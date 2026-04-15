@@ -16,3 +16,13 @@ export type {
 } from './types.js';
 
 export type { ComponentType } from './ui-types.js';
+
+export {
+  runChain,
+  MAX_CHAIN_DEPTH,
+  ChainError,
+  type Chain,
+  type ChainStep,
+} from './chain/engine.js';
+
+export type { SavedChain } from './chain/types.js';
