@@ -26,3 +26,5 @@ export {
 } from './chain/engine.js';
 
 export type { SavedChain } from './chain/types.js';
+
+export { detectCycle } from './chain/cycle.js';
