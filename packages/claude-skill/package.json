@@ -1,0 +1,15 @@
+{
+  "name": "claude-code-wyreup-skill",
+  "version": "0.0.0",
+  "description": "Claude Code skill teaching Claude how to use Wyreup",
+  "license": "MIT",
+  "private": true,
+  "files": ["skill.md", "README.md"],
+  "scripts": {
+    "build": "echo 'no build step for skill'",
+    "test": "echo 'no tests for skill'",
+    "lint": "echo 'no lint for skill'",
+    "typecheck": "echo 'no typecheck for skill'",
+    "clean": "echo 'nothing to clean'"
+  }
+}
