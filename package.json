@@ -4,7 +4,7 @@
   "private": true,
   "description": "Wyreup — free, privacy-first tool library",
   "license": "MIT",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.0.6",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -16,5 +16,8 @@
     "dev": "turbo run dev --parallel",
     "clean": "turbo run clean && rm -rf node_modules .turbo"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
 }
