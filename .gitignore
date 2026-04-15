@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.astro/
+.turbo/
+.wrangler/
+
+# Test coverage
+coverage/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+.dev.vars
+*.secret
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Cloudflare
+.wrangler/
+wrangler.toml.local
