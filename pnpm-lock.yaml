@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.39
+      prettier:
+        specifier: ^3.3.0
+        version: 3.8.3
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -19,6 +22,11 @@ packages:
 
   '@types/node@20.19.39':
     resolution: {integrity: sha512-orrrD74MBUyK8jOAD/r0+lfa1I2MO6I+vAkmAWzMYbCcgrN4lCrmK52gRFQq/JRxfYPfonkr4b0jcY7Olqdqbw==}
+
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
@@ -33,6 +41,8 @@ snapshots:
   '@types/node@20.19.39':
     dependencies:
       undici-types: 6.21.0
+
+  prettier@3.8.3: {}
 
   typescript@5.9.3: {}
 
