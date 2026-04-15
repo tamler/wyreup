@@ -28,3 +28,5 @@ export {
 export type { SavedChain } from './chain/types.js';
 
 export { detectCycle } from './chain/cycle.js';
+
+export { createRegistry, mimeMatches, type ToolRegistry } from './registry.js';
