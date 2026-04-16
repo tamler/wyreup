@@ -11,6 +11,9 @@ dist/
 # Test coverage
 coverage/
 
+# CI check temp dirs
+.tmp-*/
+
 # Environment and secrets
 .env
 .env.local
