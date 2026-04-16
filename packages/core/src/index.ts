@@ -36,5 +36,9 @@ export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
 
 export { compress, type CompressParams, defaultCompressParams } from './tools/compress/index.js';
+export { convert, type ConvertParams, defaultConvertParams } from './tools/convert/index.js';
+export { stripExif, type StripExifParams, defaultStripExifParams } from './tools/strip-exif/index.js';
+export { imageToPdf, type ImageToPdfParams, defaultImageToPdfParams } from './tools/image-to-pdf/index.js';
+export { mergePdf, type MergePdfParams, defaultMergePdfParams } from './tools/merge-pdf/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

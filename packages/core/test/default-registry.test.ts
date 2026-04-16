@@ -25,4 +25,32 @@ describe('default registry', () => {
     const compatible = registry.toolsForFiles([jpg]);
     expect(compatible.some((t) => t.id === 'compress')).toBe(true);
   });
+
+  it('includes convert', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('convert')).toBeDefined();
+  });
+
+  it('includes strip-exif', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('strip-exif')).toBeDefined();
+  });
+
+  it('includes image-to-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('image-to-pdf')).toBeDefined();
+  });
+
+  it('includes merge-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('merge-pdf')).toBeDefined();
+  });
+
+  it('merge-pdf is compatible when 2 PDFs are dropped', () => {
+    const registry = createDefaultRegistry();
+    const pdf1 = new File([], 'a.pdf', { type: 'application/pdf' });
+    const pdf2 = new File([], 'b.pdf', { type: 'application/pdf' });
+    const compatible = registry.toolsForFiles([pdf1, pdf2]);
+    expect(compatible.some((t) => t.id === 'merge-pdf')).toBe(true);
+  });
 });

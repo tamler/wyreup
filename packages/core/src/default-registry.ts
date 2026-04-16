@@ -1,16 +1,25 @@
 import { createRegistry, type ToolRegistry } from './registry.js';
 import { compress } from './tools/compress/index.js';
+import { convert } from './tools/convert/index.js';
+import { stripExif } from './tools/strip-exif/index.js';
+import { imageToPdf } from './tools/image-to-pdf/index.js';
+import { mergePdf } from './tools/merge-pdf/index.js';
 import type { ToolModule } from './types.js';
 
 /**
  * All first-party Wyreup tools, in presentation order.
- * Typed as ToolModule<any>[] because each tool has its own concrete Params type;
- * the generic array type ToolModule<unknown>[] rejects concrete instantiations
- * due to function parameter contravariance on the optional runStream field.
+ * Typed as ToolModule<any> because TypeScript's function parameter
+ * contravariance makes it hard to hold Params-parameterized tools in
+ * a single heterogeneous array without losing type safety on each one.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const defaultTools: ToolModule<any>[] = [compress];
+export const defaultTools: ToolModule<any>[] = [
+  compress,
+  convert,
+  stripExif,
+  imageToPdf,
+  mergePdf,
+];
 
 export function createDefaultRegistry(): ToolRegistry {
-  return createRegistry(defaultTools);
+  return createRegistry(defaultTools as ToolModule[]);
 }
