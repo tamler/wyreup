@@ -8,3 +8,6 @@ Reference images for tool module tests. Committed to the repo so tests are deter
 - `corrupted.jpg` — intentionally invalid bytes for error-path testing
 
 To regenerate, run the one-off scripts in `/tmp/gen-*.mjs` as described in the Wave 1a plan (Task 3).
+
+- `doc-a.pdf` — minimal A4 PDF with title "Document A"
+- `doc-b.pdf` — minimal A4 PDF with title "Document B"
