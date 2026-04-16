@@ -111,7 +111,7 @@ export const imageToPdf: ToolModule<ImageToPdfParams> = {
     const bytes = await doc.save();
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-    return new Blob([bytes], { type: 'application/pdf' });
+    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   },
 
   __testFixtures: {

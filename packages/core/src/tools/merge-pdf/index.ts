@@ -65,7 +65,7 @@ export const mergePdf: ToolModule<MergePdfParams> = {
     const bytes = await merged.save();
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-    return new Blob([bytes], { type: 'application/pdf' });
+    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   },
 
   __testFixtures: {
