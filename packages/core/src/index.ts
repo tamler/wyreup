@@ -35,6 +35,15 @@ export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
 
+export {
+  createCanvas,
+  loadImage,
+  canvasToBlob,
+  type CanvasLike,
+  type CanvasContext2DLike,
+  type ImageLike,
+} from './lib/canvas.js';
+
 export { compress, type CompressParams, defaultCompressParams } from './tools/compress/index.js';
 export { convert, type ConvertParams, defaultConvertParams } from './tools/convert/index.js';
 export { stripExif, type StripExifParams, defaultStripExifParams } from './tools/strip-exif/index.js';
