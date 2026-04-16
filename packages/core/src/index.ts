@@ -34,3 +34,5 @@ export { createRegistry, mimeMatches, type ToolRegistry } from './registry.js';
 export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
+
+export { compress, type CompressParams, defaultCompressParams } from './tools/compress/index.js';
