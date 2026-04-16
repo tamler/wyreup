@@ -11,3 +11,4 @@ To regenerate, run the one-off scripts in `/tmp/gen-*.mjs` as described in the W
 
 - `doc-a.pdf` — minimal A4 PDF with title "Document A"
 - `doc-b.pdf` — minimal A4 PDF with title "Document B"
+- `doc-multipage.pdf` — 3-page A4 PDF used as input for split-pdf, rotate-pdf, reorder-pdf, and page-numbers-pdf tests
