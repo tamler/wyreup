@@ -51,3 +51,5 @@ export { pdfToText, type PdfToTextParams, defaultPdfToTextParams } from './tools
 export { imageDiff, type ImageDiffParams, defaultImageDiffParams } from './tools/image-diff/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
+
+export { runDefaultChain } from './chain/run-default.js';
