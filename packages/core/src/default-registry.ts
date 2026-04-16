@@ -13,6 +13,14 @@ import { qr } from './tools/qr/index.js';
 import { watermarkPdf } from './tools/watermark-pdf/index.js';
 import { pdfToText } from './tools/pdf-to-text/index.js';
 import { imageDiff } from './tools/image-diff/index.js';
+import { rotateImage } from './tools/rotate-image/index.js';
+import { flipImage } from './tools/flip-image/index.js';
+import { grayscale } from './tools/grayscale/index.js';
+import { sepia } from './tools/sepia/index.js';
+import { invert } from './tools/invert/index.js';
+import { imageInfo } from './tools/image-info/index.js';
+import { pdfInfo } from './tools/pdf-info/index.js';
+import { hash } from './tools/hash/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -36,6 +44,14 @@ export const defaultTools: ToolModule<any>[] = [
   watermarkPdf,
   pdfToText,
   imageDiff,
+  rotateImage,
+  flipImage,
+  grayscale,
+  sepia,
+  invert,
+  imageInfo,
+  pdfInfo,
+  hash,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

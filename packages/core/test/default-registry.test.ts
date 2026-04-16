@@ -98,4 +98,49 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     expect(registry.toolsById.get('image-diff')).toBeDefined();
   });
+
+  it('includes rotate-image', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('rotate-image')).toBeDefined();
+  });
+
+  it('includes flip-image', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('flip-image')).toBeDefined();
+  });
+
+  it('includes grayscale', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('grayscale')).toBeDefined();
+  });
+
+  it('includes sepia', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('sepia')).toBeDefined();
+  });
+
+  it('includes invert', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('invert')).toBeDefined();
+  });
+
+  it('includes image-info', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('image-info')).toBeDefined();
+  });
+
+  it('includes pdf-info', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pdf-info')).toBeDefined();
+  });
+
+  it('includes hash', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('hash')).toBeDefined();
+  });
+
+  it('has 22 tools in total', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.size).toBe(22);
+  });
 });

@@ -49,6 +49,14 @@ export { qr, type QrParams, defaultQrParams } from './tools/qr/index.js';
 export { watermarkPdf, type WatermarkPdfParams, defaultWatermarkPdfParams } from './tools/watermark-pdf/index.js';
 export { pdfToText, type PdfToTextParams, defaultPdfToTextParams } from './tools/pdf-to-text/index.js';
 export { imageDiff, type ImageDiffParams, defaultImageDiffParams } from './tools/image-diff/index.js';
+export { rotateImage, type RotateImageParams, defaultRotateImageParams } from './tools/rotate-image/index.js';
+export { flipImage, type FlipImageParams, defaultFlipImageParams } from './tools/flip-image/index.js';
+export { grayscale, type GrayscaleParams, defaultGrayscaleParams } from './tools/grayscale/index.js';
+export { sepia, type SepiaParams, defaultSepiaParams } from './tools/sepia/index.js';
+export { invert, type InvertParams, defaultInvertParams } from './tools/invert/index.js';
+export { imageInfo, type ImageInfoParams, defaultImageInfoParams } from './tools/image-info/index.js';
+export { pdfInfo, type PdfInfoParams, defaultPdfInfoParams } from './tools/pdf-info/index.js';
+export { hash, type HashParams, defaultHashParams } from './tools/hash/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 
