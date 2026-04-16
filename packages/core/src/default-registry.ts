@@ -8,6 +8,11 @@ import { splitPdf } from './tools/split-pdf/index.js';
 import { rotatePdf } from './tools/rotate-pdf/index.js';
 import { reorderPdf } from './tools/reorder-pdf/index.js';
 import { pageNumbersPdf } from './tools/page-numbers-pdf/index.js';
+import { colorPalette } from './tools/color-palette/index.js';
+import { qr } from './tools/qr/index.js';
+import { watermarkPdf } from './tools/watermark-pdf/index.js';
+import { pdfToText } from './tools/pdf-to-text/index.js';
+import { imageDiff } from './tools/image-diff/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -26,6 +31,11 @@ export const defaultTools: ToolModule<any>[] = [
   rotatePdf,
   reorderPdf,
   pageNumbersPdf,
+  colorPalette,
+  qr,
+  watermarkPdf,
+  pdfToText,
+  imageDiff,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

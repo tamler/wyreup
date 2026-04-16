@@ -44,5 +44,10 @@ export { splitPdf, type SplitPdfParams, defaultSplitPdfParams } from './tools/sp
 export { rotatePdf, type RotatePdfParams, defaultRotatePdfParams } from './tools/rotate-pdf/index.js';
 export { reorderPdf, type ReorderPdfParams, defaultReorderPdfParams } from './tools/reorder-pdf/index.js';
 export { pageNumbersPdf, type PageNumbersPdfParams, defaultPageNumbersPdfParams } from './tools/page-numbers-pdf/index.js';
+export { colorPalette, type ColorPaletteParams, defaultColorPaletteParams } from './tools/color-palette/index.js';
+export { qr, type QrParams, defaultQrParams } from './tools/qr/index.js';
+export { watermarkPdf, type WatermarkPdfParams, defaultWatermarkPdfParams } from './tools/watermark-pdf/index.js';
+export { pdfToText, type PdfToTextParams, defaultPdfToTextParams } from './tools/pdf-to-text/index.js';
+export { imageDiff, type ImageDiffParams, defaultImageDiffParams } from './tools/image-diff/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

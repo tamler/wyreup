@@ -73,4 +73,29 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     expect(registry.toolsById.get('page-numbers-pdf')).toBeDefined();
   });
+
+  it('includes color-palette', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('color-palette')).toBeDefined();
+  });
+
+  it('includes qr', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('qr')).toBeDefined();
+  });
+
+  it('includes watermark-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('watermark-pdf')).toBeDefined();
+  });
+
+  it('includes pdf-to-text', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pdf-to-text')).toBeDefined();
+  });
+
+  it('includes image-diff', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('image-diff')).toBeDefined();
+  });
 });
