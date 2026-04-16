@@ -4,6 +4,10 @@ import { convert } from './tools/convert/index.js';
 import { stripExif } from './tools/strip-exif/index.js';
 import { imageToPdf } from './tools/image-to-pdf/index.js';
 import { mergePdf } from './tools/merge-pdf/index.js';
+import { splitPdf } from './tools/split-pdf/index.js';
+import { rotatePdf } from './tools/rotate-pdf/index.js';
+import { reorderPdf } from './tools/reorder-pdf/index.js';
+import { pageNumbersPdf } from './tools/page-numbers-pdf/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -18,6 +22,10 @@ export const defaultTools: ToolModule<any>[] = [
   stripExif,
   imageToPdf,
   mergePdf,
+  splitPdf,
+  rotatePdf,
+  reorderPdf,
+  pageNumbersPdf,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

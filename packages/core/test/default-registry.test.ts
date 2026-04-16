@@ -53,4 +53,24 @@ describe('default registry', () => {
     const compatible = registry.toolsForFiles([pdf1, pdf2]);
     expect(compatible.some((t) => t.id === 'merge-pdf')).toBe(true);
   });
+
+  it('includes split-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('split-pdf')).toBeDefined();
+  });
+
+  it('includes rotate-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('rotate-pdf')).toBeDefined();
+  });
+
+  it('includes reorder-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('reorder-pdf')).toBeDefined();
+  });
+
+  it('includes page-numbers-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('page-numbers-pdf')).toBeDefined();
+  });
 });
