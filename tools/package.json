@@ -1,0 +1,16 @@
+{
+  "name": "wyreup-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-level CI check scripts for Wyreup",
+  "scripts": {
+    "check:isolation": "node check-isolation.mjs",
+    "check:privacy": "node check-privacy.mjs",
+    "check:bundle-size": "node check-bundle-size.mjs",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0"
+  }
+}
