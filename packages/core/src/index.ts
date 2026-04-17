@@ -71,6 +71,16 @@ export { resize, type ResizeParams, defaultResizeParams } from './tools/resize/i
 export { imageWatermark, type ImageWatermarkParams, defaultImageWatermarkParams } from './tools/image-watermark/index.js';
 export { favicon, type FaviconParams, defaultFaviconParams } from './tools/favicon/index.js';
 export { pdfToImage, type PdfToImageParams, defaultPdfToImageParams } from './tools/pdf-to-image/index.js';
+export { jsonFormatter, type JsonFormatterParams, defaultJsonFormatterParams } from './tools/json-formatter/index.js';
+export { base64, type Base64Params, defaultBase64Params } from './tools/base64/index.js';
+export { urlEncoder, type UrlEncoderParams, defaultUrlEncoderParams } from './tools/url-encoder/index.js';
+export { colorConverter, type ColorConverterParams, defaultColorConverterParams } from './tools/color-converter/index.js';
+export { markdownToHtml, type MarkdownToHtmlParams, defaultMarkdownToHtmlParams } from './tools/markdown-to-html/index.js';
+export { htmlToMarkdown, type HtmlToMarkdownParams, defaultHtmlToMarkdownParams } from './tools/html-to-markdown/index.js';
+export { textDiff, type TextDiffParams, defaultTextDiffParams } from './tools/text-diff/index.js';
+export { wordCounter, type WordCounterParams, defaultWordCounterParams } from './tools/word-counter/index.js';
+export { passwordGenerator, type PasswordGeneratorParams, defaultPasswordGeneratorParams } from './tools/password-generator/index.js';
+export { uuidGenerator, type UuidGeneratorParams, defaultUuidGeneratorParams } from './tools/uuid-generator/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

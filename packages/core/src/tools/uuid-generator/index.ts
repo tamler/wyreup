@@ -1,0 +1,62 @@
+import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { UuidGeneratorParams } from './types.js';
+
+export type { UuidGeneratorParams } from './types.js';
+export { defaultUuidGeneratorParams } from './types.js';
+
+const UuidGeneratorComponentStub = (): unknown => null;
+
+export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
+  id: 'uuid-generator',
+  slug: 'uuid-generator',
+  name: 'UUID Generator',
+  description: 'Generate one or more random UUID v4 identifiers.',
+  category: 'create',
+  presence: 'both',
+  keywords: ['uuid', 'guid', 'generate', 'random', 'identifier', 'id'],
+
+  input: {
+    accept: [],
+    min: 0,
+    max: 0,
+  },
+  output: {
+    mime: 'text/plain',
+    multiple: false,
+  },
+
+  interactive: false,
+  batchable: false,
+  cost: 'free',
+  memoryEstimate: 'low',
+
+  defaults: { version: 4, count: 1 },
+
+  Component: UuidGeneratorComponentStub,
+
+  async run(
+    _inputs: File[],
+    params: UuidGeneratorParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
+    ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating UUID' });
+
+    const count = params.count ?? 1;
+    const uuids: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      uuids.push(crypto.randomUUID());
+    }
+
+    const output = uuids.join('\n');
+
+    ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
+    return [new Blob([output], { type: 'text/plain' })];
+  },
+
+  __testFixtures: {
+    valid: [],
+    weird: [],
+    expectedOutputMime: ['text/plain'],
+  },
+};
