@@ -139,8 +139,33 @@ describe('default registry', () => {
     expect(registry.toolsById.get('hash')).toBeDefined();
   });
 
-  it('has 22 tools in total', () => {
+  it('includes crop', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(22);
+    expect(registry.toolsById.get('crop')).toBeDefined();
+  });
+
+  it('includes resize', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('resize')).toBeDefined();
+  });
+
+  it('includes image-watermark', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('image-watermark')).toBeDefined();
+  });
+
+  it('includes favicon', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('favicon')).toBeDefined();
+  });
+
+  it('includes pdf-to-image', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
+  });
+
+  it('has 27 tools in total', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.size).toBe(27);
   });
 });

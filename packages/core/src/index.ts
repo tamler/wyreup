@@ -66,6 +66,11 @@ export { invert, type InvertParams, defaultInvertParams } from './tools/invert/i
 export { imageInfo, type ImageInfoParams, defaultImageInfoParams } from './tools/image-info/index.js';
 export { pdfInfo, type PdfInfoParams, defaultPdfInfoParams } from './tools/pdf-info/index.js';
 export { hash, type HashParams, defaultHashParams } from './tools/hash/index.js';
+export { crop, type CropParams, defaultCropParams } from './tools/crop/index.js';
+export { resize, type ResizeParams, defaultResizeParams } from './tools/resize/index.js';
+export { imageWatermark, type ImageWatermarkParams, defaultImageWatermarkParams } from './tools/image-watermark/index.js';
+export { favicon, type FaviconParams, defaultFaviconParams } from './tools/favicon/index.js';
+export { pdfToImage, type PdfToImageParams, defaultPdfToImageParams } from './tools/pdf-to-image/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

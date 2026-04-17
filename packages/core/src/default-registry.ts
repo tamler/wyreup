@@ -21,6 +21,11 @@ import { invert } from './tools/invert/index.js';
 import { imageInfo } from './tools/image-info/index.js';
 import { pdfInfo } from './tools/pdf-info/index.js';
 import { hash } from './tools/hash/index.js';
+import { crop } from './tools/crop/index.js';
+import { resize } from './tools/resize/index.js';
+import { imageWatermark } from './tools/image-watermark/index.js';
+import { favicon } from './tools/favicon/index.js';
+import { pdfToImage } from './tools/pdf-to-image/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -52,6 +57,11 @@ export const defaultTools: ToolModule<any>[] = [
   imageInfo,
   pdfInfo,
   hash,
+  crop,
+  resize,
+  imageWatermark,
+  favicon,
+  pdfToImage,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
