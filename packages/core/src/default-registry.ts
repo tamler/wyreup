@@ -41,6 +41,15 @@ import { svgToPng } from './tools/svg-to-png/index.js';
 import { timestampConverter } from './tools/timestamp-converter/index.js';
 import { loremIpsum } from './tools/lorem-ipsum/index.js';
 import { regexTester } from './tools/regex-tester/index.js';
+import { pdfExtractPages } from './tools/pdf-extract-pages/index.js';
+import { pdfDeletePages } from './tools/pdf-delete-pages/index.js';
+import { pdfCompress } from './tools/pdf-compress/index.js';
+import { pdfEncrypt } from './tools/pdf-encrypt/index.js';
+import { pdfDecrypt } from './tools/pdf-decrypt/index.js';
+import { pdfRedact } from './tools/pdf-redact/index.js';
+import { pdfMetadata } from './tools/pdf-metadata/index.js';
+import { pdfExtractTables } from './tools/pdf-extract-tables/index.js';
+import { pdfCrop } from './tools/pdf-crop/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -92,6 +101,15 @@ export const defaultTools: ToolModule<any>[] = [
   timestampConverter,
   loremIpsum,
   regexTester,
+  pdfExtractPages,
+  pdfDeletePages,
+  pdfCompress,
+  pdfEncrypt,
+  pdfDecrypt,
+  pdfRedact,
+  pdfMetadata,
+  pdfExtractTables,
+  pdfCrop,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

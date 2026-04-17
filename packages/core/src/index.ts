@@ -34,6 +34,7 @@ export { createRegistry, mimeMatches, type ToolRegistry } from './registry.js';
 export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
+export { parseRangeSpec } from './lib/pdf-ranges.js';
 
 export {
   createCanvas,
@@ -70,7 +71,7 @@ export { crop, type CropParams, defaultCropParams } from './tools/crop/index.js'
 export { resize, type ResizeParams, defaultResizeParams } from './tools/resize/index.js';
 export { imageWatermark, type ImageWatermarkParams, defaultImageWatermarkParams } from './tools/image-watermark/index.js';
 export { favicon, type FaviconParams, defaultFaviconParams } from './tools/favicon/index.js';
-export { pdfToImage, type PdfToImageParams, defaultPdfToImageParams } from './tools/pdf-to-image/index.js';
+export { pdfToImage, type PdfToImageParams } from './tools/pdf-to-image/index.js';
 export { jsonFormatter, type JsonFormatterParams, defaultJsonFormatterParams } from './tools/json-formatter/index.js';
 export { base64, type Base64Params, defaultBase64Params } from './tools/base64/index.js';
 export { urlEncoder, type UrlEncoderParams, defaultUrlEncoderParams } from './tools/url-encoder/index.js';
@@ -86,6 +87,15 @@ export { svgToPng, type SvgToPngParams, defaultSvgToPngParams } from './tools/sv
 export { timestampConverter, type TimestampConverterParams, defaultTimestampConverterParams } from './tools/timestamp-converter/index.js';
 export { loremIpsum, type LoremIpsumParams, defaultLoremIpsumParams } from './tools/lorem-ipsum/index.js';
 export { regexTester, type RegexTesterParams, defaultRegexTesterParams } from './tools/regex-tester/index.js';
+export { pdfExtractPages, type PdfExtractPagesParams } from './tools/pdf-extract-pages/index.js';
+export { pdfDeletePages, type PdfDeletePagesParams } from './tools/pdf-delete-pages/index.js';
+export { pdfCompress, type PdfCompressParams } from './tools/pdf-compress/index.js';
+export { pdfEncrypt, type PdfEncryptParams, type PdfEncryptPermissions } from './tools/pdf-encrypt/index.js';
+export { pdfDecrypt, type PdfDecryptParams } from './tools/pdf-decrypt/index.js';
+export { pdfRedact, type PdfRedactParams, type PdfRedactRectangle } from './tools/pdf-redact/index.js';
+export { pdfMetadata, type PdfMetadataParams, type PdfMetadataWriteFields } from './tools/pdf-metadata/index.js';
+export { pdfExtractTables, type PdfExtractTablesParams, type TableRow } from './tools/pdf-extract-tables/index.js';
+export { pdfCrop, type PdfCropParams, type PdfCropBox, type PdfCropBoxPerPage } from './tools/pdf-crop/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

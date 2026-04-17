@@ -1,48 +1,34 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import type { PdfToImageParams } from './types.js';
+import { parseRangeSpec } from '../../lib/pdf-ranges.js';
 import { createCanvas, canvasToBlob } from '../../lib/canvas.js';
 
-export type { PdfToImageParams } from './types.js';
-export { defaultPdfToImageParams } from './types.js';
+export interface PdfToImageParams {
+  /** Output format. Default 'png'. */
+  format?: 'png' | 'jpeg' | 'webp';
+  /** DPI. Default 150. Higher = larger files. */
+  dpi?: number;
+  /** Page range (1-indexed). Default: all pages. */
+  pages?: (number | string)[];
+  /** JPEG/WebP quality, 1-100. Default 90. Ignored for PNG. */
+  quality?: number;
+}
 
 const PdfToImageComponentStub = (): unknown => null;
 
-/**
- * Parse the pages param into a sorted array of 1-indexed page numbers.
- * Returns null when value is 'all' (caller uses full page range).
- */
-function parsePages(pages: string, pageCount: number): number[] | null {
-  if (pages === 'all') return null;
-
-  const nums = pages
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => {
-      const n = parseInt(s, 10);
-      if (isNaN(n)) throw new Error(`Invalid page number "${s}".`);
-      return n;
-    });
-
-  for (const n of nums) {
-    if (n < 1 || n > pageCount) {
-      throw new Error(
-        `Page number ${n} is out of range (document has ${pageCount} page${pageCount === 1 ? '' : 's'}).`,
-      );
-    }
-  }
-
-  return nums;
-}
+const FORMAT_MIME: Record<string, string> = {
+  png: 'image/png',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+};
 
 export const pdfToImage: ToolModule<PdfToImageParams> = {
   id: 'pdf-to-image',
   slug: 'pdf-to-image',
   name: 'PDF to Image',
-  description: 'Render each page of a PDF as a PNG image.',
+  description: 'Render each page of a PDF as an image (PNG, JPEG, or WebP).',
   category: 'convert',
   presence: 'both',
-  keywords: ['pdf', 'image', 'png', 'render', 'convert', 'page'],
+  keywords: ['pdf', 'image', 'png', 'jpeg', 'webp', 'render', 'convert', 'pages'],
 
   input: {
     accept: ['application/pdf'],
@@ -61,8 +47,9 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
   memoryEstimate: 'high',
 
   defaults: {
+    format: 'png',
     dpi: 150,
-    pages: 'all',
+    quality: 90,
   },
 
   Component: PdfToImageComponentStub,
@@ -74,19 +61,22 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
   ): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
+    const format = params.format ?? 'png';
     const dpi = params.dpi ?? 150;
-    const pagesParam = params.pages ?? 'all';
+    const quality = params.quality ?? 90;
     const scale = dpi / 72;
+    const mime = FORMAT_MIME[format] ?? 'image/png';
+
+    if (!FORMAT_MIME[format]) {
+      throw new Error(`Unknown format "${format}". Expected png, jpeg, or webp.`);
+    }
 
     ctx.onProgress({ stage: 'processing', percent: 5, message: 'Loading PDF' });
-
-    const input = inputs[0]!;
 
     const { getDocument, GlobalWorkerOptions } = await import(
       'pdfjs-dist/legacy/build/pdf.mjs'
     );
 
-    // Same worker setup as pdf-to-text: resolve from disk in Node.
     if (typeof window === 'undefined') {
       const { createRequire } = await import('node:module');
       const require = createRequire(import.meta.url);
@@ -100,17 +90,15 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
       }
     }
 
-    const buffer = await input.arrayBuffer();
+    const buffer = await inputs[0]!.arrayBuffer();
     const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
-
     const pageCount: number = pdf.numPages;
 
     let pageNumbers: number[];
-    const parsed = parsePages(pagesParam, pageCount);
-    if (parsed === null) {
-      pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1);
+    if (params.pages && params.pages.length > 0) {
+      pageNumbers = parseRangeSpec(params.pages, pageCount);
     } else {
-      pageNumbers = parsed;
+      pageNumbers = Array.from({ length: pageCount }, (_, i) => i + 1);
     }
 
     const outputs: Blob[] = [];
@@ -133,8 +121,6 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
         Math.ceil(viewport.height),
       );
 
-      // pdfjs needs the raw canvas object, not our typed wrapper.
-      // We pass canvas as unknown then let pdfjs use it.
       const canvasContext = canvas.getContext('2d');
 
       await page.render({
@@ -143,8 +129,9 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
         viewport,
       }).promise;
 
-      const pngBlob = await canvasToBlob(canvas, 'image/png');
-      outputs.push(pngBlob);
+      const qualityArg = format === 'png' ? undefined : quality / 100;
+      const blob = await canvasToBlob(canvas, mime, qualityArg);
+      outputs.push(blob);
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
