@@ -81,6 +81,11 @@ export { textDiff, type TextDiffParams, defaultTextDiffParams } from './tools/te
 export { wordCounter, type WordCounterParams, defaultWordCounterParams } from './tools/word-counter/index.js';
 export { passwordGenerator, type PasswordGeneratorParams, defaultPasswordGeneratorParams } from './tools/password-generator/index.js';
 export { uuidGenerator, type UuidGeneratorParams, defaultUuidGeneratorParams } from './tools/uuid-generator/index.js';
+export { ocr, type OcrParams, defaultOcrParams } from './tools/ocr/index.js';
+export { svgToPng, type SvgToPngParams, defaultSvgToPngParams } from './tools/svg-to-png/index.js';
+export { timestampConverter, type TimestampConverterParams, defaultTimestampConverterParams } from './tools/timestamp-converter/index.js';
+export { loremIpsum, type LoremIpsumParams, defaultLoremIpsumParams } from './tools/lorem-ipsum/index.js';
+export { regexTester, type RegexTesterParams, defaultRegexTesterParams } from './tools/regex-tester/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

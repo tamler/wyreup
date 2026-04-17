@@ -36,6 +36,11 @@ import { textDiff } from './tools/text-diff/index.js';
 import { wordCounter } from './tools/word-counter/index.js';
 import { passwordGenerator } from './tools/password-generator/index.js';
 import { uuidGenerator } from './tools/uuid-generator/index.js';
+import { ocr } from './tools/ocr/index.js';
+import { svgToPng } from './tools/svg-to-png/index.js';
+import { timestampConverter } from './tools/timestamp-converter/index.js';
+import { loremIpsum } from './tools/lorem-ipsum/index.js';
+import { regexTester } from './tools/regex-tester/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -82,6 +87,11 @@ export const defaultTools: ToolModule<any>[] = [
   wordCounter,
   passwordGenerator,
   uuidGenerator,
+  ocr,
+  svgToPng,
+  timestampConverter,
+  loremIpsum,
+  regexTester,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

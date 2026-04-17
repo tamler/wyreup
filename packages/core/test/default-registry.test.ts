@@ -164,8 +164,33 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 37 tools in total', () => {
+  it('has 42 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(37);
+    expect(registry.toolsById.size).toBe(42);
+  });
+
+  it('includes ocr', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('ocr')).toBeDefined();
+  });
+
+  it('includes svg-to-png', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('svg-to-png')).toBeDefined();
+  });
+
+  it('includes timestamp-converter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('timestamp-converter')).toBeDefined();
+  });
+
+  it('includes lorem-ipsum', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('lorem-ipsum')).toBeDefined();
+  });
+
+  it('includes regex-tester', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('regex-tester')).toBeDefined();
   });
 });
