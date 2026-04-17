@@ -21,11 +21,15 @@ const WORD_POOL = [
 
 function randomInt(min: number, max: number): number {
   // max inclusive
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return (buf[0]! % (max - min + 1)) + min;
 }
 
 function randomWord(): string {
-  return WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)]!;
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return WORD_POOL[buf[0]! % WORD_POOL.length]!;
 }
 
 function generateSentence(wordCount: number): string {
@@ -97,8 +101,11 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating text' });
 
     const paragraphCount = params.paragraphs ?? 3;
+    if (paragraphCount < 1 || paragraphCount > 1000) throw new Error('paragraphs must be between 1 and 1000');
     const sentenceCount = params.sentencesPerParagraph ?? 5;
+    if (sentenceCount < 1 || sentenceCount > 100) throw new Error('sentencesPerParagraph must be between 1 and 100');
     const wordsPerSentence: [number, number] = params.wordsPerSentence ?? [8, 15];
+    if (wordsPerSentence[1] > 100) throw new Error('wordsPerSentence max must be <= 100');
     const startWithLorem = params.startWithLorem ?? true;
 
     const paragraphs: string[] = [];

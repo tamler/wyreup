@@ -18,6 +18,7 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
   input: {
     accept: ['image/svg+xml'],
     min: 1,
+    sizeLimit: 50 * 1024 * 1024,
   },
   output: {
     mime: 'image/png',
@@ -48,7 +49,7 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
     const results: Blob[] = [];
 
     for (let i = 0; i < inputs.length; i++) {
-      if (ctx.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      if (ctx.signal.aborted) throw new Error('Aborted');
 
       ctx.onProgress({
         stage: 'processing',

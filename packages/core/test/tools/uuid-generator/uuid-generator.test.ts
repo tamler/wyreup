@@ -55,4 +55,17 @@ describe('uuid-generator — run()', () => {
     const [out] = await uuidGenerator.run([], { version: 4, count: 1 }, makeCtx());
     expect(out!.type).toBe('text/plain');
   });
+
+  it('throws when count > 1000', async () => {
+    await expect(uuidGenerator.run([], { count: 1001 }, makeCtx())).rejects.toThrow('count must be <= 1000');
+  });
+
+  it('throws when count < 1', async () => {
+    await expect(uuidGenerator.run([], { count: 0 }, makeCtx())).rejects.toThrow('count must be >= 1');
+  });
+
+  it('throws for unsupported version', async () => {
+    // @ts-expect-error testing invalid version
+    await expect(uuidGenerator.run([], { version: 5, count: 1 }, makeCtx())).rejects.toThrow('Unsupported UUID version');
+  });
 });

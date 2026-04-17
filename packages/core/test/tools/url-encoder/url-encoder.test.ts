@@ -61,6 +61,13 @@ describe('url-encoder — run()', () => {
     expect(encoded).toContain('=');
   });
 
+  it('decode throws readable error on malformed percent-sequence', async () => {
+    const input = new File(['%GG'], 'test.txt', { type: 'text/plain' });
+    await expect(
+      urlEncoder.run([input], { mode: 'decode', scope: 'component' }, makeCtx()),
+    ).rejects.toThrow('Invalid percent-encoded');
+  });
+
   it('handles Unicode characters', async () => {
     const input = new File(['こんにちは'], 'test.txt', { type: 'text/plain' });
     const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx());

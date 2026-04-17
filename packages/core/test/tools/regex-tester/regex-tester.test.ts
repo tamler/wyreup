@@ -84,4 +84,16 @@ describe('regex-tester — run()', () => {
     expect(result.valid).toBe(true);
     expect(result.matchCount).toBe(1);
   });
+
+  it('truncates at 10000 matches on large input and sets truncated=true', async () => {
+    const bigText = 'a'.repeat(20 * 1024); // 20 KB — more than 10000 chars
+    const result = await test(bigText, '.', 'g');
+    expect(result.valid).toBe(true);
+    expect(result.truncated).toBe(true);
+    expect(result.matches.length).toBe(10000);
+  });
+
+  it('has sizeLimit of 1 MB on input spec', () => {
+    expect(regexTester.input.sizeLimit).toBe(1 * 1024 * 1024);
+  });
 });

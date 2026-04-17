@@ -26,6 +26,7 @@ export const ocr: ToolModule<OcrParams> = {
   input: {
     accept: ACCEPTED_MIME_TYPES,
     min: 1,
+    sizeLimit: 500 * 1024 * 1024,
   },
   output: {
     mime: 'text/plain',
@@ -65,7 +66,7 @@ export const ocr: ToolModule<OcrParams> = {
 
     try {
       for (let i = 0; i < inputs.length; i++) {
-        if (ctx.signal.aborted) throw new DOMException('Aborted', 'AbortError');
+        if (ctx.signal.aborted) throw new Error('Aborted');
 
         ctx.onProgress({
           stage: 'processing',
@@ -74,7 +75,8 @@ export const ocr: ToolModule<OcrParams> = {
         });
 
         const ab = await inputs[i]!.arrayBuffer();
-        const { data: { text } } = await worker.recognize(Buffer.from(ab));
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        const { data: { text } } = await worker.recognize(new Uint8Array(ab) as unknown as Buffer);
         results.push(text.trim());
       }
     } finally {

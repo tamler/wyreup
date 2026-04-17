@@ -71,4 +71,16 @@ describe('lorem-ipsum — run()', () => {
     const paragraphs = text.split('\n\n').filter((p) => p.trim().length > 0);
     expect(paragraphs.length).toBe(1);
   });
+
+  it('throws when paragraphs > 1000', async () => {
+    await expect(loremIpsum.run([], { paragraphs: 1001 }, makeCtx())).rejects.toThrow('paragraphs must be between');
+  });
+
+  it('throws when sentencesPerParagraph > 100', async () => {
+    await expect(loremIpsum.run([], { sentencesPerParagraph: 101 }, makeCtx())).rejects.toThrow('sentencesPerParagraph must be between');
+  });
+
+  it('throws when wordsPerSentence max > 100', async () => {
+    await expect(loremIpsum.run([], { wordsPerSentence: [5, 101] }, makeCtx())).rejects.toThrow('wordsPerSentence max must be <= 100');
+  });
 });

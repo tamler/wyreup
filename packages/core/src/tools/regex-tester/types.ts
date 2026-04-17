@@ -21,4 +21,5 @@ export interface RegexTesterResult {
   error?: string;
   matchCount: number;
   matches: RegexTesterMatch[];
+  truncated?: boolean;
 }

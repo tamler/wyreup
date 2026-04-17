@@ -62,6 +62,7 @@ export const timestampConverter: ToolModule<TimestampConverterParams> = {
     accept: ['text/plain'],
     min: 1,
     max: 1,
+    sizeLimit: 1024,
   },
   output: {
     mime: 'application/json',

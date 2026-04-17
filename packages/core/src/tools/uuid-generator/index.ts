@@ -41,7 +41,13 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
   ): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating UUID' });
 
+    const version = params.version;
+    if (version !== undefined && version !== 4) {
+      throw new Error(`Unsupported UUID version: ${version}. Only v4 is supported.`);
+    }
     const count = params.count ?? 1;
+    if (count < 1) throw new Error('count must be >= 1');
+    if (count > 1000) throw new Error('count must be <= 1000');
     const uuids: string[] = [];
 
     for (let i = 0; i < count; i++) {

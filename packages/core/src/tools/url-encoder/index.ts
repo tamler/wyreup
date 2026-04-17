@@ -49,7 +49,11 @@ export const urlEncoder: ToolModule<UrlEncoderParams> = {
     if (params.mode === 'encode') {
       result = scope === 'component' ? encodeURIComponent(text) : encodeURI(text);
     } else {
-      result = scope === 'component' ? decodeURIComponent(text) : decodeURI(text);
+      try {
+        result = scope === 'component' ? decodeURIComponent(text) : decodeURI(text);
+      } catch (e) {
+        throw new Error(`Invalid percent-encoded sequence: ${(e as Error).message}`);
+      }
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

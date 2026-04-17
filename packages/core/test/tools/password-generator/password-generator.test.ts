@@ -103,4 +103,12 @@ describe('password-generator — run()', () => {
     const unique = new Set(lines);
     expect(unique.size).toBe(10);
   });
+
+  it('throws when count > 1000', async () => {
+    await expect(passwordGenerator.run([], { count: 1001 }, makeCtx())).rejects.toThrow('count must be <= 1000');
+  });
+
+  it('throws when count < 1', async () => {
+    await expect(passwordGenerator.run([], { count: 0 }, makeCtx())).rejects.toThrow('count must be >= 1');
+  });
 });

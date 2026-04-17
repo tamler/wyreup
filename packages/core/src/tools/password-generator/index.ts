@@ -112,6 +112,8 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating password' });
 
     const count = params.count ?? 1;
+    if (count < 1) throw new Error('count must be >= 1');
+    if (count > 1000) throw new Error('count must be <= 1000');
     const passwords: string[] = [];
 
     for (let i = 0; i < count; i++) {

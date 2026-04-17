@@ -19,6 +19,7 @@ export const regexTester: ToolModule<RegexTesterParams> = {
     accept: ['text/plain'],
     min: 1,
     max: 1,
+    sizeLimit: 1 * 1024 * 1024,
   },
   output: {
     mime: 'application/json',
@@ -61,10 +62,13 @@ export const regexTester: ToolModule<RegexTesterParams> = {
       return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
     }
 
+    const MAX_MATCHES = 10000;
     const matches: RegexTesterMatch[] = [];
+    let truncated = false;
 
     if (flags.includes('g') || flags.includes('y')) {
       for (const m of text.matchAll(regex)) {
+        if (matches.length >= MAX_MATCHES) { truncated = true; break; }
         const entry: RegexTesterMatch = {
           match: m[0],
           index: m.index ?? 0,
@@ -97,6 +101,7 @@ export const regexTester: ToolModule<RegexTesterParams> = {
       valid: true,
       matchCount: matches.length,
       matches,
+      truncated,
     };
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
