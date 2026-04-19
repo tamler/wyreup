@@ -31,6 +31,24 @@ export type MemoryEstimate =
   | 'high'     // 200-500 MB: video processing (v1.5), OCR (v1.5)
   | 'extreme'; // >500 MB: reserved; not used in v1 or v1.5
 
+// ──── Runtime capability requirements ────
+
+/**
+ * What a tool needs from the runtime environment. Omit when the tool has
+ * no special requirements (universal — runs everywhere).
+ * See /packages/core/docs/ai-models.md §5.4 for the tiering rules.
+ */
+export interface ToolRequires {
+  /**
+   * WebGPU requirement for this tool.
+   * - 'preferred': runs on WASM too, faster on WebGPU. UI shows a "slower mode" badge when WebGPU is absent.
+   * - 'required': only runs on WebGPU. UI hides/disables the run action on non-WebGPU browsers and offers the CLI as an escape hatch.
+   */
+  webgpu?: 'preferred' | 'required';
+  /** Minimum device memory in GB (from navigator.deviceMemory). */
+  minMemoryGB?: number;
+}
+
 // ──── MIME pattern (e.g. 'image/*', 'application/pdf', 'image/heic') ────
 
 export type MimePattern = string;
@@ -117,6 +135,8 @@ export interface ToolModule<Params = unknown> {
   batchable: boolean;
   cost: 'free' | 'credit';
   memoryEstimate: MemoryEstimate;
+  /** Runtime capability requirements. Undefined = universal (runs everywhere). */
+  requires?: ToolRequires;
 
   // Core operation (v1 tools use this)
   run(inputs: File[], params: Params, ctx: ToolRunContext): Promise<Blob[] | Blob>;

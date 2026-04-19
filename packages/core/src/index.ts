@@ -13,6 +13,7 @@ export type {
   ToolComponentProps,
   MemoryEstimate,
   MimePattern,
+  ToolRequires,
 } from './types.js';
 
 export type { ComponentType } from './ui-types.js';
@@ -35,6 +36,12 @@ export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
 export { parseRangeSpec } from './lib/pdf-ranges.js';
+export {
+  detectCapabilities,
+  checkToolCapabilities,
+  type Capabilities,
+  type CapabilityCheck,
+} from './lib/capabilities.js';
 
 export {
   createCanvas,
