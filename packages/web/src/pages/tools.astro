@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolFilter from '../components/ToolFilter.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const registry = createDefaultRegistry();
+
+// Extract serializable tool data (no functions / components)
+const tools = Array.from(registry.toolsById.values()).map((t) => ({
+  id: t.id,
+  name: t.name,
+  category: t.category,
+  description: t.description,
+  requiresWebgpu: t.requires?.webgpu,
+}));
+
+// Sorted unique categories
+const categories = [...new Set(tools.map((t) => t.category))].sort();
+
+const toolCount = tools.length;
+---
+
+<BaseLayout
+  title={`Tools — Wyreup`}
+  description={`${toolCount} browser-native tools. Compress, convert, inspect, redact — nothing uploads.`}
+>
+  <section class="tools-page">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Tools</h1>
+        <div class="page-meta">
+          <div class="solder-stat">
+            <span class="solder-stat__line" aria-hidden="true"></span>
+            <span class="solder-stat__pad" aria-hidden="true"></span>
+            <span class="solder-stat__text">{toolCount} tools</span>
+          </div>
+        </div>
+      </div>
+
+      <ToolFilter
+        client:load
+        tools={tools}
+        categories={categories}
+      />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .tools-page {
+    padding: var(--space-8) 0;
+  }
+
+  .page-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .page-title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .page-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+</style>
