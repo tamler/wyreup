@@ -1,0 +1,181 @@
+/* ── Wyreup Signal motifs (DESIGN.md §9) ── */
+
+/* Motif 1: Corner brackets
+   L-shaped corners inset 4px from card edge, 8px arms, 1px --border.
+   Apply .brackets to a position:relative container. */
+.brackets {
+  position: relative;
+}
+
+.brackets::before,
+.brackets::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+}
+
+/* Top-left: border-top + border-left */
+.brackets::before {
+  top: 4px;
+  left: 4px;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+/* Bottom-right: border-bottom + border-right */
+.brackets::after {
+  bottom: 4px;
+  right: 4px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+/* Top-right and bottom-left use child spans injected via JS, or a wrapper approach.
+   For pure-CSS on static content, we use an additional wrapper element with
+   the class .brackets-inner to cover all four corners. */
+.brackets-inner::before,
+.brackets-inner::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.brackets-inner::before {
+  top: 4px;
+  right: 4px;
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.brackets-inner::after {
+  bottom: 4px;
+  left: 4px;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+/* Accent variant — active result panels */
+.brackets-active::before,
+.brackets-active::after,
+.brackets-active .brackets-inner::before,
+.brackets-active .brackets-inner::after {
+  border-color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────── */
+
+/* Motif 2: Solder pad terminator row
+   [label] [flex rule] ■ [value]
+   Usage: <div class="solder-row"><span class="solder-label">...</span><span class="solder-value">...</span></div> */
+.solder-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  font-size: var(--text-sm);
+}
+
+.solder-label {
+  color: var(--text-muted);
+  font-weight: 400;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.solder-rule {
+  flex: 1;
+  height: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0 var(--space-2);
+}
+
+.solder-pad {
+  width: 3px;
+  height: 3px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-right: var(--space-2);
+}
+
+.solder-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Active/highlighted row */
+.solder-row.active .solder-pad {
+  background: var(--accent);
+}
+
+.solder-row.active .solder-value {
+  color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────── */
+
+/* Motif 3: Node connector dot
+   For chain-builder — not needed on home/tools pages yet. */
+.node-connector {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  transition: background var(--duration-instant) var(--ease-sharp),
+              border-color var(--duration-instant) var(--ease-sharp);
+}
+
+.node-connector.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.node-line {
+  height: 1px;
+  background: var(--border);
+  transition: background var(--duration-instant) var(--ease-sharp);
+}
+
+.node-line.active {
+  background: var(--accent);
+}
+
+/* ─────────────────────────────────────────────── */
+
+/* Solder-pad stat — decorative stat block using the motif inline
+   Usage: <div class="solder-stat"><span class="solder-stat__line"></span><span class="solder-stat__pad"></span><span class="solder-stat__text">52 tools</span></div> */
+.solder-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.solder-stat__line {
+  display: block;
+  width: 2rem;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.solder-stat__pad {
+  display: block;
+  width: 3px;
+  height: 3px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.solder-stat__text {
+  color: var(--text-primary);
+  font-weight: 500;
+}

@@ -1,21 +1,204 @@
 ---
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import '../styles/motifs.css';
+
 interface Props {
   title: string;
   description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
 }
 
-const { title, description = 'Wyreup — free, privacy-first tool library' } = Astro.props;
+const {
+  title,
+  description = 'Wyreup — 52 browser-native tools. No uploads. No signup. Free forever.',
+  ogTitle = title,
+  ogDescription = description,
+} = Astro.props;
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#FFB000" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Wyreup" />
+
     <title>{title}</title>
+
   </head>
   <body>
-    <slot />
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="wordmark">wyreup</a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="/tools" class="nav-link">Tools</a>
+          <a href="/about" class="nav-link">About</a>
+          <a href="/cli" class="nav-link">CLI</a>
+          <a
+            href="https://github.com/wyreup"
+            class="nav-link nav-link--github"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-main">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span class="footer-copy">&copy; {new Date().getFullYear()} Wyreup</span>
+        <div class="footer-rule" aria-hidden="true">
+          <span class="footer-rule__line"></span>
+          <span class="footer-rule__pad"></span>
+        </div>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="https://github.com/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+          <a href="/sitemap.xml" class="footer-link">Sitemap</a>
+        </nav>
+      </div>
+    </footer>
   </body>
 </html>
+
+<style>
+  /* Header */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .wordmark {
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+
+  .wordmark:hover {
+    color: var(--accent);
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .nav-link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+  }
+
+  .nav-link[aria-current="page"] {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1px;
+  }
+
+  /* Main */
+  .site-main {
+    flex: 1;
+  }
+
+  /* Footer */
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: var(--space-4) 0;
+    margin-top: var(--space-12);
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+  }
+
+  .footer-rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  .footer-rule__line {
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .footer-rule__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .footer-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .footer-link {
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .footer-link:hover {
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 640px) {
+    .site-nav {
+      gap: var(--space-4);
+    }
+
+    .nav-link--github {
+      display: none;
+    }
+  }
+</style>
