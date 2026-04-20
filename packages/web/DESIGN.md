@@ -1,7 +1,7 @@
 # Wyreup Design System
 ## Signal — Visual Identity Reference
 
-Version 1.2 | Dark-only at launch | Last updated: 2026-04-17
+Version 1.3 | Dark-only at launch | Last updated: 2026-04-19
 
 ---
 
@@ -174,6 +174,14 @@ Breakpoints:
 ### Layout Density Target
 
 Dense. The tools grid shows 3–4 cards per row at desktop. Table rows are 36–40px tall. Input heights are 32–36px. Padding inside cards is --space-4 (16px), not --space-8. This is not a landing page — it is a tool dashboard.
+
+### Section rhythm (homepage)
+
+**The homepage uses viewport-rhythm**: each major section is sized to ~100vh (clamped to a sane floor and ceiling — `min-height: clamp(640px, 90vh, 960px)`) so that only one section fully occupies the viewport at a time. Each section's next neighbor peeks into the bottom of the viewport — the next section's heading (or a thin scroll affordance) should be visible at the fold, signaling "more below."
+
+This rhythm applies ONLY to the homepage's value surfaces. The `/tools` catalog, per-tool pages, and chain builder use normal flow: content sized to itself, with the section rhythm discarded.
+
+Implementation: each hero-equivalent section uses `min-height: clamp(...)` + `display: flex; flex-direction: column; justify-content: flex-start; padding-block-end: 64-96px` so there's a deliberate gap between the section's content and the fold. The next section's header peeks into view either via a hairline scroll indicator or via a carefully-sized `padding-block` that pulls its heading to roughly 90% of the fold.
 
 ---
 

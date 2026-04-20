@@ -24,5 +24,30 @@ export default defineConfig({
       // Prevent Vite from following the noExternal default which would re-include them
       noExternal: [],
     },
+    build: {
+      rollupOptions: {
+        // Native packages are dynamic-imported inside tool run() functions.
+        // They must not be bundled into the client chunk — mark as external.
+        external: [
+          '@resvg/resvg-js',
+          '@napi-rs/canvas',
+          'tesseract.js',
+          '@mediapipe/tasks-vision',
+          'canvas',
+          'sharp',
+          /node_modules\/.*\.node$/,
+        ],
+      },
+    },
+    optimizeDeps: {
+      exclude: [
+        '@resvg/resvg-js',
+        '@napi-rs/canvas',
+        'tesseract.js',
+        '@mediapipe/tasks-vision',
+        'canvas',
+        'sharp',
+      ],
+    },
   },
 });
