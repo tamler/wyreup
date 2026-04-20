@@ -13,10 +13,12 @@ interface Props {
 
 const {
   title,
-  description = 'Wyreup — 52 browser-native tools. No uploads. No signup. Free forever.',
+  description = 'Wyreup — 52 browser-native tools. No uploads. No signup.',
   ogTitle = title,
   ogDescription = description,
 } = Astro.props;
+
+const currentPath = Astro.url.pathname;
 ---
 
 <!DOCTYPE html>
@@ -38,25 +40,27 @@ const {
 
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
     <header class="site-header">
       <div class="container header-inner">
-        <a href="/" class="wordmark">wyreup</a>
+        <a href="/" class="wordmark" aria-current={currentPath === '/' ? 'page' : undefined}>wyreup</a>
         <nav class="site-nav" aria-label="Primary navigation">
-          <a href="/tools" class="nav-link">Tools</a>
-          <a href="/about" class="nav-link">About</a>
-          <a href="/cli" class="nav-link">CLI</a>
+          <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
+          <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
+          <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
           <a
             href="https://github.com/wyreup"
             class="nav-link nav-link--github"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub"
+            aria-label="Wyreup on GitHub (opens in new tab)"
           >GitHub</a>
         </nav>
       </div>
     </header>
 
-    <main class="site-main">
+    <main class="site-main" id="main-content">
       <slot />
     </main>
 
