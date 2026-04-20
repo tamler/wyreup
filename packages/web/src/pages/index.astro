@@ -67,11 +67,10 @@ const featuredTools = [
   <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <h1 class="hero__headline">Your files stay on your device.<br />52 tools. Zero signup.</h1>
+      <h1 class="hero__headline">Your files stay on your device. 52 tools.</h1>
       <p class="hero__body">Compress, convert, redact, extract. Every tool runs in your browser — nothing uploads.</p>
       <div class="hero__actions">
         <a href="/tools" class="btn btn-primary">Browse tools &rarr;</a>
-        <a href="/cli" class="btn btn-secondary">Install CLI</a>
       </div>
     </div>
   </section>
@@ -106,7 +105,8 @@ const featuredTools = [
       <div class="tool-grid">
         {featuredTools.map((tool) => (
           <a href={`/tools/${tool.id}`} class="tool-card brackets" aria-label={tool.name}>
-            <div class="brackets-inner">
+            <div class="brackets-inner" aria-hidden="true"></div>
+            <div class="tool-card__inner">
               <div class="tool-card__header">
                 <span class="tool-card__icon" set:html={categoryIcons[tool.category] ?? defaultIcon}></span>
                 <div>
@@ -240,22 +240,29 @@ const featuredTools = [
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: var(--space-4);
+    padding: 1px;
     text-decoration: none;
     color: inherit;
     transition:
       border-color var(--duration-fast) var(--ease-sharp),
       background var(--duration-fast) var(--ease-sharp);
     position: relative;
+    overflow: visible;
   }
 
   .tool-card:hover {
     border-color: var(--text-muted);
-    background: var(--bg-raised);
   }
 
   .tool-card:hover .tool-card__icon {
     color: var(--accent);
+  }
+
+  .tool-card__inner {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-md) - 1px);
+    padding: var(--space-4);
   }
 
   .tool-card__header {

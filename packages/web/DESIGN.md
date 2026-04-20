@@ -1,7 +1,7 @@
 # Wyreup Design System
 ## Signal — Visual Identity Reference
 
-Version 1.0 | Dark-only at launch | Last updated: 2026-04-17
+Version 1.1 | Dark-only at launch | Last updated: 2026-04-19
 
 ---
 
@@ -72,13 +72,23 @@ Wyreup ships dark-only. Light mode is a v2 concern. The Signal aesthetic depends
 
 ## 3. Typography
 
+> **Evolution note — v1.1 (2026-04-19):** Transitioned from mono-only to hybrid Sans/Mono system after implementation showed mono body text creates fatigue over long reads. Signal's engineering feel is preserved through mono labels and data while Sans carries narrative.
+
 ### Typeface Decisions
 
-**Primary (display + body):** Geist Mono — Google Fonts / Vercel CDN, variable weight, excellent rendering at small sizes, zero licensing friction, designed for developer tooling. Monospace throughout.
+**Display + body:** Geist Sans (Apache-2.0, self-hosted, weights 400/500/600/700). Clean, contemporary sans-serif by Vercel — shares DNA with Geist Mono so the two faces read as a system, not a mismatch.
 
-**Code / terminal output:** Geist Mono — same face. No secondary code font. The product is already in mono; do not introduce a third face.
+**Labels, buttons, data metrics, code, tool IDs:** Geist Mono (unchanged, self-hosted). This is the identity accent of the product. Mono type signals "this is data, not copy." It stays wherever information density and precision matter.
 
-**No secondary sans-serif.** Geist Mono handles everything: headings, body, labels, metadata. This is a deliberate constraint. It reinforces the engineering character and eliminates font-mixing decisions.
+**No third typeface.** Sans for narrative, Mono for data. Two faces, clear rule, no exceptions.
+
+### Which Elements Use Which Font
+
+**Geist Sans:** `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `p`, `li`, `a` (in prose body), section headings, hero headline, privacy copy.
+
+**Geist Mono:** `.btn`, `button`, `code`, `kbd`, `pre`, `.badge`, `.tool-id`, `.metric`, `.category-tag`, `.solder-stat`, `.solder-stat__text`, `.solder-stat__value`, filter chips, filter search input, nav links (wordmark + category links), results count, clear button. Any element that displays system output, a data value, or a control label.
+
+**Token references:** `--font-sans` and `--font-mono` (defined in tokens.css). Never hardcode `'Geist Mono'` or `'Geist Sans'` in component styles — use the tokens.
 
 ### Type Scale
 
@@ -98,12 +108,13 @@ Eight steps. --text-hero is used in exactly one place: the homepage h1. Every ot
 ### Weight Scale
 
 ```
-400   regular — body, metadata, secondary labels
-500   medium  — nav items, card titles, emphasized labels
-700   bold    — primary headings (h1/h2), accent labels, CTAs
+400   regular   — body, metadata, secondary labels (Sans + Mono)
+500   medium    — nav items, card titles, emphasized labels (Sans + Mono)
+600   semibold  — subheadings, strong UI labels (Sans only)
+700   bold      — primary headings h1/h2, CTAs (Sans + Mono)
 ```
 
-Three weights only. 500 is the workhorse — it gives Geist Mono the right density for dense UIs without reading heavy.
+Four weights available; 500 is the workhorse. 600 is available for Sans subheadings where 700 reads too heavy and 500 reads too light.
 
 ### Line-Height Rules
 

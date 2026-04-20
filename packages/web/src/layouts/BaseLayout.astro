@@ -48,7 +48,6 @@ const currentPath = Astro.url.pathname;
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
           <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
-          <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
           <a
             href="https://github.com/wyreup"
             class="nav-link nav-link--github"
@@ -101,6 +100,7 @@ const currentPath = Astro.url.pathname;
   }
 
   .wordmark {
+    font-family: var(--font-mono);
     font-size: var(--text-md);
     font-weight: 500;
     color: var(--text-primary);
@@ -120,6 +120,7 @@ const currentPath = Astro.url.pathname;
   }
 
   .nav-link {
+    font-family: var(--font-mono);
     font-size: var(--text-sm);
     font-weight: 500;
     color: var(--text-muted);
@@ -186,6 +187,7 @@ const currentPath = Astro.url.pathname;
   }
 
   .footer-link {
+    font-family: var(--font-mono);
     font-size: var(--text-sm);
     color: var(--text-subtle);
     text-decoration: none;

@@ -34,6 +34,10 @@
   --warning:        var(--yellow-500);
   --danger:         var(--red-500);
 
+  /* ── Font families (DESIGN.md §3) ── */
+  --font-sans: 'Geist Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+
   /* ── Type scale (DESIGN.md §3) ── */
   --text-xs:    0.625rem;
   --text-sm:    0.75rem;

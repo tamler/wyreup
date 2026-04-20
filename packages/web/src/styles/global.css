@@ -15,7 +15,7 @@ html {
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: 'Geist Mono', 'Courier New', monospace;
+  font-family: var(--font-sans);
   font-size: var(--text-base);
   font-weight: 400;
   line-height: 1.6;
@@ -27,9 +27,16 @@ body {
 
 /* Typography resets */
 h1, h2, h3, h4, h5, h6 {
-  font-family: inherit;
+  font-family: var(--font-sans);
   font-weight: 700;
   color: var(--text-primary);
+}
+
+/* Mono elements — labels, buttons, data, code */
+.btn, button, code, kbd, pre,
+.tool-id, .category-tag, .metric,
+.solder-stat__value, .badge {
+  font-family: var(--font-mono);
 }
 
 h1 {
@@ -91,7 +98,7 @@ a:focus-visible {
   gap: var(--space-2);
   height: 32px;
   padding: 0 12px;
-  font-family: inherit;
+  font-family: var(--font-mono);
   font-size: var(--text-base);
   font-weight: 500;
   border-radius: var(--radius-md);

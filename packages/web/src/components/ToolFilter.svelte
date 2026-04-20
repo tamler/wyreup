@@ -113,24 +113,27 @@
     {#each filtered as tool (tool.id)}
       <a
         href={`/tools/${tool.id}`}
-        class="tool-card"
+        class="tool-card brackets"
         role="listitem"
         aria-label="{tool.name} — {tool.category}"
       >
-        <div class="tool-card__header">
-          <span class="tool-card__icon">{@html categoryIcons[tool.category] ?? defaultIcon}</span>
-          <div>
-            <div class="tool-card__name">{tool.name}</div>
-            <div class="tool-card__category">{tool.category}</div>
+        <div class="brackets-inner" aria-hidden="true"></div>
+        <div class="tool-card__inner">
+          <div class="tool-card__header">
+            <span class="tool-card__icon">{@html categoryIcons[tool.category] ?? defaultIcon}</span>
+            <div>
+              <div class="tool-card__name">{tool.name}</div>
+              <div class="tool-card__category">{tool.category}</div>
+            </div>
+            {#if tool.requiresWebgpu === 'required'}
+              <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
+            {:else if tool.requiresWebgpu === 'preferred'}
+              <span class="badge badge--preferred" title="Faster with WebGPU">Faster on WebGPU</span>
+            {/if}
           </div>
-          {#if tool.requiresWebgpu === 'required'}
-            <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
-          {:else if tool.requiresWebgpu === 'preferred'}
-            <span class="badge badge--preferred" title="Faster with WebGPU">Faster on WebGPU</span>
-          {/if}
+          <div class="tool-card__divider" aria-hidden="true"></div>
+          <p class="tool-card__desc">{tool.description}</p>
         </div>
-        <div class="tool-card__divider" aria-hidden="true"></div>
-        <p class="tool-card__desc">{tool.description}</p>
       </a>
     {/each}
   </div>
@@ -152,7 +155,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
-    font-family: 'Geist Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-base);
     width: 100%;
     max-width: 360px;
@@ -182,7 +185,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
-    font-family: 'Geist Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: 400;
     text-transform: uppercase;
@@ -224,7 +227,7 @@
     background: none;
     border: none;
     color: var(--text-subtle);
-    font-family: 'Geist Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-sm);
     cursor: pointer;
     padding: 0;
@@ -260,23 +263,22 @@
     }
   }
 
-  /* Tool card */
+  /* Tool card — double-bezel: outer frame + inner raised surface */
   .tool-card {
     display: block;
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    padding: var(--space-4);
+    padding: 1px;
     text-decoration: none;
     color: inherit;
-    transition:
-      border-color var(--duration-fast) var(--ease-sharp),
-      background var(--duration-fast) var(--ease-sharp);
+    transition: border-color var(--duration-fast) var(--ease-sharp);
+    position: relative;
+    overflow: visible;
   }
 
   .tool-card:hover {
     border-color: var(--text-muted);
-    background: var(--bg-raised);
   }
 
   .tool-card:hover .tool-card__icon {
@@ -286,6 +288,13 @@
   .tool-card:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .tool-card__inner {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-md) - 1px);
+    padding: var(--space-4);
   }
 
   .tool-card__header {
@@ -390,7 +399,7 @@
     background: none;
     border: none;
     color: var(--text-subtle);
-    font-family: 'Geist Mono', monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-sm);
     cursor: pointer;
     padding: 0;

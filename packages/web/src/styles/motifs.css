@@ -1,10 +1,16 @@
 /* ── Wyreup Signal motifs (DESIGN.md §9) ── */
 
 /* Motif 1: Corner brackets
-   L-shaped corners inset 4px from card edge, 8px arms, 1px --border.
-   Apply .brackets to a position:relative container. */
+   L-shaped corners sit OUTSIDE the card border, 4px beyond the card edge.
+   Arms: 8px each, 1px stroke. Rendered via ::before/::after on both
+   .brackets and .brackets-inner — covers all four corners without JS.
+   The card must have overflow: visible for brackets to show outside border.
+
+   On hover: brackets translate inward flush to the card edge and shift
+   to --accent. Timing: 150ms ease-out (no overshoot, per DESIGN.md §6). */
 .brackets {
   position: relative;
+  overflow: visible;
 }
 
 .brackets::before,
@@ -14,27 +20,37 @@
   width: 8px;
   height: 8px;
   pointer-events: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    top var(--duration-fast) var(--ease-out),
+    left var(--duration-fast) var(--ease-out),
+    bottom var(--duration-fast) var(--ease-out),
+    right var(--duration-fast) var(--ease-out);
 }
 
-/* Top-left: border-top + border-left */
+/* Top-left — sits 4px outside the card corner */
 .brackets::before {
-  top: 4px;
-  left: 4px;
+  top: -5px;
+  left: -5px;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
 }
 
-/* Bottom-right: border-bottom + border-right */
+/* Bottom-right — sits 4px outside the card corner */
 .brackets::after {
-  bottom: 4px;
-  right: 4px;
+  bottom: -5px;
+  right: -5px;
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
 
-/* Top-right and bottom-left use child spans injected via JS, or a wrapper approach.
-   For pure-CSS on static content, we use an additional wrapper element with
-   the class .brackets-inner to cover all four corners. */
+/* Top-right and bottom-left via .brackets-inner wrapper */
+.brackets-inner {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .brackets-inner::before,
 .brackets-inner::after {
   content: '';
@@ -42,29 +58,67 @@
   width: 8px;
   height: 8px;
   pointer-events: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    top var(--duration-fast) var(--ease-out),
+    right var(--duration-fast) var(--ease-out),
+    bottom var(--duration-fast) var(--ease-out),
+    left var(--duration-fast) var(--ease-out);
 }
 
+/* Top-right */
 .brackets-inner::before {
-  top: 4px;
-  right: 4px;
+  top: -5px;
+  right: -5px;
   border-top: 1px solid var(--border);
   border-right: 1px solid var(--border);
 }
 
+/* Bottom-left */
 .brackets-inner::after {
-  bottom: 4px;
-  left: 4px;
+  bottom: -5px;
+  left: -5px;
   border-bottom: 1px solid var(--border);
   border-left: 1px solid var(--border);
 }
 
-/* Accent variant — active result panels */
+/* Hover: brackets lock onto the card corners in amber */
+.brackets:hover::before {
+  top: -1px;
+  left: -1px;
+  border-color: var(--accent);
+}
+
+.brackets:hover::after {
+  bottom: -1px;
+  right: -1px;
+  border-color: var(--accent);
+}
+
+.brackets:hover .brackets-inner::before {
+  top: -1px;
+  right: -1px;
+  border-color: var(--accent);
+}
+
+.brackets:hover .brackets-inner::after {
+  bottom: -1px;
+  left: -1px;
+  border-color: var(--accent);
+}
+
+/* Accent variant — active result panels (static amber at locked-on position) */
 .brackets-active::before,
 .brackets-active::after,
 .brackets-active .brackets-inner::before,
 .brackets-active .brackets-inner::after {
   border-color: var(--accent);
 }
+
+.brackets-active::before { top: -1px; left: -1px; }
+.brackets-active::after  { bottom: -1px; right: -1px; }
+.brackets-active .brackets-inner::before { top: -1px; right: -1px; }
+.brackets-active .brackets-inner::after  { bottom: -1px; left: -1px; }
 
 /* ─────────────────────────────────────────────── */
 
@@ -75,6 +129,7 @@
   display: flex;
   align-items: center;
   gap: 0;
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
 }
 
@@ -155,6 +210,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: 400;
