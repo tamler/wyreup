@@ -50,6 +50,7 @@ import { pdfRedact } from './tools/pdf-redact/index.js';
 import { pdfMetadata } from './tools/pdf-metadata/index.js';
 import { pdfExtractTables } from './tools/pdf-extract-tables/index.js';
 import { pdfCrop } from './tools/pdf-crop/index.js';
+import { faceBlur } from './tools/face-blur/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -110,6 +111,7 @@ export const defaultTools: ToolModule<any>[] = [
   pdfMetadata,
   pdfExtractTables,
   pdfCrop,
+  faceBlur,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
