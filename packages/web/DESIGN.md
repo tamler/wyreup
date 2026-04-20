@@ -1,7 +1,7 @@
 # Wyreup Design System
 ## Signal — Visual Identity Reference
 
-Version 1.1 | Dark-only at launch | Last updated: 2026-04-19
+Version 1.2 | Dark-only at launch | Last updated: 2026-04-17
 
 ---
 
@@ -16,6 +16,8 @@ Version 1.1 | Dark-only at launch | Last updated: 2026-04-19
 **The metaphor is structural.** "Wire up" is not a logo treatment — it is the product's information architecture. Wires connect nodes. Circuits have signal paths. Every UI pattern should be expressible in those terms.
 
 **Density is a feature.** Power users want information-rich interfaces. Generous whitespace is a consumer pattern. Wyreup presents data at density, with clear hierarchy enforced by type weight and color — not padding.
+
+**Homepage is value-first. Tool pages are task-first.** The density principle above applies to task-first surfaces: `/tools` catalog, per-tool pages, chain builder. The homepage is a value surface — the job is to answer "What is this? Why should I care? What can I do right now?" in the first viewport. That means generous breathing room, narrative over metadata, and concrete scenarios over tool names. Signal's restraint is preserved through typography, palette, and motifs; not through cramming.
 
 ---
 
@@ -542,7 +544,7 @@ Drop a file to get started — or click to browse.
 
 **No emoji in UI.** The product is not writing text messages. Status is communicated by color, text, and icon — not glyphs.
 
-**No hero sections with big gradients and a CTA below a tagline cloud.** The homepage is a tool directory, not a marketing landing page.
+**No hero sections with gradients, blurs, or decorative backgrounds.** The homepage IS a value surface with a clear hero — just without the AI-SaaS visual idioms (gradient auras, floating blob shapes, mesh backgrounds, hero CTAs layered over blurred screenshots). Flat color, solid type, real content.
 
 **No shadows on flat surfaces.** Cards do not have drop shadows. Only modals and popovers (Level 2 elevation) use shadows.
 

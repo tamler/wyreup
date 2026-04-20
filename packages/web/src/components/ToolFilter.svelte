@@ -12,7 +12,7 @@
   export let tools: Tool[] = [];
   export let categories: string[] = [];
 
-  // Inline SVG icons per category (Lucide-style: 20px, 1.5px stroke)
+  // Inline SVG icons per category (Lucide-style: 20px, 1.5px stroke) — card icons
   const categoryIcons: Record<string, string> = {
     optimize: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>`,
     convert: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg>`,
@@ -30,9 +30,35 @@
   };
   const defaultIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
+  // 14px chip icons — same SVG paths, smaller size
+  const chipIcons: Record<string, string> = {
+    optimize: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>`,
+    convert: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg>`,
+    pdf: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+    inspect: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    create: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+    privacy: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    extract: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+    generate: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>`,
+    text: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+    dev: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    image: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+    export: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+    edit: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  };
+  const defaultChipIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+
+  // Counts per category from the full unfiltered tool set
+  $: categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+    acc[cat] = tools.filter((t) => t.category === cat).length;
+    return acc;
+  }, {});
+
   let query = '';
   let activeCategories: Set<string> = new Set();
   let filtered: Tool[] = tools;
+  // Incremented on each filter change to re-trigger stagger animation
+  let filterEpoch = 0;
 
   function toggleCategory(cat: string) {
     const next = new Set(activeCategories);
@@ -58,6 +84,7 @@
         t.category.toLowerCase().includes(q)
       );
     });
+    filterEpoch += 1;
   }
 
   function clearAll() {
@@ -89,7 +116,9 @@
         on:click={() => toggleCategory(cat)}
         aria-pressed={activeCategories.has(cat)}
       >
-        {cat}
+        <span class="filter-chip__icon">{@html chipIcons[cat] ?? defaultChipIcon}</span>
+        <span class="filter-chip__label">{cat}</span>
+        <span class="filter-chip__count">({categoryCounts[cat] ?? 0})</span>
       </button>
     {/each}
   </div>
@@ -110,12 +139,13 @@
   </div>
 {:else}
   <div class="tool-grid" role="list">
-    {#each filtered as tool (tool.id)}
+    {#each filtered as tool, i (`${filterEpoch}-${tool.id}`)}
       <a
         href={`/tools/${tool.id}`}
         class="tool-card brackets"
         role="listitem"
         aria-label="{tool.name} — {tool.category}"
+        style="--stagger-delay: {i * 50}ms"
       >
         <div class="brackets-inner" aria-hidden="true"></div>
         <div class="tool-card__inner">
@@ -179,9 +209,9 @@
   }
 
   .filter-chip {
-    height: 28px;
+    height: 32px;
     padding: 0 var(--space-3);
-    background: transparent;
+    background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
@@ -191,10 +221,24 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     transition:
       border-color var(--duration-instant) var(--ease-sharp),
       color var(--duration-instant) var(--ease-sharp),
       background var(--duration-instant) var(--ease-sharp);
+  }
+
+  .filter-chip__icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .filter-chip__count {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
   }
 
   .filter-chip:hover {
@@ -202,10 +246,18 @@
     color: var(--text-primary);
   }
 
+  .filter-chip:hover .filter-chip__count {
+    color: var(--text-muted);
+  }
+
   .filter-chip.active {
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-dim);
+  }
+
+  .filter-chip.active .filter-chip__count {
+    color: var(--accent);
   }
 
   .filter-chip:focus-visible {
@@ -275,6 +327,18 @@
     transition: border-color var(--duration-fast) var(--ease-sharp);
     position: relative;
     overflow: visible;
+    /* staggered reveal */
+    opacity: 0;
+    transform: translateY(8px);
+    animation: card-reveal 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
+    animation-delay: var(--stagger-delay, 0ms);
+  }
+
+  @keyframes card-reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .tool-card:hover {
