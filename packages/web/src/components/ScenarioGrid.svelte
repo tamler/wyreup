@@ -29,6 +29,10 @@
     { label: 'Merge receipts into one PDF', slug: 'merge-pdf', category: 'pdf', icon: categoryIcons.pdf },
     { label: 'Blur strangers from a vacation photo', slug: 'face-blur', category: 'privacy', icon: categoryIcons.privacy },
     { label: 'Extract text from a scan', slug: 'ocr', category: 'extract', icon: categoryIcons.extract },
+    { label: 'Convert HEIC to JPG', slug: 'convert', category: 'convert', icon: categoryIcons.convert },
+    { label: 'Generate a QR code', slug: 'qr', category: 'create', icon: categoryIcons.create },
+    { label: 'Resize an image for web', slug: 'resize', category: 'edit', icon: categoryIcons.edit },
+    { label: 'Redact a contract before sharing', slug: 'pdf-redact', category: 'pdf', icon: categoryIcons.pdf },
   ];
 
   function clearDrop() {
@@ -70,7 +74,7 @@
     </div>
   {:else}
     <div class="scenarios-bento">
-      {#each drop.compatibleTools.slice(0, 4) as tool, i}
+      {#each drop.compatibleTools.slice(0, 8) as tool, i}
         <a
           href={`/tools/${tool.id}`}
           class="scenario-card"
@@ -86,9 +90,9 @@
         </a>
       {/each}
     </div>
-    {#if drop.compatibleTools.length > 4}
+    {#if drop.compatibleTools.length > 8}
       <p class="more-tools">
-        + {drop.compatibleTools.length - 4} more —
+        + {drop.compatibleTools.length - 8} more —
         <a href="/tools" class="more-tools__link">browse all tools</a>
       </p>
     {/if}
@@ -180,6 +184,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-4);
+  }
+
+  @media (min-width: 960px) {
+    .scenarios-bento {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .scenario-card {
