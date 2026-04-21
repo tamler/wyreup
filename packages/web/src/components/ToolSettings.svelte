@@ -20,7 +20,7 @@
     enabled: Record<string, boolean>;
   }
 
-  let prefs: ToolPrefs = { cacheMode: 'selected', cacheStatus: {} };
+  let prefs: ToolPrefs = { cacheMode: 'selected', enabled: {} };
   let cacheStatus: Record<string, 'cached' | 'not-cached' | 'checking'> = {};
   let clearConfirm = false;
   let cleared = false;
