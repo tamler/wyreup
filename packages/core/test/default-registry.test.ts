@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 53 tools in total', () => {
+  it('has 66 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(53);
+    expect(registry.toolsById.size).toBe(66);
   });
 
   it('includes ocr', () => {
@@ -202,5 +202,76 @@ describe('default registry', () => {
   it('includes audio-enhance', () => {
     const registry = createDefaultRegistry();
     expect(registry.toolsById.get('audio-enhance')).toBeDefined();
+  });
+
+  it('includes csv-json', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('csv-json')).toBeDefined();
+  });
+
+  it('includes case-converter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('case-converter')).toBeDefined();
+  });
+
+  it('includes slug', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('slug')).toBeDefined();
+  });
+
+  it('includes json-yaml', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('json-yaml')).toBeDefined();
+  });
+
+  it('includes number-base-converter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('number-base-converter')).toBeDefined();
+  });
+
+  it('includes jwt-decoder', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('jwt-decoder')).toBeDefined();
+  });
+
+  it('includes sql-formatter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('sql-formatter')).toBeDefined();
+  });
+
+  it('includes xml-formatter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('xml-formatter')).toBeDefined();
+  });
+
+  it('includes html-formatter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('html-formatter')).toBeDefined();
+  });
+
+  it('includes css-formatter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('css-formatter')).toBeDefined();
+  });
+
+  it('includes cron-parser', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('cron-parser')).toBeDefined();
+  });
+
+  it('includes qr-reader', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('qr-reader')).toBeDefined();
+  });
+
+  it('includes svg-optimizer', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('svg-optimizer')).toBeDefined();
+  });
+
+  it('has a dev category with tools', () => {
+    const registry = createDefaultRegistry();
+    const devTools = registry.toolsByCategory('dev');
+    expect(devTools.length).toBeGreaterThan(0);
   });
 });

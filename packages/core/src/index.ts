@@ -105,6 +105,19 @@ export { pdfExtractTables, type PdfExtractTablesParams, type TableRow } from './
 export { pdfCrop, type PdfCropParams, type PdfCropBox, type PdfCropBoxPerPage } from './tools/pdf-crop/index.js';
 export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/face-blur/index.js';
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
+export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
+export { caseConverter, type CaseConverterParams, defaultCaseConverterParams } from './tools/case-converter/index.js';
+export { slug, type SlugParams, defaultSlugParams } from './tools/slug/index.js';
+export { jsonYaml, type JsonYamlParams, defaultJsonYamlParams } from './tools/json-yaml/index.js';
+export { numberBaseConverter, type NumberBaseConverterParams, type NumberBaseResult, defaultNumberBaseConverterParams } from './tools/number-base-converter/index.js';
+export { jwtDecoder, type JwtDecoderParams, type JwtDecoderResult, defaultJwtDecoderParams } from './tools/jwt-decoder/index.js';
+export { sqlFormatter, type SqlFormatterParams, defaultSqlFormatterParams } from './tools/sql-formatter/index.js';
+export { xmlFormatter, type XmlFormatterParams, defaultXmlFormatterParams } from './tools/xml-formatter/index.js';
+export { htmlFormatter, type HtmlFormatterParams, defaultHtmlFormatterParams } from './tools/html-formatter/index.js';
+export { cssFormatter, type CssFormatterParams, defaultCssFormatterParams } from './tools/css-formatter/index.js';
+export { cronParser, type CronParserParams, type CronParserResult, defaultCronParserParams } from './tools/cron-parser/index.js';
+export { qrReader, type QrReaderParams, type QrReaderResult, defaultQrReaderParams } from './tools/qr-reader/index.js';
+export { svgOptimizer, type SvgOptimizerParams, defaultSvgOptimizerParams } from './tools/svg-optimizer/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

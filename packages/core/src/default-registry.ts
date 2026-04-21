@@ -52,6 +52,19 @@ import { pdfExtractTables } from './tools/pdf-extract-tables/index.js';
 import { pdfCrop } from './tools/pdf-crop/index.js';
 import { faceBlur } from './tools/face-blur/index.js';
 import { audioEnhance } from './tools/audio-enhance/index.js';
+import { csvJson } from './tools/csv-json/index.js';
+import { caseConverter } from './tools/case-converter/index.js';
+import { slug } from './tools/slug/index.js';
+import { jsonYaml } from './tools/json-yaml/index.js';
+import { numberBaseConverter } from './tools/number-base-converter/index.js';
+import { jwtDecoder } from './tools/jwt-decoder/index.js';
+import { sqlFormatter } from './tools/sql-formatter/index.js';
+import { xmlFormatter } from './tools/xml-formatter/index.js';
+import { htmlFormatter } from './tools/html-formatter/index.js';
+import { cssFormatter } from './tools/css-formatter/index.js';
+import { cronParser } from './tools/cron-parser/index.js';
+import { qrReader } from './tools/qr-reader/index.js';
+import { svgOptimizer } from './tools/svg-optimizer/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -115,6 +128,19 @@ export const defaultTools: ToolModule<any>[] = [
   pdfCrop,
   faceBlur,
   audioEnhance,
+  csvJson,
+  caseConverter,
+  slug,
+  jsonYaml,
+  numberBaseConverter,
+  jwtDecoder,
+  sqlFormatter,
+  xmlFormatter,
+  htmlFormatter,
+  cssFormatter,
+  cronParser,
+  qrReader,
+  svgOptimizer,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
