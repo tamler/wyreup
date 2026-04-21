@@ -46,7 +46,15 @@ function isAllowed(domain, allowlist) {
 }
 
 function isScannable(file) {
-  return /\.(html|js|mjs|cjs|css|json|webmanifest|txt)$/i.test(file);
+  // We scan HTML, CSS, JSON, and text — the surfaces WE author.
+  // We deliberately skip bundled JS (in _astro/, dist/browser/, dist/node/),
+  // because regex-matching URL-shaped strings in minified third-party library
+  // code produces overwhelming false positives (namespace URIs like w3.org,
+  // author attributions like feross.org, "localhost" dev placeholders, spec
+  // links in license headers, etc.). Real runtime exfiltration is caught by
+  // the browser CSP, which is the primary enforcement layer — this scan is
+  // belt-and-suspenders for "I forgot this was a CDN link" in static assets.
+  return /\.(html|css|json|webmanifest|txt)$/i.test(file);
 }
 
 async function walkDir(dir) {
@@ -71,7 +79,23 @@ async function walkDir(dir) {
 // CLI entry point
 if (import.meta.url === `file://${process.argv[1]}`) {
   const distDirs = ['packages/web/dist', 'packages/core/dist'];
-  const allowlist = ['wyreup.com', 'static.cloudflareinsights.com'];
+  const allowlist = [
+    // First-party.
+    'wyreup.com',
+    'static.cloudflareinsights.com',
+
+    // SEO / metadata references (not runtime fetches):
+    'schema.org', // JSON-LD @context URI in per-tool page structured data
+    'github.com', // source-code link in footer + privacy block (user-initiated navigation)
+
+    // Third-party model CDNs for AI tools. The models fetch on first use, which
+    // creates a third-party origin touch. TODO: self-host these on wyreup.com
+    // (e.g. r2://wyreup-models) to eliminate the third-party leak — tracked as
+    // a post-launch privacy upgrade. Until then, these are allow-listed.
+    'jsdelivr.net',       // @mediapipe/tasks-vision WASM (face-blur)
+    'googleapis.com',     // MediaPipe model storage (face-blur)
+    'huggingface.co',     // FlashSR ONNX (audio-enhance), future: BiRefNet, TrOCR, etc.
+  ];
 
   let totalViolations = 0;
   for (const dir of distDirs) {
