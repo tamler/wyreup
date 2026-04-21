@@ -1,0 +1,195 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolRunner from '../../components/ToolRunner.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+export async function getStaticPaths() {
+  const registry = createDefaultRegistry();
+  return Array.from(registry.toolsById.values()).map((tool) => ({
+    params: { slug: tool.id },
+    props: {
+      serializedTool: {
+        id: tool.id,
+        slug: tool.slug ?? tool.id,
+        name: tool.name,
+        description: tool.description,
+        category: tool.category,
+        keywords: tool.keywords ?? [],
+        input: {
+          accept: tool.input.accept,
+          min: tool.input.min,
+          max: tool.input.max,
+          sizeLimit: tool.input.sizeLimit,
+        },
+        output: {
+          mime: tool.output.mime,
+          multiple: tool.output.multiple ?? false,
+        },
+        defaults: tool.defaults as Record<string, unknown>,
+        requiresWebgpu: tool.requires?.webgpu,
+        memoryEstimate: tool.memoryEstimate,
+      },
+    },
+  }));
+}
+
+const { serializedTool } = Astro.props;
+const { name, description, category, keywords } = serializedTool;
+
+const seoTitle = `${name} — Wyreup`;
+const seoDescription = description;
+const ogDescription = `${description} Runs entirely in your browser — no uploads.`;
+
+const ldJson = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name,
+  description,
+  applicationCategory: 'BrowserApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@type': 'Organization', name: 'Wyreup' },
+  keywords: keywords.join(', '),
+  url: `https://wyreup.com/tools/${serializedTool.id}`,
+};
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  ogDescription={ogDescription}
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(ldJson)} />
+  </Fragment>
+
+  <section class="tool-page">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="breadcrumb__link">Wyreup</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <a href="/tools" class="breadcrumb__link">Tools</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <span class="breadcrumb__current" aria-current="page">{name}</span>
+      </nav>
+
+      <header class="tool-header">
+        <div class="tool-header__meta">
+          <span class="tool-category-tag">{category}</span>
+          {serializedTool.requiresWebgpu === 'required' && (
+            <span class="badge badge--required">WebGPU only</span>
+          )}
+          {serializedTool.requiresWebgpu === 'preferred' && (
+            <span class="badge badge--preferred">Faster on WebGPU</span>
+          )}
+        </div>
+        <h1 class="tool-title">{name}</h1>
+        <p class="tool-description">{description}</p>
+      </header>
+
+      <ToolRunner client:load tool={serializedTool} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .tool-page {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  .container {
+    max-width: 860px;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .breadcrumb__link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .breadcrumb__link:hover {
+    color: var(--text-primary);
+  }
+
+  .breadcrumb__sep {
+    color: var(--text-subtle);
+  }
+
+  .breadcrumb__current {
+    color: var(--text-primary);
+  }
+
+  /* Tool header */
+  .tool-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .tool-header__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .tool-category-tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .badge--required {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .badge--preferred {
+    background: var(--bg-raised);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .tool-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: var(--space-3);
+  }
+
+  .tool-description {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+</style>

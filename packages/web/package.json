@@ -15,6 +15,7 @@
     "clean": "rm -rf dist .astro .turbo"
   },
   "dependencies": {
+    "@astrojs/sitemap": "^3.7.2",
     "@wyreup/core": "workspace:*",
     "astro": "^4.15.0"
   },
