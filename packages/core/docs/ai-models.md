@@ -497,6 +497,33 @@ Notes: This feature is gated behind having a library of images to search. It is 
 Verdict: SHIP in v2 (architecture work needed, not AI research).
 ```
 
+### 3.11 Audio Super-Resolution
+
+**What it needs to do:** Upscale low-quality (16 kHz) audio to broadcast-quality (48 kHz). Targets phone recordings, Zoom/Meet calls, old podcasts, and voice memos.
+
+**Model: FlashSR (YatharthS/FlashSR)**
+- License: **Apache 2.0** — APPROVED.
+- Architecture: HierSpeech++-based audio super-resolution model.
+- ONNX version: Xenova-converted at `YatharthS/FlashSR/onnx/model.onnx`. Size: **~500 KB** — trivially small.
+- Input: 16 kHz mono Float32 audio, shape `[1, n_samples]`. Output: 48 kHz audio at `[1, m_samples]` (~3x samples).
+- Speed (from FlashSR README): 200–400x realtime.
+- Input decoding: Web Audio API (`AudioContext` at `sampleRate: 16000`). WASM fallback for browsers ignoring the rate hint (linear interpolation resample).
+- WAV encoding: hand-rolled 44-byte PCM encoder; no audio library dependency added.
+- Long audio: v1 throws a clear error if the model's input shape is fixed and exceeded. Chunking deferred to v2.
+- Runtime: `onnxruntime-web`. WebGPU preferred, WASM fallback always available.
+
+```
+Task: Audio super-resolution
+Browser tier: FlashSR (YatharthS/FlashSR, Apache 2.0, ~500 KB ONNX, raw ORT Web,
+  WebGPU preferred / WASM fallback, 200-400x realtime on CPU-WASM)
+CLI tier: Same model — onnxruntime-web works in Node. Future: onnxruntime-node with
+  CUDA EP for batch processing.
+Notes: 500 KB model is fetched on demand from HF CDN; no bundling in npm package.
+  AudioContext required for browser decode — tool surfaces a clear error in CLI/Node.
+  Long audio (chunking) is a v2 concern; v1 throws if fixed input length is exceeded.
+Verdict: SHIP in v1 browser, CLI
+```
+
 ---
 
 ## 4. Final Recommendation Matrix
@@ -514,6 +541,7 @@ Verdict: SHIP in v2 (architecture work needed, not AI research).
 | OCR (print+handwrite) | TrOCR-small | PaddleOCR | `Xenova/trocr-small-handwritten` | MIT | ~150 MB q8 est. | v1 browser |
 | Image similarity | pHash + CLIP | pHash + CLIP | `Xenova/clip-vit-base-patch16` | MIT | 87 MB q8 | v1 (pHash), v2 (CLIP) |
 | Semantic image search | CLIP (same) | CLIP larger | `Xenova/clip-vit-base-patch16` | MIT | shared with above | v2 browser |
+| Audio super-resolution | FlashSR ONNX | FlashSR ONNX | `YatharthS/FlashSR` | Apache 2.0 | ~500 KB | v1 browser, v1 CLI |
 
 *GFPGAN: conduct upstream license sub-audit (StyleGAN2 components) before shipping.
 

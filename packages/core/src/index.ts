@@ -104,6 +104,7 @@ export { pdfMetadata, type PdfMetadataParams, type PdfMetadataWriteFields } from
 export { pdfExtractTables, type PdfExtractTablesParams, type TableRow } from './tools/pdf-extract-tables/index.js';
 export { pdfCrop, type PdfCropParams, type PdfCropBox, type PdfCropBoxPerPage } from './tools/pdf-crop/index.js';
 export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/face-blur/index.js';
+export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

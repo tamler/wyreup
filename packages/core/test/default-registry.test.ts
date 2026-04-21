@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 52 tools in total', () => {
+  it('has 53 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(52);
+    expect(registry.toolsById.size).toBe(53);
   });
 
   it('includes ocr', () => {
@@ -197,5 +197,10 @@ describe('default registry', () => {
   it('includes face-blur', () => {
     const registry = createDefaultRegistry();
     expect(registry.toolsById.get('face-blur')).toBeDefined();
+  });
+
+  it('includes audio-enhance', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('audio-enhance')).toBeDefined();
   });
 });

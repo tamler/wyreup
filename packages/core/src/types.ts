@@ -14,7 +14,8 @@ export type ToolCategory =
   | 'pdf'
   | 'create'
   | 'inspect'
-  | 'export';
+  | 'export'
+  | 'audio';
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 
