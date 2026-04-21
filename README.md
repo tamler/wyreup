@@ -6,25 +6,50 @@
 
 ---
 
-Wyreup is a free, open-source collection of 53 file and text transformation tools that run entirely in the browser. Images, PDFs, text utilities — no server, no upload, no tracking. Every operation executes in WebAssembly or browser-native APIs on your device.
+Wyreup is a free, open-source collection of 66 file and text transformation tools that run entirely in your browser. Images, PDFs, audio, text utilities — no server, no upload, no tracking. Every operation executes in WebAssembly or browser-native APIs on your device.
+
+Install it as a Progressive Web App for offline access and native file sharing from other apps on your phone or desktop.
+
+## What it does
+
+Drop a file. Pick a tool. Get the result. Nothing touches a server.
+
+Wyreup handles the kinds of tasks that normally mean uploading a file to a website you don't quite trust: compress an image before sending it, extract text from a PDF, blur faces in a photo, strip GPS data from a JPEG, merge a stack of documents into one. All of it runs on your hardware.
+
+The same tool engine ships as a CLI, an MCP server, and a Claude skill — so the same privacy guarantee applies whether you are using a browser, a terminal, or an AI agent.
 
 ## Tools
 
-53 tools across images, PDFs, and text/dev utilities. Highlights:
+66 tools across images, PDFs, audio, and text/dev utilities:
 
 - **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG to PNG, favicon generator, color palette extractor
-- **PDFs** — merge, split, compress, crop, rotate, reorder pages, extract pages, delete pages, add page numbers, encrypt/decrypt, redact, extract tables, extract text, PDF to image, image to PDF
-- **Text/Dev** — JSON formatter, base64, URL encoder, UUID generator, password generator, QR code, hash (MD5/SHA), Markdown/HTML, text diff, word counter, regex tester, lorem ipsum, timestamp converter, color converter
+- **PDFs** — merge, split, compress, crop, rotate, reorder pages, extract pages, delete pages, add page numbers, encrypt/decrypt, redact, extract tables, extract text, PDF to image, image to PDF, watermark, PDF metadata
+- **Audio** — audio enhance
+- **Text/Dev** — JSON formatter, base64, URL encoder, UUID generator, password generator, QR code, hash (MD5/SHA), Markdown/HTML, text diff, word counter, regex tester, lorem ipsum, timestamp converter, color converter, CSV/JSON, case converter, slug generator, JSON/YAML, number base converter, JWT decoder, SQL formatter, XML formatter, HTML formatter, CSS formatter, cron parser, QR reader, SVG optimizer
 
-## Packages
+## Use Wyreup
+
+| Surface | How |
+|---|---|
+| Browser | [wyreup.com/tools](https://wyreup.com/tools) — no install required |
+| PWA | Install from the browser for offline access and file sharing |
+| CLI | `npx @wyreup/cli <tool> <file>` |
+| MCP server | `npx @wyreup/mcp` — connects Claude Desktop and compatible agents |
+| Claude skill | Install `@wyreup/skill` for richer agent integration |
+
+## Architecture
+
+The monorepo is organized into five packages:
 
 | Package | Description |
 |---|---|
 | `packages/core` | Tool library (`@wyreup/core`) — framework-free, dual browser/Node build |
-| `packages/web` | Astro 4 static site — wyreup.com (57 pages, fully static) |
+| `packages/web` | Astro 4 static site — wyreup.com (76 pages, fully static, PWA) |
 | `packages/cli` | `wyreup` command-line interface (`@wyreup/cli`) |
 | `packages/mcp` | MCP server for agent access (`@wyreup/mcp`) |
-| `packages/skill` | Agent skill (`@wyreup/skill`) — skill.md for Claude and other skill-compatible agents |
+| `packages/skill` | Agent skill (`@wyreup/skill`) — skill.md for Claude and compatible agents |
+
+See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 
 ## Development
 
@@ -48,72 +73,9 @@ Run just the core library tests:
 pnpm --filter @wyreup/core test
 ```
 
-## Deployment
+## Self-hosting
 
-The site deploys to Cloudflare Pages via GitHub Actions on every push to `main`.
-
-### One-time manual setup (Cloudflare + GitHub)
-
-Before the deploy workflow can run, complete these steps once:
-
-**Cloudflare:**
-
-1. Create a Cloudflare account at [dash.cloudflare.com](https://dash.cloudflare.com) if you don't have one
-2. Go to **Workers & Pages** → **Create** → **Pages** → create a project named `wyreup`
-3. Go to **My Profile** → **API Tokens** → **Create Token** with scope: **Account → Pages → Edit**
-4. Note your **Account ID** (visible in the Workers & Pages dashboard sidebar)
-
-**DNS:**
-
-5. Add `wyreup.com` to Cloudflare (or transfer DNS there)
-6. In the Pages project settings → **Custom domains** → add `wyreup.com` and `www.wyreup.com`
-7. Cloudflare provisions TLS automatically
-
-**GitHub secrets:**
-
-8. In your GitHub repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
-9. Add `CLOUDFLARE_API_TOKEN` (the token from step 3)
-10. Add `CLOUDFLARE_ACCOUNT_ID` (the account ID from step 4)
-
-After that, every push to `main` triggers a build and deploy automatically.
-
-### CI/CD workflows
-
-- **`ci.yml`** — runs on all PRs and pushes to `main`: lint, types, unit tests, full build, isolation check, privacy scan, bundle size check
-- **`deploy.yml`** — runs on pushes to `main`: builds core + web, deploys via `wrangler pages deploy`
-
-## Publishing to npm
-
-Wyreup uses [Changesets](https://github.com/changesets/changesets) for versioning and publishing.
-
-### Adding a changeset
-
-When you make a change that should trigger a version bump:
-
-```bash
-pnpm changeset
-# Follow the prompts to select packages and bump type (patch/minor/major)
-# Commit the generated .changeset/*.md file
-```
-
-### Release flow
-
-1. Commit your changeset file alongside your code changes
-2. Push to `main`
-3. The Release GitHub Action creates a "Version Packages" PR that bumps versions and updates CHANGELOGs
-4. Merge the PR — the action then publishes to npm automatically
-
-### First-time setup
-
-You must add **`NPM_TOKEN`** as a GitHub repo secret before publishing works:
-
-1. Go to [npmjs.com](https://www.npmjs.com) → Account Settings → Access Tokens → Generate New Token (Automation type)
-2. In this repo → Settings → Secrets and variables → Actions → New repository secret
-3. Name: `NPM_TOKEN`, value: the token from step 1
-
-You also need to own the `@wyreup` scope on npm (or be added as a member of the `wyreup` npm org) before the first publish will succeed.
-
-See [Changesets docs](https://github.com/changesets/changesets/blob/main/docs/intro-to-using-changesets.md) for more.
+The site is a fully static Astro build that deploys to any static host. See [DEPLOYMENT.md](./DEPLOYMENT.md) for Cloudflare Pages setup, CI/CD workflow details, GitHub secrets, and npm publishing instructions.
 
 ## Contributing
 
