@@ -29,12 +29,19 @@ const currentPath = Astro.url.pathname;
     <meta name="description" content={description} />
     <meta name="theme-color" content="#FFB000" />
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
     <!-- Open Graph -->
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={ogDescription} />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://wyreup.com/og-image.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Wyreup" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://wyreup.com/og-image.svg" />
 
     <title>{title}</title>
 
@@ -49,7 +56,7 @@ const currentPath = Astro.url.pathname;
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
           <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
           <a
-            href="https://github.com/wyreup"
+            href="https://github.com/tamler/wyreup"
             class="nav-link nav-link--github"
             target="_blank"
             rel="noopener noreferrer"
@@ -71,7 +78,7 @@ const currentPath = Astro.url.pathname;
           <span class="footer-rule__pad"></span>
         </div>
         <nav class="footer-nav" aria-label="Footer navigation">
-          <a href="https://github.com/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+          <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
         </nav>
       </div>
@@ -86,16 +93,18 @@ const currentPath = Astro.url.pathname;
     top: 0;
     z-index: 10;
     background: var(--bg);
+    border-bottom: 1px solid var(--border);
     height: 48px;
     display: flex;
     align-items: center;
   }
 
   .header-inner {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     height: 100%;
+    width: 100%;
   }
 
   .wordmark {
@@ -105,6 +114,7 @@ const currentPath = Astro.url.pathname;
     color: var(--text-primary);
     letter-spacing: -0.01em;
     text-decoration: none;
+    justify-self: start;
   }
 
   .wordmark:hover {
@@ -116,6 +126,7 @@ const currentPath = Astro.url.pathname;
     display: flex;
     align-items: center;
     gap: var(--space-6);
+    justify-self: center;
   }
 
   .nav-link {
@@ -198,8 +209,22 @@ const currentPath = Astro.url.pathname;
   }
 
   @media (max-width: 640px) {
+    .header-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      height: auto;
+      padding: var(--space-2) 0;
+    }
+
+    .site-header {
+      height: auto;
+    }
+
     .site-nav {
       gap: var(--space-4);
+      justify-self: unset;
     }
 
     .nav-link--github {

@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="404 — Wyreup"
+  description="Page not found."
+>
+  <section class="not-found">
+    <div class="container">
+      <div class="not-found__inner">
+        <div class="not-found__code">404</div>
+
+        <div class="not-found__rule" aria-hidden="true">
+          <span class="rule-line"></span>
+          <span class="rule-pad"></span>
+        </div>
+
+        <h1 class="not-found__title">File not found.</h1>
+        <p class="not-found__body">The page you were looking for isn't here. Every page we ship runs on your device, so there's no server to ask either.</p>
+
+        <a href="/" class="not-found__link">Back to Wyreup &rarr;</a>
+
+        <div class="not-found__motif" aria-hidden="true">
+          <span class="motif-line"></span>
+          <span class="motif-pad"></span>
+          <span class="motif-line"></span>
+          <span class="motif-pad"></span>
+          <span class="motif-line"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found {
+    padding: var(--space-16) 0;
+    min-height: 60vh;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .not-found__inner {
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .not-found__code {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .not-found__rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-2) 0;
+  }
+
+  .rule-line {
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .rule-pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .not-found__title {
+    font-family: var(--font-sans);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .not-found__body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .not-found__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+    align-self: flex-start;
+  }
+
+  .not-found__link:hover {
+    color: var(--text-muted);
+  }
+
+  /* Solder-pad connector motif at bottom */
+  .not-found__motif {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: var(--space-12);
+  }
+
+  .motif-line {
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .motif-pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 0 2px;
+  }
+</style>

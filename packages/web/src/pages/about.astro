@@ -1,0 +1,255 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About — Wyreup"
+  description="Wyreup is a free, open-source library of browser-native tools. Every tool runs on your device — your files never upload, never cache, never phone home."
+>
+  <section class="about-page">
+    <div class="container">
+
+      <div class="about-hero">
+        <h1 class="about-title">About Wyreup.</h1>
+      </div>
+
+      <div class="about-body">
+
+        <div class="about-section">
+          <div class="about-prose">
+            <p>Wyreup is a free, open-source library of browser-native tools. Every tool runs on your device — your files never upload, never cache, never phone home.</p>
+            <p>This was built because file tools on the web come with a tradeoff: use ours or keep your privacy, pick one. We didn't want to pick. So Wyreup uses modern browser APIs — WebAssembly, WebGPU, and client-side compute — to give you real tool capability without the surveillance tax.</p>
+            <p>MIT-licensed. Open source. Verifiable. If you don't trust us, read the code.</p>
+          </div>
+        </div>
+
+        <div class="section-rule" aria-hidden="true">
+          <span class="section-rule__line"></span>
+          <span class="section-rule__pad"></span>
+        </div>
+
+        <div class="about-section">
+          <h2 class="about-section-title">Principles</h2>
+          <ul class="principles-list">
+            <li class="principle">
+              <div class="principle__rule" aria-hidden="true">
+                <span class="principle__line"></span>
+                <span class="principle__pad"></span>
+              </div>
+              <div class="principle__text">
+                <strong>Nothing uploads. Everything runs on your device.</strong>
+                <span>No server ever receives your file. Processing happens inside the browser, using your CPU and GPU.</span>
+              </div>
+            </li>
+            <li class="principle">
+              <div class="principle__rule" aria-hidden="true">
+                <span class="principle__line"></span>
+                <span class="principle__pad"></span>
+              </div>
+              <div class="principle__text">
+                <strong>No analytics. No cookies. No third-party scripts.</strong>
+                <span>The page loads one origin's code. Nothing phones home. No consent banners needed because there's nothing to consent to.</span>
+              </div>
+            </li>
+            <li class="principle">
+              <div class="principle__rule" aria-hidden="true">
+                <span class="principle__line"></span>
+                <span class="principle__pad"></span>
+              </div>
+              <div class="principle__text">
+                <strong>MIT-licensed. You can audit and self-host.</strong>
+                <span>Every line is public. Fork it, inspect it, run it on your own infrastructure.</span>
+              </div>
+            </li>
+            <li class="principle">
+              <div class="principle__rule" aria-hidden="true">
+                <span class="principle__line"></span>
+                <span class="principle__pad"></span>
+              </div>
+              <div class="principle__text">
+                <strong>Built to be boring.</strong>
+                <span>Not chasing AI trends. Shipping tools that work, that stay working, and that do exactly what they say.</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="section-rule" aria-hidden="true">
+          <span class="section-rule__line"></span>
+          <span class="section-rule__pad"></span>
+        </div>
+
+        <div class="about-section">
+          <h2 class="about-section-title">Who built this</h2>
+          <p class="about-prose-single">Built by people who care about privacy more than metrics.</p>
+        </div>
+
+        <div class="section-rule" aria-hidden="true">
+          <span class="section-rule__line"></span>
+          <span class="section-rule__pad"></span>
+        </div>
+
+        <div class="about-section about-links">
+          <a
+            href="https://github.com/tamler/wyreup"
+            class="about-github-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >View source on GitHub &rarr;</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .about-page {
+    padding: var(--space-12) 0 var(--space-16);
+  }
+
+  .about-hero {
+    margin-bottom: var(--space-12);
+  }
+
+  .about-title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    max-width: 640px;
+  }
+
+  .about-body {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  .about-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .about-section-title {
+    font-size: var(--text-sm);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+  }
+
+  .about-prose {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .about-prose p,
+  .about-prose-single {
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* Solder-pad section rule */
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .section-rule__line {
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .section-rule__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* Principles list */
+  .principles-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .principle {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .principle__rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .principle__line {
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  .principle__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .principle__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .principle__text strong {
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .principle__text span {
+    font-size: var(--text-sm);
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* GitHub link */
+  .about-github-link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .about-github-link:hover {
+    color: var(--text-muted);
+  }
+</style>
