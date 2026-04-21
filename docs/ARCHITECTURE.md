@@ -28,7 +28,7 @@ See the full design specification: [`superpowers/specs/2026-04-15-wyreup-tool-li
 - **`@wyreup/web`** — wyreup.com, landing pages, editor, PWA (Astro + Cloudflare Pages).
 - **`@wyreup/mcp`** — MCP server for agents.
 - **`@wyreup/cli`** — `wyreup` command.
-- **`claude-code-wyreup-skill`** — Claude Code skill teaching the agent how to use Wyreup.
+- **`@wyreup/skill`** — Agent skill (skill.md format) teaching AI assistants how to use Wyreup.
 
 ## Invariants
 

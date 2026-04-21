@@ -24,7 +24,7 @@ Wyreup is a free, open-source collection of 53 file and text transformation tool
 | `packages/web` | Astro 4 static site — wyreup.com (57 pages, fully static) |
 | `packages/cli` | `wyreup` command-line interface (`@wyreup/cli`) |
 | `packages/mcp` | MCP server for agent access (`@wyreup/mcp`) |
-| `packages/claude-skill` | Claude Code skill for using Wyreup tools in AI workflows |
+| `packages/skill` | Agent skill (`@wyreup/skill`) — skill.md for Claude and other skill-compatible agents |
 
 ## Development
 

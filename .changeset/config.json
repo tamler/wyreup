@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@wyreup/web", "claude-code-wyreup-skill", "wyreup-tools"]
+  "ignore": ["@wyreup/web", "@wyreup/skill", "wyreup-tools"]
 }

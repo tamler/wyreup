@@ -42,8 +42,6 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.39)
 
-  packages/claude-skill: {}
-
   packages/cli:
     dependencies:
       '@wyreup/core':
@@ -160,6 +158,8 @@ importers:
       vitest:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@20.19.39)
+
+  packages/skill: {}
 
   packages/web:
     dependencies:
