@@ -35,7 +35,7 @@ describe('pdf-info — metadata', () => {
 describe('pdf-info — run()', () => {
   it('reads pageCount from doc-a.pdf', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const outputs = await pdfInfo.run([input], {}, makeCtx());
+    const outputs = await pdfInfo.run([input], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('application/json');
 
@@ -46,14 +46,14 @@ describe('pdf-info — run()', () => {
 
   it('reads pageCount from doc-multipage.pdf', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    const outputs = await pdfInfo.run([input], {}, makeCtx());
+    const outputs = await pdfInfo.run([input], {}, makeCtx()) as Blob[];
     const json = JSON.parse(await outputs[0]!.text()) as PdfInfoResult;
     expect(json.pageCount).toBeGreaterThan(1);
   });
 
   it('returns null for missing metadata fields', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const outputs = await pdfInfo.run([input], {}, makeCtx());
+    const outputs = await pdfInfo.run([input], {}, makeCtx()) as Blob[];
     const json = JSON.parse(await outputs[0]!.text()) as PdfInfoResult;
     // Fixtures likely have no metadata — fields should be null not undefined
     // At minimum, assert the keys exist in the result
@@ -68,7 +68,7 @@ describe('pdf-info — run()', () => {
 
   it('createdAt is null or a valid ISO timestamp', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const outputs = await pdfInfo.run([input], {}, makeCtx());
+    const outputs = await pdfInfo.run([input], {}, makeCtx()) as Blob[];
     const json = JSON.parse(await outputs[0]!.text()) as PdfInfoResult;
     if (json.createdAt !== null) {
       expect(() => new Date(json.createdAt!)).not.toThrow();

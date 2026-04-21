@@ -6,7 +6,7 @@ export interface RotatePdfParams {
    * 'odd' rotates pages 1, 3, 5, ... 'even' rotates 2, 4, 6, ...
    * A comma-separated string of page numbers (1-indexed) rotates specific pages.
    */
-  pages: 'all' | 'odd' | 'even' | string;
+  pages: string;
 }
 
 export const defaultRotatePdfParams: RotatePdfParams = {

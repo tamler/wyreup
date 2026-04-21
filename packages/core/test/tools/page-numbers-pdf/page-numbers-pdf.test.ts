@@ -83,6 +83,8 @@ describe('page-numbers-pdf — run()', () => {
   it('throws for unknown position', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
     await expect(
+      // Intentionally passing an invalid value to test runtime error handling.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
       pageNumbersPdf.run([input], { position: 'middle' as any }, makeCtx()),
     ).rejects.toThrow();
   });

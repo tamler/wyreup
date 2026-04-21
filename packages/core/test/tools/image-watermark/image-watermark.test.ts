@@ -40,7 +40,7 @@ describe('image-watermark — run()', () => {
       [input],
       { text: 'Test Watermark', position: 'bottom-right' },
       makeCtx(),
-    );
+    ) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
 
@@ -56,7 +56,7 @@ describe('image-watermark — run()', () => {
       [input],
       { text: 'Copyright', position: 'top-left', color: '#000000', opacity: 0.8 },
       makeCtx(),
-    );
+    ) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/png');
     expect(outputs[0]!.size).toBeGreaterThan(0);

@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { SvgToPngParams } from './types.js';
+import type { ResvgRenderOptions } from '@resvg/resvg-js';
 
 export type { SvgToPngParams } from './types.js';
 export { defaultSvgToPngParams } from './types.js';
@@ -58,7 +59,7 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
       });
 
       const svgText = await inputs[i]!.text();
-      const opts: import('@resvg/resvg-js').ResvgRenderOptions = {};
+      const opts: ResvgRenderOptions = {};
 
       if (scale !== 1) {
         opts.fitTo = { mode: 'zoom', value: scale };

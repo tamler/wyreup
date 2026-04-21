@@ -34,7 +34,7 @@ describe('markdown-to-html — run()', () => {
   it('converts basic heading and bold', async () => {
     const md = '# Hello World\n\n**bold text**\n';
     const input = new File([md], 'test.md', { type: 'text/markdown' });
-    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx());
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
     expect(out!.type).toBe('text/html');
     const html = await out!.text();
     expect(html).toContain('<h1>');
@@ -46,7 +46,7 @@ describe('markdown-to-html — run()', () => {
   it('converts links', async () => {
     const md = '[Visit Example](https://example.com)\n';
     const input = new File([md], 'test.md', { type: 'text/markdown' });
-    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx());
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
     const html = await out!.text();
     expect(html).toContain('<a href="https://example.com"');
     expect(html).toContain('Visit Example');
@@ -55,7 +55,7 @@ describe('markdown-to-html — run()', () => {
   it('converts GFM table', async () => {
     const md = '| Name | Age |\n|------|-----|\n| Alice | 30 |\n';
     const input = new File([md], 'test.md', { type: 'text/markdown' });
-    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx());
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
     const html = await out!.text();
     expect(html).toContain('<table>');
     expect(html).toContain('<th>');
@@ -65,7 +65,7 @@ describe('markdown-to-html — run()', () => {
   it('converts code blocks', async () => {
     const md = '```js\nconst x = 1;\n```\n';
     const input = new File([md], 'test.md', { type: 'text/markdown' });
-    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx());
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
     const html = await out!.text();
     expect(html).toContain('<pre>');
     expect(html).toContain('const x = 1;');

@@ -1,4 +1,5 @@
-export interface TimestampConverterParams {}
+// No params — converts timestamp to all formats at once.
+export type TimestampConverterParams = Record<string, never>;
 
 export const defaultTimestampConverterParams: TimestampConverterParams = {};
 

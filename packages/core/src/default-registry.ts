@@ -60,6 +60,7 @@ import type { ToolModule } from './types.js';
  * contravariance makes it hard to hold Params-parameterized tools in
  * a single heterogeneous array without losing type safety on each one.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const defaultTools: ToolModule<any>[] = [
   compress,
   convert,

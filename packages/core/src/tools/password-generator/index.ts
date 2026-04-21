@@ -104,6 +104,8 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
 
   Component: PasswordGeneratorComponentStub,
 
+  // Tool contract requires Promise return; no internal await needed.
+  // eslint-disable-next-line @typescript-eslint/require-await
   async run(
     _inputs: File[],
     params: PasswordGeneratorParams,

@@ -26,7 +26,7 @@ describe('pdf-metadata — run() mode: read', () => {
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/json');
 
-    const json = JSON.parse(await blob.text());
+    const json = JSON.parse(await blob.text()) as { title: unknown; author: unknown; keywords: unknown[] };
     expect(json).toHaveProperty('title');
     expect(json).toHaveProperty('author');
     expect(json).toHaveProperty('keywords');
@@ -52,7 +52,7 @@ describe('pdf-metadata — run() mode: write', () => {
       makeCtx(),
     );
     const readBlob = Array.isArray(readResult) ? readResult[0]! : readResult;
-    const json = JSON.parse(await readBlob.text());
+    const json = JSON.parse(await readBlob.text()) as { title: string; author: string };
     expect(json.title).toBe('My Test Title');
     expect(json.author).toBe('Tester');
   });

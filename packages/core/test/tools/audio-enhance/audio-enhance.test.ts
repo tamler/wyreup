@@ -125,7 +125,7 @@ describe('audio-enhance — encodeWav()', () => {
     expect(buf[11]).toBe(0x45); // E
   });
 
-  it('correct total byte length: 44 header + 2 bytes per sample', async () => {
+  it('correct total byte length: 44 header + 2 bytes per sample', () => {
     const numSamples = 16000; // 1 second at 16 kHz
     const samples = new Float32Array(numSamples);
     const blob = encodeWav(samples, 16000);

@@ -70,7 +70,7 @@ export async function runChain(
       }
     }
 
-    const params = { ...(tool.defaults as Record<string, unknown>), ...(step.params as Record<string, unknown>) };
+    const params = { ...(tool.defaults as Record<string, unknown>), ...step.params };
 
     const result = await tool.run(currentInputs, params, ctx);
     const blobs: Blob[] = Array.isArray(result) ? result : [result];

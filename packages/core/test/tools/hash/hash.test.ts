@@ -34,7 +34,7 @@ describe('hash — metadata', () => {
 describe('hash — run()', () => {
   it('computes a SHA-256 hash of photo.jpg', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await hash.run([input], { algorithms: ['SHA-256'] }, makeCtx());
+    const outputs = await hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('application/json');
 
@@ -47,8 +47,8 @@ describe('hash — run()', () => {
   it('SHA-256 hash is stable on repeated calls', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
     const [out1, out2] = await Promise.all([
-      hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()),
-      hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()),
+      hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()) as Promise<Blob[]>,
+      hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()) as Promise<Blob[]>,
     ]);
     const r1 = JSON.parse(await out1[0]!.text()) as HashFileResult;
     const r2 = JSON.parse(await out2[0]!.text()) as HashFileResult;
@@ -61,7 +61,7 @@ describe('hash — run()', () => {
       [input],
       { algorithms: ['SHA-256', 'SHA-1', 'SHA-512'] },
       makeCtx(),
-    );
+    ) as Blob[];
     const result = JSON.parse(await outputs[0]!.text()) as HashFileResult;
     expect(result.hashes['SHA-256']).toMatch(/^[0-9a-f]{64}$/);
     expect(result.hashes['SHA-1']).toMatch(/^[0-9a-f]{40}$/);
@@ -71,7 +71,7 @@ describe('hash — run()', () => {
   it('handles batch inputs and returns an array', async () => {
     const a = loadFixture('photo.jpg', 'image/jpeg');
     const b = loadFixture('doc-a.pdf', 'application/pdf');
-    const outputs = await hash.run([a, b], { algorithms: ['SHA-256'] }, makeCtx());
+    const outputs = await hash.run([a, b], { algorithms: ['SHA-256'] }, makeCtx()) as Blob[];
     const result = JSON.parse(await outputs[0]!.text()) as HashFileResult[];
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBe(2);
@@ -81,7 +81,7 @@ describe('hash — run()', () => {
 
   it('hashes a PDF file without error', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const outputs = await hash.run([input], { algorithms: ['SHA-256'] }, makeCtx());
+    const outputs = await hash.run([input], { algorithms: ['SHA-256'] }, makeCtx()) as Blob[];
     const result = JSON.parse(await outputs[0]!.text()) as HashFileResult;
     expect(result.hashes['SHA-256']).toMatch(/^[0-9a-f]{64}$/);
   });

@@ -8,6 +8,8 @@
  * Node path lazy-loads @napi-rs/canvas on first call.
  */
 
+import type * as NapiCanvas from '@napi-rs/canvas';
+
 // Minimal structural types. Both OffscreenCanvas and @napi-rs/canvas's Canvas
 // satisfy these shapes at runtime.
 export interface CanvasLike {
@@ -45,7 +47,7 @@ function isNode(): boolean {
   return typeof process !== 'undefined' && typeof process.versions?.node === 'string';
 }
 
-let nodeCanvasModule: typeof import('@napi-rs/canvas') | null = null;
+let nodeCanvasModule: typeof NapiCanvas | null = null;
 
 async function getNodeCanvas() {
   if (!nodeCanvasModule) {

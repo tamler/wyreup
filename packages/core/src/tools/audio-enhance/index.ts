@@ -1,5 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { InferenceSession as OnnxInferenceSession } from 'onnxruntime-web';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AudioEnhanceParams {
   // FlashSR has no configurable parameters — it is a single-purpose 16 kHz → 48 kHz upscaler.
   // Reserved for future: e.g. output_sample_rate?: 48000 | 44100
@@ -140,9 +142,7 @@ async function decodeToMono16k(blob: Blob): Promise<Float32Array | null> {
 
 // ──── ONNX session (cached per ToolRunContext) ────
 
-type InferenceSession = Awaited<
-  ReturnType<typeof import('onnxruntime-web')['InferenceSession']['create']>
->;
+type InferenceSession = OnnxInferenceSession;
 
 async function getSession(ctx: ToolRunContext): Promise<InferenceSession> {
   const cached = ctx.cache.get('audio-enhance:session') as InferenceSession | undefined;

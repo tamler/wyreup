@@ -33,7 +33,7 @@ describe('url-encoder — metadata', () => {
 describe('url-encoder — run()', () => {
   it('encodes special characters in component mode', async () => {
     const input = new File(['hello world & foo=bar'], 'test.txt', { type: 'text/plain' });
-    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx());
+    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx()) as Blob[];
     const encoded = await out!.text();
     expect(encoded).toBe('hello%20world%20%26%20foo%3Dbar');
   });
@@ -42,17 +42,17 @@ describe('url-encoder — run()', () => {
     const original = 'name=John Doe&city=New York&special=!@#$';
     const input = new File([original], 'test.txt', { type: 'text/plain' });
 
-    const [encoded] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx());
+    const [encoded] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx()) as Blob[];
     const encodedFile = new File([await encoded!.text()], 'encoded.txt', { type: 'text/plain' });
 
-    const [decoded] = await urlEncoder.run([encodedFile], { mode: 'decode', scope: 'component' }, makeCtx());
+    const [decoded] = await urlEncoder.run([encodedFile], { mode: 'decode', scope: 'component' }, makeCtx()) as Blob[];
     expect(await decoded!.text()).toBe(original);
   });
 
   it('full mode preserves URL structure characters', async () => {
     const url = 'https://example.com/path?query=value&other=test';
     const input = new File([url], 'test.txt', { type: 'text/plain' });
-    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'full' }, makeCtx());
+    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'full' }, makeCtx()) as Blob[];
     const encoded = await out!.text();
     // In full mode, :/?&= are preserved
     expect(encoded).toContain('https://');
@@ -70,12 +70,12 @@ describe('url-encoder — run()', () => {
 
   it('handles Unicode characters', async () => {
     const input = new File(['こんにちは'], 'test.txt', { type: 'text/plain' });
-    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx());
+    const [out] = await urlEncoder.run([input], { mode: 'encode', scope: 'component' }, makeCtx()) as Blob[];
     const encoded = await out!.text();
     expect(encoded).toContain('%');
     // Decode it back
     const encodedFile = new File([encoded], 'encoded.txt', { type: 'text/plain' });
-    const [decoded] = await urlEncoder.run([encodedFile], { mode: 'decode', scope: 'component' }, makeCtx());
+    const [decoded] = await urlEncoder.run([encodedFile], { mode: 'decode', scope: 'component' }, makeCtx()) as Blob[];
     expect(await decoded!.text()).toBe('こんにちは');
   });
 });

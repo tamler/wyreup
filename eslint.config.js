@@ -29,9 +29,11 @@ export default tseslint.config(
       '**/.astro/**',
       '**/.turbo/**',
       '**/*.config.js',
+      '**/*.config.mjs',
       '**/*.config.ts',
       '**/tools/**/*.js',
       '**/tools/**/*.mjs',
+      '**/env.d.ts',
     ],
   },
 );

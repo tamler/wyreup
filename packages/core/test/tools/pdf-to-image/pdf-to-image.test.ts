@@ -21,6 +21,7 @@ describe('pdf-to-image — metadata', () => {
   });
 
   it('output is multiple images', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     expect((pdfToImage.output as any).multiple).toBe(true);
   });
 });

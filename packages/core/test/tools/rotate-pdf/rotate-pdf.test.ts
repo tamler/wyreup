@@ -85,6 +85,8 @@ describe('rotate-pdf — run()', () => {
   it('throws for invalid degrees (not 90/180/270)', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
     await expect(
+      // Intentionally passing invalid degrees to test runtime error handling.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
       rotatePdf.run([input], { degrees: 45 as any, pages: 'all' }, makeCtx()),
     ).rejects.toThrow();
   });

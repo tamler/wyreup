@@ -34,6 +34,8 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
 
   Component: UuidGeneratorComponentStub,
 
+  // Tool contract requires Promise return; no internal await needed.
+  // eslint-disable-next-line @typescript-eslint/require-await
   async run(
     _inputs: File[],
     params: UuidGeneratorParams,
@@ -43,7 +45,7 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
 
     const version = params.version;
     if (version !== undefined && version !== 4) {
-      throw new Error(`Unsupported UUID version: ${version}. Only v4 is supported.`);
+      throw new Error(`Unsupported UUID version: ${String(version)}. Only v4 is supported.`);
     }
     const count = params.count ?? 1;
     if (count < 1) throw new Error('count must be >= 1');

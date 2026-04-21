@@ -1,6 +1,5 @@
-export interface WordCounterParams {
-  // No params — counts everything.
-}
+// No params — counts everything.
+export type WordCounterParams = Record<string, never>;
 
 export const defaultWordCounterParams: WordCounterParams = {};
 

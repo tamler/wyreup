@@ -22,6 +22,7 @@ function makeTool(overrides: Partial<ToolModule> = {}): ToolModule {
     memoryEstimate: 'low',
     defaults: {},
     Component: () => null,
+    // eslint-disable-next-line @typescript-eslint/require-await
     run: async () => new Blob(),
     __testFixtures: { valid: [], weird: [], expectedOutputMime: [] },
     ...overrides,

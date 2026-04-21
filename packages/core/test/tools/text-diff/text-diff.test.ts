@@ -37,7 +37,7 @@ describe('text-diff — run()', () => {
     const f1 = new File([text], 'file1.txt', { type: 'text/plain' });
     const f2 = new File([text], 'file2.txt', { type: 'text/plain' });
 
-    const [diffBlob, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx());
+    const [_diffBlob, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx()) as Blob[];
     const stats = JSON.parse(await statsBlob!.text()) as TextDiffStats;
     expect(stats.additions).toBe(0);
     expect(stats.deletions).toBe(0);
@@ -48,7 +48,7 @@ describe('text-diff — run()', () => {
     const f1 = new File(['line one\nline two\nline three\n'], 'file1.txt', { type: 'text/plain' });
     const f2 = new File(['line one\nline TWO\nline three\n'], 'file2.txt', { type: 'text/plain' });
 
-    const [diffBlob, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx());
+    const [diffBlob, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx()) as Blob[];
     const diff = await diffBlob!.text();
     const stats = JSON.parse(await statsBlob!.text()) as TextDiffStats;
 
@@ -63,7 +63,7 @@ describe('text-diff — run()', () => {
     const f1 = new File(['line one\n'], 'file1.txt', { type: 'text/plain' });
     const f2 = new File(['line one\nline two\nline three\n'], 'file2.txt', { type: 'text/plain' });
 
-    const [, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx());
+    const [, statsBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx()) as Blob[];
     const stats = JSON.parse(await statsBlob!.text()) as TextDiffStats;
 
     expect(stats.additions).toBe(2);
@@ -74,7 +74,7 @@ describe('text-diff — run()', () => {
     const f1 = new File(['hello\n'], 'a.txt', { type: 'text/plain' });
     const f2 = new File(['world\n'], 'b.txt', { type: 'text/plain' });
 
-    const [diffBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx());
+    const [diffBlob] = await textDiff.run([f1, f2], { context: 3 }, makeCtx()) as Blob[];
     const diff = await diffBlob!.text();
     expect(diff).toContain('---');
     expect(diff).toContain('+++');

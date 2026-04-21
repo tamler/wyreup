@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function convert(colorStr: string): Promise<ColorConverterResult> {
   const input = new File([colorStr], 'color.txt', { type: 'text/plain' });
-  const [out] = await colorConverter.run([input], {}, makeCtx());
+  const [out] = await colorConverter.run([input], {}, makeCtx()) as Blob[];
   return JSON.parse(await out!.text()) as ColorConverterResult;
 }
 

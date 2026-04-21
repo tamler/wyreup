@@ -14,7 +14,8 @@ type McpServer = ReturnType<typeof createWyreupMcpServer>;
 
 function getHandler(server: McpServer, method: string) {
   // The MCP SDK Protocol base class stores handlers in _requestHandlers (Map<string, fn>).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Accessing a private SDK internal for testing purposes — no public API available.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
   const handlers = (server as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
   const handler = handlers.get(method);
   if (!handler) throw new Error(`No handler for method: ${method}`);
@@ -144,9 +145,9 @@ describe('createWyreupMcpServer', () => {
     });
     expect(result.content[0]?.text).toContain(outputPath);
     const written = await readFile(outputPath, 'utf8');
-    const parsed = JSON.parse(written);
+    const parsed: unknown = JSON.parse(written);
     // hash returns a single object for one input, or an array for multiple
-    const entry = Array.isArray(parsed) ? parsed[0] : parsed;
+    const entry: unknown = Array.isArray(parsed) ? parsed[0] : parsed;
     expect(entry).toHaveProperty('hashes');
   });
 
@@ -159,9 +160,9 @@ describe('createWyreupMcpServer', () => {
       params: { algorithms: ['SHA-256'] },
     });
     expect(result.content[0]?.type).toBe('text');
-    const parsed = JSON.parse(result.content[0]!.text);
+    const parsed: unknown = JSON.parse(result.content[0]!.text);
     // hash returns a single object for one input or an array for multiple
-    const entry = Array.isArray(parsed) ? parsed[0] : parsed;
+    const entry: unknown = Array.isArray(parsed) ? parsed[0] : parsed;
     expect(entry).toHaveProperty('hashes');
   });
 

@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function count(text: string, type = 'text/plain'): Promise<WordCounterResult> {
   const input = new File([text], 'test.txt', { type });
-  const [out] = await wordCounter.run([input], {}, makeCtx());
+  const [out] = await wordCounter.run([input], {}, makeCtx()) as Blob[];
   return JSON.parse(await out!.text()) as WordCounterResult;
 }
 

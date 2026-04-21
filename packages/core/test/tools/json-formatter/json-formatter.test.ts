@@ -33,10 +33,10 @@ describe('json-formatter — metadata', () => {
 describe('json-formatter — run()', () => {
   it('formats minified JSON with default indent', async () => {
     const input = new File(['{"a":1,"b":{"c":2}}'], 'test.json', { type: 'application/json' });
-    const [out] = await jsonFormatter.run([input], { indent: 2 }, makeCtx());
+    const [out] = await jsonFormatter.run([input], { indent: 2 }, makeCtx()) as Blob[];
     expect(out!.type).toBe('application/json');
     const text = await out!.text();
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(text) as unknown;
     expect(parsed).toEqual({ a: 1, b: { c: 2 } });
     expect(text).toContain('\n');
     expect(text).toContain('  ');
@@ -45,8 +45,8 @@ describe('json-formatter — run()', () => {
   it('preserves data types (numbers, booleans, null, arrays)', async () => {
     const data = { n: 42, f: 3.14, b: true, nil: null, arr: [1, 2, 3] };
     const input = new File([JSON.stringify(data)], 'test.json', { type: 'application/json' });
-    const [out] = await jsonFormatter.run([input], { indent: 2 }, makeCtx());
-    const result = JSON.parse(await out!.text());
+    const [out] = await jsonFormatter.run([input], { indent: 2 }, makeCtx()) as Blob[];
+    const result = JSON.parse(await out!.text()) as { n: number; f: number; b: boolean; nil: null; arr: number[] };
     expect(result.n).toBe(42);
     expect(result.f).toBeCloseTo(3.14);
     expect(result.b).toBe(true);
@@ -62,9 +62,9 @@ describe('json-formatter — run()', () => {
   it('handles nested objects', async () => {
     const nested = { a: { b: { c: { d: 'deep' } } } };
     const input = new File([JSON.stringify(nested)], 'nested.json', { type: 'application/json' });
-    const [out] = await jsonFormatter.run([input], { indent: 4 }, makeCtx());
+    const [out] = await jsonFormatter.run([input], { indent: 4 }, makeCtx()) as Blob[];
     const text = await out!.text();
     expect(text).toContain('    ');
-    expect(JSON.parse(text)).toEqual(nested);
+    expect(JSON.parse(text) as unknown).toEqual(nested);
   });
 });

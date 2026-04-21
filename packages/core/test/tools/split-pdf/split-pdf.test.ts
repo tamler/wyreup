@@ -26,6 +26,7 @@ describe('split-pdf — metadata', () => {
 
   it('output mime is application/pdf with multiple: true', () => {
     expect(splitPdf.output.mime).toBe('application/pdf');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     expect((splitPdf.output as any).multiple).toBe(true);
   });
 });

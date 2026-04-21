@@ -132,7 +132,7 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
         });
       }
     } else {
-      throw new Error(`Unknown watermark mode: "${mode}"`);
+      throw new Error(`Unknown watermark mode: "${String(mode)}"`);
     }
 
     ctx.onProgress({ stage: 'encoding', percent: 90, message: 'Saving watermarked PDF' });

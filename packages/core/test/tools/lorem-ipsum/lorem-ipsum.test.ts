@@ -12,7 +12,7 @@ function makeCtx(): ToolRunContext {
 }
 
 async function generate(params: Parameters<typeof loremIpsum.run>[1]): Promise<string> {
-  const [out] = await loremIpsum.run([], params, makeCtx());
+  const [out] = await loremIpsum.run([], params, makeCtx()) as Blob[];
   return out!.text();
 }
 
@@ -57,7 +57,7 @@ describe('lorem-ipsum — run()', () => {
   });
 
   it('output MIME type is text/plain', async () => {
-    const [out] = await loremIpsum.run([], {}, makeCtx());
+    const [out] = await loremIpsum.run([], {}, makeCtx()) as Blob[];
     expect(out!.type).toBe('text/plain');
   });
 

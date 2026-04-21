@@ -51,7 +51,7 @@ describe('ocr — run()', () => {
     'extracts text from photo.jpg without throwing (returns a string)',
     async () => {
       const file = loadFixture('photo.jpg', 'image/jpeg');
-      const [out] = await ocr.run([file], {}, makeCtx());
+      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
       const text = await out!.text();
       expect(typeof text).toBe('string');
     },
@@ -62,7 +62,7 @@ describe('ocr — run()', () => {
     'returns non-empty result from text-image.png',
     async () => {
       const file = loadFixture('text-image.png', 'image/png');
-      const [out] = await ocr.run([file], {}, makeCtx());
+      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
       const text = await out!.text();
       expect(typeof text).toBe('string');
       // OCR on generated text should find something
@@ -75,13 +75,13 @@ describe('ocr — run()', () => {
     'output MIME type is text/plain',
     async () => {
       const file = loadFixture('photo.jpg', 'image/jpeg');
-      const [out] = await ocr.run([file], {}, makeCtx());
+      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
       expect(out!.type).toBe('text/plain');
     },
     60000,
   );
 
-  it('respects abort signal', async () => {
+  it('respects abort signal', () => {
     const ac = new AbortController();
     const ctx: ToolRunContext = {
       onProgress: () => {},

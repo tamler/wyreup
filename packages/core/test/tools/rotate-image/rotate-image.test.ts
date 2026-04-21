@@ -40,7 +40,7 @@ describe('rotate-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await rotateImage.run([input], { degrees: 90 }, makeCtx());
+    const outputs = await rotateImage.run([input], { degrees: 90 }, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
 
@@ -56,7 +56,7 @@ describe('rotate-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await rotateImage.run([input], { degrees: 180 }, makeCtx());
+    const outputs = await rotateImage.run([input], { degrees: 180 }, makeCtx()) as Blob[];
     expect(outputs[0]!.type).toBe('image/png');
 
     const rotBuf = await outputs[0]!.arrayBuffer();
@@ -71,7 +71,7 @@ describe('rotate-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await rotateImage.run([input], { degrees: 270 }, makeCtx());
+    const outputs = await rotateImage.run([input], { degrees: 270 }, makeCtx()) as Blob[];
     const rotBuf = await outputs[0]!.arrayBuffer();
     const { width: newW, height: newH } = await codec.decode(rotBuf);
     expect(newW).toBe(origH);

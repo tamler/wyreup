@@ -1,6 +1,5 @@
-export interface ColorConverterParams {
-  // No params — converts to all formats at once.
-}
+// No params — converts to all formats at once.
+export type ColorConverterParams = Record<string, never>;
 
 export const defaultColorConverterParams: ColorConverterParams = {};
 

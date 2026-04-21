@@ -32,7 +32,7 @@ describe('resize — metadata', () => {
 describe('resize — run()', () => {
   it('resizes exact to 400x300', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await resize.run([input], { mode: 'exact', width: 400, height: 300 }, makeCtx());
+    const outputs = await resize.run([input], { mode: 'exact', width: 400, height: 300 }, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
 
@@ -50,7 +50,7 @@ describe('resize — run()', () => {
     const srcBuf = await input.arrayBuffer();
     const { width: srcW, height: srcH } = await codec.decode(srcBuf);
 
-    const outputs = await resize.run([input], { mode: 'fit', width: 200, height: 200 }, makeCtx());
+    const outputs = await resize.run([input], { mode: 'fit', width: 200, height: 200 }, makeCtx()) as Blob[];
     const buf = await outputs[0]!.arrayBuffer();
     const { width, height } = await codec.decode(buf);
 
@@ -70,7 +70,7 @@ describe('resize — run()', () => {
     const srcBuf = await input.arrayBuffer();
     const { width: srcW, height: srcH } = await codec.decode(srcBuf);
 
-    const outputs = await resize.run([input], { mode: 'percent', percent: 50 }, makeCtx());
+    const outputs = await resize.run([input], { mode: 'percent', percent: 50 }, makeCtx()) as Blob[];
     const buf = await outputs[0]!.arrayBuffer();
     const { width, height } = await codec.decode(buf);
 

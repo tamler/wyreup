@@ -46,7 +46,7 @@ describe('svg-to-png — metadata', () => {
 describe('svg-to-png — run()', () => {
   it('converts circle.svg to PNG with valid PNG header', async () => {
     const svgFile = loadFixture('circle.svg', 'image/svg+xml');
-    const [out] = await svgToPng.run([svgFile], { scale: 1 }, makeCtx());
+    const [out] = await svgToPng.run([svgFile], { scale: 1 }, makeCtx()) as Blob[];
     expect(out).toBeDefined();
     expect(out!.type).toBe('image/png');
     expect(await checkPngHeader(out!)).toBe(true);
@@ -54,15 +54,15 @@ describe('svg-to-png — run()', () => {
 
   it('output has reasonable size (>100 bytes)', async () => {
     const svgFile = loadFixture('circle.svg', 'image/svg+xml');
-    const [out] = await svgToPng.run([svgFile], {}, makeCtx());
+    const [out] = await svgToPng.run([svgFile], {}, makeCtx()) as Blob[];
     expect(out!.size).toBeGreaterThan(100);
   });
 
   it('scale=2 produces a larger output than scale=1', async () => {
     const svgFile1 = loadFixture('circle.svg', 'image/svg+xml');
     const svgFile2 = loadFixture('circle.svg', 'image/svg+xml');
-    const [out1] = await svgToPng.run([svgFile1], { scale: 1 }, makeCtx());
-    const [out2] = await svgToPng.run([svgFile2], { scale: 2 }, makeCtx());
+    const [out1] = await svgToPng.run([svgFile1], { scale: 1 }, makeCtx()) as Blob[];
+    const [out2] = await svgToPng.run([svgFile2], { scale: 2 }, makeCtx()) as Blob[];
     // Scaled image should be larger in bytes
     expect(out2!.size).toBeGreaterThan(out1!.size);
   });
@@ -70,7 +70,7 @@ describe('svg-to-png — run()', () => {
   it('processes multiple SVGs in batch', async () => {
     const svgFile1 = loadFixture('circle.svg', 'image/svg+xml');
     const svgFile2 = loadFixture('circle.svg', 'image/svg+xml');
-    const outputs = await svgToPng.run([svgFile1, svgFile2], {}, makeCtx());
+    const outputs = await svgToPng.run([svgFile1, svgFile2], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(2);
     for (const out of outputs) {
       expect(await checkPngHeader(out)).toBe(true);

@@ -35,7 +35,7 @@ describe('image-info — metadata', () => {
 describe('image-info — run()', () => {
   it('extracts dimensions and format from photo.jpg', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await imageInfo.run([input], {}, makeCtx());
+    const outputs = await imageInfo.run([input], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('application/json');
 
@@ -51,7 +51,7 @@ describe('image-info — run()', () => {
 
   it('extracts dimensions from graphic.png', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const outputs = await imageInfo.run([input], {}, makeCtx());
+    const outputs = await imageInfo.run([input], {}, makeCtx()) as Blob[];
     const json = JSON.parse(await outputs[0]!.text()) as ImageInfoResult;
     expect(json.format).toBe('png');
     expect(json.width).toBeGreaterThan(0);
@@ -60,7 +60,7 @@ describe('image-info — run()', () => {
 
   it('computes aspectRatio correctly using GCD', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await imageInfo.run([input], {}, makeCtx());
+    const outputs = await imageInfo.run([input], {}, makeCtx()) as Blob[];
     const json = JSON.parse(await outputs[0]!.text()) as ImageInfoResult;
     const [wStr, hStr] = json.aspectRatio.split(':');
     const w = parseInt(wStr!, 10);

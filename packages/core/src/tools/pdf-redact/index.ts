@@ -80,7 +80,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const [r, g, b] = color;
-    const fillColor = rgb(r!, g!, b!);
+    const fillColor = rgb(r, g, b);
 
     for (const rect of rectangles) {
       if (rect.page < 1 || rect.page > pageCount) {

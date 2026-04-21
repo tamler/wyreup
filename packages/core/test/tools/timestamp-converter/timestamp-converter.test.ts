@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function convert(input: string): Promise<TimestampConverterResult> {
   const file = new File([input], 'ts.txt', { type: 'text/plain' });
-  const [out] = await timestampConverter.run([file], {}, makeCtx());
+  const [out] = await timestampConverter.run([file], {}, makeCtx()) as Blob[];
   return JSON.parse(await out!.text()) as TimestampConverterResult;
 }
 

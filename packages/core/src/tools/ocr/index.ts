@@ -75,7 +75,6 @@ export const ocr: ToolModule<OcrParams> = {
         });
 
         const ab = await inputs[i]!.arrayBuffer();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const { data: { text } } = await worker.recognize(new Uint8Array(ab) as unknown as Buffer);
         results.push(text.trim());
       }

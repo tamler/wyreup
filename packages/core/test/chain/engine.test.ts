@@ -23,7 +23,7 @@ const emptyRegistry = createRegistry([]);
 describe('runChain', () => {
   it('throws ChainError with depth info when MAX_CHAIN_DEPTH exceeded', async () => {
     const step: ChainStep = { toolId: 'nonexistent-tool', params: {} };
-    const chain: Chain = Array(MAX_CHAIN_DEPTH + 1).fill(step);
+    const chain: Chain = Array<ChainStep>(MAX_CHAIN_DEPTH + 1).fill(step);
 
     await expect(runChain(chain, [], makeCtx(), emptyRegistry, MAX_CHAIN_DEPTH + 1))
       .rejects.toBeInstanceOf(ChainError);

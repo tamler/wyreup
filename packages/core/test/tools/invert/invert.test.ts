@@ -34,7 +34,7 @@ describe('invert — metadata', () => {
 describe('invert — run()', () => {
   it('inverts a JPEG and returns a JPEG', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await invert.run([input], {}, makeCtx());
+    const outputs = await invert.run([input], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
     expect(outputs[0]!.size).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe('invert — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await invert.run([input], {}, makeCtx());
+    const outputs = await invert.run([input], {}, makeCtx()) as Blob[];
     expect(outputs[0]!.type).toBe('image/png');
 
     const buf = await outputs[0]!.arrayBuffer();
@@ -62,11 +62,11 @@ describe('invert — run()', () => {
     const orig = await codec.decode(origBuf);
 
     // invert once
-    const once = await invert.run([input], {}, makeCtx());
+    const once = await invert.run([input], {}, makeCtx()) as Blob[];
     const onceFile = new File([once[0]!], 'once.png', { type: 'image/png' });
 
     // invert again
-    const twice = await invert.run([onceFile], {}, makeCtx());
+    const twice = await invert.run([onceFile], {}, makeCtx()) as Blob[];
     const twiceBuf = await twice[0]!.arrayBuffer();
     const restored = await codec.decode(twiceBuf);
 

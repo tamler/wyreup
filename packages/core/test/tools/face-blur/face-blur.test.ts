@@ -12,7 +12,7 @@
  *     pipeline runs and returns a valid PNG.
  */
 
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { faceBlur, expandBox, blurRegion, defaultFaceBlurParams } from '../../../src/tools/face-blur/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
@@ -221,10 +221,10 @@ beforeAll(async () => {
     const { FilesetResolver, FaceDetector } = await import('@mediapipe/tasks-vision');
     const { createRequire } = await import('node:module');
     const { pathToFileURL } = await import('node:url');
-    const { dirname, join } = await import('node:path');
+    const nodePath = await import('node:path');
     const req = createRequire(import.meta.url);
     const bundlePath = req.resolve('@mediapipe/tasks-vision');
-    const wasmPath = pathToFileURL(join(dirname(bundlePath), 'wasm')).href;
+    const wasmPath = pathToFileURL(nodePath.join(nodePath.dirname(bundlePath), 'wasm')).href;
     const vision = await FilesetResolver.forVisionTasks(wasmPath);
     await FaceDetector.createFromOptions(vision, {
       baseOptions: {

@@ -30,13 +30,13 @@ describe('uuid-generator — metadata', () => {
 
 describe('uuid-generator — run()', () => {
   it('generates a valid v4 UUID', async () => {
-    const [out] = await uuidGenerator.run([], { version: 4, count: 1 }, makeCtx());
+    const [out] = await uuidGenerator.run([], { version: 4, count: 1 }, makeCtx()) as Blob[];
     const uuid = (await out!.text()).trim();
     expect(uuid).toMatch(UUID_V4_RE);
   });
 
   it('count > 1 produces that many UUIDs (one per line)', async () => {
-    const [out] = await uuidGenerator.run([], { version: 4, count: 5 }, makeCtx());
+    const [out] = await uuidGenerator.run([], { version: 4, count: 5 }, makeCtx()) as Blob[];
     const lines = (await out!.text()).trim().split('\n');
     expect(lines.length).toBe(5);
     for (const line of lines) {
@@ -45,14 +45,14 @@ describe('uuid-generator — run()', () => {
   });
 
   it('each UUID is unique', async () => {
-    const [out] = await uuidGenerator.run([], { version: 4, count: 20 }, makeCtx());
+    const [out] = await uuidGenerator.run([], { version: 4, count: 20 }, makeCtx()) as Blob[];
     const lines = (await out!.text()).trim().split('\n').map((l) => l.trim());
     const unique = new Set(lines);
     expect(unique.size).toBe(20);
   });
 
   it('output MIME type is text/plain', async () => {
-    const [out] = await uuidGenerator.run([], { version: 4, count: 1 }, makeCtx());
+    const [out] = await uuidGenerator.run([], { version: 4, count: 1 }, makeCtx()) as Blob[];
     expect(out!.type).toBe('text/plain');
   });
 

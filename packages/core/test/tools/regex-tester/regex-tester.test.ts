@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function test(text: string, pattern: string, flags = 'g'): Promise<RegexTesterResult> {
   const file = new File([text], 'input.txt', { type: 'text/plain' });
-  const [out] = await regexTester.run([file], { pattern, flags }, makeCtx());
+  const [out] = await regexTester.run([file], { pattern, flags }, makeCtx()) as Blob[];
   return JSON.parse(await out!.text()) as RegexTesterResult;
 }
 
@@ -75,7 +75,7 @@ describe('regex-tester — run()', () => {
 
   it('output MIME type is application/json', async () => {
     const file = new File(['test'], 'input.txt', { type: 'text/plain' });
-    const [out] = await regexTester.run([file], { pattern: 'test' }, makeCtx());
+    const [out] = await regexTester.run([file], { pattern: 'test' }, makeCtx()) as Blob[];
     expect(out!.type).toBe('application/json');
   });
 

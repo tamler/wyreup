@@ -84,7 +84,7 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
 
     const deg = params.degrees;
     if (deg !== 90 && deg !== 180 && deg !== 270) {
-      throw new Error(`Invalid degrees "${deg}". Must be 90, 180, or 270.`);
+      throw new Error(`Invalid degrees "${String(deg)}". Must be 90, 180, or 270.`);
     }
 
     const { PDFDocument, degrees } = await import('pdf-lib');

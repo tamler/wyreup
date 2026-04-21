@@ -117,12 +117,12 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
           let imageData: ImageData | null = null;
 
           if (isJpeg) {
-            imageData = await decodeJpeg(obj.contents.slice().buffer as ArrayBuffer);
+            imageData = await decodeJpeg(obj.contents.slice().buffer);
           } else if (isPng && (pngToJpeg || true)) {
             // Check if it has alpha channel — if so, we can't convert to JPEG
             const colorSpaceStr = colorSpaceObj ? colorSpaceObj.toString() : '';
             if (colorSpaceStr.includes('DeviceRGB') || colorSpaceStr === '') {
-              imageData = await decodePng(obj.contents.slice().buffer as ArrayBuffer);
+              imageData = await decodePng(obj.contents.slice().buffer);
             }
           }
 

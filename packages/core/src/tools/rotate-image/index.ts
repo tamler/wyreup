@@ -43,7 +43,7 @@ export const rotateImage: ToolModule<RotateImageParams> = {
     const { degrees } = params;
 
     if (degrees !== 90 && degrees !== 180 && degrees !== 270) {
-      throw new Error(`Invalid degrees "${degrees}". Must be 90, 180, or 270.`);
+      throw new Error(`Invalid degrees "${String(degrees)}". Must be 90, 180, or 270.`);
     }
 
     const outputs: Blob[] = [];

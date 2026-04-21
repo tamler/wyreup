@@ -36,11 +36,11 @@ describe('pdf-extract-tables — run()', () => {
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/json');
 
-    const json = JSON.parse(await blob.text());
+    const json = JSON.parse(await blob.text()) as Array<{ page: number; rows: unknown[] }>;
     expect(Array.isArray(json)).toBe(true);
     expect(json[0]).toHaveProperty('page');
     expect(json[0]).toHaveProperty('rows');
-    expect(Array.isArray(json[0].rows)).toBe(true);
+    expect(Array.isArray(json[0]!.rows)).toBe(true);
   });
 
   it('returns CSV when format is csv', async () => {
@@ -54,9 +54,9 @@ describe('pdf-extract-tables — run()', () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
     const result = await pdfExtractTables.run([input], { format: 'json', page: 1 }, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
-    const json = JSON.parse(await blob.text());
+    const json = JSON.parse(await blob.text()) as Array<{ page: number; rows: unknown[] }>;
     expect(json.length).toBe(1);
-    expect(json[0].page).toBe(1);
+    expect(json[0]!.page).toBe(1);
   });
 
   it('throws for invalid page number', async () => {

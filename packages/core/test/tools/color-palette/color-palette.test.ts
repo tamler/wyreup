@@ -54,7 +54,7 @@ describe('color-palette — run()', () => {
     expect(output.type).toBe('application/json');
 
     const text = await output.text();
-    const result: ColorPaletteResult = JSON.parse(text);
+    const result = JSON.parse(text) as ColorPaletteResult;
 
     expect(result).toHaveProperty('vibrant');
     expect(result).toHaveProperty('muted');
@@ -69,7 +69,7 @@ describe('color-palette — run()', () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
     const output = await colorPalette.run([input], { count: 3 }, makeCtx()) as Blob;
-    const result: ColorPaletteResult = JSON.parse(await output.text());
+    const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     expect(result.topColors.length).toBeGreaterThan(0);
     expect(result.topColors.length).toBeLessThanOrEqual(3);
@@ -82,7 +82,7 @@ describe('color-palette — run()', () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
     const output = await colorPalette.run([input], {}, makeCtx()) as Blob;
-    const result: ColorPaletteResult = JSON.parse(await output.text());
+    const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     // At least one named swatch should be non-null for a real photo
     const named = [result.vibrant, result.muted, result.darkVibrant, result.darkMuted, result.lightVibrant, result.lightMuted];
@@ -94,7 +94,7 @@ describe('color-palette — run()', () => {
     const input = loadFixture('graphic.png', 'image/png');
 
     const output = await colorPalette.run([input], { count: 5 }, makeCtx()) as Blob;
-    const result: ColorPaletteResult = JSON.parse(await output.text());
+    const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     expect(Array.isArray(result.topColors)).toBe(true);
   });

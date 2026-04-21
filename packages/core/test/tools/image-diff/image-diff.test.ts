@@ -57,7 +57,7 @@ describe('image-diff — run()', () => {
     expect(diffImage.type).toBe('image/png');
     expect(metadataBlob.type).toBe('application/json');
 
-    const result: ImageDiffResult = JSON.parse(await metadataBlob.text());
+    const result = JSON.parse(await metadataBlob.text()) as ImageDiffResult;
     expect(result.pixelsDifferent).toBe(0);
     expect(result.totalPixels).toBeGreaterThan(0);
     expect(result.percentDifferent).toBe(0);
@@ -86,7 +86,7 @@ describe('image-diff — run()', () => {
 
     const outputs = await imageDiff.run([imgA, imgB], { threshold: 0.05 }, makeCtx()) as Blob[];
     const metadataBlob = outputs[1] as Blob;
-    const result: ImageDiffResult = JSON.parse(await metadataBlob.text());
+    const result = JSON.parse(await metadataBlob.text()) as ImageDiffResult;
 
     // photo.jpg and photo.webp are the same image but different encodings —
     // lossy re-encoding introduces small pixel differences

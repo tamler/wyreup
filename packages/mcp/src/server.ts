@@ -243,6 +243,8 @@ export function createWyreupMcpServer(): Server {
     { capabilities: { tools: {} } },
   );
 
+  // Handler signature requires Promise return; no internal await needed.
+  // eslint-disable-next-line @typescript-eslint/require-await
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: tools.map((tool) => ({
       name: tool.id,
@@ -258,7 +260,7 @@ export function createWyreupMcpServer(): Server {
       throw new Error(`Unknown tool: ${name}`);
     }
 
-    const rawArgs = (args ?? {}) as Record<string, unknown>;
+    const rawArgs = args ?? {};
     const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
     const outputPath = rawArgs['output_path'] as string | undefined;
     const outputDir = rawArgs['output_dir'] as string | undefined;

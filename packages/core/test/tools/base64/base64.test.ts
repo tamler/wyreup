@@ -32,7 +32,7 @@ describe('base64 — metadata', () => {
 describe('base64 — run()', () => {
   it('encodes a small text file to base64', async () => {
     const input = new File(['Hello, World!'], 'test.txt', { type: 'text/plain' });
-    const [out] = await base64.run([input], { mode: 'encode' }, makeCtx());
+    const [out] = await base64.run([input], { mode: 'encode' }, makeCtx()) as Blob[];
     expect(out!.type).toBe('text/plain');
     const encoded = await out!.text();
     expect(encoded).toBe('SGVsbG8sIFdvcmxkIQ==');
@@ -42,10 +42,10 @@ describe('base64 — run()', () => {
     const original = 'The quick brown fox jumps over the lazy dog';
     const input = new File([original], 'test.txt', { type: 'text/plain' });
 
-    const [encoded] = await base64.run([input], { mode: 'encode' }, makeCtx());
+    const [encoded] = await base64.run([input], { mode: 'encode' }, makeCtx()) as Blob[];
     const encodedFile = new File([await encoded!.text()], 'encoded.txt', { type: 'text/plain' });
 
-    const [decoded] = await base64.run([encodedFile], { mode: 'decode' }, makeCtx());
+    const [decoded] = await base64.run([encodedFile], { mode: 'decode' }, makeCtx()) as Blob[];
     const decodedText = await decoded!.text();
     expect(decodedText).toBe(original);
   });
@@ -54,7 +54,7 @@ describe('base64 — run()', () => {
     // Use bytes that produce +/= in standard base64
     const bytes = new Uint8Array([0xff, 0xfe, 0xfd, 0xfb]);
     const input = new File([bytes], 'binary.bin', { type: 'application/octet-stream' });
-    const [out] = await base64.run([input], { mode: 'encode', urlSafe: true }, makeCtx());
+    const [out] = await base64.run([input], { mode: 'encode', urlSafe: true }, makeCtx()) as Blob[];
     const encoded = await out!.text();
     expect(encoded).not.toContain('+');
     expect(encoded).not.toContain('/');
@@ -64,7 +64,7 @@ describe('base64 — run()', () => {
   it('strips data URL prefix on decode', async () => {
     const dataUrl = 'data:text/plain;base64,SGVsbG8h';
     const input = new File([dataUrl], 'data.txt', { type: 'text/plain' });
-    const [out] = await base64.run([input], { mode: 'decode' }, makeCtx());
+    const [out] = await base64.run([input], { mode: 'decode' }, makeCtx()) as Blob[];
     const text = await out!.text();
     expect(text).toBe('Hello!');
   });
@@ -73,10 +73,10 @@ describe('base64 — run()', () => {
     const binary = new Uint8Array([0, 1, 2, 3, 255, 254, 253, 252]);
     const input = new File([binary], 'binary.bin', { type: 'application/octet-stream' });
 
-    const [encoded] = await base64.run([input], { mode: 'encode' }, makeCtx());
+    const [encoded] = await base64.run([input], { mode: 'encode' }, makeCtx()) as Blob[];
     const encodedFile = new File([await encoded!.text()], 'encoded.txt', { type: 'text/plain' });
 
-    const [decoded] = await base64.run([encodedFile], { mode: 'decode' }, makeCtx());
+    const [decoded] = await base64.run([encodedFile], { mode: 'decode' }, makeCtx()) as Blob[];
     const decodedBuffer = await decoded!.arrayBuffer();
     const decodedBytes = new Uint8Array(decodedBuffer);
     expect(decodedBytes).toEqual(binary);

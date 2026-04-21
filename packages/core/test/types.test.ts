@@ -3,12 +3,8 @@ import type {
   ToolModule,
   ToolCategory,
   ToolPresence,
-  ToolInputSpec,
-  ToolOutputSpec,
-  ToolProgress,
   ToolRunContext,
   MemoryEstimate,
-  MimePattern,
 } from '../src/types.js';
 
 describe('types', () => {
@@ -53,7 +49,9 @@ describe('types', () => {
       cost: 'free',
       memoryEstimate: 'low',
       defaults: { quality: 80 },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
       Component: (() => null) as any,
+      // eslint-disable-next-line @typescript-eslint/require-await
       run: async () => new Blob(),
       __testFixtures: { valid: [], weird: [], expectedOutputMime: [] },
     };

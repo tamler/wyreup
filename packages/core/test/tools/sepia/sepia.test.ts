@@ -34,7 +34,7 @@ describe('sepia — metadata', () => {
 describe('sepia — run()', () => {
   it('applies sepia to a JPEG and returns a JPEG', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
-    const outputs = await sepia.run([input], {}, makeCtx());
+    const outputs = await sepia.run([input], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
     expect(outputs[0]!.size).toBeGreaterThan(0);
@@ -44,7 +44,7 @@ describe('sepia — run()', () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
     const codec = await getCodec('jpeg');
 
-    const outputs = await sepia.run([input], {}, makeCtx());
+    const outputs = await sepia.run([input], {}, makeCtx()) as Blob[];
     const buf = await outputs[0]!.arrayBuffer();
     const { data } = await codec.decode(buf);
 
@@ -64,7 +64,7 @@ describe('sepia — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await sepia.run([input], {}, makeCtx());
+    const outputs = await sepia.run([input], {}, makeCtx()) as Blob[];
     const buf = await outputs[0]!.arrayBuffer();
     const { width, height } = await codec.decode(buf);
     expect(width).toBe(origW);

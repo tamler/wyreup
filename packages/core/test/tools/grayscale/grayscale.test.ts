@@ -36,7 +36,7 @@ describe('grayscale — run()', () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
     const codec = await getCodec('jpeg');
 
-    const outputs = await grayscale.run([input], {}, makeCtx());
+    const outputs = await grayscale.run([input], {}, makeCtx()) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
 
@@ -63,7 +63,7 @@ describe('grayscale — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await grayscale.run([input], {}, makeCtx());
+    const outputs = await grayscale.run([input], {}, makeCtx()) as Blob[];
     const buf = await outputs[0]!.arrayBuffer();
     const { width, height } = await codec.decode(buf);
     expect(width).toBe(origW);

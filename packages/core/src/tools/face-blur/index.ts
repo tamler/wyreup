@@ -146,11 +146,11 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
     // We use the vision_bundle.mjs entrypoint (exported as ".") to locate the pkg root.
     const { createRequire } = await import('node:module');
     const { pathToFileURL } = await import('node:url');
-    const { dirname, join } = await import('node:path');
+    const nodePath = await import('node:path');
     const req = createRequire(import.meta.url);
     // resolve the CJS bundle — this works even with an exports map
     const bundlePath = req.resolve('@mediapipe/tasks-vision');
-    wasmPath = pathToFileURL(join(dirname(bundlePath), 'wasm')).href;
+    wasmPath = pathToFileURL(nodePath.join(nodePath.dirname(bundlePath), 'wasm')).href;
   } else {
     // Browser: CDN fallback (bundler can override via alias)
     wasmPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';

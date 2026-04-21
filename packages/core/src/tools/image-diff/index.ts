@@ -94,7 +94,7 @@ export const imageDiff: ToolModule<ImageDiffParams> = {
       height,
       {
         threshold,
-        diffColor: diffColor as [number, number, number],
+        diffColor,
       },
     );
 
