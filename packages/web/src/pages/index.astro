@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroDrop from '../components/HeroDrop.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
+import InstallCard from '../components/InstallCard.svelte';
 ---
 
 <BaseLayout
@@ -123,19 +124,20 @@ import ScenarioGrid from '../components/ScenarioGrid.svelte';
         <a href="/cli" class="anywhere-card brackets">
           <div class="brackets-inner" aria-hidden="true"></div>
           <div class="anywhere-card__inner">
-            <div class="anywhere-card__channel">Terminal</div>
+            <div class="anywhere-card__channel">CLI</div>
             <div class="anywhere-card__headline"><code>npx @wyreup/cli</code></div>
-            <p class="anywhere-card__body">Same engine, scriptable, offline.</p>
+            <p class="anywhere-card__body">Shell-scriptable, batch-friendly, offline.</p>
           </div>
         </a>
         <a href="/skill" class="anywhere-card brackets">
           <div class="brackets-inner" aria-hidden="true"></div>
           <div class="anywhere-card__inner">
-            <div class="anywhere-card__channel">Your agent</div>
-            <div class="anywhere-card__headline">MCP server + skill</div>
-            <p class="anywhere-card__body">For Claude. Your files never leave your machine.</p>
+            <div class="anywhere-card__channel">Agent (MCP + skill)</div>
+            <div class="anywhere-card__headline">Claude integration</div>
+            <p class="anywhere-card__body">Your files never leave your machine.</p>
           </div>
         </a>
+        <InstallCard client:load />
       </div>
     </div>
 
@@ -329,7 +331,7 @@ import ScenarioGrid from '../components/ScenarioGrid.svelte';
 
   .anywhere-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-4);
   }
 
@@ -507,6 +509,12 @@ import ScenarioGrid from '../components/ScenarioGrid.svelte';
     }
   }
 
+  @media (max-width: 768px) {
+    .anywhere-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 640px) {
     .hero__headline {
       font-size: var(--text-2xl);
@@ -518,6 +526,32 @@ import ScenarioGrid from '../components/ScenarioGrid.svelte';
 
     .anywhere-grid {
       grid-template-columns: 1fr;
+    }
+
+    /* Tighter section rhythm on short/narrow mobile viewports */
+    .section-rhythm {
+      min-height: clamp(480px, 85vh, 960px);
+      padding-block-start: clamp(48px, 10vh, 176px);
+    }
+
+    .hero__body {
+      font-size: var(--text-base);
+    }
+
+    /* Tool card grid already goes single-column on mobile */
+    /* Steps readable as-is since connectors are hidden */
+    .step__verb {
+      font-size: var(--text-md);
+    }
+  }
+
+  @media (max-width: 375px) {
+    .hero__headline {
+      font-size: var(--text-xl);
+    }
+
+    .section-title {
+      font-size: var(--text-xl);
     }
   }
 </style>
