@@ -1,8 +1,25 @@
 {
   "name": "@wyreup/cli",
-  "version": "0.0.0",
-  "description": "Wyreup CLI — wire up your tools from the shell",
+  "version": "0.1.0",
+  "description": "Wyreup CLI — run 66 privacy-first file tools from the shell. Same engine as wyreup.com, scriptable and offline.",
+  "keywords": ["wyreup", "cli", "privacy", "image", "pdf", "compress", "convert", "offline", "local", "shell"],
   "license": "MIT",
+  "homepage": "https://wyreup.com/cli",
+  "bugs": {
+    "url": "https://github.com/tamler/wyreup/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/cli"
+  },
+  "author": "Wyreup Contributors",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

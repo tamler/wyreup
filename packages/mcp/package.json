@@ -1,8 +1,25 @@
 {
   "name": "@wyreup/mcp",
-  "version": "0.0.0",
-  "description": "Wyreup MCP server — agent-accessible tool library",
+  "version": "0.1.0",
+  "description": "MCP server exposing Wyreup's 66 tools to Claude Code, Claude Desktop, and any MCP-compatible agent.",
+  "keywords": ["wyreup", "mcp", "model-context-protocol", "claude", "agent", "privacy", "image", "pdf", "offline", "local"],
   "license": "MIT",
+  "homepage": "https://wyreup.com/mcp",
+  "bugs": {
+    "url": "https://github.com/tamler/wyreup/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/mcp"
+  },
+  "author": "Wyreup Contributors",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

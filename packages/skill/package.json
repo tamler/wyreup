@@ -1,9 +1,22 @@
 {
   "name": "@wyreup/skill",
-  "version": "0.0.0",
-  "description": "Agent skill teaching AI assistants how to use Wyreup (Claude, other skill-format compatible agents)",
+  "version": "0.1.0",
+  "description": "Agent skill teaching Claude (and any skill.md-compatible agent) how to use Wyreup's 66 tools.",
+  "keywords": ["wyreup", "skill", "claude", "agent", "mcp", "privacy", "image", "pdf", "offline"],
   "license": "MIT",
-  "private": true,
+  "homepage": "https://wyreup.com/skill",
+  "bugs": {
+    "url": "https://github.com/tamler/wyreup/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/skill"
+  },
+  "author": "Wyreup Contributors",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": ["skill.md", "README.md"],
   "scripts": {
     "build": "echo 'no build step for skill'",
