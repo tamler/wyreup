@@ -210,6 +210,7 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'medium',
+  installSize: 15_500_000, // ~15 MB onnxruntime-web WASM + ~500 KB FlashSR ONNX model
   requires: { webgpu: 'preferred' },
 
   defaults: defaultAudioEnhanceParams,

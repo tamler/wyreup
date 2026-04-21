@@ -37,6 +37,7 @@ export const ocr: ToolModule<OcrParams> = {
   batchable: true,
   cost: 'free',
   memoryEstimate: 'high',
+  installSize: 10_000_000, // ~10 MB: tesseract language data
 
   defaults: {
     language: 'eng',

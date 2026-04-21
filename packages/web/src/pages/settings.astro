@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolSettings from '../components/ToolSettings.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const registry = createDefaultRegistry();
+const heavyTools = Array.from(registry.toolsById.values())
+  .filter((t) => t.installSize !== undefined)
+  .map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    installSize: t.installSize as number,
+    slug: t.slug,
+  }));
+---
+
+<BaseLayout
+  title="Wyreup — Tool settings"
+  description="Control which tools are cached for offline use."
+>
+  <div class="container settings-page">
+    <h1 class="settings-title">Tool settings</h1>
+    <ToolSettings client:load heavyTools={heavyTools} />
+  </div>
+</BaseLayout>
+
+<style>
+  .settings-page {
+    padding-block: var(--space-12);
+    max-width: 720px;
+  }
+
+  .settings-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-12);
+  }
+</style>

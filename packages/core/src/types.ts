@@ -158,6 +158,14 @@ export interface ToolModule<Params = unknown> {
   defaults: Params;
   applyPreset?: (preset: Partial<Params>, defaults: Params) => Params;
 
+  /**
+   * Approximate additional download size (bytes) this tool requires beyond
+   * the base app bundle. Includes WASM modules and ML model files fetched
+   * on first use. Undefined = negligible (pure JS, in-bundle). Used by the
+   * PWA settings UI to inform opt-in decisions.
+   */
+  installSize?: number;
+
   // Testing contract (consumed by CI)
   __testFixtures: {
     valid: string[];

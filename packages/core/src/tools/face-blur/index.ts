@@ -195,6 +195,7 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
   batchable: true,
   cost: 'free',
   memoryEstimate: 'medium',
+  installSize: 1_000_000, // ~1 MB: MediaPipe WASM + BlazeFace model
   // No `requires` field — MediaPipe runs on WASM universally (no WebGPU needed)
 
   defaults: defaultFaceBlurParams,
