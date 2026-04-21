@@ -82,6 +82,39 @@ After that, every push to `main` triggers a build and deploy automatically.
 - **`ci.yml`** — runs on all PRs and pushes to `main`: lint, types, unit tests, full build, isolation check, privacy scan, bundle size check
 - **`deploy.yml`** — runs on pushes to `main`: builds core + web, deploys via `wrangler pages deploy`
 
+## Publishing to npm
+
+Wyreup uses [Changesets](https://github.com/changesets/changesets) for versioning and publishing.
+
+### Adding a changeset
+
+When you make a change that should trigger a version bump:
+
+```bash
+pnpm changeset
+# Follow the prompts to select packages and bump type (patch/minor/major)
+# Commit the generated .changeset/*.md file
+```
+
+### Release flow
+
+1. Commit your changeset file alongside your code changes
+2. Push to `main`
+3. The Release GitHub Action creates a "Version Packages" PR that bumps versions and updates CHANGELOGs
+4. Merge the PR — the action then publishes to npm automatically
+
+### First-time setup
+
+You must add **`NPM_TOKEN`** as a GitHub repo secret before publishing works:
+
+1. Go to [npmjs.com](https://www.npmjs.com) → Account Settings → Access Tokens → Generate New Token (Automation type)
+2. In this repo → Settings → Secrets and variables → Actions → New repository secret
+3. Name: `NPM_TOKEN`, value: the token from step 1
+
+You also need to own the `@wyreup` scope on npm (or be added as a member of the `wyreup` npm org) before the first publish will succeed.
+
+See [Changesets docs](https://github.com/changesets/changesets/blob/main/docs/intro-to-using-changesets.md) for more.
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
