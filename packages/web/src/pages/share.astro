@@ -1,0 +1,44 @@
+---
+// This page is the share_target action endpoint.
+// The service worker intercepts POST requests to /share before they reach
+// the network, reads the FormData, stashes files in Cache API, then returns
+// Response.redirect('/share-receive', 303). This static page is only ever
+// reached if the SW is not yet installed (e.g., first page load after install).
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Wyreup — Share"
+  description="Processing shared file."
+>
+  <div class="container share-fallback">
+    <p class="share-fallback__msg">
+      Install Wyreup as an app to use file sharing. In the meantime, <a href="/tools">browse all tools</a>.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .share-fallback {
+    padding-block: 4rem;
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .share-fallback__msg {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .share-fallback__msg a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .share-fallback__msg a:hover {
+    text-decoration: underline;
+  }
+</style>

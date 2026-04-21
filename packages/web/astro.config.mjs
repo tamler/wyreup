@@ -1,10 +1,63 @@
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
+import AstroPWA from '@vite-pwa/astro';
 
 export default defineConfig({
   site: 'https://wyreup.com',
   output: 'static',
-  integrations: [svelte()],
+  integrations: [
+    svelte(),
+    AstroPWA({
+      registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      manifest: {
+        name: 'Wyreup',
+        short_name: 'Wyreup',
+        description: 'Privacy-first file tools. Everything runs in your browser.',
+        theme_color: '#FFB000',
+        background_color: '#111113',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        icons: [
+          { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: '/pwa-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+        share_target: {
+          action: '/share',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+            files: [
+              {
+                name: 'files',
+                accept: ['image/*', 'application/pdf', 'text/*', 'audio/*'],
+              },
+            ],
+          },
+        },
+      },
+      injectManifest: {
+        // Precache core app shell only; large ML WASM/ONNX assets are fetched on demand.
+        globPatterns: ['**/*.{html,css,js,woff2,svg,png,ico,webmanifest}'],
+        globIgnores: ['**/*.wasm', '**/*.onnx'],
+        // Raise the limit above the 25 MB ort-wasm file so the build doesn't error
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
   build: {
     inlineStylesheets: 'auto',
   },

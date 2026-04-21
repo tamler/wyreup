@@ -41,9 +41,13 @@ const sidebarTools = withSidebar
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#FFB000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wyreup" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Open Graph -->
     <meta property="og:title" content={ogTitle} />
@@ -104,6 +108,7 @@ const sidebarTools = withSidebar
         </div>
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+          <a href="/settings" class="footer-link">Settings</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
         </nav>
       </div>
@@ -255,6 +260,7 @@ const sidebarTools = withSidebar
       justify-content: center;
       height: auto;
       padding: var(--space-2) 0;
+      gap: var(--space-1);
     }
 
     .site-header {
@@ -262,12 +268,28 @@ const sidebarTools = withSidebar
     }
 
     .site-nav {
-      gap: var(--space-4);
+      gap: var(--space-3);
       justify-self: unset;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      font-size: var(--text-xs);
+      /* Increase touch target size */
+      padding: var(--space-1) 0;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
     }
 
     .nav-link--github {
       display: none;
+    }
+  }
+
+  @media (max-width: 375px) {
+    .site-nav {
+      gap: var(--space-2);
     }
   }
 </style>

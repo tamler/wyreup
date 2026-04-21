@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Wyreup — File received"
+  description="Processing your shared file."
+>
+  <div id="share-receive-root" class="container share-receive">
+    <p class="share-receive__loading">Reading shared file...</p>
+  </div>
+</BaseLayout>
+
+<script>
+  // Read file(s) from Cache API (stashed by the service worker's share target handler)
+  async function loadSharedFiles() {
+    const root = document.getElementById('share-receive-root');
+    if (!root) return;
+
+    try {
+      const cache = await caches.open('wyreup-share-intake');
+      const metaResponse = await cache.match('/wyreup-share-meta');
+      if (!metaResponse) {
+        root.innerHTML = '<p class="share-receive__msg">No shared file found. <a href="/tools">Browse tools</a>.</p>';
+        return;
+      }
+
+      const meta = await metaResponse.json() as { count: number; title: string | null; text: string | null; url: string | null };
+      const files: File[] = [];
+
+      for (let i = 0; i < meta.count; i++) {
+        const fileResponse = await cache.match(`/wyreup-share-file-${i}`);
+        if (!fileResponse) continue;
+        const blob = await fileResponse.blob();
+        const name = fileResponse.headers.get('X-File-Name') ?? `shared-file-${i}`;
+        const type = fileResponse.headers.get('Content-Type') ?? blob.type;
+        files.push(new File([blob], name, { type }));
+      }
+
+      // Clear the intake cache so we don't re-process on refresh
+      await cache.delete('/wyreup-share-meta');
+      for (let i = 0; i < meta.count; i++) {
+        await cache.delete(`/wyreup-share-file-${i}`);
+      }
+
+      if (files.length === 0) {
+        root.innerHTML = '<p class="share-receive__msg">No file data in share. <a href="/tools">Browse tools</a>.</p>';
+        return;
+      }
+
+      // Push to dropStore and redirect to home so HeroDrop picks it up
+      // We store in sessionStorage as a signal since we can't import svelte stores here
+      sessionStorage.setItem('wyreup:share-file-name', files[0].name);
+      sessionStorage.setItem('wyreup:share-file-type', files[0].type);
+
+      // Dynamically import and use the drop store
+      const { dropStore } = await import('../stores/drop');
+      const { createDefaultRegistry } = await import('@wyreup/core');
+
+      const registry = createDefaultRegistry();
+      const compatibleTools = registry.toolsForFiles(files);
+      dropStore.set({ file: files[0], mime: files[0].type || 'application/octet-stream', compatibleTools });
+
+      // Navigate to home page where HeroDrop renders with the file pre-populated
+      window.location.href = '/#scenarios-section';
+    } catch (err) {
+      console.error('share-receive error:', err);
+      const root2 = document.getElementById('share-receive-root');
+      if (root2) {
+        root2.innerHTML = '<p class="share-receive__msg">Could not read shared file. <a href="/tools">Browse tools</a>.</p>';
+      }
+    }
+  }
+
+  loadSharedFiles();
+</script>
+
+<style>
+  .share-receive {
+    padding-block: 4rem;
+    min-height: 40vh;
+    display: flex;
+    align-items: center;
+  }
+
+  .share-receive__loading,
+  .share-receive__msg {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+  }
+
+  .share-receive__msg a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .share-receive__msg a:hover {
+    text-decoration: underline;
+  }
+</style>
