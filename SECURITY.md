@@ -4,7 +4,7 @@
 
 Please do **not** open a public GitHub issue for security vulnerabilities.
 
-Instead, email security reports to the maintainers (address to be configured once the repo is public).
+Instead, email security reports to [tamler@gmail.com](mailto:tamler@gmail.com). Do not open public GitHub issues for security concerns.
 
 We aim to acknowledge reports within 48 hours and provide a remediation timeline within 5 business days.
 
