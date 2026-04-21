@@ -1,0 +1,447 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="CLI — Wyreup in your terminal"
+  description="Run all 53 Wyreup tools from the shell. Same engine as the web, same privacy — scriptable, offline, CI-ready."
+>
+  <div class="dist-page">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="dist-hero" aria-labelledby="cli-heading">
+        <h1 id="cli-heading" class="dist-hero__title">Wyreup in your terminal.</h1>
+        <p class="dist-hero__sub">
+          Run all 53 tools from the shell. Same engine as the web, same privacy — now scriptable.
+        </p>
+        <div class="dist-hero__cmd">
+          <code class="dist-hero__cmd-text">npx @wyreup/cli compress photo.jpg</code>
+        </div>
+        <p class="dist-hero__note">
+          npm publish is imminent. View the source now on
+          <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="inline-link">GitHub</a>.
+        </p>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Install block -->
+      <section class="dist-section" aria-labelledby="install-heading">
+        <h2 id="install-heading" class="dist-section__title">Install</h2>
+        <div class="code-block">
+          <div class="code-block__label">One-off — no install</div>
+          <pre class="code-block__pre"><code>npx @wyreup/cli compress photo.jpg</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block__label">Global install</div>
+          <pre class="code-block__pre"><code>npm install -g @wyreup/cli
+wyreup compress photo.jpg</code></pre>
+        </div>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Usage examples -->
+      <section class="dist-section" aria-labelledby="examples-heading">
+        <h2 id="examples-heading" class="dist-section__title">Usage examples</h2>
+        <div class="example-grid">
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">Image compression</div>
+              <pre class="example-card__cmd"><code>wyreup compress photo.jpg \
+  --quality 80 -o compressed.jpg</code></pre>
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">Merge PDFs</div>
+              <pre class="example-card__cmd"><code>wyreup merge-pdf a.pdf b.pdf c.pdf \
+  -o merged.pdf</code></pre>
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">Face blur</div>
+              <pre class="example-card__cmd"><code>wyreup face-blur vacation.jpg \
+  -o anonymized.jpg</code></pre>
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">OCR extraction</div>
+              <pre class="example-card__cmd"><code>wyreup ocr scan.pdf \
+  -o text.txt</code></pre>
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">QR code</div>
+              <pre class="example-card__cmd"><code>wyreup qr "https://wyreup.com" \
+  -o qr.png</code></pre>
+            </div>
+          </div>
+          <div class="example-card">
+            <div class="example-card__inner">
+              <div class="example-card__label">Help</div>
+              <pre class="example-card__cmd"><code>wyreup --help
+wyreup compress --help</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Why CLI -->
+      <section class="dist-section" aria-labelledby="why-heading">
+        <h2 id="why-heading" class="dist-section__title">Why CLI</h2>
+        <ul class="why-list">
+          <li class="why-item">
+            <span class="why-item__label">Batch processing</span>
+            <span class="why-item__rule" aria-hidden="true"></span>
+            <span class="why-item__pad" aria-hidden="true"></span>
+            <p class="why-item__body">Process 500 photos in a loop. Same engine, same privacy.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-item__label">Scriptable</span>
+            <span class="why-item__rule" aria-hidden="true"></span>
+            <span class="why-item__pad" aria-hidden="true"></span>
+            <p class="why-item__body">Pipe into bash, make, or a CI workflow.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-item__label">Air-gapped environments</span>
+            <span class="why-item__rule" aria-hidden="true"></span>
+            <span class="why-item__pad" aria-hidden="true"></span>
+            <p class="why-item__body">Works offline. No server call, ever.</p>
+          </li>
+          <li class="why-item">
+            <span class="why-item__label">All 53 tools</span>
+            <span class="why-item__rule" aria-hidden="true"></span>
+            <span class="why-item__pad" aria-hidden="true"></span>
+            <p class="why-item__body">Same names as the web. <a href="/tools" class="inline-link">Browse all tools &rarr;</a></p>
+          </li>
+        </ul>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Related -->
+      <nav class="dist-related" aria-label="Related pages">
+        <span class="dist-related__label">Also</span>
+        <a href="/tools" class="dist-related__link">Tools</a>
+        <span class="dist-related__sep" aria-hidden="true">/</span>
+        <a href="/mcp" class="dist-related__link">MCP server</a>
+        <span class="dist-related__sep" aria-hidden="true">/</span>
+        <a href="/skill" class="dist-related__link">Agent skill</a>
+      </nav>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .dist-page {
+    padding: var(--space-12) 0 var(--space-16);
+  }
+
+  .container {
+    max-width: 800px;
+  }
+
+  /* ── Hero ── */
+  .dist-hero {
+    margin-bottom: var(--space-12);
+  }
+
+  .dist-hero__title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-family: var(--font-sans);
+  }
+
+  .dist-hero__sub {
+    font-size: var(--text-md);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 560px;
+    margin-bottom: var(--space-6);
+    font-family: var(--font-sans);
+  }
+
+  .dist-hero__cmd {
+    display: inline-flex;
+    align-items: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .dist-hero__cmd-text {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    color: var(--accent);
+    letter-spacing: 0;
+  }
+
+  .dist-hero__note {
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    font-family: var(--font-sans);
+  }
+
+  /* ── Section divider ── */
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-10) 0;
+  }
+
+  .section-rule__line {
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .section-rule__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ── Sections ── */
+  .dist-section {
+    margin-bottom: 0;
+  }
+
+  .dist-section__title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-6);
+    font-family: var(--font-sans);
+  }
+
+  /* ── Code blocks ── */
+  .code-block {
+    margin-bottom: var(--space-4);
+  }
+
+  .code-block__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-2);
+  }
+
+  .code-block__pre {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    overflow-x: auto;
+  }
+
+  .code-block__pre code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  /* ── Example grid ── */
+  .example-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+
+  .example-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1px;
+  }
+
+  .example-card__inner {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-md) - 1px);
+    padding: var(--space-3) var(--space-4);
+    height: 100%;
+  }
+
+  .example-card__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-2);
+  }
+
+  .example-card__cmd {
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .example-card__cmd code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+    line-height: 1.5;
+    white-space: pre;
+  }
+
+  /* ── Why list ── */
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .why-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--space-2);
+    align-items: center;
+  }
+
+  .why-item__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+    grid-row: 1;
+    grid-column: 1;
+    white-space: nowrap;
+  }
+
+  .why-item__rule {
+    display: block;
+    height: 1px;
+    background: var(--border-subtle);
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .why-item__pad {
+    display: block;
+    width: 5px;
+    height: 5px;
+    background: var(--border);
+    flex-shrink: 0;
+    grid-row: 1;
+    grid-column: 3;
+  }
+
+  .why-item__body {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    padding-top: var(--space-2);
+  }
+
+  /* ── Related ── */
+  .dist-related {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-10);
+  }
+
+  .dist-related__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .dist-related__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .dist-related__link:hover {
+    color: var(--text-primary);
+  }
+
+  .dist-related__sep {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+
+  /* ── Inline link ── */
+  .inline-link {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .inline-link:hover {
+    color: var(--text-primary);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .example-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .example-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .why-item {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    .why-item__rule,
+    .why-item__pad {
+      display: none;
+    }
+
+    .why-item__body {
+      grid-row: 2;
+      grid-column: 1;
+    }
+  }
+</style>

@@ -1,0 +1,390 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Agent skill — Teach Claude about Wyreup"
+  description="A skill that gives Claude the context to use Wyreup's 53 tools correctly — when to compress, when to redact, when to blur."
+>
+  <div class="dist-page">
+    <div class="container">
+
+      <!-- Hero -->
+      <section class="dist-hero" aria-labelledby="skill-heading">
+        <h1 id="skill-heading" class="dist-hero__title">Teach Claude about Wyreup.</h1>
+        <p class="dist-hero__sub">
+          A skill that gives Claude the context to use Wyreup's tools correctly — when to compress, when to redact, when to blur.
+        </p>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- What is a skill -->
+      <section class="dist-section" aria-labelledby="what-skill-heading">
+        <h2 id="what-skill-heading" class="dist-section__title">What is a skill</h2>
+        <p class="dist-section__body">
+          A skill is a structured instruction file — YAML frontmatter + markdown — that an agent reads to decide how to behave in certain situations.
+          Install Wyreup's skill and your agent recognizes when a user's task is a good fit for Wyreup, chooses the right tool from the 53 available, and invokes it correctly.
+        </p>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Install -->
+      <section class="dist-section" aria-labelledby="install-heading">
+        <h2 id="install-heading" class="dist-section__title">Install</h2>
+
+        <div class="install-paths">
+          <div class="install-path">
+            <div class="install-path__label">Global install</div>
+            <div class="code-block">
+              <pre class="code-block__pre"><code>npm install -g @wyreup/skill</code></pre>
+            </div>
+          </div>
+          <div class="install-path">
+            <div class="install-path__label">Reference locally</div>
+            <p class="install-path__body">
+              Copy the raw
+              <a
+                href="https://github.com/tamler/wyreup/blob/main/packages/skill/skill.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-link"
+              >skill.md from GitHub</a>
+              and place it where your agent picks up skills.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- What it covers -->
+      <section class="dist-section" aria-labelledby="covers-heading">
+        <h2 id="covers-heading" class="dist-section__title">What it covers</h2>
+        <ul class="covers-list">
+          <li class="covers-item">
+            <span class="covers-item__marker" aria-hidden="true"></span>
+            <span class="covers-item__text">Recognizing when a user's file task is a fit for Wyreup</span>
+          </li>
+          <li class="covers-item">
+            <span class="covers-item__marker" aria-hidden="true"></span>
+            <span class="covers-item__text">Choosing the right tool from the 53 available</span>
+          </li>
+          <li class="covers-item">
+            <span class="covers-item__marker" aria-hidden="true"></span>
+            <span class="covers-item__text">Invoking via the CLI or the MCP server</span>
+          </li>
+          <li class="covers-item">
+            <span class="covers-item__marker" aria-hidden="true"></span>
+            <span class="covers-item__text">Handling multi-output tools and errors correctly</span>
+          </li>
+          <li class="covers-item">
+            <span class="covers-item__marker" aria-hidden="true"></span>
+            <span class="covers-item__text">Privacy-preserving behavior — no uploads, no cloud calls</span>
+          </li>
+        </ul>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Pair with CLI or MCP -->
+      <section class="dist-section pair-section" aria-labelledby="pair-heading">
+        <h2 id="pair-heading" class="dist-section__title">Pair with CLI or MCP</h2>
+        <p class="dist-section__body">
+          The skill is useful only when paired with a backend. Choose the one that fits your setup.
+        </p>
+        <div class="pair-cards">
+          <a href="/cli" class="pair-card">
+            <div class="pair-card__inner">
+              <div class="pair-card__title">CLI</div>
+              <p class="pair-card__body">Shell access. Batch-friendly. Works offline.</p>
+            </div>
+          </a>
+          <a href="/mcp" class="pair-card">
+            <div class="pair-card__inner">
+              <div class="pair-card__title">MCP server</div>
+              <p class="pair-card__body">Claude Code, Claude Desktop, and any MCP-compatible client.</p>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
+      <!-- Related -->
+      <nav class="dist-related" aria-label="Related pages">
+        <span class="dist-related__label">Also</span>
+        <a href="/tools" class="dist-related__link">Tools</a>
+        <span class="dist-related__sep" aria-hidden="true">/</span>
+        <a href="/cli" class="dist-related__link">CLI</a>
+        <span class="dist-related__sep" aria-hidden="true">/</span>
+        <a href="/mcp" class="dist-related__link">MCP server</a>
+      </nav>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .dist-page {
+    padding: var(--space-12) 0 var(--space-16);
+  }
+
+  .container {
+    max-width: 800px;
+  }
+
+  /* ── Hero ── */
+  .dist-hero {
+    margin-bottom: var(--space-12);
+  }
+
+  .dist-hero__title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-family: var(--font-sans);
+  }
+
+  .dist-hero__sub {
+    font-size: var(--text-md);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 560px;
+    font-family: var(--font-sans);
+  }
+
+  /* ── Section divider ── */
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-10) 0;
+  }
+
+  .section-rule__line {
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .section-rule__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ── Sections ── */
+  .dist-section__title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-4);
+    font-family: var(--font-sans);
+  }
+
+  .dist-section__body {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 640px;
+    margin-bottom: var(--space-6);
+    font-family: var(--font-sans);
+  }
+
+  /* ── Code blocks ── */
+  .code-block {
+    margin-bottom: var(--space-4);
+  }
+
+  .code-block__pre {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    overflow-x: auto;
+  }
+
+  .code-block__pre code {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  /* ── Install paths ── */
+  .install-paths {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .install-path__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-2);
+  }
+
+  .install-path__body {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-family: var(--font-sans);
+  }
+
+  /* ── Covers list ── */
+  .covers-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .covers-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .covers-item__marker {
+    display: block;
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .covers-item__text {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── Pair cards ── */
+  .pair-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+  }
+
+  .pair-card {
+    display: block;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--duration-fast) var(--ease-sharp);
+  }
+
+  .pair-card:hover {
+    border-color: var(--text-muted);
+  }
+
+  .pair-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .pair-card__inner {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-md) - 1px);
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .pair-card__title {
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .pair-card__body {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* ── Related ── */
+  .dist-related {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-10);
+  }
+
+  .dist-related__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .dist-related__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .dist-related__link:hover {
+    color: var(--text-primary);
+  }
+
+  .dist-related__sep {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+
+  /* ── Inline link ── */
+  .inline-link {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .inline-link:hover {
+    color: var(--text-primary);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .pair-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

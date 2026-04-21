@@ -3,22 +3,35 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/motifs.css';
+import Sidebar from '../components/Sidebar.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
 
 interface Props {
   title: string;
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
+  withSidebar?: boolean;
 }
 
 const {
   title,
-  description = 'Wyreup — 52 browser-native tools. No uploads. No signup.',
+  description = 'Wyreup — 53 browser-native tools. No uploads. No signup.',
   ogTitle = title,
   ogDescription = description,
+  withSidebar = false,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+
+// Only load tool data when sidebar is needed
+const sidebarTools = withSidebar
+  ? Array.from(createDefaultRegistry().toolsById.values()).map((t) => ({
+      id: t.id,
+      name: t.name,
+      category: t.category,
+    }))
+  : [];
 ---
 
 <!DOCTYPE html>
@@ -55,6 +68,8 @@ const currentPath = Astro.url.pathname;
         <a href="/" class="wordmark" aria-current={currentPath === '/' ? 'page' : undefined}>wyreup</a>
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
+          <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
+          <a href="/skill" class="nav-link" aria-current={currentPath === '/skill' || currentPath === '/mcp' ? 'page' : undefined}>Agents</a>
           <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
           <a
             href="https://github.com/tamler/wyreup"
@@ -67,9 +82,18 @@ const currentPath = Astro.url.pathname;
       </div>
     </header>
 
-    <main class="site-main" id="main-content">
-      <slot />
-    </main>
+    {withSidebar ? (
+      <div class="with-sidebar-layout">
+        <Sidebar client:load tools={sidebarTools} currentPath={currentPath} />
+        <main class="site-main site-main--with-sidebar" id="main-content">
+          <slot />
+        </main>
+      </div>
+    ) : (
+      <main class="site-main" id="main-content">
+        <slot />
+      </main>
+    )}
 
     <footer class="site-footer">
       <div class="container footer-inner">
@@ -152,6 +176,20 @@ const currentPath = Astro.url.pathname;
   /* Main */
   .site-main {
     flex: 1;
+    min-width: 0;
+  }
+
+  /* Sidebar layout wrapper */
+  .with-sidebar-layout {
+    display: flex;
+    flex: 1;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .site-main--with-sidebar {
+    flex: 1;
+    min-width: 0;
   }
 
   /* Footer */
