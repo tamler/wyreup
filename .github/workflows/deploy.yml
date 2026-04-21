@@ -26,6 +26,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @wyreup/core build
       - run: pnpm --filter @wyreup/web build
+      - name: Ensure Pages project exists
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Idempotent: creates the 'wyreup' project on first run. On subsequent
+          # runs the API returns "already exists" and we proceed to deploy.
+          command: pages project create wyreup --production-branch main
+        continue-on-error: true
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
