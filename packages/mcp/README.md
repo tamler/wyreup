@@ -1,13 +1,87 @@
 # @wyreup/mcp
 
-MCP server exposing Wyreup tools to agents (Claude, Continue, Cursor, any MCP-aware client).
+MCP server exposing Wyreup's 66 tools to Claude Code, Claude Desktop, and any MCP-compatible agent. All tools run locally — no files leave your machine.
 
-## Usage
+## Install
+
+No install required — use `npx`:
 
 ```bash
 npx @wyreup/mcp
 ```
 
-## Status
+Or install globally:
 
-Wave 0 foundation scaffolding. Empty tool list; Wave 1 will connect the full registry.
+```bash
+npm install -g @wyreup/mcp
+```
+
+Requires Node >= 20.
+
+## Configure in Claude Code
+
+Add to your Claude Code MCP settings (`.claude/settings.json` or user settings):
+
+```json
+{
+  "mcpServers": {
+    "wyreup": {
+      "command": "npx",
+      "args": ["-y", "@wyreup/mcp"]
+    }
+  }
+}
+```
+
+## Configure in Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "wyreup": {
+      "command": "npx",
+      "args": ["-y", "@wyreup/mcp"]
+    }
+  }
+}
+```
+
+## What tools are exposed
+
+All 66 Wyreup tools are available as MCP tool calls with structured JSON params:
+
+- `input_paths` — array of local file paths
+- `output_path` / `output_dir` — where to write results
+- `params` — tool-specific options
+
+Example agent invocation (handled by MCP automatically):
+
+```json
+{
+  "tool": "compress",
+  "input_paths": ["/home/user/photo.jpg"],
+  "output_path": "/home/user/photo-small.jpg",
+  "params": { "quality": 75 }
+}
+```
+
+## Tool categories
+
+Image (16), PDF (19), Audio (3), Text/Dev (12), Create (4) — see [wyreup.com](https://wyreup.com) for the full list.
+
+## Privacy
+
+The MCP server is a local stdio process. All file operations run in-process on your machine. Nothing is sent to Wyreup's servers.
+
+## More
+
+- [wyreup.com](https://wyreup.com) — try tools in the browser
+- [CLI (@wyreup/cli)](https://wyreup.com/cli) — shell interface
+- [Agent skill (@wyreup/skill)](https://wyreup.com/skill) — teaches Claude when and how to use Wyreup
+- [GitHub](https://github.com/tamler/wyreup)
+
+## License
+
+MIT
