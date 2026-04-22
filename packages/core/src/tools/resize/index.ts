@@ -39,6 +39,27 @@ export const resize: ToolModule<ResizeParams> = {
     quality: 90,
   },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      help: '"fit" preserves aspect ratio. "exact" sets exact dimensions. "percent" scales by factor.',
+      options: [
+        { value: 'fit', label: 'Fit (preserve aspect ratio)' },
+        { value: 'exact', label: 'Exact dimensions' },
+        { value: 'percent', label: 'Percent scale' },
+      ],
+    },
+    quality: {
+      type: 'range',
+      label: 'quality',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+    },
+  },
+
   Component: ResizeComponentStub,
 
   async run(

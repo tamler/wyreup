@@ -68,6 +68,34 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
 
   defaults: defaultConvertAudioParams,
 
+  paramSchema: {
+    format: {
+      type: 'enum',
+      label: 'format',
+      options: [
+        { value: 'mp3', label: 'MP3' },
+        { value: 'wav', label: 'WAV' },
+        { value: 'ogg', label: 'OGG' },
+        { value: 'flac', label: 'FLAC' },
+        { value: 'aac', label: 'AAC' },
+        { value: 'm4a', label: 'M4A' },
+        { value: 'opus', label: 'Opus' },
+      ],
+    },
+    bitrate: {
+      type: 'enum',
+      label: 'bitrate',
+      help: 'Only applies to lossy formats (not WAV/FLAC).',
+      options: [
+        { value: '96k', label: '96 kbps' },
+        { value: '128k', label: '128 kbps' },
+        { value: '192k', label: '192 kbps' },
+        { value: '256k', label: '256 kbps' },
+        { value: '320k', label: '320 kbps' },
+      ],
+    },
+  },
+
   Component: ConvertAudioComponentStub,
 
   async run(

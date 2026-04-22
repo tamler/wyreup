@@ -33,6 +33,26 @@ export const convert: ToolModule<ConvertParams> = {
 
   defaults: { targetFormat: 'webp', quality: 90 },
 
+  paramSchema: {
+    targetFormat: {
+      type: 'enum',
+      label: 'format',
+      options: [
+        { value: 'jpeg', label: 'JPEG' },
+        { value: 'png', label: 'PNG' },
+        { value: 'webp', label: 'WebP' },
+      ],
+    },
+    quality: {
+      type: 'range',
+      label: 'quality',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+    },
+  },
+
   Component: ConvertComponentStub,
 
   async run(

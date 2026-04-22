@@ -43,6 +43,33 @@ export const qr: ToolModule<QrParams> = {
     errorCorrectionLevel: 'M',
   },
 
+  paramSchema: {
+    text: {
+      type: 'string',
+      label: 'text',
+      placeholder: 'https://example.com',
+    },
+    size: {
+      type: 'range',
+      label: 'size',
+      min: 100,
+      max: 1000,
+      step: 50,
+      unit: 'px',
+    },
+    errorCorrectionLevel: {
+      type: 'enum',
+      label: 'error correction',
+      help: 'Higher levels can recover from more damage but increase QR complexity.',
+      options: [
+        { value: 'L', label: 'L — 7%' },
+        { value: 'M', label: 'M — 15%' },
+        { value: 'Q', label: 'Q — 25%' },
+        { value: 'H', label: 'H — 30%' },
+      ],
+    },
+  },
+
   Component: QrComponentStub,
 
   async run(

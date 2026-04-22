@@ -55,6 +55,39 @@ export const convertVideo: ToolModule<ConvertVideoParams> = {
 
   defaults: defaultConvertVideoParams,
 
+  paramSchema: {
+    format: {
+      type: 'enum',
+      label: 'format',
+      options: [
+        { value: 'mp4', label: 'MP4' },
+        { value: 'webm', label: 'WebM' },
+        { value: 'mkv', label: 'MKV' },
+        { value: 'mov', label: 'MOV' },
+        { value: 'avi', label: 'AVI' },
+      ],
+    },
+    crf: {
+      type: 'range',
+      label: 'crf',
+      min: 0,
+      max: 51,
+      step: 1,
+      help: 'Constant Rate Factor. Higher = smaller file, lower quality.',
+    },
+    preset: {
+      type: 'enum',
+      label: 'preset',
+      help: 'Encoding speed vs compression tradeoff.',
+      options: [
+        { value: 'ultrafast', label: 'ultrafast' },
+        { value: 'fast', label: 'fast' },
+        { value: 'medium', label: 'medium' },
+        { value: 'slow', label: 'slow' },
+      ],
+    },
+  },
+
   Component: ConvertVideoComponentStub,
 
   async run(

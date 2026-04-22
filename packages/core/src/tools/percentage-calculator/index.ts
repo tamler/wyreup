@@ -103,6 +103,19 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
 
   defaults: { mode: 'percent-of', value: 50, base: 200, percent: 10 },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'percent-of', label: 'Percent of value (X% of Y)' },
+        { value: 'what-percent', label: 'What percent (X is what % of Y)' },
+        { value: 'percent-change', label: 'Percent change (X to Y)' },
+        { value: 'increase-decrease', label: 'Increase/decrease by %' },
+      ],
+    },
+  },
+
   Component: PercentageCalculatorComponentStub,
 
   // eslint-disable-next-line @typescript-eslint/require-await

@@ -33,6 +33,17 @@ export const jsonFormatter: ToolModule<JsonFormatterParams> = {
 
   defaults: { indent: 2 },
 
+  paramSchema: {
+    indent: {
+      type: 'range',
+      label: 'indent',
+      min: 0,
+      max: 8,
+      step: 1,
+      unit: ' spaces',
+    },
+  },
+
   Component: JsonFormatterComponentStub,
 
   async run(

@@ -33,6 +33,18 @@ export const rotateImage: ToolModule<RotateImageParams> = {
 
   defaults: { degrees: 90 },
 
+  paramSchema: {
+    degrees: {
+      type: 'enum',
+      label: 'degrees',
+      options: [
+        { value: 90, label: '90°' },
+        { value: 180, label: '180°' },
+        { value: 270, label: '270°' },
+      ],
+    },
+  },
+
   Component: RotateImageComponentStub,
 
   async run(

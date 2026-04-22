@@ -73,6 +73,27 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
 
   defaults: { degrees: 90, pages: 'all' },
 
+  paramSchema: {
+    degrees: {
+      type: 'enum',
+      label: 'degrees',
+      options: [
+        { value: 90, label: '90°' },
+        { value: 180, label: '180°' },
+        { value: 270, label: '270°' },
+      ],
+    },
+    pages: {
+      type: 'enum',
+      label: 'pages',
+      options: [
+        { value: 'all', label: 'All pages' },
+        { value: 'odd', label: 'Odd pages' },
+        { value: 'even', label: 'Even pages' },
+      ],
+    },
+  },
+
   Component: RotatePdfComponentStub,
 
   async run(

@@ -32,6 +32,19 @@ export const hash: ToolModule<HashParams> = {
 
   defaults: { algorithms: ['SHA-256'] },
 
+  paramSchema: {
+    algorithms: {
+      type: 'multi-enum',
+      label: 'algorithms',
+      help: 'Select one or more hash algorithms to compute.',
+      options: [
+        { value: 'SHA-1', label: 'SHA-1' },
+        { value: 'SHA-256', label: 'SHA-256' },
+        { value: 'SHA-512', label: 'SHA-512' },
+      ],
+    },
+  },
+
   Component: HashComponentStub,
 
   async run(

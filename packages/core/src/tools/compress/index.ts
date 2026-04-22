@@ -38,6 +38,18 @@ export const compress: ToolModule<CompressParams> = {
 
   defaults: { quality: 80 },
 
+  paramSchema: {
+    quality: {
+      type: 'range',
+      label: 'quality',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+      help: 'Lower quality = smaller file size.',
+    },
+  },
+
   Component: CompressComponentStub,
 
   async run(

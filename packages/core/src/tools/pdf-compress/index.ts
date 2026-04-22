@@ -41,6 +41,23 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
   defaults,
 
+  paramSchema: {
+    imageQuality: {
+      type: 'range',
+      label: 'image quality',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+      help: 'JPEG quality for embedded images. Lower = smaller file.',
+    },
+    pngToJpeg: {
+      type: 'boolean',
+      label: 'convert PNG to JPEG',
+      help: 'Re-encode PNG images as JPEG for additional size reduction.',
+    },
+  },
+
   Component: PdfCompressComponentStub,
 
   async run(

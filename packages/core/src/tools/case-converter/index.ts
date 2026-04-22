@@ -80,6 +80,23 @@ export const caseConverter: ToolModule<CaseConverterParams> = {
 
   defaults: defaultCaseConverterParams,
 
+  paramSchema: {
+    case: {
+      type: 'enum',
+      label: 'case',
+      options: [
+        { value: 'upper', label: 'UPPERCASE' },
+        { value: 'lower', label: 'lowercase' },
+        { value: 'title', label: 'Title Case' },
+        { value: 'camel', label: 'camelCase' },
+        { value: 'snake', label: 'snake_case' },
+        { value: 'kebab', label: 'kebab-case' },
+        { value: 'pascal', label: 'PascalCase' },
+        { value: 'constant', label: 'CONSTANT_CASE' },
+      ],
+    },
+  },
+
   Component: CaseConverterComponentStub,
 
   async run(

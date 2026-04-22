@@ -44,6 +44,21 @@ export const unicodeNormalize: ToolModule<UnicodeNormalizeParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultUnicodeNormalizeParams,
+
+  paramSchema: {
+    form: {
+      type: 'enum',
+      label: 'form',
+      help: 'NFC is the most common. Use NFKC/NFKD to also apply compatibility decomposition.',
+      options: [
+        { value: 'NFC', label: 'NFC — precomposed (most common)' },
+        { value: 'NFD', label: 'NFD — decomposed' },
+        { value: 'NFKC', label: 'NFKC — compatibility precomposed' },
+        { value: 'NFKD', label: 'NFKD — compatibility decomposed' },
+      ],
+    },
+  },
+
   Component: UnicodeNormalizeComponentStub,
 
   async run(inputs: File[], params: UnicodeNormalizeParams, ctx: ToolRunContext): Promise<Blob[]> {

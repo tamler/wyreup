@@ -42,6 +42,48 @@ export const imageWatermark: ToolModule<ImageWatermarkParams> = {
     quality: 90,
   },
 
+  paramSchema: {
+    text: {
+      type: 'string',
+      label: 'watermark text',
+      placeholder: 'Copyright 2025',
+    },
+    position: {
+      type: 'enum',
+      label: 'position',
+      options: [
+        { value: 'top-left', label: 'Top left' },
+        { value: 'top-right', label: 'Top right' },
+        { value: 'center', label: 'Center' },
+        { value: 'bottom-left', label: 'Bottom left' },
+        { value: 'bottom-right', label: 'Bottom right' },
+      ],
+    },
+    opacity: {
+      type: 'range',
+      label: 'opacity',
+      min: 0,
+      max: 1,
+      step: 0.05,
+    },
+    fontSize: {
+      type: 'number',
+      label: 'font size',
+      min: 8,
+      max: 256,
+      step: 1,
+      unit: 'px',
+    },
+    quality: {
+      type: 'range',
+      label: 'output quality',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+    },
+  },
+
   Component: ImageWatermarkComponentStub,
 
   async run(

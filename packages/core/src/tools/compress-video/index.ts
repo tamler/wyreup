@@ -38,6 +38,28 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
 
   defaults: defaultCompressVideoParams,
 
+  paramSchema: {
+    crf: {
+      type: 'range',
+      label: 'crf',
+      min: 0,
+      max: 51,
+      step: 1,
+      help: 'Constant Rate Factor. Higher = smaller file, lower quality. 28 is a good default.',
+    },
+    preset: {
+      type: 'enum',
+      label: 'preset',
+      help: 'Encoding speed. Slower presets compress better but take longer.',
+      options: [
+        { value: 'ultrafast', label: 'ultrafast' },
+        { value: 'fast', label: 'fast' },
+        { value: 'medium', label: 'medium' },
+        { value: 'slow', label: 'slow' },
+      ],
+    },
+  },
+
   Component: CompressVideoComponentStub,
 
   async run(
