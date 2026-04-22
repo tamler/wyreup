@@ -3,15 +3,12 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/motifs.css';
-import Sidebar from '../components/Sidebar.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
 
 interface Props {
   title: string;
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
-  withSidebar?: boolean;
 }
 
 const {
@@ -19,19 +16,9 @@ const {
   description = 'Wyreup — 53 browser-native tools. No uploads. No signup.',
   ogTitle = title,
   ogDescription = description,
-  withSidebar = false,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
-
-// Only load tool data when sidebar is needed
-const sidebarTools = withSidebar
-  ? Array.from(createDefaultRegistry().toolsById.values()).map((t) => ({
-      id: t.id,
-      name: t.name,
-      category: t.category,
-    }))
-  : [];
 ---
 
 <!DOCTYPE html>
@@ -86,18 +73,9 @@ const sidebarTools = withSidebar
       </div>
     </header>
 
-    {withSidebar ? (
-      <div class="with-sidebar-layout">
-        <Sidebar client:load tools={sidebarTools} currentPath={currentPath} />
-        <main class="site-main site-main--with-sidebar" id="main-content">
-          <slot />
-        </main>
-      </div>
-    ) : (
-      <main class="site-main" id="main-content">
-        <slot />
-      </main>
-    )}
+    <main class="site-main" id="main-content">
+      <slot />
+    </main>
 
     <footer class="site-footer">
       <div class="container footer-inner">
@@ -180,19 +158,6 @@ const sidebarTools = withSidebar
 
   /* Main */
   .site-main {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Sidebar layout wrapper */
-  .with-sidebar-layout {
-    display: flex;
-    flex: 1;
-    align-items: flex-start;
-    min-width: 0;
-  }
-
-  .site-main--with-sidebar {
     flex: 1;
     min-width: 0;
   }
