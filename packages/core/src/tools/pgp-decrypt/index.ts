@@ -82,8 +82,13 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     const decryptedBytes = data as Uint8Array;
-    // Use the Uint8Array directly (not .buffer) to avoid including unused backing buffer bytes.
-    return [new Blob([decryptedBytes], { type: 'application/octet-stream' })];
+    // Copy into a fresh ArrayBuffer-backed view so the Blob constructor's
+    // strict TS type (BlobPart = ArrayBufferView<ArrayBuffer>) accepts it.
+    // Uint8Array's backing can be SharedArrayBuffer in some runtimes, which
+    // TS rejects for Blob. Copy avoids that at negligible cost.
+    const copy = new Uint8Array(decryptedBytes.byteLength);
+    copy.set(decryptedBytes);
+    return [new Blob([copy], { type: 'application/octet-stream' })];
   },
 
   __testFixtures: {
