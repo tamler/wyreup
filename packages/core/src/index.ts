@@ -14,6 +14,8 @@ export type {
   MemoryEstimate,
   MimePattern,
   ToolRequires,
+  ParamFieldSchema,
+  ParamSchema,
 } from './types.js';
 
 export type { ComponentType } from './ui-types.js';

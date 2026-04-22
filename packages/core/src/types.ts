@@ -122,6 +122,77 @@ export interface ToolComponentProps<Params> {
   onCancel: () => void;
 }
 
+// ──── Declarative param field metadata ────
+
+/**
+ * Declarative param field metadata. When a tool provides `paramSchema`,
+ * the auto-generated form in the web surface uses these types to render
+ * proper controls (enum -> select, range -> slider, etc.) instead of
+ * falling back to typeof-inference on `defaults`.
+ */
+export type ParamFieldSchema =
+  | {
+      type: 'string';
+      label?: string;
+      help?: string;
+      placeholder?: string;
+      minLength?: number;
+      maxLength?: number;
+      multiline?: boolean;
+    }
+  | {
+      type: 'number';
+      label?: string;
+      help?: string;
+      min?: number;
+      max?: number;
+      step?: number;
+      unit?: string;
+    }
+  | {
+      type: 'range';
+      label?: string;
+      help?: string;
+      min: number;
+      max: number;
+      step?: number;
+      unit?: string;
+    }
+  | {
+      type: 'boolean';
+      label?: string;
+      help?: string;
+    }
+  | {
+      type: 'enum';
+      label?: string;
+      help?: string;
+      options: Array<{ value: string | number; label: string; help?: string }>;
+    }
+  | {
+      type: 'multi-enum';
+      label?: string;
+      help?: string;
+      options: Array<{ value: string; label: string }>;
+    }
+  | {
+      type: 'array';
+      label?: string;
+      help?: string;
+      itemType: 'string' | 'number';
+      placeholder?: string;
+    }
+  | {
+      type: 'json';
+      label?: string;
+      help?: string;
+      placeholder?: string;
+    };
+
+export type ParamSchema<P> = {
+  [K in keyof P]?: ParamFieldSchema;
+};
+
 // ──── The ToolModule interface ────
 
 export interface ToolModule<Params = unknown> {
@@ -161,6 +232,13 @@ export interface ToolModule<Params = unknown> {
   // Presets
   defaults: Params;
   applyPreset?: (preset: Partial<Params>, defaults: Params) => Params;
+
+  /**
+   * Optional declarative param schema. When provided, the auto-generated
+   * form uses these types to render proper UI controls. Fields not in
+   * the schema fall back to typeof-inference on `defaults`.
+   */
+  paramSchema?: ParamSchema<Params>;
 
   /**
    * Approximate additional download size (bytes) this tool requires beyond
