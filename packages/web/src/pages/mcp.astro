@@ -1,13 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { createDefaultRegistry } from '@wyreup/core';
-
-const toolCount = createDefaultRegistry().toolsById.size;
 ---
 
 <BaseLayout
   title="MCP server — Wyreup for agents"
-  description={`An MCP server that exposes ${toolCount} Wyreup tools to Claude Code, Cline, Continue, and any MCP-compatible client. Files never leave your machine.`}
+  description="An MCP server that exposes Wyreup's tools to Claude Code, Cline, Continue, and any MCP-compatible client. Files never leave your machine."
 >
   <div class="dist-page">
     <div class="container">
@@ -16,7 +13,7 @@ const toolCount = createDefaultRegistry().toolsById.size;
       <section class="dist-hero" aria-labelledby="mcp-heading">
         <h1 id="mcp-heading" class="dist-hero__title">Wyreup for agents.</h1>
         <p class="dist-hero__sub">
-          An MCP server that exposes {toolCount} tools to Claude Code, Cline, Continue, and any MCP-compatible client.
+          An MCP server that exposes Wyreup's tools to Claude Code, Cline, Continue, and any MCP-compatible client.
         </p>
       </section>
 
@@ -30,7 +27,7 @@ const toolCount = createDefaultRegistry().toolsById.size;
         <h2 id="what-mcp-heading" class="dist-section__title">What is MCP</h2>
         <p class="dist-section__body">
           MCP is an open protocol that lets AI assistants call external tools.
-          Wyreup's MCP server wraps all {toolCount} Wyreup tools so your agent can compress images, redact PDFs,
+          Wyreup's MCP server wraps every tool so your agent can compress images, redact PDFs,
           or blur faces on your machine — without your files ever leaving it.
           Learn more at <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" class="inline-link">modelcontextprotocol.io</a>.
         </p>

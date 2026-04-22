@@ -4,14 +4,11 @@ import HeroDrop from '../components/HeroDrop.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
 import InstallCard from '../components/InstallCard.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
-
-const toolCount = createDefaultRegistry().toolsById.size;
 ---
 
 <BaseLayout
   title="Wyreup — Privacy and productivity. Have both."
-  description={`${toolCount} browser-side tools for images, PDFs, audio, text, and code. Everything runs on your device. Your files never upload, never cache, never phone home.`}
+  description="Browser-native tools for images, PDFs, audio, text, and code. Everything runs on your device. Your files never upload, never cache, never phone home."
 >
   <PwaOnboardBanner client:load />
 
@@ -22,7 +19,7 @@ const toolCount = createDefaultRegistry().toolsById.size;
       <div class="hero__copy">
         <h1 class="hero__headline">Privacy and productivity.<br>Have both.</h1>
         <p class="hero__body">
-          {toolCount} browser-side tools for images, PDFs, audio, text, and code.
+          Browser-native tools for images, PDFs, audio, text, and code.
           Everything runs on your device. Your files never upload, never cache, never phone home.
         </p>
         <div class="hero__actions">

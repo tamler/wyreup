@@ -205,7 +205,7 @@
 /* ─────────────────────────────────────────────── */
 
 /* Solder-pad stat — decorative stat block using the motif inline
-   Usage: <div class="solder-stat"><span class="solder-stat__line"></span><span class="solder-stat__pad"></span><span class="solder-stat__text">52 tools</span></div> */
+   Usage: <div class="solder-stat"><span class="solder-stat__line"></span><span class="solder-stat__pad"></span><span class="solder-stat__text">example</span></div> */
 .solder-stat {
   display: flex;
   align-items: center;

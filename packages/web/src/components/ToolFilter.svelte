@@ -11,7 +11,6 @@
 
   export let tools: Tool[] = [];
   export let categories: string[] = [];
-  export let toolCount: number = 0;
 
   // ── State ──────────────────────────────────────────────────────────────────
 
@@ -119,7 +118,7 @@
   <input
     class="filter-search"
     type="search"
-    placeholder="Search {toolCount} tools..."
+    placeholder="Search tools..."
     bind:value={query}
     aria-label="Search tools"
   />

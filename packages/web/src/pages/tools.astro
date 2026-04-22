@@ -17,8 +17,6 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
 // Sorted unique categories
 const categories = [...new Set(tools.map((t) => t.category))].sort();
 
-const toolCount = tools.length;
-
 interface ExampleChain {
   id: string;
   name: string;
@@ -87,28 +85,20 @@ function toolDisplayName(id: string): string {
 ---
 
 <BaseLayout
-  title={`All ${toolCount} tools — Wyreup`}
-  description={`${toolCount} browser-native tools across image, PDF, text, and dev categories. Compress, convert, inspect, redact — nothing uploads.`}
-  ogDescription={`${toolCount} browser-native tools. Image editing, PDF processing, text utilities, dev tools — all run locally, no uploads.`}
+  title="Tools — Wyreup"
+  description="Browser-native tools across image, PDF, audio, text, and dev categories. Compress, convert, inspect, redact — nothing uploads."
+  ogDescription="Browser-native tools. Image editing, PDF processing, text utilities, dev tools — all run locally, no uploads."
 >
   <section class="tools-page">
     <div class="container">
       <div class="page-header">
         <h1 class="page-title">Tools</h1>
-        <div class="page-meta">
-          <div class="solder-stat">
-            <span class="solder-stat__line" aria-hidden="true"></span>
-            <span class="solder-stat__pad" aria-hidden="true"></span>
-            <span class="solder-stat__text">{toolCount} tools</span>
-          </div>
-        </div>
       </div>
 
       <ToolFilter
         client:load
         tools={tools}
         categories={categories}
-        toolCount={toolCount}
       />
 
       <!-- Example Chains section -->
