@@ -67,6 +67,7 @@
     "@cantoo/pdf-lib": "^2.6.5",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.2",
+    "@huggingface/transformers": "^4.0.0",
     "@jsquash/jpeg": "^1.6.0",
     "@jsquash/png": "^3.1.0",
     "@jsquash/webp": "^1.5.0",
@@ -78,9 +79,11 @@
     "cron-parser": "^4.9.0",
     "culori": "^4.0.0",
     "diff": "^7.0.0",
+    "gpt-tokenizer": "^2.5.0",
     "js-yaml": "^4.1.0",
     "jsqr": "^1.4.0",
     "jszip": "^3.10.1",
+    "leven": "^4.0.0",
     "marked": "^15.0.0",
     "onnxruntime-web": "^1.24.3",
     "openpgp": "^5.11.2",
@@ -93,6 +96,7 @@
     "sql-formatter": "^15.4.0",
     "svgo": "^3.3.2",
     "tesseract.js": "^5.1.0",
+    "text-readability": "^1.1.0",
     "turndown": "^7.2.0"
   }
 }

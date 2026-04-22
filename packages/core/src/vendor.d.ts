@@ -21,3 +21,18 @@ declare module 'diff' {
     options?: { context?: number },
   ): string;
 }
+
+declare module 'text-readability' {
+  interface ReadabilityInstance {
+    fleschReadingEase(text: string): number;
+    fleschKincaidGrade(text: string): number;
+    colemanLiauIndex(text: string): number;
+    smogIndex(text: string): number;
+    automatedReadabilityIndex(text: string): number;
+    daleChallReadabilityScore(text: string): number;
+    gunningFog(text: string): number;
+    textStandard(text: string): string;
+  }
+  const readability: ReadabilityInstance;
+  export default readability;
+}
