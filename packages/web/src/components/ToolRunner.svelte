@@ -11,6 +11,10 @@
   import JsonResultRunner from './runners/JsonResultRunner.svelte';
   import TextResultRunner from './runners/TextResultRunner.svelte';
   import GenerateRunner from './runners/GenerateRunner.svelte';
+  import CompoundInterestRunner from './runners/CompoundInterestRunner.svelte';
+  import InvestmentDcaRunner from './runners/InvestmentDcaRunner.svelte';
+  import PercentageCalculatorRunner from './runners/PercentageCalculatorRunner.svelte';
+  import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -46,6 +50,10 @@
     JsonResultRunner,
     TextResultRunner,
     GenerateRunner,
+    CompoundInterestRunner,
+    InvestmentDcaRunner,
+    PercentageCalculatorRunner,
+    DateCalculatorRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

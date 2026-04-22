@@ -9,7 +9,11 @@ export type RunnerVariant =
   | 'JsonResultRunner'
   | 'TextResultRunner'
   | 'GenerateRunner'
-  | 'PreviewRunner';
+  | 'PreviewRunner'
+  | 'CompoundInterestRunner'
+  | 'InvestmentDcaRunner'
+  | 'PercentageCalculatorRunner'
+  | 'DateCalculatorRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -63,6 +67,12 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   qr: 'GenerateRunner',
   'lorem-ipsum': 'GenerateRunner',
   'password-generator': 'GenerateRunner',
+
+  // Finance runners — custom calculator UIs
+  'compound-interest': 'CompoundInterestRunner',
+  'investment-dca': 'InvestmentDcaRunner',
+  'percentage-calculator': 'PercentageCalculatorRunner',
+  'date-calculator': 'DateCalculatorRunner',
 
   // PreviewRunner — single file in, single blob out, prominent preview
   'face-blur': 'PreviewRunner',
