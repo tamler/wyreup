@@ -140,20 +140,18 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
   // Use the bundled WASM files from the npm package, resolved via file URL.
   // In browsers the bundler will handle this; in Node we resolve from node_modules.
   let wasmPath: string;
-  if (typeof process !== 'undefined' && process.versions?.node) {
-    // Node: resolve the wasm/ directory from the installed package.
-    // Use createRequire to find the package root, then append /wasm.
-    // We use the vision_bundle.mjs entrypoint (exported as ".") to locate the pkg root.
+  if (typeof window !== 'undefined') {
+    // Browser: use CDN — the package itself is excluded from the browser bundle
+    // (externalized in vite config) so we can't resolve a local path.
+    wasmPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
+  } else {
+    // Node (tests/CLI): resolve the wasm/ directory from the installed package.
     const { createRequire } = await import('node:module');
     const { pathToFileURL } = await import('node:url');
     const nodePath = await import('node:path');
     const req = createRequire(import.meta.url);
-    // resolve the CJS bundle — this works even with an exports map
     const bundlePath = req.resolve('@mediapipe/tasks-vision');
     wasmPath = pathToFileURL(nodePath.join(nodePath.dirname(bundlePath), 'wasm')).href;
-  } else {
-    // Browser: CDN fallback (bundler can override via alias)
-    wasmPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
   }
 
   const vision = await FilesetResolver.forVisionTasks(wasmPath);
