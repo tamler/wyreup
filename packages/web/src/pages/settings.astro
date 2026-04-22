@@ -50,7 +50,7 @@ const GROUP_LABELS: Record<string, { name: string; description: (toolIds: string
   'nlp-translate': {
     name: 'Text translation (M2M100)',
     description: (_toolIds, totalMb) =>
-      `Translate between 100+ languages using the M2M100 neural model. Downloads ~${totalMb} MB on first use — runs entirely on your device. Kept separate due to its larger download size.`,
+      `Translation model (${totalMb} MB). Only needed as a fallback — Chrome 131+ and Firefox use their built-in translator automatically.`,
   },
 };
 
