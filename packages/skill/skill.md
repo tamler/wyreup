@@ -1,13 +1,13 @@
 ---
 name: wyreup
-description: Run Wyreup's 72 browser-native tools on files — compress, convert, merge, redact, blur, OCR, and more. Use when the user wants to transform files (images, PDFs, text) without uploading them to a cloud service. Requires either wyreup CLI installed OR @wyreup/mcp MCP server configured.
+description: Run Wyreup's browser-native tools on files — compress, convert, merge, redact, blur, OCR, and more. Use when the user wants to transform files (images, PDFs, text) without uploading them to a cloud service. Requires either wyreup CLI installed OR @wyreup/mcp MCP server configured.
 ---
 
 > **This skill covers both CLI and MCP backends.** If you only use one, consider the lighter `@wyreup/cli-skill` (CLI only) or `@wyreup/mcp-skill` (MCP only) instead — smaller token footprint.
 
 # Wyreup skill
 
-Wyreup is a library of 72 privacy-first file tools that run locally — in the browser or on the user's machine. This skill teaches your AI assistant when and how to call Wyreup. It is compatible with any agent runtime that supports skills (Claude Code, Claude Desktop, Claude.ai, and others).
+Wyreup is a library of privacy-first file tools that run locally — in the browser or on the user's machine. This skill teaches your AI assistant when and how to call Wyreup. It is compatible with any agent runtime that supports skills (Claude Code, Claude Desktop, Claude.ai, and others).
 
 ## When to use
 

@@ -1,6 +1,6 @@
 # @wyreup/mcp
 
-MCP server exposing Wyreup's 66 tools to Claude Code, Claude Desktop, and any MCP-compatible agent. All tools run locally — no files leave your machine.
+MCP server exposing Wyreup's tools to Claude Code, Claude Desktop, Cline, Continue, and any MCP-compatible agent. All tools run locally — no files leave your machine.
 
 ## Install
 
@@ -50,7 +50,7 @@ Add to `claude_desktop_config.json`:
 
 ## What tools are exposed
 
-All 66 Wyreup tools are available as MCP tool calls with structured JSON params:
+Every Wyreup tool is exposed as an MCP tool call with structured JSON params:
 
 - `input_paths` — array of local file paths
 - `output_path` / `output_dir` — where to write results

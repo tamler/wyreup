@@ -1,6 +1,6 @@
 # @wyreup/cli
 
-Wyreup CLI — 66 privacy-first file tools from the shell. Same engine as [wyreup.com](https://wyreup.com), fully offline and scriptable.
+Wyreup CLI — privacy-first file tools from the shell. Same engine as [wyreup.com](https://wyreup.com), fully offline and scriptable.
 
 ## Install
 

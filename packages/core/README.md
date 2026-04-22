@@ -1,6 +1,6 @@
 # @wyreup/core
 
-Privacy-first, browser-native tool library. 66 tools for images, PDFs, audio, and text — every operation runs on-device using WebAssembly and browser-native APIs. Nothing uploads.
+Privacy-first, browser-native tool library. Tools for images, PDFs, audio, and text — every operation runs on-device using WebAssembly and browser-native APIs. Nothing uploads.
 
 ## Install
 
@@ -25,11 +25,14 @@ const result = await runTool('compress', {
 
 ### Available tool categories
 
-- **Image** (16 tools) — compress, convert, crop, resize, rotate, flip, watermark, face-blur, strip-exif, image-diff, OCR, SVG to PNG, favicon, color palette, grayscale, sepia
-- **PDF** (19 tools) — merge, split, compress, rotate, reorder, extract/delete pages, add page numbers, encrypt/decrypt, redact, extract tables, extract text, PDF to image, image to PDF, watermark, PDF info
-- **Audio** (3 tools) — convert, trim, merge
-- **Text/Dev** (12 tools) — JSON formatter, base64, URL encoder, hash, Markdown/HTML, text diff, word counter, regex tester, timestamp converter, color converter, lorem ipsum, UUID generator
-- **Create** (4 tools) — QR code, UUID, password, lorem ipsum
+- **Image** — compress, convert, crop, resize, rotate, flip, watermark, face-blur, strip-exif, image-diff, OCR, SVG rendering, favicon, color palette
+- **PDF** — merge, split, compress, rotate, reorder, extract/delete pages, page numbers, encrypt/decrypt, redact, extract tables/text, convert to/from images, watermark, metadata
+- **Audio** — enhance and upscale low-quality recordings
+- **Text / Dev** — JSON, YAML, CSV, base64, URL encoding, hashing, JWT decode, SQL/XML/HTML/CSS formatting, diff, word count, regex, Markdown and HTML conversion
+- **Create** — QR codes, UUIDs, secure passwords, lorem ipsum, slugs
+- **Finance** — compound interest, dollar-cost averaging, percentages, dates
+
+Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 
 ### Dual build
 
@@ -42,7 +45,7 @@ Your bundler resolves the right one automatically via the `exports` map.
 
 ## More
 
-- [wyreup.com](https://wyreup.com) — try all 66 tools in the browser
+- [wyreup.com](https://wyreup.com) — try every tool in the browser
 - [CLI (@wyreup/cli)](https://wyreup.com/cli) — shell interface
 - [MCP server (@wyreup/mcp)](https://wyreup.com/mcp) — agent interface
 - [GitHub](https://github.com/tamler/wyreup)

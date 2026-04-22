@@ -1,11 +1,11 @@
 ---
 name: wyreup-mcp
-description: Invoke Wyreup's 72 file tools through the Wyreup MCP server. Use when your agent runtime has MCP transport configured (e.g., @wyreup/mcp server registered via the agent client's MCP config). The tools read and write local files — nothing is uploaded.
+description: Invoke Wyreup's file tools through the Wyreup MCP server. Use when your agent runtime has MCP transport configured (e.g., @wyreup/mcp server registered via the agent client's MCP config). The tools read and write local files — nothing is uploaded.
 ---
 
 # Wyreup MCP skill
 
-Wyreup is a library of 72 privacy-first file tools that run locally. This skill is for **MCP contexts** — agent runtimes that call tools via the Model Context Protocol (Claude Code, Claude Desktop, Cline, Continue, Zed, or any custom agent using the MCP SDKs). It is smaller than `@wyreup/skill` because it omits CLI guidance and focuses entirely on MCP invocation shapes.
+Wyreup is a library of privacy-first file tools that run locally. This skill is for **MCP contexts** — agent runtimes that call tools via the Model Context Protocol (Claude Code, Claude Desktop, Cline, Continue, Zed, or any custom agent using the MCP SDKs). It is smaller than `@wyreup/skill` because it omits CLI guidance and focuses entirely on MCP invocation shapes.
 
 > If your agent context is CLI-only (shell commands, terminal agents), use `@wyreup/cli-skill` instead.
 > If you want both CLI and MCP guidance in one file, use `@wyreup/skill`.

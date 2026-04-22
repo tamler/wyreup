@@ -1,16 +1,16 @@
 # @wyreup/cli-skill
 
-An agent skill that teaches AI assistants how to invoke Wyreup's 72 local file tools via the `wyreup` CLI. Smaller token footprint than `@wyreup/skill` — no MCP guidance, no JSON schemas, just shell commands.
+An agent skill that teaches AI assistants how to invoke Wyreup's local file tools via the `wyreup` CLI. Smaller token footprint than `@wyreup/skill` — no MCP guidance, no JSON schemas, just shell commands.
 
 Use this package when your agent context is CLI-only (a shell-capable agent runtime like Claude Code, Aider, or a terminal script). If you want MCP support, use `@wyreup/mcp-skill`. If you want both CLI and MCP guidance, use `@wyreup/skill`.
 
 ## What this is
 
-This package contains `skill.md` — a structured instruction file that an agent reads to understand when and how to invoke Wyreup tools via the CLI. It covers all 72 tools across six categories: image, PDF, text/dev, create, finance, and AI/privacy.
+This package contains `skill.md` — a structured instruction file that an agent reads to understand when and how to invoke Wyreup tools via the CLI. It covers tools across image, PDF, audio, text/dev, create, and finance categories.
 
 When the skill is installed, an agent can:
 - Recognize when a user's file task is a good fit for Wyreup
-- Choose the right tool from the 72 available
+- Choose the right tool for the task
 - Invoke it as a shell command: `wyreup <tool> <input> -o <output> [--options]`
 - Handle multi-output tools, error cases, and privacy-sensitive contexts correctly
 
@@ -53,7 +53,7 @@ This package does NOT cover MCP. If you want structured MCP tool calls, use `@wy
 
 ## More
 
-- [wyreup.com](https://wyreup.com) — try all 72 tools in the browser, no install needed
+- [wyreup.com](https://wyreup.com) — try every tool in the browser, no install needed
 - [GitHub](https://github.com/tamler/wyreup)
 
 ## License

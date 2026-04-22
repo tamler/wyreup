@@ -1,6 +1,6 @@
 # @wyreup/skill
 
-An agent skill that teaches AI assistants how to use Wyreup's 72 local file-processing tools. Written in the standard `skill.md` format (YAML frontmatter + markdown body), compatible with any agent runtime that supports skills — Claude Code, Claude Desktop, Claude.ai, and others.
+An agent skill that teaches AI assistants how to use Wyreup's local file-processing tools. Written in the standard `skill.md` format (YAML frontmatter + markdown body), compatible with any agent runtime that supports skills — Claude Code, Claude Desktop, Claude.ai, and others.
 
 This is the **umbrella skill** covering both CLI and MCP backends. If you only use one backend, consider the lighter alternatives:
 - `@wyreup/cli-skill` — CLI only (no MCP guidance, smaller footprint)
@@ -8,11 +8,11 @@ This is the **umbrella skill** covering both CLI and MCP backends. If you only u
 
 ## What this is
 
-This package contains `skill.md` — a structured instruction file that an agent reads to understand when and how to invoke Wyreup tools. It covers all 72 tools across six categories: image, PDF, audio, text/dev, create, and finance.
+This package contains `skill.md` — a structured instruction file that an agent reads to understand when and how to invoke Wyreup tools. It covers tools across image, PDF, audio, text/dev, create, and finance categories.
 
 When the skill is installed, an agent can:
 - Recognize when a user's file task is a good fit for Wyreup
-- Choose the right tool from the 72 available
+- Choose the right tool for the task
 - Invoke it via the `wyreup` CLI or the `@wyreup/mcp` MCP server
 - Handle multi-output tools, error cases, and privacy-sensitive contexts correctly
 
@@ -57,7 +57,7 @@ Add the Wyreup MCP server to your agent client (Claude Code, Claude Desktop, Cli
 }
 ```
 
-The MCP server exposes all 72 tools with structured JSON params.
+The MCP server exposes every tool with structured JSON params.
 
 ## More
 
