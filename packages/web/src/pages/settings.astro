@@ -4,15 +4,65 @@ import ToolSettings from '../components/ToolSettings.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 const registry = createDefaultRegistry();
-const heavyTools = Array.from(registry.toolsById.values())
-  .filter((t) => t.installSize !== undefined)
-  .map((t) => ({
-    id: t.id,
-    name: t.name,
-    description: t.description,
-    installSize: t.installSize as number,
-    slug: t.slug,
-  }));
+
+// Build the list of heavy tools, grouping those that share an installGroup.
+// Tools in the same installGroup share one download (e.g. all ffmpeg tools share ffmpeg.wasm).
+// We present the group as a single entry rather than listing every individual tool.
+
+type HeavyEntry =
+  | {
+      type: 'tool';
+      id: string;
+      name: string;
+      description: string;
+      installSize: number;
+      slug: string;
+    }
+  | {
+      type: 'group';
+      id: string;
+      name: string;
+      description: string;
+      installSize: number;
+      toolIds: string[];
+    };
+
+const seenGroups = new Set<string>();
+const heavyTools: HeavyEntry[] = [];
+
+for (const t of registry.toolsById.values()) {
+  if (t.installSize === undefined) continue;
+
+  const group = (t as { installGroup?: string }).installGroup;
+  if (group) {
+    if (seenGroups.has(group)) continue;
+    seenGroups.add(group);
+    // Collect all tool IDs in this group
+    const groupToolIds = Array.from(registry.toolsById.values())
+      .filter((g) => (g as { installGroup?: string }).installGroup === group)
+      .map((g) => g.id);
+    heavyTools.push({
+      type: 'group',
+      id: group,
+      name: group === 'ffmpeg' ? 'Audio/Video tools (ffmpeg)' : group,
+      description:
+        group === 'ffmpeg'
+          ? `${groupToolIds.length} audio and video conversion tools powered by ffmpeg.wasm. Downloads ~30 MB on first use.`
+          : `Tool group: ${group}`,
+      installSize: t.installSize,
+      toolIds: groupToolIds,
+    });
+  } else {
+    heavyTools.push({
+      type: 'tool',
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      installSize: t.installSize,
+      slug: t.slug,
+    });
+  }
+}
 ---
 
 <BaseLayout

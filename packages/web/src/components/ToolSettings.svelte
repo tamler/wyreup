@@ -1,15 +1,25 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  interface HeavyTool {
-    id: string;
-    name: string;
-    description: string;
-    installSize: number;
-    slug: string;
-  }
+  type HeavyEntry =
+    | {
+        type: 'tool';
+        id: string;
+        name: string;
+        description: string;
+        installSize: number;
+        slug: string;
+      }
+    | {
+        type: 'group';
+        id: string;
+        name: string;
+        description: string;
+        installSize: number;
+        toolIds: string[];
+      };
 
-  export let heavyTools: HeavyTool[] = [];
+  export let heavyTools: HeavyEntry[] = [];
 
   const PREFS_KEY = 'wyreup:tool-prefs';
 
@@ -164,27 +174,31 @@
     </p>
 
     <div class="tool-list">
-      {#each heavyTools as tool}
-        {@const enabled = prefs.cacheMode === 'all' || (prefs.enabled[tool.id] ?? false)}
-        {@const status = cacheStatus[tool.id] ?? 'checking'}
+      {#each heavyTools as entry}
+        {@const enabled = prefs.cacheMode === 'all' || (prefs.enabled[entry.id] ?? false)}
+        {@const status = cacheStatus[entry.id] ?? 'checking'}
         <div class="tool-row">
           <div class="tool-row__info">
             <div class="tool-row__name">
-              <a href={`/tools/${tool.slug}`} class="tool-link">{tool.name}</a>
-              <span class="tool-row__size">{formatSize(tool.installSize)}</span>
+              {#if entry.type === 'tool'}
+                <a href={`/tools/${entry.slug}`} class="tool-link">{entry.name}</a>
+              {:else}
+                <span class="tool-group-name">{entry.name}</span>
+              {/if}
+              <span class="tool-row__size">{formatSize(entry.installSize)}</span>
             </div>
-            <p class="tool-row__desc">{tool.description}</p>
+            <p class="tool-row__desc">{entry.description}</p>
           </div>
           <div class="tool-row__controls">
             <span class="cache-status cache-status--{status}">{status === 'checking' ? '...' : status === 'cached' ? 'cached' : 'not cached'}</span>
             {#if prefs.cacheMode === 'selected'}
               <button
                 class="toggle-btn"
-                class:toggle-btn--on={prefs.enabled[tool.id] ?? false}
-                on:click={() => toggleTool(tool.id)}
-                aria-pressed={prefs.enabled[tool.id] ?? false}
+                class:toggle-btn--on={prefs.enabled[entry.id] ?? false}
+                on:click={() => toggleTool(entry.id)}
+                aria-pressed={prefs.enabled[entry.id] ?? false}
               >
-                {prefs.enabled[tool.id] ? 'Enabled' : 'Enable'}
+                {prefs.enabled[entry.id] ? 'Enabled' : 'Enable'}
               </button>
             {/if}
           </div>
@@ -343,6 +357,13 @@
 
   .tool-link:hover {
     color: var(--accent);
+  }
+
+  .tool-group-name {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
   }
 
   .tool-row__size {
