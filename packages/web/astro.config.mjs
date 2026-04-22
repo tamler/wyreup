@@ -47,6 +47,52 @@ export default defineConfig({
             ],
           },
         },
+        shortcuts: [
+          {
+            name: 'Browse tools',
+            short_name: 'Tools',
+            description: 'See all Wyreup tools',
+            url: '/tools',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Compress image',
+            short_name: 'Compress',
+            description: 'Drop and compress an image',
+            url: '/tools/compress',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Merge PDFs',
+            short_name: 'Merge PDF',
+            description: 'Combine PDFs into one',
+            url: '/tools/merge-pdf',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Blur faces',
+            short_name: 'Face blur',
+            description: 'Blur faces in a photo',
+            url: '/tools/face-blur',
+            icons: [{ src: '/pwa-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
+        // file_handlers lets the OS offer Wyreup as "open with..." for supported file types.
+        // Chromium-only as of April 2026 — Safari and Firefox ignore this field gracefully.
+        file_handlers: [
+          {
+            action: '/share-receive',
+            accept: {
+              'image/jpeg': ['.jpg', '.jpeg'],
+              'image/png': ['.png'],
+              'image/webp': ['.webp'],
+              'image/heic': ['.heic'],
+              'application/pdf': ['.pdf'],
+              'audio/wav': ['.wav'],
+              'audio/mpeg': ['.mp3'],
+            },
+          },
+        ],
       },
       injectManifest: {
         // Precache core app shell only; large ML WASM/ONNX assets are fetched on demand.
