@@ -1,3 +1,5 @@
+import type { ParamFieldSchema } from '@wyreup/core';
+
 export interface SerializedTool {
   id: string;
   slug: string;
@@ -8,6 +10,7 @@ export interface SerializedTool {
   input: { accept: string[]; min: number; max?: number; sizeLimit?: number };
   output: { mime: string; multiple?: boolean };
   defaults: Record<string, unknown>;
+  paramSchema?: Record<string, ParamFieldSchema>;
   requiresWebgpu?: 'preferred' | 'required';
   memoryEstimate: string;
 }

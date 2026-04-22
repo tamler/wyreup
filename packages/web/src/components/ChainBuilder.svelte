@@ -5,7 +5,7 @@
   import ProgressBar from './runners/ProgressBar.svelte';
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/kitStorage';
-  import type { ToolProgress } from '@wyreup/core';
+  import type { ToolProgress, ParamFieldSchema } from '@wyreup/core';
 
   interface ToolSummary {
     id: string;
@@ -15,6 +15,7 @@
     inputMin: number;
     outputMime: string;
     defaults: Record<string, unknown>;
+    paramSchema?: Record<string, ParamFieldSchema>;
   }
 
   export let tools: ToolSummary[] = [];
@@ -69,6 +70,11 @@
   function getDefaults(toolId: string): Record<string, unknown> {
     const t = tools.find((x) => x.id === toolId);
     return t?.defaults ?? {};
+  }
+
+  function getParamSchema(toolId: string): Record<string, ParamFieldSchema> | undefined {
+    const t = tools.find((x) => x.id === toolId);
+    return t?.paramSchema;
   }
 
   function prevOutputMime(idx: number): string | null {
@@ -340,6 +346,7 @@
           <div class="step-params">
             <ParamsForm
               defaults={getDefaults(step.toolId)}
+              paramSchema={getParamSchema(step.toolId)}
               params={step.params}
               on:change={(e) => updateParams(idx, e.detail)}
             />

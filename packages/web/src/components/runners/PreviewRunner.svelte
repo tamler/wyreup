@@ -119,6 +119,7 @@
 
   <ParamsForm
     defaults={tool.defaults}
+    paramSchema={tool.paramSchema}
     bind:params
     on:change={(e) => { params = e.detail; }}
   />

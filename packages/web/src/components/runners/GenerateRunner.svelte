@@ -98,7 +98,7 @@
 </script>
 
 <div class="runner">
-  <ParamsForm defaults={tool.defaults} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} type="button">
