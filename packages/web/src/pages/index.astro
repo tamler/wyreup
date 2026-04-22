@@ -3,20 +3,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroDrop from '../components/HeroDrop.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
 import InstallCard from '../components/InstallCard.svelte';
+import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const toolCount = createDefaultRegistry().toolsById.size;
 ---
 
 <BaseLayout
   title="Wyreup — Privacy and productivity. Have both."
-  description="52 browser-side tools for images, PDFs, text, and code. Everything runs on your device. Your files never upload, never cache, never phone home."
+  description={`${toolCount} browser-side tools for images, PDFs, audio, text, and code. Everything runs on your device. Your files never upload, never cache, never phone home.`}
 >
+  <PwaOnboardBanner client:load />
+
   <!-- Section 1: Hero + drop zone -->
-  <section class="hero section-rhythm" aria-label="Hero">
+  <section class="hero section-rhythm" aria-label="Hero" id="hero-drop-zone">
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
         <h1 class="hero__headline">Privacy and productivity.<br>Have both.</h1>
         <p class="hero__body">
-          52 browser-side tools for images, PDFs, text, and code.
+          {toolCount} browser-side tools for images, PDFs, audio, text, and code.
           Everything runs on your device. Your files never upload, never cache, never phone home.
         </p>
         <div class="hero__actions">
@@ -160,6 +166,9 @@ import InstallCard from '../components/InstallCard.svelte';
       <h2 id="chain-heading" class="section-title">Chain tools together.</h2>
       <p class="chain-body">
         Drop a file, pick a tool, see the result. Then pick another — the result becomes the next input. One drop, a cascade of outcomes. Every step runs on your device.
+      </p>
+      <p class="chain-bridge">
+        Run a real chain: <a href="#hero-drop-zone" class="chain-bridge__link" id="scroll-to-hero">drop a file on the hero above</a>, pick a tool, then use the result in another. Every step on your device.
       </p>
       <div class="chain-flow" aria-label="Chain demo: image.heic converted, then compressed to 247 KB JPG">
         <div class="chain-node chain-node--input" data-chain-index="0">
@@ -397,7 +406,27 @@ import InstallCard from '../components/InstallCard.svelte';
     color: var(--text-muted);
     line-height: 1.6;
     max-width: 540px;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-6);
+  }
+
+  .chain-bridge {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    line-height: 1.6;
+    max-width: 540px;
+    margin-bottom: var(--space-8);
+  }
+
+  .chain-bridge__link {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .chain-bridge__link:hover {
+    color: var(--accent);
   }
 
   .chain-flow {

@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const toolCount = createDefaultRegistry().toolsById.size;
 ---
 
 <BaseLayout
   title="CLI — Wyreup in your terminal"
-  description="Run all 72 Wyreup tools from the shell. Same engine as the web, same privacy — scriptable, offline, CI-ready."
+  description={`Run all ${toolCount} Wyreup tools from the shell. Same engine as the web, same privacy — scriptable, offline, CI-ready.`}
 >
   <div class="dist-page">
     <div class="container">
@@ -13,7 +16,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="dist-hero" aria-labelledby="cli-heading">
         <h1 id="cli-heading" class="dist-hero__title">Wyreup in your terminal.</h1>
         <p class="dist-hero__sub">
-          Run all 72 tools from the shell. Same engine as the web, same privacy — scriptable, batch-friendly, offline.
+          Run all {toolCount} tools from the shell. Same engine as the web, same privacy — scriptable, batch-friendly, offline.
         </p>
         <div class="dist-hero__cmd">
           <code class="dist-hero__cmd-text">npx @wyreup/cli compress photo.jpg</code>
@@ -125,7 +128,7 @@ wyreup compress --help</code></pre>
             <p class="why-item__body">Works offline. No server call, ever.</p>
           </li>
           <li class="why-item">
-            <span class="why-item__label">All 72 tools</span>
+            <span class="why-item__label">All {toolCount} tools</span>
             <span class="why-item__rule" aria-hidden="true"></span>
             <span class="why-item__pad" aria-hidden="true"></span>
             <p class="why-item__body">Same names as the web. <a href="/tools" class="inline-link">Browse all tools &rarr;</a></p>

@@ -3,6 +3,9 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/motifs.css';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const toolCount = createDefaultRegistry().toolsById.size;
 
 interface Props {
   title: string;
@@ -13,7 +16,7 @@ interface Props {
 
 const {
   title,
-  description = 'Wyreup — 53 browser-native tools. No uploads. No signup.',
+  description = `Wyreup — ${toolCount} browser-native tools. No uploads. No signup.`,
   ogTitle = title,
   ogDescription = description,
 } = Astro.props;
