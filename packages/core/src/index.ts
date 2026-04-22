@@ -118,6 +118,12 @@ export { cssFormatter, type CssFormatterParams, defaultCssFormatterParams } from
 export { cronParser, type CronParserParams, type CronParserResult, defaultCronParserParams } from './tools/cron-parser/index.js';
 export { qrReader, type QrReaderParams, type QrReaderResult, defaultQrReaderParams } from './tools/qr-reader/index.js';
 export { svgOptimizer, type SvgOptimizerParams, defaultSvgOptimizerParams } from './tools/svg-optimizer/index.js';
+export { calculator, type CalculatorParams, defaultCalculatorParams } from './tools/calculator/index.js';
+export { unitConverter, type UnitConverterParams, defaultUnitConverterParams } from './tools/unit-converter/index.js';
+export { percentageCalculator, type PercentageCalculatorParams, defaultPercentageCalculatorParams } from './tools/percentage-calculator/index.js';
+export { dateCalculator, type DateCalculatorParams, defaultDateCalculatorParams } from './tools/date-calculator/index.js';
+export { compoundInterest, type CompoundInterestParams, defaultCompoundInterestParams } from './tools/compound-interest/index.js';
+export { investmentDca, type InvestmentDcaParams, defaultInvestmentDcaParams } from './tools/investment-dca/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 66 tools in total', () => {
+  it('has 72 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(66);
+    expect(registry.toolsById.size).toBe(72);
   });
 
   it('includes ocr', () => {
@@ -273,5 +273,41 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     const devTools = registry.toolsByCategory('dev');
     expect(devTools.length).toBeGreaterThan(0);
+  });
+
+  it('includes calculator', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('calculator')).toBeDefined();
+  });
+
+  it('includes unit-converter', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('unit-converter')).toBeDefined();
+  });
+
+  it('includes percentage-calculator', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('percentage-calculator')).toBeDefined();
+  });
+
+  it('includes date-calculator', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('date-calculator')).toBeDefined();
+  });
+
+  it('includes compound-interest', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('compound-interest')).toBeDefined();
+  });
+
+  it('includes investment-dca', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('investment-dca')).toBeDefined();
+  });
+
+  it('has a finance category with tools', () => {
+    const registry = createDefaultRegistry();
+    const financeTools = registry.toolsByCategory('finance');
+    expect(financeTools.length).toBeGreaterThan(0);
   });
 });

@@ -16,7 +16,8 @@ export type ToolCategory =
   | 'inspect'
   | 'export'
   | 'audio'
-  | 'dev';
+  | 'dev'
+  | 'finance';
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 

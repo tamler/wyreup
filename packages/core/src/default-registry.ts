@@ -65,6 +65,12 @@ import { cssFormatter } from './tools/css-formatter/index.js';
 import { cronParser } from './tools/cron-parser/index.js';
 import { qrReader } from './tools/qr-reader/index.js';
 import { svgOptimizer } from './tools/svg-optimizer/index.js';
+import { calculator } from './tools/calculator/index.js';
+import { unitConverter } from './tools/unit-converter/index.js';
+import { percentageCalculator } from './tools/percentage-calculator/index.js';
+import { dateCalculator } from './tools/date-calculator/index.js';
+import { compoundInterest } from './tools/compound-interest/index.js';
+import { investmentDca } from './tools/investment-dca/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -141,6 +147,12 @@ export const defaultTools: ToolModule<any>[] = [
   cronParser,
   qrReader,
   svgOptimizer,
+  calculator,
+  unitConverter,
+  percentageCalculator,
+  dateCalculator,
+  compoundInterest,
+  investmentDca,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
