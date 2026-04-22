@@ -82,6 +82,27 @@ and savable.
   the right folder structure, types, defaults, test file, and registry
   update. Enables community contribution.
 
+### Wave K2 — Skill-installer pivot (queued after Wave K)
+
+Replace the three npm skill packages (`@wyreup/skill`, `@wyreup/cli-skill`,
+`@wyreup/mcp-skill`) with a unified **`wyreup install-skill`** CLI command.
+npm distribution adds zero auto-wiring value for markdown skill files;
+the CLI can detect the agent's skill directory, fetch the right skill.md
+from GitHub, and write it in place — which npm can't do.
+
+- Deprecate/unpublish the three skill packages from npm (within the 72h
+  window) OR mark them deprecated with a pointer to the CLI command.
+- Extend `@wyreup/cli`: `wyreup install-skill [cli|mcp|combined]`
+  - Interactive picker if no arg given
+  - Auto-detects Claude Code config (`.claude/skills/` etc.)
+  - Fetches current skill.md from GitHub raw
+  - `--update` flag re-fetches to pick up upstream changes
+  - `--list` shows installed skills + versions
+- Update `/skill`, and any doc that promoted `npm install -g @wyreup/skill`
+  to promote `wyreup install-skill` instead.
+- GitHub raw URLs stay available as a manual fallback for users who
+  want to copy-paste into a non-standard agent runtime.
+
 ### Wave K — Library expansions
 
 Three high-leverage additions that open whole categories.

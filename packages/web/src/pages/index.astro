@@ -8,7 +8,7 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 
 <BaseLayout
   title="Wyreup — Privacy and productivity. Have both."
-  description="Browser-native tools for images, PDFs, audio, text, and code. Everything runs on your device. Your files never upload, never cache, never phone home."
+  description="Tools you chain together. Drop a file, use one tool or wire several, get your outcome. Everything runs on your device — no uploads, no cache, no tracking."
 >
   <PwaOnboardBanner client:load />
 
@@ -19,8 +19,8 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
       <div class="hero__copy">
         <h1 class="hero__headline">Privacy and productivity.<br>Have both.</h1>
         <p class="hero__body">
-          Browser-native tools for images, PDFs, audio, text, and code.
-          Everything runs on your device. Your files never upload, never cache, never phone home.
+          Tools you chain together. Drop a file, use one tool or wire several, get your outcome.
+          Every step runs on your device — no uploads, no cache, no tracking.
         </p>
         <div class="hero__actions">
           <a href="/tools" class="btn btn-primary">Browse tools &rarr;</a>
@@ -245,12 +245,18 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
     border-bottom: 1px solid var(--border-subtle);
   }
 
+  /* Hero section centers its content vertically within the viewport. */
+  .hero {
+    justify-content: center;
+    padding-block-start: clamp(48px, 8vh, 96px);
+  }
+
   /* ── Hero ── */
   .hero__container {
     display: grid;
     grid-template-columns: 3fr 2fr;
     gap: var(--space-12);
-    align-items: start;
+    align-items: center;
     flex: 1;
   }
 
