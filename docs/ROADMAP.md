@@ -103,6 +103,41 @@ from GitHub, and write it in place — which npm can't do.
 - GitHub raw URLs stay available as a manual fallback for users who
   want to copy-paste into a non-standard agent runtime.
 
+### Wave L2 — Param schema + browser Translator + UI gating (queued)
+
+Foundation UI improvement that unlocks better ergonomics everywhere.
+
+- **`ToolModule.paramSchema?`** — optional field declaring each param's
+  type (`'string'` | `'number'` | `'boolean'` | `'enum'` | `'range'` |
+  `'file-ref'`), label, enum values, min/max/step, help text. The
+  web's auto-generated params form consumes this when present; falls
+  back to `defaults`-based inference otherwise.
+- **Retrofit the heavy hitters**: `convert` (format enum), `compress`
+  (quality slider), `convert-audio`/`convert-video` (format + bitrate
+  enums), `hash` (algorithm multi-select), `rotate-*` (angle enum),
+  `qr` (error-correction level), `pdf-compress` (quality), `text-translate`
+  (source/target lang selects). Each gets proper dropdowns/sliders.
+- **Browser Translator API for `text-translate`**:
+  1. Try `translation.createTranslator()` (Chrome 131+)
+  2. Try `window.translator` (Firefox Translations)
+  3. Fall back to M2M100 (our 400 MB bundled model)
+  Saves every user on modern browsers from the 400 MB download.
+
+### Wave L3 — Finance UI (queued)
+
+Custom Svelte runners for finance tools. JSON output is insulting for
+these.
+
+- **compound-interest**: currency-formatted inputs, live recalc,
+  compound-growth line chart, year-by-year table, summary cards
+  ("After 10 years: $X, contributions $Y, interest earned $Z")
+- **investment-dca**: side-by-side DCA vs lump-sum comparison,
+  monthly-return line chart, final-value summary
+- **percentage-calculator**: mode switcher (percent-of, what-percent,
+  change, increase/decrease), calculator-style input pad on mobile
+- **date-calculator**: calendar-style date pickers, diff breakdown
+  (years/months/days/hours), day-of-week lookup
+
 ### Wave K — Library expansions
 
 Three high-leverage additions that open whole categories.
@@ -175,6 +210,26 @@ installable via `docker run`.
 - **Image tags** — GHCR + Docker Hub
 - **Homelab docs** — reverse proxy examples (Traefik, Caddy), persistent
   volume mounts for user uploads, environment variable reference
+
+### Wave O — Offline LLM (WebLLM + Gemma / Phi / Llama)
+
+Opt-in, WebGPU-required, 500 MB – 1.5 GB download. Enables on-device
+language model capability without phoning home.
+
+- **Runtime:** WebLLM (MIT) + MLC-AI's quantized models
+- **Candidate models:**
+  - Gemma 2 2B Q4 (~500 MB, Apache-2.0)
+  - Phi 3.5 mini (~1 GB, MIT)
+  - Llama 3.2 1B (~500 MB, Llama license — check commercial terms)
+- **Tools enabled:**
+  - `local-chat` — opt-in chat tool, labelled "experimental, large download"
+  - `text-rewrite` — tone changes, simplification, formalization
+  - `text-summarize-llm` — better than DistilBART when LLM is installed
+  - `text-explain-code` — code walkthrough
+  - `wyreup-agent` (stretch) — micro-agent that picks Wyreup tools
+    from natural-language tasks, limited to single-tool invocations
+- **Install group:** `llm` — standalone PWA toggle, WebGPU-required
+- **Paid-tier candidate:** larger models (7B/8B at ~4 GB) behind Pro
 
 ### Wave P+ — Longer horizon
 
