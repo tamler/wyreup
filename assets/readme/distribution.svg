@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 280" width="1000" height="280">
+  <!-- Background -->
+  <rect width="1000" height="280" fill="#111113"/>
+
+  <!-- Central CORE node -->
+  <rect x="360" y="96" width="280" height="88" rx="4" fill="#27272A" stroke="#FFB000" stroke-width="1"/>
+  <!-- corner brackets core -->
+  <path d="M366 102 L366 96 L372 96" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M634 96 L640 96 L640 102" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M366 178 L366 184 L372 184" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M634 184 L640 184 L640 178" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="500" y="130" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="13" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">CORE ENGINE</text>
+  <text x="500" y="154" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="16" font-weight="700" fill="#FFB000" text-anchor="middle">@wyreup/core</text>
+  <text x="500" y="173" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">browser + node, dual build</text>
+
+  <!-- === BROWSER destination (top-left) === -->
+  <!-- Solder pad at core edge -->
+  <circle cx="360" cy="140" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- Line to destination node -->
+  <line x1="357" y1="140" x2="200" y2="72" stroke="#FFB000" stroke-width="1"/>
+  <!-- Mid solder pad -->
+  <rect x="277" y="103" width="3" height="3" fill="#FFB000"/>
+  <!-- Solder pad at destination -->
+  <circle cx="200" cy="72" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- Destination card: Browser -->
+  <rect x="24" y="28" width="172" height="72" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M30 34 L30 28 L36 28" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M190 28 L196 28 L196 34" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M30 94 L30 100 L36 100" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M190 100 L196 100 L196 94" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="110" y="57" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">BROWSER</text>
+  <text x="110" y="76" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="13" font-weight="500" fill="#F4F4F5" text-anchor="middle">wyreup.com</text>
+
+  <!-- === CLI destination (bottom-left) === -->
+  <circle cx="360" cy="160" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="357" y1="160" x2="200" y2="208" stroke="#FFB000" stroke-width="1"/>
+  <rect x="277" y="181" width="3" height="3" fill="#FFB000"/>
+  <circle cx="200" cy="208" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- Destination card: CLI -->
+  <rect x="24" y="164" width="172" height="88" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M30 170 L30 164 L36 164" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M190 164 L196 164 L196 170" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M30 246 L30 252 L36 252" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M190 252 L196 252 L196 246" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="110" y="193" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">CLI</text>
+  <text x="110" y="213" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="12" font-weight="500" fill="#F4F4F5" text-anchor="middle">npx @wyreup/cli</text>
+  <text x="110" y="233" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">&lt;tool&gt; &lt;file&gt;</text>
+
+  <!-- === MCP destination (top-right) === -->
+  <circle cx="640" cy="140" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="643" y1="140" x2="800" y2="72" stroke="#FFB000" stroke-width="1"/>
+  <rect x="719" y="103" width="3" height="3" fill="#FFB000"/>
+  <circle cx="800" cy="72" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- Destination card: MCP -->
+  <rect x="804" y="28" width="172" height="88" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M810 34 L810 28 L816 28" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M970 28 L976 28 L976 34" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M810 110 L810 116 L816 116" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M970 116 L976 116 L976 110" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="890" y="57" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">MCP SERVER</text>
+  <text x="890" y="76" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="12" font-weight="500" fill="#F4F4F5" text-anchor="middle">npx -y @wyreup/mcp</text>
+  <text x="890" y="97" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">Claude, Cline, Continue</text>
+
+  <!-- === Skill destination (bottom-right) === -->
+  <circle cx="640" cy="160" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="643" y1="160" x2="800" y2="208" stroke="#FFB000" stroke-width="1"/>
+  <rect x="719" y="181" width="3" height="3" fill="#FFB000"/>
+  <circle cx="800" cy="208" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- Destination card: Skill -->
+  <rect x="804" y="156" width="172" height="96" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M810 162 L810 156 L816 156" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M970 156 L976 156 L976 162" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M810 246 L810 252 L816 252" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M970 252 L976 252 L976 246" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="890" y="185" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">AGENT SKILL</text>
+  <text x="890" y="205" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="12" font-weight="500" fill="#F4F4F5" text-anchor="middle">@wyreup/skill</text>
+  <text x="890" y="222" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">cli-skill / mcp-skill</text>
+  <text x="890" y="239" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">Claude Code + Desktop</text>
+</svg>

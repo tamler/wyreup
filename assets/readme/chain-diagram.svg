@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 200" width="1000" height="200">
+  <!-- Background -->
+  <rect width="1000" height="200" fill="#111113"/>
+
+  <!-- Node 1: image.heic -->
+  <rect x="16" y="60" width="148" height="80" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M22 66 L22 60 L28 60" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M158 60 L164 60 L164 66" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M22 134 L22 140 L28 140" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <path d="M158 140 L164 140 L164 134" stroke="#3F3F46" stroke-width="1" fill="none" stroke-linecap="round"/>
+  <text x="90" y="93" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#52525B" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+  <text x="90" y="114" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="13" font-weight="500" fill="#A1A1AA" text-anchor="middle">image.heic</text>
+
+  <!-- Connector 1→2 -->
+  <circle cx="164" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="167" y1="100" x2="193" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <rect x="177" y="97" width="3" height="3" fill="#FFB000"/>
+  <line x1="196" y1="100" x2="210" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <circle cx="212" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 2: convert -->
+  <rect x="216" y="60" width="120" height="80" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M222 66 L222 60 L228 60" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M330 60 L336 60 L336 66" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M222 134 L222 140 L228 140" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M330 140 L336 140 L336 134" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="276" y="93" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">CONVERT</text>
+  <text x="276" y="114" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="14" font-weight="700" fill="#F4F4F5" text-anchor="middle">heic-to-jpg</text>
+
+  <!-- Connector 2→3 -->
+  <circle cx="336" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="339" y1="100" x2="365" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <rect x="349" y="97" width="3" height="3" fill="#FFB000"/>
+  <line x1="368" y1="100" x2="382" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <circle cx="384" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 3: strip-exif -->
+  <rect x="388" y="60" width="120" height="80" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M394 66 L394 60 L400 60" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M502 60 L508 60 L508 66" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M394 134 L394 140 L400 140" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M502 140 L508 140 L508 134" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="448" y="93" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">STRIP</text>
+  <text x="448" y="114" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="14" font-weight="700" fill="#F4F4F5" text-anchor="middle">strip-exif</text>
+
+  <!-- Connector 3→4 -->
+  <circle cx="508" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="511" y1="100" x2="537" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <rect x="521" y="97" width="3" height="3" fill="#FFB000"/>
+  <line x1="540" y1="100" x2="554" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <circle cx="556" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 4: compress -->
+  <rect x="560" y="60" width="120" height="80" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M566 66 L566 60 L572 60" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M674 60 L680 60 L680 66" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M566 134 L566 140 L572 140" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M674 140 L680 140 L680 134" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="620" y="93" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">COMPRESS</text>
+  <text x="620" y="114" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="14" font-weight="700" fill="#F4F4F5" text-anchor="middle">compress</text>
+
+  <!-- Connector 4→5 -->
+  <circle cx="680" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="683" y1="100" x2="709" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <rect x="693" y="97" width="3" height="3" fill="#FFB000"/>
+  <line x1="712" y1="100" x2="726" y2="100" stroke="#FFB000" stroke-width="1"/>
+  <circle cx="728" cy="100" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 5: anonymized.jpg (output) -->
+  <rect x="732" y="60" width="168" height="80" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <path d="M738 66 L738 60 L744 60" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M894 60 L900 60 L900 66" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M738 134 L738 140 L744 140" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M894 140 L900 140 L900 134" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="812" y="93" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">OUTPUT</text>
+  <!-- amber LED -->
+  <circle cx="754" cy="114" r="5" fill="#FFB000"/>
+  <text x="818" y="118" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="13" font-weight="500" fill="#F4F4F5" text-anchor="middle">anonymized.jpg</text>
+
+  <!-- Bottom labels -->
+  <text x="90" y="166" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" fill="#52525B" text-anchor="middle">source file</text>
+  <text x="276" y="166" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" fill="#52525B" text-anchor="middle">format</text>
+  <text x="448" y="166" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" fill="#52525B" text-anchor="middle">metadata</text>
+  <text x="620" y="166" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" fill="#52525B" text-anchor="middle">size</text>
+  <text x="816" y="166" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="10" fill="#A1A1AA" text-anchor="middle">ready to share</text>
+</svg>

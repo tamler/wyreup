@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+  <!-- Background -->
+  <rect width="1280" height="320" fill="#111113"/>
+
+  <!-- Corner brackets: top-left -->
+  <path d="M16 36 L16 16 L36 16" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Corner brackets: top-right -->
+  <path d="M1244 16 L1264 16 L1264 36" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Corner brackets: bottom-left -->
+  <path d="M16 284 L16 304 L36 304" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Corner brackets: bottom-right -->
+  <path d="M1244 304 L1264 304 L1264 284" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Wordmark: wyreup -->
+  <text x="64" y="176" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="96" font-weight="700" fill="#FFB000" letter-spacing="-3">wyreup</text>
+
+  <!-- Tagline below wordmark -->
+  <text x="66" y="224" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="18" font-weight="400" fill="#A1A1AA" letter-spacing="0">wyreup your capabilities. nothing uploads.</text>
+
+  <!-- Vertical divider -->
+  <line x1="640" y1="48" x2="640" y2="272" stroke="#3F3F46" stroke-width="1"/>
+
+  <!-- Right half: schematic chain diagram -->
+  <!-- Node 1: drop -->
+  <rect x="672" y="112" width="120" height="64" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <!-- corner brackets node 1 -->
+  <path d="M678 118 L678 112 L684 112" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M786 112 L792 112 L792 118" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M678 170 L678 176 L684 176" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M786 176 L792 176 L792 170" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="732" y="140" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">INPUT</text>
+  <text x="732" y="161" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="16" font-weight="700" fill="#F4F4F5" text-anchor="middle">drop</text>
+
+  <!-- Connector 1→2: line + solder pads -->
+  <!-- Output node dot -->
+  <circle cx="792" cy="144" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <!-- line -->
+  <line x1="795" y1="144" x2="869" y2="144" stroke="#FFB000" stroke-width="1"/>
+  <!-- solder pad square at midpoint -->
+  <rect x="829" y="141" width="3" height="3" fill="#FFB000"/>
+  <!-- Input node dot -->
+  <circle cx="872" cy="144" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 2: tool -->
+  <rect x="876" y="112" width="120" height="64" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <!-- corner brackets node 2 -->
+  <path d="M882 118 L882 112 L888 112" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M990 112 L996 112 L996 118" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M882 170 L882 176 L888 176" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M990 176 L996 176 L996 170" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="936" y="140" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">PROCESS</text>
+  <text x="936" y="161" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="16" font-weight="700" fill="#F4F4F5" text-anchor="middle">tool</text>
+
+  <!-- Connector 2→3: line + solder pads -->
+  <circle cx="996" cy="144" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+  <line x1="999" y1="144" x2="1073" y2="144" stroke="#FFB000" stroke-width="1"/>
+  <rect x="1033" y="141" width="3" height="3" fill="#FFB000"/>
+  <circle cx="1076" cy="144" r="3" fill="none" stroke="#FFB000" stroke-width="1"/>
+
+  <!-- Node 3: result -->
+  <rect x="1080" y="112" width="128" height="64" rx="4" fill="#27272A" stroke="#3F3F46" stroke-width="1"/>
+  <!-- corner brackets node 3 -->
+  <path d="M1086 118 L1086 112 L1092 112" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M1202 112 L1208 112 L1208 118" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M1086 170 L1086 176 L1092 176" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M1202 176 L1208 176 L1208 170" stroke="#FFB000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <text x="1140" y="140" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#A1A1AA" text-anchor="middle" letter-spacing="0.08em">OUTPUT</text>
+  <!-- amber LED dot -->
+  <circle cx="1126" cy="161" r="4" fill="#FFB000"/>
+  <text x="1152" y="165" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="16" font-weight="700" fill="#F4F4F5">result</text>
+
+  <!-- Labels below nodes -->
+  <text x="732" y="200" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">your file</text>
+  <text x="936" y="200" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">on device</text>
+  <text x="1144" y="200" font-family="ui-monospace, 'SF Mono', 'Courier New', monospace" font-size="11" font-weight="400" fill="#52525B" text-anchor="middle">stays local</text>
+</svg>
