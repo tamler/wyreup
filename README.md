@@ -34,20 +34,22 @@ The same tool engine ships as a CLI, an MCP server, and a Claude skill — so th
 | Browser | [wyreup.com/tools](https://wyreup.com/tools) — no install required |
 | PWA | Install from the browser for offline access and file sharing |
 | CLI | `npx @wyreup/cli <tool> <file>` |
-| MCP server | `npx @wyreup/mcp` — connects Claude Desktop and compatible agents |
-| Claude skill | Install `@wyreup/skill` for richer agent integration |
+| MCP server | `npx @wyreup/mcp` — connects Claude Code, Cline, Continue, and any MCP-compatible agent |
+| Agent skill | Install `@wyreup/skill` for richer agent integration (Claude Code, Claude Desktop, and other skill-compatible runtimes) |
 
 ## Architecture
 
-The monorepo is organized into five packages:
+The monorepo is organized into six packages:
 
 | Package | Description |
 |---|---|
 | `packages/core` | Tool library (`@wyreup/core`) — framework-free, dual browser/Node build |
-| `packages/web` | Astro 4 static site — wyreup.com (76 pages, fully static, PWA) |
+| `packages/web` | Astro 4 static site — wyreup.com (82 pages, fully static, PWA) |
 | `packages/cli` | `wyreup` command-line interface (`@wyreup/cli`) |
 | `packages/mcp` | MCP server for agent access (`@wyreup/mcp`) |
-| `packages/skill` | Agent skill (`@wyreup/skill`) — skill.md for Claude and compatible agents |
+| `packages/skill` | Agent skill (`@wyreup/skill`) — CLI + MCP guidance for skill-compatible agent runtimes |
+| `packages/cli-skill` | CLI-only agent skill (`@wyreup/cli-skill`) — smaller token footprint |
+| `packages/mcp-skill` | MCP-only agent skill (`@wyreup/mcp-skill`) — smaller token footprint |
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 

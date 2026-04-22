@@ -5,9 +5,10 @@ description: Invoke Wyreup's 72+ file tools via the `wyreup` CLI. Use when the u
 
 # Wyreup CLI skill
 
-Wyreup is a library of 72 privacy-first file tools that run locally. This skill is for **shell/CLI contexts** — Claude Code, terminal agents, or any agent that invokes binaries. It is smaller than `@wyreup/skill` because it omits MCP guidance and JSON schemas.
+Wyreup is a library of 72 privacy-first file tools that run locally. This skill is for **shell/CLI contexts** — terminal agents or any agent runtime that invokes binaries (Claude Code, Aider, and similar). It is smaller than `@wyreup/skill` because it omits MCP guidance and JSON schemas.
 
-> If your agent context supports MCP (structured tool calls), use `@wyreup/skill` instead — it covers both CLI and MCP paths.
+> If your agent context supports MCP (structured tool calls), use `@wyreup/mcp-skill` instead — it covers MCP invocation shapes only.
+> For both CLI and MCP guidance in one file, use `@wyreup/skill`.
 
 ## When to use
 

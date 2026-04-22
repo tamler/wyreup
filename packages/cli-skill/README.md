@@ -2,7 +2,7 @@
 
 An agent skill that teaches AI assistants how to invoke Wyreup's 72 local file tools via the `wyreup` CLI. Smaller token footprint than `@wyreup/skill` — no MCP guidance, no JSON schemas, just shell commands.
 
-Use this package when your agent context is CLI-only (Claude Code invoking shell commands, a terminal agent, or a script). If you want MCP support as well, use `@wyreup/skill` instead.
+Use this package when your agent context is CLI-only (a shell-capable agent runtime like Claude Code, Aider, or a terminal script). If you want MCP support, use `@wyreup/mcp-skill`. If you want both CLI and MCP guidance, use `@wyreup/skill`.
 
 ## What this is
 
@@ -20,9 +20,9 @@ When the skill is installed, an agent can:
 npm install -g @wyreup/cli-skill
 ```
 
-Then add it to your Claude Code configuration. See the [Claude Code Skills documentation](https://docs.anthropic.com/en/docs/claude-code/skills) for installation steps.
+Then add it to your agent runtime's skill configuration. See your client's skills documentation for installation steps (e.g., the [Claude Code Skills docs](https://docs.anthropic.com/en/docs/claude-code/skills)).
 
-Alternatively, copy `skill.md` directly into your Claude Code skills directory.
+Alternatively, copy `skill.md` directly into your agent's skill directory.
 
 ## Pairing with the CLI
 
@@ -49,7 +49,7 @@ npx @wyreup/cli compress photo.jpg -o compressed.jpg
 
 ## MCP support
 
-This package does NOT cover MCP. If you want structured MCP tool calls in Claude Code or Claude Desktop, use `@wyreup/skill` instead — it covers both CLI and MCP paths.
+This package does NOT cover MCP. If you want structured MCP tool calls, use `@wyreup/mcp-skill` (MCP only) or `@wyreup/skill` (both CLI and MCP).
 
 ## More
 

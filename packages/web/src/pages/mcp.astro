@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="MCP server — Wyreup for agents"
-  description="An MCP server that exposes 53 Wyreup tools to Claude, Claude Code, and any MCP-compatible client. Files never leave your machine."
+  description="An MCP server that exposes 72 Wyreup tools to Claude Code, Cline, Continue, and any MCP-compatible client. Files never leave your machine."
 >
   <div class="dist-page">
     <div class="container">
@@ -13,7 +13,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="dist-hero" aria-labelledby="mcp-heading">
         <h1 id="mcp-heading" class="dist-hero__title">Wyreup for agents.</h1>
         <p class="dist-hero__sub">
-          An MCP server that exposes 53 tools to Claude, Claude Code, and any MCP-compatible client.
+          An MCP server that exposes 72 tools to Claude Code, Cline, Continue, and any MCP-compatible client.
         </p>
       </section>
 
@@ -27,7 +27,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h2 id="what-mcp-heading" class="dist-section__title">What is MCP</h2>
         <p class="dist-section__body">
           MCP is an open protocol that lets AI assistants call external tools.
-          Wyreup's MCP server wraps all 53 Wyreup tools so your agent can compress images, redact PDFs,
+          Wyreup's MCP server wraps all 72 Wyreup tools so your agent can compress images, redact PDFs,
           or blur faces on your machine — without your files ever leaving it.
           Learn more at <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" class="inline-link">modelcontextprotocol.io</a>.
         </p>
@@ -40,9 +40,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <!-- Install -->
       <section class="dist-section" aria-labelledby="install-heading">
-        <h2 id="install-heading" class="dist-section__title">Install in Claude Code / Claude Desktop</h2>
+        <h2 id="install-heading" class="dist-section__title">Install in your agent runtime</h2>
         <p class="dist-section__body">
-          Add the following to your MCP config. The server runs via npx — no global install required.
+          Add the following to your MCP config. Works with Claude Code, Claude Desktop, Cline, Continue, Zed, or any MCP-compatible client. The server runs via npx — no global install required.
         </p>
 
         <div class="code-block">
@@ -114,7 +114,7 @@ arguments:
         <div class="callout-inner">
           <h2 id="skill-callout-heading" class="callout__title">Pair with the Wyreup skill</h2>
           <p class="callout__body">
-            The MCP server gives your agent the tools. The skill teaches Claude when and how to use them — recognizing file tasks, choosing the right tool, and handling results correctly.
+            The MCP server gives your agent the tools. The skill teaches your AI assistant when and how to use them — recognizing file tasks, choosing the right tool, and handling results correctly.
           </p>
           <a href="/skill" class="callout__link">Install the skill &rarr;</a>
         </div>

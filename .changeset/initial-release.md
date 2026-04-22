@@ -4,6 +4,7 @@
 "@wyreup/mcp": minor
 "@wyreup/skill": minor
 "@wyreup/cli-skill": minor
+"@wyreup/mcp-skill": minor
 ---
 
 Initial public release — Wyreup 0.1.0.
@@ -13,3 +14,4 @@ Initial public release — Wyreup 0.1.0.
 - MCP server for agent integration
 - Agent skill for Claude and skill-compatible runtimes
 - CLI-only agent skill (smaller token footprint, no MCP)
+- MCP-only agent skill (smaller token footprint, no CLI)

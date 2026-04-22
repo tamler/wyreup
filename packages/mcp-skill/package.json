@@ -1,0 +1,24 @@
+{
+  "name": "@wyreup/mcp-skill",
+  "version": "0.1.0",
+  "description": "MCP-only skill teaching agents how to invoke Wyreup's 72 tools via the @wyreup/mcp server. For agents that already have MCP transport wired up. Smaller token footprint than @wyreup/skill (no CLI section).",
+  "keywords": ["wyreup", "mcp", "skill", "agent", "model-context-protocol", "privacy", "image", "pdf", "offline"],
+  "license": "MIT",
+  "homepage": "https://wyreup.com/mcp",
+  "bugs": { "url": "https://github.com/tamler/wyreup/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/mcp-skill"
+  },
+  "author": "Wyreup Contributors",
+  "publishConfig": { "access": "public" },
+  "files": ["skill.md", "README.md"],
+  "scripts": {
+    "build": "echo 'no build step for skill'",
+    "test": "echo 'no tests for skill'",
+    "lint": "echo 'no lint for skill'",
+    "typecheck": "echo 'no typecheck for skill'",
+    "clean": "echo 'nothing to clean'"
+  }
+}
