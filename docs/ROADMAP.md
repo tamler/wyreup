@@ -236,14 +236,19 @@ Long-form context lives here. Future sessions read these for background:
 
 What's actually on the critical path right now:
 
-1. Flip repo public
-2. Create `@wyreup` npm scope
-3. Merge first Version Packages PR
-4. Wave J (chain builder + My Kit + SDK)
-5. Wave K (ffmpeg + PGP + ZIP)
-6. Wave M (Lemon Squeezy) — when Wave J, K, and enough AI land to make Pro worth paying for
-7. Wave L (AI expansion) — interleaves with K
-8. Wave O (Docker) — after launch, targets a distinct audience
-9. Wave N (Tier 2 tools) — fill in opportunistically
+1. ✅ Flip repo public (done 2026-04-22)
+2. Create `@wyreup` npm scope (still pending — `npm view @wyreup/core` returns 404)
+3. Merge first Version Packages PR (unblocked once lockfile + scope are resolved)
+4. Wave J — chain builder + My Kit + SDK
+5. Wave K — ffmpeg + PGP + ZIP
+6. Wave L — AI expansion (interleaves with K)
+7. Wave N — Tier 2 utility tools
+8. Wave M — Lemon Squeezy (only after N, once the capability surface
+   justifies a Pro tier)
+9. Wave O — Docker self-host (after Wave M — targets a distinct audience
+   but easier to build once the platform is monetized and stable)
+10. Wave P+ — longer horizon
 
-Everything else is nice-to-have.
+Monetization and Docker intentionally come after capability expansion.
+Building Pro before there's enough value is the wrong order; launching
+Docker before the core is stable creates support burden.
