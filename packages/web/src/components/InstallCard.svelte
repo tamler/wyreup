@@ -8,7 +8,7 @@
   }
 
   let deferredPrompt: BeforeInstallPromptEvent | null = null;
-  let installState: 'waiting' | 'ready' | 'installed' | 'ios' | 'unsupported' = 'waiting';
+  let installState: 'waiting' | 'ready' | 'installed' | 'ios' | 'chromium-manual' | 'desktop-safari' | 'firefox' = 'waiting';
 
   onMount(() => {
     // Check if already installed (standalone mode)
@@ -17,14 +17,33 @@
       return;
     }
 
-    // iOS Safari doesn't fire beforeinstallprompt — detect it
-    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    const isIos = /iphone|ipad|ipod/i.test(ua);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+    const isChromium = /chrome|chromium|edg|opr|brave/i.test(ua) && !/edge\//i.test(ua);
+    const isFirefox = /firefox/i.test(ua);
+
+    // iOS Safari: manual Add to Home Screen via Share sheet
     if (isIos && isSafari) {
       installState = 'ios';
       return;
     }
 
+    // Desktop Safari (macOS Sonoma+) can install via File → Add to Dock
+    if (!isIos && isSafari) {
+      installState = 'desktop-safari';
+      return;
+    }
+
+    // Firefox doesn't support PWA install on desktop
+    if (isFirefox) {
+      installState = 'firefox';
+      return;
+    }
+
+    // Chromium family — listen for the install prompt; if it doesn't fire
+    // (common when prompt fired in a prior session, or criteria aren't met
+    // yet), fall through to manual instructions instead of "unsupported".
     const handler = (e: Event) => {
       e.preventDefault();
       deferredPrompt = e as BeforeInstallPromptEvent;
@@ -33,12 +52,14 @@
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    // If no prompt fires within 2s on a non-iOS browser, mark unsupported
+    // After 2.5s, if still waiting and we detected a Chromium browser,
+    // show manual instructions. Chromium always supports PWA install —
+    // the event just may not fire on repeat visits.
     const timeout = setTimeout(() => {
       if (installState === 'waiting') {
-        installState = 'unsupported';
+        installState = isChromium ? 'chromium-manual' : 'chromium-manual';
       }
-    }, 2000);
+    }, 2500);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
@@ -86,13 +107,28 @@
         In Safari, tap the Share icon at the bottom of the screen, then "Add to Home Screen."
       </p>
       <a href="/settings" class="install-link">Settings &rarr;</a>
-    {:else if installState === 'unsupported'}
-      <div class="anywhere-card__headline">Add to home screen</div>
+    {:else if installState === 'chromium-manual'}
+      <div class="anywhere-card__headline">Install from your browser</div>
       <p class="anywhere-card__body">
-        Your current browser can't install Wyreup as an app.
+        Click the install icon in the address bar, or open the browser menu and pick <strong>Install Wyreup</strong>.
+      </p>
+      <ul class="install-benefits">
+        <li>Works offline</li>
+        <li>Share files from any app to Wyreup (mobile)</li>
+        <li>Register as a handler for images, PDFs, audio</li>
+      </ul>
+    {:else if installState === 'desktop-safari'}
+      <div class="anywhere-card__headline">Install via the File menu</div>
+      <p class="anywhere-card__body">
+        In Safari (macOS Sonoma or later), open the <strong>File</strong> menu and choose <strong>Add to Dock</strong>.
+      </p>
+    {:else if installState === 'firefox'}
+      <div class="anywhere-card__headline">Install from another browser</div>
+      <p class="anywhere-card__body">
+        Firefox on desktop doesn't support PWA installation. Open Wyreup in
         <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer" class="install-browser-link">Chrome</a>,
         <a href="https://www.microsoft.com/edge" target="_blank" rel="noopener noreferrer" class="install-browser-link">Edge</a>,
-        or Safari support installation.
+        or Safari 17+ to install as an app.
       </p>
     {:else}
       <div class="anywhere-card__headline">Add to home screen</div>
