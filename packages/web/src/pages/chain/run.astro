@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ChainRunner from '../../components/ChainRunner.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const registry = createDefaultRegistry();
+const tools = Array.from(registry.toolsById.values()).map((t) => ({
+  id: t.id,
+  name: t.name,
+  outputMime: t.output.mime,
+  defaults: t.defaults as Record<string, unknown>,
+}));
+
+// Read steps param for SSR meta
+const url = Astro.url;
+const stepsParam = url.searchParams.get('steps') ?? '';
+---
+
+<BaseLayout
+  title="Run a chain — Wyreup"
+  description="Run a shared Wyreup chain. Drop a file and execute the pipeline — everything runs in your browser."
+>
+  <section class="chain-run-page">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="breadcrumb__link">Wyreup</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <a href="/chain/build" class="breadcrumb__link">Build a chain</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <span class="breadcrumb__current" aria-current="page">Run a chain</span>
+      </nav>
+
+      <header class="page-header">
+        <h1 class="page-title">Run a chain</h1>
+        <p class="page-subhead">Drop a file to run this pipeline. Every step runs in your browser.</p>
+      </header>
+
+      <ChainRunner client:load {tools} {stepsParam} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .chain-run-page {
+    padding: var(--space-8) 0 var(--space-16);
+  }
+
+  .container {
+    max-width: 860px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .breadcrumb__link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .breadcrumb__link:hover { color: var(--text-primary); }
+  .breadcrumb__sep { color: var(--text-subtle); }
+  .breadcrumb__current { color: var(--text-primary); }
+
+  .page-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .page-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+    line-height: 1.1;
+    margin-bottom: var(--space-3);
+  }
+
+  .page-subhead {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+</style>
