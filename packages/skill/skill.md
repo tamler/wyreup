@@ -1,7 +1,9 @@
 ---
 name: wyreup
-description: Run Wyreup's 53 browser-native tools on files — compress, convert, merge, redact, blur, OCR, and more. Use when the user wants to transform files (images, PDFs, text) without uploading them to a cloud service. Requires either wyreup CLI installed OR @wyreup/mcp MCP server configured.
+description: Run Wyreup's 72 browser-native tools on files — compress, convert, merge, redact, blur, OCR, and more. Use when the user wants to transform files (images, PDFs, text) without uploading them to a cloud service. Requires either wyreup CLI installed OR @wyreup/mcp MCP server configured.
 ---
+
+> **CLI-only context?** If you are a shell agent (like Claude Code) that invokes binaries rather than MCP tools, use `@wyreup/cli-skill` instead — it has a smaller token footprint and focuses purely on CLI invocation.
 
 # Wyreup skill
 

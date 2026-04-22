@@ -1,0 +1,28 @@
+{
+  "name": "@wyreup/cli-skill",
+  "version": "0.1.0",
+  "description": "CLI-only skill teaching Claude and other agents how to invoke the Wyreup CLI — smaller token footprint than @wyreup/skill (no MCP).",
+  "keywords": ["wyreup", "cli", "skill", "claude", "claude-code", "agent", "privacy", "shell"],
+  "license": "MIT",
+  "homepage": "https://wyreup.com/cli",
+  "bugs": {
+    "url": "https://github.com/tamler/wyreup/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/cli-skill"
+  },
+  "author": "Wyreup Contributors",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["skill.md", "README.md"],
+  "scripts": {
+    "build": "echo 'no build step for cli-skill'",
+    "test": "echo 'no tests for cli-skill'",
+    "lint": "echo 'no lint for cli-skill'",
+    "typecheck": "echo 'no typecheck for cli-skill'",
+    "clean": "echo 'nothing to clean'"
+  }
+}
