@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolRunner from '../../components/ToolRunner.svelte';
+import ShareToolButton from '../../components/ShareToolButton.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 export async function getStaticPaths() {
@@ -83,7 +84,10 @@ const ldJson = {
             <span class="badge badge--preferred">Faster on WebGPU</span>
           )}
         </div>
-        <h1 class="tool-title">{name}</h1>
+        <div class="tool-title-row">
+          <h1 class="tool-title">{name}</h1>
+          <ShareToolButton client:load toolName={name} toolDescription={description} />
+        </div>
         <p class="tool-description">{description}</p>
       </header>
 
@@ -175,6 +179,14 @@ const ldJson = {
     border: 1px solid var(--border);
   }
 
+  .tool-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3);
+  }
+
   .tool-title {
     font-family: var(--font-sans);
     font-size: var(--text-2xl);
@@ -182,7 +194,7 @@ const ldJson = {
     letter-spacing: -0.03em;
     color: var(--text-primary);
     line-height: 1.1;
-    margin-bottom: var(--space-3);
+    margin-bottom: 0;
   }
 
   .tool-description {

@@ -74,7 +74,7 @@ async function cacheFirst(request: Request, cacheName: string): Promise<Response
   if (cached) return cached;
   const response = await fetch(request);
   if (response.ok) {
-    cache.put(request, response.clone());
+    void cache.put(request, response.clone());
   }
   return response;
 }
