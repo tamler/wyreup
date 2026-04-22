@@ -48,21 +48,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
 
-      // Push to dropStore and redirect to home so HeroDrop picks it up
-      // We store in sessionStorage as a signal since we can't import svelte stores here
-      sessionStorage.setItem('wyreup:share-file-name', files[0].name);
-      sessionStorage.setItem('wyreup:share-file-type', files[0].type);
+      // Serialize the first file into sessionStorage so it survives the full
+      // page navigation to '/'. In-memory Svelte stores don't survive
+      // window.location.href. HeroDrop's onMount consumes this payload.
+      const file = files[0];
+      const MAX_SHARE_BYTES = 10 * 1024 * 1024;
+      if (file.size > MAX_SHARE_BYTES) {
+        root.innerHTML = '<p class="share-receive__msg">Shared file exceeds 10 MB. Open Wyreup directly and upload from <a href="/tools">/tools</a>.</p>';
+        return;
+      }
 
-      // Dynamically import and use the drop store
-      const { dropStore } = await import('../stores/drop');
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const buf = await file.arrayBuffer();
+      const payload = {
+        name: file.name,
+        type: file.type,
+        data: Array.from(new Uint8Array(buf)),
+      };
+      try {
+        sessionStorage.setItem('wyreup:shared-file', JSON.stringify(payload));
+      } catch (err) {
+        console.error('Could not stash shared file in sessionStorage:', err);
+        root.innerHTML = '<p class="share-receive__msg">Browser storage is unavailable. <a href="/tools">Browse tools</a> and upload directly.</p>';
+        return;
+      }
 
-      const registry = createDefaultRegistry();
-      const compatibleTools = registry.toolsForFiles(files);
-      dropStore.set({ file: files[0], mime: files[0].type || 'application/octet-stream', compatibleTools });
+      // Clean up any stale bridge keys from older builds.
+      sessionStorage.removeItem('wyreup:share-file-name');
+      sessionStorage.removeItem('wyreup:share-file-type');
 
-      // Navigate to home page where HeroDrop renders with the file pre-populated
-      window.location.href = '/#scenarios-section';
+      // Full-page navigate to home — HeroDrop reads the payload on mount.
+      window.location.href = '/';
     } catch (err) {
       console.error('share-receive error:', err);
       const root2 = document.getElementById('share-receive-root');

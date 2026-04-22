@@ -1,9 +1,26 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { createDefaultRegistry } from '@wyreup/core';
   import { dropStore } from '../stores/drop';
 
   let isDragOver = false;
   let zone: HTMLElement;
+
+  // When arriving here from /share-receive (PWA Web Share Target), read the
+  // file stashed in sessionStorage and populate the drop store automatically.
+  onMount(() => {
+    try {
+      const raw = sessionStorage.getItem('wyreup:shared-file');
+      if (!raw) return;
+      sessionStorage.removeItem('wyreup:shared-file');
+      const payload = JSON.parse(raw) as { name: string; type: string; data: number[] };
+      const uint8 = new Uint8Array(payload.data);
+      const file = new File([uint8], payload.name, { type: payload.type });
+      processFile(file);
+    } catch (err) {
+      console.error('Failed to consume shared file:', err);
+    }
+  });
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
