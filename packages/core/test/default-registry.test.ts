@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 72 tools in total', () => {
+  it('has 87 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(72);
+    expect(registry.toolsById.size).toBe(87);
   });
 
   it('includes ocr', () => {
@@ -309,5 +309,92 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     const financeTools = registry.toolsByCategory('finance');
     expect(financeTools.length).toBeGreaterThan(0);
+  });
+
+  it('includes convert-audio', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('convert-audio')).toBeDefined();
+  });
+
+  it('includes convert-video', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('convert-video')).toBeDefined();
+  });
+
+  it('includes extract-audio', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('extract-audio')).toBeDefined();
+  });
+
+  it('includes trim-media', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('trim-media')).toBeDefined();
+  });
+
+  it('includes compress-video', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('compress-video')).toBeDefined();
+  });
+
+  it('includes video-to-gif', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-to-gif')).toBeDefined();
+  });
+
+  it('includes convert-subtitles', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('convert-subtitles')).toBeDefined();
+  });
+
+  it('includes burn-subtitles', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('burn-subtitles')).toBeDefined();
+  });
+
+  it('has a media category with tools', () => {
+    const registry = createDefaultRegistry();
+    const mediaTools = registry.toolsByCategory('media');
+    expect(mediaTools.length).toBeGreaterThan(0);
+  });
+
+  it('includes pgp-encrypt', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pgp-encrypt')).toBeDefined();
+  });
+
+  it('includes pgp-decrypt', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pgp-decrypt')).toBeDefined();
+  });
+
+  it('includes pgp-sign', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pgp-sign')).toBeDefined();
+  });
+
+  it('includes pgp-verify', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('pgp-verify')).toBeDefined();
+  });
+
+  it('includes zip-create', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('zip-create')).toBeDefined();
+  });
+
+  it('includes zip-extract', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('zip-extract')).toBeDefined();
+  });
+
+  it('includes zip-info', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('zip-info')).toBeDefined();
+  });
+
+  it('has an archive category with tools', () => {
+    const registry = createDefaultRegistry();
+    const archiveTools = registry.toolsByCategory('archive');
+    expect(archiveTools.length).toBeGreaterThan(0);
   });
 });

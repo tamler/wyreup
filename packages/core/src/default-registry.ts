@@ -71,6 +71,21 @@ import { percentageCalculator } from './tools/percentage-calculator/index.js';
 import { dateCalculator } from './tools/date-calculator/index.js';
 import { compoundInterest } from './tools/compound-interest/index.js';
 import { investmentDca } from './tools/investment-dca/index.js';
+import { convertAudio } from './tools/convert-audio/index.js';
+import { convertVideo } from './tools/convert-video/index.js';
+import { extractAudio } from './tools/extract-audio/index.js';
+import { trimMedia } from './tools/trim-media/index.js';
+import { compressVideo } from './tools/compress-video/index.js';
+import { videoToGif } from './tools/video-to-gif/index.js';
+import { convertSubtitles } from './tools/convert-subtitles/index.js';
+import { burnSubtitles } from './tools/burn-subtitles/index.js';
+import { pgpEncrypt } from './tools/pgp-encrypt/index.js';
+import { pgpDecrypt } from './tools/pgp-decrypt/index.js';
+import { pgpSign } from './tools/pgp-sign/index.js';
+import { pgpVerify } from './tools/pgp-verify/index.js';
+import { zipCreate } from './tools/zip-create/index.js';
+import { zipExtract } from './tools/zip-extract/index.js';
+import { zipInfo } from './tools/zip-info/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -153,6 +168,21 @@ export const defaultTools: ToolModule<any>[] = [
   dateCalculator,
   compoundInterest,
   investmentDca,
+  convertAudio,
+  convertVideo,
+  extractAudio,
+  trimMedia,
+  compressVideo,
+  videoToGif,
+  convertSubtitles,
+  burnSubtitles,
+  pgpEncrypt,
+  pgpDecrypt,
+  pgpSign,
+  pgpVerify,
+  zipCreate,
+  zipExtract,
+  zipInfo,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

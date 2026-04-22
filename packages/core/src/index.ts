@@ -124,6 +124,21 @@ export { percentageCalculator, type PercentageCalculatorParams, defaultPercentag
 export { dateCalculator, type DateCalculatorParams, defaultDateCalculatorParams } from './tools/date-calculator/index.js';
 export { compoundInterest, type CompoundInterestParams, defaultCompoundInterestParams } from './tools/compound-interest/index.js';
 export { investmentDca, type InvestmentDcaParams, defaultInvestmentDcaParams } from './tools/investment-dca/index.js';
+export { convertAudio, type ConvertAudioParams, defaultConvertAudioParams, type AudioFormat, getAudioCodec, getAudioMime } from './tools/convert-audio/index.js';
+export { convertVideo, type ConvertVideoParams, defaultConvertVideoParams, type VideoFormat, type VideoPreset, getVideoMime } from './tools/convert-video/index.js';
+export { extractAudio, type ExtractAudioParams, defaultExtractAudioParams, type ExtractAudioFormat, getExtractCodec, getExtractMime } from './tools/extract-audio/index.js';
+export { trimMedia, type TrimMediaParams, defaultTrimMediaParams } from './tools/trim-media/index.js';
+export { compressVideo, type CompressVideoParams, defaultCompressVideoParams } from './tools/compress-video/index.js';
+export { videoToGif, type VideoToGifParams, defaultVideoToGifParams, buildGifArgs } from './tools/video-to-gif/index.js';
+export { convertSubtitles, type ConvertSubtitlesParams, defaultConvertSubtitlesParams, type SubtitleFormat, detectSubtitleFormat, convertSrtToVtt, convertVttToSrt } from './tools/convert-subtitles/index.js';
+export { burnSubtitles, type BurnSubtitlesParams, defaultBurnSubtitlesParams } from './tools/burn-subtitles/index.js';
+export { pgpEncrypt, type PgpEncryptParams, defaultPgpEncryptParams } from './tools/pgp-encrypt/index.js';
+export { pgpDecrypt, type PgpDecryptParams, defaultPgpDecryptParams } from './tools/pgp-decrypt/index.js';
+export { pgpSign, type PgpSignParams, defaultPgpSignParams } from './tools/pgp-sign/index.js';
+export { pgpVerify, type PgpVerifyParams, type PgpVerifyResult, defaultPgpVerifyParams } from './tools/pgp-verify/index.js';
+export { zipCreate, type ZipCreateParams, defaultZipCreateParams, type ZipCompression } from './tools/zip-create/index.js';
+export { zipExtract, type ZipExtractParams, defaultZipExtractParams, shouldInclude } from './tools/zip-extract/index.js';
+export { zipInfo, type ZipInfoParams, type ZipInfoResult, type ZipEntryInfo, defaultZipInfoParams } from './tools/zip-info/index.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 
