@@ -18,6 +18,72 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
 const categories = [...new Set(tools.map((t) => t.category))].sort();
 
 const toolCount = tools.length;
+
+interface ExampleChain {
+  id: string;
+  name: string;
+  description: string;
+  steps: string[];
+  inputHint: string;
+  outputHint: string;
+}
+
+const exampleChains: ExampleChain[] = [
+  {
+    id: 'privacy',
+    name: 'Share a photo safely',
+    description: 'Strip metadata, blur faces, compress for sharing.',
+    steps: ['strip-exif', 'face-blur', 'compress'],
+    inputHint: 'Drop a JPG/PNG photo',
+    outputHint: 'Anonymized, smaller image',
+  },
+  {
+    id: 'receipts',
+    name: 'Receipts to one PDF',
+    description: 'Convert images to PDF, then merge them into a single document.',
+    steps: ['image-to-pdf', 'merge-pdf'],
+    inputHint: 'Drop 2+ receipt images',
+    outputHint: 'One searchable PDF',
+  },
+  {
+    id: 'scan-to-text',
+    name: 'Scan to searchable text',
+    description: 'OCR a scanned document, then word-count the result.',
+    steps: ['ocr', 'word-counter'],
+    inputHint: 'Drop a scanned PDF or image',
+    outputHint: 'Plain text + word stats',
+  },
+  {
+    id: 'web-ready',
+    name: 'Optimize for web',
+    description: 'Resize to web dimensions, compress for bandwidth, strip metadata.',
+    steps: ['resize', 'compress', 'strip-exif'],
+    inputHint: 'Drop a high-res JPG/PNG',
+    outputHint: 'Web-ready image',
+  },
+  {
+    id: 'redact-share',
+    name: 'Redact and lock a PDF',
+    description: 'Redact sensitive regions, encrypt with password, add page numbers.',
+    steps: ['pdf-redact', 'pdf-encrypt', 'page-numbers-pdf'],
+    inputHint: 'Drop a contract or document PDF',
+    outputHint: 'Locked, numbered, redacted PDF',
+  },
+  {
+    id: 'dev-data',
+    name: 'Clean up JSON for docs',
+    description: 'Format JSON, convert to YAML, then copy as pretty text.',
+    steps: ['json-formatter', 'json-yaml'],
+    inputHint: 'Drop a .json file',
+    outputHint: 'Formatted YAML',
+  },
+];
+
+// Helper: get a display name for a tool ID (fallback to the ID itself)
+function toolDisplayName(id: string): string {
+  const tool = tools.find((t) => t.id === id);
+  return tool ? tool.name : id;
+}
 ---
 
 <BaseLayout
@@ -42,7 +108,60 @@ const toolCount = tools.length;
         client:load
         tools={tools}
         categories={categories}
+        toolCount={toolCount}
       />
+
+      <!-- Example Chains section -->
+      <div class="chains-section">
+        <div class="chains-header">
+          <h2 class="chains-title">Example chains</h2>
+          <p class="chains-subhead">One drop. Multi-step outcome. Each step's output becomes the next step's input.</p>
+        </div>
+
+        <div class="chains-grid">
+          {exampleChains.map((chain, ci) => (
+            <div
+              class="chain-card brackets"
+              style={`--stagger-delay: ${ci * 80}ms`}
+            >
+              <div class="brackets-inner" aria-hidden="true"></div>
+              <div class="chain-card__inner">
+                <div class="chain-card__name">{chain.name}</div>
+                <p class="chain-card__desc">{chain.description}</p>
+
+                <div class="chain-flow" aria-label={`Chain steps: ${chain.steps.join(', ')}`}>
+                  {chain.steps.map((stepId, si) => (
+                    <>
+                      <span class="chain-step">{toolDisplayName(stepId)}</span>
+                      {si < chain.steps.length - 1 && (
+                        <span class="chain-connector" aria-hidden="true">
+                          <span class="chain-connector__line"></span>
+                          <span class="chain-connector__pad"></span>
+                          <span class="chain-connector__arrow">&#8594;</span>
+                        </span>
+                      )}
+                    </>
+                  ))}
+                </div>
+
+                <div class="chain-hints">
+                  <span class="chain-hint chain-hint--in">{chain.inputHint}</span>
+                  <span class="chain-hint__sep" aria-hidden="true">&#8594;</span>
+                  <span class="chain-hint chain-hint--out">{chain.outputHint}</span>
+                </div>
+
+                <div class="chain-action">
+                  <a
+                    href={`/tools/${chain.steps[0]}`}
+                    class="chain-start-link"
+                    aria-label={`Start chain: ${chain.name}`}
+                  >Start &#8594;</a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -68,5 +187,193 @@ const toolCount = tools.length;
     display: flex;
     align-items: center;
     gap: var(--space-4);
+  }
+
+  /* Example chains section */
+  .chains-section {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .chains-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .chains-title {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .chains-subhead {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .chains-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 768px) {
+    .chains-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Chain card — double-bezel matching tool-card */
+  .chain-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1px;
+    position: relative;
+    overflow: visible;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: card-reveal 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
+    animation-delay: var(--stagger-delay, 0ms);
+  }
+
+  @keyframes card-reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .chain-card:hover {
+    border-color: var(--text-muted);
+  }
+
+  .chain-card__inner {
+    background: var(--bg-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-md) - 1px);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .chain-card__name {
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.25;
+  }
+
+  .chain-card__desc {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Chain flow visualization */
+  .chain-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .chain-step {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px var(--space-2);
+    white-space: nowrap;
+  }
+
+  .chain-connector {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-subtle);
+    flex-shrink: 0;
+  }
+
+  .chain-connector__line {
+    display: block;
+    width: 8px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .chain-connector__pad {
+    display: block;
+    width: 3px;
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .chain-connector__arrow {
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    line-height: 1;
+  }
+
+  /* Hints row */
+  .chain-hints {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .chain-hint {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .chain-hint--in {
+    color: var(--text-subtle);
+  }
+
+  .chain-hint--out {
+    color: var(--text-muted);
+  }
+
+  .chain-hint__sep {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+
+  /* Action row */
+  .chain-action {
+    margin-top: var(--space-1);
+  }
+
+  .chain-start-link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .chain-start-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .chain-start-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 </style>

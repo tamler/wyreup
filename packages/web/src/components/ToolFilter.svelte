@@ -11,72 +11,7 @@
 
   export let tools: Tool[] = [];
   export let categories: string[] = [];
-
-  // ── Kits ──────────────────────────────────────────────────────────────────
-
-  interface Kit {
-    id: string;
-    name: string;
-    description: string;
-    toolIds: string[];
-  }
-
-  const KITS: Kit[] = [
-    {
-      id: 'privacy',
-      name: 'Privacy Kit',
-      description: 'Strip metadata, blur faces, redact and encrypt documents.',
-      toolIds: ['strip-exif', 'face-blur', 'pdf-redact', 'pdf-encrypt', 'hash'],
-    },
-    {
-      id: 'pdf-essentials',
-      name: 'PDF Essentials',
-      description: 'Merge, split, compress, extract, and convert PDFs.',
-      toolIds: ['merge-pdf', 'split-pdf', 'pdf-compress', 'pdf-to-text', 'image-to-pdf', 'watermark-pdf'],
-    },
-    {
-      id: 'social-media',
-      name: 'Social Media Optimizer',
-      description: 'Resize, compress, watermark, and convert images for posting.',
-      toolIds: ['resize', 'compress', 'convert', 'image-watermark', 'favicon'],
-    },
-    {
-      id: 'dev-utils',
-      name: 'Developer Utilities',
-      description: 'Format, encode, decode, and validate data in the browser.',
-      toolIds: ['json-formatter', 'base64', 'url-encoder', 'hash', 'jwt-decoder', 'sql-formatter', 'regex-tester'],
-    },
-    {
-      id: 'text-data',
-      name: 'Text & Data',
-      description: 'Convert, diff, and count text and structured data.',
-      toolIds: ['csv-json', 'case-converter', 'slug', 'json-yaml', 'word-counter', 'text-diff'],
-    },
-    {
-      id: 'generators',
-      name: 'Quick Generators',
-      description: 'Generate QR codes, UUIDs, passwords, and placeholder text.',
-      toolIds: ['qr', 'uuid-generator', 'password-generator', 'lorem-ipsum'],
-    },
-  ];
-
-  // ── Scenario pills ─────────────────────────────────────────────────────────
-
-  interface Scenario {
-    id: string;
-    label: string;
-    toolIds?: string[];
-    category?: string;
-  }
-
-  const SCENARIOS: Scenario[] = [
-    { id: 'fix-pdf', label: 'Fix my PDF', category: 'pdf' },
-    { id: 'clean-photos', label: 'Clean my photos', toolIds: ['strip-exif', 'face-blur', 'image-watermark', 'resize'] },
-    { id: 'scrub-metadata', label: 'Scrub metadata', toolIds: ['strip-exif', 'pdf-metadata'] },
-    { id: 'make-thumbnail', label: 'Make a thumbnail', toolIds: ['resize', 'compress'] },
-    { id: 'share-secret', label: 'Share a secret', toolIds: ['password-generator', 'hash', 'pdf-encrypt'] },
-    { id: 'blog-workflow', label: 'Blog workflow', toolIds: ['slug', 'markdown-to-html', 'word-counter', 'favicon'] },
-  ];
+  export let toolCount: number = 0;
 
   // ── State ──────────────────────────────────────────────────────────────────
 
@@ -96,6 +31,7 @@
     export: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
     edit: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
     finance: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="14.5" y2="14.5"/><path d="M12 6v2M12 16v2M8 12H6M18 12h-2"/></svg>`,
+    audio: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   };
   const defaultIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
@@ -115,6 +51,7 @@
     export: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
     edit: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
     finance: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="14.5" y2="14.5"/><path d="M12 6v2M12 16v2M8 12H6M18 12h-2"/></svg>`,
+    audio: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   };
   const defaultChipIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
@@ -130,79 +67,6 @@
   // Incremented on each filter change to re-trigger stagger animation
   let filterEpoch = 0;
 
-  // Kit + scenario state
-  let activeKitId: string | null = null;
-  let activeScenarioId: string | null = null;
-  // Tool IDs forced by kit or scenario (null = no restriction)
-  let forcedToolIds: Set<string> | null = null;
-  // Active scenario or kit label for the reset chip
-  let activePresetLabel: string | null = null;
-
-  function toolById(id: string): Tool | undefined {
-    return tools.find((t) => t.id === id);
-  }
-
-  function kitToolCount(kit: Kit): number {
-    return kit.toolIds.filter((id) => tools.some((t) => t.id === id)).length;
-  }
-
-  function kitRepIcons(kit: Kit): string[] {
-    return kit.toolIds
-      .slice(0, 3)
-      .map((id) => {
-        const t = toolById(id);
-        if (!t) return defaultIcon;
-        return categoryIcons[t.category] ?? defaultIcon;
-      });
-  }
-
-  function selectKit(kit: Kit) {
-    if (activeKitId === kit.id) {
-      // toggle off
-      activeKitId = null;
-      forcedToolIds = null;
-      activePresetLabel = null;
-    } else {
-      activeKitId = kit.id;
-      activeScenarioId = null;
-      forcedToolIds = new Set(kit.toolIds);
-      activePresetLabel = kit.name;
-    }
-    // clear category chips when applying a kit
-    activeCategories = new Set();
-    applyFilter();
-  }
-
-  function selectScenario(scenario: Scenario) {
-    if (activeScenarioId === scenario.id) {
-      clearPreset();
-      return;
-    }
-    activeScenarioId = scenario.id;
-    activeKitId = null;
-    activeCategories = new Set();
-    activePresetLabel = scenario.label;
-
-    if (scenario.toolIds) {
-      forcedToolIds = new Set(scenario.toolIds);
-    } else if (scenario.category) {
-      forcedToolIds = new Set(
-        tools.filter((t) => t.category === scenario.category).map((t) => t.id)
-      );
-    } else {
-      forcedToolIds = null;
-    }
-    applyFilter();
-  }
-
-  function clearPreset() {
-    activeKitId = null;
-    activeScenarioId = null;
-    forcedToolIds = null;
-    activePresetLabel = null;
-    applyFilter();
-  }
-
   function toggleCategory(cat: string) {
     const next = new Set(activeCategories);
     if (next.has(cat)) {
@@ -217,8 +81,6 @@
   function applyFilter() {
     const q = query.toLowerCase().trim();
     filtered = tools.filter((t) => {
-      // If a kit or scenario is active, restrict to those IDs first
-      if (forcedToolIds !== null && !forcedToolIds.has(t.id)) return false;
       const catMatch = activeCategories.size === 0 || activeCategories.has(t.category);
       if (!catMatch) return false;
       if (!q) return true;
@@ -235,75 +97,41 @@
   function clearAll() {
     query = '';
     activeCategories = new Set();
-    clearPreset();
+    applyFilter();
   }
 
   $: {
     query;
     activeCategories;
-    forcedToolIds;
     applyFilter();
   }
 
   onMount(() => {
-    // Check URL for ?kit= param
-    const params = new URLSearchParams(window.location.search);
-    const kitParam = params.get('kit');
-    if (kitParam) {
-      const kit = KITS.find((k) => k.id === kitParam);
-      if (kit) selectKit(kit);
-    }
+    // No URL params to process in this version
   });
 </script>
 
-<!-- Scenario pills -->
-<div class="scenario-pills" role="group" aria-label="Task shortcuts">
-  {#each SCENARIOS as scenario}
-    <button
-      class="scenario-pill"
-      class:active={activeScenarioId === scenario.id}
-      on:click={() => selectScenario(scenario)}
-      aria-pressed={activeScenarioId === scenario.id}
-    >
-      {scenario.label}
-    </button>
-  {/each}
-</div>
-
-<!-- Kit bento grid -->
-<div class="kits-bento" aria-label="Tool kits">
-  {#each KITS as kit}
-    <button
-      class="kit-card"
-      class:active={activeKitId === kit.id}
-      on:click={() => selectKit(kit)}
-      aria-pressed={activeKitId === kit.id}
-      type="button"
-    >
-      <div class="kit-card__inner">
-        <div class="kit-card__name">{kit.name}</div>
-        <p class="kit-card__desc">{kit.description}</p>
-        <div class="kit-card__footer">
-          <div class="kit-card__icons">
-            {#each kitRepIcons(kit) as icon}
-              <span class="kit-card__icon">{@html icon}</span>
-            {/each}
-          </div>
-          <span class="kit-card__count">{kitToolCount(kit)} tools</span>
-        </div>
-      </div>
-    </button>
-  {/each}
-</div>
-
-<div class="filter-bar">
+<!-- Search input — prominent, at top -->
+<div class="search-wrap">
+  <span class="search-icon" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </span>
   <input
     class="filter-search"
     type="search"
-    placeholder="Search tools"
+    placeholder="Search {toolCount} tools..."
     bind:value={query}
     aria-label="Search tools"
   />
+  {#if query}
+    <button class="search-clear" on:click={() => { query = ''; }} aria-label="Clear search">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  {/if}
+</div>
+
+<!-- Category chip filter -->
+<div class="filter-bar">
   <div class="filter-chips" role="group" aria-label="Filter by category">
     {#each categories as cat}
       <button
@@ -322,12 +150,7 @@
 
 <div class="results-meta">
   <span class="results-count">{filtered.length} tool{filtered.length !== 1 ? 's' : ''}</span>
-  {#if activePresetLabel}
-    <span class="preset-active">
-      {activePresetLabel}
-      <button class="clear-btn" on:click={clearPreset} aria-label="Clear preset filter">x — reset</button>
-    </span>
-  {:else if query || activeCategories.size > 0}
+  {#if query || activeCategories.size > 0}
     <button class="clear-btn" on:click={clearAll}>Clear</button>
   {/if}
 </div>
@@ -371,180 +194,27 @@
 {/if}
 
 <style>
-  /* Scenario pills */
-  .scenario-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-bottom: var(--space-6);
-  }
-
-  .scenario-pill {
-    height: 28px;
-    padding: 0 var(--space-3);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: 400;
-    cursor: pointer;
-    white-space: nowrap;
-    transition:
-      border-color var(--duration-instant) var(--ease-sharp),
-      color var(--duration-instant) var(--ease-sharp),
-      background var(--duration-instant) var(--ease-sharp);
-  }
-
-  .scenario-pill:hover {
-    border-color: var(--text-muted);
-    color: var(--text-primary);
-  }
-
-  .scenario-pill.active {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  .scenario-pill:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  /* Kits bento */
-  .kits-bento {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-3);
-    margin-bottom: var(--space-8);
-  }
-
-  @media (max-width: 768px) {
-    .kits-bento {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .kits-bento {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .kit-card {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 1px;
-    cursor: pointer;
-    text-align: left;
-    transition:
-      border-color var(--duration-fast) var(--ease-sharp),
-      background var(--duration-fast) var(--ease-sharp);
-  }
-
-  .kit-card:hover {
-    border-color: var(--text-muted);
-  }
-
-  .kit-card.active {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  .kit-card:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .kit-card__inner {
-    background: var(--bg-raised);
-    border: 1px solid var(--border-subtle);
-    border-radius: calc(var(--radius-md) - 1px);
-    padding: var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    height: 100%;
-  }
-
-  .kit-card.active .kit-card__inner {
-    background: var(--accent-dim);
-    border-color: transparent;
-  }
-
-  .kit-card__name {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--accent);
-    line-height: 1.25;
-  }
-
-  .kit-card__desc {
-    font-family: var(--font-sans);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .kit-card__footer {
+  /* Search wrap */
+  .search-wrap {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    margin-top: var(--space-1);
-  }
-
-  .kit-card__icons {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .kit-card__icon {
-    display: flex;
-    align-items: center;
-    color: var(--text-muted);
-    width: 20px;
-    height: 20px;
-  }
-
-  .kit-card__count {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-subtle);
-    white-space: nowrap;
-  }
-
-  /* Preset active indicator */
-  .preset-active {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--accent);
-  }
-
-  /* Filter bar */
-  .filter-bar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
     margin-bottom: var(--space-4);
   }
 
+  .search-icon {
+    position: absolute;
+    left: var(--space-3);
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
   .filter-search {
-    height: 32px;
-    padding: 0 var(--space-3);
+    height: 44px;
+    padding: 0 var(--space-8) 0 calc(var(--space-3) + 14px + var(--space-2));
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -552,7 +222,6 @@
     font-family: var(--font-mono);
     font-size: var(--text-base);
     width: 100%;
-    max-width: 360px;
     transition: border-color var(--duration-instant) var(--ease-sharp);
   }
 
@@ -564,6 +233,34 @@
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-color: var(--border);
+  }
+
+  .search-clear {
+    position: absolute;
+    right: var(--space-3);
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    color: var(--text-subtle);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .search-clear:hover {
+    color: var(--text-muted);
+  }
+
+  .search-clear:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    margin-bottom: var(--space-4);
   }
 
   .filter-chips {
