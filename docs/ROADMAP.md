@@ -62,7 +62,7 @@ Optional near-term:
 
 Each wave is self-contained, pushes to main, and leaves the site green.
 
-### Wave J — Chain builder + My Kit + SDK (next)
+### Wave J — Chain builder + My Kit + SDK (done v0.3.0)
 
 The "build-your-own-tool" surface. Chains become first-class, shareable,
 and savable.

@@ -168,7 +168,7 @@ const toolCount = createDefaultRegistry().toolsById.size;
         Drop a file, pick a tool, see the result. Then pick another — the result becomes the next input. One drop, a cascade of outcomes. Every step runs on your device.
       </p>
       <p class="chain-bridge">
-        Run a real chain: <a href="#hero-drop-zone" class="chain-bridge__link" id="scroll-to-hero">drop a file on the hero above</a>, pick a tool, then use the result in another. Every step on your device.
+        Run a real chain: <a href="/chain/build" class="chain-bridge__link">build a pipeline at /chain/build</a>, drop a file, and every step runs on your device. <a href="/chain/build" class="chain-cta">Try it &rarr;</a>
       </p>
       <div class="chain-flow" aria-label="Chain demo: image.heic converted, then compressed to 247 KB JPG">
         <div class="chain-node chain-node--input" data-chain-index="0">
@@ -427,6 +427,18 @@ const toolCount = createDefaultRegistry().toolsById.size;
 
   .chain-bridge__link:hover {
     color: var(--accent);
+  }
+
+  .chain-cta {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .chain-cta:hover {
+    color: var(--accent-hover);
   }
 
   .chain-flow {

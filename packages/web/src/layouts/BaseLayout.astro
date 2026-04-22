@@ -62,6 +62,7 @@ const currentPath = Astro.url.pathname;
         <a href="/" class="wordmark" aria-current={currentPath === '/' ? 'page' : undefined}>wyreup</a>
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
+          <a href="/my-kit" class="nav-link" aria-current={currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Kit</a>
           <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
           <a href="/skill" class="nav-link" aria-current={currentPath === '/skill' || currentPath === '/mcp' ? 'page' : undefined}>Agents</a>
           <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
