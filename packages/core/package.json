@@ -1,8 +1,21 @@
 {
   "name": "@wyreup/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Privacy-first, browser-native tool library — compress, convert, redact, and more. Every tool runs on-device.",
-  "keywords": ["wyreup", "privacy", "image", "pdf", "cli", "browser", "wasm", "compress", "convert", "redact", "offline", "local"],
+  "keywords": [
+    "wyreup",
+    "privacy",
+    "image",
+    "pdf",
+    "cli",
+    "browser",
+    "wasm",
+    "compress",
+    "convert",
+    "redact",
+    "offline",
+    "local"
+  ],
   "license": "MIT",
   "homepage": "https://wyreup.com/",
   "bugs": {

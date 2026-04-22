@@ -1,8 +1,19 @@
 {
   "name": "@wyreup/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server exposing Wyreup's 66 tools to Claude Code, Claude Desktop, and any MCP-compatible agent.",
-  "keywords": ["wyreup", "mcp", "model-context-protocol", "claude", "agent", "privacy", "image", "pdf", "offline", "local"],
+  "keywords": [
+    "wyreup",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "agent",
+    "privacy",
+    "image",
+    "pdf",
+    "offline",
+    "local"
+  ],
   "license": "MIT",
   "homepage": "https://wyreup.com/mcp",
   "bugs": {
@@ -25,7 +36,10 @@
   "bin": {
     "wyreup-mcp": "./dist/index.js"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",
