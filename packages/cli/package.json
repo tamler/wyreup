@@ -2,7 +2,18 @@
   "name": "@wyreup/cli",
   "version": "0.1.0",
   "description": "Wyreup CLI — run 66 privacy-first file tools from the shell. Same engine as wyreup.com, scriptable and offline.",
-  "keywords": ["wyreup", "cli", "privacy", "image", "pdf", "compress", "convert", "offline", "local", "shell"],
+  "keywords": [
+    "wyreup",
+    "cli",
+    "privacy",
+    "image",
+    "pdf",
+    "compress",
+    "convert",
+    "offline",
+    "local",
+    "shell"
+  ],
   "license": "MIT",
   "homepage": "https://wyreup.com/cli",
   "bugs": {
@@ -25,7 +36,10 @@
   "bin": {
     "wyreup": "./dist/index.js"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",
@@ -34,6 +48,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@clack/prompts": "^1.2.0",
     "@wyreup/core": "workspace:*",
     "commander": "^12.1.0"
   },
