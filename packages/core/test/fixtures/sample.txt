@@ -1,0 +1,5 @@
+The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet. Natural language processing tools can analyze text for readability and complexity.
+
+Text analysis involves counting words, sentences, paragraphs, and syllables. Reading time is estimated at approximately 238 words per minute for silent reading. Speaking time is slower at about 150 words per minute.
+
+Wyreup provides privacy-first tools that run entirely on your device. No data is sent to external servers. Your files stay private.
