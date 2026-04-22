@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 87 tools in total', () => {
+  it('has 102 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(87);
+    expect(registry.toolsById.size).toBe(102);
   });
 
   it('includes ocr', () => {
@@ -396,5 +396,122 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     const archiveTools = registry.toolsByCategory('archive');
     expect(archiveTools.length).toBeGreaterThan(0);
+  });
+
+  // Wave L: image AI tools
+  it('includes bg-remove', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('bg-remove')).toBeDefined();
+  });
+
+  it('includes upscale-2x', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('upscale-2x')).toBeDefined();
+  });
+
+  it('includes ocr-pro', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('ocr-pro')).toBeDefined();
+  });
+
+  it('includes image-similarity', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('image-similarity')).toBeDefined();
+  });
+
+  it('image-ai group tools have installGroup set', () => {
+    const registry = createDefaultRegistry();
+    const aiTools = ['bg-remove', 'upscale-2x', 'ocr-pro', 'image-similarity'];
+    for (const id of aiTools) {
+      const tool = registry.toolsById.get(id) as { installGroup?: string } | undefined;
+      expect(tool?.installGroup).toBe('image-ai');
+    }
+  });
+
+  // Wave L: NLP tools
+  it('includes text-sentiment', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-sentiment')).toBeDefined();
+  });
+
+  it('includes text-ner', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-ner')).toBeDefined();
+  });
+
+  it('includes text-summarize', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-summarize')).toBeDefined();
+  });
+
+  it('includes text-translate', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-translate')).toBeDefined();
+  });
+
+  it('includes text-embed', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-embed')).toBeDefined();
+  });
+
+  it('text-translate has its own installGroup (nlp-translate)', () => {
+    const registry = createDefaultRegistry();
+    const tool = registry.toolsById.get('text-translate') as { installGroup?: string } | undefined;
+    expect(tool?.installGroup).toBe('nlp-translate');
+  });
+
+  it('nlp-standard group tools have correct installGroup', () => {
+    const registry = createDefaultRegistry();
+    const nlpStandard = ['text-sentiment', 'text-ner', 'text-summarize', 'text-embed'];
+    for (const id of nlpStandard) {
+      const tool = registry.toolsById.get(id) as { installGroup?: string } | undefined;
+      expect(tool?.installGroup).toBe('nlp-standard');
+    }
+  });
+
+  // Wave L: pure-JS text tools
+  it('includes text-readability', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-readability')).toBeDefined();
+  });
+
+  it('includes text-stats', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-stats')).toBeDefined();
+  });
+
+  it('includes token-count', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('token-count')).toBeDefined();
+  });
+
+  it('includes text-diff-levenshtein', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-diff-levenshtein')).toBeDefined();
+  });
+
+  it('includes unicode-normalize', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('unicode-normalize')).toBeDefined();
+  });
+
+  it('includes text-escape', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('text-escape')).toBeDefined();
+  });
+
+  it('pure-JS text tools have no installSize', () => {
+    const registry = createDefaultRegistry();
+    const pureTools = ['text-readability', 'text-stats', 'token-count', 'text-diff-levenshtein', 'unicode-normalize', 'text-escape'];
+    for (const id of pureTools) {
+      const tool = registry.toolsById.get(id);
+      expect(tool?.installSize).toBeUndefined();
+    }
+  });
+
+  it('has a text category with tools', () => {
+    const registry = createDefaultRegistry();
+    const textTools = registry.toolsByCategory('text');
+    expect(textTools.length).toBeGreaterThan(0);
   });
 });

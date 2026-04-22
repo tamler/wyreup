@@ -30,6 +30,30 @@ type HeavyEntry =
 const seenGroups = new Set<string>();
 const heavyTools: HeavyEntry[] = [];
 
+// Human-readable labels for each installGroup
+const GROUP_LABELS: Record<string, { name: string; description: (toolIds: string[], totalMb: number) => string }> = {
+  ffmpeg: {
+    name: 'Audio/Video tools (ffmpeg)',
+    description: (toolIds, _mb) =>
+      `${toolIds.length} audio and video conversion tools powered by ffmpeg.wasm. Downloads ~30 MB on first use.`,
+  },
+  'image-ai': {
+    name: 'Image AI tools',
+    description: (toolIds, totalMb) =>
+      `${toolIds.length} AI-powered image tools (background removal, upscaling, OCR Pro, image similarity). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
+  },
+  'nlp-standard': {
+    name: 'NLP tools (sentiment, NER, summarize, embeddings)',
+    description: (toolIds, totalMb) =>
+      `${toolIds.length} natural language processing tools. Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
+  },
+  'nlp-translate': {
+    name: 'Text translation (M2M100)',
+    description: (_toolIds, totalMb) =>
+      `Translate between 100+ languages using the M2M100 neural model. Downloads ~${totalMb} MB on first use — runs entirely on your device. Kept separate due to its larger download size.`,
+  },
+};
+
 for (const t of registry.toolsById.values()) {
   if (t.installSize === undefined) continue;
 
@@ -38,18 +62,21 @@ for (const t of registry.toolsById.values()) {
     if (seenGroups.has(group)) continue;
     seenGroups.add(group);
     // Collect all tool IDs in this group
-    const groupToolIds = Array.from(registry.toolsById.values())
-      .filter((g) => (g as { installGroup?: string }).installGroup === group)
-      .map((g) => g.id);
+    const groupTools = Array.from(registry.toolsById.values())
+      .filter((g) => (g as { installGroup?: string }).installGroup === group);
+    const groupToolIds = groupTools.map((g) => g.id);
+    // Sum installSize across all tools in the group
+    const totalBytes = groupTools.reduce((sum, g) => sum + (g.installSize ?? 0), 0);
+    const totalMb = Math.round(totalBytes / 1_000_000);
+    const label = GROUP_LABELS[group];
     heavyTools.push({
       type: 'group',
       id: group,
-      name: group === 'ffmpeg' ? 'Audio/Video tools (ffmpeg)' : group,
-      description:
-        group === 'ffmpeg'
-          ? `${groupToolIds.length} audio and video conversion tools powered by ffmpeg.wasm. Downloads ~30 MB on first use.`
-          : `Tool group: ${group}`,
-      installSize: t.installSize,
+      name: label ? label.name : group,
+      description: label
+        ? label.description(groupToolIds, totalMb)
+        : `Tool group: ${group}. Downloads ~${totalMb} MB on first use.`,
+      installSize: totalBytes,
       toolIds: groupToolIds,
     });
   } else {

@@ -139,6 +139,22 @@ export { pgpVerify, type PgpVerifyParams, type PgpVerifyResult, defaultPgpVerify
 export { zipCreate, type ZipCreateParams, defaultZipCreateParams, type ZipCompression } from './tools/zip-create/index.js';
 export { zipExtract, type ZipExtractParams, defaultZipExtractParams, shouldInclude } from './tools/zip-extract/index.js';
 export { zipInfo, type ZipInfoParams, type ZipInfoResult, type ZipEntryInfo, defaultZipInfoParams } from './tools/zip-info/index.js';
+export { bgRemove, type BgRemoveParams, defaultBgRemoveParams } from './tools/bg-remove/index.js';
+export { upscale2x, type Upscale2xParams, defaultUpscale2xParams } from './tools/upscale-2x/index.js';
+export { ocrPro, type OcrProParams, defaultOcrProParams } from './tools/ocr-pro/index.js';
+export { imageSimilarity, type ImageSimilarityParams, type ImageSimilarityResult, defaultImageSimilarityParams, cosineSimilarity as imageSimilarityCosineSimilarity, clusterByThreshold } from './tools/image-similarity/index.js';
+export { textSentiment, type TextSentimentParams, type TextSentimentResult, defaultTextSentimentParams } from './tools/text-sentiment/index.js';
+export { textNer, type TextNerParams, type TextNerResult, type NerEntity, defaultTextNerParams } from './tools/text-ner/index.js';
+export { textSummarize, type TextSummarizeParams, defaultTextSummarizeParams } from './tools/text-summarize/index.js';
+export { textTranslate, type TextTranslateParams, defaultTextTranslateParams } from './tools/text-translate/index.js';
+export { textEmbed, type TextEmbedParams, type TextEmbedResult, defaultTextEmbedParams, cosineSimilarity as textEmbedCosineSimilarity } from './tools/text-embed/index.js';
+export { textReadability, type TextReadabilityParams, type TextReadabilityResult, defaultTextReadabilityParams } from './tools/text-readability/index.js';
+export { textStats, type TextStatsParams, type TextStatsResult, defaultTextStatsParams, computeTextStats, countSyllables } from './tools/text-stats/index.js';
+export { tokenCount, type TokenCountParams, type TokenCountResult, type TokenModel, defaultTokenCountParams } from './tools/token-count/index.js';
+export { textDiffLevenshtein, type TextDiffLevenshteinParams, type TextDiffLevenshteinResult, defaultTextDiffLevenshteinParams } from './tools/text-diff-levenshtein/index.js';
+export { unicodeNormalize, type UnicodeNormalizeParams, type UnicodeNormalForm, defaultUnicodeNormalizeParams, normalizeUnicode } from './tools/unicode-normalize/index.js';
+export { textEscape, type TextEscapeParams, type TextEscapeMode, defaultTextEscapeParams, encodeHtml, decodeHtml, encodeUnicode, decodeUnicode } from './tools/text-escape/index.js';
+export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

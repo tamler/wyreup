@@ -19,7 +19,8 @@ export type ToolCategory =
   | 'dev'
   | 'finance'
   | 'media'
-  | 'archive';
+  | 'archive'
+  | 'text';
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 

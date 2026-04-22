@@ -86,6 +86,21 @@ import { pgpVerify } from './tools/pgp-verify/index.js';
 import { zipCreate } from './tools/zip-create/index.js';
 import { zipExtract } from './tools/zip-extract/index.js';
 import { zipInfo } from './tools/zip-info/index.js';
+import { bgRemove } from './tools/bg-remove/index.js';
+import { upscale2x } from './tools/upscale-2x/index.js';
+import { ocrPro } from './tools/ocr-pro/index.js';
+import { imageSimilarity } from './tools/image-similarity/index.js';
+import { textSentiment } from './tools/text-sentiment/index.js';
+import { textNer } from './tools/text-ner/index.js';
+import { textSummarize } from './tools/text-summarize/index.js';
+import { textTranslate } from './tools/text-translate/index.js';
+import { textEmbed } from './tools/text-embed/index.js';
+import { textReadability } from './tools/text-readability/index.js';
+import { textStats } from './tools/text-stats/index.js';
+import { tokenCount } from './tools/token-count/index.js';
+import { textDiffLevenshtein } from './tools/text-diff-levenshtein/index.js';
+import { unicodeNormalize } from './tools/unicode-normalize/index.js';
+import { textEscape } from './tools/text-escape/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -183,6 +198,21 @@ export const defaultTools: ToolModule<any>[] = [
   zipCreate,
   zipExtract,
   zipInfo,
+  bgRemove,
+  upscale2x,
+  ocrPro,
+  imageSimilarity,
+  textSentiment,
+  textNer,
+  textSummarize,
+  textTranslate,
+  textEmbed,
+  textReadability,
+  textStats,
+  tokenCount,
+  textDiffLevenshtein,
+  unicodeNormalize,
+  textEscape,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
