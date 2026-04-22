@@ -154,7 +154,58 @@ import InstallCard from '../components/InstallCard.svelte';
     </div>
   </section>
 
-  <!-- Section 5: Privacy pitch — no viewport rhythm, natural tail -->
+  <!-- Section 5: Chain tools together -->
+  <section class="chain-demo section-rhythm" aria-labelledby="chain-heading">
+    <div class="container">
+      <h2 id="chain-heading" class="section-title">Chain tools together.</h2>
+      <p class="chain-body">
+        Drop a file, pick a tool, see the result. Then pick another — the result becomes the next input. One drop, a cascade of outcomes. Every step runs on your device.
+      </p>
+      <div class="chain-flow" aria-label="Chain demo: image.heic converted, then compressed to 247 KB JPG">
+        <div class="chain-node chain-node--input" data-chain-index="0">
+          <div class="chain-node__inner">
+            <span class="chain-node__dot" aria-hidden="true"></span>
+            <span class="chain-node__label">image.heic</span>
+          </div>
+        </div>
+        <span class="chain-arrow" aria-hidden="true"></span>
+        <div class="chain-node" data-chain-index="1">
+          <div class="chain-node__inner">
+            <span class="chain-node__dot" aria-hidden="true"></span>
+            <span class="chain-node__label">convert</span>
+          </div>
+        </div>
+        <span class="chain-arrow" aria-hidden="true"></span>
+        <div class="chain-node" data-chain-index="2">
+          <div class="chain-node__inner">
+            <span class="chain-node__dot" aria-hidden="true"></span>
+            <span class="chain-node__label">compress</span>
+          </div>
+        </div>
+        <span class="chain-arrow" aria-hidden="true"></span>
+        <div class="chain-node chain-node--output" data-chain-index="3">
+          <div class="chain-node__inner">
+            <span class="chain-node__dot chain-node__dot--active" aria-hidden="true"></span>
+            <span class="chain-node__label">247 KB JPG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" aria-hidden="true">
+      <span class="scroll-hint__line"></span>
+      <span class="scroll-hint__pad"></span>
+      <span class="scroll-hint__label">scroll</span>
+      <span class="scroll-hint__chevron">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </span>
+    </div>
+  </section>
+
+  <!-- Section 6: Privacy pitch — no viewport rhythm, natural tail -->
   <section class="privacy" aria-labelledby="privacy-heading">
     <div class="container">
       <div class="privacy-block">
@@ -396,6 +447,111 @@ import InstallCard from '../components/InstallCard.svelte';
     font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.5;
+  }
+
+  /* ── Chain demo ── */
+  .chain-demo {
+    background: var(--bg);
+  }
+
+  .chain-body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 540px;
+    margin-bottom: var(--space-12);
+  }
+
+  .chain-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: var(--space-4);
+  }
+
+  /* Each chain node starts hidden, then reveals on scroll */
+  .chain-node {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: chain-reveal 150ms cubic-bezier(0, 0, 0.2, 1) forwards;
+  }
+
+  .chain-node[data-chain-index="0"] { animation-delay: 0ms; }
+  .chain-node[data-chain-index="1"] { animation-delay: 400ms; }
+  .chain-node[data-chain-index="2"] { animation-delay: 800ms; }
+  .chain-node[data-chain-index="3"] { animation-delay: 1200ms; }
+
+  @keyframes chain-reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .chain-node__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    white-space: nowrap;
+  }
+
+  .chain-node--output .chain-node__inner {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .chain-node__dot {
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    flex-shrink: 0;
+  }
+
+  .chain-node__dot--active {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .chain-node__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .chain-node--output .chain-node__label {
+    color: var(--accent);
+  }
+
+  .chain-arrow {
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .chain-arrow::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-right: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    rotate: 45deg;
   }
 
   /* ── Privacy ── */

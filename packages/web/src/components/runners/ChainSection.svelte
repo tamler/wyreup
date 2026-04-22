@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { stashChainFile } from './chainStorage';
 
   export let resultBlob: Blob | null = null;
@@ -13,8 +14,23 @@
 
   let nextTools: NextTool[] = [];
   let tooLarge = false;
+  let saveIntermediate = false;
 
   const MAX_CHAIN_BYTES = 10 * 1024 * 1024;
+  const STORAGE_KEY = 'wyreup:chain-save-intermediate';
+
+  onMount(() => {
+    try {
+      saveIntermediate = localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch { /* ignore */ }
+  });
+
+  function toggleSaveIntermediate() {
+    saveIntermediate = !saveIntermediate;
+    try {
+      localStorage.setItem(STORAGE_KEY, saveIntermediate ? 'true' : 'false');
+    } catch { /* ignore */ }
+  }
 
   $: if (resultBlob) {
     loadNextTools(resultBlob);
@@ -34,8 +50,21 @@
     }));
   }
 
+  function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function navigate(toolId: string) {
     if (!resultBlob) return;
+    // Save intermediate file if option is checked
+    if (saveIntermediate) {
+      downloadBlob(resultBlob, resultName);
+    }
     if (!tooLarge) {
       const file = new File([resultBlob], resultName, { type: resultBlob.type });
       await stashChainFile(file);
@@ -51,6 +80,15 @@
       {#if tooLarge}
         <span class="chain-notice">File too large to carry automatically — download and re-upload manually.</span>
       {/if}
+      <label class="save-intermediate">
+        <input
+          type="checkbox"
+          checked={saveIntermediate}
+          on:change={toggleSaveIntermediate}
+          aria-label="Save intermediate file before navigating"
+        />
+        <span class="save-intermediate__label">Save intermediate</span>
+      </label>
     </div>
     <div class="chain-nodes">
       {#each nextTools as tool}
@@ -97,6 +135,30 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-subtle);
+  }
+
+  .save-intermediate {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    margin-left: auto;
+  }
+
+  .save-intermediate input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .save-intermediate__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    white-space: nowrap;
+    user-select: none;
   }
 
   .chain-nodes {
