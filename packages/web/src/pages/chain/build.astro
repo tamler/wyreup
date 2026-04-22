@@ -12,6 +12,7 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   inputMin: t.input.min,
   outputMime: t.output.mime,
   defaults: t.defaults as Record<string, unknown>,
+  paramSchema: t.paramSchema as Record<string, import('@wyreup/core').ParamFieldSchema> | undefined,
 }));
 ---
 

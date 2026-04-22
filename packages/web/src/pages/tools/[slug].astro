@@ -27,6 +27,7 @@ export async function getStaticPaths() {
           multiple: tool.output.multiple ?? false,
         },
         defaults: tool.defaults as Record<string, unknown>,
+        paramSchema: tool.paramSchema as Record<string, import('@wyreup/core').ParamFieldSchema> | undefined,
         requiresWebgpu: tool.requires?.webgpu,
         memoryEstimate: tool.memoryEstimate,
       },
