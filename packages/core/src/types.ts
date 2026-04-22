@@ -17,7 +17,9 @@ export type ToolCategory =
   | 'export'
   | 'audio'
   | 'dev'
-  | 'finance';
+  | 'finance'
+  | 'media'
+  | 'archive';
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 
@@ -166,6 +168,13 @@ export interface ToolModule<Params = unknown> {
    * PWA settings UI to inform opt-in decisions.
    */
   installSize?: number;
+
+  /**
+   * If set, tools with the same installGroup share a single download (e.g.
+   * all ffmpeg tools share the ffmpeg.wasm bundle). The PWA settings UI
+   * groups them under one toggle keyed by this value.
+   */
+  installGroup?: string;
 
   // Testing contract (consumed by CI)
   __testFixtures: {
