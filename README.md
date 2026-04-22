@@ -83,6 +83,10 @@ The site is a fully static Astro build that deploys to any static host. See [DEP
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
+## Contact
+
+General inquiries: hello@wyreup.com
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
