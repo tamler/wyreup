@@ -118,6 +118,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
           <a href="/about" class="footer-link">About</a>
           <a href="/settings" class="footer-link">Settings</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
+          <a href="https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml" target="_blank" rel="noopener noreferrer" class="footer-link">Suggest a tool</a>
         </nav>
       </div>
     </footer>
@@ -374,6 +375,23 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
     font-size: var(--text-xs);
   }
 
+  .header-suggest-sep {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: var(--space-1) 0;
+  }
+
+  .header-suggest-item--footer {
+    color: var(--text-subtle);
+    font-style: italic;
+  }
+
+  .header-suggest-item--footer:hover,
+  .header-suggest-item--footer[aria-selected="true"] {
+    color: var(--text-muted);
+    background: var(--bg-raised);
+  }
+
   /* Mobile toggle — shown only < 640px */
   .header-search-toggle {
     display: none;
@@ -422,25 +440,29 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 </style>
 
 <script>
-  // ── Header search: tool index + CMD+K + navigation ──
-  (function () {
-    const input = document.getElementById('header-search') as HTMLInputElement | null;
-    const dropdown = document.getElementById('header-search-dropdown') as HTMLElement | null;
-    const wrap = document.getElementById('header-search-wrap') as HTMLElement | null;
-    const toggle = document.getElementById('header-search-toggle') as HTMLButtonElement | null;
+  // ── Header search: Fuse.js fuzzy search + CMD+K + navigation ──
+  import { createToolSearch, searchTools } from '../lib/tool-search';
+  import type { SearchableTool } from '../lib/tool-search';
 
-    if (!input || !dropdown || !wrap) return;
+  const SUGGEST_URL_BASE =
+    'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
 
-    // Fetch tool index from the static JSON built at compile time
-    // Fall back to a live fetch of /tools-index.json which we'll create at build time
-    // For now, derive from window.__WYREUP_TOOLS__ injected by tools.astro or fallback to empty
-    let toolIndex: Array<{ id: string; name: string; category: string }> = [];
+  const input = document.getElementById('header-search') as HTMLInputElement | null;
+  const dropdown = document.getElementById('header-search-dropdown') as HTMLElement | null;
+  const wrap = document.getElementById('header-search-wrap') as HTMLElement | null;
+  const toggle = document.getElementById('header-search-toggle') as HTMLButtonElement | null;
+
+  if (input && dropdown && wrap) {
+    let fuse: ReturnType<typeof createToolSearch> | null = null;
+    let selectedIdx = -1;
+    const dd = dropdown;
 
     async function loadIndex() {
       try {
         const res = await fetch('/tools-index.json');
         if (res.ok) {
-          toolIndex = await res.json();
+          const tools: SearchableTool[] = await res.json();
+          fuse = createToolSearch(tools);
         }
       } catch {
         // silently ignore — search still works via form submit to /tools?q=
@@ -449,11 +471,49 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
     loadIndex();
 
+    function suggestUrl(query: string): string {
+      const q = query.trim();
+      return q ? SUGGEST_URL_BASE + encodeURIComponent(q) : SUGGEST_URL_BASE;
+    }
+
+    function renderDropdown(
+      results: Array<{ id: string; name: string; category: string }>,
+      query: string,
+    ) {
+      const resultRows = results
+        .slice(0, 10)
+        .map(
+          (t, i) =>
+            `<a class="header-suggest-item" href="/tools/${t.id}" role="option" aria-selected="${i === selectedIdx}">${t.name}<span class="header-suggest-item__cat">${t.category}</span></a>`,
+        )
+        .join('');
+
+      const suggestRow = `<a class="header-suggest-item header-suggest-item--footer" href="${suggestUrl(query)}" target="_blank" rel="noopener noreferrer" role="option" aria-selected="false">Can't find it? Suggest a tool</a>`;
+
+      dd.innerHTML = (results.length > 0 ? resultRows + '<div class="header-suggest-sep" aria-hidden="true"></div>' : '') + suggestRow;
+      dd.hidden = false;
+    }
+
+    input.addEventListener('input', () => {
+      selectedIdx = -1;
+      const q = input.value.trim();
+      if (!q) {
+        dd.hidden = true;
+        return;
+      }
+      if (!fuse) {
+        // Index not yet loaded — show suggest link only
+        renderDropdown([], q);
+        return;
+      }
+      const results = searchTools(fuse, q, 10).map((r) => r.tool);
+      renderDropdown(results, q);
+    });
+
     // CMD+K / Ctrl+K focus
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        // On mobile, open the overlay
         if (window.innerWidth < 640) {
           wrap.classList.add('mobile-open');
           if (toggle) toggle.setAttribute('aria-expanded', 'true');
@@ -462,7 +522,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
         input.select();
       }
       if (e.key === 'Escape') {
-        if (dropdown) dropdown.hidden = true;
+        dd.hidden = true;
         wrap.classList.remove('mobile-open');
         if (toggle) toggle.setAttribute('aria-expanded', 'false');
       }
@@ -479,44 +539,9 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
       });
     }
 
-    // Live suggestions
-    let selectedIdx = -1;
-    const dd = dropdown as HTMLElement;
-
-    function renderDropdown(matches: typeof toolIndex) {
-      if (matches.length === 0) {
-        dd.hidden = true;
-        return;
-      }
-      dd.innerHTML = matches
-        .slice(0, 8)
-        .map(
-          (t, i) =>
-            `<a class="header-suggest-item" href="/tools/${t.id}" role="option" aria-selected="${i === selectedIdx}">${t.name}<span class="header-suggest-item__cat">${t.category}</span></a>`
-        )
-        .join('');
-      dd.hidden = false;
-    }
-
-    input.addEventListener('input', () => {
-      selectedIdx = -1;
-      const q = input.value.trim().toLowerCase();
-      if (!q) {
-        dd.hidden = true;
-        return;
-      }
-      const matches = toolIndex.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.id.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q)
-      );
-      renderDropdown(matches);
-    });
-
-    // Keyboard navigation in dropdown
+    // Keyboard navigation in dropdown (skip the footer suggest link from arrow nav)
     input.addEventListener('keydown', (e) => {
-      const items = dd.querySelectorAll<HTMLAnchorElement>('.header-suggest-item');
+      const items = dd.querySelectorAll<HTMLAnchorElement>('.header-suggest-item:not(.header-suggest-item--footer)');
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
@@ -546,5 +571,5 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
         dd.hidden = true;
       }
     });
-  })();
+  }
 </script>

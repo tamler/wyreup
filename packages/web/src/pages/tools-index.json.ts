@@ -7,6 +7,8 @@ export const GET: APIRoute = () => {
     id: t.id,
     name: t.name,
     category: t.category,
+    description: t.description,
+    keywords: t.keywords ?? [],
   }));
   return new Response(JSON.stringify(tools), {
     headers: { 'Content-Type': 'application/json' },

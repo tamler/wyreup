@@ -1,11 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { createToolSearch } from '../lib/tool-search';
+
+  const SUGGEST_URL_BASE =
+    'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
 
   interface Tool {
     id: string;
     name: string;
     category: string;
     description: string;
+    keywords: string[];
     requiresWebgpu?: 'preferred' | 'required';
   }
 
@@ -71,6 +76,10 @@
   // Incremented on each filter change to re-trigger stagger animation
   let filterEpoch = 0;
 
+  $: suggestUrl = query.trim()
+    ? SUGGEST_URL_BASE + encodeURIComponent(query.trim())
+    : SUGGEST_URL_BASE;
+
   function toggleCategory(cat: string) {
     const next = new Set(activeCategories);
     if (next.has(cat)) {
@@ -83,18 +92,27 @@
   }
 
   function applyFilter() {
-    const q = query.toLowerCase().trim();
-    filtered = tools.filter((t) => {
-      const catMatch = activeCategories.size === 0 || activeCategories.has(t.category);
-      if (!catMatch) return false;
-      if (!q) return true;
-      return (
-        t.id.toLowerCase().includes(q) ||
-        t.name.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q)
-      );
-    });
+    const q = query.trim();
+    if (q) {
+      const fuse = createToolSearch(tools.map((t) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        category: t.category,
+        keywords: t.keywords ?? [],
+      })));
+      const results = fuse.search(q).map((r) => r.item);
+      const catFiltered = activeCategories.size === 0
+        ? results
+        : results.filter((r) => activeCategories.has(r.category));
+      // Preserve fuse rank order; re-look up originals to keep the full Tool shape
+      const byId = new Map(tools.map((t) => [t.id, t]));
+      filtered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
+    } else {
+      filtered = activeCategories.size === 0
+        ? tools
+        : tools.filter((t) => activeCategories.has(t.category));
+    }
     filterEpoch += 1;
   }
 
@@ -195,6 +213,14 @@
     <span class="empty-icon" aria-hidden="true">{@html `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`}</span>
     <p class="empty-msg">No tools match {query ? `"${query}"` : 'this filter'}.</p>
     <button class="btn-ghost" on:click={clearAll}>Clear filter</button>
+    {#if query.trim()}
+      <a
+        class="btn-suggest"
+        href={suggestUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >Suggest a tool</a>
+    {/if}
   </div>
 {:else}
   <div class="tool-grid" role="list">
@@ -581,6 +607,33 @@
   }
 
   .btn-ghost:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .btn-suggest {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition:
+      border-color var(--duration-instant) var(--ease-sharp),
+      color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .btn-suggest:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .btn-suggest:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
