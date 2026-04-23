@@ -1,0 +1,21 @@
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# The two Cross-Origin-* headers above enable SharedArrayBuffer, which is
+# required by ffmpeg.wasm (multi-threaded WASM) and Transformers.js (some
+# multi-threaded model inference paths). Without them, `SharedArrayBuffer is
+# not defined` at runtime.
+#
+# `credentialless` was chosen over `require-corp` because Wyreup's AI and
+# media tools fetch models/wasm from third-party CDNs (cdn.jsdelivr.net,
+# storage.googleapis.com, huggingface.co) at runtime. `credentialless` lets
+# those fetches succeed without the remote hosts having to set
+# Cross-Origin-Resource-Policy headers.
+#
+# Browser support: Chrome 96+, Edge 96+, Firefox 123+, Safari 17.4+ — ~95%
+# of sessions. Older browsers fall through to require-corp semantics which
+# would break fetches, so we degrade gracefully for those users (the tool
+# itself shows an error; the site still loads).

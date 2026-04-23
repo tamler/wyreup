@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { ImageInfoParams, ImageInfoResult } from './types.js';
 import { detectFormat, getCodec } from '../../lib/codecs.js';
+import { decodeJpegOrientation } from '../../lib/exif.js';
 
 export type { ImageInfoParams, ImageInfoResult } from './types.js';
 export { defaultImageInfoParams } from './types.js';
@@ -53,7 +54,15 @@ export const imageInfo: ToolModule<ImageInfoParams> = {
 
     const buffer = await input.arrayBuffer();
     const codec = await getCodec(sourceFormat);
-    const { width, height } = await codec.decode(buffer);
+    const decoded = await codec.decode(buffer);
+    // Swap width/height when EXIF orientation indicates a 90° rotation so
+    // image-info reports dimensions as the image would actually display.
+    const orientation = input.type.includes('jpeg') || input.type.includes('jpg')
+      ? decodeJpegOrientation(buffer)
+      : 1;
+    const swapDims = orientation >= 5;
+    const width = swapDims ? decoded.height : decoded.width;
+    const height = swapDims ? decoded.width : decoded.height;
 
     const bytes = buffer.byteLength;
     const ratio = aspectRatio(width, height);

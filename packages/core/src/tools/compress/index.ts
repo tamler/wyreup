@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { CompressParams } from './types.js';
 import { detectFormat, getCodec, type ImageFormat } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { CompressParams } from './types.js';
 export { defaultCompressParams } from './types.js';
@@ -83,7 +84,8 @@ export const compress: ToolModule<CompressParams> = {
 
       const buffer = await input.arrayBuffer();
       const sourceCodec = await getCodec(sourceFormat);
-      const decoded = await sourceCodec.decode(buffer);
+      const decodedRaw = await sourceCodec.decode(buffer);
+      const decoded = orientImageData(buffer, input.type, decodedRaw);
 
       if (ctx.signal.aborted) {
         throw new Error('Aborted');

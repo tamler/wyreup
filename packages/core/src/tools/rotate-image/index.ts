@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { RotateImageParams } from './types.js';
 import { detectFormat, getCodec } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { RotateImageParams } from './types.js';
 export { defaultRotateImageParams } from './types.js';
@@ -77,7 +78,8 @@ export const rotateImage: ToolModule<RotateImageParams> = {
 
       const buffer = await input.arrayBuffer();
       const codec = await getCodec(sourceFormat);
-      const { data, width, height } = await codec.decode(buffer);
+      const decodedRaw = await codec.decode(buffer);
+      const { data, width, height } = orientImageData(buffer, input.type, decodedRaw);
 
       const rotated = rotatePx(data, width, height, degrees);
 

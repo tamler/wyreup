@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { InvertParams } from './types.js';
 import { detectFormat, getCodec } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { InvertParams } from './types.js';
 export { defaultInvertParams } from './types.js';
@@ -59,7 +60,8 @@ export const invert: ToolModule<InvertParams> = {
 
       const buffer = await input.arrayBuffer();
       const codec = await getCodec(sourceFormat);
-      const { data, width, height } = await codec.decode(buffer);
+      const decodedRaw = await codec.decode(buffer);
+      const { data, width, height } = orientImageData(buffer, input.type, decodedRaw);
 
       const out = new Uint8ClampedArray(data.length);
       for (let p = 0; p < data.length; p += 4) {

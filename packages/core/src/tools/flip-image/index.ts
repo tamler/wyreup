@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { FlipImageParams } from './types.js';
 import { detectFormat, getCodec } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { FlipImageParams } from './types.js';
 export { defaultFlipImageParams } from './types.js';
@@ -60,7 +61,8 @@ export const flipImage: ToolModule<FlipImageParams> = {
 
       const buffer = await input.arrayBuffer();
       const codec = await getCodec(sourceFormat);
-      const { data, width, height } = await codec.decode(buffer);
+      const decodedRaw = await codec.decode(buffer);
+      const { data, width, height } = orientImageData(buffer, input.type, decodedRaw);
 
       const flipped =
         direction === 'horizontal'

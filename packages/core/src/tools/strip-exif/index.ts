@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { StripExifParams } from './types.js';
 import { detectFormat, getCodec, type ImageFormat } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { StripExifParams } from './types.js';
 export { defaultStripExifParams } from './types.js';
@@ -68,7 +69,10 @@ export const stripExif: ToolModule<StripExifParams> = {
 
       const buffer = await input.arrayBuffer();
       const codec = await getCodec(format);
-      const decoded = await codec.decode(buffer);
+      const decodedRaw = await codec.decode(buffer);
+      // Bake the EXIF orientation into pixels before stripping — otherwise
+      // phone portrait photos end up sideways after metadata strip.
+      const decoded = orientImageData(buffer, input.type, decodedRaw);
       const encoded = await codec.encode(decoded, { quality: STRIP_QUALITY });
 
       outputs.push(new Blob([encoded], { type: mimeFor(format) }));

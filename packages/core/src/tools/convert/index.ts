@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { ConvertParams } from './types.js';
 import { detectFormat, getCodec, type ImageFormat } from '../../lib/codecs.js';
+import { orientImageData } from '../../lib/exif.js';
 
 export type { ConvertParams } from './types.js';
 export { defaultConvertParams } from './types.js';
@@ -82,7 +83,11 @@ export const convert: ToolModule<ConvertParams> = {
 
       const buffer = await input.arrayBuffer();
       const sourceCodec = await getCodec(sourceFormat);
-      const decoded = await sourceCodec.decode(buffer);
+      const decodedRaw = await sourceCodec.decode(buffer);
+      // Apply EXIF orientation when source is JPEG — @jsquash returns raw
+      // pixel data without respecting the orientation tag, so phone photos
+      // taken in portrait came out rotated before this fix.
+      const decoded = orientImageData(buffer, input.type, decodedRaw);
 
       if (ctx.signal.aborted) throw new Error('Aborted');
 
