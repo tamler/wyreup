@@ -13,6 +13,7 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   description: t.description,
   keywords: t.keywords ?? [],
   requiresWebgpu: t.requires?.webgpu,
+  accept: t.input.accept,
 }));
 
 // Sorted unique categories
@@ -22,6 +23,7 @@ interface ExampleChain {
   id: string;
   name: string;
   description: string;
+  situation: string;
   steps: string[];
   inputHint: string;
   outputHint: string;
@@ -32,6 +34,7 @@ const exampleChains: ExampleChain[] = [
     id: 'privacy',
     name: 'Share a photo safely',
     description: 'Strip metadata, blur faces, compress for sharing.',
+    situation: 'Before emailing a photo — strip the GPS data, blur faces, shrink it.',
     steps: ['strip-exif', 'face-blur', 'compress'],
     inputHint: 'Drop a JPG/PNG photo',
     outputHint: 'Anonymized, smaller image',
@@ -40,6 +43,7 @@ const exampleChains: ExampleChain[] = [
     id: 'receipts',
     name: 'Receipts to one PDF',
     description: 'Convert images to PDF, then merge them into a single document.',
+    situation: 'When you have a pile of receipt photos and need one PDF for expenses.',
     steps: ['image-to-pdf', 'merge-pdf'],
     inputHint: 'Drop 2+ receipt images',
     outputHint: 'One searchable PDF',
@@ -48,6 +52,7 @@ const exampleChains: ExampleChain[] = [
     id: 'scan-to-text',
     name: 'Scan to searchable text',
     description: 'OCR a scanned document, then word-count the result.',
+    situation: 'When you have a scanned page and need the words out of it.',
     steps: ['ocr', 'word-counter'],
     inputHint: 'Drop a scanned PDF or image',
     outputHint: 'Plain text + word stats',
@@ -56,6 +61,7 @@ const exampleChains: ExampleChain[] = [
     id: 'web-ready',
     name: 'Optimize for web',
     description: 'Resize to web dimensions, compress for bandwidth, strip metadata.',
+    situation: 'Before uploading a photo to a site — resize it, compress it, clean it.',
     steps: ['resize', 'compress', 'strip-exif'],
     inputHint: 'Drop a high-res JPG/PNG',
     outputHint: 'Web-ready image',
@@ -64,6 +70,7 @@ const exampleChains: ExampleChain[] = [
     id: 'redact-share',
     name: 'Redact and lock a PDF',
     description: 'Redact sensitive regions, encrypt with password, add page numbers.',
+    situation: 'Before sharing a contract — black out the sensitive bits, then lock it.',
     steps: ['pdf-redact', 'pdf-encrypt', 'page-numbers-pdf'],
     inputHint: 'Drop a contract or document PDF',
     outputHint: 'Locked, numbered, redacted PDF',
@@ -72,6 +79,7 @@ const exampleChains: ExampleChain[] = [
     id: 'dev-data',
     name: 'Clean up JSON for docs',
     description: 'Format JSON, convert to YAML, then copy as pretty text.',
+    situation: 'When a config file is minified and you need it readable.',
     steps: ['json-formatter', 'json-yaml'],
     inputHint: 'Drop a .json file',
     outputHint: 'Formatted YAML',
@@ -118,6 +126,7 @@ function toolDisplayName(id: string): string {
               <div class="brackets-inner" aria-hidden="true"></div>
               <div class="chain-card__inner">
                 <div class="chain-card__name">{chain.name}</div>
+                <p class="chain-card__situation">"{chain.situation}"</p>
                 <p class="chain-card__desc">{chain.description}</p>
 
                 <div class="chain-flow" aria-label={`Chain steps: ${chain.steps.join(', ')}`}>
@@ -260,6 +269,15 @@ function toolDisplayName(id: string): string {
     font-weight: 600;
     color: var(--accent);
     line-height: 1.25;
+  }
+
+  .chain-card__situation {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin: 0;
+    font-style: italic;
   }
 
   .chain-card__desc {

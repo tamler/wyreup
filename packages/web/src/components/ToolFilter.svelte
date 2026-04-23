@@ -12,6 +12,7 @@
     description: string;
     keywords: string[];
     requiresWebgpu?: 'preferred' | 'required';
+    accept: string[];
   }
 
   export let tools: Tool[] = [];
@@ -63,6 +64,75 @@
   };
   const defaultChipIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
+  // ── File-type filter ──────────────────────────────────────────────────────
+
+  interface FileType {
+    id: string;
+    label: string;
+    icon: string;
+    mimes: string[];
+  }
+
+  const fileTypes: FileType[] = [
+    {
+      id: 'pdf',
+      label: 'PDF',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+      mimes: ['application/pdf'],
+    },
+    {
+      id: 'image',
+      label: 'Image',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+      mimes: ['image/*'],
+    },
+    {
+      id: 'audio',
+      label: 'Audio',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+      mimes: ['audio/*'],
+    },
+    {
+      id: 'video',
+      label: 'Video',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+      mimes: ['video/*'],
+    },
+    {
+      id: 'text',
+      label: 'Text',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+      mimes: ['text/*', 'application/json', 'application/xml', 'application/yaml', 'application/x-yaml'],
+    },
+    {
+      id: 'data',
+      label: 'Data',
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
+      mimes: ['text/csv', 'application/json', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'],
+    },
+  ];
+
+  let activeFileType: string | null = null;
+
+  function mimeMatches(toolMimes: string[], filterMimes: string[]): boolean {
+    for (const filter of filterMimes) {
+      const filterPrefix = filter.endsWith('/*') ? filter.slice(0, -2) : null;
+      for (const toolMime of toolMimes) {
+        if (filterPrefix) {
+          if (toolMime.startsWith(filterPrefix + '/') || toolMime === filter) return true;
+        } else {
+          if (toolMime === filter) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function toggleFileType(id: string) {
+    activeFileType = activeFileType === id ? null : id;
+    applyFilter();
+  }
+
   // Counts per category from the full unfiltered tool set
   $: categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
     acc[cat] = tools.filter((t) => t.category === cat).length;
@@ -93,6 +163,10 @@
 
   function applyFilter() {
     const q = query.trim();
+    const activeFileTypeDef = activeFileType
+      ? fileTypes.find((ft) => ft.id === activeFileType) ?? null
+      : null;
+
     if (q) {
       const fuse = createToolSearch(tools.map((t) => ({
         id: t.id,
@@ -107,11 +181,17 @@
         : results.filter((r) => activeCategories.has(r.category));
       // Preserve fuse rank order; re-look up originals to keep the full Tool shape
       const byId = new Map(tools.map((t) => [t.id, t]));
-      filtered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
+      const lookupFiltered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
+      filtered = activeFileTypeDef
+        ? lookupFiltered.filter((t) => mimeMatches(t.accept, activeFileTypeDef.mimes))
+        : lookupFiltered;
     } else {
-      filtered = activeCategories.size === 0
+      const catFiltered = activeCategories.size === 0
         ? tools
         : tools.filter((t) => activeCategories.has(t.category));
+      filtered = activeFileTypeDef
+        ? catFiltered.filter((t) => mimeMatches(t.accept, activeFileTypeDef.mimes))
+        : catFiltered;
     }
     filterEpoch += 1;
   }
@@ -119,6 +199,7 @@
   function clearAll() {
     query = '';
     activeCategories = new Set();
+    activeFileType = null;
     applyFilter();
   }
 
@@ -183,6 +264,21 @@
   </div>
 {/if}
 
+<!-- File-type entry row -->
+<div class="filetype-row" role="group" aria-label="Filter by file type">
+  {#each fileTypes as ft}
+    <button
+      class="filetype-chip"
+      class:active={activeFileType === ft.id}
+      on:click={() => toggleFileType(ft.id)}
+      aria-pressed={activeFileType === ft.id}
+    >
+      <span class="filetype-chip__icon">{@html ft.icon}</span>
+      <span class="filetype-chip__label">{ft.label}</span>
+    </button>
+  {/each}
+</div>
+
 <!-- Category chip filter -->
 <div class="filter-bar">
   <div class="filter-chips" role="group" aria-label="Filter by category">
@@ -203,7 +299,7 @@
 
 <div class="results-meta">
   <span class="results-count">{filtered.length} tool{filtered.length !== 1 ? 's' : ''}</span>
-  {#if activeCategories.size > 0}
+  {#if activeCategories.size > 0 || activeFileType !== null}
     <button class="clear-btn" on:click={clearAll}>Clear</button>
   {/if}
 </div>
@@ -255,6 +351,62 @@
 {/if}
 
 <style>
+  /* File-type entry row */
+  .filetype-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .filetype-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    min-width: 64px;
+    min-height: 64px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-instant) var(--ease-sharp),
+      color var(--duration-instant) var(--ease-sharp),
+      background var(--duration-instant) var(--ease-sharp);
+  }
+
+  .filetype-chip:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .filetype-chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .filetype-chip:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .filetype-chip__icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .filetype-chip__label {
+    line-height: 1;
+  }
+
   /* Recently used strip */
   .recent-strip {
     display: flex;
