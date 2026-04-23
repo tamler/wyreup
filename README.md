@@ -4,7 +4,7 @@
 
 [wyreup.com](https://wyreup.com) · MIT License · v0.1.0
 
-![Wyreup banner](./assets/readme/banner.svg)
+![Wyreup — privacy-first file tools](./assets/readme/infographic.png)
 
 ---
 
