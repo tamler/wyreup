@@ -48,6 +48,9 @@
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
   let saveName = '';
   let showSaveDialog = false;
+  // Post-run inline save prompt
+  let showEndOfRunPrompt = false;
+  let endOfRunSaved = false;
 
   // Build compatible tool list for a given MIME (or all if null)
   function toolsForMime(mime: string | null): ToolSummary[] {
@@ -170,6 +173,8 @@
     runState = 'running';
     errorMsg = '';
     resultBlob = null;
+    showEndOfRunPrompt = false;
+    endOfRunSaved = false;
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
     stepStatuses = validSteps.map(() => 'pending' as const);
 
@@ -211,10 +216,31 @@
       if (resultUrl) URL.revokeObjectURL(resultUrl);
       resultUrl = URL.createObjectURL(blob);
       runState = 'done';
+      // Auto-show save prompt after successful run
+      saveName = validSteps.map((s) => s.toolId).join('-');
+      showEndOfRunPrompt = true;
     } catch (err) {
       runState = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
+  }
+
+  function confirmEndOfRunSave() {
+    if (!saveName.trim()) return;
+    const now = new Date().toISOString();
+    saveChain({
+      id: crypto.randomUUID(),
+      name: saveName.trim(),
+      steps: chainSpec,
+      createdAt: now,
+      updatedAt: now,
+    });
+    endOfRunSaved = true;
+    showEndOfRunPrompt = false;
+  }
+
+  function dismissEndOfRunPrompt() {
+    showEndOfRunPrompt = false;
   }
 
   function reset() {
@@ -390,7 +416,7 @@
         {/if}
 
         <button class="btn-secondary" type="button" on:click={openSaveDialog}>
-          Save to My Kit
+          Save to Chains
         </button>
         {#if saveConfirm}
           <span class="confirm-msg" aria-live="polite">Saved.</span>
@@ -399,7 +425,7 @@
     </div>
   {/if}
 
-  <!-- Save dialog -->
+  <!-- Save dialog (manual trigger from run row) -->
   {#if showSaveDialog}
     <div class="save-dialog" role="dialog" aria-modal="true" aria-label="Save chain">
       <p class="save-dialog__label">Chain name</p>
@@ -464,10 +490,33 @@
         <div class="panel-divider"></div>
         <div class="result-actions">
           <button class="btn-primary" type="button" on:click={download}>Download result</button>
-          <button class="btn-secondary" type="button" on:click={openSaveDialog}>Save to My Kit</button>
+          <button class="btn-secondary" type="button" on:click={openSaveDialog}>Save to Chains</button>
         </div>
       </div>
     </div>
+  {/if}
+
+  <!-- End-of-run save prompt -->
+  {#if showEndOfRunPrompt}
+    <div class="end-save-prompt" role="region" aria-label="Save this chain">
+      <p class="end-save-prompt__label">Save this chain to your collection?</p>
+      <div class="end-save-prompt__row">
+        <input
+          class="end-save-prompt__input"
+          type="text"
+          bind:value={saveName}
+          placeholder="Chain name"
+          aria-label="Chain name"
+          on:keydown={(e) => { if (e.key === 'Enter') confirmEndOfRunSave(); if (e.key === 'Escape') dismissEndOfRunPrompt(); }}
+        />
+        <button class="btn-primary" type="button" on:click={confirmEndOfRunSave} disabled={!saveName.trim()}>Save chain</button>
+        <button class="btn-ghost-sm" type="button" on:click={dismissEndOfRunPrompt}>Skip</button>
+      </div>
+    </div>
+  {/if}
+
+  {#if endOfRunSaved}
+    <p class="end-save-confirm" aria-live="polite">Saved to your Chains. <a href="/chains" class="end-save-link">View Chains</a></p>
   {/if}
 </div>
 
@@ -850,6 +899,65 @@
     font-size: var(--text-sm);
     color: var(--text-primary);
     font-weight: 500;
+  }
+
+  /* End-of-run save prompt */
+  .end-save-prompt {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .end-save-prompt__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .end-save-prompt__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .end-save-prompt__input {
+    flex: 1;
+    min-width: 160px;
+    height: 32px;
+    padding: 0 var(--space-2);
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+
+  .end-save-prompt__input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .end-save-confirm {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .end-save-link {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .end-save-link:hover {
+    text-decoration: underline;
   }
 
   /* Corner bracket motif */

@@ -64,6 +64,7 @@
     return acc;
   }, {});
 
+  // query is set from URL ?q= on mount; not editable inline (header search handles that)
   let query = '';
   let activeCategories: Set<string> = new Set();
   let filtered: Tool[] = tools;
@@ -104,7 +105,6 @@
   }
 
   $: {
-    query;
     activeCategories;
     applyFilter();
   }
@@ -165,25 +165,6 @@
   </div>
 {/if}
 
-<!-- Search input — prominent, at top -->
-<div class="search-wrap">
-  <span class="search-icon" aria-hidden="true">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  </span>
-  <input
-    class="filter-search"
-    type="search"
-    placeholder="Search tools..."
-    bind:value={query}
-    aria-label="Search tools"
-  />
-  {#if query}
-    <button class="search-clear" on:click={() => { query = ''; }} aria-label="Clear search">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  {/if}
-</div>
-
 <!-- Category chip filter -->
 <div class="filter-bar">
   <div class="filter-chips" role="group" aria-label="Filter by category">
@@ -204,7 +185,7 @@
 
 <div class="results-meta">
   <span class="results-count">{filtered.length} tool{filtered.length !== 1 ? 's' : ''}</span>
-  {#if query || activeCategories.size > 0}
+  {#if activeCategories.size > 0}
     <button class="clear-btn" on:click={clearAll}>Clear</button>
   {/if}
 </div>
@@ -317,70 +298,6 @@
   }
 
   .recent-clear:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-  }
-
-  /* Search wrap */
-  .search-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: var(--space-4);
-  }
-
-  .search-icon {
-    position: absolute;
-    left: var(--space-3);
-    display: flex;
-    align-items: center;
-    color: var(--text-muted);
-    pointer-events: none;
-    flex-shrink: 0;
-  }
-
-  .filter-search {
-    height: 44px;
-    padding: 0 var(--space-8) 0 calc(var(--space-3) + 14px + var(--space-2));
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-size: var(--text-base);
-    width: 100%;
-    transition: border-color var(--duration-instant) var(--ease-sharp);
-  }
-
-  .filter-search::placeholder {
-    color: var(--text-subtle);
-  }
-
-  .filter-search:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-    border-color: var(--border);
-  }
-
-  .search-clear {
-    position: absolute;
-    right: var(--space-3);
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    color: var(--text-subtle);
-    cursor: pointer;
-    padding: 0;
-    transition: color var(--duration-instant) var(--ease-sharp);
-  }
-
-  .search-clear:hover {
-    color: var(--text-muted);
-  }
-
-  .search-clear:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-radius: var(--radius-sm);

@@ -61,7 +61,21 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
       <div class="container header-inner">
         <a href="/" class="wordmark" aria-current={currentPath === '/' ? 'page' : undefined}>wyreup</a>
 
-        <!-- Global header search (Deliverable 2) -->
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
+          <a href="/chains" class="nav-link" aria-current={currentPath === '/chains' || currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Chains</a>
+          <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
+          <a href="/skill" class="nav-link" aria-current={currentPath === '/skill' || currentPath === '/mcp' ? 'page' : undefined}>Agents</a>
+          <a
+            href="https://github.com/tamler/wyreup"
+            class="nav-link nav-link--github"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Wyreup on GitHub (opens in new tab)"
+          >GitHub</a>
+        </nav>
+
+        <!-- Header search — compact, rightmost (Cmd+K to focus) -->
         <div class="header-search-wrap" id="header-search-wrap">
           <span class="header-search-icon" aria-hidden="true">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -72,7 +86,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
             id="header-search"
             class="header-search-input"
             type="search"
-            placeholder="Search tools"
+            placeholder="Search"
             aria-label="Search tools (Cmd+K)"
             autocomplete="off"
           />
@@ -85,21 +99,6 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </button>
-
-        <nav class="site-nav" aria-label="Primary navigation">
-          <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
-          <a href="/my-kit" class="nav-link" aria-current={currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Kit</a>
-          <a href="/cli" class="nav-link" aria-current={currentPath === '/cli' ? 'page' : undefined}>CLI</a>
-          <a href="/skill" class="nav-link" aria-current={currentPath === '/skill' || currentPath === '/mcp' ? 'page' : undefined}>Agents</a>
-          <a href="/about" class="nav-link" aria-current={currentPath === '/about' ? 'page' : undefined}>About</a>
-          <a
-            href="https://github.com/tamler/wyreup"
-            class="nav-link nav-link--github"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Wyreup on GitHub (opens in new tab)"
-          >GitHub</a>
-        </nav>
       </div>
     </header>
 
@@ -116,6 +115,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
         </div>
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+          <a href="/about" class="footer-link">About</a>
           <a href="/settings" class="footer-link">Settings</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
         </nav>
@@ -139,7 +139,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
   .header-inner {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: var(--space-4);
     height: 100%;
@@ -255,6 +255,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
       justify-content: space-between;
       height: 48px;
       gap: var(--space-2);
+      grid-template-columns: unset;
     }
 
     .site-header {
@@ -286,13 +287,14 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
     }
   }
 
-  /* ── Header search (Deliverable 2) ── */
+  /* ── Header search ── */
   .header-search-wrap {
     position: relative;
     display: flex;
     align-items: center;
-    flex: 0 1 240px;
-    min-width: 0;
+    width: 160px;
+    flex-shrink: 0;
+    justify-self: end;
   }
 
   .header-search-icon {
@@ -397,10 +399,12 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
       right: 0;
       background: var(--bg-elevated);
       border-bottom: 1px solid var(--border);
+      width: auto;
       flex: none;
       z-index: 50;
       padding: var(--space-2) var(--space-4);
       height: 48px;
+      justify-self: unset;
     }
 
     .header-search-wrap.mobile-open {
