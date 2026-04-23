@@ -11,7 +11,7 @@ const ConvertComponentStub = (): unknown => null;
 export const convert: ToolModule<ConvertParams> = {
   id: 'convert',
   slug: 'convert',
-  name: 'Convert format',
+  name: 'Convert Format',
   description: 'Convert images between JPEG, PNG, and WebP formats.',
   category: 'convert',
   presence: 'both',

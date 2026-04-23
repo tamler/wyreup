@@ -17,7 +17,7 @@ const StripExifComponentStub = (): unknown => null;
 export const stripExif: ToolModule<StripExifParams> = {
   id: 'strip-exif',
   slug: 'strip-exif',
-  name: 'Strip EXIF metadata',
+  name: 'Strip EXIF Metadata',
   description: 'Remove EXIF metadata (including GPS, camera model, timestamps) by re-encoding at near-lossless quality.',
   category: 'privacy',
   presence: 'both',
