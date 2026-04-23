@@ -9,6 +9,7 @@ interface Props {
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
+  surfaceMode?: 'engineering' | 'welcome';
 }
 
 const {
@@ -16,9 +17,11 @@ const {
   description = 'Wyreup — privacy-first browser-native tools. No uploads. No signup.',
   ogTitle = title,
   ogDescription = description,
+  surfaceMode = 'engineering',
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 ---
 
 <!DOCTYPE html>
@@ -51,12 +54,38 @@ const currentPath = Astro.url.pathname;
 
     <slot name="head" />
   </head>
-  <body>
+  <body class={bodyClass}>
     <a href="#main-content" class="skip-link">Skip to content</a>
 
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="wordmark" aria-current={currentPath === '/' ? 'page' : undefined}>wyreup</a>
+
+        <!-- Global header search (Deliverable 2) -->
+        <div class="header-search-wrap" id="header-search-wrap">
+          <span class="header-search-icon" aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <input
+            id="header-search"
+            class="header-search-input"
+            type="search"
+            placeholder="Search tools"
+            aria-label="Search tools (Cmd+K)"
+            autocomplete="off"
+          />
+          <div id="header-search-dropdown" class="header-search-dropdown" role="listbox" aria-label="Tool suggestions" hidden></div>
+        </div>
+
+        <!-- Mobile search toggle (magnifier icon, shown < 640px) -->
+        <button class="header-search-toggle" id="header-search-toggle" aria-label="Search tools" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
           <a href="/my-kit" class="nav-link" aria-current={currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Kit</a>
@@ -110,8 +139,9 @@ const currentPath = Astro.url.pathname;
 
   .header-inner {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
+    gap: var(--space-4);
     height: 100%;
     width: 100%;
   }
@@ -221,27 +251,24 @@ const currentPath = Astro.url.pathname;
   @media (max-width: 640px) {
     .header-inner {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      height: auto;
-      padding: var(--space-2) 0;
-      gap: var(--space-1);
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      gap: var(--space-2);
     }
 
     .site-header {
-      height: auto;
+      height: 48px;
     }
 
     .site-nav {
       gap: var(--space-3);
       justify-self: unset;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     .nav-link {
       font-size: var(--text-xs);
-      /* Increase touch target size */
       padding: var(--space-1) 0;
       min-height: 36px;
       display: flex;
@@ -258,4 +285,262 @@ const currentPath = Astro.url.pathname;
       gap: var(--space-2);
     }
   }
+
+  /* ── Header search (Deliverable 2) ── */
+  .header-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 1 240px;
+    min-width: 0;
+  }
+
+  .header-search-icon {
+    position: absolute;
+    left: var(--space-2);
+    display: flex;
+    align-items: center;
+    color: var(--text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+
+  .header-search-input {
+    height: 28px;
+    padding: 0 var(--space-3) 0 calc(var(--space-2) + 13px + var(--space-2));
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    width: 100%;
+    transition: border-color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .header-search-input::placeholder {
+    color: var(--text-subtle);
+  }
+
+  .header-search-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--border);
+  }
+
+  .header-search-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    z-index: 100;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: var(--space-1) 0;
+  }
+
+  .header-search-dropdown[hidden] {
+    display: none;
+  }
+
+  .header-suggest-item {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color var(--duration-instant) var(--ease-sharp), background var(--duration-instant) var(--ease-sharp);
+    cursor: pointer;
+  }
+
+  .header-suggest-item:hover,
+  .header-suggest-item[aria-selected="true"] {
+    color: var(--text-primary);
+    background: var(--bg-raised);
+  }
+
+  .header-suggest-item__cat {
+    color: var(--text-subtle);
+    margin-left: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  /* Mobile toggle — shown only < 640px */
+  .header-search-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--space-1);
+    align-items: center;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .header-search-toggle:hover {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 639px) {
+    .header-search-wrap {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      flex: none;
+      z-index: 50;
+      padding: var(--space-2) var(--space-4);
+      height: 48px;
+    }
+
+    .header-search-wrap.mobile-open {
+      display: flex;
+    }
+
+    .header-search-input {
+      height: 32px;
+    }
+
+    .header-search-toggle {
+      display: flex;
+    }
+  }
 </style>
+
+<script>
+  // ── Header search: tool index + CMD+K + navigation ──
+  (function () {
+    const input = document.getElementById('header-search') as HTMLInputElement | null;
+    const dropdown = document.getElementById('header-search-dropdown') as HTMLElement | null;
+    const wrap = document.getElementById('header-search-wrap') as HTMLElement | null;
+    const toggle = document.getElementById('header-search-toggle') as HTMLButtonElement | null;
+
+    if (!input || !dropdown || !wrap) return;
+
+    // Fetch tool index from the static JSON built at compile time
+    // Fall back to a live fetch of /tools-index.json which we'll create at build time
+    // For now, derive from window.__WYREUP_TOOLS__ injected by tools.astro or fallback to empty
+    let toolIndex: Array<{ id: string; name: string; category: string }> = [];
+
+    async function loadIndex() {
+      try {
+        const res = await fetch('/tools-index.json');
+        if (res.ok) {
+          toolIndex = await res.json();
+        }
+      } catch {
+        // silently ignore — search still works via form submit to /tools?q=
+      }
+    }
+
+    loadIndex();
+
+    // CMD+K / Ctrl+K focus
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        // On mobile, open the overlay
+        if (window.innerWidth < 640) {
+          wrap.classList.add('mobile-open');
+          if (toggle) toggle.setAttribute('aria-expanded', 'true');
+        }
+        input.focus();
+        input.select();
+      }
+      if (e.key === 'Escape') {
+        if (dropdown) dropdown.hidden = true;
+        wrap.classList.remove('mobile-open');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Mobile toggle
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        const open = wrap.classList.toggle('mobile-open');
+        toggle.setAttribute('aria-expanded', String(open));
+        if (open) {
+          input.focus();
+        }
+      });
+    }
+
+    // Live suggestions
+    let selectedIdx = -1;
+    const dd = dropdown as HTMLElement;
+
+    function renderDropdown(matches: typeof toolIndex) {
+      if (matches.length === 0) {
+        dd.hidden = true;
+        return;
+      }
+      dd.innerHTML = matches
+        .slice(0, 8)
+        .map(
+          (t, i) =>
+            `<a class="header-suggest-item" href="/tools/${t.id}" role="option" aria-selected="${i === selectedIdx}">${t.name}<span class="header-suggest-item__cat">${t.category}</span></a>`
+        )
+        .join('');
+      dd.hidden = false;
+    }
+
+    input.addEventListener('input', () => {
+      selectedIdx = -1;
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        dd.hidden = true;
+        return;
+      }
+      const matches = toolIndex.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.id.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q)
+      );
+      renderDropdown(matches);
+    });
+
+    // Keyboard navigation in dropdown
+    input.addEventListener('keydown', (e) => {
+      const items = dd.querySelectorAll<HTMLAnchorElement>('.header-suggest-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.setAttribute('aria-selected', String(i === selectedIdx)));
+        items[selectedIdx]?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIdx = Math.max(selectedIdx - 1, -1);
+        items.forEach((el, i) => el.setAttribute('aria-selected', String(i === selectedIdx)));
+      } else if (e.key === 'Enter') {
+        if (selectedIdx >= 0 && items[selectedIdx]) {
+          e.preventDefault();
+          items[selectedIdx].click();
+        } else {
+          // Navigate to /tools?q=<query>
+          const q = encodeURIComponent(input.value.trim());
+          if (q) {
+            window.location.href = `/tools?q=${q}`;
+          }
+        }
+      }
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target as Node)) {
+        dd.hidden = true;
+      }
+    });
+  })();
+</script>
