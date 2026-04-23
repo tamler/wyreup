@@ -8,9 +8,11 @@ export async function getStaticPaths() {
   const categories = [...new Set(allTools.map((t) => t.category))].sort();
 
   // Hand-written SEO intro copy per category (Signal voice: terse, no exclamation marks)
-  const categoryMeta: Record<string, { displayName: string; description: string; intro: string }> = {
+  const categoryMeta: Record<string, { displayName: string; h1: string; sub: string; description: string; intro: string }> = {
     image: {
       displayName: 'Image',
+      h1: 'Work with images.',
+      sub: 'Compress, convert, resize, blur faces, strip metadata. Nothing uploads.',
       description: 'Compress, convert, resize, and edit images in your browser. Strip EXIF metadata, blur faces, remove backgrounds. No upload required.',
       intro: `Compress a photo for email. Convert HEIC to JPG. Strip camera metadata and GPS coordinates before sharing. Blur faces in a crowd shot. Resize for the web. Remove a background without a subscription. All image operations run on your device — the file you drop never leaves the browser tab.
 
@@ -18,6 +20,8 @@ Every tool in this category handles common image tasks that used to require desk
     },
     pdf: {
       displayName: 'PDF',
+      h1: 'Do things with PDFs.',
+      sub: 'Merge, split, compress, redact, extract. Every operation runs on your device.',
       description: 'Merge, split, rotate, encrypt, and redact PDF files. All processing runs in your browser — nothing uploads to a server.',
       intro: `Split a long scan into single pages. Merge contracts into one file. Redact sensitive sections before sending. Encrypt with a password. Add page numbers to a submission. Rotate a mis-scanned page. Every Wyreup PDF tool runs in your browser — the file you drop never uploads to a server.
 
@@ -25,6 +29,8 @@ PDF manipulation usually requires a desktop app or a cloud service that stores y
     },
     media: {
       displayName: 'Media',
+      h1: 'Convert audio and video.',
+      sub: 'Trim, convert formats, extract audio, compress. All in your browser.',
       description: 'Convert, compress, trim, and edit video and audio files in your browser. No upload, no server processing.',
       intro: `Convert a video to a different format. Trim a clip to the right length. Extract audio from a recording. Compress a large video for sharing. Add subtitles directly to the video file. Speed up or slow down footage. All media processing uses browser-native codec APIs — no file leaves your device.
 
@@ -32,6 +38,8 @@ Video and audio work have historically required heavy desktop software. These to
     },
     audio: {
       displayName: 'Audio',
+      h1: 'Make audio sound better.',
+      sub: 'Upscale low-quality recordings. Convert between formats.',
       description: 'Enhance and process audio files in your browser. Noise reduction and quality improvement, fully on-device.',
       intro: `Enhance a voice recording with noise reduction. Clean up audio before transcription or sharing. Audio processing runs entirely in your browser using local compute — your recording never touches an external server.
 
@@ -39,6 +47,8 @@ Clear audio matters for transcription accuracy, accessibility, and professional 
     },
     convert: {
       displayName: 'Convert',
+      h1: 'Turn one format into another.',
+      sub: 'Images, PDFs, documents, data.',
       description: 'Convert files between formats — images, documents, spreadsheets, markup, and data. All conversions run locally.',
       intro: `Convert Markdown to HTML for a CMS. Transform CSV to JSON for an API. Turn an SVG into a PNG at any size. Convert spreadsheet formats without Excel. Encode and decode Base64. Convert HTML back to readable Markdown. Each conversion happens in your browser with no intermediate server.
 
@@ -46,6 +56,8 @@ Format conversion is one of the most frequent developer and document tasks. Thes
     },
     edit: {
       displayName: 'Edit',
+      h1: 'Tweak a file.',
+      sub: 'Crop, rotate, flip, watermark. No signup.',
       description: 'Crop, rotate, flip, watermark, and adjust images and PDFs directly in your browser.',
       intro: `Crop an image to a specific region. Rotate a mis-oriented photo. Apply a grayscale or sepia filter. Add a watermark to protect your work. Extract or delete specific pages from a PDF. Crop a PDF to a region. These are the edit operations you reach for before sending a file on.
 
@@ -53,6 +65,8 @@ All editing runs locally — no account needed, no file stored on a third-party 
     },
     optimize: {
       displayName: 'Optimize',
+      h1: 'Shrink files.',
+      sub: 'Reduce file sizes without losing quality you will notice.',
       description: 'Compress images, PDFs, and SVGs to reduce file size without losing quality. Runs entirely on your device.',
       intro: `Compress a JPEG before attaching it to an email. Shrink a PDF for a file upload limit. Optimize an SVG for a webpage. Upscale a small image to double its resolution using AI. File size reduction matters for email, storage, and web performance.
 
@@ -60,6 +74,8 @@ These tools apply the right optimization algorithm for each file type — lossy 
     },
     privacy: {
       displayName: 'Privacy',
+      h1: 'Leave nothing behind.',
+      sub: 'Strip metadata, encrypt PDFs, blur faces, redact regions.',
       description: 'Strip metadata, blur faces, remove backgrounds, and encrypt files. Every privacy tool runs on your device.',
       intro: `Strip GPS and camera data from a photo before posting. Blur faces in a group shot. Remove a background without a cloud service that stores your images. Encrypt a file with PGP before sending. Verify a PGP signature on a received document. Privacy tools are only meaningful if they are trustworthy — these run entirely on your device with no network calls.
 
@@ -67,6 +83,8 @@ The file you process never leaves your browser. You can verify that claim in the
     },
     create: {
       displayName: 'Create',
+      h1: 'Make small things.',
+      sub: 'QR codes, UUIDs, passwords, lorem ipsum.',
       description: 'Generate QR codes, passwords, UUIDs, favicons, barcodes, and other outputs without a backend.',
       intro: `Generate a QR code for a URL or contact card. Create a secure random password. Produce a UUID for a database record. Build a favicon set from an image. Generate a barcode for a product label. Produce lorem ipsum placeholder text. Create a slug for a URL.
 
@@ -74,6 +92,8 @@ Generation tools produce something from nothing or from minimal input. All compu
     },
     inspect: {
       displayName: 'Inspect',
+      h1: 'See inside a file.',
+      sub: 'Dimensions, metadata, hashes, structure.',
       description: 'Examine file metadata, diff images and text, decode tokens, and analyze color — all in your browser.',
       intro: `Read the EXIF metadata embedded in a photo. Check the dimensions, colorspace, and bit depth of an image. Diff two images to find pixel-level differences. Parse a JWT without a decoder service. Test a regex against sample input. Count words in a document. Inspect a ZIP before extracting it. Read color values in any format.
 
@@ -81,6 +101,8 @@ Inspection tools tell you what is in a file or string without modifying it. Usef
     },
     export: {
       displayName: 'Export',
+      h1: 'Pull content out.',
+      sub: 'Extract text, tables, pages, or convert to simpler formats.',
       description: 'Extract text, run OCR, and export structured data from documents. All extraction runs in your browser.',
       intro: `Extract plain text from a PDF for further processing. Run OCR on a scanned image or document to get searchable text. Extract tables from a PDF into structured JSON. Pull audio from a video file. Export data to a format your next tool expects.
 
@@ -88,6 +110,8 @@ Extraction is the first step in many document workflows. Getting clean output ou
     },
     text: {
       displayName: 'Text',
+      h1: 'Clean up text and data.',
+      sub: 'Format JSON, decode JWTs, diff text, count words.',
       description: 'Analyze, translate, summarize, and transform text using on-device AI models. No data leaves your browser.',
       intro: `Analyze the sentiment of a review or feedback batch. Run named entity recognition to extract names, places, and organizations. Summarize a long document. Translate text between languages. Compute readability scores for content targeting. Get word and character statistics. Calculate token counts for LLM input planning.
 
@@ -95,6 +119,8 @@ Text AI tools use browser-native model inference where possible. Input text stay
     },
     dev: {
       displayName: 'Dev',
+      h1: 'Clean up text and data.',
+      sub: 'Format JSON, decode JWTs, diff text, count words.',
       description: 'Format JSON, YAML, SQL, CSS, and HTML. Convert data formats. Decode tokens and parse cron expressions.',
       intro: `Format a minified JSON payload for reading. Convert CSV to JSON for an API call. Decode a JWT to inspect its claims. Parse a cron expression to verify its schedule. Format SQL before committing it. Convert between number bases. Escape and unescape strings. Count tokens in a prompt before sending it to an LLM.
 
@@ -102,6 +128,8 @@ Developer utility tools handle the small-but-frequent text transformation tasks 
     },
     finance: {
       displayName: 'Finance',
+      h1: 'Quick math.',
+      sub: 'Compound interest, dollar-cost averaging, percentages, dates.',
       description: 'Calculate compound interest, model DCA investment strategies, and run financial projections in your browser.',
       intro: `Calculate how a lump sum grows under compound interest over time. Model a dollar-cost averaging investment plan across different contribution schedules. Run financial projections with different rate assumptions. All computation runs locally — no financial data leaves your device.
 
@@ -109,6 +137,8 @@ Financial calculators are a common daily-use tool for investors and planners. Th
     },
     archive: {
       displayName: 'Archive',
+      h1: 'Zip and unzip.',
+      sub: 'Create, extract, inspect archives.',
       description: 'Create ZIP archives, extract ZIP files, and inspect archive contents — all in your browser.',
       intro: `Create a ZIP archive from multiple files for a single download or email attachment. Extract the contents of a ZIP without installing software. Inspect a ZIP to see its file list and metadata before extracting. Archive tools are the last step before sharing a batch of files and the first step when receiving one.
 
@@ -120,6 +150,8 @@ All archive operations run in-browser using compression APIs. No files are sent 
     const catTools = allTools.filter((t) => t.category === cat);
     const meta = categoryMeta[cat] ?? {
       displayName: cat.charAt(0).toUpperCase() + cat.slice(1),
+      h1: `${cat.charAt(0).toUpperCase() + cat.slice(1)} tools.`,
+      sub: `${cat.charAt(0).toUpperCase() + cat.slice(1)} tools that run on your device.`,
       description: `${cat} tools that run in your browser. No upload required.`,
       intro: `These tools handle common ${cat} tasks directly in your browser.`,
     };
@@ -139,6 +171,8 @@ All archive operations run in-browser using compression APIs. No files are sent 
       props: {
         cat,
         displayName: meta.displayName,
+        catH1: meta.h1,
+        catSub: meta.sub,
         metaDescription: meta.description,
         intro: meta.intro,
         catTools: catTools.map((t) => ({
@@ -154,12 +188,12 @@ All archive operations run in-browser using compression APIs. No files are sent 
   });
 }
 
-const { displayName, metaDescription, intro, catTools, relatedCats } = Astro.props;
+const { displayName, catH1, catSub, metaDescription, intro, catTools, relatedCats } = Astro.props;
 const introParas = intro.split('\n\n').filter(Boolean);
 ---
 
 <BaseLayout
-  title={`${displayName} tools — Wyreup`}
+  title={`${catH1} — Wyreup`}
   description={metaDescription}
   ogDescription={metaDescription}
   surfaceMode="welcome"
@@ -177,7 +211,8 @@ const introParas = intro.split('\n\n').filter(Boolean);
 
       <!-- Hero -->
       <header class="cat-hero">
-        <h1 class="cat-title">{displayName} tools</h1>
+        <h1 class="cat-title">{catH1}</h1>
+        <p class="cat-sub">{catSub}</p>
         <div class="cat-intro">
           {introParas.map((para) => <p class="cat-intro__para">{para}</p>)}
         </div>
@@ -271,6 +306,15 @@ const introParas = intro.split('\n\n').filter(Boolean);
     color: var(--text-primary);
     line-height: 1.1;
     margin-bottom: var(--space-6);
+  }
+
+  .cat-sub {
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: var(--space-6);
+    margin-top: 0;
   }
 
   .cat-intro {
