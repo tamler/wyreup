@@ -18,8 +18,8 @@ const popularTools = popularToolIds
 ---
 
 <BaseLayout
-  title="Wyreup — Privacy and productivity. Have both."
-  description="Tools you chain together. Drop a file, use one tool or wire several, get your outcome. Everything runs on your device — no uploads, no cache, no tracking."
+  title="Wyreup — Simple file tools."
+  description="Compress, convert, merge, redact, blur, extract. Drop a file and we'll show you what you can do with it. Nothing uploads. No sign-up."
   surfaceMode="welcome"
 >
   <PwaOnboardBanner client:load />
@@ -29,10 +29,9 @@ const popularTools = popularToolIds
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">Privacy and productivity.<br>Have both.</h1>
+        <h1 class="hero__headline">Simple file tools.</h1>
         <p class="hero__body">
-          Tools you chain together. Drop a file, use one tool or wire several, get your outcome.
-          Every step runs on your device — no uploads, no cache, no tracking.
+          Compress, convert, merge, redact, blur, extract. Drop a file — we'll show you what you can do with it. Nothing uploads. No sign-up.
         </p>
         <div class="hero__actions">
           <a href="/tools" class="btn btn-primary">Browse tools &rarr;</a>
@@ -42,6 +41,19 @@ const popularTools = popularToolIds
       <!-- Right: functional drop zone -->
       <div class="hero__drop-col">
         <HeroDrop client:load />
+      </div>
+    </div>
+
+    <!-- Trust strip -->
+    <div class="trust-strip" aria-label="Key facts">
+      <div class="container trust-strip__inner">
+        <span class="trust-stat">{allTools.length} tools</span>
+        <span class="trust-sep" aria-hidden="true">·</span>
+        <span class="trust-stat">0 uploads</span>
+        <span class="trust-sep" aria-hidden="true">·</span>
+        <span class="trust-stat">0 tracking</span>
+        <span class="trust-sep" aria-hidden="true">·</span>
+        <span class="trust-stat">MIT licensed</span>
       </div>
     </div>
 
@@ -680,6 +692,44 @@ const popularTools = popularToolIds
 
   .privacy-block__link:hover {
     color: var(--text-muted);
+  }
+
+  /* ── Trust strip ── */
+  .trust-strip {
+    margin-top: var(--space-8);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-4);
+  }
+
+  .trust-strip__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .trust-stat {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    letter-spacing: 0;
+  }
+
+  .trust-sep {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--border);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .trust-strip__inner {
+      gap: var(--space-3);
+    }
+
+    .trust-stat {
+      font-size: var(--text-xs);
+    }
   }
 
   /* ── Scroll hint ── */
