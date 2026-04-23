@@ -40,24 +40,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="dist-section" aria-labelledby="install-heading">
         <h2 id="install-heading" class="dist-section__title">Install</h2>
 
+        <p class="dist-section__body">One command. Interactive picker: choose CLI-only, MCP-only, or combined; choose project-level or user-level install. The command fetches the latest skill.md from GitHub and places it in your agent's skills directory.</p>
+
         <div class="install-paths">
           <div class="install-path">
-            <div class="install-path__label">Global install</div>
+            <div class="install-path__label">One-off (no install required)</div>
             <div class="code-block">
-              <pre class="code-block__pre"><code>npm install -g @wyreup/skill</code></pre>
+              <pre class="code-block__pre"><code>npx @wyreup/cli install-skill</code></pre>
             </div>
           </div>
           <div class="install-path">
-            <div class="install-path__label">Reference locally</div>
+            <div class="install-path__label">If you have the Wyreup CLI installed globally</div>
+            <div class="code-block">
+              <pre class="code-block__pre"><code>wyreup install-skill</code></pre>
+            </div>
+          </div>
+          <div class="install-path">
+            <div class="install-path__label">Non-interactive (skip picker)</div>
+            <div class="code-block">
+              <pre class="code-block__pre"><code>npx @wyreup/cli install-skill --variant combined --location user</code></pre>
+            </div>
+          </div>
+          <div class="install-path">
+            <div class="install-path__label">Manual fallback</div>
             <p class="install-path__body">
-              Copy the raw
+              Grab the raw
               <a
                 href="https://github.com/tamler/wyreup/blob/main/packages/skill/skill.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-link"
               >skill.md from GitHub</a>
-              and place it where your agent picks up skills.
+              and place it in your agent's skills directory manually.
             </p>
           </div>
         </div>

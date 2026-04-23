@@ -82,7 +82,7 @@ and savable.
   the right folder structure, types, defaults, test file, and registry
   update. Enables community contribution.
 
-### Wave K2 — Skill-installer pivot (queued after Wave K)
+### Wave K2 — Skill-installer pivot (done v0.4.3)
 
 Replace the three npm skill packages (`@wyreup/skill`, `@wyreup/cli-skill`,
 `@wyreup/mcp-skill`) with a unified **`wyreup install-skill`** CLI command.
