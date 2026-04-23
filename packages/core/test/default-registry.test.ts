@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 102 tools in total', () => {
+  it('has 108 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(102);
+    expect(registry.toolsById.size).toBe(108);
   });
 
   it('includes ocr', () => {
@@ -513,5 +513,45 @@ describe('default registry', () => {
     const registry = createDefaultRegistry();
     const textTools = registry.toolsByCategory('text');
     expect(textTools.length).toBeGreaterThan(0);
+  });
+
+  // Wave M: video edit primitives
+  it('includes video-concat', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-concat')).toBeDefined();
+  });
+
+  it('includes video-add-text', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-add-text')).toBeDefined();
+  });
+
+  it('includes video-speed', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-speed')).toBeDefined();
+  });
+
+  it('includes video-overlay-image', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-overlay-image')).toBeDefined();
+  });
+
+  it('includes video-crossfade', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-crossfade')).toBeDefined();
+  });
+
+  it('includes video-color-correct', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('video-color-correct')).toBeDefined();
+  });
+
+  it('wave-m tools share the ffmpeg installGroup', () => {
+    const registry = createDefaultRegistry();
+    const waveM = ['video-concat', 'video-add-text', 'video-speed', 'video-overlay-image', 'video-crossfade', 'video-color-correct'];
+    for (const id of waveM) {
+      const tool = registry.toolsById.get(id) as { installGroup?: string } | undefined;
+      expect(tool?.installGroup).toBe('ffmpeg');
+    }
   });
 });

@@ -156,6 +156,12 @@ export { tokenCount, type TokenCountParams, type TokenCountResult, type TokenMod
 export { textDiffLevenshtein, type TextDiffLevenshteinParams, type TextDiffLevenshteinResult, defaultTextDiffLevenshteinParams } from './tools/text-diff-levenshtein/index.js';
 export { unicodeNormalize, type UnicodeNormalizeParams, type UnicodeNormalForm, defaultUnicodeNormalizeParams, normalizeUnicode } from './tools/unicode-normalize/index.js';
 export { textEscape, type TextEscapeParams, type TextEscapeMode, defaultTextEscapeParams, encodeHtml, decodeHtml, encodeUnicode, decodeUnicode } from './tools/text-escape/index.js';
+export { videoConcat, type VideoConcatParams, defaultVideoConcatParams, type VideoConcatPreset, buildConcatArgs } from './tools/video-concat/index.js';
+export { videoAddText, type VideoAddTextParams, defaultVideoAddTextParams, type TextPosition, positionToXY, escapeDrawtext, hexToFfmpegColor, buildDrawtextFilter } from './tools/video-add-text/index.js';
+export { videoSpeed, type VideoSpeedParams, defaultVideoSpeedParams, buildAtempoChain, buildSpeedArgs } from './tools/video-speed/index.js';
+export { videoOverlayImage, type VideoOverlayImageParams, defaultVideoOverlayImageParams, type OverlayPosition, overlayPositionToXY, buildOverlayFilter } from './tools/video-overlay-image/index.js';
+export { videoCrossfade, type VideoCrossfadeParams, defaultVideoCrossfadeParams, type CrossfadeTransition, parseDurationFromStderr, buildCrossfadeArgs } from './tools/video-crossfade/index.js';
+export { videoColorCorrect, type VideoColorCorrectParams, defaultVideoColorCorrectParams, buildColorCorrectFilter } from './tools/video-color-correct/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

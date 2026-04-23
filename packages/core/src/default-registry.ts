@@ -101,6 +101,12 @@ import { tokenCount } from './tools/token-count/index.js';
 import { textDiffLevenshtein } from './tools/text-diff-levenshtein/index.js';
 import { unicodeNormalize } from './tools/unicode-normalize/index.js';
 import { textEscape } from './tools/text-escape/index.js';
+import { videoConcat } from './tools/video-concat/index.js';
+import { videoAddText } from './tools/video-add-text/index.js';
+import { videoSpeed } from './tools/video-speed/index.js';
+import { videoOverlayImage } from './tools/video-overlay-image/index.js';
+import { videoCrossfade } from './tools/video-crossfade/index.js';
+import { videoColorCorrect } from './tools/video-color-correct/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -213,6 +219,12 @@ export const defaultTools: ToolModule<any>[] = [
   textDiffLevenshtein,
   unicodeNormalize,
   textEscape,
+  videoConcat,
+  videoAddText,
+  videoSpeed,
+  videoOverlayImage,
+  videoCrossfade,
+  videoColorCorrect,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
