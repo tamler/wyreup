@@ -13,14 +13,46 @@ Requires Node >= 20. Works in browser, Node, and edge runtimes (dual build).
 ## Usage
 
 ```js
-import { runTool } from '@wyreup/core';
+import { createDefaultRegistry } from '@wyreup/core';
+import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 
-// Compress a JPEG to 80% quality
-const result = await runTool('compress', {
-  inputPaths: ['photo.jpg'],
-  params: { quality: 80 },
-});
-// result.outputFiles[0] is the compressed file buffer
+const registry = createDefaultRegistry();
+const tool = registry.toolsById.get('compress');
+
+// Read input file
+const bytes = await readFile('photo.jpg');
+const input = new File([bytes], 'photo.jpg', { type: 'image/jpeg' });
+
+// Run the tool
+const ctx = {
+  onProgress: () => {},
+  signal: new AbortController().signal,
+  cache: new Map(),
+  executionId: randomUUID(),
+};
+const result = await tool.run([input], { quality: 80 }, ctx);
+// result is a Blob or Blob[]
+```
+
+### Chain tools
+
+```js
+import { createDefaultRegistry, runChain, parseChainString } from '@wyreup/core';
+import { randomUUID } from 'node:crypto';
+
+const registry = createDefaultRegistry();
+const chain = parseChainString('strip-exif|compress[quality=75]');
+
+const ctx = {
+  onProgress: () => {},
+  signal: new AbortController().signal,
+  cache: new Map(),
+  executionId: randomUUID(),
+};
+
+const outputs = await runChain(chain, [inputFile], ctx, registry);
+// outputs is Blob[]
 ```
 
 ### Available tool categories

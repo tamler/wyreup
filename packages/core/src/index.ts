@@ -176,3 +176,5 @@ export { getPipeline } from './lib/transformers.js';
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 
 export { runDefaultChain } from './chain/run-default.js';
+
+export { parseChainString, serializeChain } from './chain/parse-chain-string.js';
