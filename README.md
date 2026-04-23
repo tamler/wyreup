@@ -2,7 +2,7 @@
 
 **Wyreup your capabilities. Nothing uploads.**
 
-[wyreup.com](https://wyreup.com) · MIT License · v0.1.0
+[wyreup.com](https://wyreup.com) · MIT License · v0.5.0
 
 ![Wyreup — privacy-first file tools](./assets/readme/infographic.png)
 
@@ -30,20 +30,21 @@ Run it now: [wyreup.com/chain/run?steps=strip-exif|compress](https://wyreup.com/
 
 ### Merge receipts into one searchable PDF
 
-Drop receipt images. Convert each to a PDF page, then merge into one multi-page document.
-
-```
-image-to-pdf → merge-pdf
-```
+Drop receipt images. Convert each to a PDF page in one shot.
 
 CLI:
 
 ```bash
 wyreup image-to-pdf receipt1.jpg receipt2.jpg -o receipts.pdf
-wyreup merge-pdf receipts.pdf -o final.pdf
 ```
 
-Run it now: [wyreup.com/chain/run?steps=image-to-pdf|merge-pdf](https://wyreup.com/chain/run?steps=image-to-pdf%7Cmerge-pdf)
+Or chain with PDF compression afterward:
+
+```bash
+wyreup chain receipt1.jpg receipt2.jpg --steps "image-to-pdf|pdf-compress" -o receipts.pdf
+```
+
+Run it now: [wyreup.com/chain/run?steps=image-to-pdf|pdf-compress](https://wyreup.com/chain/run?steps=image-to-pdf%7Cpdf-compress)
 
 ---
 
@@ -112,7 +113,7 @@ Wyreup ships as five packages built on one engine.
 | PWA | Install from browser for offline access and native file sharing |
 | CLI | `npx @wyreup/cli <tool> <file>` |
 | MCP server | `npx -y @wyreup/mcp` — connects Claude Code, Cline, Continue, and any MCP-compatible agent |
-| Agent skill | `@wyreup/skill`, `@wyreup/cli-skill`, `@wyreup/mcp-skill` — richer integration for skill-compatible runtimes |
+| Agent skill | `wyreup install-skill` — installs a skill.md into your agent's skills directory |
 
 ---
 

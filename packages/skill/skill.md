@@ -44,7 +44,7 @@ wyreup compress input.jpg --quality 80 -o compressed.jpg
 wyreup merge-pdf a.pdf b.pdf -o merged.pdf
 wyreup face-blur photo.jpg -o anonymized.jpg
 wyreup hash document.pdf
-wyreup split-pdf doc.pdf --output-dir ./pages/
+wyreup split-pdf doc.pdf -O ./pages/
 ```
 
 If the user does not have the CLI: `npm install -g @wyreup/cli` or `npx @wyreup/cli <tool>`.

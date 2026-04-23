@@ -1,6 +1,6 @@
 # Wyreup Roadmap
 
-_Updated: 2026-04-22_
+_Updated: 2026-04-17_
 
 A single source-of-truth for what's shipped, what's next, and what we've
 deliberately deferred or rejected. Memory references point at entries in
@@ -40,11 +40,10 @@ background lives.
 
 These are small, but only you can do them. Each unblocks something downstream.
 
-- [ ] **Flip GitHub repo to public** — `gh repo edit --visibility public`.
-  Required for OSS credibility, search indexing, and Contributor sign-ups.
+- [x] **Flip GitHub repo to public** — done 2026-04-22.
 - [ ] **Create `@wyreup` npm org** at `https://www.npmjs.com/org/create`
   (or as a user scope). Required before any `pnpm publish`.
-- [ ] **Verify `NPM_TOKEN` repo secret** is set (it is as of 2026-04-21).
+- [x] **Verify `NPM_TOKEN` repo secret** is set — done 2026-04-21.
 - [ ] **Merge the Version Packages PR** once it appears. Triggers first
   publish of all 6 packages at 0.1.0 to npmjs.com.
 - [x] **Point `wyreup.com` DNS at the Cloudflare Pages project** — done 2026-04-23.
@@ -237,6 +236,28 @@ language model capability without phoning home.
     from natural-language tasks, limited to single-tool invocations
 - **Install group:** `llm` — standalone PWA toggle, WebGPU-required
 - **Paid-tier candidate:** larger models (7B/8B at ~4 GB) behind Pro
+
+### Wave P — CLI core execution + truth-in-advertising audit (done v0.5.3)
+
+Shipped the CLI's core tool-execution surface and audited every documentation
+surface against the live implementation.
+
+- **`wyreup run <tool-id>`** — single-tool execution with `-o`, `-O`, `--param`, per-tool flags
+- **Tool-id shorthand** — `wyreup <tool-id> ...` falls through to `run`
+- **`wyreup chain`** — `--steps "tool1|tool2[key=val]"` and `--from-url` support
+- **`parseChainString` / `serializeChain`** — shared util in `@wyreup/core`, imported by CLI (and available for web)
+- **Stdin/stdout piping** — single-in/single-out tools support Unix pipes
+- **Multi-output routing** — multi-output tools require `-O <dir>` and print clear error otherwise
+- **Truth-in-advertising audit** — every public surface checked; drift fixed; audit log at `docs/audit-2026-04-17.md`
+- **87 CLI tests** (was 33 pre-wave)
+
+### Recurring: Truth-in-advertising audit
+
+Run quarterly. For each public surface:
+1. Check every command example runs without error
+2. Verify every tool ID mentioned exists in the registry
+3. Confirm every URL resolves to a working page
+4. Update the audit log at `docs/audit-YYYY-MM-DD.md`
 
 ### Wave P+ — Longer horizon
 
