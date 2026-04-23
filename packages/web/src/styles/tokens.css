@@ -75,3 +75,11 @@
   --ease-in:      cubic-bezier(0.4, 0, 1, 1);
   --ease-linear:  linear;
 }
+
+/* ── Surface mode: welcome (DESIGN.md §13 v1.4) ── */
+/* Applied to marketing surfaces — homepage, /about, /cli, /mcp, /skill, /category/* */
+/* Overrides only --bg and --text-primary with warmer variants. All else unchanged. */
+.surface-welcome {
+  --bg:           #17161a;   /* --bg-warm: hair warmer / violet-shifted near-black */
+  --text-primary: #ECE7DE;   /* --text-warm: ivory-tinted off-white */
+}

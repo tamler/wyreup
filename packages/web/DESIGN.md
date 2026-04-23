@@ -1,7 +1,7 @@
 # Wyreup Design System
 ## Signal — Visual Identity Reference
 
-Version 1.3 | Dark-only at launch | Last updated: 2026-04-19
+Version 1.4 | Dark-only at launch | Last updated: 2026-04-17
 
 ---
 
@@ -561,6 +561,69 @@ Drop a file to get started — or click to browse.
 **No "lorem ipsum" content density.** Placeholder states show real structural content — category names, example tool names — not generic placeholder copy.
 
 **No marketing language in the UI.** "Privacy-first" and "free forever" live on the landing page, not in the tool interface. Inside the tool, the interface is silent about the product's values and loud about the data.
+
+---
+
+---
+
+## 13. Surface Modes (v1.4)
+
+> **Amendment — v1.4 (2026-04-17):** Introduces a warm palette variant for marketing surfaces. Task-first surfaces are unchanged. This is additive; Signal's identity, anti-patterns, and §12 restrictions apply everywhere.
+
+### Two modes
+
+**`surface-mode: engineering`** (default — task-first surfaces)
+
+Applied to: `/tools` catalog, per-tool pages, chain builder, settings, `/my-kit`.
+Uses the original Signal palette unchanged. Density, precision, and information-rich layout are primary concerns.
+No class needed — this is the `:root` default.
+
+**`surface-mode: welcome`** (marketing surfaces)
+
+Applied to: homepage hero, `/about`, `/cli`, `/mcp`, `/skill`, distribution cards, `/category/*` landing pages.
+Uses a slightly warmer variant that reads as approachable without abandoning the Signal identity.
+Apply by adding `class="surface-welcome"` to `<body>` or the outermost `<main>` element for that page.
+
+### Welcome palette tokens
+
+```css
+/* Applied via .surface-welcome — do not use on task-first surfaces */
+--bg-warm:   #17161a   /* hair warmer than --bg (#111113); slightly violet-shifted near-black */
+--text-warm: #ECE7DE   /* ivory-tinted off-white — replaces --text-primary on welcome surfaces */
+```
+
+Amber accent (`--accent: #FFB000`) is unchanged. The warmth comes from a cooler, slightly purple-shifted background paired with an ivory headline — not from new accent colors or gradients.
+
+**What stays the same on welcome surfaces:**
+- `--bg-elevated`, `--bg-raised`, `--border`, `--border-subtle` — unchanged
+- `--text-muted`, `--text-subtle` — unchanged
+- `--accent`, `--accent-hover`, `--accent-dim` — unchanged
+- All §12 anti-patterns (no gradients, no shadows on flat cards, no blur, no emoji) — still apply
+
+**What changes on welcome surfaces:**
+- Page background: `--bg-warm` instead of `--bg` (applies to `body` / top-level surface)
+- Primary heading color: `--text-warm` instead of `--text-primary`
+
+### Implementation
+
+In `tokens.css`:
+```css
+.surface-welcome {
+  --bg:          #17161a;   /* --bg-warm */
+  --text-primary: #ECE7DE;  /* --text-warm */
+}
+```
+
+In Astro frontmatter, pass a `surfaceMode` prop to `BaseLayout` (or set a body class):
+```astro
+<BaseLayout surfaceMode="welcome">
+```
+
+`BaseLayout` applies `class="surface-welcome"` to `<body>` when `surfaceMode === 'welcome'`.
+
+### Rationale
+
+TinyWow-style tool catalog sites use high-contrast white-on-dark for task screens but soften the palette on landing pages to reduce perceived coldness. Wyreup's Signal identity depends on dark backgrounds — this amendment provides a controlled warm shift (≈ +3 lightness, slight hue rotation toward violet) that reads as "welcome" without being warm enough to undercut the engineering aesthetic. The ivory headline (`#ECE7DE`) reads warmer than pure near-white (`#F4F4F5`) but maintains the same contrast ratio.
 
 ---
 
