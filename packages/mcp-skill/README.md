@@ -1,3 +1,5 @@
+> **Deprecated**: Use `npx @wyreup/cli install-skill` instead. This package only shipped a markdown file that you had to manually copy. The CLI command handles the install.
+
 # @wyreup/mcp-skill
 
 An agent skill that teaches AI assistants how to invoke Wyreup's local file tools through the `@wyreup/mcp` MCP server. Smaller token footprint than `@wyreup/skill` — no CLI guidance, just MCP tool call shapes.

@@ -1,3 +1,5 @@
+> **Deprecated**: Use `npx @wyreup/cli install-skill` instead. This package only shipped a markdown file that you had to manually copy. The CLI command handles the install.
+
 # @wyreup/skill
 
 An agent skill that teaches AI assistants how to use Wyreup's local file-processing tools. Written in the standard `skill.md` format (YAML frontmatter + markdown body), compatible with any agent runtime that supports skills — Claude Code, Claude Desktop, Claude.ai, and others.

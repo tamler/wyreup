@@ -22,6 +22,7 @@
     "url": "git+https://github.com/tamler/wyreup.git",
     "directory": "packages/cli-skill"
   },
+  "deprecated": "Use `npx @wyreup/cli install-skill` instead. The npm install didn't actually install the skill anywhere useful; the CLI command copies skill.md to your agent's skills directory in one step.",
   "author": "Wyreup Contributors",
   "publishConfig": {
     "access": "public"
