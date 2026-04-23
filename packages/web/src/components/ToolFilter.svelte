@@ -109,10 +109,61 @@
     applyFilter();
   }
 
+  // ── Recently used (localStorage) ─────────────────────────────────────────
+  const RECENT_KEY = 'wyreup:recent-tools';
+  const MAX_RECENT = 10;
+
+  interface RecentEntry {
+    id: string;
+    name: string;
+    ts: number;
+  }
+
+  let recentTools: RecentEntry[] = [];
+
+  function loadRecent() {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      if (!raw) return;
+      const parsed: RecentEntry[] = JSON.parse(raw);
+      // Filter to only tools that still exist
+      const validIds = new Set(tools.map((t) => t.id));
+      recentTools = parsed.filter((r) => validIds.has(r.id));
+    } catch {
+      recentTools = [];
+    }
+  }
+
+  function clearRecent() {
+    localStorage.removeItem(RECENT_KEY);
+    recentTools = [];
+  }
+
   onMount(() => {
-    // No URL params to process in this version
+    // Pre-fill query from URL ?q= param (header search navigation)
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('q');
+    if (q) {
+      query = q;
+      applyFilter();
+    }
+
+    loadRecent();
   });
 </script>
+
+<!-- Recently used strip (Deliverable 6) -->
+{#if recentTools.length > 0}
+  <div class="recent-strip" aria-label="Recently used tools">
+    <span class="recent-label">Recently used</span>
+    <div class="recent-pills">
+      {#each recentTools as r (r.id)}
+        <a class="recent-pill" href={`/tools/${r.id}`}>{r.name}</a>
+      {/each}
+    </div>
+    <button class="recent-clear" on:click={clearRecent}>Clear</button>
+  </div>
+{/if}
 
 <!-- Search input — prominent, at top -->
 <div class="search-wrap">
@@ -197,6 +248,80 @@
 {/if}
 
 <style>
+  /* Recently used strip */
+  .recent-strip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .recent-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .recent-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    flex: 1;
+  }
+
+  .recent-pill {
+    height: 24px;
+    padding: 0 var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition:
+      border-color var(--duration-instant) var(--ease-sharp),
+      color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .recent-pill:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  .recent-pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .recent-clear {
+    background: none;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .recent-clear:hover {
+    color: var(--text-muted);
+  }
+
+  .recent-clear:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
   /* Search wrap */
   .search-wrap {
     position: relative;

@@ -4,11 +4,23 @@ import HeroDrop from '../components/HeroDrop.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
 import InstallCard from '../components/InstallCard.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
+
+const registry = createDefaultRegistry();
+const allTools = Array.from(registry.toolsById.values());
+
+// Hand-curated popular tools (Deliverable 5)
+const popularToolIds = ['compress', 'convert', 'merge-pdf', 'qr', 'face-blur', 'ocr', 'strip-exif', 'audio-enhance'];
+const popularTools = popularToolIds
+  .map((id) => allTools.find((t) => t.id === id))
+  .filter(Boolean)
+  .map((t) => ({ id: t!.id, name: t!.name, category: t!.category, description: t!.description }));
 ---
 
 <BaseLayout
   title="Wyreup — Privacy and productivity. Have both."
   description="Tools you chain together. Drop a file, use one tool or wire several, get your outcome. Everything runs on your device — no uploads, no cache, no tracking."
+  surfaceMode="welcome"
 >
   <PwaOnboardBanner client:load />
 
@@ -195,6 +207,35 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
             <span class="chain-node__label">247 KB JPG</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint" aria-hidden="true">
+      <span class="scroll-hint__line"></span>
+      <span class="scroll-hint__pad"></span>
+      <span class="scroll-hint__label">scroll</span>
+      <span class="scroll-hint__chevron">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </span>
+    </div>
+  </section>
+
+  <!-- Section 5b: Popular tools (Deliverable 5) -->
+  <section class="popular section-rhythm" aria-labelledby="popular-heading">
+    <div class="container">
+      <h2 id="popular-heading" class="section-title">Popular tools</h2>
+      <p class="popular-sub">The ones people use most.</p>
+      <div class="popular-grid">
+        {popularTools.map((tool) => (
+          <a href={`/tools/${tool.id}`} class="popular-card" aria-label={`${tool.name} — ${tool.category}`}>
+            <div class="popular-card__name">{tool.name}</div>
+            <div class="popular-card__cat">{tool.category}</div>
+            <p class="popular-card__desc">{tool.description}</p>
+          </a>
+        ))}
       </div>
     </div>
 
@@ -535,6 +576,75 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
     rotate: 45deg;
   }
 
+  /* ── Popular tools (Deliverable 5) ── */
+  .popular {
+    background: var(--bg);
+  }
+
+  .popular-sub {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    margin-top: calc(-1 * var(--space-8));
+    margin-bottom: var(--space-8);
+  }
+
+  .popular-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+  }
+
+  .popular-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color var(--duration-fast) var(--ease-sharp);
+  }
+
+  .popular-card:hover {
+    border-color: var(--text-muted);
+  }
+
+  .popular-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .popular-card__name {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+  }
+
+  .popular-card__cat {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .popular-card__desc {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* ── Privacy ── */
   .privacy {
     padding: var(--space-16) 0;
@@ -644,6 +754,10 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
     .anywhere-grid {
       grid-template-columns: repeat(2, 1fr);
     }
+
+    .popular-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   @media (max-width: 768px) {
@@ -662,6 +776,10 @@ import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
     }
 
     .anywhere-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .popular-grid {
       grid-template-columns: 1fr;
     }
 
