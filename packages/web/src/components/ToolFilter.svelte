@@ -64,55 +64,10 @@
   };
   const defaultChipIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
 
-  // ── File-type filter ──────────────────────────────────────────────────────
-
-  interface FileType {
-    id: string;
-    label: string;
-    icon: string;
-    mimes: string[];
-  }
-
-  const fileTypes: FileType[] = [
-    {
-      id: 'pdf',
-      label: 'PDF',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
-      mimes: ['application/pdf'],
-    },
-    {
-      id: 'image',
-      label: 'Image',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
-      mimes: ['image/*'],
-    },
-    {
-      id: 'audio',
-      label: 'Audio',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
-      mimes: ['audio/*'],
-    },
-    {
-      id: 'video',
-      label: 'Video',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
-      mimes: ['video/*'],
-    },
-    {
-      id: 'text',
-      label: 'Text',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
-      mimes: ['text/*', 'application/json', 'application/xml', 'application/yaml', 'application/x-yaml'],
-    },
-    {
-      id: 'data',
-      label: 'Data',
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>`,
-      mimes: ['text/csv', 'application/json', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'],
-    },
-  ];
-
-  let activeFileType: string | null = null;
+  // ── Drop-to-filter (mirrors the homepage hero drop zone behaviour) ────────
+  // A user drops a file at the top of /tools and the grid narrows to tools
+  // compatible with that file's MIME. Stacks with category chips + header
+  // search. Local to this page — no cross-route store leakage.
 
   function mimeMatches(toolMimes: string[], filterMimes: string[]): boolean {
     for (const filter of filterMimes) {
@@ -128,8 +83,41 @@
     return false;
   }
 
-  function toggleFileType(id: string) {
-    activeFileType = activeFileType === id ? null : id;
+  let droppedFile: { name: string; mime: string } | null = null;
+  let isDragOver = false;
+
+  function handleDropZoneDragOver(e: DragEvent) {
+    e.preventDefault();
+    isDragOver = true;
+  }
+
+  function handleDropZoneDragLeave() {
+    isDragOver = false;
+  }
+
+  function handleDropZoneDrop(e: DragEvent) {
+    e.preventDefault();
+    isDragOver = false;
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    droppedFile = { name: file.name, mime: file.type || 'application/octet-stream' };
+    applyFilter();
+  }
+
+  function handleDropZonePick() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      droppedFile = { name: file.name, mime: file.type || 'application/octet-stream' };
+      applyFilter();
+    };
+    input.click();
+  }
+
+  function clearDroppedFile() {
+    droppedFile = null;
     applyFilter();
   }
 
@@ -163,9 +151,8 @@
 
   function applyFilter() {
     const q = query.trim();
-    const activeFileTypeDef = activeFileType
-      ? fileTypes.find((ft) => ft.id === activeFileType) ?? null
-      : null;
+    // Filter-by-dropped-file: treat the dropped MIME as the constraint.
+    const droppedMimeFilter = droppedFile ? [droppedFile.mime] : null;
 
     if (q) {
       const fuse = createToolSearch(tools.map((t) => ({
@@ -179,18 +166,17 @@
       const catFiltered = activeCategories.size === 0
         ? results
         : results.filter((r) => activeCategories.has(r.category));
-      // Preserve fuse rank order; re-look up originals to keep the full Tool shape
       const byId = new Map(tools.map((t) => [t.id, t]));
       const lookupFiltered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
-      filtered = activeFileTypeDef
-        ? lookupFiltered.filter((t) => mimeMatches(t.accept, activeFileTypeDef.mimes))
+      filtered = droppedMimeFilter
+        ? lookupFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
         : lookupFiltered;
     } else {
       const catFiltered = activeCategories.size === 0
         ? tools
         : tools.filter((t) => activeCategories.has(t.category));
-      filtered = activeFileTypeDef
-        ? catFiltered.filter((t) => mimeMatches(t.accept, activeFileTypeDef.mimes))
+      filtered = droppedMimeFilter
+        ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
         : catFiltered;
     }
     filterEpoch += 1;
@@ -199,7 +185,7 @@
   function clearAll() {
     query = '';
     activeCategories = new Set();
-    activeFileType = null;
+    droppedFile = null;
     applyFilter();
   }
 
@@ -264,20 +250,45 @@
   </div>
 {/if}
 
-<!-- File-type entry row -->
-<div class="filetype-row" role="group" aria-label="Filter by file type">
-  {#each fileTypes as ft}
-    <button
-      class="filetype-chip"
-      class:active={activeFileType === ft.id}
-      on:click={() => toggleFileType(ft.id)}
-      aria-pressed={activeFileType === ft.id}
-    >
-      <span class="filetype-chip__icon">{@html ft.icon}</span>
-      <span class="filetype-chip__label">{ft.label}</span>
-    </button>
-  {/each}
-</div>
+<!-- Inline drop zone — filter the grid by a dropped file's MIME -->
+{#if droppedFile}
+  <div class="drop-filter drop-filter--active" role="status">
+    <div class="drop-filter__inner">
+      <span class="drop-filter__label">
+        Showing tools compatible with
+        <span class="drop-filter__name">{droppedFile.name}</span>
+        <span class="drop-filter__mime">({droppedFile.mime.split('/').pop() ?? droppedFile.mime})</span>
+      </span>
+      <button class="drop-filter__clear" on:click={clearDroppedFile} aria-label="Clear dropped file filter">
+        Drop another · clear
+      </button>
+    </div>
+  </div>
+{:else}
+  <button
+    type="button"
+    class="drop-filter drop-filter--empty"
+    class:drop-filter--hover={isDragOver}
+    on:click={handleDropZonePick}
+    on:dragover={handleDropZoneDragOver}
+    on:dragleave={handleDropZoneDragLeave}
+    on:drop={handleDropZoneDrop}
+    aria-label="Drop a file to filter tools by what can handle it"
+  >
+    <span class="drop-filter__inner">
+      <span class="drop-filter__icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </span>
+      <span class="drop-filter__label">
+        Drop a file here to see tools that can handle it.
+      </span>
+    </span>
+  </button>
+{/if}
 
 <!-- Category chip filter -->
 <div class="filter-bar">
@@ -299,7 +310,7 @@
 
 <div class="results-meta">
   <span class="results-count">{filtered.length} tool{filtered.length !== 1 ? 's' : ''}</span>
-  {#if activeCategories.size > 0 || activeFileType !== null}
+  {#if activeCategories.size > 0 || droppedFile !== null}
     <button class="clear-btn" on:click={clearAll}>Clear</button>
   {/if}
 </div>
@@ -351,60 +362,91 @@
 {/if}
 
 <style>
-  /* File-type entry row */
-  .filetype-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
+  /* Inline drop-to-filter zone (same pattern as homepage HeroDrop). */
+  .drop-filter {
+    display: block;
+    width: 100%;
     margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color var(--duration-instant) var(--ease-sharp),
+      background var(--duration-instant) var(--ease-sharp),
+      color var(--duration-instant) var(--ease-sharp);
   }
 
-  .filetype-chip {
-    display: inline-flex;
-    flex-direction: column;
+  .drop-filter--empty:hover,
+  .drop-filter--hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    background: var(--bg-raised);
+  }
+
+  .drop-filter--active {
+    cursor: default;
+    border-style: solid;
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--text-primary);
+  }
+
+  .drop-filter__inner {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-1);
-    min-width: 64px;
-    min-height: 64px;
-    padding: var(--space-2) var(--space-3);
-    background: var(--bg-elevated);
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .drop-filter__icon {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .drop-filter__label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .drop-filter__name {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .drop-filter__mime {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    margin-left: var(--space-1);
+  }
+
+  .drop-filter__clear {
+    background: transparent;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-muted);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
     cursor: pointer;
-    transition:
-      border-color var(--duration-instant) var(--ease-sharp),
-      color var(--duration-instant) var(--ease-sharp),
-      background var(--duration-instant) var(--ease-sharp);
+    transition: color var(--duration-instant) var(--ease-sharp), border-color var(--duration-instant) var(--ease-sharp);
   }
 
-  .filetype-chip:hover {
-    border-color: var(--text-muted);
+  .drop-filter__clear:hover {
     color: var(--text-primary);
+    border-color: var(--text-muted);
   }
 
-  .filetype-chip.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  .filetype-chip:focus-visible {
+  .drop-filter__clear:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-  }
-
-  .filetype-chip__icon {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-  }
-
-  .filetype-chip__label {
-    line-height: 1;
   }
 
   /* Recently used strip */
