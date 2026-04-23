@@ -1,0 +1,54 @@
+name: Tool suggestion
+description: Suggest a new tool for Wyreup
+title: "Tool suggestion: "
+labels: ["tool-suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a tool. Wyreup ships a new tool roughly every
+        ~2 weeks; good suggestions jump the queue.
+
+  - type: input
+    id: tool-name
+    attributes:
+      label: What would you call this tool?
+      description: A short name or verb, e.g. "reverse-geocode" or "merge-csv".
+      placeholder: "e.g. pdf-to-audio"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the task / problem?
+      description: What would the user drop on the page, and what would they expect out?
+      placeholder: "Drop a PDF, get an MP3 of the text read aloud with a local TTS model."
+    validations:
+      required: true
+
+  - type: textarea
+    id: existing-alternatives
+    attributes:
+      label: How do you solve this today?
+      description: Which app or site do you use? How's it falling short?
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category (best guess)
+      options:
+        - image
+        - pdf
+        - media (audio/video)
+        - text/dev
+        - finance
+        - privacy
+        - archive
+        - other
+
+  - type: input
+    id: library
+    attributes:
+      label: Library you know that could power it (optional)
+      description: If there's a browser-native JS/WASM library that already does this, link it.
