@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createDefaultRegistry } from '@wyreup/core';
 import { createWyreupMcpServer } from './server.js';
 
 async function main(): Promise<void> {
   const server = createWyreupMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('[wyreup-mcp] ready — 53 tools exposed');
+  const toolCount = createDefaultRegistry().toolsById.size;
+  console.error(`[wyreup-mcp] ready — ${toolCount} tools exposed`);
 }
 
 main().catch((err: unknown) => {
