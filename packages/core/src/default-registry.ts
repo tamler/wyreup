@@ -107,6 +107,15 @@ import { videoSpeed } from './tools/video-speed/index.js';
 import { videoOverlayImage } from './tools/video-overlay-image/index.js';
 import { videoCrossfade } from './tools/video-crossfade/index.js';
 import { videoColorCorrect } from './tools/video-color-correct/index.js';
+import { excelToCsv } from './tools/excel-to-csv/index.js';
+import { excelToJson } from './tools/excel-to-json/index.js';
+import { csvToExcel } from './tools/csv-to-excel/index.js';
+import { jsonToExcel } from './tools/json-to-excel/index.js';
+import { excelInfo } from './tools/excel-info/index.js';
+import { mergeWorkbooks } from './tools/merge-workbooks/index.js';
+import { splitSheets } from './tools/split-sheets/index.js';
+import { htmlToPdf } from './tools/html-to-pdf/index.js';
+import { barcode } from './tools/barcode/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -225,6 +234,15 @@ export const defaultTools: ToolModule<any>[] = [
   videoOverlayImage,
   videoCrossfade,
   videoColorCorrect,
+  excelToCsv,
+  excelToJson,
+  csvToExcel,
+  jsonToExcel,
+  excelInfo,
+  mergeWorkbooks,
+  splitSheets,
+  htmlToPdf,
+  barcode,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

@@ -47,8 +47,7 @@ These are small, but only you can do them. Each unblocks something downstream.
 - [ ] **Verify `NPM_TOKEN` repo secret** is set (it is as of 2026-04-21).
 - [ ] **Merge the Version Packages PR** once it appears. Triggers first
   publish of all 6 packages at 0.1.0 to npmjs.com.
-- [ ] **Point `wyreup.com` DNS at the Cloudflare Pages project** and add
-  `wyreup.com` + `www.wyreup.com` as custom domains on the Pages project.
+- [x] **Point `wyreup.com` DNS at the Cloudflare Pages project** — done 2026-04-23.
 - [ ] **Verify email routing** for `hello@`, `security@`, and future
   `noreply@`, `support@` addresses via Zoho SMTP.
 
@@ -188,14 +187,22 @@ The first paid surface. Requires a tiny amount of server-side work.
 - **Paid tier does NOT change the free tier's privacy pitch.** Free web
   stays free + fully private. Pro adds features, not restrictions.
 
-### Wave N — Tier 2 utility tools
+### Wave N — Tier 2 utility tools (shipped)
 
-From `competitor_your_everyday_tools.md` queue.
+From `competitor_your_everyday_tools.md` queue. 9 tools shipped: +32 KB core bundle.
 
-- **Excel I/O** — XLSX ↔ CSV/JSON via SheetJS (consumer/office gap)
-- **HTML → PDF** — jsPDF + html2canvas (high-traffic keyword)
-- **Barcode generator** — jsbarcode (Code128, EAN, UPC, ISBN)
-- **Animated GIF ↔ WebP** — niche but cheap to add
+- **excel-to-csv** — SheetJS, single sheet or all-sheets ZIP
+- **excel-to-json** — SheetJS, array of objects / arrays / multi-sheet envelope
+- **csv-to-excel** — SheetJS, auto-detect delimiter, multi-file to multi-sheet
+- **json-to-excel** — SheetJS, objects / arrays / {sheets:...} multi-sheet format
+- **excel-info** — inspect sheet count, row/col counts, 5-row preview
+- **merge-workbooks** — combine 2-20 XLSX files, optional sheet-name prefix
+- **split-sheets** — one XLSX per sheet, output as ZIP
+- **html-to-pdf** — jsPDF + html2canvas; browser-only (throws in Node with clear error)
+- **barcode** — jsbarcode; Code 128, Code 39, EAN-13/8, UPC-A, ITF-14, MSI; SVG (Node-safe) + PNG (browser)
+- **Animated GIF ↔ WebP** — deferred; ImageDecoder/ImageEncoder API coverage
+  acceptable for a stretch goal but not worth the complexity in this wave.
+  Candidate for Wave P if demand warrants.
 - **Date calculator** — already shipped in Wave I (skip)
 - **Unit converter** — already shipped in Wave I (skip)
 

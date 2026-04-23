@@ -162,6 +162,15 @@ export { videoSpeed, type VideoSpeedParams, defaultVideoSpeedParams, buildAtempo
 export { videoOverlayImage, type VideoOverlayImageParams, defaultVideoOverlayImageParams, type OverlayPosition, overlayPositionToXY, buildOverlayFilter } from './tools/video-overlay-image/index.js';
 export { videoCrossfade, type VideoCrossfadeParams, defaultVideoCrossfadeParams, type CrossfadeTransition, parseDurationFromStderr, buildCrossfadeArgs } from './tools/video-crossfade/index.js';
 export { videoColorCorrect, type VideoColorCorrectParams, defaultVideoColorCorrectParams, buildColorCorrectFilter } from './tools/video-color-correct/index.js';
+export { excelToCsv, type ExcelToCsvParams } from './tools/excel-to-csv/index.js';
+export { excelToJson, type ExcelToJsonParams } from './tools/excel-to-json/index.js';
+export { csvToExcel, type CsvToExcelParams } from './tools/csv-to-excel/index.js';
+export { jsonToExcel, type JsonToExcelParams } from './tools/json-to-excel/index.js';
+export { excelInfo, type ExcelInfoParams } from './tools/excel-info/index.js';
+export { mergeWorkbooks, type MergeWorkbooksParams } from './tools/merge-workbooks/index.js';
+export { splitSheets, type SplitSheetsParams } from './tools/split-sheets/index.js';
+export { htmlToPdf, type HtmlToPdfParams } from './tools/html-to-pdf/index.js';
+export { barcode, type BarcodeParams } from './tools/barcode/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

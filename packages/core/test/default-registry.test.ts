@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 108 tools in total', () => {
+  it('has 117 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(108);
+    expect(registry.toolsById.size).toBe(117);
   });
 
   it('includes ocr', () => {
@@ -553,5 +553,74 @@ describe('default registry', () => {
       const tool = registry.toolsById.get(id) as { installGroup?: string } | undefined;
       expect(tool?.installGroup).toBe('ffmpeg');
     }
+  });
+
+  // Wave N: Excel I/O tools
+  it('includes excel-to-csv', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('excel-to-csv')).toBeDefined();
+  });
+
+  it('includes excel-to-json', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('excel-to-json')).toBeDefined();
+  });
+
+  it('includes csv-to-excel', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('csv-to-excel')).toBeDefined();
+  });
+
+  it('includes json-to-excel', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('json-to-excel')).toBeDefined();
+  });
+
+  it('includes excel-info', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('excel-info')).toBeDefined();
+  });
+
+  it('includes merge-workbooks', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('merge-workbooks')).toBeDefined();
+  });
+
+  it('includes split-sheets', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('split-sheets')).toBeDefined();
+  });
+
+  it('excel tools are in convert/inspect/edit categories', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('excel-to-csv')?.category).toBe('convert');
+    expect(registry.toolsById.get('excel-to-json')?.category).toBe('convert');
+    expect(registry.toolsById.get('csv-to-excel')?.category).toBe('convert');
+    expect(registry.toolsById.get('json-to-excel')?.category).toBe('convert');
+    expect(registry.toolsById.get('excel-info')?.category).toBe('inspect');
+    expect(registry.toolsById.get('merge-workbooks')?.category).toBe('edit');
+    expect(registry.toolsById.get('split-sheets')?.category).toBe('edit');
+  });
+
+  // Wave N: HTML-to-PDF
+  it('includes html-to-pdf', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('html-to-pdf')).toBeDefined();
+  });
+
+  it('html-to-pdf is in the convert category', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('html-to-pdf')?.category).toBe('convert');
+  });
+
+  // Wave N: Barcode
+  it('includes barcode', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('barcode')).toBeDefined();
+  });
+
+  it('barcode is in the create category', () => {
+    const registry = createDefaultRegistry();
+    expect(registry.toolsById.get('barcode')?.category).toBe('create');
   });
 });
