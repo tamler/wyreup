@@ -739,13 +739,17 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
       dTrigger.setAttribute('aria-expanded', 'false');
     }
 
-    // Open on hover
+    // Hover opens the menu, but hover never closes it — closing is
+    // always user intent (click outside, Escape, or click trigger again).
+    // The original code closed on `mouseleave`, which fires when the cursor
+    // crosses the 8px gap between trigger and dropdown. That dead zone was
+    // making the dropdown unreachable.
     devMenu.addEventListener('mouseenter', openDevMenu);
-    devMenu.addEventListener('mouseleave', closeDevMenu);
 
     // Open on focus (keyboard)
     dTrigger.addEventListener('focus', openDevMenu);
-    dTrigger.addEventListener('click', () => {
+    dTrigger.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't let the outside-click handler immediately close
       if (devOpen) {
         closeDevMenu();
       } else {
