@@ -3,6 +3,7 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/motifs.css';
+import PwaShell from '../components/PwaShell.svelte';
 
 interface Props {
   title: string;
@@ -61,6 +62,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   </head>
   <body class={bodyClass}>
     <a href="#main-content" class="skip-link">Skip to content</a>
+    <PwaShell client:load />
 
     <header class="site-header">
       <div class="container header-inner">

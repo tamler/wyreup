@@ -4,6 +4,7 @@
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
+  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -48,6 +49,7 @@
     const ac = new AbortController();
     const cache = new Map<string, unknown>();
 
+    void acquireWakeLock();
     try {
       const { createDefaultRegistry } = await import('@wyreup/core');
       const registry = createDefaultRegistry();
@@ -82,6 +84,8 @@
     } catch (err) {
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      releaseWakeLock();
     }
   }
 

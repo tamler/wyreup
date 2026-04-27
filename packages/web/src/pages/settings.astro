@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolSettings from '../components/ToolSettings.svelte';
+import StorageSettings from '../components/StorageSettings.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 const registry = createDefaultRegistry();
@@ -97,7 +98,8 @@ for (const t of registry.toolsById.values()) {
   description="Control which tools are cached for offline use."
 >
   <div class="container settings-page">
-    <h1 class="settings-title">Tool settings</h1>
+    <h1 class="settings-title">Settings</h1>
+    <StorageSettings client:load />
     <ToolSettings client:load heavyTools={heavyTools} />
   </div>
 </BaseLayout>
