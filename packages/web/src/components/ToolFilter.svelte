@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { createToolSearch } from '../lib/tool-search';
+  import { stashChainFile } from './runners/chainStorage';
 
   const SUGGEST_URL_BASE =
     'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
@@ -83,7 +84,8 @@
     return false;
   }
 
-  let droppedFile: { name: string; mime: string } | null = null;
+  // Keep the actual File so tool-card clicks can hand it off via sessionStorage.
+  let droppedFile: { name: string; mime: string; file: File } | null = null;
   let isDragOver = false;
 
   function handleDropZoneDragOver(e: DragEvent) {
@@ -100,7 +102,7 @@
     isDragOver = false;
     const file = e.dataTransfer?.files?.[0];
     if (!file) return;
-    droppedFile = { name: file.name, mime: file.type || 'application/octet-stream' };
+    droppedFile = { name: file.name, mime: file.type || 'application/octet-stream', file };
     applyFilter();
   }
 
@@ -110,7 +112,7 @@
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      droppedFile = { name: file.name, mime: file.type || 'application/octet-stream' };
+      droppedFile = { name: file.name, mime: file.type || 'application/octet-stream', file };
       applyFilter();
     };
     input.click();
@@ -119,6 +121,17 @@
   function clearDroppedFile() {
     droppedFile = null;
     applyFilter();
+  }
+
+  // When a tool is clicked while a file is dropped, stash the file so the
+  // tool page picks it up automatically — no re-upload required. Only intercept
+  // plain left-clicks so cmd/ctrl/middle-click "open in new tab" still works.
+  async function handleToolCardClick(e: MouseEvent, toolId: string) {
+    if (!droppedFile) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    await stashChainFile(droppedFile.file, { autoAccept: true });
+    window.location.href = `/tools/${toolId}`;
   }
 
   // Counts per category from the full unfiltered tool set
@@ -338,6 +351,7 @@
         role="listitem"
         aria-label="{tool.name} — {tool.category}"
         style="--stagger-delay: {i * 50}ms"
+        on:click={(e) => handleToolCardClick(e, tool.id)}
       >
         <div class="brackets-inner" aria-hidden="true"></div>
         <div class="tool-card__inner">

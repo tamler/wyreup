@@ -34,6 +34,17 @@ export const flipImage: ToolModule<FlipImageParams> = {
 
   defaults: { direction: 'horizontal' },
 
+  paramSchema: {
+    direction: {
+      type: 'enum',
+      label: 'direction',
+      options: [
+        { value: 'horizontal', label: 'horizontal (mirror left/right)' },
+        { value: 'vertical', label: 'vertical (mirror top/bottom)' },
+      ],
+    },
+  },
+
   Component: FlipImageComponentStub,
 
   async run(

@@ -46,6 +46,42 @@ export const pageNumbersPdf: ToolModule<PageNumbersPdfParams> = {
     format: '{n}',
   },
 
+  paramSchema: {
+    position: {
+      type: 'enum',
+      label: 'position',
+      options: [
+        { value: 'bottom-left', label: 'bottom left' },
+        { value: 'bottom-center', label: 'bottom center' },
+        { value: 'bottom-right', label: 'bottom right' },
+        { value: 'top-left', label: 'top left' },
+        { value: 'top-center', label: 'top center' },
+        { value: 'top-right', label: 'top right' },
+      ],
+    },
+    fontSize: {
+      type: 'range',
+      label: 'font size',
+      min: 6,
+      max: 48,
+      step: 1,
+      unit: 'pt',
+    },
+    startAt: {
+      type: 'number',
+      label: 'start at',
+      help: 'The number to print on the first page. Useful when continuing from another document.',
+      min: 0,
+      step: 1,
+    },
+    format: {
+      type: 'string',
+      label: 'format',
+      placeholder: 'Page {n} of {total}',
+      help: 'Template string. {n} = current page, {total} = total pages.',
+    },
+  },
+
   Component: PageNumbersPdfComponentStub,
 
   async run(

@@ -3,6 +3,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import { buildDownloadName } from './naming';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -85,7 +86,7 @@
     const a = document.createElement('a');
     a.href = resultUrl;
     const ext = resultBlob.type.split('/')[1] ?? 'bin';
-    a.download = `${tool.id}-result.${ext}`;
+    a.download = buildDownloadName(files[0]?.name, tool.id, ext);
     a.click();
   }
 
@@ -156,7 +157,10 @@
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
         <div class="chain-prominent">
-          <ChainSection resultBlob={resultBlob} resultName="{tool.id}-result" />
+          <ChainSection
+            resultBlob={resultBlob}
+            resultName={buildDownloadName(files[0]?.name, tool.id, resultBlob?.type.split('/')[1] ?? 'bin')}
+          />
         </div>
 
         <div class="panel-header">

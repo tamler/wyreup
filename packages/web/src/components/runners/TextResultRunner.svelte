@@ -3,6 +3,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import { buildDownloadName } from './naming';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -88,12 +89,36 @@
     } catch { /* ignore */ }
   }
 
+  // Tier-0 TTS via Web Speech API (Wave Q). OS-provided voices,
+  // no download, playback-only.
+  let speakSupported = false;
+  let speaking = false;
+
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    speakSupported = true;
+  }
+
+  function speak(text: string) {
+    if (!speakSupported || !text) return;
+    const synth = window.speechSynthesis;
+    if (speaking) {
+      synth.cancel();
+      speaking = false;
+      return;
+    }
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.onend = () => { speaking = false; };
+    utt.onerror = () => { speaking = false; };
+    synth.speak(utt);
+    speaking = true;
+  }
+
   function download() {
     if (!resultBlob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(resultBlob);
     const ext = resultMime.includes('html') ? 'html' : 'txt';
-    a.download = `${tool.id}-result.${ext}`;
+    a.download = buildDownloadName(files[0]?.name, tool.id, ext);
     a.click();
   }
 </script>
@@ -141,6 +166,11 @@
             <button class="btn-secondary" on:click={copyResult} type="button">
               {copied ? 'Copied' : 'Copy'}
             </button>
+            {#if speakSupported && !isHtml}
+              <button class="btn-secondary" on:click={() => speak(resultText)} type="button" aria-label={speaking ? 'Stop speaking' : 'Speak this text aloud'}>
+                {speaking ? 'Stop' : 'Speak'}
+              </button>
+            {/if}
             <button class="btn-secondary" on:click={download} type="button">Download</button>
           </div>
         </div>
@@ -155,7 +185,10 @@
         {/if}
 
         {#if resultBlob}
-          <ChainSection resultBlob={resultBlob} resultName="{tool.id}-result" />
+          <ChainSection
+            resultBlob={resultBlob}
+            resultName={buildDownloadName(files[0]?.name, tool.id, resultMime.includes('html') ? 'html' : 'txt')}
+          />
         {/if}
       </div>
     </div>

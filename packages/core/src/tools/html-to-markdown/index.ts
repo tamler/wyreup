@@ -33,6 +33,18 @@ export const htmlToMarkdown: ToolModule<HtmlToMarkdownParams> = {
 
   defaults: { headingStyle: 'atx' },
 
+  paramSchema: {
+    headingStyle: {
+      type: 'enum',
+      label: 'heading style',
+      help: 'ATX uses # ##. Setext uses === underlines for h1 and --- for h2 (h3+ fall back to ATX).',
+      options: [
+        { value: 'atx', label: 'ATX (# Heading)' },
+        { value: 'setext', label: 'Setext (Heading\\n===)' },
+      ],
+    },
+  },
+
   Component: HtmlToMarkdownComponentStub,
 
   async run(

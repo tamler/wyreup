@@ -48,6 +48,18 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
     mode: 'read',
   },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'read', label: 'read (extract metadata as JSON)' },
+        { value: 'write', label: 'write (set title/author/etc.)' },
+        { value: 'strip', label: 'strip (remove all metadata)' },
+      ],
+    },
+  },
+
   Component: PdfMetadataComponentStub,
 
   async run(

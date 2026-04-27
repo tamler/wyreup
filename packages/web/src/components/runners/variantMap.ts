@@ -8,12 +8,15 @@ export type RunnerVariant =
   | 'MultiOutputRunner'
   | 'JsonResultRunner'
   | 'TextResultRunner'
+  | 'TextInputRunner'
+  | 'TwoTextInputRunner'
   | 'GenerateRunner'
   | 'PreviewRunner'
   | 'CompoundInterestRunner'
   | 'InvestmentDcaRunner'
   | 'PercentageCalculatorRunner'
-  | 'DateCalculatorRunner';
+  | 'DateCalculatorRunner'
+  | 'PdfRedactRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -40,33 +43,65 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'split-pdf': 'MultiOutputRunner',
   'pdf-to-image': 'MultiOutputRunner',
 
-  // JsonResultRunner — any file in, JSON out
+  // JsonResultRunner — file in, JSON out
   hash: 'JsonResultRunner',
   'image-info': 'JsonResultRunner',
   'pdf-info': 'JsonResultRunner',
-  'regex-tester': 'JsonResultRunner',
-  'json-formatter': 'JsonResultRunner',
   'color-palette': 'JsonResultRunner',
-  'word-counter': 'JsonResultRunner',
-  'timestamp-converter': 'JsonResultRunner',
   'pdf-metadata': 'JsonResultRunner',
-  'color-converter': 'JsonResultRunner',
 
-  // TextResultRunner — any file in, text/html out
+  // TextResultRunner — file in, text/html out
   ocr: 'TextResultRunner',
   'pdf-to-text': 'TextResultRunner',
   base64: 'TextResultRunner',
-  'url-encoder': 'TextResultRunner',
-  'markdown-to-html': 'TextResultRunner',
-  'html-to-markdown': 'TextResultRunner',
-  'text-diff': 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
+
+  // TwoTextInputRunner — two side-by-side textareas, output anything
+  'text-diff': 'TwoTextInputRunner',
+  'text-diff-levenshtein': 'TwoTextInputRunner',
+
+  // TextInputRunner — type text in, any output. The default for tools
+  // where the user is going to TYPE/PASTE rather than upload a .txt file.
+  'text-translate': 'TextInputRunner',
+  'text-summarize': 'TextInputRunner',
+  'text-sentiment': 'TextInputRunner',
+  'text-ner': 'TextInputRunner',
+  'text-readability': 'TextInputRunner',
+  'text-stats': 'TextInputRunner',
+  'text-escape': 'TextInputRunner',
+  'text-embed': 'TextInputRunner',
+  'token-count': 'TextInputRunner',
+  'unicode-normalize': 'TextInputRunner',
+  slug: 'TextInputRunner',
+  'case-converter': 'TextInputRunner',
+  'regex-tester': 'TextInputRunner',
+  'url-encoder': 'TextInputRunner',
+  'jwt-decoder': 'TextInputRunner',
+  'cron-parser': 'TextInputRunner',
+  'number-base-converter': 'TextInputRunner',
+  'timestamp-converter': 'TextInputRunner',
+  'color-converter': 'TextInputRunner',
+  'json-formatter': 'TextInputRunner',
+  'css-formatter': 'TextInputRunner',
+  'html-formatter': 'TextInputRunner',
+  'sql-formatter': 'TextInputRunner',
+  'xml-formatter': 'TextInputRunner',
+  'markdown-to-html': 'TextInputRunner',
+  'html-to-markdown': 'TextInputRunner',
+  'word-counter': 'TextInputRunner',
+  'json-yaml': 'TextInputRunner',
 
   // GenerateRunner — no input needed, generates output
   'uuid-generator': 'GenerateRunner',
   qr: 'GenerateRunner',
   'lorem-ipsum': 'GenerateRunner',
   'password-generator': 'GenerateRunner',
+  barcode: 'GenerateRunner',
+
+  // No-input tools that emit JSON/text — JsonResultRunner skips the dropzone
+  // when tool.input.min === 0.
+  calculator: 'JsonResultRunner',
+  'unit-converter': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
   'compound-interest': 'CompoundInterestRunner',
@@ -74,10 +109,12 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'percentage-calculator': 'PercentageCalculatorRunner',
   'date-calculator': 'DateCalculatorRunner',
 
+  // PdfRedactRunner — bespoke canvas-overlay UI for drawing redaction rectangles
+  'pdf-redact': 'PdfRedactRunner',
+
   // PreviewRunner — single file in, single blob out, prominent preview
   'face-blur': 'PreviewRunner',
   'audio-enhance': 'PreviewRunner',
-  'pdf-redact': 'PreviewRunner',
   'pdf-crop': 'PreviewRunner',
   'pdf-extract-pages': 'PreviewRunner',
   'pdf-delete-pages': 'PreviewRunner',

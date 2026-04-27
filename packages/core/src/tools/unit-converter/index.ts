@@ -111,6 +111,120 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
 
   defaults: { value: 1, from: 'km', to: 'm', category: 'length' },
 
+  paramSchema: (() => {
+    const unitsByCategory: Record<
+      string,
+      Array<{ value: string; label: string }>
+    > = {
+      length: [
+        { value: 'm', label: 'm — meters' },
+        { value: 'km', label: 'km — kilometers' },
+        { value: 'cm', label: 'cm — centimeters' },
+        { value: 'mm', label: 'mm — millimeters' },
+        { value: 'in', label: 'in — inches' },
+        { value: 'ft', label: 'ft — feet' },
+        { value: 'yd', label: 'yd — yards' },
+        { value: 'mi', label: 'mi — miles' },
+        { value: 'nmi', label: 'nmi — nautical miles' },
+      ],
+      mass: [
+        { value: 'g', label: 'g — grams' },
+        { value: 'kg', label: 'kg — kilograms' },
+        { value: 'mg', label: 'mg — milligrams' },
+        { value: 'lb', label: 'lb — pounds' },
+        { value: 'oz', label: 'oz — ounces' },
+        { value: 'ton', label: 'ton — short ton' },
+        { value: 'stone', label: 'stone' },
+      ],
+      temperature: [
+        { value: 'C', label: '°C — Celsius' },
+        { value: 'F', label: '°F — Fahrenheit' },
+        { value: 'K', label: 'K — Kelvin' },
+      ],
+      area: [
+        { value: 'm2', label: 'm² — square meters' },
+        { value: 'km2', label: 'km² — square kilometers' },
+        { value: 'ft2', label: 'ft² — square feet' },
+        { value: 'yd2', label: 'yd² — square yards' },
+        { value: 'acre', label: 'acre' },
+        { value: 'hectare', label: 'hectare' },
+        { value: 'mi2', label: 'mi² — square miles' },
+      ],
+      volume: [
+        { value: 'L', label: 'L — liters' },
+        { value: 'mL', label: 'mL — milliliters' },
+        { value: 'gal', label: 'gal — US gallons' },
+        { value: 'qt', label: 'qt — US quarts' },
+        { value: 'pt', label: 'pt — US pints' },
+        { value: 'cup', label: 'cup' },
+        { value: 'floz', label: 'fl oz' },
+        { value: 'm3', label: 'm³ — cubic meters' },
+        { value: 'ft3', label: 'ft³ — cubic feet' },
+      ],
+      speed: [
+        { value: 'm/s', label: 'm/s' },
+        { value: 'km/h', label: 'km/h' },
+        { value: 'mph', label: 'mph' },
+        { value: 'kn', label: 'kn — knots' },
+        { value: 'ft/s', label: 'ft/s' },
+      ],
+      data: [
+        { value: 'B', label: 'B — bytes' },
+        { value: 'KB', label: 'KB — kilobytes (1000)' },
+        { value: 'MB', label: 'MB — megabytes (1000²)' },
+        { value: 'GB', label: 'GB — gigabytes (1000³)' },
+        { value: 'TB', label: 'TB — terabytes (1000⁴)' },
+        { value: 'PB', label: 'PB — petabytes (1000⁵)' },
+        { value: 'KiB', label: 'KiB — kibibytes (1024)' },
+        { value: 'MiB', label: 'MiB — mebibytes (1024²)' },
+        { value: 'GiB', label: 'GiB — gibibytes (1024³)' },
+        { value: 'TiB', label: 'TiB — tebibytes (1024⁴)' },
+      ],
+      time: [
+        { value: 's', label: 's — seconds' },
+        { value: 'ms', label: 'ms — milliseconds' },
+        { value: 'min', label: 'min — minutes' },
+        { value: 'h', label: 'h — hours' },
+        { value: 'd', label: 'd — days' },
+        { value: 'wk', label: 'wk — weeks' },
+        { value: 'mo', label: 'mo — months (30 d)' },
+        { value: 'yr', label: 'yr — years (365.24 d)' },
+      ],
+    };
+    return {
+      category: {
+        type: 'enum',
+        label: 'category',
+        options: [
+          { value: 'length', label: 'length' },
+          { value: 'mass', label: 'mass' },
+          { value: 'temperature', label: 'temperature' },
+          { value: 'area', label: 'area' },
+          { value: 'volume', label: 'volume' },
+          { value: 'speed', label: 'speed' },
+          { value: 'data', label: 'data' },
+          { value: 'time', label: 'time' },
+        ],
+      },
+      value: {
+        type: 'number',
+        label: 'value',
+      },
+      from: {
+        type: 'enum',
+        label: 'from',
+        options: unitsByCategory.length!,
+        optionsFrom: { field: 'category', map: unitsByCategory },
+      },
+      to: {
+        type: 'enum',
+        label: 'to',
+        options: unitsByCategory.length!,
+        optionsFrom: { field: 'category', map: unitsByCategory },
+      },
+    } as const;
+  })(),
+
   Component: UnitConverterComponentStub,
 
   // eslint-disable-next-line @typescript-eslint/require-await

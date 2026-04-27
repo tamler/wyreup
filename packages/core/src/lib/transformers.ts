@@ -5,10 +5,80 @@
  * the same JS module instance (i.e. the same browser tab or Node process).
  * ctx.cache is per-invocation; pipeline loading is expensive (downloads model
  * weights on first use), so we cache across invocations here.
+ *
+ * **Memory discipline.** Pipelines are heavy — 30 MB to 400 MB of model
+ * weights resident in the JS heap, plus ONNX runtime sessions. We bound
+ * the cache:
+ *
+ *  1. LRU cap (`MAX_PIPELINES`) — at most this many models stay in the
+ *     heap at once. Evicting is cheap because the SW disk-caches the
+ *     weight files (`wyreup-heavy-assets`), so a re-load is a few-second
+ *     WASM-instantiate, not a re-download.
+ *  2. Visibility-based eviction — when the tab is hidden for
+ *     `IDLE_EVICT_MS` we drop the cache entirely. Especially important
+ *     for PWA users whose process is more likely to be killed under
+ *     memory pressure.
  */
 import type { ToolRunContext } from '../types.js';
 
+const MAX_PIPELINES = 2;
+const IDLE_EVICT_MS = 5 * 60 * 1000;
+
 const pipelineCache: Map<string, unknown> = new Map();
+
+/** Best-effort dispose. Transformers.js v3+ pipelines expose dispose(). */
+function tryDispose(pipe: unknown): void {
+  if (!pipe || typeof pipe !== 'object') return;
+  const maybe = pipe as { dispose?: unknown };
+  if (typeof maybe.dispose === 'function') {
+    try {
+      const result = (maybe as { dispose: () => unknown }).dispose();
+      if (result && typeof (result as Promise<unknown>).then === 'function') {
+        // Fire-and-forget; don't block the caller.
+        void (result as Promise<unknown>).catch(() => { /* ignore */ });
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** Evict oldest entries until cache is at or below MAX_PIPELINES - 1. */
+function evictToFit(): void {
+  while (pipelineCache.size >= MAX_PIPELINES) {
+    const oldestKey = pipelineCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    const old = pipelineCache.get(oldestKey);
+    pipelineCache.delete(oldestKey);
+    tryDispose(old);
+  }
+}
+
+/** Drop the entire cache and dispose every pipeline. */
+function clearAll(): void {
+  for (const pipe of pipelineCache.values()) tryDispose(pipe);
+  pipelineCache.clear();
+}
+
+/**
+ * Browser-only: register a visibilitychange listener that evicts the
+ * cache after the tab is hidden for IDLE_EVICT_MS. The listener registers
+ * itself once at module load. No-ops in Node.
+ */
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+  let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      hiddenTimer = setTimeout(() => {
+        clearAll();
+        hiddenTimer = null;
+      }, IDLE_EVICT_MS);
+    } else if (hiddenTimer !== null) {
+      clearTimeout(hiddenTimer);
+      hiddenTimer = null;
+    }
+  });
+}
 
 /**
  * Load (or return cached) a Transformers.js v4 pipeline.
@@ -28,7 +98,16 @@ export async function getPipeline(
 ): Promise<unknown> {
   const key = `${task}:${model}`;
   const cached = pipelineCache.get(key);
-  if (cached) return cached;
+  if (cached) {
+    // LRU bump: re-insert so this pipeline becomes the most-recently-used.
+    pipelineCache.delete(key);
+    pipelineCache.set(key, cached);
+    return cached;
+  }
+
+  // Make room before loading the new pipeline; disposing the old freed
+  // heap is most useful before allocating the next big model.
+  evictToFit();
 
   const { pipeline } = await import('@huggingface/transformers');
 
@@ -53,4 +132,13 @@ export async function getPipeline(
 
   pipelineCache.set(key, pipe);
   return pipe;
+}
+
+/**
+ * Manually drop the in-memory pipeline cache. Useful for a "Free up
+ * memory" affordance on `/settings`. Does not affect the SW disk cache,
+ * so subsequent loads remain fast.
+ */
+export function clearPipelineCache(): void {
+  clearAll();
 }

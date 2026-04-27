@@ -75,7 +75,26 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
-  defaults: { mode: 'all' },
+  defaults: { mode: 'all', ranges: '' },
+
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'split mode',
+      help: 'Pick "every page" to get one PDF per page, or "page ranges" to extract specific pages.',
+      options: [
+        { value: 'all', label: 'every page' },
+        { value: 'ranges', label: 'page ranges' },
+      ],
+    },
+    ranges: {
+      type: 'string',
+      label: 'ranges',
+      placeholder: '1-3, 5, 7-9',
+      help: 'Comma-separated page numbers and ranges. Pages are 1-indexed.',
+      showWhen: { field: 'mode', equals: 'ranges' },
+    },
+  },
 
   Component: SplitPdfComponentStub,
 

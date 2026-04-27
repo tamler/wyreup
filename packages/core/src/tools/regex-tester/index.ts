@@ -36,6 +36,22 @@ export const regexTester: ToolModule<RegexTesterParams> = {
     flags: 'g',
   },
 
+  paramSchema: {
+    pattern: {
+      type: 'string',
+      label: 'pattern',
+      placeholder: '\\b\\w+@\\w+\\.\\w+\\b',
+      help: 'JavaScript regex syntax (no surrounding slashes).',
+    },
+    flags: {
+      type: 'string',
+      label: 'flags',
+      placeholder: 'gim',
+      maxLength: 6,
+      help: 'g = global, i = case-insensitive, m = multiline, s = dotall, u = unicode, y = sticky. Combine like "gim".',
+    },
+  },
+
   Component: RegexTesterComponentStub,
 
   async run(

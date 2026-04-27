@@ -55,20 +55,59 @@ const LANGUAGE_OPTIONS = [
 const TextTranslateComponentStub = (): unknown => null;
 
 /**
- * Try the Chrome 131+ built-in Translator API (window.translation).
- * Returns translated text on success, null if unavailable or unsupported pair.
+ * Try the browser's built-in on-device Translator API. Returns translated
+ * text on success, null if unavailable or unsupported pair.
+ *
+ * Two API generations are checked, modern first:
+ *   1. Chrome 138+ stable: global `Translator.create({...})` /
+ *      `Translator.availability({...})`
+ *   2. Chrome 131-137 origin-trial: `window.translation.createTranslator`
+ *
+ * Both are on-device (no network), so they preserve the privacy story.
  */
 async function tryBrowserTranslator(
   text: string,
   sourceLang: string,
   targetLang: string,
 ): Promise<string | null> {
+  if (typeof window === 'undefined' && typeof self === 'undefined') return null;
+
+  // Path 1: modern global `Translator` API (Chrome 138+ stable).
+  const globalScope =
+    (typeof self !== 'undefined' ? self : (window as unknown)) as Record<string, unknown>;
+  const Translator = globalScope['Translator'];
+  if (Translator && typeof Translator === 'object') {
+    const T = Translator as Record<string, unknown>;
+    if (typeof T['availability'] === 'function' && typeof T['create'] === 'function') {
+      try {
+        const availability = await (T['availability'] as (opts: unknown) => Promise<string>)({
+          sourceLanguage: sourceLang,
+          targetLanguage: targetLang,
+        });
+        // 'available' or 'downloadable' means we can proceed; 'unavailable' bails.
+        if (availability === 'available' || availability === 'downloadable') {
+          const translator = await (T['create'] as (opts: unknown) => Promise<unknown>)({
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+          });
+          if (translator && typeof translator === 'object') {
+            const t = translator as Record<string, unknown>;
+            if (typeof t['translate'] === 'function') {
+              const result = await (t['translate'] as (text: string) => Promise<string>)(text);
+              if (typeof result === 'string') return result;
+            }
+          }
+        }
+      } catch {
+        // Fall through to legacy API.
+      }
+    }
+  }
+
+  // Path 2: legacy `window.translation` API (Chrome 131-137 origin trial).
   if (typeof window === 'undefined') return null;
-
-  const win = window as unknown as Record<string, unknown>;
-  const translationApi = win['translation'];
+  const translationApi = (window as unknown as Record<string, unknown>)['translation'];
   if (!translationApi || typeof translationApi !== 'object') return null;
-
   const api = translationApi as Record<string, unknown>;
   if (typeof api['canTranslate'] !== 'function') return null;
 
@@ -77,7 +116,6 @@ async function tryBrowserTranslator(
       sourceLanguage: sourceLang,
       targetLanguage: targetLang,
     });
-
     if (canTranslate !== 'readily' && canTranslate !== 'after-download') return null;
 
     const createTranslator = api['createTranslator'] as (opts: unknown) => Promise<unknown>;
@@ -91,7 +129,7 @@ async function tryBrowserTranslator(
     if (typeof t['translate'] !== 'function') return null;
 
     const result = await (t['translate'] as (text: string) => Promise<string>)(text);
-    return result ?? null;
+    return typeof result === 'string' ? result : null;
   } catch {
     return null;
   }

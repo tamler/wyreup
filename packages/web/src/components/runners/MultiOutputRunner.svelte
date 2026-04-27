@@ -3,6 +3,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import { buildDownloadName } from './naming';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -80,7 +81,9 @@
     const a = document.createElement('a');
     a.href = url;
     const ext = blob.type.split('/')[1] ?? 'bin';
-    a.download = `${tool.id}-${index + 1}.${ext}`;
+    const base = buildDownloadName(files[0]?.name, tool.id, ext);
+    // Insert "-N" before the extension: "photo-split-pdf.pdf" → "photo-split-pdf-1.pdf".
+    a.download = base.replace(/(\.[^.]+)$/, `-${index + 1}$1`);
     a.click();
   }
 
@@ -162,7 +165,10 @@
         </div>
 
         {#if resultBlobs.length > 0}
-          <ChainSection resultBlob={resultBlobs[0]} resultName="{tool.id}-result" />
+          <ChainSection
+            resultBlob={resultBlobs[0]}
+            resultName={buildDownloadName(files[0]?.name, tool.id, resultBlobs[0]?.type.split('/')[1] ?? 'bin')}
+          />
         {/if}
       </div>
     </div>

@@ -67,6 +67,47 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
 
   defaults: { mode: 'diff', date1: '2026-01-01', date2: '2026-12-31', amount: 30, unit: 'days' },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'diff', label: 'difference between two dates' },
+        { value: 'add', label: 'add/subtract from a date' },
+        { value: 'day-of-week', label: 'day of week for a date' },
+      ],
+    },
+    date1: {
+      type: 'string',
+      label: 'date',
+      placeholder: 'YYYY-MM-DD',
+      help: 'Starting date in ISO 8601 format.',
+    },
+    date2: {
+      type: 'string',
+      label: 'second date',
+      placeholder: 'YYYY-MM-DD',
+      showWhen: { field: 'mode', equals: 'diff' },
+    },
+    amount: {
+      type: 'number',
+      label: 'amount',
+      help: 'Negative numbers subtract.',
+      showWhen: { field: 'mode', equals: 'add' },
+    },
+    unit: {
+      type: 'enum',
+      label: 'unit',
+      options: [
+        { value: 'days', label: 'days' },
+        { value: 'weeks', label: 'weeks' },
+        { value: 'months', label: 'months' },
+        { value: 'years', label: 'years' },
+      ],
+      showWhen: { field: 'mode', equals: 'add' },
+    },
+  },
+
   Component: DateCalculatorComponentStub,
 
   // eslint-disable-next-line @typescript-eslint/require-await

@@ -7,7 +7,7 @@ declare let self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-// Runtime caching for CDN assets
+// Runtime caching for CDN assets and same-origin heavy static assets.
 self.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
@@ -17,6 +17,8 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     return;
   }
 
+  if (event.request.method !== 'GET') return;
+
   // Runtime cache for CDN assets (jsdelivr, Google Storage, HuggingFace)
   if (
     url.hostname === 'cdn.jsdelivr.net' ||
@@ -24,6 +26,18 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     url.hostname === 'huggingface.co'
   ) {
     event.respondWith(cacheFirst(event.request, 'wyreup-cdn-assets'));
+    return;
+  }
+
+  // Same-origin heavy static assets (WASM, ONNX models, blob/data files).
+  // The build excludes these from precache (too large), and they're served
+  // with content-hashed filenames, so cache-first is safe — when the build
+  // emits a new hash, the old entry is simply unused.
+  if (
+    url.origin === self.location.origin &&
+    /\.(wasm|onnx|data|bin|tflite|task|onnx_data)$/i.test(url.pathname)
+  ) {
+    event.respondWith(cacheFirst(event.request, 'wyreup-heavy-assets'));
     return;
   }
 });

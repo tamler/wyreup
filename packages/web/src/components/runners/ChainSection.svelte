@@ -13,10 +13,9 @@
   }
 
   let nextTools: NextTool[] = [];
-  let tooLarge = false;
+  let stashFailed = false;
   let saveIntermediate = false;
 
-  const MAX_CHAIN_BYTES = 10 * 1024 * 1024;
   const STORAGE_KEY = 'wyreup:chain-save-intermediate';
 
   onMount(() => {
@@ -34,7 +33,7 @@
 
   $: if (resultBlob) {
     loadNextTools(resultBlob);
-    tooLarge = resultBlob.size > MAX_CHAIN_BYTES;
+    stashFailed = false;
   }
 
   async function loadNextTools(blob: Blob) {
@@ -61,13 +60,17 @@
 
   async function navigate(toolId: string) {
     if (!resultBlob) return;
-    // Save intermediate file if option is checked
     if (saveIntermediate) {
       downloadBlob(resultBlob, resultName);
     }
-    if (!tooLarge) {
-      const file = new File([resultBlob], resultName, { type: resultBlob.type });
-      await stashChainFile(file);
+    const file = new File([resultBlob], resultName, { type: resultBlob.type });
+    const stashed = await stashChainFile(file);
+    if (!stashed) {
+      // IndexedDB quota or persistence failure — surface the warning and
+      // download the file so the user can re-upload manually.
+      stashFailed = true;
+      downloadBlob(resultBlob, resultName);
+      return;
     }
     window.location.href = `/tools/${toolId}`;
   }
@@ -77,8 +80,8 @@
   <div class="chain-section">
     <div class="chain-header">
       <span class="chain-label">Use this result in</span>
-      {#if tooLarge}
-        <span class="chain-notice">File too large to carry automatically — download and re-upload manually.</span>
+      {#if stashFailed}
+        <span class="chain-notice">Couldn't carry the file over — saved a copy so you can re-upload it.</span>
       {/if}
       <label class="save-intermediate">
         <input

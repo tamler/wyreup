@@ -52,6 +52,37 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
     quality: 90,
   },
 
+  paramSchema: {
+    format: {
+      type: 'enum',
+      label: 'format',
+      options: [
+        { value: 'png', label: 'PNG (lossless)' },
+        { value: 'jpeg', label: 'JPEG (smaller, lossy)' },
+        { value: 'webp', label: 'WebP (modern, balanced)' },
+      ],
+    },
+    dpi: {
+      type: 'range',
+      label: 'DPI',
+      help: 'Higher = sharper but larger files. 72 = web, 150 = print preview, 300 = print quality.',
+      min: 72,
+      max: 600,
+      step: 1,
+      unit: ' dpi',
+    },
+    quality: {
+      type: 'range',
+      label: 'quality',
+      help: 'JPEG/WebP only. Ignored for PNG.',
+      min: 1,
+      max: 100,
+      step: 1,
+      unit: '%',
+      showWhen: { field: 'format', in: ['jpeg', 'webp'] },
+    },
+  },
+
   Component: PdfToImageComponentStub,
 
   async run(

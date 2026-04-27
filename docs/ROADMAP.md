@@ -1,6 +1,6 @@
 # Wyreup Roadmap
 
-_Updated: 2026-04-17_
+_Updated: 2026-04-27_
 
 A single source-of-truth for what's shipped, what's next, and what we've
 deliberately deferred or rejected. Memory references point at entries in
@@ -12,13 +12,22 @@ background lives.
 ## 0. Shipped
 
 ### Product
-- **`@wyreup/core`** — 72 tools across 11 categories, 831 tests, dual browser/node build
-- **`@wyreup/web`** — 82-page Astro static site live at `wyreup.pages.dev`
-- **`@wyreup/cli`** — shell binary wrapping core
+- **`@wyreup/core`** — **117 tools across 14 categories, 1566 tests**, dual browser/node build
+- **`@wyreup/web`** — **145-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
+- **`@wyreup/cli`** — shell binary wrapping core, full execution surface (`run`, `chain`, stdin/stdout piping)
 - **`@wyreup/mcp`** — MCP server (14 tests, 53 tools exposed via stdio)
-- **`@wyreup/skill`** — dual-backend agent skill (CLI + MCP)
-- **`@wyreup/cli-skill`** — CLI-only variant (smaller token footprint)
-- **`@wyreup/mcp-skill`** — MCP-only variant (smaller token footprint)
+- **`@wyreup/skill`** — dual-backend agent skill (CLI + MCP) — superseded by `wyreup install-skill`
+- **`@wyreup/cli-skill`** — CLI-only variant — superseded by `wyreup install-skill cli`
+- **`@wyreup/mcp-skill`** — MCP-only variant — superseded by `wyreup install-skill mcp`
+
+### Tool inventory (by category)
+edit (15) · media (14) · inspect (14) · dev (12) · convert (12) · create (11) · text (9) · privacy (7) · pdf (6) · optimize (6) · export (5) · archive (3) · finance (2) · audio (1)
+
+### Install groups (opt-in, surfaced on `/settings`)
+- **core** — ~90 deterministic tools, always loaded, ~5 MB
+- **ffmpeg** — 14 audio/video tools sharing ffmpeg.wasm (~30 MB)
+- **image-ai** — 4 image ML tools (bg-remove, upscale-2x, image-similarity, ocr-pro)
+- **nlp-standard** — 4 NLP tools (sentiment, NER, summarize, embeddings)
 
 ### Platform
 - Design system v1.3 ("Signal") locked in `packages/web/DESIGN.md`
@@ -38,21 +47,13 @@ background lives.
 
 ## 1. Pending user action (blockers)
 
-These are small, but only you can do them. Each unblocks something downstream.
+_All previous launch blockers cleared as of 2026-04-27. Verified via
+npm (`@wyreup/core`, `@wyreup/cli`, `@wyreup/mcp` all published at
+0.2.0) and live site at `wyreup.com`._
 
-- [x] **Flip GitHub repo to public** — done 2026-04-22.
-- [ ] **Create `@wyreup` npm org** at `https://www.npmjs.com/org/create`
-  (or as a user scope). Required before any `pnpm publish`.
-- [x] **Verify `NPM_TOKEN` repo secret** is set — done 2026-04-21.
-- [ ] **Merge the Version Packages PR** once it appears. Triggers first
-  publish of all 6 packages at 0.1.0 to npmjs.com.
-- [x] **Point `wyreup.com` DNS at the Cloudflare Pages project** — done 2026-04-23.
-- [ ] **Verify email routing** for `hello@`, `security@`, and future
-  `noreply@`, `support@` addresses via Zoho SMTP.
-
-Optional near-term:
-- Upgrade Cloudflare Pages to Pro ($5/mo) before high-activity dev stretches
-  (500-build-per-month limit on free tier).
+Optional / when justified:
+- Upgrade Cloudflare Pages to Pro ($5/mo) before high-activity dev
+  stretches (500-build-per-month limit on free tier).
 
 ---
 
@@ -101,69 +102,73 @@ from GitHub, and write it in place — which npm can't do.
 - GitHub raw URLs stay available as a manual fallback for users who
   want to copy-paste into a non-standard agent runtime.
 
-### Wave L2 — Param schema + browser Translator + UI gating (queued)
+### Wave L2 — Param schema + browser Translator + UI gating (mostly shipped 2026-04-27)
 
 Foundation UI improvement that unlocks better ergonomics everywhere.
 
-- **`ToolModule.paramSchema?`** — optional field declaring each param's
-  type (`'string'` | `'number'` | `'boolean'` | `'enum'` | `'range'` |
-  `'file-ref'`), label, enum values, min/max/step, help text. The
-  web's auto-generated params form consumes this when present; falls
-  back to `defaults`-based inference otherwise.
-- **Retrofit the heavy hitters**: `convert` (format enum), `compress`
-  (quality slider), `convert-audio`/`convert-video` (format + bitrate
-  enums), `hash` (algorithm multi-select), `rotate-*` (angle enum),
-  `qr` (error-correction level), `pdf-compress` (quality), `text-translate`
-  (source/target lang selects). Each gets proper dropdowns/sliders.
-- **Browser Translator API for `text-translate`**:
+- **`ToolModule.paramSchema?`** — shipped. Supports `string`, `number`,
+  `range`, `boolean`, `enum`, `multi-enum`, `array`, `json`. Plus
+  `showWhen` (conditional fields) and `optionsFrom` (cascading
+  category → unit dropdowns). The web's auto-generated params form
+  consumes the schema when present and falls back to `defaults`-based
+  inference otherwise.
+- **Retrofit the heavy hitters**: shipped for the obvious enum/cascade
+  cases — `split-pdf`, `base64`, `url-encoder`, `flip-image`,
+  `pdf-to-image`, `pdf-metadata`, `html-to-markdown`, `uuid-generator`,
+  `calculator`, `date-calculator`, `image-to-pdf`, `page-numbers-pdf`,
+  `watermark-pdf`, `unit-converter` (cascading from category),
+  `regex-tester`, plus the previous batch (`compress`, `convert`, etc.).
+  Still queued: visual-rectangle UIs for `pdf-redact` / `pdf-crop`
+  (tracked under Tech debt; needs canvas runners).
+- **Browser Translator API for `text-translate`** — queued. Plan
+  unchanged:
   1. Try `translation.createTranslator()` (Chrome 131+)
   2. Try `window.translator` (Firefox Translations)
   3. Fall back to M2M100 (our 400 MB bundled model)
   Saves every user on modern browsers from the 400 MB download.
 
-### Wave L3 — Finance UI (queued)
+### Wave L3 — Finance UI (shipped)
 
-Custom Svelte runners for finance tools. JSON output is insulting for
-these.
+Custom Svelte runners for finance tools (`CompoundInterestRunner`,
+`InvestmentDcaRunner`, `PercentageCalculatorRunner`,
+`DateCalculatorRunner`) with bespoke layouts — currency formatting,
+live recalc, mode chips, calendar pickers. All four are wired into
+`VARIANT_MAP`.
 
-- **compound-interest**: currency-formatted inputs, live recalc,
-  compound-growth line chart, year-by-year table, summary cards
-  ("After 10 years: $X, contributions $Y, interest earned $Z")
-- **investment-dca**: side-by-side DCA vs lump-sum comparison,
-  monthly-return line chart, final-value summary
-- **percentage-calculator**: mode switcher (percent-of, what-percent,
-  change, increase/decrease), calculator-style input pad on mobile
-- **date-calculator**: calendar-style date pickers, diff breakdown
-  (years/months/days/hours), day-of-week lookup
+### Wave K — Library expansions (shipped)
 
-### Wave K — Library expansions
+All three category openers landed:
 
-Three high-leverage additions that open whole categories.
+- **ffmpeg.wasm** — shipped, opt-in via `/settings`. Group `ffmpeg`
+  shares ~30 MB across 14 tools: `convert-audio`, `convert-video`,
+  `extract-audio`, `trim-media`, `compress-video`, `video-to-gif`,
+  `convert-subtitles`, `burn-subtitles`, `video-concat`,
+  `video-add-text`, `video-speed`, `video-overlay-image`,
+  `video-crossfade`, `video-color-correct`.
+- **openpgp.js** — shipped: `pgp-encrypt`, `pgp-decrypt`, `pgp-sign`,
+  `pgp-verify`.
+- **JSZip wiring** — shipped: `zip-create`, `zip-extract`, `zip-info`.
 
-- **ffmpeg.wasm** (~30 MB, opt-in via PWA settings) — audio + video
-  category: convert-audio, convert-video, extract-audio, trim-media,
-  compress-video, video-to-gif, subtitle convert (SRT↔VTT), burn
-  subtitles. Gated behind the tool-opt-in settings page from Wave H
-  so install footprint stays manageable on mobile.
-- **openpgp.js** (~600 KB) — PGP encrypt, decrypt, sign, verify.
-  Exactly aligned with privacy positioning.
-- **JSZip wiring** — create-zip, extract-zip, zip-info. Library is
-  already a dep from Wave D; just needs tool modules.
+### Wave L — AI expansion (browser ML) (partially shipped)
 
-### Wave L — AI expansion (browser ML)
+Per `packages/core/docs/ai-models.md` recommendations.
 
-Queued per `packages/core/docs/ai-models.md` recommendations.
+**Shipped:**
+- **BiRefNet_lite** → `bg-remove` (MIT, ~100 MB fp16) — free tier
+- **Swin2SR x2** → `upscale-2x` (~22 MB q4) — free tier
+- **TrOCR-small** → `ocr-pro` (~150 MB q8) — free tier
+- **CLIP ViT-B/16** → `image-similarity` + `text-embed` — free tier
+- **DistilBART** → `text-summarize` (~80 MB) — free tier
+- **DistilBERT** → `text-sentiment`, `text-ner` (~65 MB) — free tier
+- **M2M100 418M** → `text-translate` (~400 MB, fallback only) — free tier
+- **all-MiniLM-L6-v2** → `text-embed` (~23 MB) — free tier
 
-- **BiRefNet_lite** — background removal (MIT, ~100 MB fp16) — free tier
-- **Swin2SR x2** — image upscale (~22 MB q4) — free tier
-- **TrOCR-small** — handwriting + print OCR (~150 MB q8) — free tier
-- **CLIP ViT-B/16** — perceptual similarity / dedupe — free tier
-- **LaMa** — object erase / inpainting (~208 MB) — paid tier candidate
-- **GFPGAN** — face restoration (~350 MB) — paid tier candidate
-- **DDColor** — B&W colorization — paid tier candidate
+**Queued** (paid-tier candidates):
+- **LaMa** — object erase / inpainting (~208 MB)
+- **GFPGAN** — face restoration (~350 MB)
+- **DDColor** — B&W colorization
 
-Each gated behind `ToolRequires` (most preferred, some required). Heavy
-models opt-in via the PWA settings page.
+Heavy models opt-in via `/settings` install groups.
 
 ### Wave M — Monetization (Lemon Squeezy)
 
@@ -217,10 +222,13 @@ installable via `docker run`.
 - **Homelab docs** — reverse proxy examples (Traefik, Caddy), persistent
   volume mounts for user uploads, environment variable reference
 
-### Wave O — Offline LLM (WebLLM + Gemma / Phi / Llama)
+### Wave R — Offline LLM (WebLLM + Gemma / Phi / Llama)
 
 Opt-in, WebGPU-required, 500 MB – 1.5 GB download. Enables on-device
-language model capability without phoning home.
+language model capability without phoning home. Adjacent to Wave Q's
+generative-AI direction but scoped specifically to instruct-tuned
+text generation via WebLLM (chat, rewrite, explain) — Wave Q owns
+the media generation surface (image / speech / audio).
 
 - **Runtime:** WebLLM (MIT) + MLC-AI's quantized models
 - **Candidate models:**
@@ -275,28 +283,211 @@ No priority order; surface when justified.
 - **Contribution scaffold maturity** — richer `wyreup init-tool` with
   param schema generation, component stubs, test templates
 
+### Wave Q — Generative AI (planning)
+
+Opens the **generation** category alongside the existing
+processing/inspection categories. Six capability tracks: speech-to-
+text, text-to-speech, text-to-image, image-to-text, image-to-image,
+audio (music + source separation). Each track has a four-step ladder
+(OS-native → tiny → medium → heavy/Pro).
+
+#### Status
+
+- ✅ **`TextInputRunner` runner variant** — shipped 2026-04-27.
+  28 text-input tools (`text-translate`, `text-summarize`, every
+  formatter, `regex-tester`, `url-encoder`, etc.) now open with a
+  textarea instead of a file dropzone. Unlocks every Wave Q
+  text-input tool retroactively.
+- 🟡 **Canonical MIME picks** — pending. Decisions to make before
+  any tool ships, so chains compose without surprises:
+  - TTS output: `audio/wav` (recommended — uncompressed, universal)
+    or `audio/mpeg` (smaller, lossy)
+  - Image-gen output: `image/png` (lossless) or `image/webp`
+  - STT / caption output: `text/plain`
+  - Music-gen output: `audio/wav`
+  - Stem split: multiple `audio/wav` outputs
+
+#### Three principles
+
+1. **Delegate to the OS/browser when it exists.** `speechSynthesis`,
+   the global `Translator` API, Chrome Built-in AI (Gemini Nano) all
+   ship with the platform — zero download, on-device, free. Always
+   feature-detect first, fall back to bundled second.
+2. **Smallest viable model first.** Validate the install / WebGPU /
+   first-load consent UX with a tiny model before committing to a
+   heavier one. Tier-0 demonstration → Tier-1 shipped → Tier-2 added
+   on demand → Tier-3 behind Pro.
+3. **Privacy non-negotiable.** Nothing leaves the device by default.
+   Cloud APIs that phone home (`edge-tts`, ElevenLabs, AWS Polly,
+   Chrome's `webkitSpeechRecognition` for non-on-device languages)
+   are **off by default** and require explicit, labelled opt-in if
+   ever offered.
+
+#### Capability tracks
+
+##### 1. Speech → Text (STT)
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 0 | Chrome `SpeechRecognition` *(when on-device)* | 0 | Many langs route through Google servers — feature-detect carefully; opt-in only |
+| 1 | **Moonshine-tiny** | ~30 MB | Designed for edge, fast on short clips. **First STT to ship.** |
+| 2 | Distil-Whisper / Whisper-base | ~150 MB | Long-form, multi-language |
+| 3 | Whisper-large-v3 | ~1.5 GB | Best in class — Pro tier |
+
+##### 2. Text → Speech (TTS)
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 0 | **Web Speech API (`speechSynthesis`)** | 0 | Uses OS voices (macOS/Win/Android/iOS). **First TTS to ship.** Quality varies by OS. |
+| 1 | **Kitten-TTS-15M** | ~15 MB | Floor option for OSes with poor voices |
+| 1 | **Kokoro-82M** | ~80 MB | Multi-voice, natural-sounding |
+| 3 | F5-TTS / XTTS-v2 voice cloning | 500 MB – 1 GB | Pro tier. Needs consent UX (recording-of-self) |
+
+##### 3. Text → Image
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 1 | **MobileDiffusion-tiny** at 256–512 px | ~520 MB | **First diffusion to ship** — validates the stack |
+| 2 | SD-XS / SD-Turbo at 512 px | ~1.5 GB int4 | 1-step generation, ~3-5 s on M2 |
+| 3 | SDXL-Turbo distilled | ~3 GB int4 | Pro tier |
+| — | FLUX.2 [klein] 4B | ~2 GB int4, 3-4 GB working | Track only — won't fit consumer WebGPU today |
+
+##### 4. Image → Text (caption / VQA)
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 1 | **Florence-2-base** | ~200 MB | "Describe this", "extract receipt total", "alt text". Underrated. |
+| 1 | Moondream2 / BLIP-base | 200 – 800 MB | Alternatives if Florence-2 quality lags |
+
+##### 5. Image → Image
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 1 | Fast neural style transfer nets | 5 – 50 MB | Tiny, fun |
+| 2 | SD-inpaint | ~1 GB | Object erase / outpaint |
+| 2 | IP-Adapter on top of MobileDiffusion | +50 MB | Variation in style of an uploaded image |
+| 3 | ControlNet-Lite + SD-small | ~1 GB | Sketch → image |
+
+##### 6. Audio (music + source separation)
+| Tier | Option | Size | Notes |
+|---|---|---|---|
+| 2 | **Demucs-tiny** | ~100 MB | Vocal / drum / bass stem split. Counterpart to bg-remove. |
+| 2 | MusicGen-small | ~300 MB | Text → music, niche |
+| 3 | AudioLDM2 | ~600 MB | Higher-quality audio gen |
+
+#### Adjacent — Compose / Scratchpad tool *(evaluate after first ship)*
+
+A "type text, then send to..." surface. Markdown editor + live
+preview + chain-launcher that lists every text-accepting tool via
+`toolsForFiles([syntheticTxtFile])`. Higher leverage than a
+standalone markdown editor (which just duplicates `markdown-to-html`
+behind a heavier UI). Defer until at least one Wave Q generative
+tool ships — that decides whether typing-then-doing is the actual
+flow, or whether per-tool `TextInputRunner` surfaces are enough.
+
+#### Hard "no" by default
+
+- **Cloud TTS APIs** — `edge-tts` (Microsoft), AWS Polly, Google
+  Cloud TTS, ElevenLabs. Free or cheap, but they violate the
+  "everything runs on your device" pitch. **Never default to these.**
+  If offered, gate behind explicit consent UI labelled "this sends
+  your text to {vendor}" and flag in `check-privacy.mjs`.
+- **Chrome `webkitSpeechRecognition`** — uses Google servers for
+  many languages. Only use if we can confirm on-device for the
+  user's selected language; otherwise prefer bundled Moonshine.
+
+#### First three to ship (in order)
+
+1. **"Speak this text" UI affordance** *(0 MB, no tool)* — a button
+   on `TextInputRunner` / `TextResultRunner` that pipes the visible
+   text to `speechSynthesis`. **Not a Wyreup tool** because the Web
+   Speech API plays through the OS speakers and **does not expose
+   the audio waveform** — there's no standard way to capture it as
+   a file across browsers (Chromium has hacky paths via
+   `getDisplayMedia`, Safari/Firefox have nothing). Treat it as
+   playback-only. Universal across every text-result tool, ships
+   the OS-delegate pattern with zero model footprint.
+2. **TTS via Kitten-TTS-15M** *(~15 MB, opt-in)* — first **chainable**
+   TTS. Outputs `audio/wav` so it slots into chains. Tool ID:
+   `tts-kitten`. Smaller than Kokoro and good enough as a starting
+   point; bump to Kokoro-82M when quality demands it.
+3. **STT via Moonshine-tiny** *(~30 MB, opt-in)* — opens the
+   speech-input category. Tool ID: `stt-moonshine`. Outputs
+   `text/plain`. Combined with #2 you get the **voice-memo workflow**:
+   record → `stt-moonshine` → `text-summarize` → `tts-kitten`.
+   ~45 MB of new download for a complete chainable pipeline.
+
+After those, **Florence-2-base** image captioning (~200 MB) is the
+highest-leverage next add — opens image-to-text. Then
+**MobileDiffusion-tiny** to validate the diffusion stack.
+
+#### Install groups to add on `/settings`
+
+| Group | Capability tracks | Cumulative size |
+|---|---|---|
+| `speech` *(new)* | STT (Moonshine) + TTS bundled (Kokoro / Kitten) | 30 – 200 MB |
+| `vision-llm` *(new)* | Image captioning / VQA (Florence-2, Moondream) | 200 – 800 MB |
+| `generative-image` *(new)* | Diffusion (MobileDiffusion → SD-XS → SDXL) | 0.5 – 3 GB |
+| `generative-audio` *(stretch)* | Music gen + source separation (Demucs, MusicGen) | 100 – 600 MB |
+| Existing | `core`, `ffmpeg`, `image-ai`, `nlp-standard`, `llm` (Wave R) | — |
+
+#### Open product questions
+
+These need answers before shipping the first track:
+
+- **TTS output format** — `audio/wav` (universal, large) vs
+  `audio/mpeg` (smaller, needs encoder). Recommendation: `wav`,
+  add a separate `compress-audio` step in chains if size matters.
+- **Image-gen size cap** — what resolution to allow on free tier
+  before Pro gates it? 512 px feels right; 1024 px for Pro.
+- **Voice cloning consent UX** — F5-TTS lets anyone clone any
+  voice from a 3-second sample. Privacy-amazing for personal use,
+  weaponizable for impersonation. Either ship behind aggressive
+  "you must own this voice" consent + watermarking, or skip.
+- **Whether to expose the Compose / Scratchpad tool** — see the
+  Adjacent section above.
+
 ---
 
 ## 3. Technical debt
 
 Captured here so it doesn't disappear.
 
-- [ ] **`packages/web/src/sw.ts` lint error** — 1 pre-existing error from
-  Wave H service worker. Non-blocking, CI passes via the build-before-
-  lint fix. Clean up when next touching the SW.
 - [ ] **Self-host AI model CDNs on R2** — eliminate third-party touches
   (jsdelivr, googleapis, huggingface). Tracked in-line in
   `tools/check-privacy.mjs` allowlist comment.
-- [ ] **OG image is SVG** — most platforms accept it but LinkedIn and
-  Twitter may not. Generate a 1200×630 PNG fallback.
 - [ ] **`@vite-pwa/astro` dev deps** — verify none leak into production
   bundle. Bundle analyzer check on next major wave.
 - [ ] **`face-blur` integration test skip in Node** — MediaPipe doesn't
   init under vitest's jsdom-less env. Re-enable if a better headless
   test path emerges.
-- [ ] **Chain file size limit (10 MB)** — sessionStorage caps at ~10 MB
-  in most browsers. For larger chain passthroughs, IndexedDB would lift
-  this. Current graceful message is acceptable; revisit if users hit it.
+- [ ] **`pdf-redact` visual rectangle UI** — currently the tool's
+  `rectangles` param falls back to a JSON textarea, which is unusable
+  for non-developers. The right UX is a canvas-based "drag to draw"
+  overlay on the PDF preview, similar to how `face-blur` works. Reuse
+  `PreviewRunner`'s preview pipeline; add a redaction-rectangles
+  drawing layer that emits the same `[{x, y, width, height, page}]`
+  shape the tool already accepts. Standalone project — separate from
+  the param-schema audit.
+- [ ] **Regex visualizer (railroad diagrams)** — the user asked about
+  [regex-vis](https://github.com/Bowen7/regex-vis) and
+  [regexper-static](https://gitlab.com/javallone/regexper-static).
+  regex-vis is React + reactflow — embedding it in Astro/Svelte means
+  mounting a React island per page (real complexity). regexper-static
+  is older, pure-JS, SVG output, low-maintenance — better fit but the
+  upstream isn't actively maintained. Cleanest path: add a new
+  `regex-visualize` tool that builds an AST with `regexp-tree`
+  (already mature) and renders railroad SVG ourselves (~200 lines).
+  Keep `regex-tester` as the matcher; let users chain matcher →
+  visualizer. Estimate: 1–2 days. Not a paramSchema problem; it's a
+  feature gap.
+- [ ] **Lazy-load runner variants in `ToolRunner.svelte`** — currently
+  statically imports all 11 runner components, so every tool page ships
+  ~162 KB containing 10 unused variants. Switching to dynamic imports
+  keyed off `VARIANT_MAP` would let each page load only its own runner.
+  Real savings are smaller than the headline number (~10–30 KB/variant
+  after Vite hoists shared deps like `DropZone`, `ParamsForm`,
+  `ProgressBar`, `ChainSection`). Cost: extra request hop and a brief
+  loading state post-hydration. Pair with `<link rel="modulepreload">`
+  in the SSG'd page `<head>` (variant is known at build time) to fetch
+  page chunk + runner chunk in parallel and avoid the waterfall. Skip
+  for now — defer until bundle analysis shows it's worth the loading-
+  state UX cost.
 
 ---
 

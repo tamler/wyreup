@@ -32,6 +32,25 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
 
   defaults: { version: 4, count: 1 },
 
+  paramSchema: {
+    version: {
+      type: 'enum',
+      label: 'version',
+      help: 'UUID format. v4 is random and the most common.',
+      options: [
+        { value: 4, label: 'v4 (random)' },
+      ],
+    },
+    count: {
+      type: 'range',
+      label: 'count',
+      help: 'How many UUIDs to generate (one per line).',
+      min: 1,
+      max: 1000,
+      step: 1,
+    },
+  },
+
   Component: UuidGeneratorComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.

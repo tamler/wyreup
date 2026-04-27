@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import type { SerializedTool } from './runners/types';
   import { VARIANT_MAP } from './runners/variantMap';
-  import { consumeChainFile, peekChainFile } from './runners/chainStorage';
+  import { clearChainFile, consumeChainFile, peekChainFile } from './runners/chainStorage';
 
   import SimpleImageRunner from './runners/SimpleImageRunner.svelte';
   import PreviewRunner from './runners/PreviewRunner.svelte';
@@ -10,11 +10,14 @@
   import MultiOutputRunner from './runners/MultiOutputRunner.svelte';
   import JsonResultRunner from './runners/JsonResultRunner.svelte';
   import TextResultRunner from './runners/TextResultRunner.svelte';
+  import TextInputRunner from './runners/TextInputRunner.svelte';
+  import TwoTextInputRunner from './runners/TwoTextInputRunner.svelte';
   import GenerateRunner from './runners/GenerateRunner.svelte';
   import CompoundInterestRunner from './runners/CompoundInterestRunner.svelte';
   import InvestmentDcaRunner from './runners/InvestmentDcaRunner.svelte';
   import PercentageCalculatorRunner from './runners/PercentageCalculatorRunner.svelte';
   import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
+  import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -23,22 +26,26 @@
   let chainBanner = false;
   let chainMeta: { name: string; type: string } | null = null;
 
-  onMount(() => {
-    const peeked = peekChainFile();
-    if (peeked) {
-      chainMeta = peeked;
-      chainBanner = true;
+  onMount(async () => {
+    const peeked = await peekChainFile();
+    if (!peeked) return;
+    if (peeked.autoAccept) {
+      // User already chose this file (e.g. via /tools drop-to-filter) — load
+      // it without an extra confirmation step.
+      chainFile = await consumeChainFile();
+      return;
     }
+    chainMeta = peeked;
+    chainBanner = true;
   });
 
-  function acceptChain() {
-    chainFile = consumeChainFile();
+  async function acceptChain() {
+    chainFile = await consumeChainFile();
     chainBanner = false;
   }
 
-  function dismissChain() {
-    // Clear the stored file without consuming
-    try { sessionStorage.removeItem('wyreup:chain-input'); } catch { /* ignore */ }
+  async function dismissChain() {
+    await clearChainFile();
     chainBanner = false;
   }
 
@@ -49,11 +56,14 @@
     MultiOutputRunner,
     JsonResultRunner,
     TextResultRunner,
+    TextInputRunner,
+    TwoTextInputRunner,
     GenerateRunner,
     CompoundInterestRunner,
     InvestmentDcaRunner,
     PercentageCalculatorRunner,
     DateCalculatorRunner,
+    PdfRedactRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

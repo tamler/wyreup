@@ -248,6 +248,24 @@ export const calculator: ToolModule<CalculatorParams> = {
 
   defaults: { expression: '', angleMode: 'deg' },
 
+  paramSchema: {
+    expression: {
+      type: 'string',
+      label: 'expression',
+      placeholder: '2 * (3 + 4) / sqrt(2)',
+      help: 'Operators: + − × ÷ % ^. Functions: sqrt, sin, cos, tan, log, ln, abs. Constants: pi, e.',
+    },
+    angleMode: {
+      type: 'enum',
+      label: 'angle mode',
+      help: 'How sin/cos/tan interpret their input.',
+      options: [
+        { value: 'deg', label: 'degrees' },
+        { value: 'rad', label: 'radians' },
+      ],
+    },
+  },
+
   Component: CalculatorComponentStub,
 
   // eslint-disable-next-line @typescript-eslint/require-await

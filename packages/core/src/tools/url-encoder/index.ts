@@ -33,6 +33,26 @@ export const urlEncoder: ToolModule<UrlEncoderParams> = {
 
   defaults: { mode: 'encode', scope: 'component' },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'encode', label: 'encode' },
+        { value: 'decode', label: 'decode' },
+      ],
+    },
+    scope: {
+      type: 'enum',
+      label: 'scope',
+      help: '"component" escapes everything (use for query values). "full URL" preserves : / ? & # — use when encoding an entire URL.',
+      options: [
+        { value: 'component', label: 'component (encodeURIComponent)' },
+        { value: 'full', label: 'full URL (encodeURI)' },
+      ],
+    },
+  },
+
   Component: UrlEncoderComponentStub,
 
   async run(

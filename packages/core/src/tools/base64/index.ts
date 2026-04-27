@@ -95,6 +95,22 @@ export const base64: ToolModule<Base64Params> = {
 
   defaults: { mode: 'encode', urlSafe: false },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'encode', label: 'encode (binary → Base64)' },
+        { value: 'decode', label: 'decode (Base64 → binary)' },
+      ],
+    },
+    urlSafe: {
+      type: 'boolean',
+      label: 'URL-safe',
+      help: 'Use the URL-safe alphabet (- and _ instead of + and /). Required for tokens used in URLs.',
+    },
+  },
+
   Component: Base64ComponentStub,
 
   async run(

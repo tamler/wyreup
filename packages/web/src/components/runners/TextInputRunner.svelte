@@ -1,5 +1,4 @@
 <script lang="ts">
-  import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
@@ -10,39 +9,40 @@
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
 
-  // For JSON tools that may not require file input
-  const requiresFile = tool.input.min > 0;
-
-  let files: File[] = preloadedFile ? [preloadedFile] : [];
+  let inputText = '';
   let params: Record<string, unknown> = { ...tool.defaults };
-  let dropError = '';
 
   type State = 'idle' | 'running' | 'done' | 'error';
   let state: State = 'idle';
   let progress: ToolProgress = { stage: 'processing', percent: 0, message: '' };
   let errorMsg = '';
-  let resultJson = '';
   let resultBlob: Blob | null = null;
+  let resultText = '';
+  let resultMime = '';
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
+  // Chained-from-prior-tool: read its bytes into the textarea so the user
+  // can edit before running.
+  let preloadConsumed = false;
+  $: if (preloadedFile && !preloadConsumed) {
+    preloadConsumed = true;
+    void preloadedFile.text().then((t) => {
+      inputText = t;
+    });
   }
 
-  $: canRun = (requiresFile ? files.length >= tool.input.min : true) && state !== 'running';
-
-  function onFiles(e: CustomEvent<File[]>) {
-    files = e.detail;
-    dropError = '';
-    state = 'idle';
-    resultJson = '';
-    resultBlob = null;
-  }
+  $: canRun = inputText.trim().length > 0 && state !== 'running';
+  $: isHtml = resultMime === 'text/html';
+  $: isJson =
+    resultMime === 'application/json' || resultMime.endsWith('+json');
 
   async function run() {
     if (!canRun) return;
     state = 'running';
     errorMsg = '';
-    resultJson = '';
+    resultText = '';
+    resultBlob = null;
+
+    const file = new File([inputText], 'input.txt', { type: 'text/plain' });
 
     try {
       const { createDefaultRegistry } = await import('@wyreup/core');
@@ -50,7 +50,7 @@
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run(files, params, {
+      const result = await toolModule.run([file], params, {
         onProgress: (p) => { progress = p; },
         signal: new AbortController().signal,
         cache: new Map(),
@@ -62,12 +62,10 @@
       if (!blob) throw new Error('No output produced.');
 
       resultBlob = blob;
-      const text = await blob.text();
-      try {
-        resultJson = JSON.stringify(JSON.parse(text), null, 2);
-      } catch {
-        resultJson = text;
-      }
+      resultMime = blob.type;
+      resultText = isJsonMime(blob.type)
+        ? prettifyJson(await blob.text())
+        : await blob.text();
       state = 'done';
     } catch (err) {
       state = 'error';
@@ -75,44 +73,112 @@
     }
   }
 
+  function isJsonMime(m: string) {
+    return m === 'application/json' || m.endsWith('+json');
+  }
+
+  function prettifyJson(s: string) {
+    try {
+      return JSON.stringify(JSON.parse(s), null, 2);
+    } catch {
+      return s;
+    }
+  }
+
   function reset() {
     state = 'idle';
     errorMsg = '';
-    resultJson = '';
+    resultText = '';
     resultBlob = null;
   }
 
+  function clearInput() {
+    inputText = '';
+    reset();
+  }
+
+  let copied = false;
+
   async function copyResult() {
     try {
-      await navigator.clipboard.writeText(resultJson);
+      await navigator.clipboard.writeText(resultText);
       copied = true;
       setTimeout(() => { copied = false; }, 1500);
     } catch { /* ignore */ }
+  }
+
+  // Tier-0 TTS via Web Speech API. Browser/OS provides the voices —
+  // no model download, no network. Playback only (the Web Speech API
+  // doesn't expose the waveform).
+  let speakSupported = false;
+  let speaking = false;
+
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    speakSupported = true;
+  }
+
+  function speak(text: string) {
+    if (!speakSupported || !text) return;
+    const synth = window.speechSynthesis;
+    if (speaking) {
+      synth.cancel();
+      speaking = false;
+      return;
+    }
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.onend = () => { speaking = false; };
+    utt.onerror = () => { speaking = false; };
+    synth.speak(utt);
+    speaking = true;
   }
 
   function download() {
     if (!resultBlob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(resultBlob);
-    a.download = buildDownloadName(files[0]?.name, tool.id, 'json');
+    const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
+    a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
   }
 
-  let copied = false;
+  function handleKeydown(e: KeyboardEvent) {
+    // Cmd/Ctrl+Enter runs the tool.
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      void run();
+    }
+  }
+
+  $: charCount = inputText.length;
 </script>
 
 <div class="runner">
-  {#if requiresFile}
-    <DropZone
-      accept={tool.input.accept}
-      multiple={tool.input.max !== 1}
-      bind:files
-      bind:error={dropError}
-      on:files={onFiles}
-    />
-  {/if}
+  <div class="text-input">
+    <div class="text-input__header">
+      <span class="text-input__label">Input</span>
+      <div class="text-input__meta">
+        <span class="text-input__count">{charCount.toLocaleString()} char{charCount === 1 ? '' : 's'}</span>
+        {#if inputText}
+          <button class="btn-ghost-sm" on:click={clearInput} type="button">Clear</button>
+        {/if}
+      </div>
+    </div>
+    <textarea
+      class="text-input__textarea"
+      bind:value={inputText}
+      on:keydown={handleKeydown}
+      placeholder={`Type or paste text here. Cmd/Ctrl+Enter to run ${tool.name}.`}
+      rows="8"
+      spellcheck="false"
+    ></textarea>
+  </div>
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm
+    defaults={tool.defaults}
+    paramSchema={tool.paramSchema}
+    bind:params
+    on:change={(e) => { params = e.detail; }}
+  />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">
@@ -134,7 +200,7 @@
     </div>
   {/if}
 
-  {#if state === 'done' && resultJson}
+  {#if state === 'done' && resultText}
     <div class="result-panel brackets">
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
@@ -144,16 +210,28 @@
             <button class="btn-secondary" on:click={copyResult} type="button">
               {copied ? 'Copied' : 'Copy'}
             </button>
+            {#if speakSupported && !isHtml && !isJson}
+              <button class="btn-secondary" on:click={() => speak(resultText)} type="button" aria-label={speaking ? 'Stop speaking' : 'Speak this text aloud'}>
+                {speaking ? 'Stop' : 'Speak'}
+              </button>
+            {/if}
             <button class="btn-secondary" on:click={download} type="button">Download</button>
           </div>
         </div>
         <div class="panel-divider"></div>
-        <pre class="json-viewer" role="region" aria-label="JSON result">{resultJson}</pre>
+
+        {#if isHtml}
+          <div class="html-viewer" role="region" aria-label="HTML result">
+            {@html resultText}
+          </div>
+        {:else}
+          <pre class="text-viewer" role="region" aria-label={isJson ? 'JSON result' : 'Text result'}>{resultText}</pre>
+        {/if}
 
         {#if resultBlob}
           <ChainSection
             resultBlob={resultBlob}
-            resultName={buildDownloadName(files[0]?.name, tool.id, 'json')}
+            resultName={buildDownloadName(undefined, tool.id, isJson ? 'json' : isHtml ? 'html' : 'txt')}
           />
         {/if}
       </div>
@@ -163,6 +241,75 @@
 
 <style>
   .runner { display: flex; flex-direction: column; gap: var(--space-4); }
+
+  .text-input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    overflow: hidden;
+  }
+
+  .text-input__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .text-input__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+  }
+
+  .text-input__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .text-input__count {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .text-input__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.5;
+    outline: none;
+  }
+
+  .text-input__textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .btn-ghost-sm {
+    background: none;
+    border: none;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+  .btn-ghost-sm:hover { color: var(--text-muted); }
+  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .btn-primary {
     height: 32px;
@@ -211,7 +358,7 @@
 
   .result-actions { display: flex; gap: var(--space-2); }
 
-  .json-viewer {
+  .text-viewer {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-primary);
@@ -220,11 +367,24 @@
     border-radius: var(--radius-sm);
     padding: var(--space-3);
     overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-word;
     max-height: 400px;
     overflow-y: auto;
     line-height: 1.5;
     margin: 0;
+  }
+
+  .html-viewer {
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.6;
   }
 
   .brackets::before, .brackets::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }

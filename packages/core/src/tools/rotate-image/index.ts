@@ -1,7 +1,13 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { RotateImageParams } from './types.js';
 import { detectFormat, getCodec } from '../../lib/codecs.js';
-import { orientImageData } from '../../lib/exif.js';
+import {
+  composeOrientation,
+  decodeJpegOrientation,
+  injectJpegOrientation,
+  orientImageData,
+  setJpegOrientation,
+} from '../../lib/exif.js';
 
 export type { RotateImageParams } from './types.js';
 export { defaultRotateImageParams } from './types.js';
@@ -71,12 +77,30 @@ export const rotateImage: ToolModule<RotateImageParams> = {
         message: `Rotating ${input.name} (${i + 1}/${inputs.length})`,
       });
 
+      const buffer = await input.arrayBuffer();
+      const isJpeg = input.type === 'image/jpeg' || input.type === 'image/jpg';
+
+      // Lossless path for JPEG: rewrite the EXIF Orientation tag, leaving
+      // the encoded image data untouched. Preserves bytes.
+      if (isJpeg) {
+        const existing = decodeJpegOrientation(buffer);
+        const composed = composeOrientation(existing, degrees);
+        const rewritten =
+          setJpegOrientation(buffer, composed) ??
+          injectJpegOrientation(buffer, composed);
+        if (rewritten) {
+          outputs.push(new Blob([rewritten as BlobPart], { type: 'image/jpeg' }));
+          continue;
+        }
+        // Fall through to decode/re-encode if EXIF rewrite failed
+        // (malformed JPEG, etc.).
+      }
+
       const sourceFormat = detectFormat(input.type);
       if (!sourceFormat) {
         throw new Error(`Unsupported format "${input.type}".`);
       }
 
-      const buffer = await input.arrayBuffer();
       const codec = await getCodec(sourceFormat);
       const decodedRaw = await codec.decode(buffer);
       const { data, width, height } = orientImageData(buffer, input.type, decodedRaw);
@@ -86,9 +110,19 @@ export const rotateImage: ToolModule<RotateImageParams> = {
       const newWidth = degrees === 180 ? width : height;
       const newHeight = degrees === 180 ? height : width;
 
+      // PNG is always lossless. WebP gets the lossless flag. JPEG (only
+      // reachable here when EXIF rewrite couldn't apply) re-encodes at
+      // quality 100 to minimize loss.
+      const encodeOptions: Record<string, unknown> =
+        sourceFormat === 'webp'
+          ? { lossless: 1 }
+          : sourceFormat === 'jpeg'
+            ? { quality: 100 }
+            : {};
+
       const encoded = await codec.encode(
         { data: rotated, width: newWidth, height: newHeight },
-        { quality: 90 },
+        encodeOptions,
       );
 
       const mime = input.type === 'image/jpg' ? 'image/jpeg' : input.type;
@@ -129,7 +163,6 @@ function rotatePx(
         destX = width - 1 - x;
         destY = height - 1 - y;
       } else {
-        // 270
         destX = y;
         destY = width - 1 - x;
       }

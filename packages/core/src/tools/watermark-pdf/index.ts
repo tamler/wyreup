@@ -51,6 +51,55 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
     color: '#888888',
   },
 
+  paramSchema: {
+    mode: {
+      type: 'enum',
+      label: 'mode',
+      options: [
+        { value: 'text', label: 'text watermark' },
+        { value: 'image', label: 'image watermark' },
+      ],
+    },
+    text: {
+      type: 'string',
+      label: 'text',
+      placeholder: 'CONFIDENTIAL',
+      showWhen: { field: 'mode', equals: 'text' },
+    },
+    fontSize: {
+      type: 'range',
+      label: 'font size',
+      min: 8,
+      max: 144,
+      step: 1,
+      unit: 'pt',
+      showWhen: { field: 'mode', equals: 'text' },
+    },
+    color: {
+      type: 'string',
+      label: 'color',
+      placeholder: '#888888',
+      help: 'CSS hex color (e.g. #ff0000 for red).',
+      showWhen: { field: 'mode', equals: 'text' },
+    },
+    opacity: {
+      type: 'range',
+      label: 'opacity',
+      min: 0,
+      max: 1,
+      step: 0.05,
+    },
+    rotation: {
+      type: 'range',
+      label: 'rotation',
+      help: 'Degrees. Negative rotates counter-clockwise.',
+      min: -180,
+      max: 180,
+      step: 1,
+      unit: '°',
+    },
+  },
+
   Component: WatermarkPdfComponentStub,
 
   async run(

@@ -54,13 +54,47 @@
 
   function handleSelect(key: string, e: Event) {
     const v = (e.target as HTMLSelectElement).value;
-    // Try to preserve numeric type if default is a number
     const def = defaults[key];
-    if (typeof def === 'number') {
-      handleChange(key, parseFloat(v));
-    } else {
-      handleChange(key, v);
+    const newValue: unknown = typeof def === 'number' ? parseFloat(v) : v;
+    let next: Record<string, unknown> = { ...params, [key]: newValue };
+
+    // Cascading enums: if any other field's options depend on `key`, and
+    // the dependent field's current value is no longer in the new option
+    // list, reset it to the first valid option. Keeps the form coherent
+    // when the user changes a category-style controller.
+    if (paramSchema) {
+      for (const [otherKey, otherSchema] of Object.entries(paramSchema)) {
+        if (otherKey === key) continue;
+        if (otherSchema?.type !== 'enum' || !otherSchema.optionsFrom) continue;
+        if (otherSchema.optionsFrom.field !== key) continue;
+        const newOpts =
+          otherSchema.optionsFrom.map[String(newValue)] ?? otherSchema.options;
+        const currentOther = next[otherKey] ?? defaults[otherKey];
+        const stillValid = newOpts.some(
+          (o) => String(o.value) === String(currentOther),
+        );
+        if (!stillValid && newOpts.length > 0) {
+          next = { ...next, [otherKey]: newOpts[0]!.value };
+        }
+      }
     }
+
+    params = next;
+    dispatch('change', params);
+  }
+
+  function effectiveOptions(
+    schema: Extract<ParamFieldSchema, { type: 'enum' }>,
+    activeParams: Record<string, unknown>,
+    activeDefaults: Record<string, unknown>,
+  ) {
+    if (!schema.optionsFrom) return schema.options;
+    const controllingValue = String(
+      activeParams[schema.optionsFrom.field] ??
+        activeDefaults[schema.optionsFrom.field] ??
+        '',
+    );
+    return schema.optionsFrom.map[controllingValue] ?? schema.options;
   }
 
   function handleRange(key: string, e: Event) {
@@ -106,6 +140,19 @@
     if (Array.isArray(val)) return val.join(', ');
     return '';
   }
+
+  function shouldShow(
+    schema: ParamFieldSchema | undefined,
+    activeParams: Record<string, unknown>,
+    activeDefaults: Record<string, unknown>,
+  ): boolean {
+    const cond = schema && 'showWhen' in schema ? schema.showWhen : undefined;
+    if (!cond) return true;
+    const value = activeParams[cond.field] ?? activeDefaults[cond.field];
+    if (cond.equals !== undefined) return value === cond.equals;
+    if (cond.in) return cond.in.includes(value as string | number | boolean);
+    return true;
+  }
 </script>
 
 {#if entries.length > 0}
@@ -117,17 +164,19 @@
         {@const current = params[key] ?? defaultValue}
         {@const fieldId = getFieldId(key)}
         {@const helpId = getHelpId(key)}
+        {#if shouldShow(schema, params, defaults)}
         <div class="param-row" class:param-row--block={schema?.type === 'json' || (schema?.type === 'string' && schema.multiline) || schema?.type === 'array' || schema?.type === 'multi-enum'}>
           <label class="param-key" for={fieldId}>{fieldLabel(key, schema)}</label>
           <div class="param-control">
             {#if schema?.type === 'enum'}
+              {@const opts = effectiveOptions(schema, params, defaults)}
               <select
                 id={fieldId}
                 class="param-select"
                 aria-describedby={schema.help ? helpId : undefined}
                 on:change={(e) => handleSelect(key, e)}
               >
-                {#each schema.options as opt}
+                {#each opts as opt}
                   <option value={String(opt.value)} selected={String(current) === String(opt.value)}>{opt.label}</option>
                 {/each}
               </select>
@@ -288,6 +337,7 @@
             {/if}
           </div>
         </div>
+        {/if}
       {/each}
     </div>
   </div>

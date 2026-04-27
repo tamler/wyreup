@@ -1,5 +1,4 @@
 <script lang="ts">
-  import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
@@ -10,39 +9,47 @@
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
 
-  // For JSON tools that may not require file input
-  const requiresFile = tool.input.min > 0;
-
-  let files: File[] = preloadedFile ? [preloadedFile] : [];
+  // Two side-by-side textareas. Wraps each into a synthetic File so the
+  // existing tool runtime (which expects File[]) works unchanged.
+  let textA = '';
+  let textB = '';
   let params: Record<string, unknown> = { ...tool.defaults };
-  let dropError = '';
 
   type State = 'idle' | 'running' | 'done' | 'error';
   let state: State = 'idle';
   let progress: ToolProgress = { stage: 'processing', percent: 0, message: '' };
   let errorMsg = '';
-  let resultJson = '';
   let resultBlob: Blob | null = null;
+  let resultText = '';
+  let resultMime = '';
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
+  // Chain hand-off: if a single file was piped in, drop it into the first
+  // textarea so the user can paste the second half manually.
+  let preloadConsumed = false;
+  $: if (preloadedFile && !preloadConsumed) {
+    preloadConsumed = true;
+    void preloadedFile.text().then((t) => {
+      textA = t;
+    });
   }
 
-  $: canRun = (requiresFile ? files.length >= tool.input.min : true) && state !== 'running';
-
-  function onFiles(e: CustomEvent<File[]>) {
-    files = e.detail;
-    dropError = '';
-    state = 'idle';
-    resultJson = '';
-    resultBlob = null;
-  }
+  $: canRun =
+    textA.trim().length > 0 &&
+    textB.trim().length > 0 &&
+    state !== 'running';
+  $: isJson =
+    resultMime === 'application/json' || resultMime.endsWith('+json');
+  $: isHtml = resultMime === 'text/html';
 
   async function run() {
     if (!canRun) return;
     state = 'running';
     errorMsg = '';
-    resultJson = '';
+    resultText = '';
+    resultBlob = null;
+
+    const fileA = new File([textA], 'a.txt', { type: 'text/plain' });
+    const fileB = new File([textB], 'b.txt', { type: 'text/plain' });
 
     try {
       const { createDefaultRegistry } = await import('@wyreup/core');
@@ -50,7 +57,7 @@
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run(files, params, {
+      const result = await toolModule.run([fileA, fileB], params, {
         onProgress: (p) => { progress = p; },
         signal: new AbortController().signal,
         cache: new Map(),
@@ -62,12 +69,9 @@
       if (!blob) throw new Error('No output produced.');
 
       resultBlob = blob;
-      const text = await blob.text();
-      try {
-        resultJson = JSON.stringify(JSON.parse(text), null, 2);
-      } catch {
-        resultJson = text;
-      }
+      resultMime = blob.type;
+      const raw = await blob.text();
+      resultText = isJsonMime(blob.type) ? prettifyJson(raw) : raw;
       state = 'done';
     } catch (err) {
       state = 'error';
@@ -75,16 +79,30 @@
     }
   }
 
+  function isJsonMime(m: string) {
+    return m === 'application/json' || m.endsWith('+json');
+  }
+
+  function prettifyJson(s: string) {
+    try {
+      return JSON.stringify(JSON.parse(s), null, 2);
+    } catch {
+      return s;
+    }
+  }
+
   function reset() {
     state = 'idle';
     errorMsg = '';
-    resultJson = '';
+    resultText = '';
     resultBlob = null;
   }
 
+  let copied = false;
+
   async function copyResult() {
     try {
-      await navigator.clipboard.writeText(resultJson);
+      await navigator.clipboard.writeText(resultText);
       copied = true;
       setTimeout(() => { copied = false; }, 1500);
     } catch { /* ignore */ }
@@ -94,25 +112,61 @@
     if (!resultBlob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(resultBlob);
-    a.download = buildDownloadName(files[0]?.name, tool.id, 'json');
+    const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
+    a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
   }
 
-  let copied = false;
+  function swap() {
+    const t = textA;
+    textA = textB;
+    textB = t;
+  }
 </script>
 
 <div class="runner">
-  {#if requiresFile}
-    <DropZone
-      accept={tool.input.accept}
-      multiple={tool.input.max !== 1}
-      bind:files
-      bind:error={dropError}
-      on:files={onFiles}
-    />
-  {/if}
+  <div class="dual-input">
+    <div class="text-pane">
+      <div class="text-pane__header">
+        <span class="text-pane__label">A</span>
+        {#if textA}
+          <button class="btn-ghost-sm" on:click={() => { textA = ''; }} type="button">Clear</button>
+        {/if}
+      </div>
+      <textarea
+        class="text-pane__textarea"
+        bind:value={textA}
+        placeholder="First text…"
+        rows="8"
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div class="dual-input__divider">
+      <button class="btn-swap" on:click={swap} type="button" aria-label="Swap A and B" title="Swap">⇄</button>
+    </div>
+    <div class="text-pane">
+      <div class="text-pane__header">
+        <span class="text-pane__label">B</span>
+        {#if textB}
+          <button class="btn-ghost-sm" on:click={() => { textB = ''; }} type="button">Clear</button>
+        {/if}
+      </div>
+      <textarea
+        class="text-pane__textarea"
+        bind:value={textB}
+        placeholder="Second text…"
+        rows="8"
+        spellcheck="false"
+      ></textarea>
+    </div>
+  </div>
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm
+    defaults={tool.defaults}
+    paramSchema={tool.paramSchema}
+    bind:params
+    on:change={(e) => { params = e.detail; }}
+  />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">
@@ -134,7 +188,7 @@
     </div>
   {/if}
 
-  {#if state === 'done' && resultJson}
+  {#if state === 'done' && resultText}
     <div class="result-panel brackets">
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
@@ -148,12 +202,19 @@
           </div>
         </div>
         <div class="panel-divider"></div>
-        <pre class="json-viewer" role="region" aria-label="JSON result">{resultJson}</pre>
+
+        {#if isHtml}
+          <div class="html-viewer" role="region" aria-label="HTML result">
+            {@html resultText}
+          </div>
+        {:else}
+          <pre class="text-viewer" role="region" aria-label={isJson ? 'JSON result' : 'Text result'}>{resultText}</pre>
+        {/if}
 
         {#if resultBlob}
           <ChainSection
             resultBlob={resultBlob}
-            resultName={buildDownloadName(files[0]?.name, tool.id, 'json')}
+            resultName={buildDownloadName(undefined, tool.id, isJson ? 'json' : isHtml ? 'html' : 'txt')}
           />
         {/if}
       </div>
@@ -163,6 +224,105 @@
 
 <style>
   .runner { display: flex; flex-direction: column; gap: var(--space-4); }
+
+  .dual-input {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--space-2);
+    align-items: stretch;
+  }
+
+  @media (max-width: 700px) {
+    .dual-input {
+      grid-template-columns: 1fr;
+    }
+    .dual-input__divider {
+      grid-row: auto;
+      justify-self: center;
+    }
+  }
+
+  .text-pane {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .text-pane__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .text-pane__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-subtle);
+  }
+
+  .text-pane__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.5;
+    outline: none;
+    flex: 1;
+  }
+
+  .text-pane__textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .dual-input__divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-1);
+  }
+
+  .btn-swap {
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: color var(--duration-instant) var(--ease-sharp), border-color var(--duration-instant) var(--ease-sharp);
+  }
+  .btn-swap:hover { color: var(--accent); border-color: var(--accent); }
+  .btn-swap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .btn-ghost-sm {
+    background: none;
+    border: none;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+  .btn-ghost-sm:hover { color: var(--text-muted); }
+  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .btn-primary {
     height: 32px;
@@ -208,10 +368,9 @@
 
   .result-panel { position: relative; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1px; overflow: visible; }
   .result-panel__inner { background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: calc(var(--radius-md) - 1px); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
-
   .result-actions { display: flex; gap: var(--space-2); }
 
-  .json-viewer {
+  .text-viewer {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-primary);
@@ -220,11 +379,24 @@
     border-radius: var(--radius-sm);
     padding: var(--space-3);
     overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-word;
     max-height: 400px;
     overflow-y: auto;
     line-height: 1.5;
     margin: 0;
+  }
+
+  .html-viewer {
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.6;
   }
 
   .brackets::before, .brackets::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }

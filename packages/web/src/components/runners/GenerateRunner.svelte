@@ -2,6 +2,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import { buildDownloadName } from './naming';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -92,7 +93,7 @@
     const url = resultUrl ?? URL.createObjectURL(resultBlob);
     a.href = url;
     const ext = resultMime.split('/')[1] ?? 'bin';
-    a.download = `${tool.id}-result.${ext}`;
+    a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
   }
 </script>

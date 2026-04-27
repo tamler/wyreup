@@ -1,8 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { OcrParams } from './types.js';
+import { TESSERACT_LANGUAGES } from './languages.js';
 
 export type { OcrParams } from './types.js';
 export { defaultOcrParams } from './types.js';
+export { TESSERACT_LANGUAGES } from './languages.js';
 
 const OcrComponentStub = (): unknown => null;
 
@@ -41,6 +43,15 @@ export const ocr: ToolModule<OcrParams> = {
 
   defaults: {
     language: 'eng',
+  },
+
+  paramSchema: {
+    language: {
+      type: 'enum',
+      label: 'language',
+      help: 'Language data is downloaded the first time you use it (~1–10 MB depending on script). English first, then alphabetical.',
+      options: TESSERACT_LANGUAGES,
+    },
   },
 
   Component: OcrComponentStub,

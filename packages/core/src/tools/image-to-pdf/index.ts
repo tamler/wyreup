@@ -31,6 +31,29 @@ export const imageToPdf: ToolModule<ImageToPdfParams> = {
 
   defaults: { pageSize: 'auto', margin: 36 },
 
+  paramSchema: {
+    pageSize: {
+      type: 'enum',
+      label: 'page size',
+      help: '"Auto" sizes each page to its image. A4 / Letter letterbox the image inside the chosen page.',
+      options: [
+        { value: 'auto', label: 'auto (fit to image)' },
+        { value: 'a4', label: 'A4 (210 × 297 mm)' },
+        { value: 'letter', label: 'US Letter (8.5 × 11 in)' },
+      ],
+    },
+    margin: {
+      type: 'range',
+      label: 'margin',
+      help: '1 pt = 1/72 in. Ignored for "auto" page size.',
+      min: 0,
+      max: 144,
+      step: 1,
+      unit: 'pt',
+      showWhen: { field: 'pageSize', in: ['a4', 'letter'] },
+    },
+  },
+
   Component: ImageToPdfComponentStub,
 
   async run(

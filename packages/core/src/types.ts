@@ -130,6 +130,18 @@ export interface ToolComponentProps<Params> {
  * proper controls (enum -> select, range -> slider, etc.) instead of
  * falling back to typeof-inference on `defaults`.
  */
+/**
+ * `showWhen` lets a field hide unless another field matches a value. Used
+ * for mode-driven forms (e.g. split-pdf's `ranges` only matters when
+ * `mode === 'ranges'`). Supports a single `equals` value or any of a
+ * list via `in`.
+ */
+export type ShowWhenCondition = {
+  field: string;
+  equals?: string | number | boolean;
+  in?: ReadonlyArray<string | number | boolean>;
+};
+
 export type ParamFieldSchema =
   | {
       type: 'string';
@@ -139,6 +151,7 @@ export type ParamFieldSchema =
       minLength?: number;
       maxLength?: number;
       multiline?: boolean;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'number';
@@ -148,6 +161,7 @@ export type ParamFieldSchema =
       max?: number;
       step?: number;
       unit?: string;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'range';
@@ -157,23 +171,40 @@ export type ParamFieldSchema =
       max: number;
       step?: number;
       unit?: string;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'boolean';
       label?: string;
       help?: string;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'enum';
       label?: string;
       help?: string;
       options: Array<{ value: string | number; label: string; help?: string }>;
+      /**
+       * When set, the form swaps `options` for `optionsFrom.map[<value of
+       * controlling field>]` and resets this field if the prior value is
+       * no longer valid. Used for category-driven cascading enums (pick
+       * "length", then see length units only).
+       */
+      optionsFrom?: {
+        field: string;
+        map: Record<
+          string,
+          Array<{ value: string | number; label: string; help?: string }>
+        >;
+      };
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'multi-enum';
       label?: string;
       help?: string;
       options: Array<{ value: string; label: string }>;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'array';
@@ -181,12 +212,14 @@ export type ParamFieldSchema =
       help?: string;
       itemType: 'string' | 'number';
       placeholder?: string;
+      showWhen?: ShowWhenCondition;
     }
   | {
       type: 'json';
       label?: string;
       help?: string;
       placeholder?: string;
+      showWhen?: ShowWhenCondition;
     };
 
 export type ParamSchema<P> = {
