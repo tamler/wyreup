@@ -12,8 +12,8 @@ background lives.
 ## 0. Shipped
 
 ### Product
-- **`@wyreup/core`** — **117 tools across 14 categories, 1566 tests**, dual browser/node build
-- **`@wyreup/web`** — **145-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
+- **`@wyreup/core`** — **118 tools across 14 categories, 1566 tests**, dual browser/node build
+- **`@wyreup/web`** — **146-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
 - **`@wyreup/cli`** — shell binary wrapping core, full execution surface (`run`, `chain`, stdin/stdout piping)
 - **`@wyreup/mcp`** — MCP server (14 tests, 53 tools exposed via stdio)
 - **`@wyreup/skill`** — dual-backend agent skill (CLI + MCP) — superseded by `wyreup install-skill`
@@ -28,6 +28,7 @@ edit (15) · media (14) · inspect (14) · dev (12) · convert (12) · create (1
 - **ffmpeg** — 14 audio/video tools sharing ffmpeg.wasm (~30 MB)
 - **image-ai** — 4 image ML tools (bg-remove, upscale-2x, image-similarity, ocr-pro)
 - **nlp-standard** — 4 NLP tools (sentiment, NER, summarize, embeddings)
+- **speech** *(new)* — 1 tool today (`transcribe` via Whisper-tiny, ~30 MB)
 
 ### Platform
 - Design system v1.3 ("Signal") locked in `packages/web/DESIGN.md`
@@ -283,7 +284,7 @@ No priority order; surface when justified.
 - **Contribution scaffold maturity** — richer `wyreup init-tool` with
   param schema generation, component stubs, test templates
 
-### Wave Q — Generative AI (planning)
+### Wave Q — Generative AI (kicked off 2026-04-27)
 
 Opens the **generation** category alongside the existing
 processing/inspection categories. Six capability tracks: speech-to-
@@ -298,6 +299,16 @@ audio (music + source separation). Each track has a four-step ladder
   formatter, `regex-tester`, `url-encoder`, etc.) now open with a
   textarea instead of a file dropzone. Unlocks every Wave Q
   text-input tool retroactively.
+- ✅ **"Speak this text" Tier-0 TTS** — shipped 2026-04-27. Button
+  on `TextInputRunner` and `TextResultRunner` pipes visible text to
+  `speechSynthesis`. Zero download, OS voices, playback-only.
+- ✅ **`transcribe` (Whisper-tiny STT)** — shipped 2026-04-27.
+  First chainable Wave Q tool. Audio file → text. ~30 MB Xenova/
+  whisper-tiny via transformers.js, opt-in via `speech` install
+  group. Decodes any browser-supported audio (wav/mp3/m4a/ogg/webm/
+  flac), resamples to 16 kHz mono via OfflineAudioContext, runs
+  through Whisper. Optional language hint, transcribe-vs-translate
+  toggle, optional timestamps (JSON output).
 - 🟡 **Canonical MIME picks** — pending. Decisions to make before
   any tool ships, so chains compose without surprises:
   - TTS output: `audio/wav` (recommended — uncompressed, universal)

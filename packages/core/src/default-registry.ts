@@ -52,6 +52,7 @@ import { pdfExtractTables } from './tools/pdf-extract-tables/index.js';
 import { pdfCrop } from './tools/pdf-crop/index.js';
 import { faceBlur } from './tools/face-blur/index.js';
 import { audioEnhance } from './tools/audio-enhance/index.js';
+import { transcribe } from './tools/transcribe/index.js';
 import { csvJson } from './tools/csv-json/index.js';
 import { caseConverter } from './tools/case-converter/index.js';
 import { slug } from './tools/slug/index.js';
@@ -179,6 +180,7 @@ export const defaultTools: ToolModule<any>[] = [
   pdfCrop,
   faceBlur,
   audioEnhance,
+  transcribe,
   csvJson,
   caseConverter,
   slug,

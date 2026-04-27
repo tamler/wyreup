@@ -53,6 +53,11 @@ const GROUP_LABELS: Record<string, { name: string; description: (toolIds: string
     description: (_toolIds, totalMb) =>
       `Translation model (${totalMb} MB). Only needed as a fallback — Chrome 131+ and Firefox use their built-in translator automatically.`,
   },
+  speech: {
+    name: 'Speech tools (Whisper, future TTS)',
+    description: (toolIds, totalMb) =>
+      `${toolIds.length} speech tool${toolIds.length === 1 ? '' : 's'} (Whisper-tiny for transcription). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
+  },
 };
 
 for (const t of registry.toolsById.values()) {

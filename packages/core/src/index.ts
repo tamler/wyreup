@@ -108,6 +108,7 @@ export { pdfExtractTables, type PdfExtractTablesParams, type TableRow } from './
 export { pdfCrop, type PdfCropParams, type PdfCropBox, type PdfCropBoxPerPage } from './tools/pdf-crop/index.js';
 export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/face-blur/index.js';
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
+export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
 export { caseConverter, type CaseConverterParams, defaultCaseConverterParams } from './tools/case-converter/index.js';
 export { slug, type SlugParams, defaultSlugParams } from './tools/slug/index.js';
