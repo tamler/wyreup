@@ -13,6 +13,9 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   description: t.description,
   keywords: t.keywords ?? [],
   requiresWebgpu: t.requires?.webgpu,
+  requires: t.requires
+    ? { webgpu: t.requires.webgpu, minMemoryGB: t.requires.minMemoryGB }
+    : undefined,
   accept: t.input.accept,
 }));
 

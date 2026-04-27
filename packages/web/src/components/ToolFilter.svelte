@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { createToolSearch } from '../lib/tool-search';
   import { stashChainFile } from './runners/chainStorage';
+  import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
+  import type { ToolRequires } from '@wyreup/core';
 
   const SUGGEST_URL_BASE =
     'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
@@ -13,11 +15,19 @@
     description: string;
     keywords: string[];
     requiresWebgpu?: 'preferred' | 'required';
+    requires?: ToolRequires;
     accept: string[];
   }
 
   export let tools: Tool[] = [];
   export let categories: string[] = [];
+
+  // Hide tools the device can't run unless the user opts to show all.
+  // Direct URLs (`/tools/<id>`) still resolve so chains don't break.
+  $: visibleTools = (() => {
+    const { runnable, hiddenCount } = filterRunnable(tools, $capabilities.caps, $showUnrunnable);
+    return { list: runnable, hiddenCount, ready: $capabilities.ready };
+  })();
 
   // ── State ──────────────────────────────────────────────────────────────────
 
@@ -134,9 +144,9 @@
     window.location.href = `/tools/${toolId}`;
   }
 
-  // Counts per category from the full unfiltered tool set
+  // Counts per category from the device-runnable subset.
   $: categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
-    acc[cat] = tools.filter((t) => t.category === cat).length;
+    acc[cat] = visibleTools.list.filter((t) => t.category === cat).length;
     return acc;
   }, {});
 
@@ -166,9 +176,10 @@
     const q = query.trim();
     // Filter-by-dropped-file: treat the dropped MIME as the constraint.
     const droppedMimeFilter = droppedFile ? [droppedFile.mime] : null;
+    const pool = visibleTools.list;
 
     if (q) {
-      const fuse = createToolSearch(tools.map((t) => ({
+      const fuse = createToolSearch(pool.map((t) => ({
         id: t.id,
         name: t.name,
         description: t.description,
@@ -179,15 +190,15 @@
       const catFiltered = activeCategories.size === 0
         ? results
         : results.filter((r) => activeCategories.has(r.category));
-      const byId = new Map(tools.map((t) => [t.id, t]));
+      const byId = new Map(pool.map((t) => [t.id, t]));
       const lookupFiltered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
       filtered = droppedMimeFilter
         ? lookupFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
         : lookupFiltered;
     } else {
       const catFiltered = activeCategories.size === 0
-        ? tools
-        : tools.filter((t) => activeCategories.has(t.category));
+        ? pool
+        : pool.filter((t) => activeCategories.has(t.category));
       filtered = droppedMimeFilter
         ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
         : catFiltered;
@@ -204,6 +215,7 @@
 
   $: {
     activeCategories;
+    visibleTools;
     applyFilter();
   }
 
@@ -323,6 +335,14 @@
 
 <div class="results-meta">
   <span class="results-count">{filtered.length} tool{filtered.length !== 1 ? 's' : ''}</span>
+  {#if visibleTools.ready && visibleTools.hiddenCount > 0}
+    <span class="results-hidden">
+      {visibleTools.hiddenCount} hidden — your device can't run them.
+      <button class="results-show-all" on:click={() => showUnrunnable.set(!$showUnrunnable)} type="button">
+        {$showUnrunnable ? 'Hide them again' : 'Show all'}
+      </button>
+    </span>
+  {/if}
   {#if activeCategories.size > 0 || droppedFile !== null}
     <button class="clear-btn" on:click={clearAll}>Clear</button>
   {/if}
@@ -628,6 +648,36 @@
 
   .clear-btn:hover {
     color: var(--text-muted);
+  }
+
+  .results-hidden {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    margin-left: auto;
+  }
+
+  .results-show-all {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: var(--space-2);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .results-show-all:hover {
+    color: var(--text-primary);
+  }
+
+  .results-show-all:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 
   /* Tool grid */
