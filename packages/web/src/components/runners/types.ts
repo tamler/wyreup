@@ -1,4 +1,4 @@
-import type { ParamFieldSchema } from '@wyreup/core';
+import type { ParamFieldSchema, ToolRequires } from '@wyreup/core';
 
 export interface SerializedTool {
   id: string;
@@ -12,5 +12,6 @@ export interface SerializedTool {
   defaults: Record<string, unknown>;
   paramSchema?: Record<string, ParamFieldSchema>;
   requiresWebgpu?: 'preferred' | 'required';
+  requires?: ToolRequires;
   memoryEstimate: string;
 }

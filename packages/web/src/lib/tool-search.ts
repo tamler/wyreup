@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js';
+import type { ToolRequires } from '@wyreup/core';
 
 export interface SearchableTool {
   id: string;
@@ -6,6 +7,7 @@ export interface SearchableTool {
   description: string;
   category: string;
   keywords: string[];
+  requires?: ToolRequires;
 }
 
 export interface SearchResult {

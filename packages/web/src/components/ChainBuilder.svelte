@@ -5,7 +5,8 @@
   import ProgressBar from './runners/ProgressBar.svelte';
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/kitStorage';
-  import type { ToolProgress, ParamFieldSchema } from '@wyreup/core';
+  import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
+  import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
 
   interface ToolSummary {
     id: string;
@@ -16,9 +17,16 @@
     outputMime: string;
     defaults: Record<string, unknown>;
     paramSchema?: Record<string, ParamFieldSchema>;
+    requires?: ToolRequires;
   }
 
   export let tools: ToolSummary[] = [];
+
+  // Available tools the device can actually run. Direct chain URLs
+  // (`/chain/run?steps=...`) bypass this filter — the chain builder
+  // is just for composing new chains, where suggesting tools that
+  // can't run is unhelpful.
+  $: visibleTools = filterRunnable(tools, $capabilities.caps, $showUnrunnable).runnable;
 
   // Chain state: each step has a toolId + params
   interface BuildStep {
@@ -52,10 +60,12 @@
   let showEndOfRunPrompt = false;
   let endOfRunSaved = false;
 
-  // Build compatible tool list for a given MIME (or all if null)
+  // Build compatible tool list for a given MIME (or all if null).
+  // Uses the device-runnable subset so users don't compose chains that
+  // can't run on their device.
   function toolsForMime(mime: string | null): ToolSummary[] {
-    if (!mime) return tools;
-    return tools.filter((t) => {
+    if (!mime) return visibleTools;
+    return visibleTools.filter((t) => {
       if (t.inputMin === 0) return false; // generators, skip
       return t.inputAccept.some((p) => {
         if (p === '*' || p === '*/*') return true;

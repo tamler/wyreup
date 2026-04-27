@@ -9,6 +9,9 @@ export const GET: APIRoute = () => {
     category: t.category,
     description: t.description,
     keywords: t.keywords ?? [],
+    requires: t.requires
+      ? { webgpu: t.requires.webgpu, minMemoryGB: t.requires.minMemoryGB }
+      : undefined,
   }));
   return new Response(JSON.stringify(tools), {
     headers: { 'Content-Type': 'application/json' },

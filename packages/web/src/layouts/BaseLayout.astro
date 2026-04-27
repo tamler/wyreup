@@ -678,6 +678,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   // ── Header search: Fuse.js fuzzy search + CMD+K + navigation ──
   import { createToolSearch, searchTools } from '../lib/tool-search';
   import type { SearchableTool } from '../lib/tool-search';
+  import { detectCapabilities, checkToolCapabilities } from '@wyreup/core';
 
   const SUGGEST_URL_BASE =
     'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
@@ -725,10 +726,24 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
     async function loadIndex() {
       try {
-        const res = await fetch('/tools-index.json');
+        const [res, caps] = await Promise.all([
+          fetch('/tools-index.json'),
+          detectCapabilities(),
+        ]);
         if (res.ok) {
           const tools: SearchableTool[] = await res.json();
-          fuse = createToolSearch(tools);
+          // Hide tools the device can't run unless the user has flipped
+          // the override on /tools (same key as the ToolFilter store).
+          let showAll = false;
+          try {
+            showAll = localStorage.getItem('wyreup:show-unrunnable-tools') === '1';
+          } catch {
+            /* ignore */
+          }
+          const visible = showAll
+            ? tools
+            : tools.filter((t) => checkToolCapabilities(t, caps).runnable);
+          fuse = createToolSearch(visible);
         }
       } catch {
         // silently ignore — search still works via form submit to /tools?q=
