@@ -72,7 +72,10 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
           <a href="/chains" class="nav-link" aria-current={currentPath === '/chains' || currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Chains</a>
 
-          <!-- "For developers" dropdown -->
+          <!-- "Other surfaces" dropdown — Wyreup is also a CLI + an
+               agent skill (MCP). Reframed from "For developers" so
+               agent users (Claude, Cursor, ChatGPT desktop) see they
+               can use the same toolbelt without touching code. -->
           <div class="dev-menu" id="dev-menu">
             <button
               class="nav-link dev-menu__trigger"
@@ -80,16 +83,17 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
               aria-haspopup="true"
               aria-expanded="false"
               aria-controls="dev-menu-dropdown"
-            >For developers <span class="dev-menu__caret" aria-hidden="true">&#9662;</span></button>
+            >Use anywhere <span class="dev-menu__caret" aria-hidden="true">&#9662;</span></button>
             <div
               class="dev-menu__dropdown"
               id="dev-menu-dropdown"
               role="menu"
-              aria-label="Developer links"
+              aria-label="Other surfaces — CLI, agent, GitHub"
               hidden
             >
-              <a href="/cli" class="dev-menu__item" role="menuitem">CLI</a>
-              <a href="/skill" class="dev-menu__item" role="menuitem">Agents (MCP + skill)</a>
+              <a href="/skill" class="dev-menu__item" role="menuitem">From your AI agent (MCP)</a>
+              <a href="/cli" class="dev-menu__item" role="menuitem">From the terminal (CLI)</a>
+              <a href="/settings" class="dev-menu__item" role="menuitem">Settings &amp; storage</a>
               <a
                 href="https://github.com/tamler/wyreup"
                 class="dev-menu__item"
@@ -101,10 +105,11 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
             </div>
           </div>
 
-          <!-- Mobile-only dev links row (shown < 640px, dropdown hidden) -->
-          <div class="dev-mobile-row" aria-label="Developer links">
+          <!-- Mobile-only links row (shown < 640px, dropdown hidden) -->
+          <div class="dev-mobile-row" aria-label="Other surfaces">
+            <a href="/skill" class="nav-link nav-link--dev-mobile">Agent</a>
             <a href="/cli" class="nav-link nav-link--dev-mobile">CLI</a>
-            <a href="/skill" class="nav-link nav-link--dev-mobile">Agents</a>
+            <a href="/settings" class="nav-link nav-link--dev-mobile">Settings</a>
             <a href="https://github.com/tamler/wyreup" class="nav-link nav-link--dev-mobile nav-link--github" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
         </nav>

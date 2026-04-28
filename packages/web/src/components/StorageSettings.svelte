@@ -20,6 +20,7 @@
   let memoryCleared = false;
   let modelsClearing = false;
   let modelsCleared = false;
+  let modelsClearedMsg = '';
   let modelsClearError = '';
 
   async function refresh() {
@@ -60,37 +61,42 @@
   }
 
   async function clearModels() {
-    if (!confirm('Clear all cached AI models? They will re-download on next use.')) return;
+    if (
+      typeof confirm === 'function' &&
+      !confirm('Clear all cached AI models? They will re-download on next use.')
+    ) {
+      return;
+    }
     modelsClearing = true;
     modelsCleared = false;
+    modelsClearedMsg = '';
     modelsClearError = '';
+    const before = usageMb;
     try {
-      // Two distinct SW caches hold model bytes (set up in sw.ts):
-      //   - wyreup-cdn-assets:   third-party CDN fetches — HuggingFace,
-      //                          jsdelivr, googleapis. This is where
-      //                          transformers.js model weights actually
-      //                          live (downloaded from huggingface.co).
-      //   - wyreup-heavy-assets: same-origin .wasm / .onnx files
-      //                          (codec runtimes, our bundled ML libs).
-      // Clearing only one used to leave the bigger half intact — the
-      // transformers.js weights kept being served from cache, so the
-      // "Clear" button was effectively a no-op for actual ML models.
-      // Wipe both. Also try `transformers-cache` (the upstream default
-      // some transformers.js code paths fall back to).
+      // Three caches that may hold model bytes:
+      //   wyreup-cdn-assets    — HuggingFace / jsdelivr / googleapis
+      //                          (this is where transformers.js model
+      //                          weights actually live)
+      //   wyreup-heavy-assets  — same-origin .wasm / .onnx
+      //   transformers-cache   — upstream transformers.js fallback name
       const targets = ['wyreup-cdn-assets', 'wyreup-heavy-assets', 'transformers-cache'];
-      const results = await Promise.all(targets.map((name) => caches.delete(name).catch(() => false)));
-      const cleared = results.filter(Boolean).length;
-      // Drop the in-memory pipelines so the next use truly hits disk
-      // (which is now empty for these URLs).
+      const results = await Promise.all(
+        targets.map((name) => caches.delete(name).catch(() => false)),
+      );
+      const cachesCleared = results.filter(Boolean).length;
       const { clearPipelineCache } = await import('@wyreup/core');
       clearPipelineCache();
-      modelsCleared = true;
-      if (cleared === 0 && persisted !== false) {
-        // Nothing to clear (caches not yet created) — that's fine, treat
-        // as success. Don't surface a misleading error.
-      }
       await refresh();
-      setTimeout(() => { modelsCleared = false; }, 2500);
+      const freedMb = Math.max(0, Math.round((before - usageMb) * 10) / 10);
+      modelsCleared = true;
+      if (cachesCleared === 0 && freedMb === 0) {
+        modelsClearedMsg = 'Already empty — nothing cached.';
+      } else if (freedMb > 0) {
+        modelsClearedMsg = `Cleared ${cachesCleared} cache${cachesCleared === 1 ? '' : 's'} — freed ${formatBytes(freedMb)}.`;
+      } else {
+        modelsClearedMsg = `Cleared ${cachesCleared} cache${cachesCleared === 1 ? '' : 's'}.`;
+      }
+      setTimeout(() => { modelsCleared = false; modelsClearedMsg = ''; }, 4000);
     } catch (err) {
       modelsClearError = err instanceof Error ? err.message : String(err);
     } finally {
@@ -157,6 +163,9 @@
       </div>
     </div>
 
+    {#if modelsClearedMsg}
+      <p class="storage-msg storage-msg--ok" role="status">{modelsClearedMsg}</p>
+    {/if}
     {#if modelsClearError}
       <p class="storage-error" role="alert">{modelsClearError}</p>
     {/if}
@@ -193,6 +202,12 @@
 
   .storage-msg--muted {
     color: var(--text-subtle);
+  }
+
+  .storage-msg--ok {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
   }
 
   .storage-stats {
