@@ -482,6 +482,75 @@ These need answers before shipping the first track:
 - **Whether to expose the Compose / Scratchpad tool** — see the
   Adjacent section above.
 
+### Wave T — Triggers, rules, and PWA drop entry (planning)
+
+Make Wyreup automatic. Today every chain is a deliberate "click Run"
+ritual. The user has named two related capabilities that close that
+gap:
+
+#### What's already shipped (foundation)
+
+- ✅ **`/chain/run?steps=...&auto=1`** (2026-04-28) — when the URL
+  includes `auto=1` AND a file is available (either dropped or
+  consumed from `chainStorage`), the chain runs immediately on
+  page load. This is the building block the rest of the wave
+  rides on. A bookmark, share-target, or trigger that lands a
+  user on this URL with a stashed file gets a hands-free run.
+- ✅ **`chainStorage` IndexedDB hand-off** — already in use for
+  cross-page chain navigation; trigger flows reuse it as the
+  "here's the file, go run that chain" wire.
+
+#### Open features
+
+- **PWA `/drop` start page.** Today the manifest's `start_url: '/'`
+  takes installed users to the marketing landing. Power users
+  who installed the PWA want to drop and go. Add a dedicated
+  `/drop` page (or detect `display-mode: standalone` and minimize
+  the hero) that's drop-zone-first, catalog-second, no marketing
+  copy. Manifest `start_url` switches to `/drop` for PWA installs;
+  browser users still hit `/`.
+- **Trigger rules.** Persistent declarative rules like *"any audio
+  file → run `transcribe → text-summarize`"*. Stored in
+  localStorage / `/my-kit`. Resolution order: most-specific MIME
+  match first; user-defined order otherwise. UI on `/my-kit`:
+  pick a saved chain, choose a trigger MIME, save. When a file is
+  dropped on `/` (or `/drop`), check rules → if match → redirect
+  to `/chain/run?steps=...&auto=1` with the file stashed.
+- **PWA file_handlers tied to triggers.** Manifest already
+  declares `file_handlers` for image/PDF/text/audio. Today they
+  land at `/share` which lands at `/share-receive`. Route
+  through the trigger system: matched file type → matching saved
+  chain → auto-run. OS-level "Open with Wyreup" becomes "Open and
+  run my saved photo-cleanup chain."
+- **Trigger node primitive** in the chain builder. The first
+  step of a chain can be a trigger declaration: *"this chain runs
+  when an `audio/*` file arrives."* Saving a chain with a trigger
+  registers the rule. Cleaner UX than a separate rules page.
+
+#### Open product questions
+
+- **What conflicts feel like.** Two saved chains both claim
+  `image/jpeg` — which runs? Options: pick the most recent /
+  most specific / let user reorder. Probably reorderable list
+  in `/my-kit`.
+- **Auto-run consent on first use.** Some users will hate
+  auto-run (they want a dry run first). Default off for new
+  users; enable per-rule, with a "preview before run" toggle.
+- **Cross-device rules.** Triggers live in localStorage today.
+  Cross-device sync = Wave M Pro tier feature.
+- **Should `record-audio → transcribe` be a one-click chain?**
+  i.e. a default trigger so recording auto-transcribes. Probably
+  not — better as a pre-built saved chain users can opt into.
+
+#### Roadmap dependency
+
+Browser extension (Wave S) shares the trigger model — a
+right-click context menu becomes a one-shot trigger that
+redirects into `/chain/run?auto=1`. Build the rules engine once,
+both surfaces consume it.
+
+---
+
 ### Wave S — Browser extension (planning)
 
 A fifth surface alongside web / CLI / MCP / library. Not just "the

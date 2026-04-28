@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import DropZone from './runners/DropZone.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
   import { decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/kitStorage';
+  import { peekChainFile, consumeChainFile } from './runners/chainStorage';
   import type { ToolProgress } from '@wyreup/core';
 
   interface ToolSummary {
@@ -49,7 +50,8 @@
   let endOfRunSaved = false;
 
   onMount(() => {
-    const src = stepsParam || new URL(window.location.href).searchParams.get('steps') || '';
+    const url = new URL(window.location.href);
+    const src = stepsParam || url.searchParams.get('steps') || '';
     if (!src) {
       parseError = true;
       return;
@@ -73,6 +75,24 @@
       };
     });
     invalidIds = [...new Set(invalidIds)];
+
+    // Pull a chained-in file off chainStorage if one is waiting (e.g. a
+    // trigger handed off via /chain/run?auto=1, or an upstream tool's
+    // result stashed for this chain). Then, if `auto=1` is in the URL,
+    // kick off run() automatically once Svelte has reflected state.
+    void (async () => {
+      const peeked = await peekChainFile();
+      if (peeked) {
+        const file = await consumeChainFile();
+        if (file) inputFiles = [file];
+      }
+      if (url.searchParams.get('auto') === '1') {
+        await tick();
+        if (inputFiles.length > 0 && resolvedSteps.length > 0 && invalidIds.length === 0) {
+          void run();
+        }
+      }
+    })();
   });
 
   $: editUrl = `/chain/build?steps=${stepsParam || (typeof window !== 'undefined' ? new URL(window.location.href).searchParams.get('steps') ?? '' : '')}`;
