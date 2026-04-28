@@ -43,7 +43,20 @@
 
   onMount(() => {
     void refresh();
+    // Re-evaluate when another part of the UI clears storage (or when the
+    // window regains focus, which catches OS-level cache eviction).
+    const onSync = () => { void refresh(); };
+    window.addEventListener('wyreup:storage-changed', onSync);
+    window.addEventListener('focus', onSync);
+    return () => {
+      window.removeEventListener('wyreup:storage-changed', onSync);
+      window.removeEventListener('focus', onSync);
+    };
   });
+
+  function broadcastChange() {
+    window.dispatchEvent(new CustomEvent('wyreup:storage-changed'));
+  }
 
   async function freeMemory() {
     memoryClearing = true;
@@ -52,6 +65,7 @@
       const { clearPipelineCache } = await import('@wyreup/core');
       clearPipelineCache();
       memoryCleared = true;
+      broadcastChange();
       setTimeout(() => { memoryCleared = false; }, 2500);
     } catch {
       /* ignore */
@@ -88,6 +102,7 @@
       clearPipelineCache();
       await refresh();
       const freedMb = Math.max(0, Math.round((before - usageMb) * 10) / 10);
+      broadcastChange();
       modelsCleared = true;
       if (cachesCleared === 0 && freedMb === 0) {
         modelsClearedMsg = 'Already empty — nothing cached.';

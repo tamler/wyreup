@@ -31,9 +31,6 @@
   }
 
   let prefs: ToolPrefs = { cacheMode: 'selected', enabled: {} };
-  let cacheStatus: Record<string, 'cached' | 'not-cached' | 'checking'> = {};
-  let clearConfirm = false;
-  let cleared = false;
 
   function loadPrefs() {
     try {
@@ -77,50 +74,6 @@
     savePrefs();
   }
 
-  async function checkCacheStatus() {
-    if (!('caches' in window)) return;
-    for (const tool of heavyTools) {
-      cacheStatus[tool.id] = 'checking';
-    }
-    cacheStatus = { ...cacheStatus };
-
-    try {
-      const cacheNames = await caches.keys();
-      const allCaches = await Promise.all(cacheNames.map((n) => caches.open(n)));
-
-      for (const tool of heavyTools) {
-        // Heuristic: check if any cache has a response for a URL associated with this tool
-        // In practice, these are CDN URLs — we can't easily enumerate them here.
-        // So we report 'not-cached' unless the tool pref is enabled and cacheMode is 'all'.
-        const isCached =
-          prefs.cacheMode === 'all' || (prefs.cacheMode === 'selected' && (prefs.enabled[tool.id] ?? false));
-        cacheStatus[tool.id] = isCached ? 'cached' : 'not-cached';
-      }
-    } catch {
-      for (const tool of heavyTools) {
-        cacheStatus[tool.id] = 'not-cached';
-      }
-    }
-    cacheStatus = { ...cacheStatus };
-  }
-
-  async function clearAllCaches() {
-    if (!clearConfirm) {
-      clearConfirm = true;
-      return;
-    }
-    clearConfirm = false;
-    try {
-      const names = await caches.keys();
-      await Promise.all(names.map((n) => caches.delete(n)));
-      cleared = true;
-      setTimeout(() => { cleared = false; }, 3000);
-      await checkCacheStatus();
-    } catch {
-      // ignore
-    }
-  }
-
   function formatSize(bytes: number): string {
     if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(0)} MB`;
     if (bytes >= 1_000) return `${(bytes / 1_000).toFixed(0)} KB`;
@@ -129,7 +82,6 @@
 
   onMount(() => {
     loadPrefs();
-    checkCacheStatus();
   });
 </script>
 
@@ -176,7 +128,6 @@
     <div class="tool-list">
       {#each heavyTools as entry}
         {@const enabled = prefs.cacheMode === 'all' || (prefs.enabled[entry.id] ?? false)}
-        {@const status = cacheStatus[entry.id] ?? 'checking'}
         <div class="tool-row">
           <div class="tool-row__info">
             <div class="tool-row__name">
@@ -190,7 +141,9 @@
             <p class="tool-row__desc">{entry.description}</p>
           </div>
           <div class="tool-row__controls">
-            <span class="cache-status cache-status--{status}">{status === 'checking' ? '...' : status === 'cached' ? 'cached' : 'not cached'}</span>
+            <span class="cache-status cache-status--{enabled ? 'enabled' : 'disabled'}">
+              {enabled ? 'enabled' : 'disabled'}
+            </span>
             {#if prefs.cacheMode === 'selected'}
               <button
                 class="toggle-btn"
@@ -198,39 +151,18 @@
                 on:click={() => toggleTool(entry.id)}
                 aria-pressed={prefs.enabled[entry.id] ?? false}
               >
-                {prefs.enabled[entry.id] ? 'Enabled' : 'Enable'}
+                {prefs.enabled[entry.id] ? 'Disable' : 'Enable'}
               </button>
             {/if}
           </div>
         </div>
       {/each}
     </div>
-  </section>
-
-  <div class="settings-divider" aria-hidden="true">
-    <span class="divider-line"></span>
-    <span class="divider-pad"></span>
-  </div>
-
-  <!-- Section 3: Clear cache -->
-  <section class="settings-section">
-    <h2 class="settings-section__title">Clear cache</h2>
-    <p class="settings-section__body">
-      Removes all cached files and models. The app will re-download what it needs on next use.
+    <p class="settings-section__footnote">
+      "Enabled" means this tool's model will be cached when you use it.
+      Actual cache contents and total disk usage are shown in the Storage
+      panel above; clear them there.
     </p>
-    {#if cleared}
-      <p class="clear-confirm-msg">Cache cleared.</p>
-    {:else}
-      <button
-        class="btn btn-secondary clear-btn"
-        on:click={clearAllCaches}
-      >
-        {clearConfirm ? 'Confirm — clear everything?' : 'Clear cache'}
-      </button>
-      {#if clearConfirm}
-        <button class="btn-ghost cancel-btn" on:click={() => { clearConfirm = false; }}>Cancel</button>
-      {/if}
-    {/if}
   </section>
 </div>
 
@@ -394,16 +326,22 @@
     text-transform: uppercase;
   }
 
-  .cache-status--cached {
-    color: var(--success);
+  .cache-status--enabled {
+    color: var(--accent);
   }
 
-  .cache-status--not-cached {
+  .cache-status--disabled {
     color: var(--text-subtle);
   }
 
-  .cache-status--checking {
+  .settings-section__footnote {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
     color: var(--text-subtle);
+    line-height: 1.5;
+    margin: var(--space-3) 0 0;
+    padding-left: var(--space-3);
+    border-left: 1px solid var(--border-subtle);
   }
 
   .toggle-btn {
@@ -435,31 +373,6 @@
     color: var(--accent-hover);
   }
 
-  /* Clear cache */
-  .clear-btn {
-    align-self: flex-start;
-  }
-
-  .cancel-btn {
-    background: none;
-    border: none;
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--text-subtle);
-    cursor: pointer;
-    padding: var(--space-1) 0;
-    margin-left: var(--space-3);
-  }
-
-  .cancel-btn:hover {
-    color: var(--text-muted);
-  }
-
-  .clear-confirm-msg {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--success);
-  }
 
   @media (max-width: 640px) {
     .tool-row {
