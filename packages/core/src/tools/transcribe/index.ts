@@ -116,7 +116,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
   name: 'Transcribe Audio',
   description:
     'Convert speech to text using Whisper-tiny — runs entirely on your device. ' +
-    '~30 MB model downloads on first use, then works offline.',
+    '~80 MB model downloads on first use, then works offline.',
   category: 'export',
   presence: 'standalone',
   keywords: ['transcribe', 'speech', 'stt', 'whisper', 'audio', 'subtitles', 'voice'],
@@ -133,7 +133,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'high',
-  installSize: 30_000_000,
+  installSize: 80_000_000,
   installGroup: 'speech',
   requires: { webgpu: 'preferred' },
 
@@ -179,13 +179,27 @@ export const transcribe: ToolModule<TranscribeParams> = {
     ctx.onProgress({
       stage: 'loading-deps',
       percent: 0,
-      message: 'Loading Whisper-tiny (~30 MB on first use)',
+      message: 'Loading Whisper-tiny (~80 MB on first use)',
     });
 
+    // dtype: pin per-component types to avoid the broken q4 merged-decoder
+    // variant that auto-selection picks for some browsers / runtimes.
+    // Symptom: ONNX Runtime crashes at session creation with
+    //   "qdq_actions.cc:137 TransposeDQWeightsForMatMulNBits
+    //    Missing required scale: model.decoder.embed_tokens.weight_merged_0_scale"
+    // because the merge optimization looks up a scale tensor that the
+    // merged variant doesn't include. Encoder is fine at q8; decoder
+    // merge needs fp32 to avoid the bad path.
     const pipe = await getPipeline(
       ctx,
       'automatic-speech-recognition',
       MODEL_ID,
+      {
+        dtype: {
+          encoder_model: 'q8',
+          decoder_model_merged: 'fp32',
+        },
+      },
     ) as (
       audio: Float32Array,
       options?: Record<string, unknown>,
