@@ -23,6 +23,11 @@
   import ColorHarmonyRunner from './runners/ColorHarmonyRunner.svelte';
   import HashRunner from './runners/HashRunner.svelte';
   import ColorConverterRunner from './runners/ColorConverterRunner.svelte';
+  import ImageInfoRunner from './runners/ImageInfoRunner.svelte';
+  import PdfInfoRunner from './runners/PdfInfoRunner.svelte';
+  import PdfMetadataRunner from './runners/PdfMetadataRunner.svelte';
+  import QrReaderRunner from './runners/QrReaderRunner.svelte';
+  import ImageSimilarityRunner from './runners/ImageSimilarityRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -74,6 +79,11 @@
     ColorHarmonyRunner,
     HashRunner,
     ColorConverterRunner,
+    ImageInfoRunner,
+    PdfInfoRunner,
+    PdfMetadataRunner,
+    QrReaderRunner,
+    ImageSimilarityRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

@@ -21,7 +21,12 @@ export type RunnerVariant =
   | 'ColorPaletteRunner'
   | 'ColorHarmonyRunner'
   | 'HashRunner'
-  | 'ColorConverterRunner';
+  | 'ColorConverterRunner'
+  | 'ImageInfoRunner'
+  | 'PdfInfoRunner'
+  | 'PdfMetadataRunner'
+  | 'QrReaderRunner'
+  | 'ImageSimilarityRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -48,10 +53,13 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'split-pdf': 'MultiOutputRunner',
   'pdf-to-image': 'MultiOutputRunner',
 
-  // JsonResultRunner — file in, JSON out
-  'image-info': 'JsonResultRunner',
-  'pdf-info': 'JsonResultRunner',
-  'pdf-metadata': 'JsonResultRunner',
+  // Bespoke visual runners for inspect/metadata tools — thumbnails,
+  // stat cards, and per-row copy beat raw JSON for these.
+  'image-info': 'ImageInfoRunner',
+  'pdf-info': 'PdfInfoRunner',
+  'pdf-metadata': 'PdfMetadataRunner',
+  'qr-reader': 'QrReaderRunner',
+  'image-similarity': 'ImageSimilarityRunner',
 
   // HashRunner — visual hash list (per-algo copy buttons)
   hash: 'HashRunner',

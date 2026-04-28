@@ -672,22 +672,6 @@ makes sense in the extension; defer what doesn't.
 
 Captured here so it doesn't disappear.
 
-- [ ] **Visual runners for the remaining JSON-output tools.** Pattern
-  established with `ColorPaletteRunner`, `ColorHarmonyRunner`,
-  `HashRunner`, `ColorConverterRunner`, `RecordAudioRunner`,
-  `PdfRedactRunner`. Same shape applies to:
-    - `image-info` — thumbnail + dimensions / EXIF / colors as cards
-    - `pdf-info` — page count + meta as cards, optional first-page
-      thumbnails
-    - `pdf-metadata` (read mode) — title / author / subject as labeled
-      rows with copy buttons
-    - `qr-reader` — decoded text + the source QR side-by-side, version
-      / error-correction / data-mask as badges
-    - `image-similarity` — score visualization (gauge or bar) plus
-      the two compared thumbnails
-  Each is ~200-400 lines of bespoke Svelte on top of the existing
-  primitives (DropZone / ParamsForm / ChainSection). Raw JSON stays
-  one click away via `<details>` drawer.
 - [ ] **Self-host AI model CDNs on R2** — eliminate third-party touches
   (jsdelivr, googleapis, huggingface). Tracked in-line in
   `tools/check-privacy.mjs` allowlist comment.
