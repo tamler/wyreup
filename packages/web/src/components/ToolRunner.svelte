@@ -18,6 +18,7 @@
   import PercentageCalculatorRunner from './runners/PercentageCalculatorRunner.svelte';
   import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
   import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
+  import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -64,6 +65,7 @@
     PercentageCalculatorRunner,
     DateCalculatorRunner,
     PdfRedactRunner,
+    RecordAudioRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

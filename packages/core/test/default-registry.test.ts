@@ -164,9 +164,9 @@ describe('default registry', () => {
     expect(registry.toolsById.get('pdf-to-image')).toBeDefined();
   });
 
-  it('has 119 tools in total', () => {
+  it('has 120 tools in total', () => {
     const registry = createDefaultRegistry();
-    expect(registry.toolsById.size).toBe(119);
+    expect(registry.toolsById.size).toBe(120);
   });
 
   it('includes ocr', () => {

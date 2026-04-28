@@ -110,6 +110,7 @@ export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/fa
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
 export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
+export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
 export { caseConverter, type CaseConverterParams, defaultCaseConverterParams } from './tools/case-converter/index.js';
 export { slug, type SlugParams, defaultSlugParams } from './tools/slug/index.js';

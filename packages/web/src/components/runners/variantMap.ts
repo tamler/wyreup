@@ -16,7 +16,8 @@ export type RunnerVariant =
   | 'InvestmentDcaRunner'
   | 'PercentageCalculatorRunner'
   | 'DateCalculatorRunner'
-  | 'PdfRedactRunner';
+  | 'PdfRedactRunner'
+  | 'RecordAudioRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -113,6 +114,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // PdfRedactRunner — bespoke canvas-overlay UI for drawing redaction rectangles
   'pdf-redact': 'PdfRedactRunner',
+
+  // Capture tools — interactive primitives that produce a fresh asset
+  'record-audio': 'RecordAudioRunner',
 
   // PreviewRunner — single file in, single blob out, prominent preview
   'face-blur': 'PreviewRunner',
