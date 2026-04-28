@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroDrop from '../components/HeroDrop.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
+import HowItWorks from '../components/HowItWorks.svelte';
 import InstallCard from '../components/InstallCard.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
@@ -18,8 +19,8 @@ const popularTools = popularToolIds
 ---
 
 <BaseLayout
-  title="Wyreup — Simple file tools."
-  description="Compress, convert, merge, redact, blur, extract. Drop a file and we'll show you what you can do with it. Nothing uploads. No sign-up."
+  title="Wyreup — File tools that run on your device."
+  description="120+ privacy-first tools — compress, convert, transcribe, redact, caption, record. Browser, terminal, or AI agent. Nothing uploads. No signup."
   surfaceMode="welcome"
 >
   <PwaOnboardBanner client:load />
@@ -29,9 +30,14 @@ const popularTools = popularToolIds
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">Simple file tools.</h1>
+        <h1 class="hero__headline">{allTools.length}+ file tools that run on your device.</h1>
         <p class="hero__body">
-          Compress, convert, merge, redact, blur, extract. Drop a file — we'll show you what you can do with it. Nothing uploads. No sign-up.
+          Compress, convert, transcribe, redact, caption, record. Drop a file — we'll show you what you can do with it. <strong>Nothing uploads.</strong> No signup.
+        </p>
+        <p class="hero__surfaces">
+          Use it in your <a href="/" class="hero__surface-link" aria-current="page">browser</a>,
+          <a href="/cli" class="hero__surface-link">terminal</a>,
+          or <a href="/skill" class="hero__surface-link">AI agent</a>.
         </p>
         <div class="hero__actions">
           <a href="/tools" class="btn btn-primary">Browse tools &rarr;</a>
@@ -89,37 +95,12 @@ const popularTools = popularToolIds
     </div>
   </section>
 
-  <!-- Section 3: How it works -->
+  <!-- Section 3: How it works (live walkthrough — drop, pick, run) -->
   <section class="how section-rhythm" aria-labelledby="how-heading">
     <div class="container">
       <h2 id="how-heading" class="section-title">How it works</h2>
-      <div class="steps-row">
-        <div class="step">
-          <div class="step__num">01</div>
-          <div class="step__verb">Drop.</div>
-          <p class="step__body">Open any tool and drop your file directly into the browser.</p>
-        </div>
-        <div class="step__connector" aria-hidden="true">
-          <span class="connector-line"></span>
-          <span class="connector-pad"></span>
-          <span class="connector-line"></span>
-        </div>
-        <div class="step">
-          <div class="step__num">02</div>
-          <div class="step__verb">Pick.</div>
-          <p class="step__body">Choose your settings. Processing runs entirely on-device.</p>
-        </div>
-        <div class="step__connector" aria-hidden="true">
-          <span class="connector-line"></span>
-          <span class="connector-pad"></span>
-          <span class="connector-line"></span>
-        </div>
-        <div class="step">
-          <div class="step__num">03</div>
-          <div class="step__verb">Download.</div>
-          <p class="step__body">Get the result instantly. Nothing touched a server.</p>
-        </div>
-      </div>
+      <p class="section-sub">Drop a file, pick a tool, run it. No upload, no signup. Try it right here:</p>
+      <HowItWorks client:load />
     </div>
 
     <!-- Scroll hint -->
@@ -341,8 +322,35 @@ const popularTools = popularToolIds
     color: var(--text-muted);
     line-height: 1.6;
     max-width: 520px;
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-3);
     font-family: var(--font-sans);
+  }
+
+  .hero__surfaces {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    margin: 0 0 var(--space-8);
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  .hero__surface-link {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+    transition: color var(--duration-instant) var(--ease-sharp), text-decoration-color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .hero__surface-link[aria-current='page'] {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  .hero__surface-link:hover {
+    color: var(--text-primary);
+    text-decoration-color: var(--text-primary);
   }
 
   .hero__actions {
@@ -371,9 +379,17 @@ const popularTools = popularToolIds
     font-size: var(--text-2xl);
     font-weight: 700;
     letter-spacing: -0.01em;
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-3);
     color: var(--text-primary);
     font-family: var(--font-sans);
+  }
+
+  .section-sub {
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    color: var(--text-muted);
+    margin: 0 0 var(--space-8);
+    line-height: 1.5;
   }
 
   .steps-row {

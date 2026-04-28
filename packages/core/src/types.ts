@@ -24,6 +24,17 @@ export type ToolCategory =
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 
+/**
+ * Runtime surfaces a tool can run on. Distinct from `presence`
+ * (which is editor-vs-standalone, a legacy concept). Use this to
+ * gate tools that need a browser-only API (microphone, camera,
+ * screen-capture) so they don't appear in CLI / MCP listings where
+ * they can't possibly work.
+ *
+ * Undefined = ['web', 'cli', 'mcp'] (the default — runs everywhere).
+ */
+export type Surface = 'web' | 'cli' | 'mcp';
+
 // ──── Memory estimate for worker pool scheduling ────
 
 /**
@@ -293,6 +304,21 @@ export interface ToolModule<Params = unknown> {
    * regex matches, formatted code).
    */
   outputDisplay?: 'mono' | 'prose';
+
+  /**
+   * Runtime surfaces this tool is exposed on. Undefined = everywhere
+   * (the default). Set to a subset when the tool depends on a
+   * surface-specific API that other surfaces can't provide:
+   *
+   *   record-audio       → ['web']        (getUserMedia is browser-only)
+   *   take-photo         → ['web']        (same)
+   *   screen-capture     → ['web']        (getDisplayMedia is browser-only)
+   *
+   * The CLI's `list` command, the MCP server's tool registration, and
+   * the web's catalog all filter by this so a tool only appears where
+   * it can actually run. No "use the web UI" runtime errors.
+   */
+  surfaces?: Surface[];
 
   /**
    * Approximate additional download size (bytes) this tool requires beyond

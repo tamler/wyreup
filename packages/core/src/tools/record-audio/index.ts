@@ -47,6 +47,12 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  // Web-only — getUserMedia is browser-only. The CLI's `list` command
+  // and the MCP server's tool registration filter on this so the tool
+  // never appears where it can't run. No "use the web UI" runtime
+  // failures.
+  surfaces: ['web'],
+
   // Sensible chains for a fresh recording. Most common: transcribe it.
   // Then audio post-processing tools.
   chainSuggestions: [
@@ -61,13 +67,15 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
 
   Component: RecordAudioComponentStub,
 
+  // The web's RecordAudioRunner handles capture interactively and
+  // emits the captured blob as the result; tool.run() is never called
+  // from the web path. Because surfaces:['web'] gates this tool out
+  // of CLI / MCP, run() is also never called from those surfaces.
+  // The body throws as a safety net only — this should be unreachable.
   // eslint-disable-next-line @typescript-eslint/require-await
   async run(_inputs: File[], _params: RecordAudioParams, _ctx: ToolRunContext): Promise<Blob[]> {
-    // CLI / MCP can't capture from a microphone. Surface a clear
-    // message instead of returning an empty blob.
     throw new Error(
-      'record-audio requires the web UI — microphone capture isn\'t available from CLI or MCP. ' +
-        'Open this tool at /tools/record-audio in a browser, or pipe an existing audio file into the next tool directly.',
+      'record-audio is a web-only capture primitive; run() should never be reached.',
     );
   },
 

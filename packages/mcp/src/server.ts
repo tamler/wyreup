@@ -4,7 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -236,7 +236,13 @@ function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boo
 
 export function createWyreupMcpServer(): Server {
   const registry = createDefaultRegistry();
-  const tools = Array.from(registry.toolsById.values());
+  // Hide tools that can't run via MCP (e.g. web-only capture
+  // primitives like record-audio that need getUserMedia). They aren't
+  // listed and aren't callable — the agent never sees them as an
+  // option, so there's no fail path.
+  const tools = Array.from(registry.toolsById.values()).filter((t) =>
+    toolRunsOnSurface(t, 'mcp'),
+  );
 
   const server = new Server(
     { name: 'wyreup', version: '0.1.0' },
@@ -256,7 +262,7 @@ export function createWyreupMcpServer(): Server {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     const tool = registry.toolsById.get(name);
-    if (!tool) {
+    if (!tool || !toolRunsOnSurface(tool, 'mcp')) {
       throw new Error(`Unknown tool: ${name}`);
     }
 

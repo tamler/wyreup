@@ -1,4 +1,12 @@
-import type { ToolModule, ToolCategory, MimePattern } from './types.js';
+import type { ToolModule, ToolCategory, MimePattern, Surface } from './types.js';
+
+/**
+ * True if this tool is exposed on the given runtime surface.
+ * Undefined `surfaces` (the common case) means the tool runs everywhere.
+ */
+export function toolRunsOnSurface(tool: ToolModule, surface: Surface): boolean {
+  return tool.surfaces === undefined || tool.surfaces.includes(surface);
+}
 
 export interface ToolRegistry {
   /** All tools, in registration order. */

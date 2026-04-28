@@ -8,7 +8,7 @@ import { executeTool, addToolOptions, mergeToolOptions } from './commands/run.js
 import { executeChain } from './commands/chain.js';
 import { prefetchCommand } from './commands/prefetch.js';
 import { cacheListCommand, cacheClearCommand } from './commands/cache.js';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
 
 // Read version from package.json at runtime so it never drifts.
 import { createRequire } from 'node:module';
@@ -190,11 +190,13 @@ if (
   !firstArg.startsWith('-') &&
   !BUILTIN_COMMANDS.has(firstArg)
 ) {
-  // Peek at the registry; if the tool exists, handle it directly.
+  // Peek at the registry; if the tool exists AND runs on this
+  // surface, handle it directly. Tools gated to web-only (e.g.
+  // record-audio) fall through and Commander emits "unknown command".
   const registry = createDefaultRegistry();
   const tool = registry.toolsById.get(firstArg);
 
-  if (tool) {
+  if (tool && toolRunsOnSurface(tool, 'cli')) {
     // Build a sub-program for this tool so --help works correctly.
     const toolCmd = new Command(tool.id)
       .description(tool.description)
