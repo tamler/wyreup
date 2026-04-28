@@ -220,7 +220,6 @@ const popularTools = popularToolIds
   <section class="popular section-rhythm" aria-labelledby="popular-heading">
     <div class="container">
       <h2 id="popular-heading" class="section-title">Popular tools</h2>
-      <p class="popular-sub">The ones people use most.</p>
       <div class="popular-grid">
         {popularTools.map((tool) => (
           <a href={`/tools/${tool.id}`} class="popular-card" aria-label={`${tool.name} — ${tool.category}`}>
@@ -614,14 +613,6 @@ const popularTools = popularToolIds
   /* ── Popular tools (Deliverable 5) ── */
   .popular {
     background: var(--bg);
-  }
-
-  .popular-sub {
-    font-family: var(--font-sans);
-    font-size: var(--text-base);
-    color: var(--text-muted);
-    margin-top: calc(-1 * var(--space-8));
-    margin-bottom: var(--space-8);
   }
 
   .popular-grid {
