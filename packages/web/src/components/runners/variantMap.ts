@@ -17,7 +17,8 @@ export type RunnerVariant =
   | 'PercentageCalculatorRunner'
   | 'DateCalculatorRunner'
   | 'PdfRedactRunner'
-  | 'RecordAudioRunner';
+  | 'RecordAudioRunner'
+  | 'ColorPaletteRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -48,8 +49,10 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   hash: 'JsonResultRunner',
   'image-info': 'JsonResultRunner',
   'pdf-info': 'JsonResultRunner',
-  'color-palette': 'JsonResultRunner',
   'pdf-metadata': 'JsonResultRunner',
+
+  // ColorPaletteRunner — bespoke visual chips for the extracted palette
+  'color-palette': 'ColorPaletteRunner',
 
   // TextResultRunner — file in, text/html out
   ocr: 'TextResultRunner',

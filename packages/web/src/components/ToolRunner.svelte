@@ -19,6 +19,7 @@
   import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
   import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
   import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
+  import ColorPaletteRunner from './runners/ColorPaletteRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -66,6 +67,7 @@
     DateCalculatorRunner,
     PdfRedactRunner,
     RecordAudioRunner,
+    ColorPaletteRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
