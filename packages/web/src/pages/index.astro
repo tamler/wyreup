@@ -286,9 +286,16 @@ const popularTools = popularToolIds
 </BaseLayout>
 
 <style>
-  /* ── Section rhythm (DESIGN.md §4) ── */
+  /* ── Section rhythm (DESIGN.md §4) ──
+     min-height was previously capped at 960px which left dead space
+     below the bottom border + scroll hint on viewports taller than
+     ~1100px (the next section started 100-400px below the visible
+     fold, so the bottom border floated mid-screen). Use 100svh
+     (small viewport height) — fills the viewport cleanly on every
+     screen size, and 100svh accounts for mobile browser chrome
+     (URL bar collapse) better than 100vh would. */
   .section-rhythm {
-    min-height: clamp(640px, 90vh, 960px);
+    min-height: max(640px, 100svh);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -833,9 +840,11 @@ const popularTools = popularToolIds
       grid-template-columns: 1fr;
     }
 
-    /* Tighter section rhythm on short/narrow mobile viewports */
+    /* Tighter section rhythm on short/narrow mobile viewports.
+       Lower floor (480px) for mobile portrait; 100svh tracks the
+       browser-chrome-aware viewport height. */
     .section-rhythm {
-      min-height: clamp(480px, 85vh, 960px);
+      min-height: max(480px, 100svh);
       padding-block-start: clamp(48px, 10vh, 176px);
     }
 

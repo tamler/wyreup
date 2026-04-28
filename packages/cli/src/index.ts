@@ -6,6 +6,7 @@ import { initToolCommand } from './commands/init-tool.js';
 import { makeInstallSkillCommand } from './commands/install-skill.js';
 import { executeTool, addToolOptions, mergeToolOptions } from './commands/run.js';
 import { executeChain } from './commands/chain.js';
+import { prefetchCommand } from './commands/prefetch.js';
 import { createDefaultRegistry } from '@wyreup/core';
 
 // Read version from package.json at runtime so it never drifts.
@@ -41,6 +42,36 @@ program
 // ──── install-skill ───────────────────────────────────────────────────────────
 
 program.addCommand(makeInstallSkillCommand());
+
+// ──── prefetch ────────────────────────────────────────────────────────────────
+
+program
+  .command('prefetch')
+  .description('Pre-download model weights for AI/ML tools so first-use is offline-ready')
+  .argument('[tool-ids...]', 'Tool IDs to prefetch (e.g. transcribe image-caption)')
+  .option('--group <name>', 'Prefetch every tool in an install group (e.g. speech, vision-llm, image-ai)')
+  .option('--all', 'Prefetch every tool with a downloadable model')
+  .option('--verbose', 'Print download progress')
+  .addHelpText(
+    'after',
+    `
+Examples:
+  wyreup prefetch transcribe                   # one tool
+  wyreup prefetch transcribe image-caption     # several tools
+  wyreup prefetch --group speech               # whole install group
+  wyreup prefetch --all                        # every model-backed tool
+  wyreup prefetch --all --verbose              # with download progress
+
+The cache is stored where Transformers.js puts it (typically
+~/.cache/huggingface/hub) and is shared across CLI / MCP invocations.`,
+  )
+  .action(async (toolIds: string[], opts: Record<string, unknown>) => {
+    await prefetchCommand(toolIds, {
+      group: opts['group'] as string | undefined,
+      all: opts['all'] as boolean | undefined,
+      verbose: opts['verbose'] as boolean | undefined,
+    });
+  });
 
 // ──── run ─────────────────────────────────────────────────────────────────────
 
@@ -115,7 +146,15 @@ Examples:
 // If the first argument is a known tool ID and not a built-in subcommand,
 // route it to `executeTool`. This enables `wyreup compress photo.jpg -o out.jpg`.
 
-const BUILTIN_COMMANDS = new Set(['list', 'init-tool', 'install-skill', 'run', 'chain', 'help']);
+const BUILTIN_COMMANDS = new Set([
+  'list',
+  'init-tool',
+  'install-skill',
+  'prefetch',
+  'run',
+  'chain',
+  'help',
+]);
 
 // Check if argv[2] is a known tool ID before Commander gets its hands on it.
 const firstArg = process.argv[2];
