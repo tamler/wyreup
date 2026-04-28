@@ -3,6 +3,8 @@
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
+  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -51,6 +53,7 @@
     const fileA = new File([textA], 'a.txt', { type: 'text/plain' });
     const fileB = new File([textB], 'b.txt', { type: 'text/plain' });
 
+    void acquireWakeLock();
     try {
       const { createDefaultRegistry } = await import('@wyreup/core');
       const registry = createDefaultRegistry();
@@ -72,10 +75,13 @@
       resultMime = blob.type;
       const raw = await blob.text();
       resultText = isJsonMime(blob.type) ? prettifyJson(raw) : raw;
+      markToolUsed(tool.id);
       state = 'done';
     } catch (err) {
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      releaseWakeLock();
     }
   }
 

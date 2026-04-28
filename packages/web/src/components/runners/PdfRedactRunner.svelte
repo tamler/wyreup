@@ -3,6 +3,8 @@
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
+  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -218,6 +220,7 @@
     state = 'running';
     errorMsg = '';
 
+    void acquireWakeLock();
     try {
       const { createDefaultRegistry } = await import('@wyreup/core');
       const registry = createDefaultRegistry();
@@ -243,10 +246,13 @@
       resultBlob = blob;
       if (resultUrl) URL.revokeObjectURL(resultUrl);
       resultUrl = URL.createObjectURL(blob);
+      markToolUsed(tool.id);
       state = 'done';
     } catch (err) {
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      releaseWakeLock();
     }
   }
 

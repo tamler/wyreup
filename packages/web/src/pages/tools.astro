@@ -89,6 +89,33 @@ const exampleChains: ExampleChain[] = [
     inputHint: 'Drop a .json file',
     outputHint: 'Formatted YAML',
   },
+  {
+    id: 'voice-memo',
+    name: 'Voice memo to summary',
+    description: 'Transcribe a recording, then summarize the transcript.',
+    situation: "After a meeting or interview when you want the gist, not the full text.",
+    steps: ['transcribe', 'text-summarize'],
+    inputHint: 'Drop an audio file (wav, mp3, m4a)',
+    outputHint: 'Short text summary',
+  },
+  {
+    id: 'meeting-translate',
+    name: 'Foreign-language audio to English summary',
+    description: 'Transcribe non-English speech, translate, then summarize.',
+    situation: 'When a colleague sends a voice memo in a language you do not speak.',
+    steps: ['transcribe', 'text-translate', 'text-summarize'],
+    inputHint: 'Drop a recording in any language',
+    outputHint: 'English summary',
+  },
+  {
+    id: 'alt-text',
+    name: 'Image to alt-text',
+    description: 'Caption an image, then translate to your target locale.',
+    situation: 'Building accessible content in multiple languages.',
+    steps: ['image-caption', 'text-translate'],
+    inputHint: 'Drop a JPG/PNG/WebP',
+    outputHint: 'Translated alt-text',
+  },
 ];
 
 // Helper: get a display name for a tool ID (fallback to the ID itself)
