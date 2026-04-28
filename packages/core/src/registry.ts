@@ -79,12 +79,20 @@ function filesMatchInput(
 /**
  * Match a MIME type against a pattern. Supports simple wildcards like
  * 'image/*' matching any 'image/<x>'.
+ *
+ * Handles MIME parameters per RFC 7231 — `audio/webm;codecs=opus` matches
+ * the `audio/webm` pattern. MediaRecorder routinely emits the parameter-
+ * suffixed form, and without this normalization the captured-blob would
+ * match nothing in the chain panel.
  */
 export function mimeMatches(mime: string, pattern: MimePattern): boolean {
   if (pattern === '*' || pattern === '*/*') return true;
-  if (pattern.endsWith('/*')) {
-    const prefix = pattern.slice(0, -1); // 'image/'
-    return mime.startsWith(prefix);
+  // Strip parameters (anything after `;`) before comparison.
+  const baseMime = (mime.split(';')[0] ?? '').trim().toLowerCase();
+  const basePattern = (pattern.split(';')[0] ?? '').trim().toLowerCase();
+  if (basePattern.endsWith('/*')) {
+    const prefix = basePattern.slice(0, -1); // 'image/'
+    return baseMime.startsWith(prefix);
   }
-  return mime === pattern;
+  return baseMime === basePattern;
 }

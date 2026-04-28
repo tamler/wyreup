@@ -78,9 +78,15 @@
       if (e.data && e.data.size > 0) chunks.push(e.data);
     };
     recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: chunks[0]?.type ?? mime ?? 'audio/webm' });
-      const ext = (blob.type.split('/')[1] ?? 'webm').split(';')[0];
-      const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: blob.type });
+      // Strip MIME parameters (e.g. ";codecs=opus") so the resulting
+      // File's type is the base MIME tools' accept lists check against.
+      // Belt-and-suspenders with mimeMatches' new param-stripping; this
+      // way native viewers also recognize the file cleanly.
+      const rawType = chunks[0]?.type ?? mime ?? 'audio/webm';
+      const baseType = (rawType.split(';')[0] ?? 'audio/webm').trim();
+      const blob = new Blob(chunks, { type: baseType });
+      const ext = baseType.split('/')[1] ?? 'webm';
+      const file = new File([blob], `recording-${Date.now()}.${ext}`, { type: baseType });
       stopStream();
       state = 'idle';
       elapsedMs = 0;
