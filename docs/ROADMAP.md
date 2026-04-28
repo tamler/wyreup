@@ -14,8 +14,8 @@ background lives.
 ### Product
 - **`@wyreup/core`** — **119 tools across 14 categories, 1566 tests**, dual browser/node build
 - **`@wyreup/web`** — **147-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
-- **`@wyreup/cli`** — shell binary wrapping core, full execution surface (`run`, `chain`, stdin/stdout piping)
-- **`@wyreup/mcp`** — MCP server (14 tests, 53 tools exposed via stdio)
+- **`@wyreup/cli`** — shell binary wrapping core. Surface: `run`, `chain`, stdin/stdout piping, `prefetch` (single tool / `--group` / `--chain` / `--all`), `cache list`, `cache clear`, `init-tool`, `install-skill`, `list`. Cache shared with MCP via Transformers.js's standard cache dir.
+- **`@wyreup/mcp`** — MCP server (14 tests, 53 tools exposed via stdio). Boot banner hints at `wyreup prefetch` for offline / scripted use.
 - **`@wyreup/skill`** — dual-backend agent skill (CLI + MCP) — superseded by `wyreup install-skill`
 - **`@wyreup/cli-skill`** — CLI-only variant — superseded by `wyreup install-skill cli`
 - **`@wyreup/mcp-skill`** — MCP-only variant — superseded by `wyreup install-skill mcp`
@@ -429,9 +429,32 @@ flow, or whether per-tool `TextInputRunner` surfaces are enough.
    record → `stt-moonshine` → `text-summarize` → `tts-kitten`.
    ~45 MB of new download for a complete chainable pipeline.
 
-After those, **Florence-2-base** image captioning (~200 MB) is the
-highest-leverage next add — opens image-to-text. Then
-**MobileDiffusion-tiny** to validate the diffusion stack.
+**Status note (2026-04-28):** the lighter alternative to #2/#3 is
+already shipped — `transcribe` (Whisper-tiny, ~30 MB) covers STT;
+the Tier-0 Speak button covers play-only TTS. A chainable TTS that
+emits `audio/wav` is deferred until there's a confirmed product
+need (the existing Speak affordance handles "say this aloud" today).
+
+**Image captioning:** `image-caption` shipped via vit-gpt2 (~100 MB)
+as the first vision-llm tool. **Florence-2-base** is the obvious
+quality upgrade but uses a custom architecture
+(`Florence2ForConditionalGeneration` + task-prompt API), not the
+`image-to-text` pipeline — needs proper transformers.js v3+
+integration testing before wiring as a tool. **BLIP-base** (~250 MB)
+is the safer next step if vit-gpt2 quality is the limiting factor;
+it uses the standard `image-to-text` pipeline like vit-gpt2.
+
+**Demucs source separation:** transformers.js doesn't have
+first-class Demucs support today (it's PyTorch-native; ONNX exports
+exist but require custom processing/encoding glue). Track but defer.
+
+**Validated next adds (in order of confidence):**
+1. **BLIP-base** as `image-caption-detailed` (~250 MB) — drop-in
+   pipeline replacement, richer captions. Same install group.
+2. **MobileDiffusion-tiny** for text→image — validates diffusion
+   stack. New `generative-image` install group.
+3. Florence-2 / Demucs after architecture-specific integration is
+   verified.
 
 #### Install groups to add on `/settings`
 
