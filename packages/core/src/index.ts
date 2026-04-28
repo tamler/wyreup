@@ -111,6 +111,7 @@ export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from
 export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';
+export { colorHarmony, type ColorHarmonyParams, defaultColorHarmonyParams, type HarmonyScheme, type ColorHarmonyResult } from './tools/color-harmony/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
 export { caseConverter, type CaseConverterParams, defaultCaseConverterParams } from './tools/case-converter/index.js';
 export { slug, type SlugParams, defaultSlugParams } from './tools/slug/index.js';

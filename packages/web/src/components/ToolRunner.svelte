@@ -20,6 +20,7 @@
   import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
   import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
   import ColorPaletteRunner from './runners/ColorPaletteRunner.svelte';
+  import ColorHarmonyRunner from './runners/ColorHarmonyRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -68,6 +69,7 @@
     PdfRedactRunner,
     RecordAudioRunner,
     ColorPaletteRunner,
+    ColorHarmonyRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

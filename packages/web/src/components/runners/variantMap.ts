@@ -18,7 +18,8 @@ export type RunnerVariant =
   | 'DateCalculatorRunner'
   | 'PdfRedactRunner'
   | 'RecordAudioRunner'
-  | 'ColorPaletteRunner';
+  | 'ColorPaletteRunner'
+  | 'ColorHarmonyRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -53,6 +54,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // ColorPaletteRunner — bespoke visual chips for the extracted palette
   'color-palette': 'ColorPaletteRunner',
+
+  // ColorHarmonyRunner — live color theory schemes (chip-driven)
+  'color-harmony': 'ColorHarmonyRunner',
 
   // TextResultRunner — file in, text/html out
   ocr: 'TextResultRunner',
