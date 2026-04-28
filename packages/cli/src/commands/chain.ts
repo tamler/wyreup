@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { basename, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createDefaultRegistry, runChain, parseChainString } from '@wyreup/core';
+import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 
@@ -36,11 +36,74 @@ export function extractStepsFromUrl(input: string): string {
 export interface ChainOptions {
   steps?: string;
   fromUrl?: string;
+  fromKit?: string;
+  name?: string;
   output?: string;
   outputDir?: string;
   saveIntermediates?: string;
   inputFormat?: string;
   verbose?: boolean;
+}
+
+interface KitChainStep {
+  toolId: string;
+  params: Record<string, unknown>;
+}
+interface KitChain {
+  id: string;
+  name: string;
+  steps: KitChainStep[];
+}
+
+/**
+ * Read a chain by name (or id, or substring) from a kit JSON file —
+ * the same format the web's My Kit exports via "Export kit" on
+ * `/my-kit`. Returns the steps as a chain string, or throws on
+ * missing file / no match / ambiguous match.
+ */
+async function loadFromKit(path: string, nameOrId: string): Promise<string> {
+  let raw: string;
+  try {
+    raw = await readFile(path, 'utf8');
+  } catch {
+    throw new Error(`Could not read kit file: ${path}`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Kit file is not valid JSON: ${path}`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Kit file must be a JSON array of chains: ${path}`);
+  }
+  const chains = parsed as KitChain[];
+
+  const needle = nameOrId.trim().toLowerCase();
+  const exactId = chains.find((c) => c.id === nameOrId);
+  if (exactId) return serializeChain(exactId.steps);
+
+  const exactName = chains.filter((c) => c.name.toLowerCase() === needle);
+  if (exactName.length === 1) return serializeChain(exactName[0]!.steps);
+  if (exactName.length > 1) {
+    throw new Error(
+      `Multiple chains named "${nameOrId}" in kit file; use a unique id instead.`,
+    );
+  }
+
+  const partial = chains.filter((c) => c.name.toLowerCase().includes(needle));
+  if (partial.length === 1) return serializeChain(partial[0]!.steps);
+  if (partial.length > 1) {
+    const opts = partial.map((c) => `  ${c.name}`).join('\n');
+    throw new Error(
+      `"${nameOrId}" matches multiple chains in kit file:\n${opts}\nUse the full name or id.`,
+    );
+  }
+
+  const all = chains.map((c) => `  ${c.name}`).join('\n');
+  throw new Error(
+    `No chain "${nameOrId}" in ${path}.\nAvailable:\n${all || '  (kit is empty)'}`,
+  );
 }
 
 // ──── runner ──────────────────────────────────────────────────────────────────
@@ -49,13 +112,29 @@ export async function executeChain(
   inputPaths: string[],
   opts: ChainOptions,
 ): Promise<void> {
-  // Resolve the chain string
-  const rawSteps = opts.fromUrl
-    ? extractStepsFromUrl(opts.fromUrl)
-    : opts.steps ?? '';
+  // Resolve the chain string from the chosen source.
+  let rawSteps = '';
+  if (opts.fromKit) {
+    if (!opts.name) {
+      process.stderr.write('--from-kit requires --name <chain-name>.\n');
+      process.exit(1);
+    }
+    try {
+      rawSteps = await loadFromKit(opts.fromKit, opts.name);
+    } catch (err) {
+      process.stderr.write(`${err instanceof Error ? err.message : String(err)}\n`);
+      process.exit(1);
+    }
+  } else if (opts.fromUrl) {
+    rawSteps = extractStepsFromUrl(opts.fromUrl);
+  } else {
+    rawSteps = opts.steps ?? '';
+  }
 
   if (!rawSteps.trim()) {
-    process.stderr.write('Provide --steps "tool1|tool2" or --from-url <url>.\n');
+    process.stderr.write(
+      'Provide --steps "tool1|tool2", --from-url <url>, or --from-kit <kit.json> --name <chain-name>.\n',
+    );
     process.exit(1);
   }
 

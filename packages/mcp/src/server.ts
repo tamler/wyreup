@@ -4,7 +4,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
+import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -249,18 +249,148 @@ export function createWyreupMcpServer(): Server {
     { capabilities: { tools: {} } },
   );
 
+  // The `wyreup_chain` meta-tool lets agents run a multi-step chain
+  // in a single call instead of orchestrating each tool individually.
+  // Same pipeline the web's /chain/run uses; same chain string syntax
+  // the CLI's `wyreup chain --steps "..."` accepts.
+  const CHAIN_TOOL = {
+    name: 'wyreup_chain',
+    description:
+      'Run a chain of Wyreup tools in sequence. Each step\'s output becomes the next step\'s input. ' +
+      'Chain syntax: "tool1|tool2[key=val,key2=val2]|tool3". ' +
+      'Use this when the agent task naturally pipelines (e.g. transcribe an audio file then summarize the text).',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        steps: {
+          type: 'string',
+          description:
+            'Chain string. Pipe-delimited tool IDs with optional [key=value,...] params: ' +
+            '"transcribe|text-summarize[maxLength=200]" or "strip-exif|compress[quality=80]".',
+        },
+        input_paths: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Input file paths for the first step.',
+        },
+        output_path: {
+          type: 'string',
+          description: 'Where to write the final result. Required for binary outputs.',
+        },
+        output_dir: {
+          type: 'string',
+          description: 'Directory for multi-output chains (each output written with a tool-derived name).',
+        },
+      },
+      required: ['steps', 'input_paths'],
+    },
+  };
+
   // Handler signature requires Promise return; no internal await needed.
   // eslint-disable-next-line @typescript-eslint/require-await
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map((tool) => ({
-      name: tool.id,
-      description: TOOL_DESCRIPTIONS[tool.id] ?? `${tool.name}: ${tool.description}`,
-      inputSchema: buildMcpInputSchema(tool),
-    })),
+    tools: [
+      CHAIN_TOOL,
+      ...tools.map((tool) => ({
+        name: tool.id,
+        description: TOOL_DESCRIPTIONS[tool.id] ?? `${tool.name}: ${tool.description}`,
+        inputSchema: buildMcpInputSchema(tool),
+      })),
+    ],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
+
+    // Meta-tool: run a chain in one shot.
+    if (name === 'wyreup_chain') {
+      const rawArgs = args ?? {};
+      const stepsStr = rawArgs['steps'] as string | undefined;
+      const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
+      const outputPath = rawArgs['output_path'] as string | undefined;
+      const outputDir = rawArgs['output_dir'] as string | undefined;
+      if (!stepsStr) {
+        throw new Error('wyreup_chain requires a "steps" chain string.');
+      }
+      const chain = parseChainString(stepsStr);
+      if (chain.length === 0) {
+        throw new Error('wyreup_chain: no valid steps parsed from input.');
+      }
+      // Validate every step references a real, MCP-runnable tool.
+      for (const step of chain) {
+        const t = registry.toolsById.get(step.toolId);
+        if (!t) throw new Error(`wyreup_chain: unknown tool "${step.toolId}".`);
+        if (!toolRunsOnSurface(t, 'mcp')) {
+          throw new Error(
+            `wyreup_chain: tool "${step.toolId}" is not available on MCP. ` +
+              'Web-only capture primitives (record-audio, take-photo, etc.) cannot run in a chain from MCP.',
+          );
+        }
+      }
+
+      const inputFiles = await Promise.all(
+        inputPaths.map(async (filePath: string) => {
+          const data = await readFile(filePath);
+          return new File([data], basename(filePath), {
+            type: inferMimeFromPath(filePath),
+          });
+        }),
+      );
+
+      const result = await runChain(
+        chain,
+        inputFiles,
+        {
+          onProgress: () => {},
+          signal: new AbortController().signal,
+          cache: new Map(),
+          executionId: randomUUID(),
+        },
+        registry,
+      );
+
+      const outputs = Array.isArray(result) ? result : [result];
+      const writtenPaths: string[] = [];
+
+      if (outputs.length === 1 && outputPath) {
+        await mkdir(dirname(outputPath), { recursive: true });
+        await writeFile(outputPath, Buffer.from(await outputs[0]!.arrayBuffer()));
+        writtenPaths.push(outputPath);
+      } else if (outputDir) {
+        await mkdir(outputDir, { recursive: true });
+        for (let i = 0; i < outputs.length; i++) {
+          const ext = extFromMime(outputs[i]!.type);
+          const outPath = join(outputDir, `chain-${i}${ext}`);
+          await writeFile(outPath, Buffer.from(await outputs[i]!.arrayBuffer()));
+          writtenPaths.push(outPath);
+        }
+      } else if (outputs.length > 0 && !outputDir && !outputPath) {
+        const blob = outputs[0]!;
+        if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          const text = await blob.text();
+          return { content: [{ type: 'text', text }] };
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Chain produced binary output but no output_path was provided. Rerun with output_path or output_dir.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Chain completed (${chain.length} step${chain.length === 1 ? '' : 's'}). Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
+          },
+        ],
+      };
+    }
+
     const tool = registry.toolsById.get(name);
     if (!tool || !toolRunsOnSurface(tool, 'mcp')) {
       throw new Error(`Unknown tool: ${name}`);

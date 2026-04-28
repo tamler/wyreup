@@ -137,6 +137,8 @@ program
   .argument('[inputs...]', 'Input file paths (use - for stdin, or omit for stdin when piping)')
   .option('--steps <chain>', 'Chain string: "tool1|tool2[key=val]|tool3"')
   .option('--from-url <url>', 'Parse chain from a Wyreup chain URL (?steps=...)')
+  .option('--from-kit <path>', 'Read a chain from a My Kit JSON export (use with --name)')
+  .option('--name <name>', 'Chain name or id to load from --from-kit')
   .option('-o, --output <path>', 'Output file path')
   .option('-O, --output-dir <dir>', 'Output directory for multi-output chains')
   .option('--save-intermediates <dir>', 'Save each step\'s output to this directory')
@@ -153,12 +155,20 @@ Chain string syntax:
 Examples:
   wyreup chain photo.jpg --steps "strip-exif|compress[quality=75]" -o clean.jpg
   wyreup chain photo.jpg --from-url "https://wyreup.com/chain/run?steps=strip-exif|compress" -o out.jpg
-  cat photo.jpg | wyreup chain --steps "strip-exif" --input-format image/jpeg > clean.jpg`,
+  wyreup chain photo.jpg --from-kit ~/wyreup-kit.json --name "photo cleanup" -o clean.jpg
+  cat photo.jpg | wyreup chain --steps "strip-exif" --input-format image/jpeg > clean.jpg
+
+Saved chains:
+  Export your kit from /my-kit on the web (uses the same JSON format
+  the CLI's --from-kit reads). Name match is case-insensitive and
+  accepts substrings or chain ids.`,
   )
   .action(async (inputs: string[], opts: Record<string, unknown>) => {
     await executeChain(inputs, {
       steps: opts['steps'] as string | undefined,
       fromUrl: opts['fromUrl'] as string | undefined,
+      fromKit: opts['fromKit'] as string | undefined,
+      name: opts['name'] as string | undefined,
       output: opts['output'] as string | undefined,
       outputDir: opts['outputDir'] as string | undefined,
       saveIntermediates: opts['saveIntermediates'] as string | undefined,
