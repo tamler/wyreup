@@ -13,5 +13,7 @@ export interface SerializedTool {
   paramSchema?: Record<string, ParamFieldSchema>;
   requiresWebgpu?: 'preferred' | 'required';
   requires?: ToolRequires;
+  installSize?: number;
+  installGroup?: string;
   memoryEstimate: string;
 }

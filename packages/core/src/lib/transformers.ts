@@ -111,22 +111,55 @@ export async function getPipeline(
 
   const { pipeline } = await import('@huggingface/transformers');
 
+  // Aggregate progress across files. Transformers.js emits per-file events
+  // (initiate, download, progress, done) which would otherwise show as
+  // "0% → 100% → 0% → 100%..." resetting per file. We track each file's
+  // bytes and emit an overall byte-weighted percent.
+  const fileBytes = new Map<string, { loaded: number; total: number }>();
+
+  function fmtBytes(b: number): string {
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+    return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   const pipe = await pipeline(task as Parameters<typeof pipeline>[0], model, {
     ...options,
     // Progress callback receives an untyped object from the Transformers.js library.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     progress_callback: (p: any) => {
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      if (p.status === 'downloading' && p.total) {
-        const percent =
-          p.loaded != null && p.total ? (p.loaded / p.total) * 100 : undefined;
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+      const file: string = typeof p.file === 'string' ? p.file : '';
+      const loaded: number =
+        typeof p.loaded === 'number' ? p.loaded : 0;
+      const total: number = typeof p.total === 'number' ? p.total : 0;
+
+      // 'progress' / 'downloading' events carry byte counts. Update our
+      // per-file tally; emit aggregated progress.
+      if ((p.status === 'progress' || p.status === 'downloading') && file && total > 0) {
+        fileBytes.set(file, { loaded, total });
+      } else if (p.status === 'done' && file) {
+        // Completed file: ensure loaded === total for accurate aggregate.
+        const existing = fileBytes.get(file);
+        if (existing) {
+          fileBytes.set(file, { loaded: existing.total, total: existing.total });
+        }
+      }
+
+      if (fileBytes.size > 0) {
+        let agg = { loaded: 0, total: 0 };
+        for (const v of fileBytes.values()) {
+          agg.loaded += v.loaded;
+          agg.total += v.total;
+        }
+        const percent = agg.total > 0 ? Math.round((agg.loaded / agg.total) * 100) : undefined;
         ctx.onProgress({
           stage: 'loading-deps',
           percent,
-          message: `Downloading ${model}...`,
+          message: `Loading ${model} — ${fmtBytes(agg.loaded)} / ${fmtBytes(agg.total)} (${fileBytes.size} file${fileBytes.size === 1 ? '' : 's'})`,
         });
       }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
     },
   } as Parameters<typeof pipeline>[2]);
 

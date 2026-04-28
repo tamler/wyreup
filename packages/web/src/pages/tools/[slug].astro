@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolRunner from '../../components/ToolRunner.svelte';
 import ShareToolButton from '../../components/ShareToolButton.svelte';
 import ToolCapabilityBanner from '../../components/ToolCapabilityBanner.svelte';
+import ToolDownloadNotice from '../../components/ToolDownloadNotice.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 export async function getStaticPaths() {
@@ -56,6 +57,8 @@ export async function getStaticPaths() {
           requires: tool.requires
             ? { webgpu: tool.requires.webgpu, minMemoryGB: tool.requires.minMemoryGB }
             : undefined,
+          installSize: tool.installSize,
+          installGroup: (tool as { installGroup?: string }).installGroup,
           memoryEstimate: tool.memoryEstimate,
         },
         relatedTools,
@@ -122,6 +125,12 @@ const ldJson = {
       </header>
 
       <ToolCapabilityBanner client:load requires={serializedTool.requires} toolName={name} />
+      <ToolDownloadNotice
+        client:load
+        toolId={serializedTool.id}
+        installSize={serializedTool.installSize}
+        installGroup={serializedTool.installGroup}
+      />
       <ToolRunner client:load tool={serializedTool} />
 
       <!-- Deliverable 4: Related tools footer -->

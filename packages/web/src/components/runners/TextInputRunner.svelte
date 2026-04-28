@@ -3,6 +3,7 @@
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
+  import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -66,6 +67,7 @@
       resultText = isJsonMime(blob.type)
         ? prettifyJson(await blob.text())
         : await blob.text();
+      markToolUsed(tool.id);
       state = 'done';
     } catch (err) {
       state = 'error';

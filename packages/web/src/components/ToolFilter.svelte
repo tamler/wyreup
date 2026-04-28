@@ -16,7 +16,16 @@
     keywords: string[];
     requiresWebgpu?: 'preferred' | 'required';
     requires?: ToolRequires;
+    installSize?: number;
     accept: string[];
+  }
+
+  function formatInstallSize(bytes: number | undefined): string | null {
+    if (!bytes || bytes <= 0) return null;
+    const mb = bytes / (1024 * 1024);
+    if (mb < 1) return `${Math.round(mb * 1024)} KB`;
+    if (mb < 1024) return `${Math.round(mb)} MB`;
+    return `${(mb / 1024).toFixed(1)} GB`;
   }
 
   export let tools: Tool[] = [];
@@ -389,6 +398,18 @@
           </div>
           <div class="tool-card__divider" aria-hidden="true"></div>
           <p class="tool-card__desc">{tool.description}</p>
+          {#if formatInstallSize(tool.installSize)}
+            <div class="tool-card__footer">
+              <span class="tool-card__download" title="Downloads on first use">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                {formatInstallSize(tool.installSize)} on first use
+              </span>
+            </div>
+          {/if}
         </div>
       </a>
     {/each}
@@ -799,6 +820,23 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .tool-card__footer {
+    margin-top: var(--space-2);
+  }
+
+  .tool-card__download {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    padding: 2px 6px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
   }
 
   /* WebGPU badges */
