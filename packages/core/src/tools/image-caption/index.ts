@@ -58,6 +58,18 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
   installGroup: 'vision-llm',
   requires: { webgpu: 'preferred' },
 
+  // A caption is prose. Suggest tools that work on prose, not on
+  // arbitrary text/plain (color-converter, regex-tester, etc.).
+  chainSuggestions: [
+    'text-translate',
+    'text-summarize',
+    'text-sentiment',
+    'text-readability',
+    'text-stats',
+    'markdown-to-html',
+  ],
+  outputDisplay: 'prose',
+
   defaults: defaultImageCaptionParams,
 
   paramSchema: {

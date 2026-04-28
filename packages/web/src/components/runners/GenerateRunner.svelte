@@ -151,7 +151,7 @@
         {/if}
 
         {#if resultBlob}
-          <ChainSection resultBlob={resultBlob} resultName="{tool.id}-result" />
+          <ChainSection resultBlob={resultBlob} sourceToolId={tool.id} resultName="{tool.id}-result" />
         {/if}
       </div>
     </div>

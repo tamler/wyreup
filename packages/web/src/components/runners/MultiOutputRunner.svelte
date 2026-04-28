@@ -173,6 +173,7 @@
         {#if resultBlobs.length > 0}
           <ChainSection
             resultBlob={resultBlobs[0]}
+            sourceToolId={tool.id}
             resultName={buildDownloadName(files[0]?.name, tool.id, resultBlobs[0]?.type.split('/')[1] ?? 'bin')}
           />
         {/if}

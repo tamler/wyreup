@@ -60,6 +60,7 @@ export async function getStaticPaths() {
           installSize: tool.installSize,
           installGroup: (tool as { installGroup?: string }).installGroup,
           memoryEstimate: tool.memoryEstimate,
+          outputDisplay: (tool as { outputDisplay?: 'mono' | 'prose' }).outputDisplay,
         },
         relatedTools,
       },

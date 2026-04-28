@@ -233,6 +233,7 @@
         {#if resultBlob}
           <ChainSection
             resultBlob={resultBlob}
+            sourceToolId={tool.id}
             resultName={buildDownloadName(undefined, tool.id, isJson ? 'json' : isHtml ? 'html' : 'txt')}
           />
         {/if}

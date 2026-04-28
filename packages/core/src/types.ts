@@ -274,6 +274,27 @@ export interface ToolModule<Params = unknown> {
   paramSchema?: ParamSchema<Params>;
 
   /**
+   * Curated next-step tool ids for the "Use this result in…" chain
+   * panel. When set, only these tools appear as suggestions instead
+   * of the full mime-compatible set.
+   *
+   * Without this, a transcribe-prose result would suggest every tool
+   * that accepts text/plain — including tools like `color-converter`
+   * that expect a hex string, not prose. Output mime alone can't
+   * disambiguate "transcript" vs "color string"; this field carries
+   * that intent.
+   */
+  chainSuggestions?: string[];
+
+  /**
+   * Hint for how the tool's text output should be presented in the
+   * web runner. `prose` = sans-serif, generous line height (transcripts,
+   * captions, summaries). `mono` = monospace, code-like (default; JSON,
+   * regex matches, formatted code).
+   */
+  outputDisplay?: 'mono' | 'prose';
+
+  /**
    * Approximate additional download size (bytes) this tool requires beyond
    * the base app bundle. Includes WASM modules and ML model files fetched
    * on first use. Undefined = negligible (pure JS, in-bundle). Used by the

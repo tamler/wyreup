@@ -16,4 +16,5 @@ export interface SerializedTool {
   installSize?: number;
   installGroup?: string;
   memoryEstimate: string;
+  outputDisplay?: 'mono' | 'prose';
 }

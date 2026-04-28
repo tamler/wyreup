@@ -165,6 +165,7 @@
         <div class="chain-prominent">
           <ChainSection
             resultBlob={resultBlob}
+            sourceToolId={tool.id}
             resultName={buildDownloadName(files[0]?.name, tool.id, resultBlob?.type.split('/')[1] ?? 'bin')}
           />
         </div>

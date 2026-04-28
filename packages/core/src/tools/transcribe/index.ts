@@ -137,6 +137,19 @@ export const transcribe: ToolModule<TranscribeParams> = {
   installGroup: 'speech',
   requires: { webgpu: 'preferred' },
 
+  // Sensible chain follow-ups for a transcript: language work + analysis,
+  // not "is this a hex color" tools that happen to accept text/plain.
+  chainSuggestions: [
+    'text-summarize',
+    'text-translate',
+    'text-sentiment',
+    'text-readability',
+    'text-stats',
+    'text-ner',
+    'markdown-to-html',
+  ],
+  outputDisplay: 'prose',
+
   defaults: defaultTranscribeParams,
 
   paramSchema: {
@@ -228,11 +241,14 @@ export const transcribe: ToolModule<TranscribeParams> = {
     const task = params.task ?? 'transcribe';
     const wantTimestamps = params.timestamps === true;
 
+    // Whisper in transformers.js v3 *requires* return_timestamps: true to
+    // do chunked long-form transcription. Without it, only the first 30 s
+    // chunk is decoded and the rest of the file is silently dropped. We
+    // always enable it internally, then strip the chunk metadata from
+    // the output unless the user explicitly asked for it.
     const options: Record<string, unknown> = {
       task,
-      return_timestamps: wantTimestamps,
-      // 30s chunks with 5s stride is the Whisper-recommended setting for
-      // long-form audio.
+      return_timestamps: true,
       chunk_length_s: 30,
       stride_length_s: 5,
     };

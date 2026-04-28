@@ -396,6 +396,7 @@
         <p class="done-msg">PDF redacted with {rectangles.length} rectangle{rectangles.length === 1 ? '' : 's'} across {new Set(rectangles.map((r) => r.page)).size} page{new Set(rectangles.map((r) => r.page)).size === 1 ? '' : 's'}.</p>
         <ChainSection
           resultBlob={resultBlob}
+          sourceToolId={tool.id}
           resultName={buildDownloadName(files[0]?.name, tool.id, 'pdf')}
         />
       </div>

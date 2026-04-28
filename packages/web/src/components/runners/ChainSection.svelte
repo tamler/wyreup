@@ -4,6 +4,13 @@
 
   export let resultBlob: Blob | null = null;
   export let resultName: string = 'result';
+  /**
+   * Optional id of the tool that produced this result. When set, the
+   * chain panel honors that tool's `chainSuggestions` field to filter
+   * the next-step list — avoids suggesting wildly off-topic tools just
+   * because they accept the same MIME (e.g. color-converter for prose).
+   */
+  export let sourceToolId: string | undefined = undefined;
 
   interface NextTool {
     id: string;
@@ -40,8 +47,24 @@
     const { createDefaultRegistry } = await import('@wyreup/core');
     const registry = createDefaultRegistry();
     const file = new File([blob], resultName, { type: blob.type });
-    const tools = registry.toolsForFiles([file]);
-    nextTools = tools.slice(0, 6).map((t) => ({
+    let pool = registry.toolsForFiles([file]);
+
+    // If the source tool curated its own chain suggestions, restrict
+    // the panel to that allowlist (preserving the curated order).
+    if (sourceToolId) {
+      const source = registry.toolsById.get(sourceToolId);
+      const suggestions = (source as { chainSuggestions?: string[] } | undefined)
+        ?.chainSuggestions;
+      if (suggestions && suggestions.length > 0) {
+        const compatibleIds = new Set(pool.map((t) => t.id));
+        pool = suggestions
+          .filter((id) => compatibleIds.has(id))
+          .map((id) => registry.toolsById.get(id))
+          .filter((t): t is NonNullable<typeof t> => Boolean(t));
+      }
+    }
+
+    nextTools = pool.slice(0, 6).map((t) => ({
       id: t.id,
       name: t.name,
       category: t.category,

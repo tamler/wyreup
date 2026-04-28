@@ -183,12 +183,24 @@
             {@html resultText}
           </div>
         {:else}
-          <pre class="text-viewer" role="region" aria-label="Text result">{resultText}</pre>
+          <pre
+            class="text-viewer"
+            class:text-viewer--prose={tool.outputDisplay === 'prose'}
+            role="region"
+            aria-label="Text result"
+          >{resultText}</pre>
+          {#if tool.outputDisplay === 'prose' && resultText}
+            <p class="text-stats">
+              {resultText.length.toLocaleString()} characters ·
+              {resultText.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words
+            </p>
+          {/if}
         {/if}
 
         {#if resultBlob}
           <ChainSection
             resultBlob={resultBlob}
+            sourceToolId={tool.id}
             resultName={buildDownloadName(files[0]?.name, tool.id, resultMime.includes('html') ? 'html' : 'txt')}
           />
         {/if}
@@ -261,6 +273,23 @@
     max-height: 400px;
     overflow-y: auto;
     line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Prose mode for transcripts, captions, summaries — readable, not
+     code. Larger / sans-serif / generous line height. */
+  .text-viewer--prose {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.7;
+    padding: var(--space-4);
+    max-height: 540px;
+  }
+
+  .text-stats {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
     margin: 0;
   }
 
