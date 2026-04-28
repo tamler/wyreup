@@ -73,19 +73,28 @@ async function tryBrowserTranslator(
   if (typeof window === 'undefined' && typeof self === 'undefined') return null;
 
   // Path 1: modern global `Translator` API (Chrome 138+ stable).
+  // Translator is a class — `typeof class === 'function'`. The previous
+  // `typeof === 'object'` check wrongly filtered it out, so this branch
+  // never executed and users fell through to the 400 MB M2M100 path.
   const globalScope =
     (typeof self !== 'undefined' ? self : (window as unknown)) as Record<string, unknown>;
-  const Translator = globalScope['Translator'];
-  if (Translator && typeof Translator === 'object') {
-    const T = Translator as Record<string, unknown>;
+  const TranslatorApi = globalScope['Translator'];
+  if (TranslatorApi) {
+    const T = TranslatorApi as Record<string, unknown>;
     if (typeof T['availability'] === 'function' && typeof T['create'] === 'function') {
       try {
         const availability = await (T['availability'] as (opts: unknown) => Promise<string>)({
           sourceLanguage: sourceLang,
           targetLanguage: targetLang,
         });
-        // 'available' or 'downloadable' means we can proceed; 'unavailable' bails.
-        if (availability === 'available' || availability === 'downloadable') {
+        // 'available' = ready now; 'downloadable' = browser will fetch
+        // the language pack on Translator.create. 'downloading' = fetch
+        // already in progress. Anything else (incl. 'unavailable') bails.
+        if (
+          availability === 'available' ||
+          availability === 'downloadable' ||
+          availability === 'downloading'
+        ) {
           const translator = await (T['create'] as (opts: unknown) => Promise<unknown>)({
             sourceLanguage: sourceLang,
             targetLanguage: targetLang,
@@ -198,17 +207,29 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    // Path 1: Browser-native Translator API (Chrome 131+)
-    ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Checking for browser translator...' });
+    // Path 1: Browser-native Translator API (Chrome 138+ stable, also
+    // legacy Chrome 131-137). Tried FIRST so users on supported
+    // browsers don't download the 400 MB fallback model — Chrome
+    // ships its own translation language packs on demand.
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 20,
+      message: 'Trying browser-native translator…',
+    });
     const browserResult = await tryBrowserTranslator(text, sourceLang, targetLang);
 
     if (browserResult !== null) {
-      ctx.onProgress({ stage: 'done', percent: 100, message: 'Done (browser-native)' });
+      ctx.onProgress({ stage: 'done', percent: 100, message: 'Done (translated by your browser, no download)' });
       return [new Blob([browserResult], { type: 'text/plain' })];
     }
 
-    // Path 2: M2M100 via Transformers.js (fallback)
-    ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading translation model (~400 MB on first use)' });
+    // Path 2: M2M100 via Transformers.js (fallback for browsers without
+    // the Translator API — Firefox, Safari, older Chrome).
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 0,
+      message: 'Browser translator unavailable — loading M2M100 (~400 MB on first use)',
+    });
 
     const pipe = await getPipeline(ctx, 'translation', MODEL_ID, {
       src_lang: sourceLang,
