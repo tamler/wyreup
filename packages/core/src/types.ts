@@ -245,7 +245,16 @@ export interface ToolModule<Params = unknown> {
   slug: string;
   name: string;
   description: string;
+  /** Primary category — where the tool lives by default. */
   category: ToolCategory;
+  /**
+   * Additional categories this tool belongs to. A tool surfaces under
+   * any category in {category, ...categories}. Useful when a tool
+   * legitimately spans buckets (e.g. record-audio is both a capture
+   * primitive and an audio tool). Listings deduplicate by id, so the
+   * tool appears once per category but only once total.
+   */
+  categories?: ToolCategory[];
   presence: ToolPresence;
   keywords: string[];
 

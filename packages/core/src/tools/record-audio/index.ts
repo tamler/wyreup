@@ -28,6 +28,9 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   description:
     'Push-to-talk microphone capture. Click record, talk, click stop — the recording is yours to download or chain into another tool.',
   category: 'audio',
+  // Also a capture/creation primitive — surfaces under "create" so users
+  // who think "I want to make a new audio file" find it from there too.
+  categories: ['create'],
   presence: 'standalone',
   keywords: [
     'record', 'audio', 'microphone', 'mic', 'voice', 'capture', 'push-to-talk', 'memo',

@@ -10,6 +10,7 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   id: t.id,
   name: t.name,
   category: t.category,
+  categories: t.categories ?? [],
   description: t.description,
   keywords: t.keywords ?? [],
   requiresWebgpu: t.requires?.webgpu,
@@ -21,8 +22,14 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   accept: t.input.accept,
 }));
 
-// Sorted unique categories
-const categories = [...new Set(tools.map((t) => t.category))].sort();
+// Sorted unique categories — include both the primary `category` and
+// any additional `categories[]` membership so the chip row covers
+// every bucket a tool can surface under.
+const categories = [
+  ...new Set(
+    tools.flatMap((t) => [t.category, ...(t.categories ?? [])]),
+  ),
+].sort();
 
 interface ExampleChain {
   id: string;

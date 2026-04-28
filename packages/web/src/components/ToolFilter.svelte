@@ -12,6 +12,8 @@
     id: string;
     name: string;
     category: string;
+    /** Additional categories this tool surfaces under. */
+    categories?: string[];
     description: string;
     keywords: string[];
     requiresWebgpu?: 'preferred' | 'required';
@@ -19,6 +21,20 @@
     installSize?: number;
     installGroup?: string;
     accept: string[];
+  }
+
+  function toolInCategory(t: Tool, cat: string): boolean {
+    if (t.category === cat) return true;
+    return (t.categories ?? []).includes(cat);
+  }
+
+  function toolMatchesCategoryFilter(t: Tool, active: Set<string>): boolean {
+    if (active.size === 0) return true;
+    if (active.has(t.category)) return true;
+    for (const c of t.categories ?? []) {
+      if (active.has(c)) return true;
+    }
+    return false;
   }
 
   // Install groups that mean "this is an AI/ML tool". Drives the AI badge
@@ -171,9 +187,11 @@
     window.location.href = `/tools/${toolId}`;
   }
 
-  // Counts per category from the device-runnable subset.
+  // Counts per category from the device-runnable subset. Tools with
+  // multi-category membership get counted in each bucket they belong
+  // to — so the totals can sum > tool count, which is correct.
   $: categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
-    acc[cat] = visibleTools.list.filter((t) => t.category === cat).length;
+    acc[cat] = visibleTools.list.filter((t) => toolInCategory(t, cat)).length;
     return acc;
   }, {});
 
@@ -219,18 +237,14 @@
         keywords: t.keywords ?? [],
       })));
       const results = fuse.search(q).map((r) => r.item);
-      const catFiltered = activeCategories.size === 0
-        ? results
-        : results.filter((r) => activeCategories.has(r.category));
       const byId = new Map(pool.map((t) => [t.id, t]));
-      const lookupFiltered = catFiltered.map((r) => byId.get(r.id)!).filter(Boolean);
+      const hydrated = results.map((r) => byId.get(r.id)!).filter(Boolean);
+      const catFiltered = hydrated.filter((t) => toolMatchesCategoryFilter(t, activeCategories));
       filtered = droppedMimeFilter
-        ? lookupFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
-        : lookupFiltered;
+        ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
+        : catFiltered;
     } else {
-      const catFiltered = activeCategories.size === 0
-        ? pool
-        : pool.filter((t) => activeCategories.has(t.category));
+      const catFiltered = pool.filter((t) => toolMatchesCategoryFilter(t, activeCategories));
       filtered = droppedMimeFilter
         ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
         : catFiltered;

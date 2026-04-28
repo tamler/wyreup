@@ -38,13 +38,104 @@
     state = 'idle';
   }
 
-  function download() {
-    if (!resultFile) return;
-    const a = document.createElement('a');
-    a.href = resultUrl ?? URL.createObjectURL(resultFile);
-    const ext = (resultFile.type.split('/')[1] ?? 'webm').split(';')[0];
-    a.download = buildDownloadName(undefined, tool.id, ext);
-    a.click();
+  let convertingForDownload = false;
+
+  /**
+   * Convert a webm/opus blob to a portable WAV file. MediaRecorder
+   * only emits webm or mp4 in current browsers; users expect a file
+   * that opens cleanly in Finder / QuickTime / their email app.
+   * WAV is universal and we can write it without a new dependency.
+   *
+   * Uses Web Audio's decodeAudioData + a hand-rolled WAV header.
+   */
+  async function blobToWav(blob: Blob): Promise<Blob> {
+    const arrayBuf = await blob.arrayBuffer();
+    const Ctor = (typeof AudioContext !== 'undefined'
+      ? AudioContext
+      : (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    const ctx = new Ctor();
+    let audioBuf: AudioBuffer;
+    try {
+      audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+    } finally {
+      void ctx.close();
+    }
+    return audioBufferToWav(audioBuf);
+  }
+
+  function audioBufferToWav(buf: AudioBuffer): Blob {
+    const numChan = Math.min(buf.numberOfChannels, 2);
+    const sampleRate = buf.sampleRate;
+    const samples = buf.length;
+    const dataBytes = samples * numChan * 2;
+    const total = 44 + dataBytes;
+    const arrayBuf = new ArrayBuffer(total);
+    const view = new DataView(arrayBuf);
+
+    function writeStr(offset: number, str: string) {
+      for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    }
+
+    // RIFF header
+    writeStr(0, 'RIFF');
+    view.setUint32(4, total - 8, true);
+    writeStr(8, 'WAVE');
+    // fmt chunk (PCM, 16-bit)
+    writeStr(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChan, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChan * 2, true);
+    view.setUint16(32, numChan * 2, true);
+    view.setUint16(34, 16, true);
+    // data chunk
+    writeStr(36, 'data');
+    view.setUint32(40, dataBytes, true);
+
+    // Interleaved 16-bit PCM
+    let offset = 44;
+    const channels: Float32Array[] = [];
+    for (let c = 0; c < numChan; c++) channels.push(buf.getChannelData(c));
+    for (let i = 0; i < samples; i++) {
+      for (let c = 0; c < numChan; c++) {
+        let s = Math.max(-1, Math.min(1, channels[c]![i]!));
+        s = s < 0 ? s * 0x8000 : s * 0x7fff;
+        view.setInt16(offset, s, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuf], { type: 'audio/wav' });
+  }
+
+  async function download() {
+    if (!resultFile || !resultBlob) return;
+    convertingForDownload = true;
+    try {
+      const wavBlob = await blobToWav(resultBlob);
+      const url = URL.createObjectURL(wavBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = buildDownloadName(undefined, tool.id, 'wav');
+      a.click();
+      // Free the temp URL after the download is queued.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      // Fall back to the raw recording if conversion fails. Better to
+      // give the user *something* than a silent failure.
+      const url = URL.createObjectURL(resultFile);
+      const a = document.createElement('a');
+      a.href = url;
+      const ext = (resultFile.type.split('/')[1] ?? 'webm').split(';')[0];
+      a.download = buildDownloadName(undefined, tool.id, ext);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      // eslint-disable-next-line no-console
+      console.warn('WAV conversion failed; downloaded raw recording:', err);
+    } finally {
+      convertingForDownload = false;
+    }
   }
 
   function fmtBytes(n: number): string {
@@ -69,7 +160,9 @@
         <div class="panel-header">
           <span class="panel-label">Recording</span>
           <div class="result-actions">
-            <button class="btn-secondary" on:click={download} type="button">Download</button>
+            <button class="btn-secondary" on:click={download} disabled={convertingForDownload} type="button">
+              {convertingForDownload ? 'Converting…' : 'Download (.wav)'}
+            </button>
             <button class="btn-secondary" on:click={reset} type="button">Record again</button>
           </div>
         </div>
