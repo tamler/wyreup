@@ -23,6 +23,15 @@
   let modelsClearedMsg = '';
   let modelsClearError = '';
 
+  interface CachedModel {
+    id: string;
+    bytes: number;
+    requestCount: number;
+  }
+  let cachedModels: CachedModel[] = [];
+  let modelsLoading = false;
+  let perModelDeleting: Record<string, boolean> = {};
+
   async function refresh() {
     if (typeof navigator === 'undefined' || !('storage' in navigator)) {
       status = 'unsupported';
@@ -38,6 +47,77 @@
       status = 'ready';
     } catch {
       status = 'unsupported';
+    }
+    void refreshModelList();
+  }
+
+  /**
+   * Group every cached HuggingFace request by `<org>/<repo>` and sum
+   * bytes via Content-Length headers. Other CDN entries (jsdelivr,
+   * googleapis) aren't model-attributable in the same way; they're
+   * left to the global Clear button.
+   */
+  async function refreshModelList(): Promise<void> {
+    if (typeof caches === 'undefined') {
+      cachedModels = [];
+      return;
+    }
+    modelsLoading = true;
+    try {
+      const cache = await caches.open('wyreup-cdn-assets').catch(() => null);
+      if (!cache) {
+        cachedModels = [];
+        return;
+      }
+      const requests = await cache.keys();
+      const groups = new Map<string, CachedModel>();
+
+      for (const req of requests) {
+        const url = new URL(req.url);
+        if (url.hostname !== 'huggingface.co') continue;
+        // Path: /<org>/<repo>/resolve/<ref>/<file>
+        const m = /^\/([^/]+)\/([^/]+)\/resolve\//.exec(url.pathname);
+        if (!m) continue;
+        const id = `${m[1]}/${m[2]}`;
+        let group = groups.get(id);
+        if (!group) {
+          group = { id, bytes: 0, requestCount: 0 };
+          groups.set(id, group);
+        }
+        group.requestCount += 1;
+        const resp = await cache.match(req);
+        const cl = resp?.headers.get('content-length');
+        if (cl) group.bytes += parseInt(cl, 10);
+      }
+
+      cachedModels = Array.from(groups.values()).sort((a, b) => b.bytes - a.bytes);
+    } catch {
+      cachedModels = [];
+    } finally {
+      modelsLoading = false;
+    }
+  }
+
+  async function deleteOneModel(id: string): Promise<void> {
+    perModelDeleting = { ...perModelDeleting, [id]: true };
+    try {
+      const cache = await caches.open('wyreup-cdn-assets');
+      const requests = await cache.keys();
+      const toDelete: Request[] = [];
+      for (const req of requests) {
+        const url = new URL(req.url);
+        if (url.hostname !== 'huggingface.co') continue;
+        const m = /^\/([^/]+)\/([^/]+)\/resolve\//.exec(url.pathname);
+        if (m && `${m[1]}/${m[2]}` === id) toDelete.push(req);
+      }
+      await Promise.all(toDelete.map((r) => cache.delete(r)));
+      // Also drop the in-memory pipeline that loaded these weights so a
+      // subsequent run truly hits disk (which is now empty for them).
+      const { clearPipelineCache } = await import('@wyreup/core');
+      clearPipelineCache();
+      broadcastChange();
+    } finally {
+      perModelDeleting = { ...perModelDeleting, [id]: false };
     }
   }
 
@@ -157,6 +237,34 @@
       </p>
     {/if}
 
+    {#if cachedModels.length > 0}
+      <div class="model-list" aria-label="Cached AI models">
+        <div class="model-list__header">
+          <span>{cachedModels.length} model{cachedModels.length === 1 ? '' : 's'} cached</span>
+          <span>{formatBytes(cachedModels.reduce((acc, m) => acc + m.bytes, 0) / (1024 * 1024))} total</span>
+        </div>
+        {#each cachedModels as m}
+          <div class="model-row">
+            <div class="model-row__info">
+              <span class="model-row__id">{m.id}</span>
+              <span class="model-row__meta">{formatBytes(m.bytes / (1024 * 1024))} · {m.requestCount} file{m.requestCount === 1 ? '' : 's'}</span>
+            </div>
+            <button
+              class="btn-secondary btn-secondary--danger model-row__delete"
+              on:click={() => deleteOneModel(m.id)}
+              disabled={perModelDeleting[m.id]}
+              type="button"
+              aria-label={`Delete ${m.id} from disk`}
+            >
+              {perModelDeleting[m.id] ? '…' : 'Delete'}
+            </button>
+          </div>
+        {/each}
+      </div>
+    {:else if !modelsLoading}
+      <p class="storage-msg storage-msg--muted">No AI models cached yet. Models download the first time you use a tool that needs them.</p>
+    {/if}
+
     <div class="storage-actions">
       <div class="storage-action">
         <div class="storage-action__copy">
@@ -262,6 +370,68 @@
     border-left: 2px solid var(--accent);
     background: var(--bg-raised);
     margin: 0;
+  }
+
+  .model-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-raised);
+    padding: var(--space-2);
+  }
+
+  .model-list__header {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .model-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .model-row__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .model-row__id {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .model-row__meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .model-row__delete {
+    height: 28px;
+    padding: 0 var(--space-3);
+    font-size: var(--text-xs);
+    flex-shrink: 0;
   }
 
   .storage-actions {
