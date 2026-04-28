@@ -17,7 +17,25 @@
     requiresWebgpu?: 'preferred' | 'required';
     requires?: ToolRequires;
     installSize?: number;
+    installGroup?: string;
     accept: string[];
+  }
+
+  // Install groups that mean "this is an AI/ML tool". Drives the AI badge
+  // on cards and the AI filter chip. Update when adding new ML groups.
+  const AI_GROUPS = new Set([
+    'image-ai',
+    'nlp-standard',
+    'nlp-translate',
+    'speech',
+    'vision-llm',
+    'generative-image',
+    'generative-audio',
+    'llm',
+  ]);
+
+  function isAiTool(t: { installGroup?: string }): boolean {
+    return !!t.installGroup && AI_GROUPS.has(t.installGroup);
   }
 
   function formatInstallSize(bytes: number | undefined): string | null {
@@ -162,6 +180,9 @@
   // query is set from URL ?q= on mount; not editable inline (header search handles that)
   let query = '';
   let activeCategories: Set<string> = new Set();
+  let aiOnly = false;
+
+  $: aiCount = visibleTools.list.filter(isAiTool).length;
   let filtered: Tool[] = tools;
   // Incremented on each filter change to re-trigger stagger animation
   let filterEpoch = 0;
@@ -185,7 +206,9 @@
     const q = query.trim();
     // Filter-by-dropped-file: treat the dropped MIME as the constraint.
     const droppedMimeFilter = droppedFile ? [droppedFile.mime] : null;
-    const pool = visibleTools.list;
+    const pool = aiOnly
+      ? visibleTools.list.filter(isAiTool)
+      : visibleTools.list;
 
     if (q) {
       const fuse = createToolSearch(pool.map((t) => ({
@@ -218,6 +241,7 @@
   function clearAll() {
     query = '';
     activeCategories = new Set();
+    aiOnly = false;
     droppedFile = null;
     applyFilter();
   }
@@ -225,6 +249,7 @@
   $: {
     activeCategories;
     visibleTools;
+    aiOnly;
     applyFilter();
   }
 
@@ -327,6 +352,24 @@
 <!-- Category chip filter -->
 <div class="filter-bar">
   <div class="filter-chips" role="group" aria-label="Filter by category">
+    {#if aiCount > 0}
+      <button
+        class="filter-chip filter-chip--ai"
+        class:active={aiOnly}
+        on:click={() => { aiOnly = !aiOnly; }}
+        aria-pressed={aiOnly}
+        title="Show only on-device AI / ML tools"
+      >
+        <span class="filter-chip__icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor" stroke="none" opacity="0.4"/>
+            <path d="M19 14l.94 2.81L23 18l-3.06.94L19 22l-.94-3.06L15 18l3.06-1.19L19 14z" fill="currentColor" stroke="none" opacity="0.6"/>
+          </svg>
+        </span>
+        <span class="filter-chip__label">AI</span>
+        <span class="filter-chip__count">({aiCount})</span>
+      </button>
+    {/if}
     {#each categories as cat}
       <button
         class="filter-chip"
@@ -390,6 +433,9 @@
               <div class="tool-card__name">{tool.name}</div>
               <div class="tool-card__category">{tool.category}</div>
             </div>
+            {#if isAiTool(tool)}
+              <span class="badge badge--ai" title="On-device AI / ML model">AI</span>
+            {/if}
             {#if tool.requiresWebgpu === 'required'}
               <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
             {:else if tool.requiresWebgpu === 'preferred'}
@@ -524,9 +570,17 @@
 
   .recent-pills {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--space-2);
     flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    /* Fade the right edge to hint at scrollable overflow without showing
+       a chunky scrollbar in macOS / iOS. */
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
   }
 
   .recent-pill {
@@ -541,6 +595,9 @@
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    white-space: nowrap;
     transition:
       border-color var(--duration-instant) var(--ease-sharp),
       color var(--duration-instant) var(--ease-sharp);
@@ -644,6 +701,27 @@
   .filter-chip:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* AI filter chip — leads the row, marked with the accent dot to stand
+     out as a capability filter rather than a category. */
+  .filter-chip--ai {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  }
+
+  .filter-chip--ai .filter-chip__count {
+    color: color-mix(in srgb, var(--accent) 70%, var(--text-subtle));
+  }
+
+  .filter-chip--ai.active {
+    background: var(--accent);
+    color: var(--black);
+    border-color: var(--accent);
+  }
+
+  .filter-chip--ai.active .filter-chip__count {
+    color: var(--black);
   }
 
   /* Results meta */
@@ -856,6 +934,13 @@
     background: var(--accent-dim);
     color: var(--accent);
     border: 1px solid var(--accent);
+  }
+
+  .badge--ai {
+    background: var(--accent);
+    color: var(--black);
+    border: 1px solid var(--accent);
+    font-weight: 600;
   }
 
   .badge--preferred {
