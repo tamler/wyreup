@@ -447,14 +447,14 @@
               <div class="tool-card__name">{tool.name}</div>
               <div class="tool-card__category">{tool.category}</div>
             </div>
-            {#if isAiTool(tool)}
-              <span class="badge badge--ai" title="On-device AI / ML model">AI</span>
-            {/if}
-            {#if tool.requiresWebgpu === 'required'}
-              <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
-            {:else if tool.requiresWebgpu === 'preferred'}
-              <span class="badge badge--preferred" title="Faster with WebGPU">Faster on WebGPU</span>
-            {/if}
+            <div class="tool-card__badges">
+              {#if isAiTool(tool)}
+                <span class="badge badge--ai" title="On-device AI / ML model">AI</span>
+              {/if}
+              {#if tool.requiresWebgpu === 'required'}
+                <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
+              {/if}
+            </div>
           </div>
           <div class="tool-card__divider" aria-hidden="true"></div>
           <p class="tool-card__desc">{tool.description}</p>
@@ -717,15 +717,11 @@
     outline-offset: 2px;
   }
 
-  /* AI filter chip — leads the row, marked with the accent dot to stand
-     out as a capability filter rather than a category. */
-  .filter-chip--ai {
+  /* AI filter chip — uses the same neutral resting state as category
+     chips so it doesn't look pre-selected. The icon is the only thing
+     that distinguishes it at rest; active state inverts to accent. */
+  .filter-chip--ai .filter-chip__icon {
     color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  }
-
-  .filter-chip--ai .filter-chip__count {
-    color: color-mix(in srgb, var(--accent) 70%, var(--text-subtle));
   }
 
   .filter-chip--ai.active {
@@ -734,6 +730,7 @@
     border-color: var(--accent);
   }
 
+  .filter-chip--ai.active .filter-chip__icon,
   .filter-chip--ai.active .filter-chip__count {
     color: var(--black);
   }
@@ -818,9 +815,15 @@
     }
   }
 
-  /* Tool card — double-bezel: outer frame + inner raised surface */
+  /* Tool card — double-bezel: outer frame + inner raised surface.
+     Flex column so the inner panel can stretch to the grid-row height
+     (the parent .tool-grid is a CSS grid that equalizes row heights;
+     without flex on the card the inner background didn't fill, leaving
+     a stripe of the outer frame at the bottom on shorter cards like
+     pdf-to-text and invert). */
   .tool-card {
-    display: block;
+    display: flex;
+    flex-direction: column;
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
@@ -862,14 +865,35 @@
     border: 1px solid var(--border-subtle);
     border-radius: calc(var(--radius-md) - 1px);
     padding: var(--space-4);
+    /* Stretch to fill the card so the raised background covers the
+       full grid-row height even when content is short. */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
+  /* Header: 3 columns — icon, name+category (flex-grow), badges
+     (right-anchored). Long names truncate with ellipsis instead of
+     pushing badges to a new row, which previously moved the AI tag
+     into the middle of the card on tools like Named Entity Recognition. */
   .tool-card__header {
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
     gap: var(--space-2);
     margin-bottom: var(--space-3);
-    flex-wrap: wrap;
+  }
+
+  .tool-card__header > div:nth-child(2) {
+    min-width: 0;
+  }
+
+  .tool-card__badges {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-1);
+    flex-shrink: 0;
   }
 
   .tool-card__icon {
@@ -887,6 +911,13 @@
     font-weight: 500;
     color: var(--text-primary);
     line-height: 1.25;
+    overflow: hidden;
+    /* Two-line clamp for long tool names so the card height stays
+       predictable. Name keeps the grid cell from blowing up wider
+       than 1fr; badges stay right-anchored. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 
   .tool-card__category {
@@ -915,7 +946,11 @@
   }
 
   .tool-card__footer {
-    margin-top: var(--space-2);
+    /* Anchor at the bottom of the inner panel so cards with and
+       without an install-size tag end at the same baseline within
+       the grid row. */
+    margin-top: auto;
+    padding-top: var(--space-3);
   }
 
   .tool-card__download {
@@ -940,7 +975,6 @@
     border-radius: var(--radius-sm);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    margin-left: auto;
     flex-shrink: 0;
   }
 
