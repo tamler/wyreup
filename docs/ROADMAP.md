@@ -12,8 +12,8 @@ background lives.
 ## 0. Shipped
 
 ### Product
-- **`@wyreup/core`** — **118 tools across 14 categories, 1566 tests**, dual browser/node build
-- **`@wyreup/web`** — **146-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
+- **`@wyreup/core`** — **119 tools across 14 categories, 1566 tests**, dual browser/node build
+- **`@wyreup/web`** — **147-page** Astro static site live at `wyreup.pages.dev` and `wyreup.com`
 - **`@wyreup/cli`** — shell binary wrapping core, full execution surface (`run`, `chain`, stdin/stdout piping)
 - **`@wyreup/mcp`** — MCP server (14 tests, 53 tools exposed via stdio)
 - **`@wyreup/skill`** — dual-backend agent skill (CLI + MCP) — superseded by `wyreup install-skill`
@@ -29,6 +29,7 @@ edit (15) · media (14) · inspect (14) · dev (12) · convert (12) · create (1
 - **image-ai** — 4 image ML tools (bg-remove, upscale-2x, image-similarity, ocr-pro)
 - **nlp-standard** — 4 NLP tools (sentiment, NER, summarize, embeddings)
 - **speech** *(new)* — 1 tool today (`transcribe` via Whisper-tiny, ~30 MB)
+- **vision-llm** *(new)* — 1 tool today (`image-caption` via vit-gpt2, ~100 MB)
 
 ### Platform
 - Design system v1.3 ("Signal") locked in `packages/web/DESIGN.md`
@@ -309,6 +310,11 @@ audio (music + source separation). Each track has a four-step ladder
   flac), resamples to 16 kHz mono via OfflineAudioContext, runs
   through Whisper. Optional language hint, transcribe-vs-translate
   toggle, optional timestamps (JSON output).
+- ✅ **`image-caption` (vit-gpt2)** — shipped 2026-04-28.
+  Image → text caption. ~100 MB Xenova/vit-gpt2-image-captioning
+  via transformers.js `image-to-text` pipeline. Opt-in via
+  `vision-llm` install group. Tier-2 upgrade path: Florence-2-base
+  for richer captions / VQA / OCR-style extraction.
 - 🟡 **Canonical MIME picks** — pending. Decisions to make before
   any tool ships, so chains compose without surprises:
   - TTS output: `audio/wav` (recommended — uncompressed, universal)

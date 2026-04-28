@@ -56,6 +56,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   base64: 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
+  'image-caption': 'TextResultRunner',
 
   // TwoTextInputRunner — two side-by-side textareas, output anything
   'text-diff': 'TwoTextInputRunner',

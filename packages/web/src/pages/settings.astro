@@ -58,6 +58,11 @@ const GROUP_LABELS: Record<string, { name: string; description: (toolIds: string
     description: (toolIds, totalMb) =>
       `${toolIds.length} speech tool${toolIds.length === 1 ? '' : 's'} (Whisper-tiny for transcription). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
   },
+  'vision-llm': {
+    name: 'Vision tools (image captioning)',
+    description: (toolIds, totalMb) =>
+      `${toolIds.length} image-to-text tool${toolIds.length === 1 ? '' : 's'} (caption / describe / extract). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
+  },
 };
 
 for (const t of registry.toolsById.values()) {
