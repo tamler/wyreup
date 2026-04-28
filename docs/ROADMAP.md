@@ -482,6 +482,121 @@ These need answers before shipping the first track:
 - **Whether to expose the Compose / Scratchpad tool** — see the
   Adjacent section above.
 
+### Wave S — Browser extension (planning)
+
+A fifth surface alongside web / CLI / MCP / library. Not just "the
+web app in a popup" — the extension genuinely unlocks capabilities
+that a website can't offer, and forecloses some opportunities only
+if we build it as a launcher-only. Stay open to inline execution
+where it's safe.
+
+#### What an extension genuinely unlocks (new, not-available-today)
+
+1. **Right-click context menus on every page.** The OS-level
+   "send X to Wyreup" verb. The web has nothing equivalent —
+   `navigator.share` is one-shot, doesn't surface tool choice.
+2. **DOM-level access on every site.** Translate a paragraph
+   in-place. Summarize an article into a sidebar. Replace
+   page images with bg-removed versions. Inline UX impossible
+   from a tab Wyreup doesn't own.
+3. **Cross-origin fetches without CORS.** Process any image / PDF
+   / audio file the user can see in their browser, regardless of
+   the host's CORS policy. Today the web app needs the user to
+   download then re-upload.
+4. **Persistent background work.** MV3 service workers can
+   prefetch models in the background, watch downloads, watch the
+   clipboard. Web tabs only run while visible.
+5. **Tab-aware bulk operations.** "Compress every image on this
+   page." "OCR every PDF in my open tabs." Cross-tab intent
+   the web can't express.
+6. **System clipboard reads on demand.** Web requires a user
+   gesture *every* time. Extensions get permission once and read
+   freely, enabling fast clipboard tools.
+7. **Native Messaging** (later). Hand off to a locally-installed
+   `wyreup` CLI for tools that benefit from native performance
+   (ffmpeg, big diffusion models). Bridges the install groups
+   problem cleanly.
+8. **Override built-in browser behavior.** Replace "Save image
+   as" with a Wyreup-flavored save (strip-EXIF + compress + save).
+9. **Storage durability.** `chrome.storage.local` is more
+   eviction-resistant than IndexedDB on iOS Safari and during
+   storage pressure. Useful for a small "recent" / "kit" store.
+10. **Always-on toolbar action.** The pocket toolbelt — popup
+    with the existing search, scoped to the active tab's context.
+
+#### Architecture — hybrid, not launcher-only
+
+Don't pre-emptively decide everything has to open a tab. Run what
+makes sense in the extension; defer what doesn't.
+
+- **In the popup (instant, no tab open):** lightweight tools
+  with no model load — `regex-tester`, `base64`, `url-encoder`,
+  `case-converter`, `slug`, `jwt-decoder`, `cron-parser`,
+  `timestamp-converter`, `color-converter`, hash, password-generator,
+  uuid, number-base-converter, formatters. About 30 of the existing
+  catalog. Sub-100 ms invocation, no tab spawn.
+- **In a sandboxed offscreen document** (MV3 feature, runs HTML +
+  JS in a worker-like context for the SW): medium-weight tools
+  including image processing (compress, convert, rotate, etc.).
+  WebAssembly works fine here. Survives across popup closes.
+- **By opening a wyreup.com tab with the asset pre-loaded:**
+  heavy ML (transcribe, image-caption, future MobileDiffusion).
+  Reuses the existing `chainStorage` IndexedDB hand-off so the
+  destination page already has the asset when it loads.
+- **By calling the local CLI via Native Messaging** (v2): for
+  users who installed `@wyreup/cli`, optionally route heavy
+  tools to the local install for native-speed inference. Opt-in
+  per-tool, not blanket.
+
+#### Right-click context map
+
+| Right-click on | Surface a menu of | Notes |
+|---|---|---|
+| **Image (page or selected)** | `bg-remove`, `compress`, `face-blur`, `image-caption`, `image-info`, `rotate-image`, `flip-image`, `strip-exif`, `convert` | Most common context |
+| **Selected text** | `text-translate`, `text-summarize`, `text-sentiment`, `text-ner`, `regex-tester`, `case-converter`, `slug`, `markdown-to-html`, `text-readability`, `text-stats` | Inline language work |
+| **Link to PDF** | `merge-pdf`, `split-pdf`, `pdf-redact`, `pdf-to-text`, `pdf-extract-pages`, `pdf-info`, `pdf-compress` | Capture-and-process |
+| **Link to audio** | `transcribe`, `extract-audio`, `convert-audio`, `audio-enhance` | One-click STT |
+| **Link to video** | `extract-audio`, `compress-video`, `convert-video`, `video-to-gif`, `trim-media` | Quick post-production |
+| **Page (no selection)** | full-page screenshot → `image-caption` / `compress` / `qr` (page URL) | Capture flows |
+| **Browser action popup** | The existing tool search dropdown, plus quick paste-text-and-go for text tools | The pocket toolbelt |
+
+#### What we'd ship (v1 scope)
+
+- New package: `@wyreup/extension`
+- MV3 manifest, background service worker, popup, offscreen document
+  for medium tools, content script (only where needed for inline UX)
+- Reuses `@wyreup/core`'s registry + the new `toolsForFiles` helper
+  to generate context menus dynamically — no hand-curated lists
+- Shares the `wyreup:tools-used` localStorage flag with the web app
+  via cross-origin storage (or duplicate; small).
+- Distribution: Chrome Web Store ($5 one-time dev fee), Firefox
+  Add-ons (free), Edge (free). Safari Web Extensions (separate
+  XCode build) deferred to v2.
+
+#### Open product questions
+
+- **How aggressive should "Save image as → Wyreup" override be?**
+  Power-users want it; first-time users would be confused. Probably
+  off by default with a clear toggle in extension preferences.
+- **Native Messaging Host install UX** — requires per-OS install
+  scripts. Punt to v2 unless demand surfaces.
+- **iOS Safari Web Extensions** — separate XCode + App Store
+  pipeline. Big lift for a minority surface. v2 at earliest.
+- **In-page DOM rewriting consent** — "translate this paragraph"
+  modifies the user's view. Should be one-time consented per site.
+
+#### Roadmap dependencies
+
+- Wave Q's heavy-tool work (download UX, capability filter,
+  install groups) carries over directly — same registry, same
+  install-group machinery, same SW disk cache (extension can
+  share the user's regular browser SW cache for the
+  wyreup.com origin).
+- The `chainStorage` IndexedDB hand-off is reused as the
+  asset-passing primitive between extension and tab.
+- Wave M's Pro tier is naturally extension-aware (some context
+  menus could be Pro-only without changing the protocol).
+
 ---
 
 ## 3. Technical debt
