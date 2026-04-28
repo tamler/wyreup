@@ -19,7 +19,9 @@ export type RunnerVariant =
   | 'PdfRedactRunner'
   | 'RecordAudioRunner'
   | 'ColorPaletteRunner'
-  | 'ColorHarmonyRunner';
+  | 'ColorHarmonyRunner'
+  | 'HashRunner'
+  | 'ColorConverterRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -47,10 +49,12 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'pdf-to-image': 'MultiOutputRunner',
 
   // JsonResultRunner — file in, JSON out
-  hash: 'JsonResultRunner',
   'image-info': 'JsonResultRunner',
   'pdf-info': 'JsonResultRunner',
   'pdf-metadata': 'JsonResultRunner',
+
+  // HashRunner — visual hash list (per-algo copy buttons)
+  hash: 'HashRunner',
 
   // ColorPaletteRunner — bespoke visual chips for the extracted palette
   'color-palette': 'ColorPaletteRunner',
@@ -90,7 +94,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'cron-parser': 'TextInputRunner',
   'number-base-converter': 'TextInputRunner',
   'timestamp-converter': 'TextInputRunner',
-  'color-converter': 'TextInputRunner',
+  // color-converter is bespoke: live swatch + every format with copies
+  'color-converter': 'ColorConverterRunner',
   'json-formatter': 'TextInputRunner',
   'css-formatter': 'TextInputRunner',
   'html-formatter': 'TextInputRunner',

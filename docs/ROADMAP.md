@@ -672,21 +672,17 @@ makes sense in the extension; defer what doesn't.
 
 Captured here so it doesn't disappear.
 
-- [ ] **Visual runners for the remaining JSON-output tools.** The
-  bespoke-runner pattern (`ColorPaletteRunner`, `ColorHarmonyRunner`,
-  `RecordAudioRunner`, `PdfRedactRunner`) is set; same shape applies
-  to:
+- [ ] **Visual runners for the remaining JSON-output tools.** Pattern
+  established with `ColorPaletteRunner`, `ColorHarmonyRunner`,
+  `HashRunner`, `ColorConverterRunner`, `RecordAudioRunner`,
+  `PdfRedactRunner`. Same shape applies to:
     - `image-info` — thumbnail + dimensions / EXIF / colors as cards
     - `pdf-info` — page count + meta as cards, optional first-page
       thumbnails
     - `pdf-metadata` (read mode) — title / author / subject as labeled
       rows with copy buttons
-    - `hash` — multiple hashes as labeled rows with copy buttons
-      (md5 / sha1 / sha256 / sha512), file-size badge
     - `qr-reader` — decoded text + the source QR side-by-side, version
       / error-correction / data-mask as badges
-    - `color-converter` — input hex/rgb/hsl, show a swatch + variants
-      in every format (hex / rgb / hsl / hsv / oklch / cmyk)
     - `image-similarity` — score visualization (gauge or bar) plus
       the two compared thumbnails
   Each is ~200-400 lines of bespoke Svelte on top of the existing

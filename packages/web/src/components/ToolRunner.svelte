@@ -21,6 +21,8 @@
   import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
   import ColorPaletteRunner from './runners/ColorPaletteRunner.svelte';
   import ColorHarmonyRunner from './runners/ColorHarmonyRunner.svelte';
+  import HashRunner from './runners/HashRunner.svelte';
+  import ColorConverterRunner from './runners/ColorConverterRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -70,6 +72,8 @@
     RecordAudioRunner,
     ColorPaletteRunner,
     ColorHarmonyRunner,
+    HashRunner,
+    ColorConverterRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
