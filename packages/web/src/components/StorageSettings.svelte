@@ -65,16 +65,30 @@
     modelsCleared = false;
     modelsClearError = '';
     try {
-      // The SW's cacheFirst handler stores heavy assets under this name.
-      const ok = await caches.delete('wyreup-heavy-assets');
-      if (!ok) {
-        // Cache may not exist yet (no models downloaded). Treat as success.
-      }
-      // Also drop the in-memory pipelines so the next use truly hits disk
+      // Two distinct SW caches hold model bytes (set up in sw.ts):
+      //   - wyreup-cdn-assets:   third-party CDN fetches — HuggingFace,
+      //                          jsdelivr, googleapis. This is where
+      //                          transformers.js model weights actually
+      //                          live (downloaded from huggingface.co).
+      //   - wyreup-heavy-assets: same-origin .wasm / .onnx files
+      //                          (codec runtimes, our bundled ML libs).
+      // Clearing only one used to leave the bigger half intact — the
+      // transformers.js weights kept being served from cache, so the
+      // "Clear" button was effectively a no-op for actual ML models.
+      // Wipe both. Also try `transformers-cache` (the upstream default
+      // some transformers.js code paths fall back to).
+      const targets = ['wyreup-cdn-assets', 'wyreup-heavy-assets', 'transformers-cache'];
+      const results = await Promise.all(targets.map((name) => caches.delete(name).catch(() => false)));
+      const cleared = results.filter(Boolean).length;
+      // Drop the in-memory pipelines so the next use truly hits disk
       // (which is now empty for these URLs).
       const { clearPipelineCache } = await import('@wyreup/core');
       clearPipelineCache();
       modelsCleared = true;
+      if (cleared === 0 && persisted !== false) {
+        // Nothing to clear (caches not yet created) — that's fine, treat
+        // as success. Don't surface a misleading error.
+      }
       await refresh();
       setTimeout(() => { modelsCleared = false; }, 2500);
     } catch (err) {
