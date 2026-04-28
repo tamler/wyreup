@@ -1,7 +1,16 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { getPipeline } from '../../lib/transformers.js';
 
+export type WhisperModel = 'tiny' | 'base' | 'small';
+
 export interface TranscribeParams {
+  /**
+   * Whisper model size. Trade-off:
+   *   tiny  — ~80 MB,  fast, OK for clean speech
+   *   base  — ~250 MB, better with noise / accents (recommended)
+   *   small — ~600 MB, production-grade quality
+   */
+  model?: WhisperModel;
   /**
    * Language hint for the model. 'auto' lets Whisper detect, but a specific
    * code is faster and usually more accurate. ISO 639-1 codes.
@@ -19,17 +28,19 @@ export interface TranscribeParams {
 }
 
 export const defaultTranscribeParams: TranscribeParams = {
+  model: 'base',
   language: 'en',
   timestamps: false,
   task: 'transcribe',
 };
 
-// Whisper-tiny — MIT-licensed, ~30 MB quantized.
-// https://huggingface.co/Xenova/whisper-tiny
-// Tiny is the right starting point: covers the speech-input category at
-// the smallest possible footprint, and validates the install/consent UX
-// before we add Whisper-base or Distil-Whisper as Tier-2 upgrades.
-const MODEL_ID = 'Xenova/whisper-tiny';
+// Whisper model variants on HuggingFace. All MIT-licensed and supported
+// by transformers.js's automatic-speech-recognition pipeline.
+const MODEL_IDS: Record<WhisperModel, string> = {
+  tiny: 'Xenova/whisper-tiny',
+  base: 'Xenova/whisper-base',
+  small: 'Xenova/whisper-small',
+};
 
 const ACCEPTED_MIME_TYPES = [
   'audio/wav',
@@ -115,8 +126,9 @@ export const transcribe: ToolModule<TranscribeParams> = {
   slug: 'transcribe',
   name: 'Transcribe Audio',
   description:
-    'Convert speech to text using Whisper-tiny — runs entirely on your device. ' +
-    '~80 MB model downloads on first use, then works offline.',
+    'Convert speech to text using OpenAI Whisper — runs entirely on your device. ' +
+    'Pick a model: tiny (~80 MB, fast), base (~250 MB, recommended), or small (~600 MB, best). ' +
+    'The chosen model downloads on first use, then works offline.',
   category: 'export',
   presence: 'standalone',
   keywords: ['transcribe', 'speech', 'stt', 'whisper', 'audio', 'subtitles', 'voice'],
@@ -133,7 +145,10 @@ export const transcribe: ToolModule<TranscribeParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'high',
-  installSize: 80_000_000,
+  // installSize tracks the recommended default (base ~250 MB). The
+  // download size is shown per-model in the param help text and in the
+  // download notice so users see the actual cost of their choice.
+  installSize: 250_000_000,
   installGroup: 'speech',
   requires: { webgpu: 'preferred' },
 
@@ -153,6 +168,16 @@ export const transcribe: ToolModule<TranscribeParams> = {
   defaults: defaultTranscribeParams,
 
   paramSchema: {
+    model: {
+      type: 'enum',
+      label: 'model',
+      help: 'Bigger = more accurate, slower, larger download on first use.',
+      options: [
+        { value: 'tiny', label: 'tiny — ~80 MB · fast · clean speech' },
+        { value: 'base', label: 'base — ~250 MB · recommended' },
+        { value: 'small', label: 'small — ~600 MB · best quality' },
+      ],
+    },
     language: {
       type: 'enum',
       label: 'language',
@@ -189,10 +214,14 @@ export const transcribe: ToolModule<TranscribeParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
+    const modelChoice: WhisperModel = params.model ?? 'base';
+    const modelId = MODEL_IDS[modelChoice];
+    const modelSizeMb = { tiny: 80, base: 250, small: 600 }[modelChoice];
+
     ctx.onProgress({
       stage: 'loading-deps',
       percent: 0,
-      message: 'Loading Whisper-tiny (~80 MB on first use)',
+      message: `Loading Whisper-${modelChoice} (~${modelSizeMb} MB on first use)`,
     });
 
     // dtype: pin per-component types to avoid the broken q4 merged-decoder
@@ -202,11 +231,12 @@ export const transcribe: ToolModule<TranscribeParams> = {
     //    Missing required scale: model.decoder.embed_tokens.weight_merged_0_scale"
     // because the merge optimization looks up a scale tensor that the
     // merged variant doesn't include. Encoder is fine at q8; decoder
-    // merge needs fp32 to avoid the bad path.
+    // merge needs fp32 to avoid the bad path. Same setting works for
+    // tiny / base / small variants.
     const pipe = await getPipeline(
       ctx,
       'automatic-speech-recognition',
-      MODEL_ID,
+      modelId,
       {
         dtype: {
           encoder_model: 'q8',
