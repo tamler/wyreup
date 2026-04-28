@@ -7,6 +7,7 @@ import { makeInstallSkillCommand } from './commands/install-skill.js';
 import { executeTool, addToolOptions, mergeToolOptions } from './commands/run.js';
 import { executeChain } from './commands/chain.js';
 import { prefetchCommand } from './commands/prefetch.js';
+import { cacheListCommand, cacheClearCommand } from './commands/cache.js';
 import { createDefaultRegistry } from '@wyreup/core';
 
 // Read version from package.json at runtime so it never drifts.
@@ -50,17 +51,19 @@ program
   .description('Pre-download model weights for AI/ML tools so first-use is offline-ready')
   .argument('[tool-ids...]', 'Tool IDs to prefetch (e.g. transcribe image-caption)')
   .option('--group <name>', 'Prefetch every tool in an install group (e.g. speech, vision-llm, image-ai)')
+  .option('--chain <chain>', 'Prefetch every tool in a chain string ("tool1|tool2[k=v]|tool3")')
   .option('--all', 'Prefetch every tool with a downloadable model')
   .option('--verbose', 'Print download progress')
   .addHelpText(
     'after',
     `
 Examples:
-  wyreup prefetch transcribe                   # one tool
-  wyreup prefetch transcribe image-caption     # several tools
-  wyreup prefetch --group speech               # whole install group
-  wyreup prefetch --all                        # every model-backed tool
-  wyreup prefetch --all --verbose              # with download progress
+  wyreup prefetch transcribe                                       # one tool
+  wyreup prefetch transcribe image-caption                         # several tools
+  wyreup prefetch --group speech                                   # whole install group
+  wyreup prefetch --chain "transcribe|text-summarize|markdown-to-html"  # preflight a chain
+  wyreup prefetch --all                                            # every model-backed tool
+  wyreup prefetch --all --verbose                                  # with download progress
 
 The cache is stored where Transformers.js puts it (typically
 ~/.cache/huggingface/hub) and is shared across CLI / MCP invocations.`,
@@ -68,9 +71,32 @@ The cache is stored where Transformers.js puts it (typically
   .action(async (toolIds: string[], opts: Record<string, unknown>) => {
     await prefetchCommand(toolIds, {
       group: opts['group'] as string | undefined,
+      chain: opts['chain'] as string | undefined,
       all: opts['all'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
     });
+  });
+
+// ──── cache ───────────────────────────────────────────────────────────────────
+
+const cacheCmd = program
+  .command('cache')
+  .description('Inspect or clear the local model cache shared with MCP');
+
+cacheCmd
+  .command('list')
+  .description('Show downloaded models and total cache size')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(async (opts: Record<string, unknown>) => {
+    await cacheListCommand({ json: opts['json'] as boolean | undefined });
+  });
+
+cacheCmd
+  .command('clear')
+  .description('Delete all cached model weights (frees disk; next use re-downloads)')
+  .option('--force', 'Skip the confirmation prompt')
+  .action(async (opts: Record<string, unknown>) => {
+    await cacheClearCommand({ force: opts['force'] as boolean | undefined });
   });
 
 // ──── run ─────────────────────────────────────────────────────────────────────
@@ -151,6 +177,7 @@ const BUILTIN_COMMANDS = new Set([
   'init-tool',
   'install-skill',
   'prefetch',
+  'cache',
   'run',
   'chain',
   'help',

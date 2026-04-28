@@ -16,11 +16,12 @@
  * ~/.cache/huggingface/hub) and is honored on subsequent invocations.
  */
 
-import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
+import { createDefaultRegistry, parseChainString, type ToolModule } from '@wyreup/core';
 
 interface PrefetchOpts {
   group?: string;
   all?: boolean;
+  chain?: string;
   verbose?: boolean;
 }
 
@@ -33,7 +34,30 @@ export async function prefetchCommand(
 
   // Resolve which tools to prefetch.
   let targets: ToolModule[];
-  if (opts.all) {
+  if (opts.chain) {
+    let parsed: { toolId: string }[];
+    try {
+      parsed = parseChainString(opts.chain);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`Invalid --chain: ${msg}`);
+      process.exitCode = 1;
+      return;
+    }
+    targets = [];
+    const seen = new Set<string>();
+    for (const step of parsed) {
+      if (seen.has(step.toolId)) continue;
+      seen.add(step.toolId);
+      const t = registry.toolsById.get(step.toolId);
+      if (!t) {
+        console.error(`Chain references unknown tool: "${step.toolId}"`);
+        process.exitCode = 1;
+        return;
+      }
+      targets.push(t);
+    }
+  } else if (opts.all) {
     targets = all.filter((t) => (t.installSize ?? 0) > 0);
   } else if (opts.group) {
     targets = all.filter(
@@ -65,7 +89,7 @@ export async function prefetchCommand(
     }
   } else {
     console.error(
-      'Usage: wyreup prefetch <tool-id>... | --group <name> | --all',
+      'Usage: wyreup prefetch <tool-id>... | --chain "<chain>" | --group <name> | --all',
     );
     process.exitCode = 1;
     return;
