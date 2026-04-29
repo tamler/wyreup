@@ -5,8 +5,10 @@
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
   import type { ToolRequires } from '@wyreup/core';
 
-  const SUGGEST_URL_BASE =
-    'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
+  // Tool suggestions go to hello@wyreup.com — lower friction than
+  // GitHub Issues for non-technical users (no signup wall). Power
+  // users can still find the GitHub repo on /about.
+  const SUGGEST_EMAIL = 'hello@wyreup.com';
 
   interface Tool {
     id: string;
@@ -205,9 +207,17 @@
   // Incremented on each filter change to re-trigger stagger animation
   let filterEpoch = 0;
 
-  $: suggestUrl = query.trim()
-    ? SUGGEST_URL_BASE + encodeURIComponent(query.trim())
-    : SUGGEST_URL_BASE;
+  $: suggestUrl = (() => {
+    const q = query.trim();
+    const subject = q ? `Tool suggestion: ${q}` : 'Tool suggestion';
+    const body = q
+      ? `I searched for "${q}" but couldn't find a tool that fits. Could you add one?`
+      : '';
+    const params = new URLSearchParams();
+    params.set('subject', subject);
+    if (body) params.set('body', body);
+    return `mailto:${SUGGEST_EMAIL}?${params.toString()}`;
+  })();
 
   function toggleCategory(cat: string) {
     const next = new Set(activeCategories);
@@ -420,12 +430,7 @@
     <p class="empty-msg">No tools match {query ? `"${query}"` : 'this filter'}.</p>
     <button class="btn-ghost" on:click={clearAll}>Clear filter</button>
     {#if query.trim()}
-      <a
-        class="btn-suggest"
-        href={suggestUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >Suggest a tool</a>
+      <a class="btn-suggest" href={suggestUrl}>Email a suggestion</a>
     {/if}
   </div>
 {:else}

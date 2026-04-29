@@ -157,7 +157,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
           <a href="/about" class="footer-link">About</a>
           <a href="/settings" class="footer-link">Settings</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
-          <a href="https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml" target="_blank" rel="noopener noreferrer" class="footer-link">Suggest a tool</a>
+          <a href="mailto:hello@wyreup.com?subject=Tool%20suggestion" class="footer-link">Suggest a tool</a>
         </nav>
       </div>
     </footer>
@@ -685,8 +685,9 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   import type { SearchableTool } from '../lib/tool-search';
   import { detectCapabilities, checkToolCapabilities } from '@wyreup/core';
 
-  const SUGGEST_URL_BASE =
-    'https://github.com/tamler/wyreup/issues/new?template=tool-suggestion.yml&title=Tool+suggestion%3A+';
+  // Tool suggestions go to hello@wyreup.com — friendlier than a
+  // GitHub Issues signup wall for non-technical users.
+  const SUGGEST_EMAIL = 'hello@wyreup.com';
 
   const input = document.getElementById('header-search') as HTMLInputElement | null;
   const dropdown = document.getElementById('header-search-dropdown') as HTMLElement | null;
@@ -759,7 +760,14 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
     function suggestUrl(query: string): string {
       const q = query.trim();
-      return q ? SUGGEST_URL_BASE + encodeURIComponent(q) : SUGGEST_URL_BASE;
+      const subject = q ? `Tool suggestion: ${q}` : 'Tool suggestion';
+      const body = q
+        ? `I searched for "${q}" but couldn't find a tool that fits. Could you add one?`
+        : '';
+      const params = new URLSearchParams();
+      params.set('subject', subject);
+      if (body) params.set('body', body);
+      return `mailto:${SUGGEST_EMAIL}?${params.toString()}`;
     }
 
     function renderDropdown(
@@ -785,7 +793,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
         ? `<div class="header-suggest-results">${rows}</div><div class="header-suggest-sep" aria-hidden="true"></div>`
         : '';
 
-      const suggestRow = `<a class="header-suggest-item header-suggest-item--footer" href="${suggestUrl(query)}" target="_blank" rel="noopener noreferrer" role="option" aria-selected="false">Can't find it? Suggest a tool</a>`;
+      const suggestRow = `<a class="header-suggest-item header-suggest-item--footer" href="${suggestUrl(query)}" role="option" aria-selected="false">Can't find it? Email a suggestion</a>`;
 
       dd.innerHTML = resultsBlock + suggestRow;
       dd.hidden = false;
