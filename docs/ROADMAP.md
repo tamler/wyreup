@@ -451,10 +451,25 @@ exist but require custom processing/encoding glue). Track but defer.
 **Validated next adds (in order of confidence):**
 1. **BLIP-base** as `image-caption-detailed` (~250 MB) — drop-in
    pipeline replacement, richer captions. Same install group.
-2. **MobileDiffusion-tiny** for text→image — validates diffusion
-   stack. New `generative-image` install group.
-3. Florence-2 / Demucs after architecture-specific integration is
+2. Florence-2 / Demucs after architecture-specific integration is
    verified.
+
+**Diffusion (text→image) — deferred 2026-04-29.** Investigated and
+benched. Findings:
+- transformers.js v4 has no `text-to-image` pipeline; needs a separate
+  stack (`@aislamov/diffusers.js` + `onnxruntime-web`).
+- MobileDiffusion-tiny (the roadmap aspiration) was a Google paper —
+  no public ONNX export exists.
+- Smallest *actually working* browser model is
+  `TheyCallMeHex/LCM-Dreamshaper-V7-ONNX` at ~2 GB, 8–15 s/image on
+  M-series with WebGPU. Average hardware is multiples slower.
+- WebGPU + JSPI flag still required in Chrome for many users.
+Conclusion: shipping a 2 GB / 30+ s first-image experience as the
+flagship "generate an image" tool would damage the brand more than
+no diffusion at all. Hold for one of: (a) a sub-1 GB model that
+generates in <5 s on average hardware, (b) WebGPU + JSPI shipping
+without flags everywhere, (c) genuine user pull where the size/speed
+tradeoff is acceptable.
 
 #### Install groups to add on `/settings`
 
