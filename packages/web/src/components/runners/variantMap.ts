@@ -77,6 +77,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
   'image-caption': 'TextResultRunner',
+  'image-caption-detailed': 'TextResultRunner',
 
   // TwoTextInputRunner — two side-by-side textareas, output anything
   'text-diff': 'TwoTextInputRunner',

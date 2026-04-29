@@ -110,6 +110,7 @@ export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/fa
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
 export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
+export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';
 export { colorHarmony, type ColorHarmonyParams, defaultColorHarmonyParams, type HarmonyScheme, type ColorHarmonyResult } from './tools/color-harmony/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
