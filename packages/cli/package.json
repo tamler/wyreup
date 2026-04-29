@@ -50,6 +50,7 @@
   "dependencies": {
     "@clack/prompts": "^1.2.0",
     "@wyreup/core": "workspace:*",
+    "chokidar": "^5.0.0",
     "commander": "^12.1.0"
   },
   "devDependencies": {

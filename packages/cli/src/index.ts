@@ -6,6 +6,7 @@ import { initToolCommand } from './commands/init-tool.js';
 import { makeInstallSkillCommand } from './commands/install-skill.js';
 import { executeTool, addToolOptions, mergeToolOptions } from './commands/run.js';
 import { executeChain } from './commands/chain.js';
+import { executeWatch } from './commands/watch.js';
 import { prefetchCommand } from './commands/prefetch.js';
 import { cacheListCommand, cacheClearCommand } from './commands/cache.js';
 import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
@@ -177,6 +178,52 @@ Saved chains:
     });
   });
 
+// ──── watch ───────────────────────────────────────────────────────────────────
+
+program
+  .command('watch')
+  .description('Watch a folder and run a chain on every new file (daemon)')
+  .argument('<directory>', 'Directory to watch (only new files trigger runs)')
+  .option('--steps <chain>', 'Chain string: "tool1|tool2[key=val]|tool3"')
+  .option('--from-url <url>', 'Parse chain from a Wyreup chain URL (?steps=...)')
+  .option('--from-kit <path>', 'Read a chain from a My Kit JSON export (use with --name)')
+  .option('--name <name>', 'Chain name or id to load from --from-kit')
+  .option('--out-dir <name>', 'Output subfolder name inside the watched directory (default _wyreup-out)')
+  .option('--concurrency <n>', 'Max concurrent runs (1-8, default 2)', (v: string) => parseInt(v, 10))
+  .option('--follow-symlinks', 'Follow symbolic links into the watched tree (off by default for safety)')
+  .option('--allow-system', 'Override the safety guard against watching system / home dirs (you almost never want this)')
+  .option('--verbose', 'Print per-file progress to stderr')
+  .addHelpText(
+    'after',
+    `
+Examples:
+  wyreup watch ./screenshots --steps "strip-exif|compress[quality=80]"
+  wyreup watch ./inbox --from-kit ~/wyreup-kit.json --name "photo cleanup"
+  wyreup watch ./drops --from-url "https://wyreup.com/chain/run?steps=transcribe|text-summarize" --verbose
+
+Behavior:
+  - Watches for files added or moved into the directory (not edits to existing files).
+  - Skips dotfiles, the output subfolder, and files whose MIME doesn't match the chain's first tool.
+  - Outputs to ./<watch-dir>/_wyreup-out/ (configurable). Source files are never modified.
+  - Symlinks are NOT followed by default. Pass --follow-symlinks to opt in.
+  - Refuses to watch /, $HOME, /etc, /usr, etc. Pass --allow-system to override.
+  - Logs paths, sizes, and durations only — never file contents.
+  - Ctrl-C drains in-flight work, then exits cleanly.`,
+  )
+  .action(async (directory: string, opts: Record<string, unknown>) => {
+    await executeWatch(directory, {
+      steps: opts['steps'] as string | undefined,
+      fromUrl: opts['fromUrl'] as string | undefined,
+      fromKit: opts['fromKit'] as string | undefined,
+      name: opts['name'] as string | undefined,
+      outDir: opts['outDir'] as string | undefined,
+      concurrency: opts['concurrency'] as number | undefined,
+      followSymlinks: opts['followSymlinks'] as boolean | undefined,
+      allowSystem: opts['allowSystem'] as boolean | undefined,
+      verbose: opts['verbose'] as boolean | undefined,
+    });
+  });
+
 // ──── tool-id shorthand (fall-through) ───────────────────────────────────────
 //
 // If the first argument is a known tool ID and not a built-in subcommand,
@@ -190,6 +237,7 @@ const BUILTIN_COMMANDS = new Set([
   'cache',
   'run',
   'chain',
+  'watch',
   'help',
 ]);
 
