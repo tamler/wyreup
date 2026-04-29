@@ -38,6 +38,11 @@ function saveAll(chains: KitChain[]): void {
   } catch {
     // localStorage full or unavailable
   }
+  // Notify any listening UI (e.g. SavedChainsSection on /tools) to refresh.
+  // localStorage doesn't fire `storage` events for same-tab writes.
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wyreup:chains-changed'));
+  }
 }
 
 export function getAllChains(): KitChain[] {

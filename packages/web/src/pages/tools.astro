@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolFilter from '../components/ToolFilter.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
+import SavedChainsSection from '../components/SavedChainsSection.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 const registry = createDefaultRegistry();
@@ -144,6 +145,8 @@ function toolDisplayName(id: string): string {
       <div class="page-header">
         <h1 class="page-title">Tools</h1>
       </div>
+
+      <SavedChainsSection client:load />
 
       <ToolFilter
         client:load
