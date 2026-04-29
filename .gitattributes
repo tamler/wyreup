@@ -1,0 +1,6 @@
+*.svelte text
+*.astro text
+*.ts text
+*.tsx text
+*.js text
+*.mjs text
