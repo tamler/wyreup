@@ -29,13 +29,22 @@ export function encodeChainSteps(steps: ChainStepSpec[]): string {
 }
 
 /**
+ * Hard cap on chain steps decoded from a URL. Defends against shareable
+ * URLs that try to enqueue thousands of steps (DoS via auto-run, or
+ * resource exhaustion). 20 is well above any reasonable real chain.
+ */
+export const MAX_CHAIN_STEPS = 20;
+
+/**
  * Decode a URL-safe chain string back to steps.
- * Returns null if the string is malformed beyond recovery.
+ * Returns null if the string is malformed beyond recovery, or if it
+ * exceeds MAX_CHAIN_STEPS.
  */
 export function decodeChainSteps(encoded: string): ChainStepSpec[] | null {
   if (!encoded || !encoded.trim()) return null;
   try {
     const parts = encoded.split('|');
+    if (parts.length > MAX_CHAIN_STEPS) return null;
     const steps: ChainStepSpec[] = [];
     for (const part of parts) {
       const trimmed = part.trim();

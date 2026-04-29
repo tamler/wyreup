@@ -10,6 +10,7 @@
 
   let chains: KitChain[] = [];
   let menuOpenId: string | null = null;
+  let copiedId: string | null = null;
 
   onMount(() => {
     refresh();
@@ -58,6 +59,28 @@
     // Refresh happens via the wyreup:chains-changed event dispatched by
     // kitStorage's saveAll; no manual call needed here.
   }
+
+  function shareUrl(chain: KitChain): string {
+    const encoded = encodeChainSteps(chain.steps);
+    const params = new URLSearchParams();
+    params.set('steps', encoded);
+    params.set('name', chain.name);
+    return `${window.location.origin}/chain/run?${params.toString()}`;
+  }
+
+  async function handleCopyShare(e: MouseEvent, chain: KitChain) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(shareUrl(chain));
+      copiedId = chain.id;
+      setTimeout(() => { if (copiedId === chain.id) copiedId = null; }, 1500);
+    } catch {
+      // Fallback: show a prompt with the URL the user can copy manually
+      window.prompt('Copy this link', shareUrl(chain));
+    }
+    menuOpenId = null;
+  }
 </script>
 
 <svelte:window on:click={closeMenu} />
@@ -104,6 +127,9 @@
               {#if menuOpenId === chain.id}
                 <div class="chain-card__menu" role="menu" on:click|stopPropagation>
                   <a href="/chain/build?steps={encodeURIComponent(encodeChainSteps(chain.steps))}" class="chain-card__menu-item" role="menuitem">Edit</a>
+                  <button class="chain-card__menu-item" on:click={(e) => handleCopyShare(e, chain)} type="button" role="menuitem">
+                    {copiedId === chain.id ? 'Link copied' : 'Copy share link'}
+                  </button>
                   <button class="chain-card__menu-item chain-card__menu-item--danger" on:click={(e) => handleDelete(e, chain)} type="button" role="menuitem">Delete</button>
                 </div>
               {/if}
