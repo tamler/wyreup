@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolFilter from '../components/ToolFilter.svelte';
+import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 
 const registry = createDefaultRegistry();
@@ -137,6 +138,7 @@ function toolDisplayName(id: string): string {
   description="Browser-native tools across image, PDF, audio, text, and dev categories. Compress, convert, inspect, redact — nothing uploads."
   ogDescription="Browser-native tools. Image editing, PDF processing, text utilities, dev tools — all run locally, no uploads."
 >
+  <PwaOnboardBanner client:load />
   <section class="tools-page">
     <div class="container">
       <div class="page-header">
