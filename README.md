@@ -138,8 +138,8 @@ Open [wyreup.com](https://wyreup.com) and install as a PWA. On mobile, share any
 
 Agent skills are installed via `wyreup install-skill [cli|mcp|combined]` —
 the CLI fetches the current `skill.md` from GitHub and writes it into the
-agent's skills directory. Replaces the deprecated `@wyreup/skill`,
-`@wyreup/cli-skill`, and `@wyreup/mcp-skill` npm packages.
+agent's skills directory. This replaces three deprecated npm packages
+(`@wyreup/skill`, `@wyreup/cli-skill`, `@wyreup/mcp-skill`).
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 
