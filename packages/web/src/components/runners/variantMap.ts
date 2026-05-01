@@ -27,7 +27,8 @@ export type RunnerVariant =
   | 'PdfMetadataRunner'
   | 'QrReaderRunner'
   | 'ImageSimilarityRunner'
-  | 'TrimMediaRunner';
+  | 'TrimMediaRunner'
+  | 'ZipInfoRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -177,7 +178,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // ZIP / archive
   'zip-create': 'MultiInputRunner',
   'zip-extract': 'MultiOutputRunner',
-  'zip-info': 'JsonResultRunner',
+  'zip-info': 'ZipInfoRunner',
 
   // PGP — text-out variants get the text result; verify gets JSON
   'pgp-encrypt': 'TextResultRunner',

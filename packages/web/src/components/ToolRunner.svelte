@@ -29,6 +29,7 @@
   import QrReaderRunner from './runners/QrReaderRunner.svelte';
   import ImageSimilarityRunner from './runners/ImageSimilarityRunner.svelte';
   import TrimMediaRunner from './runners/TrimMediaRunner.svelte';
+  import ZipInfoRunner from './runners/ZipInfoRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -86,6 +87,7 @@
     QrReaderRunner,
     ImageSimilarityRunner,
     TrimMediaRunner,
+    ZipInfoRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
