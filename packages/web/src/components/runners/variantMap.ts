@@ -28,7 +28,8 @@ export type RunnerVariant =
   | 'QrReaderRunner'
   | 'ImageSimilarityRunner'
   | 'TrimMediaRunner'
-  | 'ZipInfoRunner';
+  | 'ZipInfoRunner'
+  | 'ExcelInfoRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -188,7 +189,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // Spreadsheets / CSV
   'csv-json': 'TextResultRunner',
   'csv-to-excel': 'MultiInputRunner',
-  'excel-info': 'JsonResultRunner',
+  'excel-info': 'ExcelInfoRunner',
   'excel-to-csv': 'TextResultRunner',
   'excel-to-json': 'JsonResultRunner',
   'merge-workbooks': 'MultiInputRunner',

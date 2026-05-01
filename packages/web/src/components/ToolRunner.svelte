@@ -30,6 +30,7 @@
   import ImageSimilarityRunner from './runners/ImageSimilarityRunner.svelte';
   import TrimMediaRunner from './runners/TrimMediaRunner.svelte';
   import ZipInfoRunner from './runners/ZipInfoRunner.svelte';
+  import ExcelInfoRunner from './runners/ExcelInfoRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -88,6 +89,7 @@
     ImageSimilarityRunner,
     TrimMediaRunner,
     ZipInfoRunner,
+    ExcelInfoRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
