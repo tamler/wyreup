@@ -152,4 +152,50 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'reorder-pdf': 'PreviewRunner',
   'page-numbers-pdf': 'PreviewRunner',
   'watermark-pdf': 'PreviewRunner',
+
+  // ffmpeg — single video/audio in, media out (mime-aware preview)
+  'compress-video': 'PreviewRunner',
+  'convert-video': 'PreviewRunner',
+  'convert-audio': 'PreviewRunner',
+  'extract-audio': 'PreviewRunner',
+  'trim-media': 'PreviewRunner',
+  'video-add-text': 'PreviewRunner',
+  'video-color-correct': 'PreviewRunner',
+  'video-speed': 'PreviewRunner',
+  'video-to-gif': 'PreviewRunner',
+  'html-to-pdf': 'PreviewRunner',
+  'pgp-decrypt': 'PreviewRunner',
+  'json-to-excel': 'PreviewRunner',
+
+  // ffmpeg multi-input
+  'burn-subtitles': 'MultiInputRunner',
+  'video-concat': 'MultiInputRunner',
+  'video-crossfade': 'MultiInputRunner',
+  'video-overlay-image': 'MultiInputRunner',
+
+  // ZIP / archive
+  'zip-create': 'MultiInputRunner',
+  'zip-extract': 'MultiOutputRunner',
+  'zip-info': 'JsonResultRunner',
+
+  // PGP — text-out variants get the text result; verify gets JSON
+  'pgp-encrypt': 'TextResultRunner',
+  'pgp-sign': 'TextResultRunner',
+  'pgp-verify': 'MultiInputRunner',
+
+  // Spreadsheets / CSV
+  'csv-json': 'TextResultRunner',
+  'csv-to-excel': 'MultiInputRunner',
+  'excel-info': 'JsonResultRunner',
+  'excel-to-csv': 'TextResultRunner',
+  'excel-to-json': 'JsonResultRunner',
+  'merge-workbooks': 'MultiInputRunner',
+  'split-sheets': 'MultiOutputRunner',
+  'convert-subtitles': 'TextResultRunner',
+
+  // ML — single image in, single image/text out
+  'bg-remove': 'SimpleImageRunner',
+  'upscale-2x': 'SimpleImageRunner',
+  'ocr-pro': 'TextResultRunner',
+  'svg-optimizer': 'SimpleImageRunner',
 };
