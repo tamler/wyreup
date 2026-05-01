@@ -2,7 +2,7 @@
 
 **Wyreup your capabilities. Nothing uploads.**
 
-[wyreup.com](https://wyreup.com) · MIT License · v0.5.0
+[wyreup.com](https://wyreup.com) · MIT License · v0.2.0
 
 ![Wyreup — privacy-first file tools](./assets/readme/infographic.png)
 
@@ -90,11 +90,12 @@ Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save 
 
 ## The toolbelt
 
-- **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette
+- **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette and harmony, background removal, 2× upscale, image captioning
 - **PDFs** — merge, split, compress, crop, rotate, reorder, extract and delete pages, page numbers, encrypt and decrypt, redact, extract tables and text, convert to and from images, watermark, metadata
-- **Audio** — enhance and upscale low-quality recordings
-- **Text and data** — JSON, YAML, CSV, base64, URL encoding, Markdown and HTML, regex, hashing, JWT decode, SQL, XML, HTML and CSS formatting, diff, word count
-- **Create** — QR codes, UUIDs, secure passwords, lorem ipsum, slugs
+- **Audio + video** — trim, convert, compress, extract audio, transcribe (Whisper), burn or convert subtitles, video concat / crossfade / overlay / colour, video to GIF, enhance low-quality voice memos
+- **Text and data** — JSON, YAML, CSV, Excel, base64, URL encoding, Markdown and HTML, regex, hashing, JWT decode, SQL, XML, HTML and CSS formatting, diff, word count, translation, summarisation, sentiment, NER
+- **Create** — QR codes and barcodes, UUIDs, secure passwords, lorem ipsum, slugs
+- **Privacy** — strip EXIF, face blur, PGP encrypt / decrypt / sign / verify
 - **Finance** — compound interest, dollar-cost averaging, percentages, dates
 
 Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
@@ -103,7 +104,8 @@ Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 
 ## Everywhere your files are
 
-Wyreup ships as five packages built on one engine.
+Wyreup ships as four packages built on one engine, with the agent skill
+installed in-place by the CLI.
 
 ![Distribution diagram](./assets/readme/distribution.svg)
 
