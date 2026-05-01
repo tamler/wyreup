@@ -28,6 +28,7 @@
   import PdfMetadataRunner from './runners/PdfMetadataRunner.svelte';
   import QrReaderRunner from './runners/QrReaderRunner.svelte';
   import ImageSimilarityRunner from './runners/ImageSimilarityRunner.svelte';
+  import TrimMediaRunner from './runners/TrimMediaRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -84,6 +85,7 @@
     PdfMetadataRunner,
     QrReaderRunner,
     ImageSimilarityRunner,
+    TrimMediaRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';

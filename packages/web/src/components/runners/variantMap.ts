@@ -26,7 +26,8 @@ export type RunnerVariant =
   | 'PdfInfoRunner'
   | 'PdfMetadataRunner'
   | 'QrReaderRunner'
-  | 'ImageSimilarityRunner';
+  | 'ImageSimilarityRunner'
+  | 'TrimMediaRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -158,7 +159,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'convert-video': 'PreviewRunner',
   'convert-audio': 'PreviewRunner',
   'extract-audio': 'PreviewRunner',
-  'trim-media': 'PreviewRunner',
+  'trim-media': 'TrimMediaRunner',
   'video-add-text': 'PreviewRunner',
   'video-color-correct': 'PreviewRunner',
   'video-speed': 'PreviewRunner',
