@@ -68,6 +68,28 @@ export const slug: ToolModule<SlugParams> = {
 
   defaults: defaultSlugParams,
 
+  paramSchema: {
+    separator: {
+      type: 'enum',
+      label: 'Separator',
+      options: [
+        { value: '-', label: 'Hyphen ( - )' },
+        { value: '_', label: 'Underscore ( _ )' },
+      ],
+    },
+    lowercase: {
+      type: 'boolean',
+      label: 'Lowercase output',
+    },
+    maxLength: {
+      type: 'number',
+      label: 'Max length',
+      min: 0,
+      step: 1,
+      help: 'Truncate to this many characters (0 = no limit).',
+    },
+  },
+
   Component: SlugComponentStub,
 
   async run(

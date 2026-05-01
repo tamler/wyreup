@@ -62,6 +62,20 @@ export const numberBaseConverter: ToolModule<NumberBaseConverterParams> = {
 
   defaults: defaultNumberBaseConverterParams,
 
+  paramSchema: {
+    inputBase: {
+      type: 'enum',
+      label: 'Input base',
+      options: [
+        { value: 'auto', label: 'Auto-detect (0x, 0o, 0b prefix)' },
+        { value: 2, label: 'Binary (base 2)' },
+        { value: 8, label: 'Octal (base 8)' },
+        { value: 10, label: 'Decimal (base 10)' },
+        { value: 16, label: 'Hexadecimal (base 16)' },
+      ],
+    },
+  },
+
   Component: NumberBaseConverterComponentStub,
 
   async run(

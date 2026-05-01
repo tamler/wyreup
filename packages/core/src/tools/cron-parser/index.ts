@@ -54,6 +54,22 @@ export const cronParser: ToolModule<CronParserParams> = {
 
   defaults: defaultCronParserParams,
 
+  paramSchema: {
+    nextCount: {
+      type: 'number',
+      label: 'Upcoming runs to show',
+      min: 1,
+      max: 50,
+      step: 1,
+    },
+    timezone: {
+      type: 'string',
+      label: 'Timezone',
+      placeholder: 'UTC, America/New_York, Europe/Berlin…',
+      help: 'IANA timezone name. Leave empty for UTC.',
+    },
+  },
+
   Component: CronParserComponentStub,
 
   async run(

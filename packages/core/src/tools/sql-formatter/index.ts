@@ -41,6 +41,36 @@ export const sqlFormatter: ToolModule<SqlFormatterParams> = {
 
   defaults: defaultSqlFormatterParams,
 
+  paramSchema: {
+    language: {
+      type: 'enum',
+      label: 'Dialect',
+      options: [
+        { value: 'sql', label: 'Standard SQL' },
+        { value: 'postgresql', label: 'PostgreSQL' },
+        { value: 'mysql', label: 'MySQL' },
+        { value: 'sqlite', label: 'SQLite' },
+        { value: 'bigquery', label: 'BigQuery' },
+      ],
+    },
+    keywordCase: {
+      type: 'enum',
+      label: 'Keyword case',
+      options: [
+        { value: 'upper', label: 'UPPER (SELECT, FROM, WHERE)' },
+        { value: 'lower', label: 'lower (select, from, where)' },
+        { value: 'preserve', label: 'Preserve (as written)' },
+      ],
+    },
+    indent: {
+      type: 'number',
+      label: 'Indent spaces',
+      min: 0,
+      max: 8,
+      step: 1,
+    },
+  },
+
   Component: SqlFormatterComponentStub,
 
   async run(

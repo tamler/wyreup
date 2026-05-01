@@ -102,6 +102,33 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
     count: 1,
   },
 
+  paramSchema: {
+    length: {
+      type: 'range',
+      label: 'Length',
+      min: 4,
+      max: 128,
+      step: 1,
+      unit: 'chars',
+    },
+    uppercase: { type: 'boolean', label: 'Uppercase A–Z' },
+    lowercase: { type: 'boolean', label: 'Lowercase a–z' },
+    digits: { type: 'boolean', label: 'Digits 0–9' },
+    symbols: { type: 'boolean', label: 'Symbols !@#$…' },
+    excludeAmbiguous: {
+      type: 'boolean',
+      label: 'Exclude ambiguous',
+      help: 'Skip 0/O/l/1/I to avoid confusion in copy-paste.',
+    },
+    count: {
+      type: 'number',
+      label: 'How many to generate',
+      min: 1,
+      max: 100,
+      step: 1,
+    },
+  },
+
   Component: PasswordGeneratorComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.

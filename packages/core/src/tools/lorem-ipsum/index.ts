@@ -91,6 +91,27 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
     startWithLorem: true,
   },
 
+  paramSchema: {
+    paragraphs: {
+      type: 'number',
+      label: 'Paragraphs',
+      min: 1,
+      max: 50,
+      step: 1,
+    },
+    sentencesPerParagraph: {
+      type: 'number',
+      label: 'Sentences per paragraph',
+      min: 1,
+      max: 30,
+      step: 1,
+    },
+    startWithLorem: {
+      type: 'boolean',
+      label: 'Start with the canonical "Lorem ipsum…"',
+    },
+  },
+
   Component: LoremIpsumComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.
