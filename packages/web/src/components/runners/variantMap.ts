@@ -29,7 +29,8 @@ export type RunnerVariant =
   | 'ImageSimilarityRunner'
   | 'TrimMediaRunner'
   | 'ZipInfoRunner'
-  | 'ExcelInfoRunner';
+  | 'ExcelInfoRunner'
+  | 'VideoConcatRunner';
 
 export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // SimpleImageRunner — single image in, single image out
@@ -172,7 +173,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // ffmpeg multi-input
   'burn-subtitles': 'MultiInputRunner',
-  'video-concat': 'MultiInputRunner',
+  'video-concat': 'VideoConcatRunner',
   'video-crossfade': 'MultiInputRunner',
   'video-overlay-image': 'MultiInputRunner',
 

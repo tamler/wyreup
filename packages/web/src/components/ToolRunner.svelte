@@ -31,6 +31,7 @@
   import TrimMediaRunner from './runners/TrimMediaRunner.svelte';
   import ZipInfoRunner from './runners/ZipInfoRunner.svelte';
   import ExcelInfoRunner from './runners/ExcelInfoRunner.svelte';
+  import VideoConcatRunner from './runners/VideoConcatRunner.svelte';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -90,6 +91,7 @@
     TrimMediaRunner,
     ZipInfoRunner,
     ExcelInfoRunner,
+    VideoConcatRunner,
   } as const;
 
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
