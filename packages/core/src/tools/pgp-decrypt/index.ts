@@ -35,6 +35,22 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
 
   defaults: defaultPgpDecryptParams,
 
+  paramSchema: {
+    privateKey: {
+      type: 'string',
+      label: 'Your private key',
+      multiline: true,
+      placeholder: '-----BEGIN PGP PRIVATE KEY BLOCK-----\n...',
+      help: 'ASCII-armored OpenPGP private key. Stays on your device.',
+    },
+    passphrase: {
+      type: 'string',
+      label: 'Passphrase',
+      placeholder: 'Required if your key is protected',
+      help: 'Leave empty if the key has no passphrase.',
+    },
+  },
+
   Component: PgpDecryptComponentStub,
 
   async run(

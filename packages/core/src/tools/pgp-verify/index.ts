@@ -42,6 +42,16 @@ export const pgpVerify: ToolModule<PgpVerifyParams> = {
 
   defaults: defaultPgpVerifyParams,
 
+  paramSchema: {
+    publicKey: {
+      type: 'string',
+      label: 'Signer public key',
+      multiline: true,
+      placeholder: '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...',
+      help: 'ASCII-armored OpenPGP public key of whoever signed the file.',
+    },
+  },
+
   Component: PgpVerifyComponentStub,
 
   async run(

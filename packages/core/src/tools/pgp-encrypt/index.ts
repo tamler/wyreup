@@ -37,6 +37,27 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
 
   defaults: defaultPgpEncryptParams,
 
+  paramSchema: {
+    publicKey: {
+      type: 'string',
+      label: 'Recipient public key',
+      multiline: true,
+      placeholder: '-----BEGIN PGP PUBLIC KEY BLOCK-----\n...',
+      help: 'ASCII-armored OpenPGP public key of the recipient.',
+    },
+    armor: {
+      type: 'boolean',
+      label: 'ASCII armor output',
+      help: 'On: output is text. Off: output is binary `.pgp`.',
+    },
+    filename: {
+      type: 'string',
+      label: 'Filename hint',
+      placeholder: 'Original filename (optional)',
+      help: 'Stored inside the encrypted message; used by some clients on decrypt.',
+    },
+  },
+
   Component: PgpEncryptComponentStub,
 
   async run(
