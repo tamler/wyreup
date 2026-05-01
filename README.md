@@ -133,9 +133,11 @@ Open [wyreup.com](https://wyreup.com) and install as a PWA. On mobile, share any
 | `packages/web` | Astro 4 static site — wyreup.com, fully static, PWA |
 | `packages/cli` | `wyreup` CLI (`@wyreup/cli`) |
 | `packages/mcp` | MCP server (`@wyreup/mcp`) |
-| `packages/skill` | Agent skill (`@wyreup/skill`) — CLI + MCP guidance for skill-compatible runtimes |
-| `packages/cli-skill` | CLI-only agent skill (`@wyreup/cli-skill`) — smaller token footprint |
-| `packages/mcp-skill` | MCP-only agent skill (`@wyreup/mcp-skill`) — smaller token footprint |
+
+Agent skills are installed via `wyreup install-skill [cli|mcp|combined]` —
+the CLI fetches the current `skill.md` from GitHub and writes it into the
+agent's skills directory. Replaces the deprecated `@wyreup/skill`,
+`@wyreup/cli-skill`, and `@wyreup/mcp-skill` npm packages.
 
 See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 

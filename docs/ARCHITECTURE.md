@@ -27,10 +27,7 @@ See the full design specification: [`superpowers/specs/2026-04-15-wyreup-tool-li
 - **`@wyreup/core`** — the library. Framework-free. Dual browser/node build.
 - **`@wyreup/web`** — wyreup.com, landing pages, editor, PWA (Astro + Cloudflare Pages).
 - **`@wyreup/mcp`** — MCP server for agents (Claude Code, Cline, Continue, and any MCP-compatible client).
-- **`@wyreup/cli`** — `wyreup` command.
-- **`@wyreup/skill`** — Agent skill (skill.md format) covering both CLI and MCP backends. Compatible with any skill-aware agent runtime.
-- **`@wyreup/cli-skill`** — CLI-only agent skill (smaller token footprint, no MCP guidance).
-- **`@wyreup/mcp-skill`** — MCP-only agent skill (smaller token footprint, no CLI guidance).
+- **`@wyreup/cli`** — `wyreup` command. Installs agent skills via `wyreup install-skill [cli|mcp|combined]`, which fetches the current `skill.md` from GitHub into the agent's skills directory.
 
 ## Invariants
 

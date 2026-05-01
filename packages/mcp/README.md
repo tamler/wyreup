@@ -79,7 +79,7 @@ The MCP server is a local stdio process. All file operations run in-process on y
 
 - [wyreup.com](https://wyreup.com) — try tools in the browser
 - [CLI (@wyreup/cli)](https://wyreup.com/cli) — shell interface
-- [Agent skill (@wyreup/skill)](https://wyreup.com/skill) — teaches Claude when and how to use Wyreup
+- [Agent skill](https://wyreup.com/skill) — teaches Claude when and how to use Wyreup. Install via `wyreup install-skill`.
 - [GitHub](https://github.com/tamler/wyreup)
 
 ## License
