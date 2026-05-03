@@ -6,8 +6,8 @@ describe('convert-geo — metadata', () => {
     expect(convertGeo.id).toBe('convert-geo');
   });
 
-  it('is web-only (gdal3.js wasm/worker requirements)', () => {
-    expect(convertGeo.surfaces).toEqual(['web']);
+  it('runs everywhere (web, cli, mcp) — surfaces field unset', () => {
+    expect(convertGeo.surfaces).toBeUndefined();
   });
 
   it('declares installSize and installGroup', () => {
