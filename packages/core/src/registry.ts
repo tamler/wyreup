@@ -96,3 +96,35 @@ export function mimeMatches(mime: string, pattern: MimePattern): boolean {
   }
   return baseMime === basePattern;
 }
+
+/**
+ * Decide whether a producer's declared output MIME could feed a
+ * consumer's `accept` list. Used by chain UIs (builder, dry-run, panel)
+ * that need to predict compatibility before any concrete bytes exist.
+ *
+ * Wildcards on either side are tolerated:
+ * - Producer `image/<wild>` resolves to a concrete `image/<x>` at runtime,
+ *   so it's compatible with any consumer that accepts the same family
+ *   (concrete or wildcard).
+ * - Consumer `<star>` / `<star>/<star>` accepts anything.
+ *
+ * Use this whenever you're matching declared output → declared accept.
+ * For matching a real File's `.type` → declared accept, use
+ * `mimeMatches(file.type, pattern)` directly.
+ */
+export function couldFlowTo(producerOutput: string, consumerAccept: MimePattern[]): boolean {
+  const out = (producerOutput.split(';')[0] ?? '').trim().toLowerCase();
+  if (out.endsWith('/*')) {
+    const family = out.slice(0, -1); // 'image/'
+    return consumerAccept.some((pattern) => {
+      const p = (pattern.split(';')[0] ?? '').trim().toLowerCase();
+      if (p === '*' || p === '*/*') return true;
+      if (p.endsWith('/*')) {
+        // Same family wildcard, or wider wildcard, both flow.
+        return p.startsWith(family) || family.startsWith(p.slice(0, -1));
+      }
+      return p.startsWith(family);
+    });
+  }
+  return consumerAccept.some((p) => mimeMatches(producerOutput, p));
+}

@@ -32,7 +32,7 @@ export type { SavedChain } from './chain/types.js';
 
 export { detectCycle } from './chain/cycle.js';
 
-export { createRegistry, mimeMatches, toolRunsOnSurface, type ToolRegistry } from './registry.js';
+export { createRegistry, mimeMatches, couldFlowTo, toolRunsOnSurface, type ToolRegistry } from './registry.js';
 
 export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 

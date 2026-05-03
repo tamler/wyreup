@@ -7,28 +7,7 @@
  * No I/O. No file reads. Just inspection.
  */
 
-import { type Chain, mimeMatches, type ToolModule, type ToolRegistry } from '@wyreup/core';
-
-/**
- * Check whether a producer's declared output MIME could feed a consumer's
- * accept list. Some tools declare wildcard outputs like `image/*` to mean
- * "I preserve the input's concrete format" — at runtime that resolves to
- * a specific type the consumer probably accepts. Treat such wildcards as
- * compatible whenever the consumer accepts the same family.
- */
-function couldFlowTo(producerOutput: string, consumerAccept: string[]): boolean {
-  const out = producerOutput.split(';')[0]?.trim().toLowerCase() ?? '';
-  if (out.endsWith('/*')) {
-    const family = out.slice(0, -1); // 'image/'
-    return consumerAccept.some((pattern) => {
-      const p = pattern.split(';')[0]?.trim().toLowerCase() ?? '';
-      if (p === '*' || p === '*/*') return true;
-      if (p.endsWith('/*')) return p.startsWith(family) || family.startsWith(p.slice(0, -1));
-      return p.startsWith(family);
-    });
-  }
-  return consumerAccept.some((p) => mimeMatches(producerOutput, p));
-}
+import { type Chain, couldFlowTo, type ToolModule, type ToolRegistry } from '@wyreup/core';
 
 export interface DryRunResult {
   /** Human-readable text. Written to stderr from the CLI. */

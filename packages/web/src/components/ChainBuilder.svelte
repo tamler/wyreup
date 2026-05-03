@@ -6,6 +6,7 @@
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/kitStorage';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
+  import { couldFlowTo } from '@wyreup/core';
   import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
 
   interface ToolSummary {
@@ -63,15 +64,18 @@
   // Build compatible tool list for a given MIME (or all if null).
   // Uses the device-runnable subset so users don't compose chains that
   // can't run on their device.
+  //
+  // The `mime` argument can be either a concrete MIME from a dropped
+  // file (e.g. `image/jpeg`) or a declared output mime from a previous
+  // step's tool (e.g. `image/*` for tools that preserve the input
+  // format). `couldFlowTo` handles both cases — a wildcard producer
+  // is treated as compatible with any consumer accepting the same
+  // family. See `@wyreup/core/registry.ts` for the matching rules.
   function toolsForMime(mime: string | null): ToolSummary[] {
     if (!mime) return visibleTools;
     return visibleTools.filter((t) => {
       if (t.inputMin === 0) return false; // generators, skip
-      return t.inputAccept.some((p) => {
-        if (p === '*' || p === '*/*') return true;
-        if (p.endsWith('/*')) return mime.startsWith(p.slice(0, -1));
-        return mime === p;
-      });
+      return couldFlowTo(mime, t.inputAccept);
     });
   }
 

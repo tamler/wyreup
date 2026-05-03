@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createRegistry,
+  couldFlowTo,
   type ToolRegistry,
 } from '../src/registry.js';
 import type { ToolModule } from '../src/types.js';
@@ -107,5 +108,47 @@ describe('registry', () => {
   it('searchTools returns empty for no match', () => {
     const results = registry.searchTools('nonexistent-query-xyz');
     expect(results).toEqual([]);
+  });
+});
+
+describe('couldFlowTo', () => {
+  it('flows when producer is exact and consumer accepts that exact mime', () => {
+    expect(couldFlowTo('image/jpeg', ['image/jpeg', 'image/png'])).toBe(true);
+  });
+
+  it('flows when consumer accepts the mime via family wildcard', () => {
+    expect(couldFlowTo('image/jpeg', ['image/*'])).toBe(true);
+  });
+
+  it('flows when producer is a wildcard and consumer accepts a concrete mime in the same family', () => {
+    // The bug fix case: strip-exif declares output 'image/*'; compress
+    // accepts only concrete image mimes. Builder must surface compress
+    // as a valid next step.
+    expect(couldFlowTo('image/*', ['image/jpeg', 'image/png', 'image/webp'])).toBe(true);
+  });
+
+  it('flows when both sides are family wildcards in the same family', () => {
+    expect(couldFlowTo('image/*', ['image/*'])).toBe(true);
+  });
+
+  it('flows when consumer accepts the universal wildcard', () => {
+    expect(couldFlowTo('image/*', ['*/*'])).toBe(true);
+    expect(couldFlowTo('application/geo+json', ['*'])).toBe(true);
+  });
+
+  it('does not flow across families even when both use wildcards', () => {
+    expect(couldFlowTo('image/*', ['audio/*'])).toBe(false);
+  });
+
+  it('does not flow when producer is a concrete mime in a different family', () => {
+    expect(couldFlowTo('text/plain', ['image/jpeg', 'image/*'])).toBe(false);
+  });
+
+  it('does not flow when consumer list is empty', () => {
+    expect(couldFlowTo('image/jpeg', [])).toBe(false);
+  });
+
+  it('strips MIME parameters when matching (RFC 7231 — `audio/webm;codecs=opus`)', () => {
+    expect(couldFlowTo('audio/webm;codecs=opus', ['audio/webm'])).toBe(true);
   });
 });
