@@ -181,6 +181,47 @@ stable enough that support burden is low.
 - Homelab docs: reverse-proxy examples (Traefik, Caddy), persistent
   volume mounts, env var reference
 
+### Wave AI-Chrome — Chrome Built-in AI (Gemini Nano APIs)
+
+User-approved 2026-05-03. Distinct lane from the paused Wave R (WebLLM)
+because Chrome's built-in APIs are **zero install** — Gemini Nano is
+baked into the browser, hardware-accelerated, no model download we have
+to host or warn about. The transformers.js fallback already shipping in
+existing tools means non-Chrome users see no regression.
+
+Two-pronged execution:
+
+1. **Capability adapter for existing tools.** When `'translator' in
+   self`, `'summarizer' in self`, `'languageDetector' in self`, etc.
+   resolve true at runtime, route the call to the native API; otherwise
+   fall back to transformers.js. Affects `text-translate`,
+   `text-summarize`. Net effect: Chrome users get ~10× faster runs and
+   skip the 156 KB transformers.web.js chunk download.
+
+2. **New tools for capabilities we don't have.** Three candidates,
+   pending the brainstorm scoping pass to lock the order:
+   - `text-proofread` — grammar + readability rewrites
+   - `text-write` — generate content to spec (subject + tone + length)
+   - `text-rewrite` — adjust tone/length of existing text
+
+Tradeoffs:
+- All seven Chrome built-in APIs are origin-trial today (Translator,
+  Summarizer, Proofreader, Writer, Rewriter, Language Detector, Prompt).
+  Feature-detect each at runtime and degrade gracefully — never throw
+  on a non-Chrome browser.
+- Origin trial means API surface may shift. Pin behavior behind our own
+  thin wrapper so a breaking upstream change is one diff, not seven.
+- The `Prompt API` is the most flexible (general-purpose chat-style
+  input) but also the most likely to ship with usage caps. Hold off on
+  building tools that depend on it as their primary backend until after
+  GA.
+
+Resume signal for the still-paused Wave R (WebLLM): unchanged — confirmed
+user pull for sub-500 MB instruct models or a paid Pro tier that
+justifies the heavy download. Chrome Built-in AI does *not* satisfy
+that signal because it solves a different shape of problem (small
+ambient text ops, not full chat).
+
 ---
 
 ## Paused
@@ -283,6 +324,43 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   test templates)
 - Animated GIF ↔ WebP conversion (ImageDecoder/ImageEncoder API)
 - Compose / Scratchpad tool — evaluate after a chainable text-output tool ships
+- **CommonForms — auto-detect form fields in PDFs.** Joe Barrow's
+  FFDNet-S/L models (paper arXiv:2509.16506, ~1k stars on
+  github.com/jbarrow/commonforms) take a PDF and return a fillable
+  version. Solves a real pain ("make this PDF fillable") that none of
+  our 20+ PDF tools cover. Gating questions before we commit:
+  (a) does FFDNet have an ONNX export that runs under
+  `onnxruntime-web` — if yes, drops in alongside `bg-remove`/`ocr-pro`
+  cleanly; if no, we're stuck with CLI-only via a Python sidecar,
+  which doesn't fit the cross-surface story.
+  (b) license is unstated in the repo; README invites non-academic use
+  to email the author. Resolve before shipping.
+- **PDF chat-fill assistant** (revisit after Wave AI-Chrome lands).
+  Inspired by SimplePDF Copilot
+  (github.com/SimplePDF/simplepdf-embed/tree/main/copilot) — a chat
+  sidebar that reads a PDF, fills fields, navigates pages, and
+  submits. We can't use SimplePDF's reference impl directly: it requires
+  a paid SimplePDF Pro account for the iframe and routes chat through
+  a server with an LLM API key (both violate the no-server posture).
+  But the *concept* is strong, and once Chrome's Prompt API + our
+  existing pdf.js + form-fill primitives are in place, a fully local
+  reimplementation is plausible. Keep on the wishlist; don't start
+  while AI-Chrome is in flight.
+- **`@wyreup/cli-browser` — opt-in Chromium-backed browser tools.**
+  Separate npm package depending on Puppeteer/Playwright; not bundled
+  with `@wyreup/cli` because Chromium adds 150–300 MB to the install.
+  Users who want browser tools opt in via `npm i -g
+  @wyreup/cli-browser`; tools declare `requires: { browser: 'required' }`
+  so the registry's surface filter hides them where Chromium isn't
+  present (same pattern as `webgpu` today). Candidate tool surface:
+  `url-to-screenshot`, `url-to-pdf` (real Chrome rendering — better
+  output than the existing jsPDF+html2canvas `html-to-pdf`), `web-archive`
+  (single-file HTML capture), `url-to-markdown` (Reader-mode-style
+  cleanup), `web-scrape` (selector-driven extraction). Strong chain
+  fit: URL → text → summarize/translate. Decision: do **not** use this
+  to bring Chrome Built-in AI into CLI/MCP — bundling 200 MB of Chromium
+  to access an API our transformers.js fallback already covers in CLI
+  is the wrong tradeoff.
 
 The previously-listed heavy-ML candidates (LaMa, GFPGAN, DDColor,
 optical-flow video interpolation, ML video upscaling) move under the
