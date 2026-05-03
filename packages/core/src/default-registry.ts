@@ -58,6 +58,7 @@ import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
 import { colorHarmony } from './tools/color-harmony/index.js';
 import { csvJson } from './tools/csv-json/index.js';
+import { csvToGeojson } from './tools/csv-to-geojson/index.js';
 import { caseConverter } from './tools/case-converter/index.js';
 import { slug } from './tools/slug/index.js';
 import { jsonYaml } from './tools/json-yaml/index.js';
@@ -190,6 +191,7 @@ export const defaultTools: ToolModule<any>[] = [
   recordAudio,
   colorHarmony,
   csvJson,
+  csvToGeojson,
   caseConverter,
   slug,
   jsonYaml,
