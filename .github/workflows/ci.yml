@@ -42,6 +42,25 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
+  gdal-node-integration:
+    # convert-geo's Node bridge uses a process.chdir() workaround for an
+    # upstream gdal3.js bug (see ROADMAP "Tech debt" item 6). chdir is
+    # process-global, so vitest's default threaded pool can race with
+    # other tests' cwd-relative work. Skipped from `pnpm test`; run it
+    # here in a dedicated job where the process is fresh and isolated.
+    name: convert-geo Node integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wyreup/core build
+      - run: WYREUP_GDAL_NODE=1 pnpm --filter @wyreup/core test convert-geo
+
   build:
     name: Build
     runs-on: ubuntu-latest

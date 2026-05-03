@@ -149,7 +149,7 @@ wyreup <tool-id> --help
 
 ## Tool categories
 
-117 tools across 13 categories. Run `wyreup list` to see all of them.
+Tools span image, PDF, audio, video, text, dev, geo, and other categories. Run `wyreup list` for the live inventory — counts drift, this section is illustrative.
 
 | Category | Sample tools |
 |----------|-------------|

@@ -40,7 +40,7 @@ describe('shapefile-to-geojson — error cases', () => {
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ]);
-    const file = new File([eocd.buffer as ArrayBuffer], 'empty.zip', { type: 'application/zip' });
+    const file = new File([eocd], 'empty.zip', { type: 'application/zip' });
     await expect(shapefileToGeojson.run([file], {}, makeCtx())).rejects.toThrow();
   });
 });

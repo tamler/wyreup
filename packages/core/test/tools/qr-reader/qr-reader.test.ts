@@ -40,7 +40,7 @@ describe('qr-reader — run()', () => {
     ctx2d.fillStyle = 'white';
     ctx2d.fillRect(0, 0, 100, 100);
     const buf = c.toBuffer('image/png');
-    const file = new File([buf], 'blank.png', { type: 'image/png' });
+    const file = new File([buf as BlobPart], 'blank.png', { type: 'image/png' });
     const [out] = await qrReader.run([file], {}, makeCtx()) as Blob[];
     const result = JSON.parse(await out!.text()) as QrReaderResult;
     expect(result.detected).toBe(false);

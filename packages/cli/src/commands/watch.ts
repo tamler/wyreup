@@ -246,7 +246,7 @@ export async function executeWatch(
 
   // ──── handle one file event ────────────────────────────────────────────────
 
-  async function handleFile(absPath: string): Promise<void> {
+  function handleFile(absPath: string): void {
     // Recursion guard: anything inside the output dir, or a path we
     // just wrote, gets ignored.
     if (absPath.startsWith(absOut + sep) || absPath === absOut) return;
@@ -321,14 +321,14 @@ export async function executeWatch(
     ignored: [
       // Always ignore the output dir, dotfiles, and common temp suffixes.
       absOut,
-      /(^|[\/\\])\../,
+      /(^|[/\\])\../,
       /\.tmp$/i,
       /\.swp$/i,
       /\.DS_Store$/,
     ],
   });
 
-  watcher.on('add', (path) => { void handleFile(path); });
+  watcher.on('add', (path) => { handleFile(path); });
 
   watcher.on('error', (err) => {
     log(`watcher error: ${err instanceof Error ? err.message : String(err)}`);

@@ -61,9 +61,22 @@ describe('createWyreupMcpServer', () => {
 
   // ── list_tools ──────────────────────────────────────────────────────────────
 
-  it('lists exactly 53 tools', async () => {
+  it('lists every registry tool that runs on the mcp surface, plus wyreup_chain', async () => {
+    // Hardcoded counts drift; instead, assert structural equality with
+    // the registry's mcp-runnable subset (plus the meta-tool wyreup_chain
+    // which is added by the server itself). If a tool is added or its
+    // surfaces change, this still passes without test maintenance.
+    const { createDefaultRegistry, toolRunsOnSurface } = await import('@wyreup/core');
+    const registry = createDefaultRegistry();
+    const registryIds = Array.from(registry.toolsById.values())
+      .filter((t) => toolRunsOnSurface(t, 'mcp'))
+      .map((t) => t.id);
+    const expected = [...registryIds, 'wyreup_chain'].sort();
+
     const result = await listTools(server);
-    expect(result.tools).toHaveLength(53);
+    const actual = result.tools.map((t) => t.name).sort();
+    expect(actual).toEqual(expected);
+    expect(result.tools.some((t) => t.name === 'wyreup_chain')).toBe(true);
   });
 
   it('every tool entry has name, description, and inputSchema', async () => {
@@ -95,33 +108,31 @@ describe('createWyreupMcpServer', () => {
     expect(props).not.toHaveProperty('output_path');
   });
 
-  it('inputSchema includes input_paths and params for every tool', async () => {
+  it('inputSchema includes input_paths and params for every per-tool entry', async () => {
+    // wyreup_chain is a meta-tool with a different schema (steps + input_paths
+    // + output_path/output_dir, no `params`). Skip it; assert the rest.
     const result = await listTools(server);
-    for (const tool of result.tools) {
+    const perTool = result.tools.filter((t) => t.name !== 'wyreup_chain');
+    expect(perTool.length).toBeGreaterThan(0);
+    for (const tool of perTool) {
       const props = (tool.inputSchema as { properties: Record<string, unknown> }).properties;
       expect(props).toHaveProperty('input_paths');
       expect(props).toHaveProperty('params');
     }
   });
 
-  it('all 53 expected tool IDs are present', async () => {
+  it('exposes a known core set of tools (regression guard)', async () => {
+    // Spot-check a handful of foundational tools so a refactor that
+    // accidentally drops one is caught loudly. Not an exhaustive list —
+    // the structural test above does full registry equivalence.
     const result = await listTools(server);
     const ids = new Set(result.tools.map((t) => t.name));
-    const expected = [
-      'compress', 'convert', 'strip-exif', 'image-to-pdf', 'merge-pdf',
-      'split-pdf', 'rotate-pdf', 'reorder-pdf', 'page-numbers-pdf', 'color-palette',
-      'qr', 'watermark-pdf', 'pdf-to-text', 'image-diff', 'rotate-image',
-      'flip-image', 'grayscale', 'sepia', 'invert', 'image-info',
-      'pdf-info', 'hash', 'crop', 'resize', 'image-watermark',
-      'favicon', 'pdf-to-image', 'json-formatter', 'base64', 'url-encoder',
-      'color-converter', 'markdown-to-html', 'html-to-markdown', 'text-diff', 'word-counter',
-      'password-generator', 'uuid-generator', 'ocr', 'svg-to-png', 'timestamp-converter',
-      'lorem-ipsum', 'regex-tester', 'pdf-extract-pages', 'pdf-delete-pages', 'pdf-compress',
-      'pdf-encrypt', 'pdf-decrypt', 'pdf-redact', 'pdf-metadata', 'pdf-extract-tables',
-      'pdf-crop', 'face-blur', 'audio-enhance',
+    const sentinels = [
+      'compress', 'convert', 'merge-pdf', 'split-pdf', 'qr',
+      'hash', 'ocr', 'pdf-to-text', 'face-blur', 'transcribe',
     ];
-    for (const id of expected) {
-      expect(ids.has(id), `missing tool: ${id}`).toBe(true);
+    for (const id of sentinels) {
+      expect(ids.has(id), `missing core tool: ${id}`).toBe(true);
     }
   });
 

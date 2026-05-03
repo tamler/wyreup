@@ -1,10 +1,26 @@
 // Node-only integration test for convert-geo. Runs the full pipeline
 // (init gdal3.js, open input, ogr2ogr, read output) under Node so that
 // CLI/MCP regressions are caught before shipping.
+//
+// gdal3.js's Node loader resolves WASM/data paths relative to process.cwd()
+// (see docs/ROADMAP.md tech-debt #6). The bridge in convert-geo.ts uses
+// chdir/restore around init, which works fine in the production code path
+// because each ToolRunContext caches the gdal handle and init runs once.
+//
+// In vitest's default threaded pool, every test file shares one process and
+// thus one cwd, so concurrent chdir from this file races with other tests'
+// path-relative work. Vitest can't switch a single file to the forks pool
+// without splitting it out, so we only execute this file when WYREUP_GDAL_NODE
+// is set (CI runs it, regular `pnpm test` skips it). The functionality is
+// also verified end-to-end by `wyreup run convert-geo` in the CLI integration
+// path.
 
 import { describe, it, expect } from 'vitest';
 import { convertGeo } from '../../../src/tools/convert-geo/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
+
+const RUN_GDAL_NODE = process.env['WYREUP_GDAL_NODE'] === '1';
+const describeOrSkip = RUN_GDAL_NODE ? describe : describe.skip;
 
 function makeCtx(): ToolRunContext {
   return {
@@ -26,7 +42,7 @@ const POINT_FC = JSON.stringify({
   ],
 });
 
-describe('convert-geo — Node integration', () => {
+describeOrSkip('convert-geo — Node integration', () => {
   it(
     'converts GeoJSON to KML in Node',
     async () => {

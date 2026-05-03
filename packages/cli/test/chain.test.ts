@@ -10,9 +10,9 @@ const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockMkdir = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('node:fs/promises', () => ({
-  readFile: (...args: unknown[]) => mockReadFile(...args),
-  writeFile: (...args: unknown[]) => mockWriteFile(...args),
-  mkdir: (...args: unknown[]) => mockMkdir(...args),
+  readFile: (...args: unknown[]) => mockReadFile(...args) as unknown,
+  writeFile: (...args: unknown[]) => mockWriteFile(...args) as unknown,
+  mkdir: (...args: unknown[]) => mockMkdir(...args) as unknown,
 }));
 
 vi.mock('node:crypto', () => ({
@@ -75,8 +75,8 @@ vi.mock('@wyreup/core', () => ({
       ['compress', TOOL_COMPRESS],
     ]),
   }),
-  runChain: (...args: unknown[]) => mockRunChain(...args),
-  parseChainString: (...args: unknown[]) => mockParseChainString(...args),
+  runChain: (...args: unknown[]) => mockRunChain(...args) as unknown,
+  parseChainString: (...args: unknown[]) => mockParseChainString(...args) as unknown,
 }));
 
 // ──── import after mocks ──────────────────────────────────────────────────────

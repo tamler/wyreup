@@ -17,6 +17,21 @@ const SAMPLE_TEXT =
   'Reading comprehension depends on vocabulary and sentence length. ' +
   'Complex academic writing often uses longer sentences with multisyllabic words that can challenge readers.';
 
+interface ReadabilityResult {
+  flesch: number;
+  fleschKincaid: number;
+  colemanLiau: number;
+  smog: number;
+  automatedReadability: number;
+  daleChall: number;
+  gunningFog: number;
+  gradeLevel: string;
+}
+
+async function parseRead(blob: Blob | undefined): Promise<ReadabilityResult> {
+  return JSON.parse(await blob!.text()) as ReadabilityResult;
+}
+
 describe('text-readability — metadata', () => {
   it('has id text-readability', () => {
     expect(textReadability.id).toBe('text-readability');
@@ -49,7 +64,7 @@ describe('text-readability — run()', () => {
   it('includes all expected score fields', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
     const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseRead(out);
     expect(typeof data.flesch).toBe('number');
     expect(typeof data.fleschKincaid).toBe('number');
     expect(typeof data.colemanLiau).toBe('number');
@@ -63,7 +78,7 @@ describe('text-readability — run()', () => {
   it('Flesch score is within expected range (0-100 for normal text)', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
     const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseRead(out);
     // Flesch can go outside 0-100 for very simple or complex text, but typical range
     expect(data.flesch).toBeDefined();
     expect(typeof data.flesch).toBe('number');
@@ -72,7 +87,7 @@ describe('text-readability — run()', () => {
   it('gradeLevel is a non-empty string', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
     const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseRead(out);
     expect(data.gradeLevel.length).toBeGreaterThan(0);
   });
 
@@ -88,7 +103,7 @@ describe('text-readability — run()', () => {
   it('scores are rounded to 1 decimal place', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
     const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseRead(out);
     // Check rounding: result * 10 should be close to an integer
     const isRounded = (n: number) => Math.abs(Math.round(n * 10) - n * 10) < 0.001;
     expect(isRounded(data.flesch)).toBe(true);

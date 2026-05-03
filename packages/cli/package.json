@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/cli",
   "version": "0.2.0",
-  "description": "Wyreup CLI — run 66 privacy-first file tools from the shell. Same engine as wyreup.com, scriptable and offline.",
+  "description": "Wyreup CLI — run privacy-first file tools from the shell. Same engine as wyreup.com, scriptable and offline.",
   "keywords": [
     "wyreup",
     "cli",

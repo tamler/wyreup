@@ -10,9 +10,9 @@ const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockMkdir = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('node:fs/promises', () => ({
-  readFile: (...args: unknown[]) => mockReadFile(...args),
-  writeFile: (...args: unknown[]) => mockWriteFile(...args),
-  mkdir: (...args: unknown[]) => mockMkdir(...args),
+  readFile: (...args: unknown[]) => mockReadFile(...args) as unknown,
+  writeFile: (...args: unknown[]) => mockWriteFile(...args) as unknown,
+  mkdir: (...args: unknown[]) => mockMkdir(...args) as unknown,
 }));
 
 // ──── crypto mock ─────────────────────────────────────────────────────────────
@@ -311,9 +311,10 @@ describe('executeTool — stdin input', () => {
     // Mock stdin as an async iterable
     const chunk = Buffer.from('hello');
     const mockStdin = {
+      // eslint-disable-next-line @typescript-eslint/require-await
       [Symbol.asyncIterator]: async function* () { yield chunk; },
     };
-    vi.spyOn(process, 'stdin', 'get').mockReturnValue(mockStdin as NodeJS.ReadStream);
+    vi.spyOn(process, 'stdin', 'get').mockReturnValue(mockStdin as unknown as typeof process.stdin);
 
     await executeTool('hash', [], { inputFormat: 'text/plain' });
 

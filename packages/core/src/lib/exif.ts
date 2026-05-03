@@ -35,8 +35,7 @@ export function decodeJpegOrientation(buffer: ArrayBuffer): ExifOrientation {
     offset += 2;
     // APP1 (EXIF)
     if (marker === 0xffe1) {
-      // segment length includes the 2 length bytes
-      const segmentLength = view.getUint16(offset);
+      // Skip the 2-byte segment-length header; we walk the IFD directly.
       offset += 2;
       // Expect "Exif\0\0" header
       if (offset + 6 > view.byteLength) return 1;
@@ -69,9 +68,6 @@ export function decodeJpegOrientation(buffer: ArrayBuffer): ExifOrientation {
       }
       // No orientation tag in IFD
       return 1;
-      // unreachable but keeps TS happy
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _ignored = segmentLength;
     } else if ((marker & 0xff00) === 0xff00 && marker !== 0xffff) {
       // Other marker: skip its segment
       if (offset + 2 > view.byteLength) return 1;

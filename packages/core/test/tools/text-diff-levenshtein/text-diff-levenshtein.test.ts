@@ -34,12 +34,22 @@ describe('text-diff-levenshtein — metadata', () => {
   });
 });
 
+interface DiffResult {
+  distance: number;
+  similarity: number;
+  maxLength: number;
+}
+
+async function parseDiff(blob: Blob | undefined): Promise<DiffResult> {
+  return JSON.parse(await blob!.text()) as DiffResult;
+}
+
 describe('text-diff-levenshtein — run()', () => {
   it('identical strings have distance 0 and similarity 1', async () => {
     const a = new File(['hello'], 'a.txt', { type: 'text/plain' });
     const b = new File(['hello'], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.distance).toBe(0);
     expect(data.similarity).toBe(1);
   });
@@ -48,7 +58,7 @@ describe('text-diff-levenshtein — run()', () => {
     const a = new File(['aaaa'], 'a.txt', { type: 'text/plain' });
     const b = new File(['bbbb'], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.distance).toBe(4);
     expect(data.similarity).toBe(0);
   });
@@ -57,7 +67,7 @@ describe('text-diff-levenshtein — run()', () => {
     const a = new File(['kitten'], 'a.txt', { type: 'text/plain' });
     const b = new File(['sitting'], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.distance).toBe(3);
   });
 
@@ -65,7 +75,7 @@ describe('text-diff-levenshtein — run()', () => {
     const a = new File(['hello'], 'a.txt', { type: 'text/plain' });
     const b = new File(['helo'], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.maxLength).toBe(5);
     expect(data.distance).toBe(1);
     expect(data.similarity).toBeCloseTo(0.8, 1);
@@ -75,7 +85,7 @@ describe('text-diff-levenshtein — run()', () => {
     const a = new File([''], 'a.txt', { type: 'text/plain' });
     const b = new File([''], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.similarity).toBe(1);
   });
 
@@ -88,7 +98,7 @@ describe('text-diff-levenshtein — run()', () => {
     const a = new File(['hello world'], 'a.txt', { type: 'text/plain' });
     const b = new File(['hi'], 'b.txt', { type: 'text/plain' });
     const [out] = await textDiffLevenshtein.run([a, b], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseDiff(out);
     expect(data.maxLength).toBe(11);
   });
 });

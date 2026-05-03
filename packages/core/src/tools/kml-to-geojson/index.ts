@@ -68,9 +68,9 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 70, message: 'Converting' });
-    const fc = kml(doc as unknown as Document);
+    const fc = kml(doc as unknown as Document) as { features?: unknown[] } | null;
 
-    if (!fc || fc.features.length === 0) {
+    if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) {
       throw new Error('No placemarks found in KML.');
     }
 

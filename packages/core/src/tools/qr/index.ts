@@ -47,7 +47,7 @@ export const qr: ToolModule<QrParams> = {
     text: {
       type: 'string',
       label: 'text',
-      placeholder: 'https://example.com',
+      placeholder: 'https://wyreup.com',
     },
     size: {
       type: 'range',

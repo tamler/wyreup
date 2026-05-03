@@ -62,7 +62,13 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading shapefile parser' });
-    const shp = (await import('shpjs')).default;
+    // shpjs has no published types; declare the call shape locally.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error — no .d.ts published with shpjs as of 6.2.0
+    const shpMod = (await import('shpjs')) as unknown as {
+      default: (buf: ArrayBuffer) => Promise<FeatureCollection | FeatureCollection[]>;
+    };
+    const shp = shpMod.default;
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Reading archive' });
     const buf = await inputs[0]!.arrayBuffer();
@@ -70,7 +76,7 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 60, message: 'Parsing shapefile' });
-    let result: unknown;
+    let result: FeatureCollection | FeatureCollection[];
     try {
       result = await shp(buf);
     } catch (e) {
@@ -82,10 +88,10 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
     // output is always one GeoJSON file.
     let merged: FeatureCollection;
     if (Array.isArray(result)) {
-      const all = (result as FeatureCollection[]).flatMap((fc) => fc.features ?? []);
+      const all = result.flatMap((fc) => fc.features ?? []);
       merged = { type: 'FeatureCollection', features: all };
     } else {
-      merged = result as FeatureCollection;
+      merged = result;
     }
 
     if (!merged || !Array.isArray(merged.features) || merged.features.length === 0) {

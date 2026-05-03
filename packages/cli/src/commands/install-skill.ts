@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts';
-import { mkdir, writeFile, access, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
@@ -38,7 +38,9 @@ export function resolveSkillsDir(
   }
   if (location === 'project') return join(process.cwd(), '.claude', 'skills');
   if (location === 'user') return join(homedir(), '.claude', 'skills');
-  throw new Error(`Unknown location: ${location}`);
+  // Exhaustiveness check — location is `never` here.
+  const exhaustive: never = location;
+  throw new Error(`Unknown location: ${String(exhaustive)}`);
 }
 
 export async function fetchSkill(url: string): Promise<string> {
@@ -122,7 +124,7 @@ async function runInteractive(opts: {
       p.cancel('Cancelled.');
       process.exit(0);
     }
-    variant = picked as SkillVariant;
+    variant = picked;
   }
 
   // Resolve location / path
@@ -143,7 +145,7 @@ async function runInteractive(opts: {
       p.cancel('Cancelled.');
       process.exit(0);
     }
-    location = picked as LocationChoice;
+    location = picked;
 
     if (location === 'custom') {
       const userPath = await p.text({
@@ -224,20 +226,27 @@ export function makeInstallSkillCommand(): Command {
     .option('--update', 'Overwrite the skill if already installed', false)
     .option('--list', 'List currently installed Wyreup skills and exit', false)
     .option('-y, --yes', 'Skip confirmation prompt', false)
-    .action(async (rawOpts) => {
+    .action(async (rawOpts: {
+      list?: boolean;
+      variant?: string;
+      location?: string;
+      path?: string;
+      update?: boolean;
+      yes?: boolean;
+    }) => {
       if (rawOpts.list) {
         await listInstalledSkills();
         return;
       }
 
-      if (rawOpts.variant && !SKILL_VARIANTS.includes(rawOpts.variant)) {
+      if (rawOpts.variant && !SKILL_VARIANTS.includes(rawOpts.variant as SkillVariant)) {
         console.error(
           `Invalid --variant "${rawOpts.variant}". Must be one of: ${SKILL_VARIANTS.join(', ')}.`,
         );
         process.exit(1);
       }
 
-      if (rawOpts.location && !LOCATION_CHOICES.includes(rawOpts.location)) {
+      if (rawOpts.location && !LOCATION_CHOICES.includes(rawOpts.location as LocationChoice)) {
         console.error(
           `Invalid --location "${rawOpts.location}". Must be one of: ${LOCATION_CHOICES.join(', ')}.`,
         );
@@ -249,18 +258,19 @@ export function makeInstallSkillCommand(): Command {
         rawOpts.location !== undefined ||
         rawOpts.path !== undefined;
 
-      if (isNonInteractive && !rawOpts.yes) {
-        // For non-interactive flag usage, default yes to true unless they have a TTY
-        // In CI / piped contexts skip the prompt
-        rawOpts.yes = !process.stdin.isTTY;
+      let yes = rawOpts.yes ?? false;
+      if (isNonInteractive && !yes) {
+        // For non-interactive flag usage, default yes to true unless they have a TTY.
+        // In CI / piped contexts skip the prompt.
+        yes = !process.stdin.isTTY;
       }
 
       await runInteractive({
         variant: rawOpts.variant as SkillVariant | undefined,
         location: rawOpts.location as LocationChoice | undefined,
-        path: rawOpts.path as string | undefined,
-        update: rawOpts.update as boolean,
-        yes: rawOpts.yes as boolean,
+        path: rawOpts.path,
+        update: rawOpts.update ?? false,
+        yes,
       });
     });
 

@@ -90,9 +90,7 @@ async function decodeToMono16k(buffer: ArrayBuffer): Promise<Float32Array> {
   }
   // Use a temporary context for the initial decode — sample rate doesn't
   // matter, we'll resample to 16k.
-  const Ctor = (typeof AudioContext !== 'undefined' ? AudioContext : OfflineAudioContext) as
-    | typeof AudioContext
-    | typeof OfflineAudioContext;
+  const Ctor = typeof AudioContext !== 'undefined' ? AudioContext : OfflineAudioContext;
   const tempCtx =
     Ctor === AudioContext
       ? new AudioContext()

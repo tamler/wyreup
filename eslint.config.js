@@ -23,6 +23,14 @@ export default tseslint.config(
     },
   },
   {
+    // CLI command files use console.log as their primary output channel —
+    // that's the point of a CLI. Allow it there only.
+    files: ['packages/cli/src/commands/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
@@ -33,6 +41,7 @@ export default tseslint.config(
       '**/*.config.ts',
       '**/tools/**/*.js',
       '**/tools/**/*.mjs',
+      '**/scripts/**/*.mjs',
       '**/env.d.ts',
     ],
   },

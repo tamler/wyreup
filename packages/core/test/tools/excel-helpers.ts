@@ -23,8 +23,10 @@ export function makeXlsxFile(
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  const buf: Uint8Array = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
-  return new File([buf], fileName, {
+  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
+  // The DOM lib's BlobPart type insists on ArrayBuffer (not ArrayBufferLike),
+  // but Uint8Array's underlying buffer is fine here at runtime.
+  return new File([buf as BlobPart], fileName, {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
@@ -39,8 +41,10 @@ export function makeMultiSheetXlsxFile(
     const ws = XLSX.utils.aoa_to_sheet(rows);
     XLSX.utils.book_append_sheet(wb, ws, name);
   }
-  const buf: Uint8Array = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
-  return new File([buf], fileName, {
+  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
+  // The DOM lib's BlobPart type insists on ArrayBuffer (not ArrayBufferLike),
+  // but Uint8Array's underlying buffer is fine here at runtime.
+  return new File([buf as BlobPart], fileName, {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }

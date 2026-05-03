@@ -147,7 +147,7 @@ export async function executeTool(
   opts: RunOptions,
 ): Promise<void> {
   const registry = createDefaultRegistry();
-  const tool = registry.toolsById.get(toolId) as ToolModule | undefined;
+  const tool = registry.toolsById.get(toolId);
   if (!tool) {
     const available = Array.from(registry.toolsById.keys()).sort().join(', ');
     process.stderr.write(
@@ -235,13 +235,14 @@ export async function executeTool(
 export function addToolOptions(cmd: Command, tool: ToolModule): void {
   if (!tool.paramSchema) return;
   for (const [key, schema] of Object.entries(tool.paramSchema)) {
-    if (!schema) continue;
+    if (!schema || typeof schema !== 'object') continue;
     const flagName = `--${key} <value>`;
-    const help =
-      ('label' in schema && schema.label ? schema.label + '. ' : '') +
-      ('help' in schema && schema.help ? schema.help : '');
+    const s = schema as { label?: unknown; help?: unknown };
+    const label = typeof s.label === 'string' ? s.label : '';
+    const helpText = typeof s.help === 'string' ? s.help : '';
+    const combined = (label ? `${label}. ` : '') + helpText;
 
-    cmd.option(flagName, help || key);
+    cmd.option(flagName, combined || key);
   }
 }
 
@@ -259,7 +260,12 @@ export function mergeToolOptions(
   if (!tool.paramSchema) return extra;
   for (const key of Object.keys(tool.paramSchema)) {
     if (Object.prototype.hasOwnProperty.call(rawOpts, key) && rawOpts[key] !== undefined) {
-      extra.push(`${key}=${String(rawOpts[key])}`);
+      const v = rawOpts[key];
+      const str =
+        typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'
+          ? String(v)
+          : JSON.stringify(v);
+      extra.push(`${key}=${str}`);
     }
   }
   return extra;

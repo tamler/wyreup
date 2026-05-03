@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { join } from 'node:path';
 
 // ── mocks must be hoisted before importing the module under test ──────────────
@@ -11,9 +11,9 @@ const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockAccess = vi.fn().mockRejectedValue(new Error('ENOENT'));
 
 vi.mock('node:fs/promises', () => ({
-  mkdir: (...args: unknown[]) => mockMkdir(...args),
-  writeFile: (...args: unknown[]) => mockWriteFile(...args),
-  access: (...args: unknown[]) => mockAccess(...args),
+  mkdir: (...args: unknown[]) => mockMkdir(...args) as unknown,
+  writeFile: (...args: unknown[]) => mockWriteFile(...args) as unknown,
+  access: (...args: unknown[]) => mockAccess(...args) as unknown,
   readFile: vi.fn().mockResolvedValue(''),
 }));
 

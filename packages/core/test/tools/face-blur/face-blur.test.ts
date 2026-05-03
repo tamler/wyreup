@@ -281,7 +281,7 @@ describe('face-blur — run() integration', () => {
    */
   it('processes photo.jpg and returns a PNG blob', async () => {
     if (!MEDIAPIPE_OK) {
-      console.log('[skip] MediaPipe requires DOM — skipping in Node env');
+      console.warn('[skip] MediaPipe requires DOM — skipping in Node env');
       return;
     }
     const img = loadFixture('photo.jpg', 'image/jpeg');
@@ -296,7 +296,7 @@ describe('face-blur — run() integration', () => {
 
   it('caches the detector across calls (cache hit path)', async () => {
     if (!MEDIAPIPE_OK) {
-      console.log('[skip] MediaPipe requires DOM — skipping in Node env');
+      console.warn('[skip] MediaPipe requires DOM — skipping in Node env');
       return;
     }
     const ctx = makeCtx();
@@ -310,7 +310,7 @@ describe('face-blur — run() integration', () => {
 
   it('handles an image with no detected faces without error', async () => {
     if (!MEDIAPIPE_OK) {
-      console.log('[skip] MediaPipe requires DOM — skipping in Node env');
+      console.warn('[skip] MediaPipe requires DOM — skipping in Node env');
       return;
     }
     // graphic.png is a geometric shape — BlazeFace will find no faces.

@@ -147,7 +147,7 @@ export async function getPipeline(
       }
 
       if (fileBytes.size > 0) {
-        let agg = { loaded: 0, total: 0 };
+        const agg = { loaded: 0, total: 0 };
         for (const v of fileBytes.values()) {
           agg.loaded += v.loaded;
           agg.total += v.total;

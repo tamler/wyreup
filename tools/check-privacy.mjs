@@ -87,6 +87,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // SEO / metadata references (not runtime fetches):
     'schema.org', // JSON-LD @context URI in per-tool page structured data
     'github.com', // source-code link in footer + privacy block (user-initiated navigation)
+    'modelcontextprotocol.io', // doc link on /mcp page to the MCP spec (user-initiated navigation)
 
     // Third-party model CDNs for AI tools. The models fetch on first use, which
     // creates a third-party origin touch. TODO: self-host these on wyreup.com

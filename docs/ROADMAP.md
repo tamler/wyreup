@@ -13,15 +13,21 @@ preserved so existing commit messages still resolve.
 
 ## State of the project
 
-- **`@wyreup/core`** — 122 tools across 14 categories, ~1566 tests, dual
-  browser/node build. Published `0.2.0` on npm.
+- **`@wyreup/core`** — privacy-first browser-native tool library, dual
+  browser/node build. Published `0.2.0` on npm. Run
+  `pnpm --filter @wyreup/core test 2>&1 | grep -i 'tools'` for live
+  counts; we deliberately don't pin a number here so this section
+  doesn't rot.
 - **`@wyreup/cli`** — `0.2.0` on npm. Surface: `run`, `chain`, `watch`, `prefetch`,
   `cache`, `init-tool`, `install-skill`, `list`, stdin/stdout piping.
-- **`@wyreup/mcp`** — `0.2.0` on npm. 53 tools exposed via stdio, 14 tests.
-- **`@wyreup/web`** — 147 pages live at `wyreup.com` (Cloudflare Pages).
-- **Tool inventory:** edit (15) · media (14) · inspect (14) · dev (12) ·
-  convert (12) · create (11) · text (9) · privacy (7) · pdf (6) ·
-  optimize (6) · export (5) · archive (3) · finance (2) · audio (1).
+- **`@wyreup/mcp`** — `0.2.0` on npm. Exposes every registry tool whose
+  `surfaces` includes `mcp` over stdio. The set tracks the registry
+  automatically — no separate registration.
+- **`@wyreup/web`** — live at `wyreup.com` (Cloudflare Pages). Per-tool
+  pages and category indexes are static-site-generated from the registry.
+- **Tool inventory:** spans image, PDF, audio, video, text, dev, geo,
+  finance, and other categories. The chip filter on `/tools` is the
+  source of truth — counts shift between releases.
 - **Install groups:** `core`, `ffmpeg`, `image-ai`, `nlp-standard`,
   `speech`, `vision-llm`.
 - **Privacy posture:** every tool runs client-side. No analytics, cookies,

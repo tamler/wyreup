@@ -202,4 +202,16 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'upscale-2x': 'SimpleImageRunner',
   'ocr-pro': 'TextResultRunner',
   'svg-optimizer': 'SimpleImageRunner',
+
+  // Geospatial — text-formatted vector data (geojson, kml, gpx) renders
+  // well as a TextResultRunner (preview + copy + download). The catch-all
+  // and the zip-output shapefile go through PreviewRunner so binary
+  // formats (gpkg, fgb, zip) get a proper download UX.
+  'csv-to-geojson': 'TextResultRunner',
+  'kml-to-geojson': 'TextResultRunner',
+  'geojson-to-kml': 'TextResultRunner',
+  'gpx-to-geojson': 'TextResultRunner',
+  'gpx-to-kml': 'TextResultRunner',
+  'shapefile-to-geojson': 'TextResultRunner',
+  'convert-geo': 'PreviewRunner',
 };

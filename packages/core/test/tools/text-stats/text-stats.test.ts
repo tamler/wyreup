@@ -11,6 +11,19 @@ function makeCtx(): ToolRunContext {
   };
 }
 
+interface StatsResult {
+  words: number;
+  sentences: number;
+  paragraphs: number;
+  syllables: number;
+  readingTimeMinutes: number;
+  speakingTimeMinutes: number;
+}
+
+async function parseStats(blob: Blob | undefined): Promise<StatsResult> {
+  return JSON.parse(await blob!.text()) as StatsResult;
+}
+
 describe('text-stats — metadata', () => {
   it('has id text-stats', () => {
     expect(textStats.id).toBe('text-stats');
@@ -102,7 +115,7 @@ describe('text-stats — run()', () => {
     const input = new File(['Hello world. How are you?'], 'test.txt', { type: 'text/plain' });
     const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
     expect(out!.type).toBe('application/json');
-    const data = JSON.parse(await out!.text());
+    const data = await parseStats(out);
     expect(data.words).toBeGreaterThan(0);
     expect(data.sentences).toBeGreaterThan(0);
     expect(typeof data.readingTimeMinutes).toBe('number');
@@ -117,14 +130,14 @@ describe('text-stats — run()', () => {
     const text = 'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.';
     const input = new File([text], 'para.txt', { type: 'text/plain' });
     const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseStats(out);
     expect(data.paragraphs).toBe(3);
   });
 
   it('counts syllables in result', async () => {
     const input = new File(['beautiful butterfly'], 'syl.txt', { type: 'text/plain' });
     const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
-    const data = JSON.parse(await out!.text());
+    const data = await parseStats(out);
     expect(data.syllables).toBeGreaterThan(2);
   });
 });
