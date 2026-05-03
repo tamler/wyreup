@@ -19,6 +19,12 @@ export interface WatchOptions {
   followSymlinks?: boolean;
   allowSystem?: boolean;
   verbose?: boolean;
+  /**
+   * Stop the watcher after this many files have finished (succeeded or
+   * failed). Skipped files don't count. Useful for piloting a chain on
+   * a few files before letting it run on a bulk drop.
+   */
+  maxFiles?: number;
 }
 
 interface KitChainStep {
@@ -244,6 +250,23 @@ export async function executeWatch(
   const ac = new AbortController();
   const log = (msg: string) => process.stderr.write(`[watch] ${msg}\n`);
 
+  // Validate --max-files. parseInt of garbage returns NaN; treat any
+  // non-positive number as "no limit" so we don't immediately exit.
+  const maxFiles =
+    opts.maxFiles !== undefined &&
+    Number.isFinite(opts.maxFiles) &&
+    opts.maxFiles > 0
+      ? Math.floor(opts.maxFiles)
+      : undefined;
+
+  function reachedLimit(): boolean {
+    return maxFiles !== undefined && processed + failed >= maxFiles;
+  }
+
+  // Forward declaration so handleFile/queue tasks can call shutdown when
+  // the cap is hit. The actual binding is set further down.
+  let triggerShutdown: () => void = () => {};
+
   // ──── handle one file event ────────────────────────────────────────────────
 
   function handleFile(absPath: string): void {
@@ -251,6 +274,11 @@ export async function executeWatch(
     // just wrote, gets ignored.
     if (absPath.startsWith(absOut + sep) || absPath === absOut) return;
     if (wasRecentlyWritten(absPath)) return;
+
+    // Once --max-files has been reached, drop new events on the floor.
+    // The shutdown path will close the watcher, but events between the
+    // cap-hit and `watcher.close()` resolving still arrive here.
+    if (reachedLimit()) return;
 
     const name = basename(absPath);
 
@@ -265,6 +293,11 @@ export async function executeWatch(
     }
 
     queue.add(async () => {
+      // Re-check the cap at execution time. A burst of events may have
+      // queued more files than the cap — those tasks abort here without
+      // doing any I/O.
+      if (reachedLimit()) return;
+
       const start = Date.now();
       try {
         const bytes = await readFile(absPath);
@@ -301,6 +334,11 @@ export async function executeWatch(
         failed++;
         const msg = err instanceof Error ? err.message : String(err);
         log(`fail ${name}: ${msg}`);
+      } finally {
+        if (reachedLimit() && !aborting) {
+          log(`reached --max-files=${String(maxFiles)} — shutting down`);
+          triggerShutdown();
+        }
       }
     });
   }
@@ -312,6 +350,7 @@ export async function executeWatch(
   log(`outputs: ${absOut}/`);
   log(`concurrency: ${concurrency}`);
   log(`accepts: ${firstStepAccept.join(', ') || '*/*'}`);
+  if (maxFiles !== undefined) log(`max files: ${String(maxFiles)} (will exit after that many runs)`);
   log(`Ctrl-C to stop.`);
 
   const watcher = chokidar.watch(absWatch, {
@@ -340,13 +379,24 @@ export async function executeWatch(
     if (aborting) return;
     aborting = true;
     log(`shutting down — draining ${queue.size()} in-flight…`);
-    ac.abort();
+    // Close the watcher first so no new events arrive. Don't abort the
+    // signal here — in-flight work should finish naturally. (SIGINT is a
+    // separate path that does abort.)
     await watcher.close();
     await queue.drain();
     log(`done. processed=${processed} failed=${failed} skipped=${skipped}`);
     process.exit(0);
   };
 
-  process.on('SIGINT', () => { void shutdown(); });
-  process.on('SIGTERM', () => { void shutdown(); });
+  triggerShutdown = () => { void shutdown(); };
+
+  const sigShutdown = async () => {
+    // Same as shutdown but also aborts in-flight work, so Ctrl-C is snappy.
+    if (aborting) return;
+    ac.abort();
+    await shutdown();
+  };
+
+  process.on('SIGINT', () => { void sigShutdown(); });
+  process.on('SIGTERM', () => { void sigShutdown(); });
 }

@@ -36,3 +36,16 @@ declare module 'text-readability' {
   const readability: ReadabilityInstance;
   export default readability;
 }
+
+declare module 'shpjs' {
+  interface ShpFeatureCollection {
+    type: 'FeatureCollection';
+    features: unknown[];
+    fileName?: string;
+  }
+  // shpjs's default export accepts an ArrayBuffer (raw zip bytes) or a URL
+  // string. We only use the buffer form. Returns one collection or an
+  // array when the zip contains multiple shapefiles.
+  function shp(buf: ArrayBuffer): Promise<ShpFeatureCollection | ShpFeatureCollection[]>;
+  export default shp;
+}

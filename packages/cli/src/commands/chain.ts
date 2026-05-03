@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { buildDryRun } from './chain-dryrun.js';
 
 // ──── chain URL parser ────────────────────────────────────────────────────────
 
@@ -43,6 +44,8 @@ export interface ChainOptions {
   saveIntermediates?: string;
   inputFormat?: string;
   verbose?: boolean;
+  /** Print the parsed plan + MIME flow + install groups; do not execute. */
+  dryRun?: boolean;
 }
 
 interface KitChainStep {
@@ -155,6 +158,15 @@ export async function executeChain(
       );
       process.exit(1);
     }
+  }
+
+  // Dry-run: print plan + MIME flow + install groups, then exit. No I/O,
+  // no file reads, no stdin consumption. Same exit code regardless of
+  // mime-flow warnings — they're advisory, not fatal.
+  if (opts.dryRun) {
+    const report = buildDryRun(chain, registry);
+    process.stdout.write(report.text);
+    process.exit(0);
   }
 
   // Read input files

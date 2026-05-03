@@ -144,6 +144,7 @@ program
   .option('-O, --output-dir <dir>', 'Output directory for multi-output chains')
   .option('--save-intermediates <dir>', 'Save each step\'s output to this directory')
   .option('--input-format <mime>', 'Override input MIME type')
+  .option('--dry-run', 'Print the parsed plan, MIME flow, and install-group totals without running anything')
   .option('--verbose', 'Print progress to stderr')
   .addHelpText(
     'after',
@@ -158,6 +159,7 @@ Examples:
   wyreup chain photo.jpg --from-url "https://wyreup.com/chain/run?steps=strip-exif|compress" -o out.jpg
   wyreup chain photo.jpg --from-kit ~/wyreup-kit.json --name "photo cleanup" -o clean.jpg
   cat photo.jpg | wyreup chain --steps "strip-exif" --input-format image/jpeg > clean.jpg
+  wyreup chain --steps "transcribe|text-summarize" --dry-run   # preview only
 
 Saved chains:
   Export your kit from /my-kit on the web (uses the same JSON format
@@ -174,6 +176,7 @@ Saved chains:
       outputDir: opts['outputDir'] as string | undefined,
       saveIntermediates: opts['saveIntermediates'] as string | undefined,
       inputFormat: opts['inputFormat'] as string | undefined,
+      dryRun: opts['dryRun'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
     });
   });
@@ -190,6 +193,7 @@ program
   .option('--name <name>', 'Chain name or id to load from --from-kit')
   .option('--out-dir <name>', 'Output subfolder name inside the watched directory (default _wyreup-out)')
   .option('--concurrency <n>', 'Max concurrent runs (1-8, default 2)', (v: string) => parseInt(v, 10))
+  .option('--max-files <n>', 'Stop after this many runs finish (succeeded or failed). Useful for piloting a chain.', (v: string) => parseInt(v, 10))
   .option('--follow-symlinks', 'Follow symbolic links into the watched tree (off by default for safety)')
   .option('--allow-system', 'Override the safety guard against watching system / home dirs (you almost never want this)')
   .option('--verbose', 'Print per-file progress to stderr')
@@ -200,6 +204,7 @@ Examples:
   wyreup watch ./screenshots --steps "strip-exif|compress[quality=80]"
   wyreup watch ./inbox --from-kit ~/wyreup-kit.json --name "photo cleanup"
   wyreup watch ./drops --from-url "https://wyreup.com/chain/run?steps=transcribe|text-summarize" --verbose
+  wyreup watch ./pilot --steps "strip-exif|compress" --max-files 5  # try on 5 then exit
 
 Behavior:
   - Watches for files added or moved into the directory (not edits to existing files).
@@ -208,7 +213,8 @@ Behavior:
   - Symlinks are NOT followed by default. Pass --follow-symlinks to opt in.
   - Refuses to watch /, $HOME, /etc, /usr, etc. Pass --allow-system to override.
   - Logs paths, sizes, and durations only — never file contents.
-  - Ctrl-C drains in-flight work, then exits cleanly.`,
+  - Ctrl-C drains in-flight work, then exits cleanly.
+  - --max-files counts processed + failed (skipped files don't count).`,
   )
   .action(async (directory: string, opts: Record<string, unknown>) => {
     await executeWatch(directory, {
@@ -218,6 +224,7 @@ Behavior:
       name: opts['name'] as string | undefined,
       outDir: opts['outDir'] as string | undefined,
       concurrency: opts['concurrency'] as number | undefined,
+      maxFiles: opts['maxFiles'] as number | undefined,
       followSymlinks: opts['followSymlinks'] as boolean | undefined,
       allowSystem: opts['allowSystem'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
