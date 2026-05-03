@@ -67,6 +67,50 @@ describe('buildDryRun', () => {
     }
   });
 
+  it('uses the max declared size when sibling tools in a group disagree', async () => {
+    // Build a synthetic two-tool registry where both tools share an
+    // installGroup but declare different installSize values. The group
+    // total must reflect the max (not the last seen, not the sum).
+    const { createRegistry } = await import('@wyreup/core');
+    const fakeTool = (id: string, size: number) => ({
+      id,
+      slug: id,
+      name: id,
+      description: id,
+      category: 'convert' as const,
+      presence: 'both' as const,
+      keywords: [],
+      input: { accept: ['*/*'], min: 1 },
+      output: { mime: 'application/octet-stream' },
+      interactive: false,
+      batchable: false,
+      cost: 'free' as const,
+      memoryEstimate: 'low' as const,
+      defaults: {},
+      installGroup: 'fake-group',
+      installSize: size,
+      Component: () => null,
+      run: () => Promise.resolve([new Blob([''])]),
+      __testFixtures: { valid: [], weird: [], expectedOutputMime: ['application/octet-stream'] },
+    });
+    const synth = createRegistry([
+      fakeTool('small-tool', 10_000_000),
+      fakeTool('big-tool', 100_000_000),
+    ] as never);
+
+    // Smaller-then-bigger and bigger-then-smaller both report ~100 MB.
+    const a = buildDryRun(
+      [{ toolId: 'small-tool', params: {} }, { toolId: 'big-tool', params: {} }],
+      synth,
+    );
+    const b = buildDryRun(
+      [{ toolId: 'big-tool', params: {} }, { toolId: 'small-tool', params: {} }],
+      synth,
+    );
+    expect(a.totalInstallBytes).toBe(100_000_000);
+    expect(b.totalInstallBytes).toBe(100_000_000);
+  });
+
   it('rejects unknown tool ids with a clear message', () => {
     const chain: Chain = [{ toolId: 'no-such-tool', params: {} }];
     const result = buildDryRun(chain, registry);

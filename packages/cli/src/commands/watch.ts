@@ -3,6 +3,7 @@ import { basename, join, resolve, sep, extname } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import chokidar from 'chokidar';
+import type { FSWatcher } from 'chokidar';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
@@ -263,9 +264,29 @@ export async function executeWatch(
     return maxFiles !== undefined && processed + failed >= maxFiles;
   }
 
-  // Forward declaration so handleFile/queue tasks can call shutdown when
-  // the cap is hit. The actual binding is set further down.
-  let triggerShutdown: () => void = () => {};
+  // The watcher is constructed below (after handleFile), but shutdown
+  // needs to reference it. We use a lazy holder so the closure picks up
+  // the real watcher at shutdown time. This is safer than a `let
+  // triggerShutdown = noop` forward-declaration pattern, where any call
+  // before the late assignment would silently no-op.
+  const watcherRef: { current: FSWatcher | null } = { current: null };
+
+  // ──── graceful shutdown (defined early so handleFile can call it) ─────────
+
+  const shutdown = async (): Promise<void> => {
+    if (aborting) return;
+    aborting = true;
+    log(`shutting down — draining ${queue.size()} in-flight…`);
+    // Close the watcher first so no new events arrive. Don't abort the
+    // signal here — in-flight work should finish naturally. (SIGINT is a
+    // separate path that does abort.)
+    if (watcherRef.current) await watcherRef.current.close();
+    await queue.drain();
+    log(`done. processed=${processed} failed=${failed} skipped=${skipped}`);
+    process.exit(0);
+  };
+
+  const triggerShutdown = (): void => { void shutdown(); };
 
   // ──── handle one file event ────────────────────────────────────────────────
 
@@ -366,29 +387,13 @@ export async function executeWatch(
       /\.DS_Store$/,
     ],
   });
+  watcherRef.current = watcher;
 
   watcher.on('add', (path) => { handleFile(path); });
 
   watcher.on('error', (err) => {
     log(`watcher error: ${err instanceof Error ? err.message : String(err)}`);
   });
-
-  // ──── graceful shutdown ───────────────────────────────────────────────────
-
-  const shutdown = async () => {
-    if (aborting) return;
-    aborting = true;
-    log(`shutting down — draining ${queue.size()} in-flight…`);
-    // Close the watcher first so no new events arrive. Don't abort the
-    // signal here — in-flight work should finish naturally. (SIGINT is a
-    // separate path that does abort.)
-    await watcher.close();
-    await queue.drain();
-    log(`done. processed=${processed} failed=${failed} skipped=${skipped}`);
-    process.exit(0);
-  };
-
-  triggerShutdown = () => { void shutdown(); };
 
   const sigShutdown = async () => {
     // Same as shutdown but also aborts in-flight work, so Ctrl-C is snappy.

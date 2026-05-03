@@ -125,7 +125,10 @@ export function buildDryRun(chain: Chain, registry: ToolRegistry): DryRunResult 
     if (!row.installSize) continue;
     if (row.installGroup) {
       // Only count each group once even if multiple steps share it.
-      groupBytes.set(row.installGroup, row.installSize);
+      // Take the max declared size in case sibling tools disagree —
+      // safer to overestimate the download than to lie low to the user.
+      const prior = groupBytes.get(row.installGroup) ?? 0;
+      groupBytes.set(row.installGroup, Math.max(prior, row.installSize));
     } else {
       ungroupedBytes.set(row.toolId, row.installSize);
     }
