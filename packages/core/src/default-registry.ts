@@ -64,6 +64,7 @@ import { geojsonToKml } from './tools/geojson-to-kml/index.js';
 import { gpxToGeojson } from './tools/gpx-to-geojson/index.js';
 import { gpxToKml } from './tools/gpx-to-kml/index.js';
 import { shapefileToGeojson } from './tools/shapefile-to-geojson/index.js';
+import { convertGeo } from './tools/convert-geo/index.js';
 import { caseConverter } from './tools/case-converter/index.js';
 import { slug } from './tools/slug/index.js';
 import { jsonYaml } from './tools/json-yaml/index.js';
@@ -202,6 +203,7 @@ export const defaultTools: ToolModule<any>[] = [
   gpxToGeojson,
   gpxToKml,
   shapefileToGeojson,
+  convertGeo,
   caseConverter,
   slug,
   jsonYaml,

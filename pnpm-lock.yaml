@@ -128,6 +128,9 @@ importers:
       diff:
         specifier: ^7.0.0
         version: 7.0.0
+      gdal3.js:
+        specifier: ^2.8.1
+        version: 2.8.1
       gpt-tokenizer:
         specifier: ^2.5.0
         version: 2.9.0
@@ -3509,6 +3512,9 @@ packages:
     resolution: {integrity: sha512-plz8RVjfcDedTGfVngWH1jmJvBvAwi1v2jecfDerbEnMcmOYUEEwKFTHbNoCiYyzaK2Ws8lABkTCcRSqCY1q4w==}
     engines: {node: '>=10'}
 
+  gdal3.js@2.8.1:
+    resolution: {integrity: sha512-Zg3T0vyDAPJ7kyyhyjhmG2OvUg7Xpn+Uh9+hTMIKXj4JDrJPERTrA8Q9wpthtqX9yvaftg7aS9YIrot4p7cNLA==}
+
   generator-function@2.0.1:
     resolution: {integrity: sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g==}
     engines: {node: '>= 0.4'}
@@ -5908,6 +5914,10 @@ packages:
   xlsx@0.18.5:
     resolution: {integrity: sha512-dmg3LCjBPHZnQp5/F/+nnTa+miPJxUXB6vtk42YjBBKayDNagxGEeIdWApkYPOf3Z3pm3k62Knjzp7lMeTEtFQ==}
     engines: {node: '>=0.8'}
+    hasBin: true
+
+  xml-js@1.6.11:
+    resolution: {integrity: sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==}
     hasBin: true
 
   xxhash-wasm@1.1.0:
@@ -9382,6 +9392,11 @@ snapshots:
 
   fuse.js@7.3.0: {}
 
+  gdal3.js@2.8.1:
+    dependencies:
+      detect-node: 2.1.0
+      xml-js: 1.6.11
+
   generator-function@2.0.1: {}
 
   gensync@1.0.0-beta.2: {}
@@ -12298,6 +12313,10 @@ snapshots:
       ssf: 0.11.2
       wmf: 1.0.2
       word: 0.3.0
+
+  xml-js@1.6.11:
+    dependencies:
+      sax: 1.6.0
 
   xxhash-wasm@1.1.0: {}
 
