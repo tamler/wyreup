@@ -233,6 +233,29 @@ tool are now in **Now** as the two high-confidence wins.
    Real savings ~10–30 KB/variant after Vite hoists shared deps. Pair
    with `<link rel="modulepreload">` to avoid the waterfall. **Defer**
    until bundle analysis shows the loading-state UX cost is worth it.
+6. **`convert-geo` Node bridge — drop the chdir hack.** `gdal3.js`'s
+   Node loader hardcodes `./node_modules/gdal3.js/dist/package/` and
+   *concatenates* user-supplied `paths:` onto it, so absolute paths
+   produce nonsense. Workaround in `loadGdal()`:
+   `process.chdir()` to the directory whose layout the lib expects,
+   init, restore. Works under both pnpm and flat npm-install.
+   - **File upstream issue** at https://github.com/bugra9/gdal3.js asking
+     for absolute paths in `paths:` to be honoured as-is. When fixed,
+     drop the chdir block entirely.
+   - **Concurrency.** chdir is process-global. Init happens once per
+     `ToolRunContext` (cached), so serial use is safe. If MCP ever
+     processes concurrent tool calls in one process, wrap `loadGdal()`
+     in a module-scope mutex (~10 LOC) — or wait for the upstream fix
+     and the issue disappears.
+   - **`useWorker: false` in Node** — Workers don't init in plain Node
+     ESM. No parallelism cost today; revisit if we ever batch ogr2ogr
+     calls in one process.
+   - **Stale VFS files.** `gdal3.js` shares one WASM filesystem across
+     every call; `getOutputFiles()` returns *everything* the lib has
+     ever written. We use `ogr2ogr()`'s returned `FilePath` instead.
+     The VFS still grows unboundedly across a long-lived MCP session;
+     no clear-VFS helper exists short of re-init. Live with it until
+     it OOMs someone.
 
 ### Recurring: Truth-in-advertising audit
 
