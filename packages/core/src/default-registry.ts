@@ -59,6 +59,8 @@ import { recordAudio } from './tools/record-audio/index.js';
 import { colorHarmony } from './tools/color-harmony/index.js';
 import { csvJson } from './tools/csv-json/index.js';
 import { csvToGeojson } from './tools/csv-to-geojson/index.js';
+import { kmlToGeojson } from './tools/kml-to-geojson/index.js';
+import { geojsonToKml } from './tools/geojson-to-kml/index.js';
 import { caseConverter } from './tools/case-converter/index.js';
 import { slug } from './tools/slug/index.js';
 import { jsonYaml } from './tools/json-yaml/index.js';
@@ -192,6 +194,8 @@ export const defaultTools: ToolModule<any>[] = [
   colorHarmony,
   csvJson,
   csvToGeojson,
+  kmlToGeojson,
+  geojsonToKml,
   caseConverter,
   slug,
   jsonYaml,
