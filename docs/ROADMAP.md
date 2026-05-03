@@ -181,47 +181,6 @@ stable enough that support burden is low.
 - Homelab docs: reverse-proxy examples (Traefik, Caddy), persistent
   volume mounts, env var reference
 
-### Wave AI-Chrome — Chrome Built-in AI (Gemini Nano APIs)
-
-User-approved 2026-05-03. Distinct lane from the paused Wave R (WebLLM)
-because Chrome's built-in APIs are **zero install** — Gemini Nano is
-baked into the browser, hardware-accelerated, no model download we have
-to host or warn about. The transformers.js fallback already shipping in
-existing tools means non-Chrome users see no regression.
-
-Two-pronged execution:
-
-1. **Capability adapter for existing tools.** When `'translator' in
-   self`, `'summarizer' in self`, `'languageDetector' in self`, etc.
-   resolve true at runtime, route the call to the native API; otherwise
-   fall back to transformers.js. Affects `text-translate`,
-   `text-summarize`. Net effect: Chrome users get ~10× faster runs and
-   skip the 156 KB transformers.web.js chunk download.
-
-2. **New tools for capabilities we don't have.** Three candidates,
-   pending the brainstorm scoping pass to lock the order:
-   - `text-proofread` — grammar + readability rewrites
-   - `text-write` — generate content to spec (subject + tone + length)
-   - `text-rewrite` — adjust tone/length of existing text
-
-Tradeoffs:
-- All seven Chrome built-in APIs are origin-trial today (Translator,
-  Summarizer, Proofreader, Writer, Rewriter, Language Detector, Prompt).
-  Feature-detect each at runtime and degrade gracefully — never throw
-  on a non-Chrome browser.
-- Origin trial means API surface may shift. Pin behavior behind our own
-  thin wrapper so a breaking upstream change is one diff, not seven.
-- The `Prompt API` is the most flexible (general-purpose chat-style
-  input) but also the most likely to ship with usage caps. Hold off on
-  building tools that depend on it as their primary backend until after
-  GA.
-
-Resume signal for the still-paused Wave R (WebLLM): unchanged — confirmed
-user pull for sub-500 MB instruct models or a paid Pro tier that
-justifies the heavy download. Chrome Built-in AI does *not* satisfy
-that signal because it solves a different shape of problem (small
-ambient text ops, not full chat).
-
 ---
 
 ## Paused
@@ -324,6 +283,55 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   test templates)
 - Animated GIF ↔ WebP conversion (ImageDecoder/ImageEncoder API)
 - Compose / Scratchpad tool — evaluate after a chainable text-output tool ships
+- **Chrome Built-in AI (Gemini Nano APIs) — parked, not paused.**
+  Chrome ships seven origin-trial APIs that run a small LLM locally,
+  zero install, hardware-accelerated: Translator (Chrome 138+),
+  Summarizer, Proofreader (141–145), Writer, Rewriter, Language
+  Detector, Prompt API. Investigated and recommended 2026-05-03 then
+  pulled back same day on this reasoning:
+  - Origin-trial APIs in Chrome only. Adding them as load-bearing
+    parts of any tool means the catalog becomes asymmetric (some tools
+    work in every browser via transformers.js, some don't), and that
+    asterisk weakens the "every tool runs on your device" pitch.
+  - Origin trial = API surface still shifting. Implementation work
+    against a moving target.
+  - The two clearest fits already exist as cross-browser tools
+    (`text-translate`, `text-summarize` via transformers.js). The
+    speed/size win for Chrome users is real but doesn't unlock new
+    capability — it optimizes existing capability for ~65% of users at
+    the cost of dev time.
+  - The genuinely new tools (proofread / write / rewrite) would only
+    work in Chrome, splitting the catalog into a "works for everyone"
+    tier and a "works on Chrome desktop with 16 GB RAM and 22 GB disk"
+    tier. Same asymmetry concern, sharper.
+
+  **Resume conditions** (any one of):
+  1. Two or more major browsers (Firefox, Safari, Edge counts) ship
+     compatible Built-in AI APIs, eliminating the asymmetry.
+  2. The Chrome APIs reach GA *and* there's confirmed user demand for
+     proofread / write / rewrite specifically.
+  3. We add a paid tier where Chrome-only acceleration is positioned
+     as a Pro perk (then asymmetry is a feature, not a pitch tax).
+
+  **Technical work already scoped** (preserved here so we don't redo
+  the homework if/when we revisit):
+  - Pattern: capability adapter `lib/chrome-ai.ts` with feature detect
+    via `'Translator' in self` etc., route to native API when present,
+    transformers.js fallback otherwise. Pin everything behind our own
+    thin wrapper so a breaking upstream change is one diff.
+  - Adapter would refactor `text-translate` and `text-summarize` to
+    consume the native API on Chrome (~10× faster, skip the 156 KB
+    transformers.web.js download).
+  - Net-new tool candidates: `text-proofread` (Proofreader API,
+    returns `correctedInput` + `corrections[]` with start/end indices),
+    `text-rewrite` (Rewriter API, tone/length), `text-write` (Writer
+    API, generate to spec).
+  - Hardware floor for any user: ≥16 GB RAM (CPU) or ≥4 GB VRAM (GPU),
+    22 GB free disk for the model, desktop only.
+  - Feature-detect every call. Never throw on non-Chrome browsers.
+  - Held off on the Prompt API specifically — most flexible but also
+    most likely to ship with per-origin usage caps post-trial.
+
 - **CommonForms — auto-detect form fields in PDFs.** Joe Barrow's
   FFDNet-S/L models (paper arXiv:2509.16506, ~1k stars on
   github.com/jbarrow/commonforms) take a PDF and return a fillable
