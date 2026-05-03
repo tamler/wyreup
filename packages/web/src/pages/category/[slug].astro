@@ -5,7 +5,12 @@ import { createDefaultRegistry } from '@wyreup/core';
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
   const allTools = Array.from(registry.toolsById.values());
-  const categories = [...new Set(allTools.map((t) => t.category))].sort();
+  // Include both primary `category` and additional `categories[]` so a
+  // tool can surface under multiple buckets (e.g. geo tools live under
+  // both 'convert' and 'geo'). Mirrors the filter logic in tools.astro.
+  const categories = [
+    ...new Set(allTools.flatMap((t) => [t.category, ...(t.categories ?? [])])),
+  ].sort();
 
   // Hand-written SEO intro copy per category (Signal voice: terse, no exclamation marks)
   const categoryMeta: Record<string, { displayName: string; h1: string; sub: string; description: string; intro: string }> = {
@@ -144,10 +149,21 @@ Financial calculators are a common daily-use tool for investors and planners. Th
 
 All archive operations run in-browser using compression APIs. No files are sent to an external server.`,
     },
+    geo: {
+      displayName: 'Geo',
+      h1: 'Convert geospatial data.',
+      sub: 'GeoJSON, KML, GPX, Shapefile, and the rest of the GIS family.',
+      description: 'Convert between GeoJSON, KML, GPX, Shapefile, GeoPackage, FlatGeobuf, TopoJSON, and CSV. Every conversion runs in your browser.',
+      intro: `Turn a Google Earth KML into GeoJSON for a web map. Convert a Strava GPX track to KML to visualize the ride. Pull a CSV of latitude/longitude points into a proper GeoJSON FeatureCollection. Open a zipped ESRI Shapefile from a GIS portal without ArcGIS or QGIS installed. Bridge a GeoJSON layer into GeoPackage or FlatGeobuf for the next tool downstream. Every geospatial conversion runs locally — your map data never uploads to a service.
+
+The narrow tools (KML to GeoJSON, GPX to KML, Shapefile to GeoJSON, CSV to GeoJSON) cover the most-searched conversions with tiny dependencies. The catch-all Convert Geospatial Data tool wraps GDAL/OGR via WebAssembly for everything else, including round-trips between any pair of vector formats.`,
+    },
   };
 
   return categories.map((cat) => {
-    const catTools = allTools.filter((t) => t.category === cat);
+    const catTools = allTools.filter(
+      (t) => t.category === cat || (t.categories ?? []).includes(cat),
+    );
     const meta = categoryMeta[cat] ?? {
       displayName: cat.charAt(0).toUpperCase() + cat.slice(1),
       h1: `${cat.charAt(0).toUpperCase() + cat.slice(1)} tools.`,
@@ -161,7 +177,9 @@ All archive operations run in-browser using compression APIs. No files are sent 
     const relatedCats = categories
       .filter((c) => c !== cat)
       .filter((c) => {
-        const cTools = allTools.filter((t) => t.category === c);
+        const cTools = allTools.filter(
+          (t) => t.category === c || (t.categories ?? []).includes(c),
+        );
         return cTools.some((t) => catMimes.has(t.output?.mime));
       })
       .slice(0, 4);

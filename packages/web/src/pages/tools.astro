@@ -125,6 +125,15 @@ const exampleChains: ExampleChain[] = [
     inputHint: 'Drop a JPG/PNG/WebP',
     outputHint: 'Translated alt-text',
   },
+  {
+    id: 'csv-to-google-earth',
+    name: 'Spreadsheet of locations to Google Earth',
+    description: 'Turn a CSV of lat/lng rows into a KML file you can open in Google Earth.',
+    situation: 'When someone hands you a list of addresses or coordinates and wants them on a map.',
+    steps: ['csv-to-geojson', 'geojson-to-kml'],
+    inputHint: 'Drop a .csv with latitude/longitude columns',
+    outputHint: 'KML for Google Earth or My Maps',
+  },
 ];
 
 // Helper: get a display name for a tool ID (fallback to the ID itself)

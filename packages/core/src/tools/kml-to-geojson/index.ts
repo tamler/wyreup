@@ -14,6 +14,7 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
   description:
     'Convert a Google Earth KML file to GeoJSON. Preserves placemark names, descriptions, and geometry.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'kml',

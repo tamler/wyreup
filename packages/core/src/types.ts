@@ -20,7 +20,8 @@ export type ToolCategory =
   | 'finance'
   | 'media'
   | 'archive'
-  | 'text';
+  | 'text'
+  | 'geo';
 
 export type ToolPresence = 'editor' | 'standalone' | 'both';
 

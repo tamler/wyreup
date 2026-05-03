@@ -113,6 +113,7 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
   description:
     'Convert between Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, and CSV. Powered by GDAL/OGR.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'gdal',

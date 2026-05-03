@@ -56,6 +56,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
   description:
     'Convert a GeoJSON file to KML for Google Earth, Google My Maps, or any KML-compatible viewer.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'geojson',

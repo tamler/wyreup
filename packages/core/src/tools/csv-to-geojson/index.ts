@@ -86,6 +86,7 @@ export const csvToGeojson: ToolModule<CsvToGeoJsonParams> = {
   description:
     'Convert a CSV with latitude/longitude columns into a GeoJSON FeatureCollection of points.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'csv',

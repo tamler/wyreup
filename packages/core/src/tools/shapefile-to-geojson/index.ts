@@ -18,6 +18,7 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
   description:
     'Convert a zipped Shapefile bundle (.shp + .dbf + .prj) to GeoJSON. Upload the .zip directly.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'shapefile',

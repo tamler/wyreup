@@ -14,6 +14,7 @@ export const gpxToKml: ToolModule<GpxToKmlParams> = {
   description:
     'Convert a GPX track from Strava, Garmin, or any GPS device to KML for Google Earth.',
   category: 'convert',
+  categories: ['geo'],
   presence: 'both',
   keywords: [
     'gpx',
