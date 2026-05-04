@@ -14,6 +14,9 @@ coverage/
 # CI check temp dirs
 .tmp-*/
 
+# Superpowers brainstorm session artifacts
+.superpowers/
+
 # Tesseract language data (downloaded at runtime)
 *.traineddata
 
