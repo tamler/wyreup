@@ -123,7 +123,7 @@ a:focus-visible {
 
 .btn-primary {
   background: var(--accent);
-  color: var(--black);
+  color: var(--ink);
   border-color: var(--accent);
 }
 
@@ -150,7 +150,7 @@ a:focus-visible {
   left: var(--space-4);
   z-index: 100;
   background: var(--accent);
-  color: var(--black);
+  color: var(--ink);
   font-size: var(--text-base);
   font-weight: 500;
   padding: var(--space-2) var(--space-4);
@@ -185,13 +185,16 @@ a:focus-visible {
   padding: 1px;
   text-decoration: none;
   color: inherit;
-  transition: border-color var(--duration-fast) var(--ease-sharp);
+  transition: border-color var(--duration-fast) var(--ease-sharp),
+              box-shadow var(--duration-fast) var(--ease-sharp);
   position: relative;
   overflow: visible;
+  box-shadow: var(--shadow-sm);
 }
 
 .anywhere-card:hover {
   border-color: var(--text-muted);
+  box-shadow: var(--shadow-md);
 }
 
 .anywhere-card:focus-visible {
@@ -230,7 +233,7 @@ a:focus-visible {
   font-family: var(--font-mono);
   font-size: var(--text-md);
   font-weight: 500;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .anywhere-card__body {
