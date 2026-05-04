@@ -32,10 +32,10 @@
   --ink-subtle:         #6B665C;
   --border-warm:        #E5DECC;
   --border-warm-subtle: #EFE9D8;
-  --amber-deep:         #F59E0B;   /* sunny orange-amber, used as fill (button bg, badge bg) */
+  --amber-deep:         #FFB000;   /* full brand amber as fill — unified with dark-mode --amber-500 */
   --amber-text:         #B0470A;   /* vibrant orange-rust foreground (~5.2:1 on paper, AA pass) */
-  --amber-deep-hover:   #C97515;   /* orange-amber stroke (~3.2:1 on paper) */
-  --amber-pale:         #FCE3A5;   /* low-emphasis amber surface — slightly more saturated to match brighter family */
+  --amber-deep-hover:   #C97515;   /* orange-amber stroke (~3.2:1 on paper, AA pass) */
+  --amber-pale:         #FCE3A5;   /* low-emphasis amber surface (callouts, active chips) */
 
   /* ─────────────────────────────────────────────────────────────
      LAYER 2: Semantic tokens — defaults point to LIGHT primitives
