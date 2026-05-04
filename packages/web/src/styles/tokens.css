@@ -34,6 +34,7 @@
   --amber-deep:         #D98A00;
   --amber-text:         #8A5500;
   --amber-deep-hover:   #B87505;
+  --amber-pale:         #FBE8B5;
 
   /* ─────────────────────────────────────────────────────────────
      LAYER 2: Semantic tokens — defaults point to LIGHT primitives
@@ -52,7 +53,7 @@
   --accent:         var(--amber-deep);        /* fill: button bg, badge bg */
   --accent-text:    var(--amber-text);        /* foreground: links, inline */
   --accent-hover:   var(--amber-deep-hover);  /* stroke: focus ring, border */
-  --accent-dim:     var(--amber-900);         /* unchanged usage */
+  --accent-dim:     var(--amber-pale);        /* low-emphasis amber surface (callouts, active chips) */
 
   --success:        var(--green-500);
   --warning:        var(--yellow-500);
