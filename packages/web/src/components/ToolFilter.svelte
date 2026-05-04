@@ -322,7 +322,12 @@
   });
 </script>
 
-<!-- Recently used strip (Deliverable 6) -->
+<!-- Recently used strip (Deliverable 6).
+     Wrapped in `.reserve-recent` so the inline script in BaseLayout can
+     reserve vertical space at first paint. Without the wrapper, when
+     the Svelte mount populates `recentTools` from localStorage the
+     strip pops in and pushes everything below it down — visible flash. -->
+<div class="reserve-recent">
 {#if recentTools.length > 0}
   <div class="recent-strip" aria-label="Recently used tools">
     <span class="recent-label">Recently used</span>
@@ -334,6 +339,7 @@
     <button class="recent-clear" on:click={clearRecent}>Clear</button>
   </div>
 {/if}
+</div>
 
 <!-- Inline drop zone — filter the grid by a dropped file's MIME -->
 {#if droppedFile}

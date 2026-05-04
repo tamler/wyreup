@@ -148,14 +148,18 @@ function toolDisplayName(id: string): string {
   description="Browser-native tools across image, PDF, audio, text, and dev categories. Compress, convert, inspect, redact — nothing uploads."
   ogDescription="Browser-native tools. Image editing, PDF processing, text utilities, dev tools — all run locally, no uploads."
 >
-  <PwaOnboardBanner client:load />
+  <div class="reserve-pwa-banner">
+    <PwaOnboardBanner client:load />
+  </div>
   <section class="tools-page">
     <div class="container">
       <div class="page-header">
         <h1 class="page-title">Tools</h1>
       </div>
 
-      <SavedChainsSection client:load />
+      <div class="reserve-saved-chains">
+        <SavedChainsSection client:load />
+      </div>
 
       <ToolFilter
         client:load

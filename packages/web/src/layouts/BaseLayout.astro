@@ -72,6 +72,74 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
     <title>{title}</title>
 
     <slot name="head" />
+
+    <!-- Pre-paint layout reservation. Several components hydrate from
+         localStorage (saved chains, recent tools, PWA install state) and
+         render nothing during SSR. Without reservation, when those
+         components mount and add content, everything below them jumps —
+         the visible "flash" the user reported on /tools.
+
+         This script runs before first paint, reads the same localStorage
+         keys those components use, and sets CSS custom properties that
+         reserve the correct vertical space. The Svelte components then
+         fill that already-reserved space without triggering a shift.
+
+         Numbers are rough averages of the rendered components — they're
+         allowed to be slightly off; the goal is to eliminate the *jump*,
+         not to be pixel-perfect. -->
+    <script is:inline>
+      (function () {
+        try {
+          var html = document.documentElement;
+
+          // Recent tools strip in ToolFilter. ~24px pill + 16px bottom
+          // margin. Only reserves if the user has at least one entry.
+          var recentRaw = localStorage.getItem('wyreup:recent-tools');
+          if (recentRaw) {
+            var recents = JSON.parse(recentRaw);
+            if (Array.isArray(recents) && recents.length > 0) {
+              html.style.setProperty('--reserve-recent', '56px');
+            }
+          }
+
+          // Saved chains section above the tool grid. Header (~36px) +
+          // gap + 1+ rows of ~140px cards. Cards wrap at minmax(260px),
+          // assume 4 per row at desktop. Always at least one row when
+          // chains exist.
+          var chainsRaw = localStorage.getItem('wyreup:my-kit:chains');
+          if (chainsRaw) {
+            var chains = JSON.parse(chainsRaw);
+            if (Array.isArray(chains) && chains.length > 0) {
+              var rows = Math.max(1, Math.ceil(chains.length / 4));
+              var px = 36 + 12 + rows * 140 + 32; // header + gap + rows + bottom margin
+              html.style.setProperty('--reserve-saved-chains', px + 'px');
+            }
+          }
+
+          // PWA install banner. Two surfaces: standalone-mode welcome,
+          // iOS install hint. Welcome dismisses persist; iOS hint
+          // dismisses persist separately. Reserve only when at least
+          // one will actually render.
+          var ua = navigator.userAgent;
+          var isIos = /iPad|iPhone|iPod/.test(ua) && !('MSStream' in window);
+          var isStandalone =
+            window.matchMedia('(display-mode: standalone)').matches ||
+            navigator.standalone === true;
+          var welcomeDismissed = localStorage.getItem('wyreup:pwa-onboard-dismissed');
+          var iosDismissed = localStorage.getItem('wyreup:pwa-ios-install-dismissed');
+          var willShowBanner =
+            (isStandalone && !welcomeDismissed) ||
+            (!isStandalone && isIos && !iosDismissed);
+          if (willShowBanner) {
+            html.style.setProperty('--reserve-pwa-banner', '48px');
+          }
+        } catch (e) {
+          // localStorage unavailable (private mode, embedded, etc.) —
+          // accept the small first-load shift in that edge case rather
+          // than failing the whole page.
+        }
+      })();
+    </script>
   </head>
   <body class={bodyClass}>
     <a href="#main-content" class="skip-link">Skip to content</a>

@@ -239,3 +239,21 @@ a:focus-visible {
   color: var(--text-muted);
   line-height: 1.5;
 }
+
+/* Pre-paint layout reservation slots — paired with the inline script in
+   BaseLayout that reads localStorage and sets the --reserve-* CSS vars.
+   For users without the relevant localStorage state the var is unset
+   and min-height resolves to 0 (no-op). For users with state, the slot
+   is reserved at SSR-paint time so when the Svelte component hydrates
+   and fills the slot, no layout shift propagates downward. */
+.reserve-pwa-banner {
+  min-height: var(--reserve-pwa-banner, 0);
+}
+
+.reserve-saved-chains {
+  min-height: var(--reserve-saved-chains, 0);
+}
+
+.reserve-recent {
+  min-height: var(--reserve-recent, 0);
+}
