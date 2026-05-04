@@ -307,7 +307,7 @@
               <path
                 d={chart.totalPath}
                 fill="none"
-                stroke="var(--accent)"
+                stroke="var(--accent-hover)"
                 stroke-width="1.5"
               />
             </svg>
@@ -566,7 +566,7 @@
     width: 20px;
     height: 1px;
   }
-  .legend-line--accent { background: var(--accent); height: 1.5px; }
+  .legend-line--accent { background: var(--accent-hover); height: 1.5px; }
   .legend-line--muted { background: var(--text-subtle); }
 
   :global(.axis-label) {
