@@ -44,17 +44,15 @@ const popularTools = popularToolIds.map((id) => {
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">{allTools.length}+ file tools that run on your device.</h1>
+        <h1 class="hero__headline">Tools for your files. <span class="hero__headline-accent">Nothing uploads.</span></h1>
         <p class="hero__body">
-          Compress, convert, transcribe, redact, caption, record. Drop a file — we'll show you what you can do with it. <strong>Nothing uploads.</strong> No signup.
+          Drop a file. We'll show you what you can do with it — compress, convert, transcribe, redact, and {allTools.length - 5}+ more. Everything happens on your device. No signup. No tracking.
         </p>
         <p class="hero__surfaces">
-          Use it in your <a href="/" class="hero__surface-link" aria-current="page">browser</a>,
-          <a href="/cli" class="hero__surface-link">terminal</a>,
-          or <a href="/skill" class="hero__surface-link">AI agent</a>.
+          Use Wyreup in your <a href="/" class="hero__surface-link" aria-current="page">browser</a>, your <a href="/cli" class="hero__surface-link">terminal</a>, or your <a href="/skill" class="hero__surface-link">AI assistant</a>.
         </p>
         <div class="hero__actions">
-          <a href="/tools" class="btn btn-primary">Browse tools &rarr;</a>
+          <a href="/tools" class="btn btn-primary">Browse all tools &rarr;</a>
         </div>
       </div>
 
@@ -321,26 +319,36 @@ const popularTools = popularToolIds.map((id) => {
   }
 
   .hero__headline {
+    font-family: var(--font-sans);
     font-size: var(--text-hero);
-    font-weight: 600;
-    line-height: 1.1;
+    line-height: 1.05;
     letter-spacing: -0.03em;
     color: var(--text-primary);
-    margin-bottom: var(--space-6);
-    font-family: var(--font-sans);
+    margin: 0 0 var(--space-6);
+    font-weight: 700;
+  }
+
+  .hero__headline-accent {
+    color: var(--accent-text);
+    display: inline;
   }
 
   .hero__body {
-    font-size: var(--text-md);
-    color: var(--text-muted);
-    line-height: 1.6;
-    max-width: 520px;
-    margin-bottom: var(--space-3);
     font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+    max-width: 36rem;
+  }
+
+  .hero__body strong {
+    color: var(--text-primary);
+    font-weight: 600;
   }
 
   .hero__surfaces {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     color: var(--text-subtle);
     margin: 0 0 var(--space-8);
@@ -737,14 +745,14 @@ const popularTools = popularToolIds.map((id) => {
   }
 
   .trust-stat {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     color: var(--text-subtle);
     letter-spacing: 0;
   }
 
   .trust-sep {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     color: var(--border);
     flex-shrink: 0;
