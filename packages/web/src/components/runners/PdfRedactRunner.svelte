@@ -515,7 +515,7 @@
 
   .rect-existing {
     position: absolute;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--border);
     cursor: pointer;
     padding: 0;
     color: transparent;
@@ -534,7 +534,7 @@
 
   .rect-live {
     position: absolute;
-    border: 1px dashed rgba(255, 255, 255, 0.6);
+    border: 1px dashed var(--text-muted);
     pointer-events: none;
   }
 
