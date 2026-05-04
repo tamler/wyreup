@@ -503,18 +503,18 @@
   }
 
   .btn-secondary--danger {
-    color: var(--danger);
-    border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+    color: var(--danger-text);
+    border-color: color-mix(in srgb, var(--danger-text) 40%, var(--border));
   }
 
   .btn-secondary--danger:hover:not(:disabled) {
-    border-color: var(--danger);
+    border-color: var(--danger-text);
   }
 
   .storage-error {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--danger);
+    color: var(--danger-text);
     margin: 0;
   }
 </style>
