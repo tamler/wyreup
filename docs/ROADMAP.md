@@ -203,16 +203,48 @@ What was queued before the pause:
 Resume signal: confirmed user pull for one of these specific capabilities.
 "Could be cool" doesn't count.
 
-### Wave R — Offline LLM (WebLLM)
+### Wave R — Offline LLM (Gemma 4 via transformers.js / WebLLM)
 
-Gemma 2 / Phi 3.5 / Llama 3.2 in the browser via WebLLM. 500 MB – 1.5 GB
-download, WebGPU-required. Tools would have been `local-chat`,
-`text-rewrite`, `text-summarize-llm`, `text-explain-code`, stretch
-`wyreup-agent`.
+In-browser local LLM, no vendor lock, cross-browser via WebGPU. Tools
+would have been `local-chat`, `text-rewrite`, `text-write`,
+`text-proofread`, `text-summarize-llm`, `text-explain-code`,
+`language-detect`, stretch `wyreup-agent`.
 
-Resume signal: a sub-500 MB instruct model that runs at usable speed on
-average hardware, OR a paid Pro tier where the heavy download is
-justified by sticky use.
+**Candidate model**: Gemma 4 E2B (released 2026-04-02, Apache 2.0).
+2.3B effective parameters (~5.1B with embeddings), multimodal (text +
+audio + image inputs), 128k context. At int4 the on-disk weights run
+~1.5–2 GB — significantly larger than the previous "sub-500 MB"
+threshold but the quality and capability ceiling jumps far enough that
+the original threshold is now arguably wrong. The MMLU-Pro / AIME /
+LiveCodeBench numbers (85.2 / 89.2 / 80.0 on the 31B variant) and the
+multimodal surface mean one model could power what would otherwise be
+five separate transformers.js downloads.
+
+Why we're considering it now (recorded 2026-05-04):
+- **No vendor lock** (Apache 2.0). Runs anywhere transformers.js +
+  WebGPU exists — Chrome, Firefox, Safari, Edge.
+- **Multimodal capability** — image, audio, text inputs in one model
+  unlocks tools we don't have any path to today (audio Q&A,
+  on-device image-to-text-with-context).
+- **Open weights** = self-host on R2 (already on the privacy
+  tech-debt list), no third-party model CDN.
+
+Why we're still not starting:
+- ~1.5–2 GB download is heavy. PWA settings UI needs a strong opt-in
+  prompt (similar to the conversation we'd have had for Chrome AI's
+  22 GB Gemini Nano).
+- Wave-sized investment: model hosting, WebLLM/transformers.js
+  integration, streaming runner UI, prompt engineering per tool, eval
+  harness. Not a half-day spike.
+- The current Now sequence (Wave T, Wave U) hasn't completed.
+
+Resume signal (any one):
+1. Now sequence (Wave T + U) completes.
+2. Confirmed user pull for one of the specific Gemma-powered tool
+   ideas above — "we want a local LLM" doesn't count, "I want to
+   proofread without sending text to a cloud API" does.
+3. A paid Pro tier exists where the heavy download is justified by
+   sticky use.
 
 ---
 
@@ -283,55 +315,6 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   test templates)
 - Animated GIF ↔ WebP conversion (ImageDecoder/ImageEncoder API)
 - Compose / Scratchpad tool — evaluate after a chainable text-output tool ships
-- **Chrome Built-in AI (Gemini Nano APIs) — parked, not paused.**
-  Chrome ships seven origin-trial APIs that run a small LLM locally,
-  zero install, hardware-accelerated: Translator (Chrome 138+),
-  Summarizer, Proofreader (141–145), Writer, Rewriter, Language
-  Detector, Prompt API. Investigated and recommended 2026-05-03 then
-  pulled back same day on this reasoning:
-  - Origin-trial APIs in Chrome only. Adding them as load-bearing
-    parts of any tool means the catalog becomes asymmetric (some tools
-    work in every browser via transformers.js, some don't), and that
-    asterisk weakens the "every tool runs on your device" pitch.
-  - Origin trial = API surface still shifting. Implementation work
-    against a moving target.
-  - The two clearest fits already exist as cross-browser tools
-    (`text-translate`, `text-summarize` via transformers.js). The
-    speed/size win for Chrome users is real but doesn't unlock new
-    capability — it optimizes existing capability for ~65% of users at
-    the cost of dev time.
-  - The genuinely new tools (proofread / write / rewrite) would only
-    work in Chrome, splitting the catalog into a "works for everyone"
-    tier and a "works on Chrome desktop with 16 GB RAM and 22 GB disk"
-    tier. Same asymmetry concern, sharper.
-
-  **Resume conditions** (any one of):
-  1. Two or more major browsers (Firefox, Safari, Edge counts) ship
-     compatible Built-in AI APIs, eliminating the asymmetry.
-  2. The Chrome APIs reach GA *and* there's confirmed user demand for
-     proofread / write / rewrite specifically.
-  3. We add a paid tier where Chrome-only acceleration is positioned
-     as a Pro perk (then asymmetry is a feature, not a pitch tax).
-
-  **Technical work already scoped** (preserved here so we don't redo
-  the homework if/when we revisit):
-  - Pattern: capability adapter `lib/chrome-ai.ts` with feature detect
-    via `'Translator' in self` etc., route to native API when present,
-    transformers.js fallback otherwise. Pin everything behind our own
-    thin wrapper so a breaking upstream change is one diff.
-  - Adapter would refactor `text-translate` and `text-summarize` to
-    consume the native API on Chrome (~10× faster, skip the 156 KB
-    transformers.web.js download).
-  - Net-new tool candidates: `text-proofread` (Proofreader API,
-    returns `correctedInput` + `corrections[]` with start/end indices),
-    `text-rewrite` (Rewriter API, tone/length), `text-write` (Writer
-    API, generate to spec).
-  - Hardware floor for any user: ≥16 GB RAM (CPU) or ≥4 GB VRAM (GPU),
-    22 GB free disk for the model, desktop only.
-  - Feature-detect every call. Never throw on non-Chrome browsers.
-  - Held off on the Prompt API specifically — most flexible but also
-    most likely to ship with per-origin usage caps post-trial.
-
 - **CommonForms — auto-detect form fields in PDFs.** Joe Barrow's
   FFDNet-S/L models (paper arXiv:2509.16506, ~1k stars on
   github.com/jbarrow/commonforms) take a PDF and return a fillable
@@ -383,6 +366,22 @@ horizon while AI work is on hold.
   `product_chain_ux.md`. We differentiate on simplicity.
 - **Server-side AI** (OpenAI, Anthropic via API) — contradicts the privacy
   pitch. Every Wyreup tool runs on the user's device.
+- **Chrome Built-in AI (Gemini Nano APIs)** — investigated and rejected
+  2026-05-04 after a multi-stage brainstorm. Rationale, durable: (a)
+  vendor lock to Google's model + Chrome's API + Google's roadmap, same
+  shape as "server-side AI" above; (b) 22 GB Gemini Nano download is
+  100× our current largest model and only Chrome desktop hardware that
+  meets the floor (16 GB RAM, 22 GB disk) gets to use the result;
+  (c) origin-trial API surface that may break before GA; (d) the only
+  genuinely new capabilities it would unlock (proofread / rewrite /
+  write) are already addressable via Gemma 4 E2B (~1.5–2 GB at int4,
+  Apache 2.0, cross-browser) when Wave R resumes — and Gemma's
+  multimodal surface gives us more than Chrome AI's seven text-only
+  APIs. Reopen only if the Chrome APIs become a W3C standard
+  implemented across Firefox + Safari + Chrome (eliminating the
+  vendor-lock and asymmetry concerns) AND there's confirmed user
+  demand. The Wave R / Gemma 4 path subsumes everything Chrome AI
+  would have offered, with none of the lock-in.
 - **User accounts for the free tier** — free stays account-less.
 - **Cloud TTS / STT APIs** (`edge-tts`, AWS Polly, Google Cloud TTS,
   ElevenLabs, `webkitSpeechRecognition` for non-on-device langs) — phone
