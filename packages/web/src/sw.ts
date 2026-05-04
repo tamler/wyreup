@@ -1,11 +1,28 @@
 /// <reference lib="webworker" />
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from 'workbox-precaching';
+import { setCatchHandler } from 'workbox-routing';
 
 declare let self: ServiceWorkerGlobalScope;
 
 // Injected by vite-pwa at build time
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+// Offline fallback for navigations: when the network is unreachable AND
+// the requested URL isn't in the precache (e.g. a deep link to a page the
+// user hasn't visited before, or a route added after the SW was last
+// updated), serve the precached /offline.html so the user sees something
+// actionable instead of the browser's default offline error.
+//
+// setCatchHandler runs only after every other handler has rejected, so
+// the happy path (online navigation, precached navigation) is unaffected.
+setCatchHandler(async ({ request }) => {
+  if (request.destination === 'document') {
+    const fallback = await matchPrecache('/offline.html');
+    if (fallback) return fallback;
+  }
+  return Response.error();
+});
 
 // Runtime caching for CDN assets and same-origin heavy static assets.
 self.addEventListener('fetch', (event: FetchEvent) => {

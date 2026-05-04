@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FFB000">
+  <title>Offline — Wyreup</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <style>
+    /* Self-contained styles — this page must render without any external
+       CSS because the user is offline and the stylesheet may not be in
+       the cache yet. Mirrors the production look (dark bg, amber accent)
+       at a smaller surface area. */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #111113;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .offline-card {
+      max-width: 480px;
+      width: 100%;
+    }
+    .brand {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #FFB000;
+      margin: 0 0 1.5rem;
+    }
+    h1 {
+      font-size: 1.875rem;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin: 0 0 1rem;
+    }
+    p {
+      font-size: 1rem;
+      line-height: 1.55;
+      color: #a1a1aa;
+      margin: 0 0 1rem;
+    }
+    .hints {
+      margin: 1.5rem 0;
+      padding-left: 1.25rem;
+    }
+    .hints li {
+      color: #a1a1aa;
+      line-height: 1.6;
+      margin-bottom: 0.25rem;
+    }
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+      flex-wrap: wrap;
+    }
+    button, a.btn {
+      display: inline-block;
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.375rem;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+      border: 1px solid #3f3f46;
+      background: transparent;
+      color: inherit;
+    }
+    button:hover, a.btn:hover { border-color: #71717a; }
+    button.primary, a.btn.primary {
+      background: #FFB000;
+      border-color: #FFB000;
+      color: #111113;
+    }
+    button.primary:hover, a.btn.primary:hover { background: #ffc233; border-color: #ffc233; }
+    .footer-note {
+      margin-top: 2rem;
+      font-size: 0.8125rem;
+      color: #52525b;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+  </style>
+</head>
+<body>
+  <main class="offline-card">
+    <p class="brand">Wyreup &middot; offline</p>
+    <h1>You're offline.</h1>
+    <p>
+      Wyreup runs every tool in your browser, so most things keep working
+      without a network connection. The page you wanted just isn't in
+      this device's cache yet.
+    </p>
+    <ul class="hints">
+      <li>Pages you've visited before will load offline.</li>
+      <li>Tools that download a model on first use need to be online for that download — once cached, they run offline forever.</li>
+      <li>If this is your first visit, reconnect to load the catalog.</li>
+    </ul>
+    <div class="actions">
+      <button class="primary" onclick="location.reload()">Try again</button>
+      <a class="btn" href="/">Home</a>
+      <a class="btn" href="/tools">All tools</a>
+    </div>
+    <p class="footer-note">
+      Auto-refreshes when the connection comes back.
+    </p>
+  </main>
+  <script>
+    // Auto-refresh once we're back online so the user lands on the page
+    // they were trying to reach (or the home page) without thinking.
+    window.addEventListener('online', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>

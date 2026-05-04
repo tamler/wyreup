@@ -271,6 +271,14 @@ tool are now in **Now** as the two high-confidence wins.
    Real savings ~10–30 KB/variant after Vite hoists shared deps. Pair
    with `<link rel="modulepreload">` to avoid the waterfall. **Defer**
    until bundle analysis shows the loading-state UX cost is worth it.
+7. **PWA manifest screenshots[].** The 2026-05-04 PWA pass added
+   manifest id, lang/dir/categories, monochrome icon, msapplication
+   tile metas, /offline fallback, and the iOS Safari install hint.
+   Screenshots[] was deferred because it needs real product captures
+   (not OG marketing imagery) at the recommended form factors:
+   540×720 narrow + 1280×720 wide, both PNG. Capture during the next
+   designer pass, drop into `packages/web/public/screenshots/` and add
+   the entries to `astro.config.mjs` manifest.
 6. **`convert-geo` Node bridge — drop the chdir hack.** `gdal3.js`'s
    Node loader hardcodes `./node_modules/gdal3.js/dist/package/` and
    *concatenates* user-supplied `paths:` onto it, so absolute paths

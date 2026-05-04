@@ -3,6 +3,7 @@
   Cross-Origin-Embedder-Policy: credentialless
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Service-Worker-Allowed: /
 
 # The two Cross-Origin-* headers above enable SharedArrayBuffer, which is
 # required by ffmpeg.wasm (multi-threaded WASM) and Transformers.js (some
@@ -19,3 +20,22 @@
 # of sessions. Older browsers fall through to require-corp semantics which
 # would break fetches, so we degrade gracefully for those users (the tool
 # itself shows an error; the site still loads).
+#
+# Service-Worker-Allowed: / lets the SW (served from /sw.js) intercept
+# requests under the entire origin, not just /sw.js's own directory. This
+# is the default scope for a root-served SW, but spelling it out keeps the
+# behavior stable if someone moves the file later.
+
+# PWA: ensure manifest and service worker updates roll out fast. Browsers
+# cache these aggressively otherwise; users would stay on a stale SW for
+# days after a deploy.
+/manifest.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: application/manifest+json; charset=utf-8
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  Service-Worker-Allowed: /
+
+/registerSW.js
+  Cache-Control: public, max-age=0, must-revalidate

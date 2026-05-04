@@ -13,9 +13,17 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       manifest: {
+        // Stable identity that survives reinstalls and start_url changes.
+        // The PWA spec recommends an `id` so the browser can recognize
+        // the same app across upgrades; without it, changing start_url
+        // creates a "different" PWA in the install database.
+        id: '/',
         name: 'Wyreup',
         short_name: 'Wyreup',
         description: 'Privacy-first file tools. Everything runs in your browser.',
+        lang: 'en',
+        dir: 'ltr',
+        categories: ['productivity', 'utilities'],
         theme_color: '#FFB000',
         background_color: '#111113',
         display: 'standalone',
@@ -29,6 +37,14 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
+          },
+          {
+            // Monochrome silhouette tinted by the OS — used by Android 13+
+            // themed icons, GNOME Shell badges, and notification badges.
+            src: '/pwa-monochrome-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'monochrome',
           },
         ],
         share_target: {
