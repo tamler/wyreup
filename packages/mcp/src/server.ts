@@ -164,6 +164,24 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
     'Detect and blur all faces in an image using MediaPipe. Use for privacy — anonymizes people in photos. Note: requires browser/WebGL context for MediaPipe; may not work in pure Node.js without a display.',
   'audio-enhance':
     'Enhance audio quality using AI super-resolution (FlashSR, 16kHz to 48kHz upsampling). Use when the user wants higher quality audio from a low-quality recording. CPU/GPU-intensive — may take several seconds.',
+
+  // Geospatial tools (added 2026-05-03). All chain via application/geo+json
+  // as the canonical pivot, so an LLM can compose e.g.
+  // "shapefile-to-geojson | geojson-to-kml" without intermediate massaging.
+  'csv-to-geojson':
+    'Convert a CSV file with latitude/longitude columns to a GeoJSON FeatureCollection of Points. Auto-detects common column names (lat, latitude, y, lng, lon, longitude, x); the user can override via params. Use when the user has a spreadsheet of coordinates and wants a map-ready file.',
+  'kml-to-geojson':
+    'Convert a Google Earth KML file to GeoJSON. Preserves placemark names, descriptions, and geometry (Point, LineString, Polygon, multi-geometry). Use when the user has a KML and wants to feed it into web mapping tools or chain it through other GIS conversions.',
+  'geojson-to-kml':
+    'Convert a GeoJSON file to KML for Google Earth, Google My Maps, or any KML-compatible viewer. Optional documentName param sets the layer title. Accepts FeatureCollection, single Feature, or bare Geometry input.',
+  'gpx-to-geojson':
+    'Convert a GPS Exchange (GPX) track from Strava, Garmin, or any GPS device to GeoJSON. Tracks become LineStrings; waypoints become Points; preserves elevation and time metadata as feature properties.',
+  'gpx-to-kml':
+    'Convert a GPX track to KML for Google Earth visualization. One-step shortcut for "GPS recording → Google Earth".',
+  'shapefile-to-geojson':
+    'Convert a zipped ESRI Shapefile bundle (.shp + .dbf + .prj inside a single .zip) to GeoJSON. Use when the user has a shapefile from a GIS portal and needs it in a web-friendly format. Input must be a .zip containing all the shapefile components.',
+  'convert-geo':
+    'Convert between any pair of vector geospatial formats: Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, CSV. Powered by GDAL/OGR via WebAssembly (~40 MB lazy download on first use). Use when the lighter-weight format-specific tools (kml-to-geojson, gpx-to-kml, etc.) don\'t cover the user\'s pair, or when the user needs to round-trip through GDAL for projection / dataset metadata fidelity. Set the `to` param to the target format name.',
 };
 
 // ──── Schema builder ──────────────────────────────────────────────────────────
@@ -281,10 +299,89 @@ export function createWyreupMcpServer(): Server {
           type: 'string',
           description: 'Directory for multi-output chains (each output written with a tool-derived name).',
         },
+        timeout_ms: {
+          type: 'number',
+          description:
+            'Optional max runtime in milliseconds before the chain is aborted. Default 1800000 (30 min). Override upward for chains that include slow models — transcribe (~5–10 min/hour of audio), audio-enhance, ocr-pro — or downward for known-fast chains. Pass 0 to disable.',
+        },
       },
       required: ['steps', 'input_paths'],
     },
   };
+
+  // ── Result shape helpers ──────────────────────────────────────────────────
+  // Centralize the "tool error vs transport error" decision: anything caused
+  // by the LLM's input or by the tool's own runtime failure is a TOOL result
+  // with isError:true so the agent sees something it can recover from. Only
+  // genuine transport / programming bugs get rethrown.
+
+  type CallResult = {
+    content: Array<{ type: 'text'; text: string }>;
+    isError?: boolean;
+  };
+
+  function errorResult(text: string): CallResult {
+    return { content: [{ type: 'text', text }], isError: true };
+  }
+
+  // Read an absolute path into a File. On any I/O error (missing file,
+  // permission denied, EISDIR, etc.) returns a structured error message
+  // instead of throwing — the LLM sees a clear path to retry.
+  async function safeReadFile(
+    filePath: string,
+  ): Promise<{ ok: true; file: File } | { ok: false; error: string }> {
+    try {
+      const data = await readFile(filePath);
+      return {
+        ok: true,
+        file: new File([data], basename(filePath), {
+          type: inferMimeFromPath(filePath),
+        }),
+      };
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (code === 'ENOENT') return { ok: false, error: `File not found: ${filePath}` };
+      if (code === 'EACCES') return { ok: false, error: `Permission denied reading ${filePath}` };
+      if (code === 'EISDIR') return { ok: false, error: `Expected a file, got a directory: ${filePath}` };
+      return { ok: false, error: `Could not read ${filePath}: ${msg}` };
+    }
+  }
+
+  async function safeReadAllInputs(
+    paths: string[],
+  ): Promise<{ ok: true; files: File[] } | { ok: false; error: string }> {
+    const files: File[] = [];
+    for (const p of paths) {
+      const r = await safeReadFile(p);
+      if (!r.ok) return r;
+      files.push(r.file);
+    }
+    return { ok: true, files };
+  }
+
+  async function safeWriteFile(target: string, bytes: Uint8Array): Promise<string | null> {
+    try {
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, bytes);
+      return null;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (code === 'EACCES') return `Permission denied writing to ${target}`;
+      if (code === 'ENOSPC') return `No space left on device writing ${target}`;
+      return `Could not write ${target}: ${msg}`;
+    }
+  }
+
+  // Build an AbortSignal that fires after `timeoutMs` (or never if 0/undefined).
+  // Uses AbortSignal.timeout (Node 17.3+) so we don't have to wire setTimeout
+  // ourselves. The reason on the abort signal is a DOMException with name
+  // 'TimeoutError'; downstream tools see ctx.signal.aborted === true.
+  function makeTimeoutSignal(timeoutMs: number | undefined): AbortSignal {
+    if (!timeoutMs || timeoutMs <= 0) return new AbortController().signal;
+    return AbortSignal.timeout(timeoutMs);
+  }
 
   // Handler signature requires Promise return; no internal await needed.
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -309,59 +406,73 @@ export function createWyreupMcpServer(): Server {
       const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
       const outputPath = rawArgs['output_path'] as string | undefined;
       const outputDir = rawArgs['output_dir'] as string | undefined;
+      const timeoutMs = rawArgs['timeout_ms'] as number | undefined;
+
       if (!stepsStr) {
-        throw new Error('wyreup_chain requires a "steps" chain string.');
+        return errorResult('wyreup_chain requires a "steps" chain string.');
       }
       const chain = parseChainString(stepsStr);
       if (chain.length === 0) {
-        throw new Error('wyreup_chain: no valid steps parsed from input.');
+        return errorResult('wyreup_chain: no valid steps parsed from input.');
       }
       // Validate every step references a real, MCP-runnable tool.
       for (const step of chain) {
         const t = registry.toolsById.get(step.toolId);
-        if (!t) throw new Error(`wyreup_chain: unknown tool "${step.toolId}".`);
+        if (!t) return errorResult(`wyreup_chain: unknown tool "${step.toolId}".`);
         if (!toolRunsOnSurface(t, 'mcp')) {
-          throw new Error(
+          return errorResult(
             `wyreup_chain: tool "${step.toolId}" is not available on MCP. ` +
               'Web-only capture primitives (record-audio, take-photo, etc.) cannot run in a chain from MCP.',
           );
         }
       }
 
-      const inputFiles = await Promise.all(
-        inputPaths.map(async (filePath: string) => {
-          const data = await readFile(filePath);
-          return new File([data], basename(filePath), {
-            type: inferMimeFromPath(filePath),
-          });
-        }),
-      );
+      const readResult = await safeReadAllInputs(inputPaths);
+      if (!readResult.ok) return errorResult(readResult.error);
+      const inputFiles = readResult.files;
 
-      const result = await runChain(
-        chain,
-        inputFiles,
-        {
-          onProgress: () => {},
-          signal: new AbortController().signal,
-          cache: new Map(),
-          executionId: randomUUID(),
-        },
-        registry,
-      );
+      const effectiveTimeout = timeoutMs ?? 1800000; // 30 min default
+      let result: Blob[] | Blob;
+      try {
+        result = await runChain(
+          chain,
+          inputFiles,
+          {
+            onProgress: () => {},
+            signal: makeTimeoutSignal(effectiveTimeout),
+            cache: new Map(),
+            executionId: randomUUID(),
+          },
+          registry,
+        );
+      } catch (err) {
+        const isTimeout = err instanceof Error && err.name === 'TimeoutError';
+        const msg = err instanceof Error ? err.message : String(err);
+        if (isTimeout) {
+          return errorResult(
+            `wyreup_chain timed out after ${effectiveTimeout} ms. Pass a larger timeout_ms (or 0 to disable) for chains that include slow tools (transcribe, audio-enhance, ocr-pro, convert-geo on large inputs).`,
+          );
+        }
+        return errorResult(`wyreup_chain failed: ${msg}`);
+      }
 
       const outputs = Array.isArray(result) ? result : [result];
       const writtenPaths: string[] = [];
 
       if (outputs.length === 1 && outputPath) {
-        await mkdir(dirname(outputPath), { recursive: true });
-        await writeFile(outputPath, Buffer.from(await outputs[0]!.arrayBuffer()));
+        const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
+        if (writeErr) return errorResult(writeErr);
         writtenPaths.push(outputPath);
       } else if (outputDir) {
-        await mkdir(outputDir, { recursive: true });
+        // Use the final step's tool ID in the filename so multi-output
+        // chains stay traceable: the user/agent can see which tool produced
+        // each artifact rather than getting opaque "chain-0", "chain-1".
+        const finalToolId = chain[chain.length - 1]!.toolId;
         for (let i = 0; i < outputs.length; i++) {
           const ext = extFromMime(outputs[i]!.type);
-          const outPath = join(outputDir, `chain-${i}${ext}`);
-          await writeFile(outPath, Buffer.from(await outputs[i]!.arrayBuffer()));
+          const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
+          const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+          if (writeErr) return errorResult(writeErr);
           writtenPaths.push(outPath);
         }
       } else if (outputs.length > 0 && !outputDir && !outputPath) {
@@ -370,15 +481,9 @@ export function createWyreupMcpServer(): Server {
           const text = await blob.text();
           return { content: [{ type: 'text', text }] };
         }
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Chain produced binary output but no output_path was provided. Rerun with output_path or output_dir.`,
-            },
-          ],
-          isError: true,
-        };
+        return errorResult(
+          'Chain produced binary output but no output_path was provided. Rerun with output_path or output_dir.',
+        );
       }
 
       return {
@@ -393,7 +498,7 @@ export function createWyreupMcpServer(): Server {
 
     const tool = registry.toolsById.get(name);
     if (!tool || !toolRunsOnSurface(tool, 'mcp')) {
-      throw new Error(`Unknown tool: ${name}`);
+      return errorResult(`Unknown tool: ${name}`);
     }
 
     const rawArgs = args ?? {};
@@ -402,37 +507,39 @@ export function createWyreupMcpServer(): Server {
     const outputDir = rawArgs['output_dir'] as string | undefined;
     const params = (rawArgs['params'] as Record<string, unknown> | undefined) ?? tool.defaults;
 
-    // Read input files from disk
-    const inputFiles = await Promise.all(
-      inputPaths.map(async (filePath: string) => {
-        const data = await readFile(filePath);
-        return new File([data], basename(filePath), {
-          type: inferMimeFromPath(filePath),
-        });
-      }),
-    );
+    // Read input files from disk with structured error reporting.
+    const readResult = await safeReadAllInputs(inputPaths);
+    if (!readResult.ok) return errorResult(readResult.error);
+    const inputFiles = readResult.files;
 
-    // Run the tool
-    const result = await tool.run(inputFiles, params, {
-      onProgress: () => {},
-      signal: new AbortController().signal,
-      cache: new Map(),
-      executionId: randomUUID(),
-    });
+    // Run the tool. Errors from tool.run() are tool-level, not transport —
+    // surface them as isError content so the LLM can act on them.
+    let result: Blob[] | Blob;
+    try {
+      result = await tool.run(inputFiles, params, {
+        onProgress: () => {},
+        signal: new AbortController().signal,
+        cache: new Map(),
+        executionId: randomUUID(),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return errorResult(`Tool "${tool.id}" failed: ${msg}`);
+    }
 
     const outputs = Array.isArray(result) ? result : [result];
     const writtenPaths: string[] = [];
 
     if (outputs.length === 1 && outputPath) {
-      await mkdir(dirname(outputPath), { recursive: true });
-      await writeFile(outputPath, Buffer.from(await outputs[0]!.arrayBuffer()));
+      const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
+      if (writeErr) return errorResult(writeErr);
       writtenPaths.push(outputPath);
     } else if (outputDir) {
-      await mkdir(outputDir, { recursive: true });
       for (let i = 0; i < outputs.length; i++) {
         const ext = extFromMime(outputs[i]!.type);
         const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
-        await writeFile(outPath, Buffer.from(await outputs[i]!.arrayBuffer()));
+        const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+        if (writeErr) return errorResult(writeErr);
         writtenPaths.push(outPath);
       }
     } else if (outputs.length > 0 && !outputDir && !outputPath) {
@@ -440,20 +547,12 @@ export function createWyreupMcpServer(): Server {
       const blob = outputs[0]!;
       if (blob.type.startsWith('text/') || blob.type === 'application/json') {
         const text = await blob.text();
-        return {
-          content: [{ type: 'text', text }],
-        };
+        return { content: [{ type: 'text', text }] };
       }
       // Binary with no output path — surface a helpful error
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
-          },
-        ],
-        isError: true,
-      };
+      return errorResult(
+        `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
+      );
     }
 
     return {

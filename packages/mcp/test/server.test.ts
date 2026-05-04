@@ -138,10 +138,18 @@ describe('createWyreupMcpServer', () => {
 
   // ── call_tool — unknown tool ────────────────────────────────────────────────
 
-  it('throws for unknown tool name', async () => {
-    await expect(callTool(server, 'does-not-exist', {})).rejects.toThrow(
-      'Unknown tool: does-not-exist',
-    );
+  it('returns a structured isError for an unknown tool name', async () => {
+    // Pre-2026-05-04 the handler threw, which surfaces as a transport-level
+    // error and short-circuits the agent. Now invalid tool names return a
+    // structured tool result with isError:true, which the LLM can read and
+    // self-correct from.
+    const result = (await callTool(server, 'does-not-exist', {})) as {
+      content: Array<{ type: string; text: string }>;
+      isError?: boolean;
+    };
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain('Unknown tool');
+    expect(result.content[0]?.text).toContain('does-not-exist');
   });
 
   // ── call_tool — hash (JSON output, written to disk) ─────────────────────────

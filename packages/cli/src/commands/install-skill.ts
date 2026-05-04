@@ -3,6 +3,7 @@ import { mkdir, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
+import { EXIT_CODES } from '../lib/exit-codes.js';
 
 const SKILL_VARIANTS = ['cli', 'mcp', 'combined'] as const;
 type SkillVariant = (typeof SKILL_VARIANTS)[number];
@@ -55,6 +56,19 @@ export async function fetchSkill(url: string): Promise<string> {
     );
   }
   if (!res.ok) {
+    // 404 is the most likely real-world failure: the SKILL_DEFS URLs
+    // hardcode raw.githubusercontent.com paths to packages that may
+    // have moved, been renamed, or be on a different branch. Surface
+    // a more specific recovery hint than a generic HTTP message.
+    if (res.status === 404) {
+      throw new Error(
+        `Skill not found at ${url} (HTTP 404).\n` +
+          'The hardcoded URL may be out of date — open an issue at\n' +
+          'https://github.com/tamler/wyreup/issues so the SKILL_DEFS\n' +
+          'map can be refreshed. Meanwhile, install from a local file:\n' +
+          '  wyreup install-skill --path ./skill.md',
+      );
+    }
     throw new Error(
       `Failed to fetch skill from ${url}: HTTP ${res.status} ${res.statusText}\n` +
         'Use --path to install from a local skill.md file instead.',
@@ -196,21 +210,23 @@ async function runInteractive(opts: {
   try {
     content = await fetchSkill(def.url);
   } catch (err) {
+    // Network or HTTP failure: SYSTEM error (out of CLI-args control).
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Error: ${msg}`);
-    process.exit(1);
+    process.exit(EXIT_CODES.SYSTEM_ERROR);
   }
 
   try {
     await mkdir(skillDir, { recursive: true });
     await writeFile(skillFile, content, 'utf8');
   } catch (err) {
+    // Filesystem write failure: SYSTEM error.
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Error writing skill file: ${msg}`);
     if (msg.includes('EACCES') || msg.includes('permission')) {
       console.error('Permission denied. Try a different path or check directory permissions.');
     }
-    process.exit(1);
+    process.exit(EXIT_CODES.SYSTEM_ERROR);
   }
 
   p.outro(`Installed: ${def.name}  ->  ${skillFile}`);

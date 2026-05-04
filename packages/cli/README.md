@@ -105,6 +105,50 @@ tool-id[key=val,key2=val2]     # run with param overrides
 tool1|tool2|tool3              # pipe output of each step to next
 ```
 
+### Preview a chain before running it
+
+`--dry-run` parses the chain, prints the per-step plan, flags any MIME
+mismatches between adjacent steps, and reports the install-group totals
+that will need to download on first run. Reads no files; produces no
+outputs; exits 0 regardless of mismatches (warnings are advisory).
+
+```bash
+wyreup chain --steps "transcribe|text-summarize" --dry-run
+# Chain plan — 2 steps
+#   1. transcribe
+#        accepts: audio/wav, audio/mpeg, audio/mp4, ...
+#        output:  text/plain
+#   2. text-summarize
+#        accepts: text/plain
+#        output:  text/plain
+#
+# Lazy installs needed on first run:
+#   speech               ~238 MB
+#   nlp-standard         ~76 MB
+#   total                ~315 MB
+```
+
+Useful for sanity-checking a chain string from the share URL or kit
+JSON before letting it pull a few hundred MB of models.
+
+## Pilot a watcher before unleashing it
+
+`wyreup watch --max-files N` runs the chain on at most N files (counted
+by completed runs — successes plus failures; skipped non-matching files
+don't count) and exits cleanly. Use it to verify a chain's output before
+letting the daemon run on a thousand-file drop:
+
+```bash
+# Try the chain on the first 5 PNGs that land in ./drops
+wyreup watch ./drops --steps "strip-exif|compress" --max-files 5
+
+# Same flag works with a kit-stored chain
+wyreup watch ./inbox --from-kit ~/wyreup-kit.json --name "photo cleanup" --max-files 10
+```
+
+The output subfolder (`_wyreup-out/` by default) is excluded from the
+watch, so re-runs of the watcher don't reprocess their own outputs.
+
 ## Stdin/stdout piping
 
 Single-input, single-output tools support Unix pipes:
@@ -146,6 +190,17 @@ wyreup run --help
 wyreup chain --help
 wyreup <tool-id> --help
 ```
+
+## Exit codes
+
+Standardized so shell scripts wrapping `wyreup` can differentiate
+"retry with different args" from "infrastructure problem":
+
+| Code | Meaning | Examples |
+|------|---------|----------|
+| 0 | Success | Tool ran, output written |
+| 1 | User error | Unknown tool, missing input file, bad chain syntax, MIME mismatch |
+| 2 | System error | Filesystem permission denied, network unreachable, OOM |
 
 ## Tool categories
 

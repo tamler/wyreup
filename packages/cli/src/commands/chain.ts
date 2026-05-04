@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { formatSuggestion } from '../lib/fuzzy.js';
 import { buildDryRun } from './chain-dryrun.js';
 
 // ──── chain URL parser ────────────────────────────────────────────────────────
@@ -152,10 +153,8 @@ export async function executeChain(
   for (let i = 0; i < chain.length; i++) {
     const step = chain[i]!;
     if (!registry.toolsById.has(step.toolId)) {
-      const available = Array.from(registry.toolsById.keys()).sort().join(', ');
-      process.stderr.write(
-        `Unknown tool in step ${i + 1}: "${step.toolId}"\nAvailable tools: ${available}\n`,
-      );
+      const allIds = Array.from(registry.toolsById.keys());
+      process.stderr.write(`In step ${i + 1}: ` + formatSuggestion(step.toolId, allIds));
       process.exit(1);
     }
   }

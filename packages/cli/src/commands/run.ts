@@ -5,6 +5,7 @@ import type { Command } from 'commander';
 import { createDefaultRegistry } from '@wyreup/core';
 import type { ToolModule, ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { formatSuggestion } from '../lib/fuzzy.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
@@ -149,10 +150,7 @@ export async function executeTool(
   const registry = createDefaultRegistry();
   const tool = registry.toolsById.get(toolId);
   if (!tool) {
-    const available = Array.from(registry.toolsById.keys()).sort().join(', ');
-    process.stderr.write(
-      `Unknown tool: "${toolId}"\nAvailable tools: ${available}\n`,
-    );
+    process.stderr.write(formatSuggestion(toolId, Array.from(registry.toolsById.keys())));
     process.exit(1);
   }
 
@@ -165,6 +163,24 @@ export async function executeTool(
 
   const isStdinMode =
     useStdin && (inputPaths[0] === '-' || !process.stdin.isTTY);
+
+  // Friendly guard: an interactive shell (stdin is a TTY) running a tool
+  // that needs input but with no file args and no piped stdin would
+  // otherwise hang reading empty stdin. Exit early with actionable copy.
+  if (
+    useStdin &&
+    !isStdinMode &&
+    tool.input.min > 0 &&
+    process.stdin.isTTY
+  ) {
+    process.stderr.write(
+      `Tool "${tool.id}" needs at least ${tool.input.min} input file${tool.input.min === 1 ? '' : 's'}.\n` +
+        `Pass a file path as an argument, or pipe data via stdin:\n` +
+        `  wyreup run ${tool.id} <file>\n` +
+        `  cat <file> | wyreup run ${tool.id} --input-format <mime>\n`,
+    );
+    process.exit(1);
+  }
 
   if (isStdinMode && tool.input.min > 0) {
     if (!opts.inputFormat) {
