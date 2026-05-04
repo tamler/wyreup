@@ -26,6 +26,7 @@
     "changeset:publish": "changeset publish"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@changesets/cli": "^2.27.0",
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.0.0",
