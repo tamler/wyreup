@@ -10,17 +10,31 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="container">
 
       <div class="about-hero">
-        <h1 class="about-title">About Wyreup.</h1>
+        <h1 class="about-title">Wyreup is for everyone with files.</h1>
       </div>
 
       <div class="about-body">
 
         <div class="about-section">
           <div class="about-prose">
-            <p>Wyreup is a free, open-source library of browser-native tools. Every tool runs on your device — your files never upload, never cache, never phone home.</p>
-            <p>This was built because file tools on the web come with a tradeoff: use ours or keep your privacy, pick one. We didn't want to pick. So Wyreup uses modern browser APIs — WebAssembly, WebGPU, and client-side compute — to give you real tool capability without the surveillance tax.</p>
+            <p class="about-lede">Photos that need resizing. PDFs that need merging. Audio that needs trimming. Video that needs converting. The kind of small file tasks that come up in everyday life — and the kind that most tools want you to upload your private data to solve.</p>
+            <p class="about-lede">Wyreup runs every tool on your device. Your files never leave your computer. There's no account, no upload, no tracking — just tools that do their job and get out of the way.</p>
             <p>MIT-licensed. Open source. Verifiable. If you don't trust us, read the code.</p>
           </div>
+        </div>
+
+        <div class="section-rule" aria-hidden="true">
+          <span class="section-rule__line"></span>
+          <span class="section-rule__pad"></span>
+        </div>
+
+        <div class="about-section">
+          <h2 class="about-section-title">However you work</h2>
+          <ul class="surfaces-list">
+            <li><strong>If you're at your desk</strong>, drop a file in your <a href="/">browser</a>.</li>
+            <li><strong>If you live in the terminal</strong>, install the <a href="/cli">CLI</a>.</li>
+            <li><strong>If you work alongside an AI assistant</strong>, install the <a href="/skill">agent skill</a>.</li>
+          </ul>
         </div>
 
         <div class="section-rule" aria-hidden="true">
@@ -177,12 +191,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   .about-section-title {
-    font-size: var(--text-sm);
-    font-family: var(--font-mono);
-    font-weight: 500;
-    color: var(--text-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--text-primary);
     margin: 0;
   }
 
@@ -199,6 +211,43 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     color: var(--text-muted);
     line-height: 1.7;
     margin: 0;
+  }
+
+  .about-lede {
+    font-size: var(--text-lg) !important;
+    line-height: 1.6 !important;
+  }
+
+  .surfaces-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .surfaces-list li {
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .surfaces-list li strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .surfaces-list li a {
+    color: var(--text-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .surfaces-list li a:hover {
+    color: var(--text-primary);
   }
 
   /* Solder-pad section rule */
