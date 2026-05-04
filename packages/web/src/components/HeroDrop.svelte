@@ -260,7 +260,7 @@
 
   .hero-drop__sub {
     font-size: var(--text-sm);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     color: var(--text-subtle);
     line-height: 1.4;
   }

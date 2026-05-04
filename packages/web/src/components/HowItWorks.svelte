@@ -288,7 +288,7 @@
     background: none;
     border: none;
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-xs);
     cursor: pointer;
     padding: 0;
@@ -344,7 +344,7 @@
     display: inline-flex;
     align-items: center;
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-xs);
     text-decoration: none;
   }
@@ -360,7 +360,7 @@
     color: var(--black);
     border: none;
     border-radius: var(--radius-md);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;

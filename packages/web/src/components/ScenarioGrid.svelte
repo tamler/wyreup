@@ -163,7 +163,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     cursor: pointer;
     padding: var(--space-2) var(--space-3);
@@ -355,15 +355,13 @@
     font-family: var(--font-mono);
     font-weight: 400;
     color: var(--text-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     margin-top: auto;
   }
 
   .more-tools {
     margin-top: var(--space-4);
     font-size: var(--text-sm);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     color: var(--text-subtle);
   }
 
