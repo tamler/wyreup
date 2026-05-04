@@ -74,13 +74,13 @@
   }
 
   .share-btn:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .share-confirm {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--accent);
+    color: var(--accent-text);
     animation: fade-out 1.5s ease forwards;
   }
 

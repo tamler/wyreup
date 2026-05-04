@@ -439,7 +439,7 @@
     cursor: pointer;
     transition: border-color var(--duration-instant) var(--ease-sharp), color var(--duration-instant) var(--ease-sharp);
   }
-  .mode-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .mode-toggle:hover { border-color: var(--accent-hover); color: var(--accent-text); }
 
   .input-wrap {
     display: flex;
@@ -471,7 +471,7 @@
     outline: none;
     min-width: 0;
   }
-  .input-wrap:focus-within { border-color: var(--accent); }
+  .input-wrap:focus-within { border-color: var(--accent-hover); }
 
   .paste-area {
     width: 100%;
@@ -485,7 +485,7 @@
     resize: vertical;
     box-sizing: border-box;
   }
-  .paste-area:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .paste-area:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .rows-editor {
     display: flex;
@@ -522,7 +522,7 @@
     font-size: var(--text-sm);
     min-width: 0;
   }
-  .price-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .price-input:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 1px; }
 
   .row-remove {
     background: none;
@@ -549,7 +549,7 @@
     cursor: pointer;
     transition: border-color var(--duration-instant) var(--ease-sharp), color var(--duration-instant) var(--ease-sharp);
   }
-  .btn-add-row:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-add-row:hover { border-color: var(--accent-hover); color: var(--accent-text); }
 
   /* Result */
   .result-col {
@@ -567,7 +567,7 @@
     border-radius: var(--radius-md);
     background: var(--bg-elevated);
   }
-  .winner--dca { border-color: var(--accent); background: var(--accent-dim); }
+  .winner--dca { border-color: var(--accent-hover); background: var(--accent-dim); }
   .winner--lump { border-color: var(--border); }
 
   .winner-indicator {
@@ -584,7 +584,7 @@
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
-  .winner--dca .winner-text { color: var(--accent); }
+  .winner--dca .winner-text { color: var(--accent-text); }
 
   .cards-row {
     display: grid;
@@ -604,7 +604,7 @@
     flex-direction: column;
     gap: var(--space-2);
   }
-  .card--winner { border-color: var(--accent); }
+  .card--winner { border-color: var(--accent-hover); }
 
   .card-label {
     font-family: var(--font-mono);
@@ -632,7 +632,7 @@
     text-align: right;
   }
   .stat-val--primary { font-weight: 700; font-size: var(--text-md); }
-  .stat-val--accent { color: var(--accent); }
+  .stat-val--accent { color: var(--accent-text); }
 
   /* Chart */
   .chart-wrap {

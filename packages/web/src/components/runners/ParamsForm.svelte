@@ -418,7 +418,7 @@
   }
 
   .param-input:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -437,7 +437,7 @@
   }
 
   .param-textarea:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -477,7 +477,7 @@
   }
 
   .param-select:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -542,13 +542,13 @@
   }
 
   .multi-enum-chip--active {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
   }
 
   .multi-enum-chip--active:hover {
-    border-color: var(--accent-hover, var(--accent));
-    color: var(--accent-hover, var(--accent));
+    border-color: var(--accent-hover);
+    color: var(--accent-hover);
   }
 
   /* Help text */

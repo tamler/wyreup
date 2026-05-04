@@ -262,14 +262,14 @@
       border-color var(--duration-instant) var(--ease-sharp),
       color var(--duration-instant) var(--ease-sharp);
   }
-  .chip:hover { border-color: var(--accent); color: var(--text-primary); }
+  .chip:hover { border-color: var(--accent-hover); color: var(--text-primary); }
   .chip--active {
     background: var(--accent);
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     color: var(--black);
     font-weight: 500;
   }
-  .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chip:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   /* Layout */
   .calc-layout {
@@ -308,7 +308,7 @@
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
-  .field-value { color: var(--accent); }
+  .field-value { color: var(--accent-text); }
 
   .date-input {
     height: 32px;
@@ -323,7 +323,7 @@
     width: 100%;
     box-sizing: border-box;
   }
-  .date-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .date-input:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .range-input {
     width: 100%;
@@ -352,9 +352,9 @@
     cursor: pointer;
     transition: background var(--duration-instant) var(--ease-sharp), border-color var(--duration-instant) var(--ease-sharp), color var(--duration-instant) var(--ease-sharp);
   }
-  .unit-chip:hover { border-color: var(--accent); }
-  .unit-chip--active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-  .unit-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .unit-chip:hover { border-color: var(--accent-hover); }
+  .unit-chip--active { background: var(--accent-dim); border-color: var(--accent-hover); color: var(--accent-text); }
+  .unit-chip:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .radio-group { display: flex; gap: var(--space-4); }
   .radio-label {
@@ -377,7 +377,7 @@
 
   .result-display {
     background: var(--bg-elevated);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     border-radius: var(--radius-md);
     padding: var(--space-6) var(--space-4);
     display: flex;
@@ -404,7 +404,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-2xl);
     font-weight: 700;
-    color: var(--accent);
+    color: var(--accent-text);
     line-height: 1.1;
     letter-spacing: -0.03em;
   }

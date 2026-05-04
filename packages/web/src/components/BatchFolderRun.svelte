@@ -300,7 +300,7 @@
 
   .review { display: flex; flex-direction: column; gap: var(--space-3); }
   .review__line { font-family: var(--font-sans); font-size: var(--text-sm); color: var(--text-primary); margin: 0; }
-  .review__line strong { color: var(--accent); font-weight: 600; }
+  .review__line strong { color: var(--accent-text); font-weight: 600; }
   .review__sub { color: var(--text-subtle); font-size: var(--text-xs); }
   .review__actions { display: flex; gap: var(--space-2); align-items: center; }
 
@@ -322,7 +322,7 @@
 
   .batch-result { display: flex; flex-direction: column; gap: var(--space-3); }
   .batch-result__line { font-family: var(--font-sans); font-size: var(--text-sm); color: var(--text-primary); margin: 0; }
-  .batch-result__line strong { color: var(--accent); font-weight: 600; }
+  .batch-result__line strong { color: var(--accent-text); font-weight: 600; }
   .batch-result__failed { color: var(--danger); }
   .batch-result__actions { display: flex; gap: var(--space-2); align-items: center; }
   .batch-result__failures summary {

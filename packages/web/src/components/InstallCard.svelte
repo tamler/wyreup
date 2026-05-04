@@ -170,7 +170,7 @@
 
   .install-btn {
     margin-top: var(--space-3);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     font-weight: 500;
     padding: var(--space-2) var(--space-4);
@@ -207,7 +207,7 @@
   .install-link {
     display: inline-block;
     margin-top: var(--space-3);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     color: var(--text-subtle);
     text-decoration: none;

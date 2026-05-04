@@ -424,7 +424,7 @@
     color: var(--text-muted);
   }
   .field-value {
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 500;
   }
 
@@ -459,7 +459,7 @@
     min-width: 0;
   }
   .num-input:focus { outline: none; }
-  .input-wrap:focus-within { border-color: var(--accent); }
+  .input-wrap:focus-within { border-color: var(--accent-hover); }
 
   .range-input {
     width: 100%;
@@ -486,7 +486,7 @@
     font-size: var(--text-sm);
     cursor: pointer;
   }
-  .select-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .select-input:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   /* Result column */
   .result-col {
@@ -514,8 +514,8 @@
     flex-direction: column;
     gap: var(--space-1);
   }
-  .card--accent { border-color: var(--accent); }
-  .card--accent-dim { background: var(--accent-dim); border-color: var(--accent); }
+  .card--accent { border-color: var(--accent-hover); }
+  .card--accent-dim { background: var(--accent-dim); border-color: var(--accent-hover); }
   .card-label {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -531,7 +531,7 @@
     line-height: 1.1;
     letter-spacing: -0.03em;
   }
-  .card-value--accent { color: var(--accent); }
+  .card-value--accent { color: var(--accent-text); }
   .card-value--muted { color: var(--text-muted); }
 
   /* Chart */
@@ -592,7 +592,7 @@
     border: none;
     cursor: pointer;
   }
-  .table-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .table-toggle:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: -2px; }
   .toggle-caret {
     font-size: var(--text-xs);
     color: var(--text-subtle);
@@ -626,7 +626,7 @@
     border-bottom: 1px solid var(--border-subtle);
   }
   .td--r { text-align: right; }
-  .td--accent { color: var(--accent); }
+  .td--accent { color: var(--accent-text); }
 
   /* Copy + misc */
   .copy-row { display: flex; justify-content: flex-end; }
@@ -643,7 +643,7 @@
     letter-spacing: 0.08em;
   }
   .btn-ghost:hover { color: var(--text-muted); }
-  .btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-ghost:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .error-panel {
     border: 1px solid var(--danger);

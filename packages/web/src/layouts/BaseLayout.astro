@@ -26,12 +26,13 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 ---
 
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#FFB000" />
+    <meta name="theme-color" content="#FAF7F0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Wyreup" />
@@ -284,7 +285,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   }
 
   .wordmark:hover {
-    color: var(--accent);
+    color: var(--accent-text);
     transition: color var(--duration-instant) var(--ease-sharp);
   }
 
@@ -310,7 +311,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
   .nav-link[aria-current="page"] {
     color: var(--text-primary);
-    border-bottom: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent-hover);
     padding-bottom: 1px;
   }
 
@@ -440,7 +441,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   }
 
   .dev-menu__trigger:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -496,7 +497,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   }
 
   .dev-menu__item:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: -2px;
   }
 
@@ -569,7 +570,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
   }
 
   .header-search-input:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 1px;
     border-color: var(--border);
   }
@@ -635,7 +636,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
   :global(.header-suggest-item:hover .header-suggest-item__icon),
   :global(.header-suggest-item[aria-selected="true"] .header-suggest-item__icon) {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   :global(.header-suggest-item__body) {
@@ -700,7 +701,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
     padding: var(--space-3);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
     border-radius: var(--radius-sm);
     transition: background var(--duration-instant) var(--ease-sharp);

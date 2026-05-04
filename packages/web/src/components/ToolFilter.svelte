@@ -512,7 +512,7 @@
 
   .drop-filter--empty:hover,
   .drop-filter--hover {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     color: var(--text-primary);
     background: var(--bg-raised);
   }
@@ -520,7 +520,7 @@
   .drop-filter--active {
     cursor: default;
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--accent-dim);
     color: var(--text-primary);
   }
@@ -533,7 +533,7 @@
   }
 
   .drop-filter__icon {
-    color: var(--accent);
+    color: var(--accent-text);
     flex-shrink: 0;
   }
 
@@ -544,7 +544,7 @@
 
   .drop-filter__name {
     font-family: var(--font-mono);
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 500;
   }
 
@@ -573,7 +573,7 @@
   }
 
   .drop-filter__clear:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -636,7 +636,7 @@
   }
 
   .recent-pill:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -657,7 +657,7 @@
   }
 
   .recent-clear:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -716,17 +716,17 @@
   }
 
   .filter-chip.active {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
     background: var(--accent-dim);
   }
 
   .filter-chip.active .filter-chip__count {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .filter-chip:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -734,13 +734,13 @@
      chips so it doesn't look pre-selected. The icon is the only thing
      that distinguishes it at rest; active state inverts to accent. */
   .filter-chip--ai .filter-chip__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .filter-chip--ai.active {
     background: var(--accent);
     color: var(--black);
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .filter-chip--ai.active .filter-chip__icon,
@@ -798,7 +798,7 @@
   }
 
   .results-show-all:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -865,11 +865,11 @@
   }
 
   .tool-card:hover .tool-card__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .tool-card:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -993,14 +993,14 @@
 
   .badge--required {
     background: var(--accent-dim);
-    color: var(--accent);
-    border: 1px solid var(--accent);
+    color: var(--accent-text);
+    border: 1px solid var(--accent-hover);
   }
 
   .badge--ai {
     background: var(--accent);
     color: var(--black);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     font-weight: 600;
   }
 
@@ -1049,7 +1049,7 @@
   }
 
   .btn-ghost:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -1076,7 +1076,7 @@
   }
 
   .btn-suggest:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 </style>

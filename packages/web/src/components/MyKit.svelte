@@ -224,7 +224,7 @@
   }
 
   .kit-link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
     font-family: var(--font-mono);
   }
@@ -278,7 +278,7 @@
     height: 28px;
     padding: 0 var(--space-2);
     background: var(--bg-raised);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     font-family: var(--font-sans);
@@ -287,7 +287,7 @@
     min-width: 200px;
   }
 
-  .rename-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rename-input:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   /* Step preview */
   .step-preview {
@@ -346,7 +346,7 @@
     background: var(--bg-raised);
   }
 
-  .btn-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-action:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
   .btn-action--danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(239, 68, 68, 0.08); }
 
   /* Utility row */
@@ -377,7 +377,7 @@
 
   .btn-secondary:hover { background: var(--bg-raised); border-color: var(--text-muted); }
   .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .import-success {
     font-family: var(--font-mono);

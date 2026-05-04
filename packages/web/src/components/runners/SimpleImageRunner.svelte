@@ -315,7 +315,7 @@
   }
 
   .btn-primary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -342,7 +342,7 @@
   }
 
   .btn-secondary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -461,7 +461,7 @@
   }
 
   .solder-val--accent {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .result-actions {
@@ -483,15 +483,15 @@
   .brackets::before {
     top: -5px;
     left: -5px;
-    border-top: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
 
   .brackets::after {
     bottom: -5px;
     right: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
 
   .brackets-inner {
@@ -512,14 +512,14 @@
   .brackets-inner::before {
     top: -5px;
     right: -5px;
-    border-top: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
 
   .brackets-inner::after {
     bottom: -5px;
     left: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
 </style>

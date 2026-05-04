@@ -142,12 +142,12 @@
   }
 
   .drop-zone:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
   .drop-zone.dragover {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     border-style: solid;
     background: var(--accent-dim);
   }
@@ -203,7 +203,7 @@
   }
 
   .drop-zone.dragover .drop-zone__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .drop-zone__label {
@@ -259,7 +259,7 @@
   }
 
   .btn-ghost:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 </style>

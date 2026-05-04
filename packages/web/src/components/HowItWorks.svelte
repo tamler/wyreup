@@ -227,18 +227,18 @@
 
   .how-card[role='button']:hover,
   .how-card[role='button']:focus-visible {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--bg-raised);
   }
 
   .how-card[role='button']:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
   .how-card--dragover {
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--accent-dim);
   }
 
@@ -288,7 +288,7 @@
     background: none;
     border: none;
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-xs);
     cursor: pointer;
     padding: 0;
@@ -328,13 +328,13 @@
   }
 
   .how-card__tool--picked {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
     background: var(--accent-dim);
   }
 
   .how-card__tool:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -344,7 +344,7 @@
     display: inline-flex;
     align-items: center;
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-xs);
     text-decoration: none;
   }
@@ -360,7 +360,7 @@
     color: var(--black);
     border: none;
     border-radius: var(--radius-md);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
@@ -386,7 +386,7 @@
   }
 
   .how-card__run:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 

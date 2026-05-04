@@ -328,7 +328,7 @@
   }
 
   .storage-msg--ok {
-    color: var(--accent);
+    color: var(--accent-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
   }
@@ -367,7 +367,7 @@
     color: var(--text-muted);
     line-height: 1.5;
     padding: var(--space-2) var(--space-3);
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--accent-hover);
     background: var(--bg-raised);
     margin: 0;
   }
@@ -498,23 +498,23 @@
   }
 
   .btn-secondary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
   .btn-secondary--danger {
-    color: var(--danger);
-    border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+    color: var(--danger-text);
+    border-color: color-mix(in srgb, var(--danger-text) 40%, var(--border));
   }
 
   .btn-secondary--danger:hover:not(:disabled) {
-    border-color: var(--danger);
+    border-color: var(--danger-text);
   }
 
   .storage-error {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--danger);
+    color: var(--danger-text);
     margin: 0;
   }
 </style>

@@ -131,7 +131,7 @@
     gap: var(--space-3);
     padding: var(--space-3);
     background: var(--accent-dim);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     border-radius: var(--radius-md);
   }
 
@@ -146,7 +146,7 @@
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .chain-banner__file {
@@ -176,7 +176,7 @@
   }
 
   .btn-primary-sm:hover { background: var(--accent-hover); }
-  .btn-primary-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary-sm:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .btn-ghost-sm {
     background: none;
@@ -190,5 +190,5 @@
   }
 
   .btn-ghost-sm:hover { color: var(--text-muted); }
-  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 </style>

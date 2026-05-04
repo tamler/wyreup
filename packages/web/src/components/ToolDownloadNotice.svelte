@@ -82,7 +82,7 @@
     padding: var(--space-3) var(--space-4);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid var(--accent-hover);
     border-radius: var(--radius-md);
     font-family: var(--font-sans);
     font-size: var(--text-sm);
@@ -90,7 +90,7 @@
   }
 
   .dl-notice__icon {
-    color: var(--accent);
+    color: var(--accent-text);
     flex-shrink: 0;
     margin-top: 1px;
   }
@@ -114,7 +114,7 @@
   }
 
   .dl-notice__link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: underline;
   }
 
@@ -140,7 +140,7 @@
   }
 
   .dl-notice__close:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 </style>

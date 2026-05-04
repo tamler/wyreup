@@ -148,7 +148,7 @@
   }
 
   .scenarios-heading__file {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .scenarios-heading__mime {
@@ -163,7 +163,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-subtle);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: var(--text-sm);
     cursor: pointer;
     padding: var(--space-2) var(--space-3);
@@ -180,7 +180,7 @@
   }
 
   .clear-btn:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -292,33 +292,33 @@
   .scenario-card:hover::before {
     top: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover::after {
     bottom: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .brackets-inner-card::before {
     top: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .brackets-inner-card::after {
     bottom: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .scenario-card__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .scenario-card:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -355,15 +355,13 @@
     font-family: var(--font-mono);
     font-weight: 400;
     color: var(--text-subtle);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     margin-top: auto;
   }
 
   .more-tools {
     margin-top: var(--space-4);
     font-size: var(--text-sm);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     color: var(--text-subtle);
   }
 
@@ -374,7 +372,7 @@
   }
 
   .more-tools__link:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .empty-state {

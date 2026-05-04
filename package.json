@@ -26,12 +26,14 @@
     "changeset:publish": "changeset publish"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@changesets/cli": "^2.27.0",
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.10.0",
     "eslint-config-prettier": "^10.1.8",
+    "playwright": "^1.59.1",
     "prettier": "^3.3.0",
     "turbo": "^2.1.0",
     "typescript": "^5.5.0",
