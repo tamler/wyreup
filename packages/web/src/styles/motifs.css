@@ -86,25 +86,25 @@
 .brackets:hover::before {
   top: -1px;
   left: -1px;
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .brackets:hover::after {
   bottom: -1px;
   right: -1px;
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .brackets:hover .brackets-inner::before {
   top: -1px;
   right: -1px;
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .brackets:hover .brackets-inner::after {
   bottom: -1px;
   left: -1px;
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 /* Accent variant — active result panels (static amber at locked-on position) */
@@ -112,7 +112,7 @@
 .brackets-active::after,
 .brackets-active .brackets-inner::before,
 .brackets-active .brackets-inner::after {
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .brackets-active::before { top: -1px; left: -1px; }
@@ -169,7 +169,7 @@
 }
 
 .solder-row.active .solder-value {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ─────────────────────────────────────────────── */
@@ -189,7 +189,7 @@
 
 .node-connector.active {
   background: var(--accent);
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .node-line {
