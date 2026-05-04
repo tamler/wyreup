@@ -182,7 +182,7 @@
 
   .decoded { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
   .decoded__head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-  .badge { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 2px 8px; }
+  .badge { font-family: var(--font-mono); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-text); border: 1px solid var(--accent-hover); border-radius: var(--radius-sm); padding: 2px 8px; }
   .decoded__text { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); background: var(--bg); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-3); overflow: auto; white-space: pre-wrap; word-break: break-all; max-height: 240px; margin: 0; }
 
   .not-found { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); background: var(--bg); border: 1px dashed var(--border); border-radius: var(--radius-sm); }
@@ -197,10 +197,10 @@
   .json-view { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); background: var(--bg); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: var(--space-3); overflow: auto; max-height: 280px; white-space: pre-wrap; margin: var(--space-2) 0 0; }
 
   .brackets::before, .brackets::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }
-  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
-  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent-hover); border-left: 1px solid var(--accent-hover); }
+  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
   .brackets-inner { position: absolute; inset: 0; pointer-events: none; }
   .brackets-inner::before, .brackets-inner::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }
-  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
-  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
+  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
 </style>

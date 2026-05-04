@@ -136,7 +136,7 @@
     gap: var(--space-3);
     padding: var(--space-4);
     background: var(--bg-elevated);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     border-radius: var(--radius-md);
     color: var(--text-primary);
     font-family: var(--font-sans);
@@ -182,7 +182,7 @@
   .pwa-toast__btn--primary {
     background: var(--accent);
     color: var(--black);
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .pwa-toast__btn--primary:hover {
@@ -191,7 +191,7 @@
   }
 
   .pwa-toast__btn:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 

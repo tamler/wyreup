@@ -577,7 +577,7 @@
   .step-num {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 700;
     letter-spacing: 0.08em;
     flex-shrink: 0;
@@ -600,7 +600,7 @@
   }
 
   .tool-select:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -613,7 +613,7 @@
   }
 
   .step-status--done { color: var(--success); }
-  .step-status--running { color: var(--accent); }
+  .step-status--running { color: var(--accent-text); }
 
   .step-actions {
     display: flex;
@@ -683,7 +683,7 @@
   }
 
   .btn-add-step:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -698,7 +698,7 @@
   .confirm-msg {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   /* Save dialog */
@@ -732,7 +732,7 @@
   }
 
   .save-dialog__input:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -766,7 +766,7 @@
     color: var(--text-subtle);
     cursor: not-allowed;
   }
-  .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .btn-secondary {
     height: 32px;
@@ -785,7 +785,7 @@
   }
 
   .btn-secondary:hover { background: var(--bg-raised); border-color: var(--text-muted); }
-  .btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .btn-ghost-sm {
     background: none;
@@ -801,7 +801,7 @@
 
   .btn-ghost-sm:hover { color: var(--text-muted); }
   .btn-ghost-sm:disabled { opacity: 0.3; cursor: not-allowed; }
-  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
   .btn-ghost-sm--danger:hover { color: var(--danger); }
 
   /* Error panel */
@@ -954,7 +954,7 @@
   }
 
   .end-save-prompt__input:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -966,7 +966,7 @@
   }
 
   .end-save-link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -987,15 +987,15 @@
   .brackets::before {
     top: -5px;
     left: -5px;
-    border-top: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
 
   .brackets::after {
     bottom: -5px;
     right: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
 
   .brackets-inner {
@@ -1016,14 +1016,14 @@
   .brackets-inner::before {
     top: -5px;
     right: -5px;
-    border-top: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
 
   .brackets-inner::after {
     bottom: -5px;
     left: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
 </style>

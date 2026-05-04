@@ -209,17 +209,17 @@
   }
 
   .chain-node:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--accent-dim);
   }
 
   .chain-node:hover .chain-node__dot {
     background: var(--accent);
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .chain-node:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 

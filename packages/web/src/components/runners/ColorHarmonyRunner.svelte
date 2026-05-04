@@ -234,7 +234,7 @@
   }
 
   .input-row__text:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -321,7 +321,7 @@
     transition: filter var(--duration-instant) var(--ease-sharp);
   }
   .strip__chip:hover { filter: brightness(1.1); }
-  .strip__chip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; }
+  .strip__chip:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: -2px; z-index: 1; }
 
   .strip__hex {
     font-family: var(--font-mono);
@@ -359,10 +359,10 @@
   }
 
   .brackets::before, .brackets::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }
-  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
-  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent-hover); border-left: 1px solid var(--accent-hover); }
+  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
   .brackets-inner { position: absolute; inset: 0; pointer-events: none; }
   .brackets-inner::before, .brackets-inner::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }
-  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
-  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
+  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent-hover); border-left: 1px solid var(--accent-hover); }
 </style>

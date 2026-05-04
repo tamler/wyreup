@@ -148,7 +148,7 @@
   }
 
   .scenarios-heading__file {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .scenarios-heading__mime {
@@ -180,7 +180,7 @@
   }
 
   .clear-btn:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -292,33 +292,33 @@
   .scenario-card:hover::before {
     top: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover::after {
     bottom: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .brackets-inner-card::before {
     top: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .brackets-inner-card::after {
     bottom: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .scenario-card:hover .scenario-card__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .scenario-card:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -374,7 +374,7 @@
   }
 
   .more-tools__link:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .empty-state {

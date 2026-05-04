@@ -505,7 +505,7 @@
 
   /* Auto-run consent panel — gates drive-by AI model downloads */
   .consent-panel {
-    border: 1px solid var(--accent);
+    border: 1px solid var(--accent-hover);
     border-radius: var(--radius-md);
     background: var(--accent-dim, var(--bg-elevated));
     padding: var(--space-4);
@@ -514,7 +514,7 @@
     gap: var(--space-3);
   }
   .consent-panel__head { display: flex; align-items: center; gap: var(--space-2); }
-  .consent-panel__icon { color: var(--accent); display: inline-flex; }
+  .consent-panel__icon { color: var(--accent-text); display: inline-flex; }
   .consent-panel__title {
     font-family: var(--font-sans);
     font-size: var(--text-base);
@@ -522,7 +522,7 @@
     color: var(--text-primary);
     margin: 0;
   }
-  .consent-panel__title strong { color: var(--accent); }
+  .consent-panel__title strong { color: var(--accent-text); }
   .consent-panel__body {
     font-family: var(--font-sans);
     font-size: var(--text-sm);
@@ -568,7 +568,7 @@
     font-size: var(--text-xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .chain-name-hero__title {
@@ -669,7 +669,7 @@
   .confirm-msg {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   /* Save dialog */
@@ -702,7 +702,7 @@
     font-size: var(--text-sm);
   }
 
-  .save-dialog__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .save-dialog__input:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .save-dialog__actions {
     display: flex;
@@ -733,7 +733,7 @@
   .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
   .btn-primary:active:not(:disabled) { transform: scale(0.98); }
   .btn-primary:disabled { background: var(--bg-raised); color: var(--text-subtle); cursor: not-allowed; }
-  .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .btn-secondary {
     height: 32px;
@@ -755,7 +755,7 @@
   }
 
   .btn-secondary:hover { background: var(--bg-raised); border-color: var(--text-muted); }
-  .btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   .btn-ghost-sm {
     background: none;
@@ -770,7 +770,7 @@
   }
 
   .btn-ghost-sm:hover { color: var(--text-muted); }
-  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
   /* Error panel */
   .error-panel {
@@ -881,7 +881,7 @@
   }
 
   .end-save-prompt__input:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -893,7 +893,7 @@
   }
 
   .end-save-link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
   }
 
@@ -907,8 +907,8 @@
     height: 8px;
     pointer-events: none;
   }
-  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
-  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+  .brackets::before { top: -5px; left: -5px; border-top: 1px solid var(--accent-hover); border-left: 1px solid var(--accent-hover); }
+  .brackets::after { bottom: -5px; right: -5px; border-bottom: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
 
   .brackets-inner { position: absolute; inset: 0; pointer-events: none; }
   .brackets-inner::before, .brackets-inner::after {
@@ -918,6 +918,6 @@
     height: 8px;
     pointer-events: none;
   }
-  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
-  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
+  .brackets-inner::before { top: -5px; right: -5px; border-top: 1px solid var(--accent-hover); border-right: 1px solid var(--accent-hover); }
+  .brackets-inner::after { bottom: -5px; left: -5px; border-bottom: 1px solid var(--accent-hover); border-left: 1px solid var(--accent-hover); }
 </style>

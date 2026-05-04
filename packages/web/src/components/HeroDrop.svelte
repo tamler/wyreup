@@ -116,7 +116,7 @@
   }
 
   .hero-drop:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -187,32 +187,32 @@
 
   /* Dragover: brackets lock on amber, bg shifts */
   .hero-drop.dragover {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--accent-dim);
   }
 
   .hero-drop.dragover::before {
     top: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .hero-drop.dragover::after {
     bottom: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .hero-drop.dragover .brackets-inner::before {
     top: -1px;
     right: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .hero-drop.dragover .brackets-inner::after {
     bottom: -1px;
     left: -1px;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
   }
 
   .hero-drop__inner {
@@ -242,7 +242,7 @@
   }
 
   .hero-drop.dragover .hero-drop__icon {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .hero-drop__caption {
@@ -255,7 +255,7 @@
   }
 
   .hero-drop.dragover .hero-drop__caption {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .hero-drop__sub {

@@ -90,7 +90,7 @@
 
 <style>
   .pwa-banner {
-    border-bottom: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
     background: var(--accent-dim);
     padding: var(--space-3) 0;
   }
@@ -113,7 +113,7 @@
   }
 
   .pwa-banner__link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: underline;
     text-underline-offset: 2px;
     transition: color var(--duration-instant) var(--ease-sharp);
@@ -126,7 +126,7 @@
   .pwa-banner__icon {
     display: inline-flex;
     align-items: center;
-    color: var(--accent);
+    color: var(--accent-text);
     transform: translateY(2px);
     margin: 0 1px;
   }

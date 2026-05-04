@@ -186,7 +186,7 @@
 
   .mic-row--recording {
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--bg-raised);
   }
 
@@ -216,13 +216,13 @@
   }
 
   .mic-btn:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
   .mic-btn--stop {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
   }
 
   .mic-btn__dot {
@@ -235,7 +235,7 @@
 
   .mic-btn__dot--rec {
     background: var(--accent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-hover) 30%, transparent);
     animation: mic-pulse 1.2s ease-in-out infinite;
   }
 
@@ -251,7 +251,7 @@
   .mic-time {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    color: var(--accent);
+    color: var(--accent-text);
     font-variant-numeric: tabular-nums;
   }
 

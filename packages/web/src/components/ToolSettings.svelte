@@ -288,7 +288,7 @@
   }
 
   .tool-link:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .tool-group-name {
@@ -327,7 +327,7 @@
   }
 
   .cache-status--enabled {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   .cache-status--disabled {
@@ -364,8 +364,8 @@
   }
 
   .toggle-btn--on {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
   }
 
   .toggle-btn--on:hover {

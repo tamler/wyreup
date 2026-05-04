@@ -328,7 +328,7 @@
   }
 
   .storage-msg--ok {
-    color: var(--accent);
+    color: var(--accent-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
   }
@@ -367,7 +367,7 @@
     color: var(--text-muted);
     line-height: 1.5;
     padding: var(--space-2) var(--space-3);
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--accent-hover);
     background: var(--bg-raised);
     margin: 0;
   }
@@ -498,7 +498,7 @@
   }
 
   .btn-secondary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 

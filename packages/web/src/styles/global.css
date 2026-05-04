@@ -74,7 +74,7 @@ a {
 }
 
 a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-hover);
   outline-offset: 2px;
 }
 
@@ -117,14 +117,14 @@ a:focus-visible {
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-hover);
   outline-offset: 2px;
 }
 
 .btn-primary {
   background: var(--accent);
   color: var(--ink);
-  border-color: var(--accent);
+  border-color: var(--accent-hover);
 }
 
 .btn-primary:hover {
@@ -198,7 +198,7 @@ a:focus-visible {
 }
 
 .anywhere-card:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-hover);
   outline-offset: 2px;
 }
 

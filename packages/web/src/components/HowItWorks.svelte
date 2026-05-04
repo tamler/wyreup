@@ -227,18 +227,18 @@
 
   .how-card[role='button']:hover,
   .how-card[role='button']:focus-visible {
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--bg-raised);
   }
 
   .how-card[role='button']:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
   .how-card--dragover {
     border-style: solid;
-    border-color: var(--accent);
+    border-color: var(--accent-hover);
     background: var(--accent-dim);
   }
 
@@ -328,13 +328,13 @@
   }
 
   .how-card__tool--picked {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--accent-hover);
+    color: var(--accent-text);
     background: var(--accent-dim);
   }
 
   .how-card__tool:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -386,7 +386,7 @@
   }
 
   .how-card__run:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 

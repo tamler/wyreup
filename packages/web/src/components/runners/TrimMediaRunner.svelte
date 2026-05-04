@@ -455,7 +455,7 @@
     margin-left: -8px;
     transform: translateY(-50%);
     background: var(--bg);
-    border: 2px solid var(--accent);
+    border: 2px solid var(--accent-hover);
     border-radius: 50%;
     cursor: grab;
     touch-action: none;
@@ -468,7 +468,7 @@
   }
 
   .scrubber__handle:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -552,7 +552,7 @@
     cursor: not-allowed;
   }
   .btn-primary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -577,7 +577,7 @@
     border-color: var(--text-muted);
   }
   .btn-secondary:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
   }
 
@@ -705,14 +705,14 @@
   .brackets::before {
     top: -5px;
     left: -5px;
-    border-top: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
   .brackets::after {
     bottom: -5px;
     right: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
 
   .brackets-inner {
@@ -733,13 +733,13 @@
   .brackets-inner::before {
     top: -5px;
     right: -5px;
-    border-top: 1px solid var(--accent);
-    border-right: 1px solid var(--accent);
+    border-top: 1px solid var(--accent-hover);
+    border-right: 1px solid var(--accent-hover);
   }
   .brackets-inner::after {
     bottom: -5px;
     left: -5px;
-    border-bottom: 1px solid var(--accent);
-    border-left: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent-hover);
+    border-left: 1px solid var(--accent-hover);
   }
 </style>
