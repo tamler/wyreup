@@ -42,6 +42,7 @@ describe('types', () => {
       cost: 'free',
       memoryEstimate: 'low',
       defaults: { quality: 80 },
+      // eslint-disable-next-line @typescript-eslint/require-await
       run: async () => new Blob(),
       __testFixtures: { valid: [], weird: [], expectedOutputMime: [] },
     };
