@@ -119,6 +119,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-frequency': 'TextInputRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
+  'text-stats-by-paragraph': 'TextInputRunner',
   // text-redact emits both the redacted text and a counts report
   'text-redact': 'MultiOutputRunner',
   slug: 'TextInputRunner',
@@ -142,6 +143,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'html-to-markdown': 'TextInputRunner',
   'html-clean': 'TextInputRunner',
   'html-extract-links': 'TextInputRunner',
+  'favicon-from-url': 'TextInputRunner',
   'word-counter': 'TextInputRunner',
   'json-yaml': 'TextInputRunner',
   'json-flatten': 'TextInputRunner',
@@ -160,6 +162,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // otpauth-uri produces both JSON metadata and an optional QR PNG;
   // MultiOutputRunner shows the URI text and the QR image side by side.
   'otpauth-uri': 'MultiOutputRunner',
+  // url-shorten-local — JSON + optional QR
+  'url-shorten-local': 'MultiOutputRunner',
 
   // No-input tools that emit JSON/text — JsonResultRunner skips the dropzone
   // when tool.input.min === 0.

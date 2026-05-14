@@ -468,6 +468,29 @@ export {
   defaultJsonPathParams,
   queryJsonPath,
 } from './tools/json-path/index.js';
+export {
+  urlShortenLocal,
+  type UrlShortenLocalParams,
+  type UrlShortenLocalResult,
+  defaultUrlShortenLocalParams,
+  shortenUrl,
+} from './tools/url-shorten-local/index.js';
+export {
+  textStatsByParagraph,
+  type TextStatsByParagraphParams,
+  type TextStatsByParagraphResult,
+  type ParagraphStats,
+  defaultTextStatsByParagraphParams,
+} from './tools/text-stats-by-paragraph/index.js';
+export {
+  faviconFromUrl,
+  type FaviconFromUrlParams,
+  type FaviconFromUrlResult,
+  type FaviconLink,
+  type FaviconRel,
+  defaultFaviconFromUrlParams,
+  extractFavicons,
+} from './tools/favicon-from-url/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

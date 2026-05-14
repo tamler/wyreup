@@ -168,6 +168,9 @@ import { pdfExtractImages } from './tools/pdf-extract-images/index.js';
 import { csvInfo } from './tools/csv-info/index.js';
 import { csvToJsonSchema } from './tools/csv-to-json-schema/index.js';
 import { jsonPath } from './tools/json-path/index.js';
+import { urlShortenLocal } from './tools/url-shorten-local/index.js';
+import { textStatsByParagraph } from './tools/text-stats-by-paragraph/index.js';
+import { faviconFromUrl } from './tools/favicon-from-url/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -347,6 +350,9 @@ export const defaultTools: ToolModule<any>[] = [
   csvInfo,
   csvToJsonSchema,
   jsonPath,
+  urlShortenLocal,
+  textStatsByParagraph,
+  faviconFromUrl,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
