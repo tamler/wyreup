@@ -412,6 +412,35 @@ export {
   type FrontmatterToCsvResult,
   defaultFrontmatterToCsvParams,
 } from './tools/frontmatter-to-csv/index.js';
+export {
+  yamlValidate,
+  type YamlValidateParams,
+  type YamlValidateResult,
+  defaultYamlValidateParams,
+} from './tools/yaml-validate/index.js';
+export {
+  jsonSchemaInfer,
+  type JsonSchemaInferParams,
+  defaultJsonSchemaInferParams,
+  inferSchema,
+} from './tools/json-schema-infer/index.js';
+export {
+  textRedact,
+  type TextRedactParams,
+  type TextRedactResult,
+  type RedactPreset,
+  defaultTextRedactParams,
+  redactText,
+} from './tools/text-redact/index.js';
+export {
+  htmlExtractLinks,
+  type HtmlExtractLinksParams,
+  type HtmlExtractLinksResult,
+  type ExtractedLink,
+  type LinkKind,
+  defaultHtmlExtractLinksParams,
+  extractLinks,
+} from './tools/html-extract-links/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

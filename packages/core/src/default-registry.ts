@@ -160,6 +160,10 @@ import { fileFingerprint } from './tools/file-fingerprint/index.js';
 import { jsonSchemaValidate } from './tools/json-schema-validate/index.js';
 import { textConfusable } from './tools/text-confusable/index.js';
 import { frontmatterToCsv } from './tools/frontmatter-to-csv/index.js';
+import { yamlValidate } from './tools/yaml-validate/index.js';
+import { jsonSchemaInfer } from './tools/json-schema-infer/index.js';
+import { textRedact } from './tools/text-redact/index.js';
+import { htmlExtractLinks } from './tools/html-extract-links/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -331,6 +335,10 @@ export const defaultTools: ToolModule<any>[] = [
   jsonSchemaValidate,
   textConfusable,
   frontmatterToCsv,
+  yamlValidate,
+  jsonSchemaInfer,
+  textRedact,
+  htmlExtractLinks,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

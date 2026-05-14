@@ -116,6 +116,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-frequency': 'TextInputRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
+  // text-redact emits both the redacted text and a counts report
+  'text-redact': 'MultiOutputRunner',
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
@@ -136,10 +138,13 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'markdown-frontmatter': 'TextInputRunner',
   'html-to-markdown': 'TextInputRunner',
   'html-clean': 'TextInputRunner',
+  'html-extract-links': 'TextInputRunner',
   'word-counter': 'TextInputRunner',
   'json-yaml': 'TextInputRunner',
   'json-flatten': 'TextInputRunner',
   'json-unflatten': 'TextInputRunner',
+  'yaml-validate': 'TextInputRunner',
+  'json-schema-infer': 'TextInputRunner',
 
   // GenerateRunner — no input needed, generates output
   'uuid-generator': 'GenerateRunner',
