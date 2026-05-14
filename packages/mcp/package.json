@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "MCP server exposing Wyreup's privacy-first file tools to Claude Code, Claude Desktop, and any MCP-compatible agent.",
   "keywords": [
     "wyreup",
