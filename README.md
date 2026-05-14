@@ -2,7 +2,7 @@
 
 **Wyreup your capabilities. Nothing uploads.**
 
-[wyreup.com](https://wyreup.com) · MIT License · v0.2.0
+[wyreup.com](https://wyreup.com) · MIT License
 
 ![Wyreup — privacy-first file tools](./assets/readme/infographic.png)
 
@@ -90,12 +90,16 @@ Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save 
 
 ## The toolbelt
 
-- **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette and harmony, background removal, 2× upscale, image captioning
-- **PDFs** — merge, split, compress, crop, rotate, reorder, extract and delete pages, page numbers, encrypt and decrypt, redact, extract tables and text, convert to and from images, watermark, metadata
+- **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette and harmony, color-blind simulation, background removal, 2× upscale, image captioning
+- **PDFs** — merge, split, compress, crop, rotate, reorder, extract and delete pages, extract images, page numbers, encrypt and decrypt, redact, extract tables and text, convert to and from images, watermark, metadata, prompt-injection scan
 - **Audio + video** — trim, convert, compress, extract audio, transcribe (Whisper), burn or convert subtitles, video concat / crossfade / overlay / colour, video to GIF, enhance low-quality voice memos
-- **Text and data** — JSON, YAML, CSV, Excel, base64, URL encoding, Markdown and HTML, regex, hashing, JWT decode, SQL, XML, HTML and CSS formatting, diff, word count, translation, summarisation, sentiment, NER
+- **Text** — diff, redact, suspicious-scan, confusable detection, template (mustache), word count, summarisation, translation, sentiment, NER, stats, readability, unicode info, Markdown ↔ HTML
+- **Dev** — JSON (format / diff / merge / flatten / path / schema infer + validate), YAML, XML ↔ JSON, SQL / HTML / CSS formatting and minify, regex, JWT decode, OpenAPI and `package.json` validation
+- **Security & auth** — hash, HMAC, base32/58/64, TOTP / HOTP, JWT sign, signed URLs, signed cookies, backup codes, API and license keys, OTP-auth URIs, webhook verify and replay, file fingerprint
+- **Privacy** — strip EXIF, face blur, PGP encrypt / decrypt / sign / verify / armor
+- **Data** — CSV (info, dedupe, merge, diff, schema, mail-merge template), Excel ↔ CSV / JSON
+- **Geo** — GeoJSON, KML, GPX, shapefile conversion
 - **Create** — QR codes and barcodes, UUIDs, secure passwords, lorem ipsum, slugs
-- **Privacy** — strip EXIF, face blur, PGP encrypt / decrypt / sign / verify
 - **Finance** — compound interest, dollar-cost averaging, percentages, dates
 
 Full catalog: [wyreup.com/tools](https://wyreup.com/tools)

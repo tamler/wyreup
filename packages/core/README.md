@@ -57,11 +57,15 @@ const outputs = await runChain(chain, [inputFile], ctx, registry);
 
 ### Available tool categories
 
-- **Image** — compress, convert, crop, resize, rotate, flip, watermark, face-blur, strip-exif, image-diff, OCR, SVG rendering, favicon, color palette
-- **PDF** — merge, split, compress, rotate, reorder, extract/delete pages, page numbers, encrypt/decrypt, redact, extract tables/text, convert to/from images, watermark, metadata
-- **Audio** — enhance and upscale low-quality recordings
-- **Text / Dev** — JSON, YAML, CSV, base64, URL encoding, hashing, JWT decode, SQL/XML/HTML/CSS formatting, diff, word count, regex, Markdown and HTML conversion
-- **Create** — QR codes, UUIDs, secure passwords, lorem ipsum, slugs
+- **Image** — compress, convert, crop, resize, rotate, flip, watermark, face-blur, strip-exif, image-diff, OCR, SVG rendering, favicon, color palette, color-blind simulation, background removal, 2× upscale, image captioning
+- **PDF** — merge, split, compress, rotate, reorder, extract/delete pages, extract images, page numbers, encrypt/decrypt, redact, extract tables/text, convert to/from images, watermark, metadata, prompt-injection scan
+- **Audio + video** — transcribe (Whisper), audio enhance, convert, extract, trim, record, video concat/crossfade/overlay/color, video to GIF, burn subtitles
+- **Text** — diff, redact, suspicious-scan, confusable detection, template (mustache), summarise, translate, sentiment, NER, stats, readability, unicode info/normalize, Markdown and HTML conversion
+- **Dev** — JSON (format, diff, merge, flatten, path, schema infer/validate), YAML, XML ↔ JSON, SQL/CSS/HTML formatting, CSS/HTML minify, regex, JWT decode, OpenAPI / package.json validation
+- **Security & auth** — hash, hmac, base32/58/64, TOTP/HOTP, JWT sign, signed URLs, signed cookies, backup codes, API/license keys, OTP-auth URIs, webhook verify/replay, file fingerprint
+- **Privacy** — strip EXIF, face blur, PGP encrypt/decrypt/sign/verify/armor
+- **Data** — CSV (info, dedupe, merge, diff, schema, template/mail-merge), Excel ↔ CSV/JSON, GeoJSON ↔ KML/GPX/shapefile, geo conversion
+- **Create** — QR codes, barcodes, UUIDs, secure passwords, lorem ipsum, slugs
 - **Finance** — compound interest, dollar-cost averaging, percentages, dates
 
 Full catalog: [wyreup.com/tools](https://wyreup.com/tools)

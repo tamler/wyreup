@@ -1,6 +1,6 @@
 # Wyreup Roadmap
 
-_Updated: 2026-05-13_
+_Updated: 2026-05-14_
 
 Three sections: **Now** (in flight), **Next** (scoped, not started), **Later**
 (one-liners). Tech debt is inlined into the wave that absorbs it; the rest
@@ -103,104 +103,60 @@ suite, and slots into chains by MIME. No install group. Targets the
   (<100 KB) and well-maintained
 - Solves something a normal user would Google for
 
-**Batch 1 — libraries already installed (near-free):**
-- ~~**`text-diff`**~~ — shipped (2026-05).
-- ~~**`sql-format`**~~ — shipped as `sql-formatter`.
-- ~~**`pdf-rotate`**~~ — shipped as `rotate-pdf`.
-- ~~**`pdf-encrypt`** / **`pdf-decrypt`**~~ — shipped.
-- **`pdf-extract-images`** — `pdfjs-dist` (already in deps). Walk
-  `operatorList` per page, resolve image refs via `commonObjs`/`objs`,
-  encode each to PNG, pack into a ZIP. Held back during the 2026-05
-  Wave-U sprint because it needs Node/browser worker-handling and the
-  inline-image fallback — pick this up before the rest of the deferred
-  list since it's the most-visibly-missing tool.
-- ~~**`color-contrast`**~~ — shipped.
-- **`color-blind-simulator`** — `culori` matrix transforms. Simulate
-  protanopia / deuteranopia / tritanopia on an uploaded image.
+**Batches 1–5 (shipped, 2026-05).** The Wave-U sprint landed five
+batches totalling ~70 tools across two weeks. Inline status preserved
+for cross-reference with commit history; full diff in
+`packages/core/CHANGELOG.md`.
 
-**Batch 2 — small new libs (low risk):**
-- ~~**`csv-deduplicate`** / **`csv-merge`** / **`csv-diff`**~~ — shipped
-  (papaparse added 2026-05).
-- ~~**`markdown-toc`**~~ — shipped.
-- **`xml-to-json`** / **`json-to-xml`** — `fast-xml-parser`.
-  (`xml-format` already shipped as `xml-formatter`.)
-- ~~**`json-schema-validate`**~~ — shipped (ajv added 2026-05).
-- **`html-minify`** / **`css-minify`** — `html-minifier-terser`,
-  `clean-css`. (`prettier` already in deps for the format counterparts.)
-- ~~**`unicode-info`**~~ — shipped.
-- ~~**`hmac`**~~ — shipped.
+**Batch 1 — libraries already installed (near-free): all shipped.**
+- ~~`text-diff`, `sql-formatter`, `rotate-pdf`, `pdf-encrypt`,
+  `pdf-decrypt`, `color-contrast`, `pdf-extract-images`,
+  `color-blind-simulator`~~
 
-**Batch 3 — emergent chains and primitives surfaced by the 2026-05 sprint
-(no new deps unless noted):**
+**Batch 2 — small new libs (low risk): all shipped.**
+- ~~`csv-deduplicate`, `csv-merge`, `csv-diff`, `markdown-toc`,
+  `xml-to-json`, `json-to-xml`, `json-schema-validate`, `html-minify`,
+  `css-minify`, `unicode-info`, `hmac`~~
+  (Added deps: papaparse, fast-xml-parser, ajv, clean-css,
+  html-minifier-terser.)
 
-The 2026-05 sprint shipped 36 tools in one session and exposed two
-patterns worth chasing: small primitives compose into real utilities
-cheaply (TOTP = base32 + HMAC; signed-url = url-parse + url-build +
-HMAC; otpauth-uri = base32 + URI builder + qr), and the catalog rewards
-closed-loop pairs (encode/decode, parse/build, infer/validate).
+**Batch 3 — emergent chains surfaced by the sprint: all shipped.**
+- ~~`csv-to-json-schema`, `csv-info`, `json-path`,
+  `url-shorten-local`, `text-stats-by-paragraph`,
+  `favicon-from-url`~~
 
-The deck below is ordered by leverage. Everything here uses existing
-deps unless tagged otherwise.
+**Batch 4 — speculative picks promoted on user signal: all shipped.**
+- ~~`openapi-validate`, `package-json-validate`, `api-key-format`,
+  `license-key`, `pgp-armor`, `base58`, `text-template`,
+  `signed-cookie-decode`, `text-suspicious`~~
+- Skipped: `webhook-replay-to-server` (server-roundtrip
+  out-of-scope for Wave U).
 
-- **`csv-to-json-schema`** — papaparse + the `inferSchema` helper from
-  `json-schema-infer`. Reads a CSV, walks rows to infer column types,
-  emits a JSON Schema. Cuts a real chore for data ingestion pipelines.
-- **`csv-info`** / **`csv-validate`** — column stats (type, null
-  count, distinct count, min/max for numerics) and row-width
-  consistency. Pure papaparse.
-- **`json-path`** — JSONPath-style extraction. ~80 lines of pure JS for
-  the common subset (`$.a.b[0].c`, `$..deep`, `$.items[*].price`). Pairs
-  with `json-flatten` for tabular pulls.
-- **`url-shorten-local`** — generate a short slug, persist the mapping
-  in localStorage. Browser-local URL shortener. Composes a random
-  base32 code + the existing url-parse / url-build pair.
-- **`text-stats-by-paragraph`** — Per-paragraph readability + length.
-  Composes `text-readability` + `text-stats` by chunking. Useful for
-  editorial reviews on long-form content.
-- **`favicon-from-url`** — extract favicon URLs from an HTML head.
-  Composes `html-extract-links` + `url-parse` to resolve the canonical
-  favicon (link rel="icon" / "shortcut icon" / "apple-touch-icon").
-
-**Batch 4 — speculative emergent picks from the 2026-05 sprint's
-chaining patterns (defer until user signal):**
-
-- **`openapi-validate`** — `ajv` + bundled OpenAPI 3.x meta-schema
-  (~30 KB). Specific instance of the json-schema-validate pattern,
-  popular ecosystem.
-- **`package-json-validate`** — `ajv` + bundled npm package.json
-  schema. Pre-commit safety for monorepos.
-- **`backup-codes`** has surfaced two more variations worth tracking:
-  - **`api-key-format`** — `sk_live_<base32>` style key with prefix.
-    Composes backup-codes' random sampling + a configurable prefix.
-  - **`license-key`** — grouped 5x5 alphanumeric (no ambiguous chars)
-    Microsoft-style key.
-- **`pgp-armor`** — encode/decode PGP armor (base64 wrap + header
-  lines). Pure JS, pairs with the existing `pgp-encrypt` / `pgp-sign`
-  family.
-- **`base58`** — Bitcoin-style alphabet. Closes the
-  base32/base64/base58 triplet.
-- **`text-template`** — Mustache-style `{{key}}` interpolation against a
-  JSON data file. Composes with `csv-json` for bulk per-row rendering.
-- **`webhook-replay-to-server`** — extension of `webhook-replay` that
-  POSTs the re-signed payload to a local URL via `fetch`. Browser-only,
-  fails fast in Node — declare `surfaces: ['web']`.
-- **`signed-cookie-decode`** — verify and parse Express / Flask /
-  Rails-style signed cookies. Composes `hmac` + base64url decoding.
-- **`text-suspicious`** — combines `text-confusable`'s confusable hits
-  with `text-frequency` anomalies for a single security verdict on a
-  block of text. The "should I trust this prompt-injection-shaped
-  message" tool.
+**Batch 5 — second-order chains over the new primitives: all shipped.**
+- ~~`json-merge`~~ — deep-merge with conflict tree. Closes the
+  diff/merge pair against the existing `json-diff`.
+- ~~`csv-template`~~ — mail-merge. CSV + mustache → ZIP of N rendered
+  files. The canonical text-template chain.
+- ~~`pdf-suspicious`~~ — PDF prompt-injection / homoglyph scanner.
+  Composes `pdf-to-text` + `text-suspicious`. Timely as LLMs ingest
+  PDFs routinely.
 
 **Out-of-scope for Wave U:**
 - Anything that needs a model download (that's Wave Q, paused)
 - Anything that needs a server roundtrip
 - Anything beyond a single command's worth of UX
 
-Ship Batch 1's remaining items first (`pdf-extract-images`,
-`color-blind-simulator`), then Batch 3's emergent chains, then Batch 4
-based on user signal. Batch 2's surviving items (`html-minify` /
-`css-minify` / xml-json bridges) can land alongside Batch 3 whenever
-the dep additions are worth it.
+**Remaining Wave-U deck (Bucket 2, defer until user signal):**
+- **`openapi-report`** — chain `openapi-validate` → `text-template`
+  → Markdown summary for CI / PR comments.
+- **`html-redact`** — `text-redact` PII patterns over HTML preserving
+  structure (today's `text-redact` is plaintext-only).
+- **`ocr-suspicious`** — `ocr` + `text-suspicious` on images.
+  Threat model: prompt-injection in product/poster screenshots.
+- **`csv-sort`** / **`csv-filter`** — close the papaparse family
+  (dedupe + merge + diff exist, sort/filter don't).
+- **`diff-apply`** — apply a unified diff to a file. Consumer of the
+  text-diff producer.
 
 ---
 

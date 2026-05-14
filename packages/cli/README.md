@@ -208,12 +208,17 @@ Tools span image, PDF, audio, video, text, dev, geo, and other categories. Run `
 
 | Category | Sample tools |
 |----------|-------------|
-| Image | compress, convert, crop, resize, rotate-image, flip-image, watermark, face-blur, strip-exif, image-diff, ocr, svg-to-png, favicon, color-palette, grayscale, sepia, bg-remove, upscale-2x |
-| PDF | merge-pdf, split-pdf, pdf-compress, rotate-pdf, reorder-pdf, pdf-extract-pages, pdf-delete-pages, page-numbers-pdf, pdf-encrypt, pdf-decrypt, pdf-redact, pdf-extract-tables, pdf-to-text, pdf-to-image, image-to-pdf, watermark-pdf, pdf-info, pdf-metadata, pdf-crop |
-| Audio | audio-enhance, convert-audio, extract-audio, trim-media |
-| Video | convert-video, compress-video, video-to-gif, video-concat, video-add-text, video-speed, burn-subtitles |
-| Text/Dev | json-formatter, base64, url-encoder, hash, markdown-to-html, html-to-markdown, text-diff, word-counter, regex-tester, timestamp-converter, color-converter, case-converter, slug, jwt-decoder, sql-formatter, xml-formatter, css-formatter, cron-parser |
-| Create | qr, uuid-generator, password-generator, lorem-ipsum, barcode |
+| Image | compress, convert, crop, resize, rotate-image, flip-image, watermark, face-blur, strip-exif, image-diff, ocr, ocr-pro, svg-to-png, favicon, color-palette, grayscale, sepia, bg-remove, upscale-2x, color-blind-simulator |
+| PDF | merge-pdf, split-pdf, pdf-compress, rotate-pdf, reorder-pdf, pdf-extract-pages, pdf-delete-pages, pdf-extract-images, page-numbers-pdf, pdf-encrypt, pdf-decrypt, pdf-redact, pdf-extract-tables, pdf-to-text, pdf-to-image, image-to-pdf, watermark-pdf, pdf-info, pdf-metadata, pdf-crop, pdf-suspicious |
+| Audio | audio-enhance, convert-audio, extract-audio, transcribe, trim-media, record-audio |
+| Video | convert-video, compress-video, video-to-gif, video-concat, video-add-text, video-speed, burn-subtitles, video-color-correct |
+| Text | text-diff, text-redact, text-suspicious, text-confusable, text-template, text-summarize, text-translate, text-sentiment, text-stats, text-readability, word-counter, unicode-info, unicode-normalize, markdown-to-html, markdown-toc, markdown-frontmatter, html-to-markdown, html-clean, html-extract-links |
+| Dev | json-formatter, json-diff, json-merge, json-flatten, json-unflatten, json-path, json-schema-validate, json-schema-infer, xml-formatter, xml-to-json, json-to-xml, yaml-validate, sql-formatter, css-formatter, css-minify, html-formatter, html-minify, regex-tester, cron-parser, jwt-decoder, openapi-validate, package-json-validate |
+| Security / auth | hash, hmac, base32, base58, base64, totp-code, hotp-code, jwt-sign, signed-url, signed-cookie-decode, backup-codes, api-key-format, license-key, otpauth-uri, webhook-verify, webhook-replay, file-fingerprint, password-strength, password-generator |
+| Privacy | strip-exif, face-blur, pgp-encrypt, pgp-decrypt, pgp-sign, pgp-verify, pgp-armor |
+| Data | csv-json, csv-info, csv-deduplicate, csv-merge, csv-diff, csv-to-json-schema, csv-template, excel-to-csv, excel-to-json, csv-to-excel, json-to-excel, excel-info, merge-workbooks, split-sheets, frontmatter-to-csv |
+| Geo | csv-to-geojson, kml-to-geojson, gpx-to-geojson, geojson-to-kml, gpx-to-kml, shapefile-to-geojson, convert-geo |
+| Create | qr, qr-reader, uuid-generator, password-generator, lorem-ipsum, barcode |
 | Finance | compound-interest, investment-dca, percentage-calculator, date-calculator |
 | Archive | zip-create, zip-extract, zip-info |
 

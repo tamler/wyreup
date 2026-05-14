@@ -69,7 +69,7 @@ Example agent invocation (handled by MCP automatically):
 
 ## Tool categories
 
-Image (16), PDF (19), Audio (3), Text/Dev (12), Create (4) — see [wyreup.com](https://wyreup.com) for the full list.
+Tools span image, PDF, audio, video, text, dev, geo, archive, finance, security/auth, and other categories — the full set ships in this server and tracks the registry automatically. Browse the live catalog at [wyreup.com/tools](https://wyreup.com/tools).
 
 ## Privacy
 
