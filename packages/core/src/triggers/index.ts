@@ -21,3 +21,11 @@ export {
 
 export type { FireRecord, MatchOutcome } from './match.js';
 export { matchRule, clampRateLimit, pruneFires } from './match.js';
+
+export type {
+  PreflightVerdict,
+  PreflightFinding,
+  PreflightResult,
+  FileHeader,
+} from './preflight.js';
+export { runPreflight, readFileHeader } from './preflight.js';
