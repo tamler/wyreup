@@ -287,6 +287,38 @@ export {
   defaultHtmlCleanParams,
   cleanHtml,
 } from './tools/html-clean/index.js';
+export {
+  hotpCode,
+  type HotpCodeParams,
+  type HotpCodeResult,
+  type HotpAlgorithm,
+  defaultHotpCodeParams,
+  generateHotp,
+} from './tools/hotp-code/index.js';
+export {
+  jwtSign,
+  type JwtSignParams,
+  type JwtSignResult,
+  type JwtSignAlgorithm,
+  defaultJwtSignParams,
+  signJwt,
+} from './tools/jwt-sign/index.js';
+export {
+  webhookVerify,
+  type WebhookVerifyParams,
+  type WebhookVerifyResult,
+  type WebhookAlgorithm,
+  type WebhookEncoding,
+  defaultWebhookVerifyParams,
+} from './tools/webhook-verify/index.js';
+export {
+  urlBuild,
+  type UrlBuildParams,
+  type UrlBuildResult,
+  type UrlBuildSpec,
+  defaultUrlBuildParams,
+  buildUrl,
+} from './tools/url-build/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

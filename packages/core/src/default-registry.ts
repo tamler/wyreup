@@ -143,6 +143,10 @@ import { totpCode } from './tools/totp-code/index.js';
 import { urlParse } from './tools/url-parse/index.js';
 import { markdownFrontmatter } from './tools/markdown-frontmatter/index.js';
 import { htmlClean } from './tools/html-clean/index.js';
+import { hotpCode } from './tools/hotp-code/index.js';
+import { jwtSign } from './tools/jwt-sign/index.js';
+import { webhookVerify } from './tools/webhook-verify/index.js';
+import { urlBuild } from './tools/url-build/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -297,6 +301,10 @@ export const defaultTools: ToolModule<any>[] = [
   urlParse,
   markdownFrontmatter,
   htmlClean,
+  hotpCode,
+  jwtSign,
+  webhookVerify,
+  urlBuild,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
