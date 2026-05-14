@@ -17,10 +17,13 @@ import {
   updateTriggerRule as coreUpdate,
   type TriggerKit,
   type TriggerRule,
+  type FireRecord,
   TRIGGER_KIT_VERSION,
 } from '@wyreup/core';
 
 const RULES_KEY = 'wyreup:my-kit:trigger-rules';
+const FIRES_KEY = 'wyreup:my-kit:trigger-fires';
+const FIRES_MAX = 500;
 
 function emptyKit(): TriggerKit {
   return { version: TRIGGER_KIT_VERSION, rules: [] };
@@ -93,7 +96,7 @@ export function reorderRule(id: string, direction: 'up' | 'down'): void {
   if (idx < 0) return;
   const swapWith = direction === 'up' ? idx - 1 : idx + 1;
   if (swapWith < 0 || swapWith >= rules.length) return;
-  [rules[idx]!.order, rules[swapWith]!.order] = [rules[swapWith]!.order, rules[idx]!.order];
+  [rules[idx].order, rules[swapWith].order] = [rules[swapWith].order, rules[idx].order];
   saveKit({ ...kit, rules });
 }
 
@@ -128,4 +131,44 @@ export function nextOrder(): number {
   const rules = loadKit().rules;
   if (rules.length === 0) return 0;
   return Math.max(...rules.map((r) => r.order)) + 1;
+}
+
+// ──── Fire history (G7 rate limit support) ─────────────────────────────
+
+function loadFires(): FireRecord[] {
+  try {
+    const raw = localStorage.getItem(FIRES_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (f): f is FireRecord =>
+        !!f &&
+        typeof f === 'object' &&
+        typeof (f as FireRecord).ruleId === 'string' &&
+        typeof (f as FireRecord).firedAt === 'number',
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveFires(fires: FireRecord[]): void {
+  try {
+    // Bound the list: keep the most recent FIRES_MAX entries.
+    const trimmed = fires.slice(-FIRES_MAX);
+    localStorage.setItem(FIRES_KEY, JSON.stringify(trimmed));
+  } catch {
+    // ignore quota
+  }
+}
+
+export function getFires(): FireRecord[] {
+  return loadFires();
+}
+
+export function recordFire(ruleId: string): void {
+  const fires = loadFires();
+  fires.push({ ruleId, firedAt: Date.now() });
+  saveFires(fires);
 }

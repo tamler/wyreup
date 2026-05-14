@@ -4,6 +4,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import '../styles/motifs.css';
 import PwaShell from '../components/PwaShell.svelte';
+import TriggerRuntime from '../components/TriggerRuntime.svelte';
 
 interface Props {
   title: string;
@@ -158,6 +159,7 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
   <body class={bodyClass}>
     <a href="#main-content" class="skip-link">Skip to content</a>
     <PwaShell client:load />
+    <TriggerRuntime client:load />
 
     <header class="site-header">
       <div class="container header-inner">
