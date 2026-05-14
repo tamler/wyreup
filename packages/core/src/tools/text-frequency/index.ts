@@ -81,7 +81,7 @@ export function analyzeFrequency(text: string, params: TextFrequencyParams): Tex
   let wordTotal = 0;
   // \p{Letter}+\p{Mark}*([-'’]\p{Letter}+)* — Unicode-aware word tokenizer
   // that keeps "don't" and "well-known" as single tokens.
-  const wordRe = /[\p{Letter}\p{Mark}\p{Number}]+(?:[''’\-][\p{Letter}\p{Mark}\p{Number}]+)*/gu;
+  const wordRe = /[\p{Letter}\p{Mark}\p{Number}]+(?:[''’-][\p{Letter}\p{Mark}\p{Number}]+)*/gu;
   for (const match of normalized.matchAll(wordRe)) {
     const w = match[0];
     wordCounts.set(w, (wordCounts.get(w) ?? 0) + 1);

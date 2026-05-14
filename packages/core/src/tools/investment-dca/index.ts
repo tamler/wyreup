@@ -38,7 +38,7 @@ export const investmentDca: ToolModule<InvestmentDcaParams> = {
 
   Component: InvestmentDcaComponentStub,
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(
     _inputs: File[],
     params: InvestmentDcaParams,

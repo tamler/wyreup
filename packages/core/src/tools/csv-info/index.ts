@@ -153,7 +153,7 @@ export const csvInfo: ToolModule<CsvInfoParams> = {
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing CSV' });
     const text = await inputs[0]!.text();
     const parsed = Papa.parse<string[]>(text, { header: false, delimiter, skipEmptyLines: true });
-    const all = parsed.data as string[][];
+    const all = parsed.data;
     if (all.length === 0) throw new Error('CSV is empty.');
 
     let header: string[];

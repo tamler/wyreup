@@ -47,6 +47,10 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'main.', budgetKb: 500, why: 'app entry; ROADMAP tech debt #5 to shrink' },
   // Astro tool runner top-level chunk.
   { prefix: 'ToolRunner.', budgetKb: 500, why: 'shared runner shell; same as main' },
+  // html-minifier-terser is the bulk of the html-minify tool; lazy-loaded.
+  { prefix: 'htmlminifier.', budgetKb: 200, why: 'html-minifier-terser; html-minify tool only' },
+  // clean-css for css-minify; lazy-loaded.
+  { prefix: 'clean-css.', budgetKb: 200, why: 'clean-css; css-minify tool only' },
 ];
 
 /**

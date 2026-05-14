@@ -89,6 +89,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     'github.com', // source-code link in footer + privacy block (user-initiated navigation)
     'modelcontextprotocol.io', // doc link on /mcp page to the MCP spec (user-initiated navigation)
 
+    // Documentation example domains used in tool descriptions and placeholders
+    // (e.g. signed-url shows "https://api.example.com/files/<token>" as a sample).
+    // RFC 2606 reserves example.com / example.org / example.net for this purpose.
+    // wyreup.app is the placeholder short-URL host shown in url-shorten-local's UI.
+    // None of these are fetched at runtime; they're static text in tool descriptions.
+    'example.com',
+    'example.org',
+    'example.net',
+    'wyreup.app',
+
     // Third-party model CDNs for AI tools. The models fetch on first use, which
     // creates a third-party origin touch. TODO: self-host these on wyreup.com
     // (e.g. r2://wyreup-models) to eliminate the third-party leak — tracked as

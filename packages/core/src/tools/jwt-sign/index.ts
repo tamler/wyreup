@@ -74,11 +74,11 @@ export async function signJwt(
     mergedHeader = baseHeader;
   } else {
     try {
-      const parsed = JSON.parse(extraHeaderJson);
+      const parsed: unknown = JSON.parse(extraHeaderJson);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
         throw new Error('Header must be a JSON object.');
       }
-      mergedHeader = { ...parsed, ...baseHeader };
+      mergedHeader = { ...(parsed as Record<string, unknown>), ...baseHeader };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       throw new Error(`Header is not valid JSON: ${msg}`);

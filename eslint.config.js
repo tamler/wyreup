@@ -31,6 +31,15 @@ export default tseslint.config(
     },
   },
   {
+    // Tool modules implement `async run(...)` because the ToolModule contract
+    // requires Promise<Blob[]>. Many tools are CPU-only and have no genuine
+    // await — require-await flags those as false positives.
+    files: ['packages/core/src/tools/**/*.ts'],
+    rules: {
+      '@typescript-eslint/require-await': 'off',
+    },
+  },
+  {
     ignores: [
       '**/node_modules/**',
       '**/dist/**',

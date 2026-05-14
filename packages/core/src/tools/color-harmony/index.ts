@@ -162,7 +162,7 @@ export const colorHarmony: ToolModule<ColorHarmonyParams> = {
 
   Component: ColorHarmonyComponentStub,
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(_inputs: File[], params: ColorHarmonyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 

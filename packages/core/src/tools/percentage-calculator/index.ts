@@ -118,7 +118,7 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
 
   Component: PercentageCalculatorComponentStub,
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(
     _inputs: File[],
     params: PercentageCalculatorParams,

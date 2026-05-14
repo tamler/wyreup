@@ -38,7 +38,7 @@ function summarize(value: unknown): YamlValidateResult['summary'] {
   if (value === null) return { type: 'null' };
   if (Array.isArray(value)) return { type: 'array', topLength: value.length };
   if (typeof value === 'object') {
-    return { type: 'object', topKeys: Object.keys(value as object) };
+    return { type: 'object', topKeys: Object.keys(value) };
   }
   return { type: typeof value };
 }

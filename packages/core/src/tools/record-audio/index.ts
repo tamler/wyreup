@@ -75,7 +75,7 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   // from the web path. Because surfaces:['web'] gates this tool out
   // of CLI / MCP, run() is also never called from those surfaces.
   // The body throws as a safety net only — this should be unreachable.
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(_inputs: File[], _params: RecordAudioParams, _ctx: ToolRunContext): Promise<Blob[]> {
     throw new Error(
       'record-audio is a web-only capture primitive; run() should never be reached.',

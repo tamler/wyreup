@@ -110,7 +110,7 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
 
   Component: DateCalculatorComponentStub,
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(
     _inputs: File[],
     params: DateCalculatorParams,

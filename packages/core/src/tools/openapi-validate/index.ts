@@ -117,8 +117,9 @@ export function validateOpenapi(doc: unknown, strict: boolean): OpenapiValidateR
 
   // Servers — when present, urls should be valid.
   if (Array.isArray(doc.servers)) {
-    for (let i = 0; i < doc.servers.length; i++) {
-      const s = doc.servers[i];
+    const servers = doc.servers as unknown[];
+    for (let i = 0; i < servers.length; i++) {
+      const s = servers[i];
       if (!isObject(s) || typeof s.url !== 'string') {
         push('error', `$.servers[${i}]`, 'Each server entry must have a string "url".');
       }

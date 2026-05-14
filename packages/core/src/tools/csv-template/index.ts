@@ -28,6 +28,7 @@ const CsvTemplateComponentStub = (): unknown => null;
 
 function sanitizeFilename(name: string, fallback: string): string {
   // Strip path separators + control chars; keep something resembling a filename.
+  // eslint-disable-next-line no-control-regex
   const cleaned = name.replace(/[\x00-\x1f\\/]+/g, '_').trim();
   return cleaned || fallback;
 }

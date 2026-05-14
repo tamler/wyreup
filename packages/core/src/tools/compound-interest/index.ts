@@ -37,7 +37,7 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
 
   Component: CompoundInterestComponentStub,
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(
     _inputs: File[],
     params: CompoundInterestParams,

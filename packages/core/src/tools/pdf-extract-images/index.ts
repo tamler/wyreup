@@ -253,7 +253,8 @@ export const pdfExtractImages: ToolModule<PdfExtractImagesParams> = {
 
       for (let i = 0; i < ops.fnArray.length; i++) {
         if (ops.fnArray[i] !== OPS_PAINT_IMAGE_X_OBJECT) continue;
-        const imgName = ops.argsArray[i]?.[0];
+        const argsArray = ops.argsArray as unknown[][];
+        const imgName: unknown = argsArray[i]?.[0];
         if (typeof imgName !== 'string') continue;
         if (seenIds.has(imgName)) continue;
         seenIds.add(imgName);

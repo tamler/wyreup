@@ -41,7 +41,7 @@ const NAMED_ENTITIES: Record<string, string> = {
 };
 
 function decodeEntities(text: string): string {
-  return text.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, body) => {
+  return text.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match: string, body: string) => {
     if (body[0] === '#') {
       const hex = body[1] === 'x' || body[1] === 'X';
       const code = parseInt(body.slice(hex ? 2 : 1), hex ? 16 : 10);

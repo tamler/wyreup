@@ -138,7 +138,7 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
       }
       const data = flatten
         ? flattenJson(fm.frontmatter, { separator: '.', arrayStyle: 'dot', preserveArrays: true })
-        : (fm.frontmatter as Record<string, unknown>);
+        : (fm.frontmatter);
       for (const k of Object.keys(data)) seenKeys.add(k);
       rows.push({ name: file.name, data });
     }

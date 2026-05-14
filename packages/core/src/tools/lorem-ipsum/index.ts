@@ -115,7 +115,7 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
   Component: LoremIpsumComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.
-  // eslint-disable-next-line @typescript-eslint/require-await
+   
   async run(
     _inputs: File[],
     params: LoremIpsumParams,

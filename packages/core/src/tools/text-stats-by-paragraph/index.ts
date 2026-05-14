@@ -60,7 +60,7 @@ function splitParagraphs(text: string): Array<{ body: string; start: number }> {
 }
 
 function countWords(text: string): number {
-  const matches = text.match(/[\p{Letter}\p{Number}]+(?:[''’\-][\p{Letter}\p{Number}]+)*/gu);
+  const matches = text.match(/[\p{Letter}\p{Number}]+(?:[''’-][\p{Letter}\p{Number}]+)*/gu);
   return matches ? matches.length : 0;
 }
 

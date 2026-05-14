@@ -119,7 +119,7 @@ export const jsonSchemaValidate: ToolModule<JsonSchemaValidateParams> = {
     }
 
     ctx.onProgress({ stage: 'processing', percent: 85, message: 'Validating' });
-    const valid = validate(data) as boolean;
+    const valid = validate(data);
     const errors: JsonSchemaError[] = (validate.errors ?? []).map((e) => ({
       instancePath: e.instancePath,
       schemaPath: e.schemaPath,

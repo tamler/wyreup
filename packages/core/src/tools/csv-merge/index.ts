@@ -128,8 +128,8 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
     const rightText = await inputs[1]!.text();
     const leftParsed = Papa.parse<string[]>(leftText, { header: false, delimiter: delimiterOverride, skipEmptyLines: true });
     const rightParsed = Papa.parse<string[]>(rightText, { header: false, delimiter: delimiterOverride ?? leftParsed.meta.delimiter, skipEmptyLines: true });
-    const leftRows = leftParsed.data as string[][];
-    const rightRows = rightParsed.data as string[][];
+    const leftRows = leftParsed.data;
+    const rightRows = rightParsed.data;
     if (leftRows.length === 0 || rightRows.length === 0) {
       throw new Error('Both CSV files must contain at least one row.');
     }

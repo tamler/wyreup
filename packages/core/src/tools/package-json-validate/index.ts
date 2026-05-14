@@ -158,7 +158,7 @@ export function validatePackageJson(doc: unknown, strict: boolean): PackageJsonV
 
   // Strict-only practice checks.
   if (strict) {
-    if (typeof doc.description !== 'string' || (doc.description as string).trim() === '') {
+    if (typeof doc.description !== 'string' || (doc.description).trim() === '') {
       push('warning', '$.description', 'No description — strongly recommended for npm search.');
     }
     if (doc.repository === undefined) {

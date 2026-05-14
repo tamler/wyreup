@@ -42,13 +42,20 @@ function parseKeyList(raw: string): string[] {
     .filter(Boolean);
 }
 
+function stringifyCell(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return JSON.stringify(v);
+}
+
 function keyOf(row: unknown[], keyIndices: number[], caseInsensitive: boolean): string {
   if (keyIndices.length === 0) {
-    const parts = row.map((v) => String(v ?? ''));
+    const parts = row.map(stringifyCell);
     return caseInsensitive ? parts.join('').toLowerCase() : parts.join('');
   }
   const parts: string[] = [];
-  for (const i of keyIndices) parts.push(String(row[i] ?? ''));
+  for (const i of keyIndices) parts.push(stringifyCell(row[i]));
   return caseInsensitive ? parts.join('').toLowerCase() : parts.join('');
 }
 
@@ -131,7 +138,7 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
       delimiter,
       skipEmptyLines: true,
     });
-    const rows = parsed.data as string[][];
+    const rows = parsed.data;
     if (rows.length === 0) throw new Error('CSV is empty.');
 
     let headerRow: string[] | null = null;

@@ -147,7 +147,7 @@ export function analyzeConfusable(text: string, params: TextConfusableParams): T
         char,
         codepoint: cp,
         hex: `U+${cp.toString(16).padStart(4, '0').toUpperCase()}`,
-        lookalike: CONFUSABLES[cp]!,
+        lookalike: CONFUSABLES[cp],
         script,
         reason: 'confusable',
       });

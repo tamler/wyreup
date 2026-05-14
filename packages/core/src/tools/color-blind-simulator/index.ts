@@ -150,7 +150,7 @@ export const colorBlindSimulator: ToolModule<ColorBlindSimulatorParams> = {
     drawCtx.putImageData(imageData, 0, 0);
 
     ctx.onProgress({ stage: 'processing', percent: 90, message: 'Encoding' });
-    const mime = FORMAT_MIME[format]!;
+    const mime = FORMAT_MIME[format];
     const qualityArg = format === 'png' ? undefined : quality / 100;
     const blob = await canvasToBlob(canvas, mime, qualityArg);
 
