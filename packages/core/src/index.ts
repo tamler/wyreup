@@ -230,6 +230,35 @@ export {
   encodeBase32,
   decodeBase32,
 } from './tools/base32/index.js';
+export {
+  jsonDiff,
+  type JsonDiffParams,
+  type JsonDiffStats,
+  defaultJsonDiffParams,
+} from './tools/json-diff/index.js';
+export {
+  morseCode,
+  type MorseCodeParams,
+  defaultMorseCodeParams,
+  encodeMorse,
+  decodeMorse,
+} from './tools/morse-code/index.js';
+export {
+  romanNumeral,
+  type RomanNumeralParams,
+  type RomanNumeralResult,
+  type RomanNumeralEntry,
+  defaultRomanNumeralParams,
+  encodeRoman,
+  decodeRoman,
+} from './tools/roman-numeral/index.js';
+export {
+  mimeDetect,
+  type MimeDetectParams,
+  type MimeDetectResult,
+  defaultMimeDetectParams,
+  detectMime,
+} from './tools/mime-detect/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

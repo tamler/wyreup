@@ -69,6 +69,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   hash: 'HashRunner',
   // hmac — single file in + secret key + algo → JSON digest
   hmac: 'JsonResultRunner',
+  // mime-detect — magic-byte sniff on file head → JSON report
+  'mime-detect': 'JsonResultRunner',
 
   // ColorPaletteRunner — bespoke visual chips for the extracted palette
   'color-palette': 'ColorPaletteRunner',
@@ -89,6 +91,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // TwoTextInputRunner — two side-by-side textareas, output anything
   'text-diff': 'TwoTextInputRunner',
   'text-diff-levenshtein': 'TwoTextInputRunner',
+  'json-diff': 'TwoTextInputRunner',
 
   // TextInputRunner — type text in, any output. The default for tools
   // where the user is going to TYPE/PASTE rather than upload a .txt file.
@@ -104,6 +107,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'unicode-normalize': 'TextInputRunner',
   'unicode-info': 'TextInputRunner',
   'text-frequency': 'TextInputRunner',
+  'morse-code': 'TextInputRunner',
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
@@ -138,6 +142,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'unit-converter': 'JsonResultRunner',
   'color-contrast': 'JsonResultRunner',
   'password-strength': 'JsonResultRunner',
+  'roman-numeral': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
   'compound-interest': 'CompoundInterestRunner',

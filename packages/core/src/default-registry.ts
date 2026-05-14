@@ -135,6 +135,10 @@ import { colorContrast } from './tools/color-contrast/index.js';
 import { passwordStrength } from './tools/password-strength/index.js';
 import { textFrequency } from './tools/text-frequency/index.js';
 import { base32 } from './tools/base32/index.js';
+import { jsonDiff } from './tools/json-diff/index.js';
+import { morseCode } from './tools/morse-code/index.js';
+import { romanNumeral } from './tools/roman-numeral/index.js';
+import { mimeDetect } from './tools/mime-detect/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -281,6 +285,10 @@ export const defaultTools: ToolModule<any>[] = [
   passwordStrength,
   textFrequency,
   base32,
+  jsonDiff,
+  morseCode,
+  romanNumeral,
+  mimeDetect,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
