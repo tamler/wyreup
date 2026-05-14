@@ -29,6 +29,22 @@ export type { SavedChain } from './chain/types.js';
 
 export { detectCycle } from './chain/cycle.js';
 
+// Trigger rules — declarative MIME → saved-chain bindings. Every
+// consumer must implement preview-before-run per docs/triggers-security.md.
+export type { TriggerRule, TriggerKit, FireRecord, MatchOutcome } from './triggers/index.js';
+export {
+  TRIGGER_KIT_VERSION,
+  DEFAULT_RATE_LIMIT,
+  MAX_RATE_LIMIT,
+  parseTriggerKit,
+  serializeTriggerKit,
+  updateTriggerRule,
+  strippedForImport,
+  matchRule,
+  clampRateLimit,
+  pruneFires,
+} from './triggers/index.js';
+
 export { createRegistry, mimeMatches, couldFlowTo, toolRunsOnSurface, type ToolRegistry } from './registry.js';
 
 export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
