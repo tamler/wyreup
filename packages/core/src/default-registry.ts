@@ -154,6 +154,9 @@ import { backupCodes } from './tools/backup-codes/index.js';
 import { csvDiff } from './tools/csv-diff/index.js';
 import { jsonFlatten } from './tools/json-flatten/index.js';
 import { jsonUnflatten } from './tools/json-unflatten/index.js';
+import { otpauthUri } from './tools/otpauth-uri/index.js';
+import { webhookReplay } from './tools/webhook-replay/index.js';
+import { fileFingerprint } from './tools/file-fingerprint/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -319,6 +322,9 @@ export const defaultTools: ToolModule<any>[] = [
   csvDiff,
   jsonFlatten,
   jsonUnflatten,
+  otpauthUri,
+  webhookReplay,
+  fileFingerprint,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

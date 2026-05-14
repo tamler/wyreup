@@ -71,8 +71,12 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   hmac: 'JsonResultRunner',
   // mime-detect — magic-byte sniff on file head → JSON report
   'mime-detect': 'JsonResultRunner',
+  // file-fingerprint — comprehensive file identity bundle
+  'file-fingerprint': 'JsonResultRunner',
   // webhook-verify — payload file + provided signature → valid/invalid JSON
   'webhook-verify': 'JsonResultRunner',
+  // webhook-replay — verify under one secret, re-sign under another
+  'webhook-replay': 'JsonResultRunner',
 
   // ColorPaletteRunner — bespoke visual chips for the extracted palette
   'color-palette': 'ColorPaletteRunner',
@@ -142,6 +146,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'password-generator': 'GenerateRunner',
   barcode: 'GenerateRunner',
   'backup-codes': 'GenerateRunner',
+  // otpauth-uri produces both JSON metadata and an optional QR PNG;
+  // MultiOutputRunner shows the URI text and the QR image side by side.
+  'otpauth-uri': 'MultiOutputRunner',
 
   // No-input tools that emit JSON/text — JsonResultRunner skips the dropzone
   // when tool.input.min === 0.

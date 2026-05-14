@@ -365,6 +365,31 @@ export {
   defaultJsonUnflattenParams,
   unflattenJson,
 } from './tools/json-unflatten/index.js';
+export {
+  otpauthUri,
+  type OtpauthUriParams,
+  type OtpauthUriResult,
+  type OtpType,
+  type OtpAlgorithm,
+  defaultOtpauthUriParams,
+  buildOtpauthUri,
+} from './tools/otpauth-uri/index.js';
+export {
+  webhookReplay,
+  type WebhookReplayParams,
+  type WebhookReplayResult,
+  type WebhookReplayAlgorithm,
+  type WebhookReplayEncoding,
+  defaultWebhookReplayParams,
+} from './tools/webhook-replay/index.js';
+export {
+  fileFingerprint,
+  type FileFingerprintParams,
+  type FileFingerprintResult,
+  type FingerprintHashAlgo,
+  type FingerprintHmacAlgo,
+  defaultFileFingerprintParams,
+} from './tools/file-fingerprint/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
