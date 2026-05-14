@@ -383,7 +383,15 @@ const popularTools = popularToolIds.map((id) => {
   .hero__drop-col {
     display: flex;
     flex-direction: column;
-    min-height: 280px;
+    min-height: 360px;
+  }
+
+  /* Whole hero acts as a drop target — when files are dragged over any part
+     of the hero section, tint the background to confirm the entire region
+     accepts drops. The visible card has its own .dragover state too. */
+  .hero.hero--dragover {
+    background: var(--accent-dim);
+    transition: background var(--duration-fast) var(--ease-sharp);
   }
 
   /* ── Scenarios ── */

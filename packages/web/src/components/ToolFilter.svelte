@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { createToolSearch } from '../lib/tool-search';
   import { stashChainFile } from './runners/chainStorage';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
@@ -180,6 +180,17 @@
     applyFilter();
   }
 
+  // Drops anywhere on the page (outside the inline drop zone) are caught
+  // by the site-wide safety net in BaseLayout and re-dispatched as this
+  // event. Route them into the same filter-by-MIME flow.
+  function handleGlobalFileDrop(e: Event) {
+    const files = (e as CustomEvent<{ files: FileList }>).detail?.files;
+    const file = files?.[0];
+    if (!file) return;
+    droppedFile = { name: file.name, mime: file.type || 'application/octet-stream', file };
+    applyFilter();
+  }
+
   // When a tool is clicked while a file is dropped, stash the file so the
   // tool page picks it up automatically — no re-upload required. Only intercept
   // plain left-clicks so cmd/ctrl/middle-click "open in new tab" still works.
@@ -319,6 +330,14 @@
     }
 
     loadRecent();
+
+    document.addEventListener('wyreup:filedrop', handleGlobalFileDrop);
+  });
+
+  onDestroy(() => {
+    // onDestroy fires during SSR teardown as well — guard browser globals.
+    if (typeof document === 'undefined') return;
+    document.removeEventListener('wyreup:filedrop', handleGlobalFileDrop);
   });
 </script>
 

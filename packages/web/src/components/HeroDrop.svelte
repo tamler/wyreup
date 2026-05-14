@@ -1,42 +1,81 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { createDefaultRegistry } from '@wyreup/core';
   import { dropStore } from '../stores/drop';
 
   let isDragOver = false;
   let zone: HTMLElement;
+  let heroSection: HTMLElement | null = null;
 
   // When arriving here from /share-receive (PWA Web Share Target), read the
   // file stashed in sessionStorage and populate the drop store automatically.
   onMount(() => {
     try {
       const raw = sessionStorage.getItem('wyreup:shared-file');
-      if (!raw) return;
-      sessionStorage.removeItem('wyreup:shared-file');
-      const payload = JSON.parse(raw) as { name: string; type: string; data: number[] };
-      const uint8 = new Uint8Array(payload.data);
-      const file = new File([uint8], payload.name, { type: payload.type });
-      processFile(file);
+      if (raw) {
+        sessionStorage.removeItem('wyreup:shared-file');
+        const payload = JSON.parse(raw) as { name: string; type: string; data: number[] };
+        const uint8 = new Uint8Array(payload.data);
+        const file = new File([uint8], payload.name, { type: payload.type });
+        processFile(file);
+      }
     } catch (err) {
       console.error('Failed to consume shared file:', err);
     }
+
+    // Treat the entire hero section as a drop target. Listeners live on the
+    // section so dragging anywhere in the hero (not just the visible card)
+    // registers as a drop.
+    heroSection = document.getElementById('hero-drop-zone');
+    if (heroSection) {
+      heroSection.addEventListener('dragover', handleDragOver);
+      heroSection.addEventListener('dragleave', handleDragLeave);
+      heroSection.addEventListener('drop', handleDrop);
+    }
+
+    // Drops outside the hero (further down the homepage) get caught by the
+    // site-wide safety net in BaseLayout and broadcast via this event.
+    document.addEventListener('wyreup:filedrop', handleGlobalFileDrop);
   });
+
+  onDestroy(() => {
+    // onDestroy runs on the server during SSR teardown too; guard so we
+    // don't touch browser globals there.
+    if (typeof document === 'undefined') return;
+    if (heroSection) {
+      heroSection.removeEventListener('dragover', handleDragOver);
+      heroSection.removeEventListener('dragleave', handleDragLeave);
+      heroSection.removeEventListener('drop', handleDrop);
+    }
+    document.removeEventListener('wyreup:filedrop', handleGlobalFileDrop);
+  });
+
+  function handleGlobalFileDrop(e: Event) {
+    const files = (e as CustomEvent<{ files: FileList }>).detail?.files;
+    const file = files?.[0];
+    if (file) processFile(file);
+  }
 
   function handleDragOver(e: DragEvent) {
     e.preventDefault();
-    isDragOver = true;
+    if (!isDragOver) {
+      isDragOver = true;
+      heroSection?.classList.add('hero--dragover');
+    }
   }
 
   function handleDragLeave(e: DragEvent) {
-    // Only clear if leaving the zone itself, not a child
-    if (!zone.contains(e.relatedTarget as Node)) {
+    // Only clear when leaving the section itself, not when moving to a child
+    if (heroSection && !heroSection.contains(e.relatedTarget as Node)) {
       isDragOver = false;
+      heroSection.classList.remove('hero--dragover');
     }
   }
 
   function handleDrop(e: DragEvent) {
     e.preventDefault();
     isDragOver = false;
+    heroSection?.classList.remove('hero--dragover');
     const file = e.dataTransfer?.files?.[0];
     if (!file) return;
     processFile(file);
@@ -73,12 +112,9 @@
   class="hero-drop"
   class:dragover={isDragOver}
   bind:this={zone}
-  on:dragover={handleDragOver}
-  on:dragleave={handleDragLeave}
-  on:drop={handleDrop}
   role="button"
   tabindex="0"
-  aria-label="Drop a file or click to browse"
+  aria-label="Drop a file anywhere in the hero, or click to browse"
   on:click={handleClick}
   on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
 >
@@ -110,7 +146,7 @@
     transition:
       border-color var(--duration-fast) var(--ease-sharp),
       background var(--duration-fast) var(--ease-sharp);
-    min-height: 280px;
+    min-height: 360px;
     display: flex;
     flex-direction: column;
   }
