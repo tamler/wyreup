@@ -80,6 +80,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   ocr: 'TextResultRunner',
   'pdf-to-text': 'TextResultRunner',
   base64: 'TextResultRunner',
+  base32: 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
   'image-caption': 'TextResultRunner',
@@ -102,6 +103,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'token-count': 'TextInputRunner',
   'unicode-normalize': 'TextInputRunner',
   'unicode-info': 'TextInputRunner',
+  'text-frequency': 'TextInputRunner',
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
@@ -135,6 +137,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   calculator: 'JsonResultRunner',
   'unit-converter': 'JsonResultRunner',
   'color-contrast': 'JsonResultRunner',
+  'password-strength': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
   'compound-interest': 'CompoundInterestRunner',

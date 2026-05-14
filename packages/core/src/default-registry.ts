@@ -132,6 +132,9 @@ import { unicodeInfo } from './tools/unicode-info/index.js';
 import { hmac } from './tools/hmac/index.js';
 import { markdownToc } from './tools/markdown-toc/index.js';
 import { colorContrast } from './tools/color-contrast/index.js';
+import { passwordStrength } from './tools/password-strength/index.js';
+import { textFrequency } from './tools/text-frequency/index.js';
+import { base32 } from './tools/base32/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -275,6 +278,9 @@ export const defaultTools: ToolModule<any>[] = [
   hmac,
   markdownToc,
   colorContrast,
+  passwordStrength,
+  textFrequency,
+  base32,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

@@ -207,6 +207,29 @@ export {
   type ColorContrastResult,
   defaultColorContrastParams,
 } from './tools/color-contrast/index.js';
+export {
+  passwordStrength,
+  type PasswordStrengthParams,
+  type PasswordStrengthResult,
+  type StrengthTier,
+  defaultPasswordStrengthParams,
+  evaluatePassword,
+} from './tools/password-strength/index.js';
+export {
+  textFrequency,
+  type TextFrequencyParams,
+  type TextFrequencyResult,
+  type FrequencyEntry,
+  defaultTextFrequencyParams,
+  analyzeFrequency,
+} from './tools/text-frequency/index.js';
+export {
+  base32,
+  type Base32Params,
+  defaultBase32Params,
+  encodeBase32,
+  decodeBase32,
+} from './tools/base32/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
