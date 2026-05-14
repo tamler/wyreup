@@ -319,6 +319,19 @@ export {
   defaultUrlBuildParams,
   buildUrl,
 } from './tools/url-build/index.js';
+export {
+  csvDeduplicate,
+  type CsvDeduplicateParams,
+  type CsvDeduplicateResult,
+  defaultCsvDeduplicateParams,
+} from './tools/csv-deduplicate/index.js';
+export {
+  csvMerge,
+  type CsvMergeParams,
+  type CsvMergeResult,
+  type CsvMergeJoin,
+  defaultCsvMergeParams,
+} from './tools/csv-merge/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

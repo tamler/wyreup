@@ -211,6 +211,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // Spreadsheets / CSV
   'csv-json': 'TextResultRunner',
+  'csv-deduplicate': 'MultiOutputRunner',
+  'csv-merge': 'MultiInputRunner',
   'csv-to-excel': 'MultiInputRunner',
   'excel-info': 'ExcelInfoRunner',
   'excel-to-csv': 'TextResultRunner',

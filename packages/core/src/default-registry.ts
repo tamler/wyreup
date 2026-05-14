@@ -147,6 +147,8 @@ import { hotpCode } from './tools/hotp-code/index.js';
 import { jwtSign } from './tools/jwt-sign/index.js';
 import { webhookVerify } from './tools/webhook-verify/index.js';
 import { urlBuild } from './tools/url-build/index.js';
+import { csvDeduplicate } from './tools/csv-deduplicate/index.js';
+import { csvMerge } from './tools/csv-merge/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -305,6 +307,8 @@ export const defaultTools: ToolModule<any>[] = [
   jwtSign,
   webhookVerify,
   urlBuild,
+  csvDeduplicate,
+  csvMerge,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
