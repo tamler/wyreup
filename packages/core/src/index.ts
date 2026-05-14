@@ -491,6 +491,41 @@ export {
   defaultFaviconFromUrlParams,
   extractFavicons,
 } from './tools/favicon-from-url/index.js';
+export {
+  colorBlindSimulator,
+  type ColorBlindSimulatorParams,
+  type ColorBlindType,
+  defaultColorBlindSimulatorParams,
+} from './tools/color-blind-simulator/index.js';
+export {
+  base58,
+  type Base58Params,
+  defaultBase58Params,
+  encodeBase58,
+  decodeBase58,
+} from './tools/base58/index.js';
+export {
+  xmlToJson,
+  type XmlToJsonParams,
+  defaultXmlToJsonParams,
+} from './tools/xml-to-json/index.js';
+export {
+  jsonToXml,
+  type JsonToXmlParams,
+  defaultJsonToXmlParams,
+} from './tools/json-to-xml/index.js';
+export {
+  cssMinify,
+  type CssMinifyParams,
+  type CssMinifyResult,
+  defaultCssMinifyParams,
+} from './tools/css-minify/index.js';
+export {
+  htmlMinify,
+  type HtmlMinifyParams,
+  type HtmlMinifyResult,
+  defaultHtmlMinifyParams,
+} from './tools/html-minify/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

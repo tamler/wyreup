@@ -38,6 +38,38 @@ declare module 'text-readability' {
   export default readability;
 }
 
+declare module 'clean-css' {
+  interface CleanCSSOptions {
+    level?: 0 | 1 | 2 | Record<string, unknown>;
+    returnPromise?: boolean;
+    inline?: string[];
+  }
+  interface CleanCSSResult {
+    styles: string;
+    errors?: string[];
+    warnings?: string[];
+  }
+  class CleanCSS {
+    constructor(options?: CleanCSSOptions);
+    minify(input: string | Record<string, unknown>): CleanCSSResult;
+  }
+  export default CleanCSS;
+}
+
+declare module 'html-minifier-terser' {
+  interface MinifyOptions {
+    collapseWhitespace?: boolean;
+    removeComments?: boolean;
+    removeRedundantAttributes?: boolean;
+    removeEmptyAttributes?: boolean;
+    minifyCSS?: boolean;
+    minifyJS?: boolean;
+    useShortDoctype?: boolean;
+    [key: string]: unknown;
+  }
+  export function minify(html: string, options?: MinifyOptions): Promise<string>;
+}
+
 declare module 'shpjs' {
   interface ShpFeatureCollection {
     type: 'FeatureCollection';

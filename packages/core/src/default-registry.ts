@@ -171,6 +171,12 @@ import { jsonPath } from './tools/json-path/index.js';
 import { urlShortenLocal } from './tools/url-shorten-local/index.js';
 import { textStatsByParagraph } from './tools/text-stats-by-paragraph/index.js';
 import { faviconFromUrl } from './tools/favicon-from-url/index.js';
+import { colorBlindSimulator } from './tools/color-blind-simulator/index.js';
+import { base58 } from './tools/base58/index.js';
+import { xmlToJson } from './tools/xml-to-json/index.js';
+import { jsonToXml } from './tools/json-to-xml/index.js';
+import { cssMinify } from './tools/css-minify/index.js';
+import { htmlMinify } from './tools/html-minify/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -353,6 +359,12 @@ export const defaultTools: ToolModule<any>[] = [
   urlShortenLocal,
   textStatsByParagraph,
   faviconFromUrl,
+  colorBlindSimulator,
+  base58,
+  xmlToJson,
+  jsonToXml,
+  cssMinify,
+  htmlMinify,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
