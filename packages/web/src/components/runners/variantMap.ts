@@ -98,6 +98,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-diff': 'TwoTextInputRunner',
   'text-diff-levenshtein': 'TwoTextInputRunner',
   'json-diff': 'TwoTextInputRunner',
+  'json-schema-validate': 'TwoTextInputRunner',
 
   // TextInputRunner — type text in, any output. The default for tools
   // where the user is going to TYPE/PASTE rather than upload a .txt file.
@@ -114,6 +115,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'unicode-info': 'TextInputRunner',
   'text-frequency': 'TextInputRunner',
   'morse-code': 'TextInputRunner',
+  'text-confusable': 'TextInputRunner',
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
@@ -225,6 +227,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'csv-deduplicate': 'MultiOutputRunner',
   'csv-merge': 'MultiInputRunner',
   'csv-diff': 'MultiInputRunner',
+  'frontmatter-to-csv': 'MultiInputRunner',
   'csv-to-excel': 'MultiInputRunner',
   'excel-info': 'ExcelInfoRunner',
   'excel-to-csv': 'TextResultRunner',

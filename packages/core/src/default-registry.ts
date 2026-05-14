@@ -157,6 +157,9 @@ import { jsonUnflatten } from './tools/json-unflatten/index.js';
 import { otpauthUri } from './tools/otpauth-uri/index.js';
 import { webhookReplay } from './tools/webhook-replay/index.js';
 import { fileFingerprint } from './tools/file-fingerprint/index.js';
+import { jsonSchemaValidate } from './tools/json-schema-validate/index.js';
+import { textConfusable } from './tools/text-confusable/index.js';
+import { frontmatterToCsv } from './tools/frontmatter-to-csv/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -325,6 +328,9 @@ export const defaultTools: ToolModule<any>[] = [
   otpauthUri,
   webhookReplay,
   fileFingerprint,
+  jsonSchemaValidate,
+  textConfusable,
+  frontmatterToCsv,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

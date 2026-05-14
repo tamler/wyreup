@@ -390,6 +390,28 @@ export {
   type FingerprintHmacAlgo,
   defaultFileFingerprintParams,
 } from './tools/file-fingerprint/index.js';
+export {
+  jsonSchemaValidate,
+  type JsonSchemaValidateParams,
+  type JsonSchemaValidateResult,
+  type JsonSchemaError,
+  defaultJsonSchemaValidateParams,
+} from './tools/json-schema-validate/index.js';
+export {
+  textConfusable,
+  type TextConfusableParams,
+  type TextConfusableResult,
+  type ConfusableHit,
+  type MixedScriptToken,
+  defaultTextConfusableParams,
+  analyzeConfusable,
+} from './tools/text-confusable/index.js';
+export {
+  frontmatterToCsv,
+  type FrontmatterToCsvParams,
+  type FrontmatterToCsvResult,
+  defaultFrontmatterToCsvParams,
+} from './tools/frontmatter-to-csv/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
