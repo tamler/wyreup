@@ -164,6 +164,10 @@ import { yamlValidate } from './tools/yaml-validate/index.js';
 import { jsonSchemaInfer } from './tools/json-schema-infer/index.js';
 import { textRedact } from './tools/text-redact/index.js';
 import { htmlExtractLinks } from './tools/html-extract-links/index.js';
+import { pdfExtractImages } from './tools/pdf-extract-images/index.js';
+import { csvInfo } from './tools/csv-info/index.js';
+import { csvToJsonSchema } from './tools/csv-to-json-schema/index.js';
+import { jsonPath } from './tools/json-path/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -339,6 +343,10 @@ export const defaultTools: ToolModule<any>[] = [
   jsonSchemaInfer,
   textRedact,
   htmlExtractLinks,
+  pdfExtractImages,
+  csvInfo,
+  csvToJsonSchema,
+  jsonPath,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

@@ -73,6 +73,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'mime-detect': 'JsonResultRunner',
   // file-fingerprint — comprehensive file identity bundle
   'file-fingerprint': 'JsonResultRunner',
+  // csv-info — per-column type / null / distinct profile
+  'csv-info': 'JsonResultRunner',
+  'csv-to-json-schema': 'JsonResultRunner',
   // webhook-verify — payload file + provided signature → valid/invalid JSON
   'webhook-verify': 'JsonResultRunner',
   // webhook-replay — verify under one secret, re-sign under another
@@ -143,6 +146,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'json-yaml': 'TextInputRunner',
   'json-flatten': 'TextInputRunner',
   'json-unflatten': 'TextInputRunner',
+  'json-path': 'TextInputRunner',
   'yaml-validate': 'TextInputRunner',
   'json-schema-infer': 'TextInputRunner',
 
@@ -221,6 +225,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'zip-create': 'MultiInputRunner',
   'zip-extract': 'MultiOutputRunner',
   'zip-info': 'ZipInfoRunner',
+  'pdf-extract-images': 'PreviewRunner',
 
   // PGP — text-out variants get the text result; verify gets JSON
   'pgp-encrypt': 'TextResultRunner',

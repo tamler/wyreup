@@ -441,6 +441,33 @@ export {
   defaultHtmlExtractLinksParams,
   extractLinks,
 } from './tools/html-extract-links/index.js';
+export {
+  pdfExtractImages,
+  type PdfExtractImagesParams,
+  type PdfExtractImagesReport,
+  defaultPdfExtractImagesParams,
+} from './tools/pdf-extract-images/index.js';
+export {
+  csvInfo,
+  type CsvInfoParams,
+  type CsvInfoResult,
+  type CsvColumnInfo,
+  type CsvType,
+  defaultCsvInfoParams,
+} from './tools/csv-info/index.js';
+export {
+  csvToJsonSchema,
+  type CsvToJsonSchemaParams,
+  defaultCsvToJsonSchemaParams,
+} from './tools/csv-to-json-schema/index.js';
+export {
+  jsonPath,
+  type JsonPathParams,
+  type JsonPathResult,
+  type JsonPathMatch,
+  defaultJsonPathParams,
+  queryJsonPath,
+} from './tools/json-path/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
