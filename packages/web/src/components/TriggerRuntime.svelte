@@ -17,7 +17,7 @@
   //    the chain happened to succeed).
 
   import { onMount, onDestroy } from 'svelte';
-  import { createDefaultRegistry, matchRule, runChain, runPreflight, type TriggerRule, type Chain } from '@wyreup/core';
+  import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core';
   import TriggerPreviewSheet from './TriggerPreviewSheet.svelte';
   import { getAllRules, getFires, recordFire, updateRule } from './runners/triggerStorage';
   import { getChain, type KitChain } from './runners/kitStorage';
@@ -80,9 +80,17 @@
 
     const chain = kitChainToChain(savedChain);
 
+    // Spoof gate: if the saved chain references tool IDs that aren't in
+    // the built-in registry, force the preview sheet open so the user
+    // sees the "unknown tool" error before anything runs. confirmed=true
+    // is bypassed only for VALID chains.
+    if (!registry) registry = createDefaultRegistry();
+    const validation = validateChain(chain, registry);
+
     // G2: confirmed=true skips the sheet, BUT G4 still gets a vote — we
     // run pre-flight first and force the sheet when verdict is 'high'.
-    if (rule.confirmed) {
+    // Spoof gate also vetoes the bypass.
+    if (rule.confirmed && validation.ok) {
       const verdict = await runPreflight(file).catch(() => ({ verdict: 'clean' as const }));
       if (verdict.verdict !== 'high') {
         await executeChain(file, rule, chain, savedChain.name);

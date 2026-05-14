@@ -29,6 +29,11 @@ export type { SavedChain } from './chain/types.js';
 
 export { detectCycle } from './chain/cycle.js';
 
+export {
+  validateChain,
+  type ChainValidationResult,
+} from './chain/validate.js';
+
 // Trigger rules — declarative MIME → saved-chain bindings. Every
 // consumer must implement preview-before-run per docs/triggers-security.md.
 export type {

@@ -121,6 +121,37 @@ red, and the user must explicitly choose Overwrite or Rename.
 This is enforced by the chain runner, not by the trigger system, so it
 applies to every chain run regardless of how it was initiated.
 
+### G8 — Spoof gate: only built-in tools can run
+
+The Wyreup tool registry is compiled into `@wyreup/core` and shipped via
+signed npm publish. It cannot be extended at runtime; there is no
+"load custom tool" surface anywhere in the codebase.
+
+A chain — saved locally, imported from JSON, or arriving via a shared
+URL — can still nominate a tool ID that isn't in the active registry.
+That ID will never resolve to executable code (the registry lookup
+fails), but the failure could surface late and confusingly. To make the
+boundary explicit:
+
+- **At import time:** `importChainsJson` rejects any incoming chain
+  whose steps reference unknown tool IDs. The user sees a "skipped X —
+  references unknown tool(s)" message and the chain is never written
+  to localStorage.
+- **At preview time:** the preview sheet runs `validateChain` against
+  the registry. If any step references an unknown tool, the chain
+  summary is annotated red, Run is disabled, and the user is told
+  which tool ID is unrecognised.
+- **In the runtime bypass:** even for a `confirmed: true` rule, if the
+  referenced chain fails validation, the runtime forces the preview
+  sheet open instead of executing directly. `confirmed` is a comfort
+  bypass for verdict-clean valid chains only.
+
+This guarantee is structurally enforced by `validateChain` (in
+`@wyreup/core`), which is the single source of truth for the
+registry-membership check. It's tested for prototype-pollution-shaped
+IDs (`__proto__`, `constructor`) explicitly so a future Map-shape
+regression can't silently re-open the gate.
+
 ### G7 — Resource limits per rule
 
 Each rule has a hidden rate limit: a single rule cannot fire more than

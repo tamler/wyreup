@@ -3,8 +3,22 @@
  * Schema version 1.
  */
 
+import { createDefaultRegistry, validateChain, type Chain } from '@wyreup/core';
+
 const KIT_KEY = 'wyreup:my-kit:chains';
 const SCHEMA_VERSION = 1;
+
+let cachedRegistry: ReturnType<typeof createDefaultRegistry> | null = null;
+function getRegistry() {
+  if (!cachedRegistry) cachedRegistry = createDefaultRegistry();
+  return cachedRegistry;
+}
+
+export function validateKitChain(chain: KitChain): { ok: boolean; unknownTools: string[] } {
+  const asChain: Chain = chain.steps.map((s) => ({ toolId: s.toolId, params: s.params }));
+  const r = validateChain(asChain, getRegistry());
+  return { ok: r.ok, unknownTools: r.unknownTools };
+}
 
 export interface KitChainStep {
   toolId: string;
@@ -143,6 +157,19 @@ export function importChainsJson(json: string): { added: number; updated: number
       updatedAt: typeof entry.updatedAt === 'string' ? entry.updatedAt : new Date().toISOString(),
       schemaVersion: SCHEMA_VERSION,
     };
+
+    // Spoof gate: reject any imported chain that references tool IDs
+    // not in the built-in registry. The Wyreup registry cannot be
+    // extended at runtime, so an "unknown tool" in an imported chain
+    // is either stale (old version of Wyreup) or a spoofing attempt.
+    // Either way: refuse it at import, never on first run.
+    const validation = validateKitChain(chain);
+    if (!validation.ok) {
+      errors.push(
+        `Skipped "${chain.name}" — references unknown tool(s): ${validation.unknownTools.join(', ')}.`,
+      );
+      continue;
+    }
 
     const existingIdx = all.findIndex((c) => c.id === chain.id);
     if (existingIdx >= 0) {

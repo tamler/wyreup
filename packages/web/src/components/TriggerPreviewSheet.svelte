@@ -11,13 +11,29 @@
   // which owns the chain executor + rule store.
 
   import { onMount, createEventDispatcher } from 'svelte';
-  import { readFileHeader, runPreflight, type PreflightResult, type FileHeader, type TriggerRule, type Chain } from '@wyreup/core';
+  import {
+    readFileHeader,
+    runPreflight,
+    createDefaultRegistry,
+    validateChain,
+    type PreflightResult,
+    type FileHeader,
+    type TriggerRule,
+    type Chain,
+    type ChainValidationResult,
+  } from '@wyreup/core';
 
   export let file: File;
   export let rule: TriggerRule;
   export let chain: Chain;
   /** When true, the user has previously confirmed this rule (G2). */
   export let preconfirmed = false;
+
+  // Spoof gate: validate every chain step against the BUILT-IN registry
+  // before letting the user click Run. Imported / corrupted / stale
+  // chains that reference unknown tool IDs are blocked here.
+  const registry = createDefaultRegistry();
+  const validation: ChainValidationResult = validateChain(chain, registry);
 
   const dispatch = createEventDispatcher<{
     run: { dontAskAgain: boolean };
@@ -59,6 +75,9 @@
   }
 
   function handleRun() {
+    // Spoof gate — Run must never fire on an invalid chain. The button
+    // is also disabled in the markup, but defense in depth.
+    if (!validation.ok) return;
     if (preflight?.verdict === 'high' && !runAnywayUnlocked) {
       runAnywayUnlocked = true;
       return;
@@ -111,6 +130,13 @@
     <section class="sheet__section">
       <p class="sheet__label">Chain</p>
       <p class="sheet__value sheet__chain"><code>{chainSummary}</code></p>
+      {#if !validation.ok}
+        <p class="sheet__warn sheet__chain-error">
+          Unknown tool{validation.unknownTools.length > 1 ? 's' : ''}:
+          <code>{validation.unknownTools.join(', ')}</code>.
+          This chain references tools that aren't part of Wyreup. Run is disabled — edit the chain in your kit.
+        </p>
+      {/if}
     </section>
 
     {#if header}
@@ -157,7 +183,9 @@
     </label>
 
     <div class="sheet__actions">
-      {#if preflight?.verdict === 'high' && !runAnywayUnlocked}
+      {#if !validation.ok}
+        <button type="button" class="btn-primary" disabled>Run (chain invalid)</button>
+      {:else if preflight?.verdict === 'high' && !runAnywayUnlocked}
         <button type="button" class="btn-danger" on:click={handleRun}>
           Acknowledge severity to enable Run
         </button>
