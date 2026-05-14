@@ -67,6 +67,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // HashRunner — visual hash list (per-algo copy buttons)
   hash: 'HashRunner',
+  // hmac — single file in + secret key + algo → JSON digest
+  hmac: 'JsonResultRunner',
 
   // ColorPaletteRunner — bespoke visual chips for the extracted palette
   'color-palette': 'ColorPaletteRunner',
@@ -99,6 +101,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-embed': 'TextInputRunner',
   'token-count': 'TextInputRunner',
   'unicode-normalize': 'TextInputRunner',
+  'unicode-info': 'TextInputRunner',
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
@@ -115,6 +118,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'sql-formatter': 'TextInputRunner',
   'xml-formatter': 'TextInputRunner',
   'markdown-to-html': 'TextInputRunner',
+  'markdown-toc': 'TextInputRunner',
   'html-to-markdown': 'TextInputRunner',
   'word-counter': 'TextInputRunner',
   'json-yaml': 'TextInputRunner',
@@ -130,6 +134,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // when tool.input.min === 0.
   calculator: 'JsonResultRunner',
   'unit-converter': 'JsonResultRunner',
+  'color-contrast': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
   'compound-interest': 'CompoundInterestRunner',

@@ -177,6 +177,36 @@ export { mergeWorkbooks, type MergeWorkbooksParams } from './tools/merge-workboo
 export { splitSheets, type SplitSheetsParams } from './tools/split-sheets/index.js';
 export { htmlToPdf, type HtmlToPdfParams } from './tools/html-to-pdf/index.js';
 export { barcode, type BarcodeParams } from './tools/barcode/index.js';
+export {
+  unicodeInfo,
+  type UnicodeInfoParams,
+  type UnicodeInfoReport,
+  type UnicodeCharInfo,
+  defaultUnicodeInfoParams,
+  analyzeUnicode,
+} from './tools/unicode-info/index.js';
+export {
+  hmac,
+  type HmacParams,
+  type HmacResult,
+  type HmacAlgorithm,
+  type HmacEncoding,
+  defaultHmacParams,
+  computeHmac,
+} from './tools/hmac/index.js';
+export {
+  markdownToc,
+  type MarkdownTocParams,
+  defaultMarkdownTocParams,
+  buildToc,
+  slugify,
+} from './tools/markdown-toc/index.js';
+export {
+  colorContrast,
+  type ColorContrastParams,
+  type ColorContrastResult,
+  defaultColorContrastParams,
+} from './tools/color-contrast/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

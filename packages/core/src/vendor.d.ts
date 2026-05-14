@@ -8,6 +8,7 @@ declare module 'culori' {
   export function formatRgb(color: Color | undefined): string | undefined;
   export function formatHsl(color: Color | undefined): string | undefined;
   export function converter(mode: string): (color: Color | undefined) => Color | undefined;
+  export function wcagContrast(a: Color | string, b: Color | string): number;
 }
 
 declare module 'diff' {

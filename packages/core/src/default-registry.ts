@@ -128,6 +128,10 @@ import { mergeWorkbooks } from './tools/merge-workbooks/index.js';
 import { splitSheets } from './tools/split-sheets/index.js';
 import { htmlToPdf } from './tools/html-to-pdf/index.js';
 import { barcode } from './tools/barcode/index.js';
+import { unicodeInfo } from './tools/unicode-info/index.js';
+import { hmac } from './tools/hmac/index.js';
+import { markdownToc } from './tools/markdown-toc/index.js';
+import { colorContrast } from './tools/color-contrast/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -267,6 +271,10 @@ export const defaultTools: ToolModule<any>[] = [
   splitSheets,
   htmlToPdf,
   barcode,
+  unicodeInfo,
+  hmac,
+  markdownToc,
+  colorContrast,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
