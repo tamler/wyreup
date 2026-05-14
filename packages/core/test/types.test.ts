@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import type {
   ToolModule,
   ToolCategory,
-  ToolPresence,
   ToolRunContext,
   MemoryEstimate,
 } from '../src/types.js';
@@ -16,11 +15,6 @@ describe('types', () => {
   it('MemoryEstimate includes expected tiers', () => {
     const mem: MemoryEstimate = 'low';
     expect(mem).toBe('low');
-  });
-
-  it('ToolPresence is a union of three literals', () => {
-    const p: ToolPresence = 'editor';
-    expect(p).toBe('editor');
   });
 
   it('ToolRunContext has executionId for idempotency', () => {
@@ -48,9 +42,6 @@ describe('types', () => {
       cost: 'free',
       memoryEstimate: 'low',
       defaults: { quality: 80 },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-      Component: (() => null) as any,
-      // eslint-disable-next-line @typescript-eslint/require-await
       run: async () => new Blob(),
       __testFixtures: { valid: [], weird: [], expectedOutputMime: [] },
     };
