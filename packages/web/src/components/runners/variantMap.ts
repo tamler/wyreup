@@ -132,6 +132,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'html-clean': 'TextInputRunner',
   'word-counter': 'TextInputRunner',
   'json-yaml': 'TextInputRunner',
+  'json-flatten': 'TextInputRunner',
+  'json-unflatten': 'TextInputRunner',
 
   // GenerateRunner — no input needed, generates output
   'uuid-generator': 'GenerateRunner',
@@ -139,6 +141,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'lorem-ipsum': 'GenerateRunner',
   'password-generator': 'GenerateRunner',
   barcode: 'GenerateRunner',
+  'backup-codes': 'GenerateRunner',
 
   // No-input tools that emit JSON/text — JsonResultRunner skips the dropzone
   // when tool.input.min === 0.
@@ -151,6 +154,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'hotp-code': 'JsonResultRunner',
   'url-parse': 'JsonResultRunner',
   'url-build': 'JsonResultRunner',
+  'signed-url': 'JsonResultRunner',
   'jwt-sign': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
@@ -213,6 +217,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'csv-json': 'TextResultRunner',
   'csv-deduplicate': 'MultiOutputRunner',
   'csv-merge': 'MultiInputRunner',
+  'csv-diff': 'MultiInputRunner',
   'csv-to-excel': 'MultiInputRunner',
   'excel-info': 'ExcelInfoRunner',
   'excel-to-csv': 'TextResultRunner',

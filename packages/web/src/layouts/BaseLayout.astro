@@ -23,6 +23,12 @@ const {
 
 const currentPath = Astro.url.pathname;
 const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
+
+// Canonical URL is sourced from the production origin, not Astro.site,
+// so dev/preview builds emit the right value too. Tools rely on a
+// stable canonical to consolidate signals when the same page is reached
+// via /tools/<slug>?q= variants from the header search.
+const canonicalUrl = `https://wyreup.com${currentPath}`;
 ---
 
 <!DOCTYPE html>
@@ -54,9 +60,15 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
          browser surfaces the install prompt and install criteria pass. -->
     <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- Canonical — consolidates signals when the same tool is reached
+         via header-search variants. Always production origin so dev /
+         preview builds also emit a stable canonical. -->
+    <link rel="canonical" href={canonicalUrl} />
+
     <!-- Open Graph — PNG is the primary because LinkedIn / Twitter / X
          don't reliably render SVG og:image. Regenerate via
          `pnpm run build:og` after editing the SVG. -->
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={ogDescription} />
     <meta property="og:image" content="https://wyreup.com/og-image.png" />
@@ -68,6 +80,7 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalUrl} />
     <meta name="twitter:image" content="https://wyreup.com/og-image.png" />
 
     <title>{title}</title>

@@ -332,6 +332,39 @@ export {
   type CsvMergeJoin,
   defaultCsvMergeParams,
 } from './tools/csv-merge/index.js';
+export {
+  signedUrl,
+  type SignedUrlParams,
+  type SignedUrlResult,
+  type SignedUrlAlgorithm,
+  defaultSignedUrlParams,
+} from './tools/signed-url/index.js';
+export {
+  backupCodes,
+  type BackupCodesParams,
+  type BackupCodesResult,
+  defaultBackupCodesParams,
+  generateBackupCodes,
+} from './tools/backup-codes/index.js';
+export {
+  csvDiff,
+  type CsvDiffParams,
+  type CsvDiffResult,
+  type CsvRowDiff,
+  defaultCsvDiffParams,
+} from './tools/csv-diff/index.js';
+export {
+  jsonFlatten,
+  type JsonFlattenParams,
+  defaultJsonFlattenParams,
+  flattenJson,
+} from './tools/json-flatten/index.js';
+export {
+  jsonUnflatten,
+  type JsonUnflattenParams,
+  defaultJsonUnflattenParams,
+  unflattenJson,
+} from './tools/json-unflatten/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

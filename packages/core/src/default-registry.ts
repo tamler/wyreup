@@ -149,6 +149,11 @@ import { webhookVerify } from './tools/webhook-verify/index.js';
 import { urlBuild } from './tools/url-build/index.js';
 import { csvDeduplicate } from './tools/csv-deduplicate/index.js';
 import { csvMerge } from './tools/csv-merge/index.js';
+import { signedUrl } from './tools/signed-url/index.js';
+import { backupCodes } from './tools/backup-codes/index.js';
+import { csvDiff } from './tools/csv-diff/index.js';
+import { jsonFlatten } from './tools/json-flatten/index.js';
+import { jsonUnflatten } from './tools/json-unflatten/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -309,6 +314,11 @@ export const defaultTools: ToolModule<any>[] = [
   urlBuild,
   csvDeduplicate,
   csvMerge,
+  signedUrl,
+  backupCodes,
+  csvDiff,
+  jsonFlatten,
+  jsonUnflatten,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
