@@ -164,6 +164,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'json-schema-infer': 'TextInputRunner',
   'openapi-validate': 'TextInputRunner',
   'package-json-validate': 'TextInputRunner',
+  'json-merge': 'MultiInputRunner',
+  'csv-template': 'MultiInputRunner',
+  'pdf-suspicious': 'JsonResultRunner',
 
   // GenerateRunner — no input needed, generates output
   'uuid-generator': 'GenerateRunner',

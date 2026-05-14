@@ -587,6 +587,28 @@ export {
   defaultPackageJsonValidateParams,
   validatePackageJson,
 } from './tools/package-json-validate/index.js';
+export {
+  jsonMerge,
+  type JsonMergeParams,
+  type JsonMergeResult,
+  type JsonMergeConflict,
+  type JsonMergeStrategy,
+  type JsonMergeArrayMode,
+  defaultJsonMergeParams,
+  mergeJson,
+} from './tools/json-merge/index.js';
+export {
+  csvTemplate,
+  type CsvTemplateParams,
+  type CsvTemplateOnMissing,
+  defaultCsvTemplateParams,
+} from './tools/csv-template/index.js';
+export {
+  pdfSuspicious,
+  type PdfSuspiciousParams,
+  type PdfSuspiciousResult,
+  defaultPdfSuspiciousParams,
+} from './tools/pdf-suspicious/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

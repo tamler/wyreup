@@ -185,6 +185,9 @@ import { signedCookieDecode } from './tools/signed-cookie-decode/index.js';
 import { textSuspicious } from './tools/text-suspicious/index.js';
 import { openapiValidate } from './tools/openapi-validate/index.js';
 import { packageJsonValidate } from './tools/package-json-validate/index.js';
+import { jsonMerge } from './tools/json-merge/index.js';
+import { csvTemplate } from './tools/csv-template/index.js';
+import { pdfSuspicious } from './tools/pdf-suspicious/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -381,6 +384,9 @@ export const defaultTools: ToolModule<any>[] = [
   textSuspicious,
   openapiValidate,
   packageJsonValidate,
+  jsonMerge,
+  csvTemplate,
+  pdfSuspicious,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
