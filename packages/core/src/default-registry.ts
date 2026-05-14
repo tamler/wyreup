@@ -139,6 +139,10 @@ import { jsonDiff } from './tools/json-diff/index.js';
 import { morseCode } from './tools/morse-code/index.js';
 import { romanNumeral } from './tools/roman-numeral/index.js';
 import { mimeDetect } from './tools/mime-detect/index.js';
+import { totpCode } from './tools/totp-code/index.js';
+import { urlParse } from './tools/url-parse/index.js';
+import { markdownFrontmatter } from './tools/markdown-frontmatter/index.js';
+import { htmlClean } from './tools/html-clean/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -289,6 +293,10 @@ export const defaultTools: ToolModule<any>[] = [
   morseCode,
   romanNumeral,
   mimeDetect,
+  totpCode,
+  urlParse,
+  markdownFrontmatter,
+  htmlClean,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

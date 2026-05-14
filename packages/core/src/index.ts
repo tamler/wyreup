@@ -259,6 +259,34 @@ export {
   defaultMimeDetectParams,
   detectMime,
 } from './tools/mime-detect/index.js';
+export {
+  totpCode,
+  type TotpCodeParams,
+  type TotpCodeResult,
+  type TotpAlgorithm,
+  defaultTotpCodeParams,
+  generateTotp,
+} from './tools/totp-code/index.js';
+export {
+  urlParse,
+  type UrlParseParams,
+  type UrlParseResult,
+  defaultUrlParseParams,
+  parseUrl,
+} from './tools/url-parse/index.js';
+export {
+  markdownFrontmatter,
+  type MarkdownFrontmatterParams,
+  type MarkdownFrontmatterResult,
+  defaultMarkdownFrontmatterParams,
+  extractFrontmatter,
+} from './tools/markdown-frontmatter/index.js';
+export {
+  htmlClean,
+  type HtmlCleanParams,
+  defaultHtmlCleanParams,
+  cleanHtml,
+} from './tools/html-clean/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

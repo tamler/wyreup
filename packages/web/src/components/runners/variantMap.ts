@@ -125,7 +125,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'xml-formatter': 'TextInputRunner',
   'markdown-to-html': 'TextInputRunner',
   'markdown-toc': 'TextInputRunner',
+  'markdown-frontmatter': 'TextInputRunner',
   'html-to-markdown': 'TextInputRunner',
+  'html-clean': 'TextInputRunner',
   'word-counter': 'TextInputRunner',
   'json-yaml': 'TextInputRunner',
 
@@ -143,6 +145,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'color-contrast': 'JsonResultRunner',
   'password-strength': 'JsonResultRunner',
   'roman-numeral': 'JsonResultRunner',
+  'totp-code': 'JsonResultRunner',
+  'url-parse': 'JsonResultRunner',
 
   // Finance runners — custom calculator UIs
   'compound-interest': 'CompoundInterestRunner',
