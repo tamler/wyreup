@@ -13,8 +13,6 @@ export interface PdfToImageParams {
   quality?: number;
 }
 
-const PdfToImageComponentStub = (): unknown => null;
-
 const FORMAT_MIME: Record<string, string> = {
   png: 'image/png',
   jpeg: 'image/jpeg',
@@ -27,7 +25,6 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
   name: 'PDF to Image',
   description: 'Render each page of a PDF as an image (PNG, JPEG, or WebP).',
   category: 'convert',
-  presence: 'both',
   keywords: ['pdf', 'image', 'png', 'jpeg', 'webp', 'render', 'convert', 'pages'],
 
   input: {
@@ -82,8 +79,6 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
       showWhen: { field: 'format', in: ['jpeg', 'webp'] },
     },
   },
-
-  Component: PdfToImageComponentStub,
 
   async run(
     inputs: File[],

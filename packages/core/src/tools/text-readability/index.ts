@@ -17,15 +17,12 @@ export interface TextReadabilityResult {
   gradeLevel: string;
 }
 
-const TextReadabilityComponentStub = (): unknown => null;
-
 export const textReadability: ToolModule<TextReadabilityParams> = {
   id: 'text-readability',
   slug: 'text-readability',
   name: 'Readability Scores',
   description: 'Compute Flesch, Gunning Fog, Coleman-Liau, and other readability scores for any text.',
   category: 'text',
-  presence: 'both',
   keywords: ['readability', 'flesch', 'fog', 'grade', 'level', 'score', 'writing', 'complexity'],
 
   input: {
@@ -43,7 +40,6 @@ export const textReadability: ToolModule<TextReadabilityParams> = {
   // No installSize — pure JS, no model download
 
   defaults: defaultTextReadabilityParams,
-  Component: TextReadabilityComponentStub,
 
   async run(inputs: File[], _params: TextReadabilityParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

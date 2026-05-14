@@ -29,8 +29,6 @@ export interface JsonMergeResult {
   };
 }
 
-const JsonMergeComponentStub = (): unknown => null;
-
 function isObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v);
 }
@@ -129,7 +127,6 @@ export const jsonMerge: ToolModule<JsonMergeParams> = {
   description:
     'Deep-merge two JSON documents with a conflict report. Pass two files (base, override); the second wins on collisions. Picks an array strategy (replace / concat / union) and emits the merged result alongside a list of every path where base and override disagreed. Pairs with json-diff (compare) for change-management workflows.',
   category: 'dev',
-  presence: 'both',
   keywords: ['json', 'merge', 'deep-merge', 'config', 'diff', 'conflict'],
 
   input: {
@@ -169,8 +166,6 @@ export const jsonMerge: ToolModule<JsonMergeParams> = {
       ],
     },
   },
-
-  Component: JsonMergeComponentStub,
 
   async run(inputs: File[], params: JsonMergeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 2) throw new Error('json-merge needs exactly two JSON files (base, override).');

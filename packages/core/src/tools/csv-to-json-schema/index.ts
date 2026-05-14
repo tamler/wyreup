@@ -19,8 +19,6 @@ export const defaultCsvToJsonSchemaParams: CsvToJsonSchemaParams = {
   draft: 'draft-07',
 };
 
-const CsvToJsonSchemaComponentStub = (): unknown => null;
-
 type ColumnType = 'integer' | 'number' | 'boolean' | 'string';
 
 interface ColumnObservations {
@@ -112,7 +110,6 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
   description:
     'Read a CSV and emit a JSON Schema that describes each row as an object. Per-column types are inferred from observed values, with min/max for numerics and format detection (date, date-time, email, uri, uuid) for strings. Pair with json-schema-validate to lock incoming CSVs to a known shape.',
   category: 'convert',
-  presence: 'both',
   keywords: ['csv', 'json-schema', 'jsonschema', 'infer', 'derive', 'validate', 'data'],
 
   input: {
@@ -159,8 +156,6 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
       ],
     },
   },
-
-  Component: CsvToJsonSchemaComponentStub,
 
   async run(inputs: File[], params: CsvToJsonSchemaParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('csv-to-json-schema accepts exactly one CSV file.');

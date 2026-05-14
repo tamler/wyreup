@@ -32,8 +32,6 @@ function stripPrefix(text: string): string {
   return text.trim().replace(/^0x|^0b|^0o/i, '');
 }
 
-const NumberBaseConverterComponentStub = (): unknown => null;
-
 export const numberBaseConverter: ToolModule<NumberBaseConverterParams> = {
   id: 'number-base-converter',
   slug: 'number-base-converter',
@@ -41,7 +39,6 @@ export const numberBaseConverter: ToolModule<NumberBaseConverterParams> = {
   description:
     'Convert integers between decimal, binary, octal, and hexadecimal. Handles large numbers via BigInt.',
   category: 'dev',
-  presence: 'both',
   keywords: ['binary', 'hex', 'octal', 'decimal', 'base', 'convert', 'number', 'bitwise'],
 
   input: {
@@ -75,8 +72,6 @@ export const numberBaseConverter: ToolModule<NumberBaseConverterParams> = {
       ],
     },
   },
-
-  Component: NumberBaseConverterComponentStub,
 
   async run(
     inputs: File[],

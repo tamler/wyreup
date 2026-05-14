@@ -5,15 +5,12 @@ import type { ResvgRenderOptions } from '@resvg/resvg-js';
 export type { SvgToPngParams } from './types.js';
 export { defaultSvgToPngParams } from './types.js';
 
-const SvgToPngComponentStub = (): unknown => null;
-
 export const svgToPng: ToolModule<SvgToPngParams> = {
   id: 'svg-to-png',
   slug: 'svg-to-png',
   name: 'SVG to PNG',
   description: 'Convert SVG files to PNG images with optional scale factor and background color.',
   category: 'convert',
-  presence: 'both',
   keywords: ['svg', 'png', 'convert', 'vector', 'rasterize', 'image'],
 
   input: {
@@ -34,8 +31,6 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
   defaults: {
     scale: 1,
   },
-
-  Component: SvgToPngComponentStub,
 
   async run(
     inputs: File[],

@@ -10,15 +10,12 @@ export const defaultCompressVideoParams: CompressVideoParams = {
   preset: 'fast',
 };
 
-const CompressVideoComponentStub = (): unknown => null;
-
 export const compressVideo: ToolModule<CompressVideoParams> = {
   id: 'compress-video',
   slug: 'compress-video',
   name: 'Compress Video',
   description: 'Reduce video file size using H.264 encoding. Higher CRF = smaller file, lower quality.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'compress', 'reduce', 'size', 'h264', 'mp4', 'crf'],
 
   input: {
@@ -59,8 +56,6 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
       ],
     },
   },
-
-  Component: CompressVideoComponentStub,
 
   async run(
     inputs: File[],

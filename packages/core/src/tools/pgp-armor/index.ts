@@ -22,8 +22,6 @@ export const defaultPgpArmorParams: PgpArmorParams = {
   comment: '',
 };
 
-const PgpArmorComponentStub = (): unknown => null;
-
 function toBase64(bytes: Uint8Array): string {
   if (typeof Buffer !== 'undefined') return Buffer.from(bytes).toString('base64');
   let binary = '';
@@ -138,7 +136,6 @@ export const pgpArmor: ToolModule<PgpArmorParams> = {
   description:
     'Wrap binary into OpenPGP ASCII armor with a CRC-24 checksum (or unwrap an existing armored block back to bytes + headers). Doesn\'t encrypt or sign — that\'s pgp-encrypt / pgp-sign. This tool only handles the armoring envelope.',
   category: 'convert',
-  presence: 'both',
   keywords: ['pgp', 'armor', 'ascii-armor', 'encode', 'decode', 'crc24', 'rfc4880'],
 
   input: {
@@ -193,8 +190,6 @@ export const pgpArmor: ToolModule<PgpArmorParams> = {
       showWhen: { field: 'mode', equals: 'encode' },
     },
   },
-
-  Component: PgpArmorComponentStub,
 
   async run(inputs: File[], params: PgpArmorParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('pgp-armor accepts exactly one file.');

@@ -20,8 +20,6 @@ export interface CssMinifyResult {
   errors: string[];
 }
 
-const CssMinifyComponentStub = (): unknown => null;
-
 export const cssMinify: ToolModule<CssMinifyParams> = {
   id: 'css-minify',
   slug: 'css-minify',
@@ -29,7 +27,6 @@ export const cssMinify: ToolModule<CssMinifyParams> = {
   description:
     'Minify CSS with clean-css. Level 1 is safe (whitespace, comments, basic optimizations); level 2 does cross-selector and value-level optimizations (merge rules, shorthand collapse). Inverse direction of the existing css-formatter.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['css', 'minify', 'compress', 'optimize', 'whitespace'],
 
   input: {
@@ -67,8 +64,6 @@ export const cssMinify: ToolModule<CssMinifyParams> = {
       showWhen: { field: 'level', equals: 2 },
     },
   },
-
-  Component: CssMinifyComponentStub,
 
   async run(inputs: File[], params: CssMinifyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('css-minify accepts exactly one file.');

@@ -4,15 +4,12 @@ import type { HashParams, HashFileResult, HashAlgorithm } from './types.js';
 export type { HashParams, HashFileResult, HashAlgorithm } from './types.js';
 export { defaultHashParams } from './types.js';
 
-const HashComponentStub = (): unknown => null;
-
 export const hash: ToolModule<HashParams> = {
   id: 'hash',
   slug: 'hash',
   name: 'Hash',
   description: 'Compute SHA-256, SHA-1, or SHA-512 hashes of files.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['hash', 'checksum', 'sha256', 'sha1', 'sha512', 'integrity'],
 
   input: {
@@ -44,8 +41,6 @@ export const hash: ToolModule<HashParams> = {
       ],
     },
   },
-
-  Component: HashComponentStub,
 
   async run(
     inputs: File[],

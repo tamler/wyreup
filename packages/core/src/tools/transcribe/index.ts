@@ -75,8 +75,6 @@ const LANGUAGE_OPTIONS = [
   { value: 'vi', label: 'Vietnamese' },
 ];
 
-const TranscribeComponentStub = (): unknown => null;
-
 /**
  * Decode any browser-supported audio file to mono 16 kHz Float32Array,
  * which is what Whisper expects. Uses OfflineAudioContext for resampling
@@ -128,7 +126,6 @@ export const transcribe: ToolModule<TranscribeParams> = {
     'Pick a model: tiny (~80 MB, fast), base (~250 MB, recommended), or small (~600 MB, best). ' +
     'The chosen model downloads on first use, then works offline.',
   category: 'export',
-  presence: 'standalone',
   keywords: ['transcribe', 'speech', 'stt', 'whisper', 'audio', 'subtitles', 'voice'],
 
   input: {
@@ -197,8 +194,6 @@ export const transcribe: ToolModule<TranscribeParams> = {
       help: 'Include per-segment timestamps in the output. Output becomes JSON instead of plain text.',
     },
   },
-
-  Component: TranscribeComponentStub,
 
   async run(
     inputs: File[],

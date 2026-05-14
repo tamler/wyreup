@@ -5,15 +5,12 @@ import { detectFormat, getCodec } from '../../lib/codecs.js';
 export type { ImageDiffParams, ImageDiffResult } from './types.js';
 export { defaultImageDiffParams } from './types.js';
 
-const ImageDiffComponentStub = (): unknown => null;
-
 export const imageDiff: ToolModule<ImageDiffParams> = {
   id: 'image-diff',
   slug: 'image-diff',
   name: 'Image Diff',
   description: 'Pixel-level diff between two images of the same dimensions.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['diff', 'compare', 'pixel', 'difference', 'inspect'],
 
   input: {
@@ -36,8 +33,6 @@ export const imageDiff: ToolModule<ImageDiffParams> = {
     threshold: 0.1,
     diffColor: [255, 0, 0],
   },
-
-  Component: ImageDiffComponentStub,
 
   async run(
     inputs: File[],

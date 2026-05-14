@@ -106,15 +106,12 @@ function looksLikeJson(text: string): boolean {
   return t.startsWith('[') || t.startsWith('{');
 }
 
-const CsvJsonComponentStub = (): unknown => null;
-
 export const csvJson: ToolModule<CsvJsonParams> = {
   id: 'csv-json',
   slug: 'csv-json',
   name: 'CSV ↔ JSON',
   description: 'Convert between CSV and JSON formats. Auto-detects direction from input.',
   category: 'dev',
-  presence: 'both',
   keywords: ['csv', 'json', 'convert', 'table', 'data', 'transform', 'spreadsheet'],
 
   input: {
@@ -134,8 +131,6 @@ export const csvJson: ToolModule<CsvJsonParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultCsvJsonParams,
-
-  Component: CsvJsonComponentStub,
 
   async run(
     inputs: File[],

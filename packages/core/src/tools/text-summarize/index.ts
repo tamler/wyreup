@@ -17,15 +17,12 @@ export const defaultTextSummarizeParams: TextSummarizeParams = {
 // https://huggingface.co/Xenova/distilbart-cnn-6-6
 const MODEL_ID = 'Xenova/distilbart-cnn-6-6';
 
-const TextSummarizeComponentStub = (): unknown => null;
-
 export const textSummarize: ToolModule<TextSummarizeParams> = {
   id: 'text-summarize',
   slug: 'text-summarize',
   name: 'Summarize Text',
   description: 'Generate a concise summary of any long text — runs entirely on your device.',
   category: 'text',
-  presence: 'both',
   keywords: ['summarize', 'summary', 'condense', 'abstract', 'tldr', 'nlp', 'shorten'],
 
   input: {
@@ -45,7 +42,6 @@ export const textSummarize: ToolModule<TextSummarizeParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultTextSummarizeParams,
-  Component: TextSummarizeComponentStub,
 
   async run(inputs: File[], params: TextSummarizeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

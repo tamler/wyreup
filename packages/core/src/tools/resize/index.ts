@@ -6,15 +6,12 @@ import { loadImage, createCanvas, canvasToBlob } from '../../lib/canvas.js';
 export type { ResizeParams } from './types.js';
 export { defaultResizeParams } from './types.js';
 
-const ResizeComponentStub = (): unknown => null;
-
 export const resize: ToolModule<ResizeParams> = {
   id: 'resize',
   slug: 'resize',
   name: 'Resize',
   description: 'Resize images with exact dimensions, fit-within-box, or percent scaling.',
   category: 'edit',
-  presence: 'both',
   keywords: ['resize', 'scale', 'dimensions', 'shrink', 'enlarge', 'fit'],
 
   input: {
@@ -59,8 +56,6 @@ export const resize: ToolModule<ResizeParams> = {
       unit: '%',
     },
   },
-
-  Component: ResizeComponentStub,
 
   async run(
     inputs: File[],

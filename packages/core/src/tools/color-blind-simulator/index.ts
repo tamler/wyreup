@@ -23,8 +23,6 @@ export const defaultColorBlindSimulatorParams: ColorBlindSimulatorParams = {
   quality: 90,
 };
 
-const ColorBlindSimulatorComponentStub = (): unknown => null;
-
 // RGB → RGB transformation matrices for the eight common color-vision
 // deficiencies. Values from Brettel/Viénot/Mollon and Machado et al. — the
 // canonical references used by Sim Daltonism and Chrome DevTools.
@@ -53,7 +51,6 @@ export const colorBlindSimulator: ToolModule<ColorBlindSimulatorParams> = {
   description:
     'Apply a color-vision-deficiency transform to an image — protanopia, deuteranopia, tritanopia, and the full set including milder anomalous variants and achromatopsia. Useful for sanity-checking charts, UI screenshots, and brand palettes.',
   category: 'edit',
-  presence: 'both',
   keywords: ['accessibility', 'a11y', 'color', 'blind', 'colorblind', 'cvd', 'protanopia', 'deuteranopia', 'tritanopia', 'simulate'],
 
   input: {
@@ -106,8 +103,6 @@ export const colorBlindSimulator: ToolModule<ColorBlindSimulatorParams> = {
       showWhen: { field: 'format', in: ['jpeg', 'webp'] },
     },
   },
-
-  Component: ColorBlindSimulatorComponentStub,
 
   async run(inputs: File[], params: ColorBlindSimulatorParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('color-blind-simulator accepts exactly one image.');

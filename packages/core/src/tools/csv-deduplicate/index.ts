@@ -33,8 +33,6 @@ export interface CsvDeduplicateResult {
   delimiter: string;
 }
 
-const CsvDeduplicateComponentStub = (): unknown => null;
-
 function parseKeyList(raw: string): string[] {
   return raw
     .split(',')
@@ -66,7 +64,6 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
   description:
     'Drop duplicate rows from a CSV — either by full-row match or by specific key columns. Choose whether the first or last duplicate wins.',
   category: 'edit',
-  presence: 'both',
   keywords: ['csv', 'deduplicate', 'dedup', 'unique', 'distinct', 'rows'],
 
   input: {
@@ -119,8 +116,6 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
       help: 'Treat keys "ALICE" and "alice" as equal.',
     },
   },
-
-  Component: CsvDeduplicateComponentStub,
 
   async run(inputs: File[], params: CsvDeduplicateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('csv-deduplicate accepts exactly one CSV file.');

@@ -74,15 +74,12 @@ export function computeTextStats(text: string): TextStatsResult {
   };
 }
 
-const TextStatsComponentStub = (): unknown => null;
-
 export const textStats: ToolModule<TextStatsParams> = {
   id: 'text-stats',
   slug: 'text-stats',
   name: 'Text Statistics',
   description: 'Count words, sentences, paragraphs, syllables, and estimate reading time.',
   category: 'text',
-  presence: 'both',
   keywords: ['stats', 'word count', 'sentences', 'paragraphs', 'syllables', 'reading time', 'character count'],
 
   input: {
@@ -99,7 +96,6 @@ export const textStats: ToolModule<TextStatsParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultTextStatsParams,
-  Component: TextStatsComponentStub,
 
   async run(inputs: File[], _params: TextStatsParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

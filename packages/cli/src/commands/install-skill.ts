@@ -1,6 +1,6 @@
 import * as p from '@clack/prompts';
-import { mkdir, writeFile, access } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, writeFile, access, readFile, stat } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
 import { EXIT_CODES } from '../lib/exit-codes.js';
@@ -42,6 +42,29 @@ export function resolveSkillsDir(
   // Exhaustiveness check — location is `never` here.
   const exhaustive: never = location;
   throw new Error(`Unknown location: ${String(exhaustive)}`);
+}
+
+/**
+ * Read a skill.md from a local path. The argument may point at a `skill.md`
+ * file directly or at a directory containing one. Used by --source for local
+ * iteration (and by CI tests that don't want a network roundtrip).
+ */
+export async function readLocalSkill(sourcePath: string): Promise<string> {
+  const abs = resolve(sourcePath);
+  let target = abs;
+  try {
+    const s = await stat(abs);
+    if (s.isDirectory()) target = join(abs, 'skill.md');
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot read --source "${sourcePath}": ${msg}`);
+  }
+  try {
+    return await readFile(target, 'utf8');
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot read skill file at ${target}: ${msg}`);
+  }
 }
 
 export async function fetchSkill(url: string): Promise<string> {
@@ -118,6 +141,7 @@ async function runInteractive(opts: {
   variant?: SkillVariant;
   location?: LocationChoice;
   path?: string;
+  source?: string;
   update: boolean;
   yes: boolean;
 }): Promise<void> {
@@ -208,9 +232,11 @@ async function runInteractive(opts: {
 
   let content: string;
   try {
-    content = await fetchSkill(def.url);
+    content = opts.source
+      ? await readLocalSkill(opts.source)
+      : await fetchSkill(def.url);
   } catch (err) {
-    // Network or HTTP failure: SYSTEM error (out of CLI-args control).
+    // Network / filesystem failure: SYSTEM error (out of CLI-args control).
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Error: ${msg}`);
     process.exit(EXIT_CODES.SYSTEM_ERROR);
@@ -239,6 +265,7 @@ export function makeInstallSkillCommand(): Command {
     .option('--variant <cli|mcp|combined>', 'Skill variant to install (default: combined)')
     .option('--location <project|user|custom>', 'Install location (default: project)')
     .option('--path <dir>', 'Custom directory path (used with --location custom, or as override)')
+    .option('--source <path>', 'Read skill.md from a local file or directory instead of GitHub. Use for local development of skill content, or in CI tests where you don\'t want a network fetch.')
     .option('--update', 'Overwrite the skill if already installed', false)
     .option('--list', 'List currently installed Wyreup skills and exit', false)
     .option('-y, --yes', 'Skip confirmation prompt', false)
@@ -247,6 +274,7 @@ export function makeInstallSkillCommand(): Command {
       variant?: string;
       location?: string;
       path?: string;
+      source?: string;
       update?: boolean;
       yes?: boolean;
     }) => {
@@ -272,7 +300,8 @@ export function makeInstallSkillCommand(): Command {
       const isNonInteractive =
         rawOpts.variant !== undefined ||
         rawOpts.location !== undefined ||
-        rawOpts.path !== undefined;
+        rawOpts.path !== undefined ||
+        rawOpts.source !== undefined;
 
       let yes = rawOpts.yes ?? false;
       if (isNonInteractive && !yes) {
@@ -285,6 +314,7 @@ export function makeInstallSkillCommand(): Command {
         variant: rawOpts.variant as SkillVariant | undefined,
         location: rawOpts.location as LocationChoice | undefined,
         path: rawOpts.path,
+        source: rawOpts.source,
         update: rawOpts.update ?? false,
         yes,
       });

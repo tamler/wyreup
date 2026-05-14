@@ -4,8 +4,6 @@ import type { PercentageCalculatorParams, PercentageMode } from './types.js';
 export type { PercentageCalculatorParams, PercentageMode } from './types.js';
 export { defaultPercentageCalculatorParams } from './types.js';
 
-const PercentageCalculatorComponentStub = (): unknown => null;
-
 function formatNum(n: number): string {
   return parseFloat(n.toPrecision(10)).toString();
 }
@@ -90,7 +88,6 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
   name: 'Percentage Calculator',
   description: 'Calculate percentages: percent of a value, percent change, or apply a percentage increase/decrease.',
   category: 'create',
-  presence: 'both',
   keywords: ['percentage', 'percent', 'calculator', 'math', 'ratio', 'discount', 'change'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -115,8 +112,6 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
       ],
     },
   },
-
-  Component: PercentageCalculatorComponentStub,
 
    
   async run(

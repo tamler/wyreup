@@ -15,15 +15,12 @@ function looksLikeJson(text: string): boolean {
   return t.startsWith('{') || t.startsWith('[');
 }
 
-const JsonYamlComponentStub = (): unknown => null;
-
 export const jsonYaml: ToolModule<JsonYamlParams> = {
   id: 'json-yaml',
   slug: 'json-yaml',
   name: 'JSON ↔ YAML',
   description: 'Convert between JSON and YAML formats. Auto-detects direction from input.',
   category: 'dev',
-  presence: 'both',
   keywords: ['json', 'yaml', 'convert', 'transform', 'config', 'format'],
 
   input: {
@@ -43,8 +40,6 @@ export const jsonYaml: ToolModule<JsonYamlParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultJsonYamlParams,
-
-  Component: JsonYamlComponentStub,
 
   async run(
     inputs: File[],

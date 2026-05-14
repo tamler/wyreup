@@ -8,15 +8,12 @@ const XLSX_ACCEPT = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-const MergeWorkbooksComponentStub = (): unknown => null;
-
 export const mergeWorkbooks: ToolModule<MergeWorkbooksParams> = {
   id: 'merge-workbooks',
   slug: 'merge-workbooks',
   name: 'Merge Workbooks',
   description: 'Merge multiple Excel workbooks into one. Each source sheet appears as a sheet in the output.',
   category: 'edit',
-  presence: 'both',
   keywords: ['excel', 'xlsx', 'merge', 'combine', 'workbook', 'spreadsheet', 'sheets'],
 
   input: {
@@ -46,8 +43,6 @@ export const mergeWorkbooks: ToolModule<MergeWorkbooksParams> = {
       help: 'Prefix each sheet with its source filename to avoid name collisions.',
     },
   },
-
-  Component: MergeWorkbooksComponentStub,
 
   async run(
     inputs: File[],

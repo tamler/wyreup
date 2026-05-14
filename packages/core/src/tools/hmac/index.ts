@@ -24,8 +24,6 @@ export interface HmacResult {
   digest: string;
 }
 
-const HmacComponentStub = (): unknown => null;
-
 function toHex(bytes: Uint8Array): string {
   let out = '';
   for (let i = 0; i < bytes.length; i++) {
@@ -68,7 +66,6 @@ export const hmac: ToolModule<HmacParams> = {
   description:
     'Compute an HMAC signature of a file with your own secret key. Pairs with the hash tool — use HMAC when you also need authentication, not just integrity.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['hmac', 'signature', 'mac', 'sha256', 'sha512', 'sha1', 'authentication', 'integrity', 'sign'],
 
   input: {
@@ -112,8 +109,6 @@ export const hmac: ToolModule<HmacParams> = {
       ],
     },
   },
-
-  Component: HmacComponentStub,
 
   async run(inputs: File[], params: HmacParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('hmac accepts exactly one file.');

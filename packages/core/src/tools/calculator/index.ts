@@ -4,8 +4,6 @@ import type { CalculatorParams, AngleMode } from './types.js';
 export type { CalculatorParams, AngleMode } from './types.js';
 export { defaultCalculatorParams } from './types.js';
 
-const CalculatorComponentStub = (): unknown => null;
-
 // ── Tiny shunting-yard calculator ──────────────────────────────────────────
 
 type TokenType = 'number' | 'op' | 'fn' | 'lparen' | 'rparen' | 'const';
@@ -235,7 +233,6 @@ export const calculator: ToolModule<CalculatorParams> = {
   name: 'Calculator',
   description: 'Evaluate arithmetic and scientific expressions locally — no server, no data sent.',
   category: 'create',
-  presence: 'both',
   keywords: ['calculator', 'math', 'expression', 'arithmetic', 'scientific', 'compute'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -265,8 +262,6 @@ export const calculator: ToolModule<CalculatorParams> = {
       ],
     },
   },
-
-  Component: CalculatorComponentStub,
 
    
   async run(

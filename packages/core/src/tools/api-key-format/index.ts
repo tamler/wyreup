@@ -27,8 +27,6 @@ export interface ApiKeyFormatResult {
   keys: string[];
 }
 
-const ApiKeyFormatComponentStub = (): unknown => null;
-
 const ALPHABETS = {
   base32: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
   'base32-lower': 'abcdefghijklmnopqrstuvwxyz234567',
@@ -69,7 +67,6 @@ export const apiKeyFormat: ToolModule<ApiKeyFormatParams> = {
   description:
     'Generate API keys in the Stripe / GitHub / OpenAI shape: a stable prefix (sk_live_, ghp_, …) plus a cryptographically random body. Configurable alphabet and length. Pairs with backup-codes and password-generator for adjacent secret-generation needs.',
   category: 'create',
-  presence: 'both',
   keywords: ['api-key', 'token', 'secret', 'random', 'generate', 'stripe', 'github'],
 
   input: {
@@ -120,8 +117,6 @@ export const apiKeyFormat: ToolModule<ApiKeyFormatParams> = {
       step: 1,
     },
   },
-
-  Component: ApiKeyFormatComponentStub,
 
   async run(_inputs: File[], params: ApiKeyFormatParams, ctx: ToolRunContext): Promise<Blob[]> {
     const prefix = params.prefix ?? '';

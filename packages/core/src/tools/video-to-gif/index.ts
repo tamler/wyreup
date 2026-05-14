@@ -34,15 +34,12 @@ export function buildGifArgs(
   ];
 }
 
-const VideoToGifComponentStub = (): unknown => null;
-
 export const videoToGif: ToolModule<VideoToGifParams> = {
   id: 'video-to-gif',
   slug: 'video-to-gif',
   name: 'Video to GIF',
   description: 'Convert a video clip to an animated GIF with palette optimization.',
   category: 'media',
-  presence: 'both',
   keywords: ['gif', 'video', 'animate', 'convert', 'loop', 'animated'],
 
   input: {
@@ -61,8 +58,6 @@ export const videoToGif: ToolModule<VideoToGifParams> = {
   installGroup: 'ffmpeg',
 
   defaults: defaultVideoToGifParams,
-
-  Component: VideoToGifComponentStub,
 
   async run(
     inputs: File[],

@@ -6,15 +6,12 @@ export interface PdfDeletePagesParams {
   pages: (number | string)[];
 }
 
-const PdfDeletePagesComponentStub = (): unknown => null;
-
 export const pdfDeletePages: ToolModule<PdfDeletePagesParams> = {
   id: 'pdf-delete-pages',
   slug: 'pdf-delete-pages',
   name: 'Delete PDF Pages',
   description: 'Remove specific pages from a PDF.',
   category: 'edit',
-  presence: 'both',
   keywords: ['pdf', 'delete', 'remove', 'pages'],
 
   input: {
@@ -35,8 +32,6 @@ export const pdfDeletePages: ToolModule<PdfDeletePagesParams> = {
   defaults: {
     pages: [],
   },
-
-  Component: PdfDeletePagesComponentStub,
 
   async run(
     inputs: File[],

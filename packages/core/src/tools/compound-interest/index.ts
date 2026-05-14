@@ -4,8 +4,6 @@ import type { CompoundInterestParams, YearlyBreakdownRow } from './types.js';
 export type { CompoundInterestParams, YearlyBreakdownRow } from './types.js';
 export { defaultCompoundInterestParams } from './types.js';
 
-const CompoundInterestComponentStub = (): unknown => null;
-
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
@@ -16,7 +14,6 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
   name: 'Compound Interest',
   description: 'Calculate compound interest with optional monthly contributions and a year-by-year breakdown.',
   category: 'finance',
-  presence: 'both',
   keywords: ['compound', 'interest', 'investment', 'savings', 'finance', 'calculator', 'APR'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -34,8 +31,6 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
     compoundingPerYear: 12,
     monthlyContribution: 0,
   },
-
-  Component: CompoundInterestComponentStub,
 
    
   async run(

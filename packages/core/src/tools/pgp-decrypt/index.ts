@@ -9,15 +9,12 @@ export const defaultPgpDecryptParams: PgpDecryptParams = {
   privateKey: '',
 };
 
-const PgpDecryptComponentStub = (): unknown => null;
-
 export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
   id: 'pgp-decrypt',
   slug: 'pgp-decrypt',
   name: 'PGP Decrypt',
   description: 'Decrypt a PGP-encrypted file using your private key.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['pgp', 'gpg', 'decrypt', 'openpgp', 'private-key', 'security', 'privacy'],
 
   input: {
@@ -50,8 +47,6 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
       help: 'Leave empty if the key has no passphrase.',
     },
   },
-
-  Component: PgpDecryptComponentStub,
 
   async run(
     inputs: File[],

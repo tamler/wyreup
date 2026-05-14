@@ -11,15 +11,12 @@ export interface TextDiffLevenshteinResult {
   maxLength: number;
 }
 
-const TextDiffLevenshteinComponentStub = (): unknown => null;
-
 export const textDiffLevenshtein: ToolModule<TextDiffLevenshteinParams> = {
   id: 'text-diff-levenshtein',
   slug: 'text-diff-levenshtein',
   name: 'Levenshtein Distance',
   description: 'Compute edit distance and similarity ratio between two text files.',
   category: 'text',
-  presence: 'both',
   keywords: ['levenshtein', 'edit distance', 'diff', 'similarity', 'compare', 'fuzzy', 'string'],
 
   input: {
@@ -36,7 +33,6 @@ export const textDiffLevenshtein: ToolModule<TextDiffLevenshteinParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultTextDiffLevenshteinParams,
-  Component: TextDiffLevenshteinComponentStub,
 
   async run(
     inputs: File[],

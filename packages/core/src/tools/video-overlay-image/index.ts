@@ -63,15 +63,12 @@ export function buildOverlayFilter(params: VideoOverlayImageParams): string {
   return `[1:v]${scaleFilter}[ol];[0:v][ol]overlay=${x}:${y}${enableExpr}`;
 }
 
-const VideoOverlayImageComponentStub = (): unknown => null;
-
 export const videoOverlayImage: ToolModule<VideoOverlayImageParams> = {
   id: 'video-overlay-image',
   slug: 'video-overlay-image',
   name: 'Overlay Image on Video',
   description: 'Add a watermark or logo image over a video at a fixed position.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'watermark', 'logo', 'overlay', 'brand', 'stamp', 'image'],
 
   input: {
@@ -140,8 +137,6 @@ export const videoOverlayImage: ToolModule<VideoOverlayImageParams> = {
       help: 'How long to show the overlay. Leave 0 to show until end.',
     },
   },
-
-  Component: VideoOverlayImageComponentStub,
 
   async run(
     inputs: File[],

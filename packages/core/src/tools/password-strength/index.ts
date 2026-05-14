@@ -34,8 +34,6 @@ export interface PasswordStrengthResult {
   suggestions: string[];
 }
 
-const PasswordStrengthComponentStub = (): unknown => null;
-
 // Short, intentional list of "obviously broken" passwords. Not meant to
 // be a 10k common-password dictionary (that's zxcvbn territory and
 // belongs behind a lib). The point here is to catch the obvious cases
@@ -134,7 +132,6 @@ export const passwordStrength: ToolModule<PasswordStrengthParams> = {
   description:
     'Estimate password entropy in bits, classify character mix, and flag passwords from a small common-passwords list. Nothing leaves your device.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['password', 'strength', 'entropy', 'security', 'check', 'weak', 'strong', 'audit'],
 
   input: {
@@ -159,8 +156,6 @@ export const passwordStrength: ToolModule<PasswordStrengthParams> = {
       placeholder: 'enter a password to check',
     },
   },
-
-  Component: PasswordStrengthComponentStub,
 
   async run(_inputs: File[], params: PasswordStrengthParams, ctx: ToolRunContext): Promise<Blob[]> {
     const password = params.password ?? '';

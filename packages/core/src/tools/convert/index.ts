@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { ConvertParams } from './types.js';
 export { defaultConvertParams } from './types.js';
 
-const ConvertComponentStub = (): unknown => null;
-
 export const convert: ToolModule<ConvertParams> = {
   id: 'convert',
   slug: 'convert',
   name: 'Convert Format',
   description: 'Convert images between JPEG, PNG, and WebP formats.',
   category: 'convert',
-  presence: 'both',
   keywords: ['convert', 'format', 'change', 'transform', 'png', 'jpg', 'jpeg', 'webp'],
 
   input: {
@@ -53,8 +50,6 @@ export const convert: ToolModule<ConvertParams> = {
       unit: '%',
     },
   },
-
-  Component: ConvertComponentStub,
 
   async run(
     inputs: File[],

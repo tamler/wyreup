@@ -7,8 +7,6 @@ export interface RecordAudioParams {
 
 export const defaultRecordAudioParams: RecordAudioParams = {};
 
-const RecordAudioComponentStub = (): unknown => null;
-
 /**
  * Push-to-talk audio capture. Web-only — relies on `getUserMedia` +
  * `MediaRecorder`, which CLI / MCP don't have access to. The web
@@ -31,7 +29,6 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   // Also a capture/creation primitive — surfaces under "create" so users
   // who think "I want to make a new audio file" find it from there too.
   categories: ['create'],
-  presence: 'standalone',
   keywords: [
     'record', 'audio', 'microphone', 'mic', 'voice', 'capture', 'push-to-talk', 'memo',
   ],
@@ -67,8 +64,6 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   ],
 
   defaults: defaultRecordAudioParams,
-
-  Component: RecordAudioComponentStub,
 
   // The web's RecordAudioRunner handles capture interactively and
   // emits the captured blob as the result; tool.run() is never called

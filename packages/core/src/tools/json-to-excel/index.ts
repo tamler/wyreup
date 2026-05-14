@@ -6,8 +6,6 @@ export interface JsonToExcelParams {
   boldHeaders?: boolean;
 }
 
-const JsonToExcelComponentStub = (): unknown => null;
-
 /**
  * Accepts three JSON shapes:
  *   - [{col: val}, ...]               — array of objects
@@ -67,7 +65,6 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
   name: 'JSON to Excel',
   description: 'Convert JSON data to an Excel workbook. Supports arrays of objects, arrays of arrays, or multi-sheet format.',
   category: 'convert',
-  presence: 'both',
   keywords: ['json', 'excel', 'xlsx', 'convert', 'spreadsheet', 'table', 'data'],
 
   input: {
@@ -105,8 +102,6 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
       help: 'Note: style support requires the xlsx-style extension; this flag is recorded but may not render.',
     },
   },
-
-  Component: JsonToExcelComponentStub,
 
   async run(
     inputs: File[],

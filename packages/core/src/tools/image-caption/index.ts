@@ -27,8 +27,6 @@ const ACCEPTED_MIME_TYPES = [
   'image/bmp',
 ];
 
-const ImageCaptionComponentStub = (): unknown => null;
-
 export const imageCaption: ToolModule<ImageCaptionParams> = {
   id: 'image-caption',
   slug: 'image-caption',
@@ -37,7 +35,6 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
     'Generate a plain-English description of any image. ' +
     '~100 MB model downloads on first use, then works offline.',
   category: 'export',
-  presence: 'standalone',
   keywords: [
     'caption', 'describe', 'image', 'alt-text', 'accessibility', 'vlm', 'vision',
   ],
@@ -82,8 +79,6 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
       step: 5,
     },
   },
-
-  Component: ImageCaptionComponentStub,
 
   async run(
     inputs: File[],

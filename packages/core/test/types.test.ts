@@ -40,7 +40,6 @@ describe('types', () => {
       name: 'Test',
       description: 'Test tool',
       category: 'optimize',
-      presence: 'both',
       keywords: ['test'],
       input: { accept: ['image/*'], min: 1 },
       output: { mime: 'image/png' },

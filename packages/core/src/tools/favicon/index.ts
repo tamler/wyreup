@@ -5,8 +5,6 @@ import { loadImage, createCanvas, canvasToBlob } from '../../lib/canvas.js';
 export type { FaviconParams } from './types.js';
 export { defaultFaviconParams } from './types.js';
 
-const FaviconComponentStub = (): unknown => null;
-
 const DEFAULT_SIZES = [16, 32, 48, 64, 128, 180, 192, 512];
 const ICO_SIZES = [16, 32, 48];
 
@@ -75,7 +73,6 @@ export const favicon: ToolModule<FaviconParams> = {
   name: 'Favicon Generator',
   description: 'Generate a complete favicon set (PNG sizes + ICO + webmanifest) from any image.',
   category: 'create',
-  presence: 'both',
   keywords: ['favicon', 'icon', 'ico', 'png', 'webmanifest', 'pwa'],
 
   input: {
@@ -97,8 +94,6 @@ export const favicon: ToolModule<FaviconParams> = {
     sizes: [16, 32, 48, 64, 128, 180, 192, 512],
     includeIco: true,
   },
-
-  Component: FaviconComponentStub,
 
   async run(
     inputs: File[],

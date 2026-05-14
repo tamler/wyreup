@@ -7,15 +7,12 @@ const XLSX_ACCEPT = [
   'application/vnd.ms-excel',
 ];
 
-const ExcelInfoComponentStub = (): unknown => null;
-
 export const excelInfo: ToolModule<ExcelInfoParams> = {
   id: 'excel-info',
   slug: 'excel-info',
   name: 'Excel Info',
   description: 'Inspect an Excel workbook: sheet names, row/column counts, and a data preview.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['excel', 'xlsx', 'xls', 'inspect', 'info', 'metadata', 'sheets', 'spreadsheet'],
 
   input: {
@@ -35,8 +32,6 @@ export const excelInfo: ToolModule<ExcelInfoParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: ExcelInfoComponentStub,
 
   async run(
     inputs: File[],

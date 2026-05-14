@@ -6,15 +6,12 @@ export interface PdfExtractPagesParams {
   pages: (number | string)[];
 }
 
-const PdfExtractPagesComponentStub = (): unknown => null;
-
 export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
   id: 'pdf-extract-pages',
   slug: 'pdf-extract-pages',
   name: 'Extract PDF Pages',
   description: 'Extract specific pages from a PDF into a new document.',
   category: 'edit',
-  presence: 'both',
   keywords: ['pdf', 'extract', 'pages', 'select', 'subset'],
 
   input: {
@@ -35,8 +32,6 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
   defaults: {
     pages: [1],
   },
-
-  Component: PdfExtractPagesComponentStub,
 
   async run(
     inputs: File[],

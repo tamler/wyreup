@@ -38,8 +38,6 @@ const FORMATS: Record<GeoFormat, FormatSpec> = {
   CSV: { ext: 'csv', mime: 'text/csv', ogr: 'CSV' },
 };
 
-const ConvertGeoComponentStub = (): unknown => null;
-
 const GDAL_VERSION = '2.8.1';
 const GDAL_CDN_BASE = `https://cdn.jsdelivr.net/npm/gdal3.js@${GDAL_VERSION}/dist/package`;
 
@@ -112,9 +110,10 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
   name: 'Convert Geospatial Data',
   description:
     'Convert between Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, and CSV. Powered by GDAL/OGR.',
+  llmDescription:
+    'Convert between any pair of vector geospatial formats: Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, CSV. Powered by GDAL/OGR via WebAssembly (~40 MB lazy download on first use). Use when the lighter-weight format-specific tools (kml-to-geojson, gpx-to-kml, etc.) don\'t cover the user\'s pair, or when the user needs to round-trip through GDAL for projection / dataset metadata fidelity. Set the `to` param to the target format name.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'gdal',
     'ogr',
@@ -187,8 +186,6 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
       ],
     },
   },
-
-  Component: ConvertGeoComponentStub,
 
   async run(
     inputs: File[],

@@ -40,8 +40,6 @@ export interface SignedUrlResult {
   expired?: boolean;
 }
 
-const SignedUrlComponentStub = (): unknown => null;
-
 function toHex(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += bytes[i]!.toString(16).padStart(2, '0');
@@ -104,7 +102,6 @@ export const signedUrl: ToolModule<SignedUrlParams> = {
   description:
     'Generate or verify an HMAC-signed URL (S3-presign style). Combines url-parse + hmac — append a signature and optional expiry, verify by recomputing. Canonicalized so query-param order doesn\'t change the signature.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['signed', 'url', 'presigned', 'hmac', 's3', 'token', 'expiry', 'auth'],
 
   input: {
@@ -173,8 +170,6 @@ export const signedUrl: ToolModule<SignedUrlParams> = {
       placeholder: 'e',
     },
   },
-
-  Component: SignedUrlComponentStub,
 
   async run(_inputs: File[], params: SignedUrlParams, ctx: ToolRunContext): Promise<Blob[]> {
     const mode = params.mode ?? 'sign';

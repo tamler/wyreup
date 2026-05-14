@@ -27,8 +27,6 @@ export interface FrontmatterToCsvResult {
   columns: string[];
 }
 
-const FrontmatterToCsvComponentStub = (): unknown => null;
-
 function toCsvValue(v: unknown): string {
   if (v === null || v === undefined) return '';
   if (typeof v === 'string') return v;
@@ -44,7 +42,6 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
   description:
     'Bulk-harvest frontmatter from a folder of markdown files into a single CSV. The header row is the union of every key seen; each row is one source file. Hugo / Astro / Jekyll content inventories in one drop.',
   category: 'convert',
-  presence: 'both',
   keywords: ['frontmatter', 'csv', 'markdown', 'hugo', 'astro', 'jekyll', 'gatsby', 'inventory', 'bulk', 'metadata'],
 
   input: {
@@ -94,8 +91,6 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
       placeholder: 'title, date, draft, tags',
     },
   },
-
-  Component: FrontmatterToCsvComponentStub,
 
   async run(inputs: File[], params: FrontmatterToCsvParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length === 0) throw new Error('frontmatter-to-csv requires at least one markdown file.');

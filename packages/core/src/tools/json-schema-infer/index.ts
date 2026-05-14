@@ -21,8 +21,6 @@ export const defaultJsonSchemaInferParams: JsonSchemaInferParams = {
   draft: 'draft-07',
 };
 
-const JsonSchemaInferComponentStub = (): unknown => null;
-
 type Schema = Record<string, unknown>;
 
 function unionTypes(a: Schema, b: Schema): Schema {
@@ -125,7 +123,6 @@ export const jsonSchemaInfer: ToolModule<JsonSchemaInferParams> = {
   description:
     'Walk a JSON document and emit a draft schema that describes it. Round-trips with json-schema-validate — infer a schema, then validate the same document and the result is `valid: true`.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['json', 'schema', 'infer', 'generate', 'jsonschema', 'derive'],
 
   input: {
@@ -173,8 +170,6 @@ export const jsonSchemaInfer: ToolModule<JsonSchemaInferParams> = {
       ],
     },
   },
-
-  Component: JsonSchemaInferComponentStub,
 
   async run(inputs: File[], params: JsonSchemaInferParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('json-schema-infer accepts exactly one JSON file.');

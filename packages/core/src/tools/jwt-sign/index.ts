@@ -25,8 +25,6 @@ export interface JwtSignResult {
   algorithm: JwtSignAlgorithm;
 }
 
-const JwtSignComponentStub = (): unknown => null;
-
 const ALGO_HASH: Record<JwtSignAlgorithm, 'SHA-256' | 'SHA-384' | 'SHA-512'> = {
   HS256: 'SHA-256',
   HS384: 'SHA-384',
@@ -114,7 +112,6 @@ export const jwtSign: ToolModule<JwtSignParams> = {
   description:
     'Build a JWT (HS256 / HS384 / HS512) from a payload and a shared secret. Inverse of jwt-decoder — useful for testing APIs that authenticate with HMAC-signed tokens.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['jwt', 'sign', 'token', 'hmac', 'hs256', 'hs384', 'hs512', 'auth', 'bearer'],
 
   input: {
@@ -162,8 +159,6 @@ export const jwtSign: ToolModule<JwtSignParams> = {
       ],
     },
   },
-
-  Component: JwtSignComponentStub,
 
   async run(_inputs: File[], params: JwtSignParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (!params.payload || params.payload.trim() === '') {

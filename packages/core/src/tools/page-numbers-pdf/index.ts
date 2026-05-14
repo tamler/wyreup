@@ -4,8 +4,6 @@ import type { PageNumbersPdfParams } from './types.js';
 export type { PageNumbersPdfParams } from './types.js';
 export { defaultPageNumbersPdfParams } from './types.js';
 
-const PageNumbersPdfComponentStub = (): unknown => null;
-
 const VALID_POSITIONS = [
   'bottom-left',
   'bottom-center',
@@ -21,7 +19,6 @@ export const pageNumbersPdf: ToolModule<PageNumbersPdfParams> = {
   name: 'Add Page Numbers',
   description: 'Draw page numbers on each page of a PDF at a configurable position.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['page numbers', 'pdf', 'number', 'footer', 'header', 'annotate'],
 
   input: {
@@ -81,8 +78,6 @@ export const pageNumbersPdf: ToolModule<PageNumbersPdfParams> = {
       help: 'Template string. {n} = current page, {total} = total pages.',
     },
   },
-
-  Component: PageNumbersPdfComponentStub,
 
   async run(
     inputs: File[],

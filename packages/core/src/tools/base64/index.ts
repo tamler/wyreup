@@ -66,15 +66,12 @@ function decodeBase64(text: string): Uint8Array {
   return output;
 }
 
-const Base64ComponentStub = (): unknown => null;
-
 export const base64: ToolModule<Base64Params> = {
   id: 'base64',
   slug: 'base64',
   name: 'Base64',
   description: 'Encode any file to Base64 text or decode Base64 back to bytes.',
   category: 'convert',
-  presence: 'both',
   keywords: ['base64', 'encode', 'decode', 'binary', 'text', 'data-url'],
 
   input: {
@@ -110,8 +107,6 @@ export const base64: ToolModule<Base64Params> = {
       help: 'Use the URL-safe alphabet (- and _ instead of + and /). Required for tokens used in URLs.',
     },
   },
-
-  Component: Base64ComponentStub,
 
   async run(
     inputs: File[],

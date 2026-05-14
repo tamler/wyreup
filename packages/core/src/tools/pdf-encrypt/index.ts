@@ -19,15 +19,12 @@ export interface PdfEncryptParams {
   permissions?: PdfEncryptPermissions;
 }
 
-const PdfEncryptComponentStub = (): unknown => null;
-
 export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
   id: 'pdf-encrypt',
   slug: 'pdf-encrypt',
   name: 'Encrypt PDF',
   description: 'Password-protect a PDF with optional permission restrictions.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['pdf', 'encrypt', 'password', 'protect', 'security'],
 
   input: {
@@ -48,8 +45,6 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
   defaults: {
     userPassword: '',
   },
-
-  Component: PdfEncryptComponentStub,
 
   async run(
     inputs: File[],

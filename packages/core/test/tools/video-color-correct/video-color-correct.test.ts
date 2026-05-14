@@ -23,7 +23,6 @@ describe('video-color-correct — metadata', () => {
   it('memoryEstimate is "high"', () => expect(videoColorCorrect.memoryEstimate).toBe('high'));
   it('cost is "free"', () => expect(videoColorCorrect.cost).toBe('free'));
   it('batchable is false', () => expect(videoColorCorrect.batchable).toBe(false));
-  it('presence is "both"', () => expect(videoColorCorrect.presence).toBe('both'));
   it('defaults brightness is 0', () => expect(defaultVideoColorCorrectParams.brightness).toBe(0));
   it('defaults contrast is 1.0', () => expect(defaultVideoColorCorrectParams.contrast).toBe(1.0));
   it('defaults saturation is 1.0', () => expect(defaultVideoColorCorrectParams.saturation).toBe(1.0));

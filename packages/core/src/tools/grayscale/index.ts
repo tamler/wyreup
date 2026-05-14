@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { GrayscaleParams } from './types.js';
 export { defaultGrayscaleParams } from './types.js';
 
-const GrayscaleComponentStub = (): unknown => null;
-
 export const grayscale: ToolModule<GrayscaleParams> = {
   id: 'grayscale',
   slug: 'grayscale',
   name: 'Grayscale',
   description: 'Convert images to grayscale using luminance weighting.',
   category: 'edit',
-  presence: 'both',
   keywords: ['grayscale', 'black and white', 'desaturate', 'monochrome'],
 
   input: {
@@ -33,8 +30,6 @@ export const grayscale: ToolModule<GrayscaleParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: GrayscaleComponentStub,
 
   async run(
     inputs: File[],

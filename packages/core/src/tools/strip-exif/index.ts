@@ -6,8 +6,6 @@ import { orientImageData } from '../../lib/exif.js';
 export type { StripExifParams } from './types.js';
 export { defaultStripExifParams } from './types.js';
 
-const StripExifComponentStub = (): unknown => null;
-
 /**
  * Strip EXIF metadata by re-encoding the image at near-lossless quality (95).
  * Because jSquash decodes to raw pixel data (no metadata), the re-encode
@@ -20,7 +18,6 @@ export const stripExif: ToolModule<StripExifParams> = {
   name: 'Strip EXIF Metadata',
   description: 'Remove EXIF metadata (including GPS, camera model, timestamps) by re-encoding at near-lossless quality.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['strip', 'exif', 'metadata', 'privacy', 'gps', 'location', 'remove'],
 
   input: {
@@ -39,8 +36,6 @@ export const stripExif: ToolModule<StripExifParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: StripExifComponentStub,
 
   async run(
     inputs: File[],

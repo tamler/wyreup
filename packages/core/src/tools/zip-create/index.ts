@@ -13,15 +13,12 @@ export const defaultZipCreateParams: ZipCreateParams = {
   compressionLevel: 6,
 };
 
-const ZipCreateComponentStub = (): unknown => null;
-
 export const zipCreate: ToolModule<ZipCreateParams> = {
   id: 'zip-create',
   slug: 'zip-create',
   name: 'Create ZIP',
   description: 'Compress one or more files into a ZIP archive.',
   category: 'archive',
-  presence: 'both',
   keywords: ['zip', 'compress', 'archive', 'pack', 'bundle', 'deflate'],
 
   input: {
@@ -37,8 +34,6 @@ export const zipCreate: ToolModule<ZipCreateParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultZipCreateParams,
-
-  Component: ZipCreateComponentStub,
 
   async run(
     inputs: File[],

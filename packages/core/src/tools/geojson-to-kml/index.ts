@@ -8,8 +8,6 @@ export const defaultGeojsonToKmlParams: GeojsonToKmlParams = {
   documentName: '',
 };
 
-const GeojsonToKmlComponentStub = (): unknown => null;
-
 interface FeatureCollection {
   type: 'FeatureCollection';
   features: unknown[];
@@ -57,7 +55,6 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
     'Convert a GeoJSON file to KML for Google Earth, Google My Maps, or any KML-compatible viewer.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'geojson',
     'kml',
@@ -96,8 +93,6 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
       help: 'Shown as the layer name in Google Earth and similar viewers.',
     },
   },
-
-  Component: GeojsonToKmlComponentStub,
 
   async run(
     inputs: File[],

@@ -28,8 +28,6 @@ export interface UrlShortenLocalResult {
   slugBits: number;
 }
 
-const UrlShortenLocalComponentStub = (): unknown => null;
-
 export async function shortenUrl(
   url: string,
   slugLength: number,
@@ -68,7 +66,6 @@ export const urlShortenLocal: ToolModule<UrlShortenLocalParams> = {
   description:
     'Deterministic local URL shortener. SHA-256 the URL, base32-encode the digest, truncate to a slug. No server, no database — same URL always produces the same slug, so two clients can mint matching short links without coordination. Optional QR PNG of the short URL.',
   category: 'create',
-  presence: 'both',
   keywords: ['url', 'shorten', 'short', 'link', 'slug', 'qr', 'local', 'hash'],
 
   input: {
@@ -121,8 +118,6 @@ export const urlShortenLocal: ToolModule<UrlShortenLocalParams> = {
       unit: 'px',
     },
   },
-
-  Component: UrlShortenLocalComponentStub,
 
   async run(_inputs: File[], params: UrlShortenLocalParams, ctx: ToolRunContext): Promise<Blob[]> {
     const slugLength = Math.max(4, Math.min(32, params.slugLength ?? 8));

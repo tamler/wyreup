@@ -32,8 +32,6 @@ export interface YamlValidateResult {
   };
 }
 
-const YamlValidateComponentStub = (): unknown => null;
-
 function summarize(value: unknown): YamlValidateResult['summary'] {
   if (value === null) return { type: 'null' };
   if (Array.isArray(value)) return { type: 'array', topLength: value.length };
@@ -50,7 +48,6 @@ export const yamlValidate: ToolModule<YamlValidateParams> = {
   description:
     'Strict YAML parser with structural diagnostics. Different from json-yaml (which just converts) — this one catches duplicate keys, undefined anchors, and reports the precise line and column of any failure.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['yaml', 'validate', 'parse', 'lint', 'syntax', 'config'],
 
   input: {
@@ -85,8 +82,6 @@ export const yamlValidate: ToolModule<YamlValidateParams> = {
       ],
     },
   },
-
-  Component: YamlValidateComponentStub,
 
   async run(inputs: File[], params: YamlValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('yaml-validate accepts exactly one file.');

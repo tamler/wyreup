@@ -4,8 +4,6 @@ import type { RotatePdfParams } from './types.js';
 export type { RotatePdfParams } from './types.js';
 export { defaultRotatePdfParams } from './types.js';
 
-const RotatePdfComponentStub = (): unknown => null;
-
 /** Returns a Set of 0-indexed page indices to rotate based on the pages param. */
 function resolvePageIndices(pages: string, pageCount: number): Set<number> {
   if (pages === 'all') {
@@ -53,7 +51,6 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
   name: 'Rotate PDF',
   description: 'Rotate all or selected pages of a PDF by 90, 180, or 270 degrees.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['rotate', 'pdf', 'pages', 'orientation', 'landscape', 'portrait'],
 
   input: {
@@ -93,8 +90,6 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
       ],
     },
   },
-
-  Component: RotatePdfComponentStub,
 
   async run(
     inputs: File[],

@@ -40,15 +40,12 @@ export function getAudioMime(format: AudioFormat): string {
   return FORMAT_MIME[format];
 }
 
-const ConvertAudioComponentStub = (): unknown => null;
-
 export const convertAudio: ToolModule<ConvertAudioParams> = {
   id: 'convert-audio',
   slug: 'convert-audio',
   name: 'Convert Audio',
   description: 'Convert audio files between MP3, WAV, OGG, FLAC, AAC, M4A, and Opus formats.',
   category: 'media',
-  presence: 'both',
   keywords: ['audio', 'convert', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'opus', 'format'],
 
   input: {
@@ -95,8 +92,6 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
       ],
     },
   },
-
-  Component: ConvertAudioComponentStub,
 
   async run(
     inputs: File[],

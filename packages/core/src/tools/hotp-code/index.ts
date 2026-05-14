@@ -26,8 +26,6 @@ export interface HotpCodeResult {
   code: string;
 }
 
-const HotpCodeComponentStub = (): unknown => null;
-
 function counterBytes(counter: number): Uint8Array {
   // 8-byte big-endian unsigned int. JS bit ops are 32-bit, split halves.
   const bytes = new Uint8Array(8);
@@ -84,7 +82,6 @@ export const hotpCode: ToolModule<HotpCodeParams> = {
   description:
     'Generate an RFC 4226 HOTP code from a base32 secret and an explicit counter. Counter-based sibling of TOTP — same algorithm, just no time slice.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['hotp', 'otp', 'rfc4226', 'counter', 'auth', 'mfa', 'one-time'],
 
   input: {
@@ -134,8 +131,6 @@ export const hotpCode: ToolModule<HotpCodeParams> = {
       ],
     },
   },
-
-  Component: HotpCodeComponentStub,
 
   async run(_inputs: File[], params: HotpCodeParams, ctx: ToolRunContext): Promise<Blob[]> {
     const secret = (params.secret ?? '').trim();

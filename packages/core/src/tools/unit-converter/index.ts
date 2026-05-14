@@ -4,8 +4,6 @@ import type { UnitConverterParams, UnitCategory } from './types.js';
 export type { UnitConverterParams, UnitCategory } from './types.js';
 export { defaultUnitConverterParams } from './types.js';
 
-const UnitConverterComponentStub = (): unknown => null;
-
 // ── Unit factor tables (all values are in SI base units) ───────────────────
 
 // Factor tables: unit -> multiplier to convert TO base unit
@@ -98,7 +96,6 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
   name: 'Unit Converter',
   description: 'Convert between length, mass, temperature, area, volume, speed, data, and time units.',
   category: 'create',
-  presence: 'both',
   keywords: ['unit', 'convert', 'measurement', 'length', 'mass', 'temperature', 'metric', 'imperial'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -224,8 +221,6 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
       },
     } as const;
   })(),
-
-  Component: UnitConverterComponentStub,
 
    
   async run(

@@ -4,15 +4,12 @@ import type { TextDiffParams, TextDiffStats } from './types.js';
 export type { TextDiffParams, TextDiffStats } from './types.js';
 export { defaultTextDiffParams } from './types.js';
 
-const TextDiffComponentStub = (): unknown => null;
-
 export const textDiff: ToolModule<TextDiffParams> = {
   id: 'text-diff',
   slug: 'text-diff',
   name: 'Text Diff',
   description: 'Compare two text files and produce a unified diff with change statistics.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['diff', 'compare', 'text', 'patch', 'changes', 'unified'],
 
   input: {
@@ -32,8 +29,6 @@ export const textDiff: ToolModule<TextDiffParams> = {
   memoryEstimate: 'low',
 
   defaults: { context: 3 },
-
-  Component: TextDiffComponentStub,
 
   async run(
     inputs: File[],

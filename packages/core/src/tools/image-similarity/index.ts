@@ -77,15 +77,12 @@ export function clusterByThreshold(
   return Array.from(groups.values());
 }
 
-const ImageSimilarityComponentStub = (): unknown => null;
-
 export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
   id: 'image-similarity',
   slug: 'image-similarity',
   name: 'Image Similarity',
   description: 'Compare images and find near-duplicates using CLIP embeddings — runs on your device.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['similarity', 'duplicate', 'compare', 'clip', 'perceptual', 'near-duplicate', 'embedding'],
 
   input: {
@@ -104,7 +101,6 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultImageSimilarityParams,
-  Component: ImageSimilarityComponentStub,
 
   async run(
     inputs: File[],

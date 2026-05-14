@@ -6,15 +6,12 @@ import { loadImage, createCanvas, canvasToBlob } from '../../lib/canvas.js';
 export type { ImageWatermarkParams } from './types.js';
 export { defaultImageWatermarkParams } from './types.js';
 
-const ImageWatermarkComponentStub = (): unknown => null;
-
 export const imageWatermark: ToolModule<ImageWatermarkParams> = {
   id: 'image-watermark',
   slug: 'image-watermark',
   name: 'Image Watermark',
   description: 'Overlay a text watermark onto images.',
   category: 'edit',
-  presence: 'both',
   keywords: ['watermark', 'text', 'overlay', 'branding', 'label'],
 
   input: {
@@ -83,8 +80,6 @@ export const imageWatermark: ToolModule<ImageWatermarkParams> = {
       unit: '%',
     },
   },
-
-  Component: ImageWatermarkComponentStub,
 
   async run(
     inputs: File[],

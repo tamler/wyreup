@@ -18,8 +18,6 @@ export const defaultMarkdownTocParams: MarkdownTocParams = {
   skipFirstH1: false,
 };
 
-const MarkdownTocComponentStub = (): unknown => null;
-
 // GitHub-style slug: lowercase, strip punctuation, spaces → hyphens.
 // Not byte-identical to GitHub's algorithm but matches in the cases
 // that matter for TOC linking.
@@ -84,7 +82,6 @@ export const markdownToc: ToolModule<MarkdownTocParams> = {
   description:
     'Generate a table of contents from markdown headings. Indented list with GitHub-style anchor links — drop it at the top of the document.',
   category: 'text',
-  presence: 'both',
   keywords: ['markdown', 'toc', 'table of contents', 'headings', 'outline', 'anchors'],
 
   input: {
@@ -134,8 +131,6 @@ export const markdownToc: ToolModule<MarkdownTocParams> = {
       help: 'Useful when the first H1 is the title and you don\'t want it in the TOC.',
     },
   },
-
-  Component: MarkdownTocComponentStub,
 
   async run(inputs: File[], params: MarkdownTocParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('markdown-toc accepts exactly one markdown file.');

@@ -18,8 +18,6 @@ export interface JsonDiffStats {
   changes: number;
 }
 
-const JsonDiffComponentStub = (): unknown => null;
-
 function canonicalize(value: unknown, sortKeys: boolean): unknown {
   if (Array.isArray(value)) return value.map((v) => canonicalize(v, sortKeys));
   if (value && typeof value === 'object') {
@@ -48,7 +46,6 @@ export const jsonDiff: ToolModule<JsonDiffParams> = {
   description:
     'Compare two JSON files and produce a unified diff over their canonical (key-sorted) pretty form. Reorderings vanish; real changes stand out.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['json', 'diff', 'compare', 'changes', 'unified', 'patch'],
 
   input: {
@@ -84,8 +81,6 @@ export const jsonDiff: ToolModule<JsonDiffParams> = {
       help: 'Canonicalize key order before diffing so {"a":1,"b":2} and {"b":2,"a":1} compare equal.',
     },
   },
-
-  Component: JsonDiffComponentStub,
 
   async run(inputs: File[], params: JsonDiffParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 2) throw new Error('json-diff requires exactly two JSON files.');

@@ -36,8 +36,6 @@ export interface FileFingerprintResult {
   hmac: { algorithm: FingerprintHmacAlgo; digest: string } | null;
 }
 
-const FileFingerprintComponentStub = (): unknown => null;
-
 function toHex(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += bytes[i]!.toString(16).padStart(2, '0');
@@ -68,7 +66,6 @@ export const fileFingerprint: ToolModule<FileFingerprintParams> = {
   description:
     'Build an identity bundle for a file: size, declared-vs-detected MIME, hashes (SHA-1 / SHA-256 / SHA-512), optional HMAC, and a hex head preview. "Is this file exactly what I think it is?" in one drop.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['fingerprint', 'identity', 'hash', 'sha256', 'hmac', 'mime', 'verify', 'integrity'],
 
   input: {
@@ -121,8 +118,6 @@ export const fileFingerprint: ToolModule<FileFingerprintParams> = {
       step: 4,
     },
   },
-
-  Component: FileFingerprintComponentStub,
 
   async run(inputs: File[], params: FileFingerprintParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('file-fingerprint accepts exactly one file.');

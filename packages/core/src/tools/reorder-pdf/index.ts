@@ -4,8 +4,6 @@ import type { ReorderPdfParams } from './types.js';
 export type { ReorderPdfParams } from './types.js';
 export { defaultReorderPdfParams } from './types.js';
 
-const ReorderPdfComponentStub = (): unknown => null;
-
 /** Parse a comma-separated 1-indexed order string into 0-indexed indices. */
 function parseOrder(order: string, pageCount: number): number[] {
   if (!order.trim()) {
@@ -37,7 +35,6 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
   name: 'Reorder PDF Pages',
   description: 'Rearrange, duplicate, or remove pages in a PDF using a custom order.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['reorder', 'rearrange', 'pdf', 'pages', 'order', 'sort'],
 
   input: {
@@ -56,8 +53,6 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
   memoryEstimate: 'low',
 
   defaults: { order: '' },
-
-  Component: ReorderPdfComponentStub,
 
   async run(
     inputs: File[],

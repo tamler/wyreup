@@ -109,15 +109,12 @@ export function buildDrawtextFilter(params: VideoAddTextParams): string {
   return filter;
 }
 
-const VideoAddTextComponentStub = (): unknown => null;
-
 export const videoAddText: ToolModule<VideoAddTextParams> = {
   id: 'video-add-text',
   slug: 'video-add-text',
   name: 'Add Text to Video',
   description: 'Overlay text on a video at a chosen position, size, and color.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'text', 'caption', 'title', 'overlay', 'watermark', 'subtitle', 'label'],
 
   input: {
@@ -203,8 +200,6 @@ export const videoAddText: ToolModule<VideoAddTextParams> = {
       step: 1,
     },
   },
-
-  Component: VideoAddTextComponentStub,
 
   async run(
     inputs: File[],

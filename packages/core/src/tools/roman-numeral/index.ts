@@ -22,8 +22,6 @@ export interface RomanNumeralResult {
   errors: string[];
 }
 
-const RomanNumeralComponentStub = (): unknown => null;
-
 // Subtractive notation table per the modern conventional form (no
 // medieval shorthand). 3999 is the largest representable value without
 // vinculum overlines.
@@ -80,7 +78,6 @@ export const romanNumeral: ToolModule<RomanNumeralParams> = {
   description:
     'Convert between arabic numbers (1–3999) and roman numerals. Decoding rejects non-canonical forms (e.g. IIII) so it doubles as a roman-numeral validator.',
   category: 'convert',
-  presence: 'both',
   keywords: ['roman', 'numeral', 'arabic', 'convert', 'encode', 'decode'],
 
   input: {
@@ -114,8 +111,6 @@ export const romanNumeral: ToolModule<RomanNumeralParams> = {
       multiline: true,
     },
   },
-
-  Component: RomanNumeralComponentStub,
 
   async run(_inputs: File[], params: RomanNumeralParams, ctx: ToolRunContext): Promise<Blob[]> {
     const mode = params.mode ?? 'encode';

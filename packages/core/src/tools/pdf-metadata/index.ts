@@ -16,15 +16,12 @@ export interface PdfMetadataParams {
   metadata?: PdfMetadataWriteFields;
 }
 
-const PdfMetadataComponentStub = (): unknown => null;
-
 export const pdfMetadata: ToolModule<PdfMetadataParams> = {
   id: 'pdf-metadata',
   slug: 'pdf-metadata',
   name: 'PDF Metadata',
   description: 'Read, write, or strip metadata (title, author, keywords, etc.) from a PDF.',
   category: 'edit',
-  presence: 'both',
   keywords: ['pdf', 'metadata', 'title', 'author', 'keywords', 'strip'],
 
   input: {
@@ -59,8 +56,6 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
       ],
     },
   },
-
-  Component: PdfMetadataComponentStub,
 
   async run(
     inputs: File[],

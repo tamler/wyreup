@@ -44,8 +44,6 @@ export interface WebhookReplayResult {
   replayHeader: string;
 }
 
-const WebhookReplayComponentStub = (): unknown => null;
-
 function toHex(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += bytes[i]!.toString(16).padStart(2, '0');
@@ -85,7 +83,6 @@ export const webhookReplay: ToolModule<WebhookReplayParams> = {
   description:
     'Verify an inbound webhook then re-sign the same payload under a different secret for replay against your local dev or staging server. The classic "tunnel a Stripe / GitHub webhook through to localhost" pattern, without a server roundtrip.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['webhook', 'replay', 'forward', 'tunnel', 'hmac', 'stripe', 'github', 'staging', 'dev'],
 
   input: {
@@ -153,8 +150,6 @@ export const webhookReplay: ToolModule<WebhookReplayParams> = {
       placeholder: 'sha256=',
     },
   },
-
-  Component: WebhookReplayComponentStub,
 
   async run(inputs: File[], params: WebhookReplayParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('webhook-replay needs exactly one payload file.');

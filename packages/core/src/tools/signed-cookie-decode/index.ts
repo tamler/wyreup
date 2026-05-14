@@ -32,8 +32,6 @@ export interface SignedCookieDecodeResult {
   valid: boolean;
 }
 
-const SignedCookieDecodeComponentStub = (): unknown => null;
-
 function toBase64Url(bytes: Uint8Array): string {
   let b64: string;
   if (typeof Buffer !== 'undefined') {
@@ -119,7 +117,6 @@ export const signedCookieDecode: ToolModule<SignedCookieDecodeParams> = {
   description:
     'Verify and parse a signed cookie from Express (cookie-signature), Flask (itsdangerous), or Rails. Splits on the framework-specific separator, recomputes the HMAC under your secret, and reports valid + payload. Constant-time compare so timing can\'t lift the signature.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['cookie', 'session', 'signed', 'verify', 'express', 'flask', 'rails', 'itsdangerous', 'hmac'],
 
   input: {
@@ -171,8 +168,6 @@ export const signedCookieDecode: ToolModule<SignedCookieDecodeParams> = {
       ],
     },
   },
-
-  Component: SignedCookieDecodeComponentStub,
 
   async run(_inputs: File[], params: SignedCookieDecodeParams, ctx: ToolRunContext): Promise<Blob[]> {
     const cookie = (params.cookie ?? '').trim();

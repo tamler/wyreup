@@ -4,15 +4,12 @@ import type { PdfInfoParams, PdfInfoResult } from './types.js';
 export type { PdfInfoParams, PdfInfoResult } from './types.js';
 export { defaultPdfInfoParams } from './types.js';
 
-const PdfInfoComponentStub = (): unknown => null;
-
 export const pdfInfo: ToolModule<PdfInfoParams> = {
   id: 'pdf-info',
   slug: 'pdf-info',
   name: 'PDF Info',
   description: 'Extract page count and metadata from a PDF.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['pdf', 'info', 'metadata', 'pages', 'inspect'],
 
   input: {
@@ -32,8 +29,6 @@ export const pdfInfo: ToolModule<PdfInfoParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: PdfInfoComponentStub,
 
   async run(
     inputs: File[],

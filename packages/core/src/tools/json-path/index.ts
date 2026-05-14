@@ -23,8 +23,6 @@ export interface JsonPathResult {
   matches: JsonPathMatch[];
 }
 
-const JsonPathComponentStub = (): unknown => null;
-
 interface Step {
   kind: 'root' | 'name' | 'index' | 'wildcard' | 'descend';
   name?: string;
@@ -168,7 +166,6 @@ export const jsonPath: ToolModule<JsonPathParams> = {
   description:
     'Extract values from JSON using JSONPath syntax. Supports the common subset: $.a.b, $.items[0], $.items[*].price, $..recursive, $["quoted key"]. Pairs with json-flatten for tabular pulls.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['json', 'jsonpath', 'query', 'extract', 'select', 'path'],
 
   input: {
@@ -202,8 +199,6 @@ export const jsonPath: ToolModule<JsonPathParams> = {
       step: 1,
     },
   },
-
-  Component: JsonPathComponentStub,
 
   async run(inputs: File[], params: JsonPathParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('json-path accepts exactly one JSON input.');

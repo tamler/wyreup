@@ -91,15 +91,12 @@ export function decodeUnicode(text: string): string {
   return result;
 }
 
-const TextEscapeComponentStub = (): unknown => null;
-
 export const textEscape: ToolModule<TextEscapeParams> = {
   id: 'text-escape',
   slug: 'text-escape',
   name: 'Text Escape / Unescape',
   description: 'Encode or decode HTML entities and Unicode escape sequences.',
   category: 'dev',
-  presence: 'both',
   keywords: ['escape', 'unescape', 'html', 'entities', 'unicode', 'encode', 'decode'],
 
   input: {
@@ -116,7 +113,6 @@ export const textEscape: ToolModule<TextEscapeParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultTextEscapeParams,
-  Component: TextEscapeComponentStub,
 
   async run(inputs: File[], params: TextEscapeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

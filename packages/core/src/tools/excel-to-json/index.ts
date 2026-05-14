@@ -11,15 +11,12 @@ const XLSX_ACCEPT = [
   'application/vnd.ms-excel',
 ];
 
-const ExcelToJsonComponentStub = (): unknown => null;
-
 export const excelToJson: ToolModule<ExcelToJsonParams> = {
   id: 'excel-to-json',
   slug: 'excel-to-json',
   name: 'Excel to JSON',
   description: 'Convert Excel workbooks (XLSX/XLS) to JSON. Supports single-sheet or all-sheets output.',
   category: 'convert',
-  presence: 'both',
   keywords: ['excel', 'xlsx', 'xls', 'json', 'convert', 'spreadsheet', 'data'],
 
   input: {
@@ -65,8 +62,6 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
       help: 'For arrays mode: whether first row is treated as headers and included.',
     },
   },
-
-  Component: ExcelToJsonComponentStub,
 
   async run(
     inputs: File[],

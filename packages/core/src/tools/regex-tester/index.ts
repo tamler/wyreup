@@ -4,15 +4,12 @@ import type { RegexTesterParams, RegexTesterResult, RegexTesterMatch } from './t
 export type { RegexTesterParams, RegexTesterResult, RegexTesterMatch } from './types.js';
 export { defaultRegexTesterParams } from './types.js';
 
-const RegexTesterComponentStub = (): unknown => null;
-
 export const regexTester: ToolModule<RegexTesterParams> = {
   id: 'regex-tester',
   slug: 'regex-tester',
   name: 'Regex Tester',
   description: 'Test a regular expression against text and see all matches with positions and named groups.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['regex', 'regexp', 'regular', 'expression', 'pattern', 'match', 'test'],
 
   input: {
@@ -51,8 +48,6 @@ export const regexTester: ToolModule<RegexTesterParams> = {
       help: 'g = global, i = case-insensitive, m = multiline, s = dotall, u = unicode, y = sticky. Combine like "gim".',
     },
   },
-
-  Component: RegexTesterComponentStub,
 
   async run(
     inputs: File[],

@@ -38,8 +38,6 @@ export interface TextFrequencyResult {
   ngramSize: number;
 }
 
-const TextFrequencyComponentStub = (): unknown => null;
-
 function buildHistogram(counts: Map<string, number>, total: number, topN: number): FrequencyEntry[] {
   const entries: FrequencyEntry[] = [];
   for (const [key, count] of counts) {
@@ -112,7 +110,6 @@ export const textFrequency: ToolModule<TextFrequencyParams> = {
   description:
     'Top characters, words, and n-grams by frequency. Useful for data inspection, cryptanalysis warm-ups, and quick text profiling.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['frequency', 'histogram', 'count', 'words', 'characters', 'ngram', 'bigram', 'trigram', 'analysis', 'text'],
 
   input: {
@@ -161,8 +158,6 @@ export const textFrequency: ToolModule<TextFrequencyParams> = {
       ],
     },
   },
-
-  Component: TextFrequencyComponentStub,
 
   async run(inputs: File[], params: TextFrequencyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-frequency accepts exactly one text input.');

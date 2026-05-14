@@ -11,15 +11,12 @@ export const defaultPgpSignParams: PgpSignParams = {
   armor: true,
 };
 
-const PgpSignComponentStub = (): unknown => null;
-
 export const pgpSign: ToolModule<PgpSignParams> = {
   id: 'pgp-sign',
   slug: 'pgp-sign',
   name: 'PGP Sign',
   description: 'Create a detached PGP signature for any file using your private key.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['pgp', 'gpg', 'sign', 'signature', 'openpgp', 'private-key', 'verify', 'authenticity'],
 
   input: {
@@ -57,8 +54,6 @@ export const pgpSign: ToolModule<PgpSignParams> = {
       help: 'On: signature is text. Off: binary `.sig`.',
     },
   },
-
-  Component: PgpSignComponentStub,
 
   async run(
     inputs: File[],

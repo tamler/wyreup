@@ -34,8 +34,6 @@ export interface TextSuspiciousResult {
   };
 }
 
-const TextSuspiciousComponentStub = (): unknown => null;
-
 const SEVERITY_RANK: Record<SuspiciousFinding['severity'], number> = { low: 1, medium: 2, high: 3 };
 const VERDICT_BY_RANK: TextSuspiciousResult['verdict'][] = ['clean', 'low', 'medium', 'high'];
 
@@ -141,7 +139,6 @@ export const textSuspicious: ToolModule<TextSuspiciousParams> = {
   description:
     'Single security verdict on a block of text. Combines text-confusable\'s homoglyph / mixed-script detection with checks for invisible-character density, control characters, BOM markers, and non-ASCII heaviness. Returns a verdict (clean / low / medium / high) with the contributing findings — the "should I trust this prompt-injection-shaped message" tool.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['suspicious', 'security', 'prompt-injection', 'confusable', 'invisible', 'audit', 'safety'],
 
   input: {
@@ -184,8 +181,6 @@ export const textSuspicious: ToolModule<TextSuspiciousParams> = {
       step: 1,
     },
   },
-
-  Component: TextSuspiciousComponentStub,
 
   async run(inputs: File[], params: TextSuspiciousParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-suspicious accepts exactly one text input.');

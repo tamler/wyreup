@@ -27,15 +27,12 @@ export function getVideoMime(format: VideoFormat): string {
   return FORMAT_MIME[format];
 }
 
-const ConvertVideoComponentStub = (): unknown => null;
-
 export const convertVideo: ToolModule<ConvertVideoParams> = {
   id: 'convert-video',
   slug: 'convert-video',
   name: 'Convert Video',
   description: 'Convert video files between MP4, WebM, MKV, MOV, and AVI formats.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'convert', 'mp4', 'webm', 'mkv', 'mov', 'avi', 'format'],
 
   input: {
@@ -87,8 +84,6 @@ export const convertVideo: ToolModule<ConvertVideoParams> = {
       ],
     },
   },
-
-  Component: ConvertVideoComponentStub,
 
   async run(
     inputs: File[],

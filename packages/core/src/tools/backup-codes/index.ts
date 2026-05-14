@@ -28,8 +28,6 @@ export interface BackupCodesResult {
   codes: string[];
 }
 
-const BackupCodesComponentStub = (): unknown => null;
-
 const ALPHABETS = {
   base32: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
   'base32-lower': 'abcdefghijklmnopqrstuvwxyz234567',
@@ -107,7 +105,6 @@ export const backupCodes: ToolModule<BackupCodesParams> = {
   description:
     'Generate N cryptographically random recovery codes for 2FA. Configurable alphabet (base32 / numeric / alphanumeric), code length, and group separator. Pairs with totp-code and hotp-code for enrollment.',
   category: 'create',
-  presence: 'both',
   keywords: ['backup', 'codes', '2fa', 'recovery', 'mfa', 'auth', 'random', 'generate'],
 
   input: {
@@ -169,8 +166,6 @@ export const backupCodes: ToolModule<BackupCodesParams> = {
       ],
     },
   },
-
-  Component: BackupCodesComponentStub,
 
   async run(_inputs: File[], params: BackupCodesParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Generating codes' });

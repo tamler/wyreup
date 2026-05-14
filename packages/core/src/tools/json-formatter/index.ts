@@ -4,15 +4,12 @@ import type { JsonFormatterParams } from './types.js';
 export type { JsonFormatterParams } from './types.js';
 export { defaultJsonFormatterParams } from './types.js';
 
-const JsonFormatterComponentStub = (): unknown => null;
-
 export const jsonFormatter: ToolModule<JsonFormatterParams> = {
   id: 'json-formatter',
   slug: 'json-formatter',
   name: 'JSON Formatter',
   description: 'Parse and pretty-print JSON with configurable indentation.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['json', 'format', 'pretty', 'print', 'indent', 'beautify'],
 
   input: {
@@ -43,8 +40,6 @@ export const jsonFormatter: ToolModule<JsonFormatterParams> = {
       unit: ' spaces',
     },
   },
-
-  Component: JsonFormatterComponentStub,
 
   async run(
     inputs: File[],

@@ -15,15 +15,12 @@ export const defaultPgpVerifyParams: PgpVerifyParams = {
   publicKey: '',
 };
 
-const PgpVerifyComponentStub = (): unknown => null;
-
 export const pgpVerify: ToolModule<PgpVerifyParams> = {
   id: 'pgp-verify',
   slug: 'pgp-verify',
   name: 'PGP Verify',
   description: 'Verify a detached PGP signature against the original file using a public key.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['pgp', 'gpg', 'verify', 'signature', 'openpgp', 'public-key', 'authenticity'],
 
   input: {
@@ -51,8 +48,6 @@ export const pgpVerify: ToolModule<PgpVerifyParams> = {
       help: 'ASCII-armored OpenPGP public key of whoever signed the file.',
     },
   },
-
-  Component: PgpVerifyComponentStub,
 
   async run(
     inputs: File[],

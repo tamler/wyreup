@@ -15,15 +15,12 @@ export interface TextSentimentResult {
 // https://huggingface.co/Xenova/distilbert-base-uncased-finetuned-sst-2-english
 const MODEL_ID = 'Xenova/distilbert-base-uncased-finetuned-sst-2-english';
 
-const TextSentimentComponentStub = (): unknown => null;
-
 export const textSentiment: ToolModule<TextSentimentParams> = {
   id: 'text-sentiment',
   slug: 'text-sentiment',
   name: 'Sentiment Analysis',
   description: 'Classify text as positive or negative — runs entirely on your device.',
   category: 'text',
-  presence: 'both',
   keywords: ['sentiment', 'emotion', 'positive', 'negative', 'classify', 'nlp', 'opinion'],
 
   input: {
@@ -43,7 +40,6 @@ export const textSentiment: ToolModule<TextSentimentParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultTextSentimentParams,
-  Component: TextSentimentComponentStub,
 
   async run(inputs: File[], _params: TextSentimentParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

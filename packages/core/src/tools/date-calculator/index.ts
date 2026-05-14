@@ -4,8 +4,6 @@ import type { DateCalculatorParams, DateUnit } from './types.js';
 export type { DateCalculatorParams, DateCalcMode, DateUnit } from './types.js';
 export { defaultDateCalculatorParams } from './types.js';
 
-const DateCalculatorComponentStub = (): unknown => null;
-
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -54,7 +52,6 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
   name: 'Date Calculator',
   description: 'Calculate the difference between two dates, add/subtract time from a date, or find the day of the week.',
   category: 'create',
-  presence: 'both',
   keywords: ['date', 'calculator', 'difference', 'days', 'weeks', 'months', 'years', 'calendar'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -107,8 +104,6 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
       showWhen: { field: 'mode', equals: 'add' },
     },
   },
-
-  Component: DateCalculatorComponentStub,
 
    
   async run(

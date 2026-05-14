@@ -72,15 +72,12 @@ export function decodeBase32(text: string, hexExtended: boolean): Uint8Array {
   return new Uint8Array(bytes);
 }
 
-const Base32ComponentStub = (): unknown => null;
-
 export const base32: ToolModule<Base32Params> = {
   id: 'base32',
   slug: 'base32',
   name: 'Base32',
   description: 'Encode any file to Base32 text (RFC 4648) or decode Base32 back to bytes. Pairs with the base64 tool.',
   category: 'convert',
-  presence: 'both',
   keywords: ['base32', 'encode', 'decode', 'rfc4648', 'binary', 'text'],
 
   input: {
@@ -119,8 +116,6 @@ export const base32: ToolModule<Base32Params> = {
       showWhen: { field: 'mode', equals: 'encode' },
     },
   },
-
-  Component: Base32ComponentStub,
 
   async run(inputs: File[], params: Base32Params, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('base32 accepts exactly one file.');

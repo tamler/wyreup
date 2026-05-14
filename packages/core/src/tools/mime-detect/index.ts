@@ -24,8 +24,6 @@ export interface MimeDetectResult {
   mismatch: boolean;
 }
 
-const MimeDetectComponentStub = (): unknown => null;
-
 interface Signature {
   /** Human label that surfaces in the result. */
   name: string;
@@ -146,7 +144,6 @@ export const mimeDetect: ToolModule<MimeDetectParams> = {
   description:
     'Identify a file by its magic bytes — independent of file extension or the browser-reported type. Useful for verifying uploads and spotting mislabeled files.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['mime', 'detect', 'magic', 'signature', 'file-type', 'sniff', 'identify', 'verify'],
 
   input: {
@@ -174,8 +171,6 @@ export const mimeDetect: ToolModule<MimeDetectParams> = {
       step: 64,
     },
   },
-
-  Component: MimeDetectComponentStub,
 
   async run(inputs: File[], params: MimeDetectParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('mime-detect accepts exactly one file.');

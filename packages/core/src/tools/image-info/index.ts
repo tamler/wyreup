@@ -6,15 +6,12 @@ import { decodeJpegOrientation } from '../../lib/exif.js';
 export type { ImageInfoParams, ImageInfoResult } from './types.js';
 export { defaultImageInfoParams } from './types.js';
 
-const ImageInfoComponentStub = (): unknown => null;
-
 export const imageInfo: ToolModule<ImageInfoParams> = {
   id: 'image-info',
   slug: 'image-info',
   name: 'Image Info',
   description: 'Extract dimensions, format, and metadata from an image.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['info', 'dimensions', 'metadata', 'width', 'height', 'inspect'],
 
   input: {
@@ -34,8 +31,6 @@ export const imageInfo: ToolModule<ImageInfoParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: ImageInfoComponentStub,
 
   async run(
     inputs: File[],

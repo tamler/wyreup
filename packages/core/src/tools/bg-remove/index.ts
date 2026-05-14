@@ -17,15 +17,12 @@ const MODEL_ID = 'onnx-community/BiRefNet_lite-ONNX';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const BgRemoveComponentStub = (): unknown => null;
-
 export const bgRemove: ToolModule<BgRemoveParams> = {
   id: 'bg-remove',
   slug: 'bg-remove',
   name: 'Remove Background',
   description: 'Strip the background from any photo — runs entirely on your device.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['background', 'remove', 'transparent', 'cut-out', 'composite', 'alpha', 'png'],
 
   input: {
@@ -45,7 +42,6 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultBgRemoveParams,
-  Component: BgRemoveComponentStub,
 
   async run(inputs: File[], params: BgRemoveParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

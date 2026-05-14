@@ -32,15 +32,12 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return denom === 0 ? 0 : dot / denom;
 }
 
-const TextEmbedComponentStub = (): unknown => null;
-
 export const textEmbed: ToolModule<TextEmbedParams> = {
   id: 'text-embed',
   slug: 'text-embed',
   name: 'Text Embeddings',
   description: 'Compute semantic embeddings and pairwise similarity for text files — runs on your device.',
   category: 'text',
-  presence: 'both',
   keywords: ['embed', 'embedding', 'semantic', 'similarity', 'sentence', 'vector', 'nlp', 'search'],
 
   input: {
@@ -59,7 +56,6 @@ export const textEmbed: ToolModule<TextEmbedParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultTextEmbedParams,
-  Component: TextEmbedComponentStub,
 
   async run(inputs: File[], _params: TextEmbedParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length < 1) {

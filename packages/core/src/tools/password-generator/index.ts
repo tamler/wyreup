@@ -11,8 +11,6 @@ const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
 const AMBIGUOUS = new Set(['0', 'O', 'l', '1', 'I']);
 
-const PasswordGeneratorComponentStub = (): unknown => null;
-
 function buildCharset(params: PasswordGeneratorParams): { charset: string; required: string[] } {
   const excludeAmbiguous = params.excludeAmbiguous ?? false;
 
@@ -74,7 +72,6 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
   name: 'Password Generator',
   description: 'Generate cryptographically random passwords with configurable character sets.',
   category: 'create',
-  presence: 'both',
   keywords: ['password', 'generate', 'random', 'secure', 'credentials'],
 
   input: {
@@ -128,8 +125,6 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
       step: 1,
     },
   },
-
-  Component: PasswordGeneratorComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.
    

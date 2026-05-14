@@ -24,8 +24,6 @@ export const defaultCronParserParams: CronParserParams = {
   nextCount: 5,
 };
 
-const CronParserComponentStub = (): unknown => null;
-
 export const cronParser: ToolModule<CronParserParams> = {
   id: 'cron-parser',
   slug: 'cron-parser',
@@ -33,7 +31,6 @@ export const cronParser: ToolModule<CronParserParams> = {
   description:
     'Parse a cron expression and show the next scheduled run times. Validates syntax and lists field values.',
   category: 'dev',
-  presence: 'both',
   keywords: ['cron', 'schedule', 'expression', 'interval', 'job', 'parse', 'time'],
 
   input: {
@@ -69,8 +66,6 @@ export const cronParser: ToolModule<CronParserParams> = {
       help: 'IANA timezone name. Leave empty for UTC.',
     },
   },
-
-  Component: CronParserComponentStub,
 
   async run(
     inputs: File[],

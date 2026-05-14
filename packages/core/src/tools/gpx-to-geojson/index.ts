@@ -5,8 +5,6 @@ export type GpxToGeojsonParams = Record<string, never>;
 
 export const defaultGpxToGeojsonParams: GpxToGeojsonParams = {};
 
-const GpxToGeojsonComponentStub = (): unknown => null;
-
 export const gpxToGeojson: ToolModule<GpxToGeojsonParams> = {
   id: 'gpx-to-geojson',
   slug: 'gpx-to-geojson',
@@ -15,7 +13,6 @@ export const gpxToGeojson: ToolModule<GpxToGeojsonParams> = {
     'Convert a GPS Exchange (GPX) track from Strava, Garmin, or any GPS device to GeoJSON.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'gpx',
     'geojson',
@@ -47,8 +44,6 @@ export const gpxToGeojson: ToolModule<GpxToGeojsonParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultGpxToGeojsonParams,
-
-  Component: GpxToGeojsonComponentStub,
 
   async run(
     inputs: File[],

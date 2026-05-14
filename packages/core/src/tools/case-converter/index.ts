@@ -50,8 +50,6 @@ function convertCase(text: string, targetCase: CaseConverterParams['case']): str
   }
 }
 
-const CaseConverterComponentStub = (): unknown => null;
-
 export const caseConverter: ToolModule<CaseConverterParams> = {
   id: 'case-converter',
   slug: 'case-converter',
@@ -59,7 +57,6 @@ export const caseConverter: ToolModule<CaseConverterParams> = {
   description:
     'Convert text between uppercase, lowercase, title, camelCase, snake_case, kebab-case, PascalCase, and CONSTANT_CASE.',
   category: 'dev',
-  presence: 'both',
   keywords: ['case', 'convert', 'camel', 'snake', 'kebab', 'pascal', 'upper', 'lower', 'title'],
 
   input: {
@@ -96,8 +93,6 @@ export const caseConverter: ToolModule<CaseConverterParams> = {
       ],
     },
   },
-
-  Component: CaseConverterComponentStub,
 
   async run(
     inputs: File[],

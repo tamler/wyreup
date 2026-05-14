@@ -5,8 +5,6 @@ export type KmlToGeojsonParams = Record<string, never>;
 
 export const defaultKmlToGeojsonParams: KmlToGeojsonParams = {};
 
-const KmlToGeojsonComponentStub = (): unknown => null;
-
 export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
   id: 'kml-to-geojson',
   slug: 'kml-to-geojson',
@@ -15,7 +13,6 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
     'Convert a Google Earth KML file to GeoJSON. Preserves placemark names, descriptions, and geometry.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'kml',
     'geojson',
@@ -45,8 +42,6 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultKmlToGeojsonParams,
-
-  Component: KmlToGeojsonComponentStub,
 
   async run(
     inputs: File[],

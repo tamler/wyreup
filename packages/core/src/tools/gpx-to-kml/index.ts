@@ -5,8 +5,6 @@ export type GpxToKmlParams = Record<string, never>;
 
 export const defaultGpxToKmlParams: GpxToKmlParams = {};
 
-const GpxToKmlComponentStub = (): unknown => null;
-
 export const gpxToKml: ToolModule<GpxToKmlParams> = {
   id: 'gpx-to-kml',
   slug: 'gpx-to-kml',
@@ -15,7 +13,6 @@ export const gpxToKml: ToolModule<GpxToKmlParams> = {
     'Convert a GPX track from Strava, Garmin, or any GPS device to KML for Google Earth.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'gpx',
     'kml',
@@ -48,8 +45,6 @@ export const gpxToKml: ToolModule<GpxToKmlParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultGpxToKmlParams,
-
-  Component: GpxToKmlComponentStub,
 
   async run(
     inputs: File[],

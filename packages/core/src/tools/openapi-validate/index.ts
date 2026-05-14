@@ -28,8 +28,6 @@ export interface OpenapiValidateResult {
   };
 }
 
-const OpenapiValidateComponentStub = (): unknown => null;
-
 const VALID_HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
 
 function isObject(v: unknown): v is Record<string, unknown> {
@@ -142,7 +140,6 @@ export const openapiValidate: ToolModule<OpenapiValidateParams> = {
   description:
     'Validate an OpenAPI 3.0 or 3.1 document against the core spec rules. Catches the common shape errors (missing info, malformed paths, response status code typos) with clear paths and messages — without bundling the full 50 KB meta-schema. Set strict mode to also flag missing operationIds, descriptions, and other lints.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['openapi', 'swagger', 'api', 'validate', 'lint', 'spec'],
 
   input: {
@@ -167,8 +164,6 @@ export const openapiValidate: ToolModule<OpenapiValidateParams> = {
       help: 'Also flag practices (missing operationIds, descriptions, etc.) as warnings.',
     },
   },
-
-  Component: OpenapiValidateComponentStub,
 
   async run(inputs: File[], params: OpenapiValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('openapi-validate accepts exactly one file.');

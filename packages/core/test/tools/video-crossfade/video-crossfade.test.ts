@@ -24,7 +24,6 @@ describe('video-crossfade — metadata', () => {
   it('memoryEstimate is "high"', () => expect(videoCrossfade.memoryEstimate).toBe('high'));
   it('cost is "free"', () => expect(videoCrossfade.cost).toBe('free'));
   it('batchable is false', () => expect(videoCrossfade.batchable).toBe(false));
-  it('presence is "both"', () => expect(videoCrossfade.presence).toBe('both'));
   it('input min is 2, max is 2', () => {
     expect(videoCrossfade.input.min).toBe(2);
     expect(videoCrossfade.input.max).toBe(2);

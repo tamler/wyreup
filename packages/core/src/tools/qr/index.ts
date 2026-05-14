@@ -9,15 +9,12 @@ export { defaultQrParams } from './types.js';
 // instead (MIT, pure JS, generates PNG directly in Node). Logo embedding
 // is not supported; that can be added later with a canvas-compatible setup.
 
-const QrComponentStub = (): unknown => null;
-
 export const qr: ToolModule<QrParams> = {
   id: 'qr',
   slug: 'qr',
   name: 'QR Code',
   description: 'Generate a QR code image from text or a URL.',
   category: 'create',
-  presence: 'both',
   keywords: ['qr', 'qrcode', 'barcode', 'generate', 'url', 'link'],
 
   input: {
@@ -69,8 +66,6 @@ export const qr: ToolModule<QrParams> = {
       ],
     },
   },
-
-  Component: QrComponentStub,
 
   async run(
     _inputs: File[],

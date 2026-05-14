@@ -78,8 +78,6 @@ export function decodeBase58(text: string): Uint8Array {
   return out;
 }
 
-const Base58ComponentStub = (): unknown => null;
-
 export const base58: ToolModule<Base58Params> = {
   id: 'base58',
   slug: 'base58',
@@ -87,7 +85,6 @@ export const base58: ToolModule<Base58Params> = {
   description:
     'Encode any file to Bitcoin-style Base58 text, or decode Base58 back to bytes. Same alphabet used by Bitcoin / Solana / Stellar addresses — no 0, O, I, or l so the encoded text is unambiguous when read aloud. Closes the base32 / base64 / base58 trio.',
   category: 'convert',
-  presence: 'both',
   keywords: ['base58', 'encode', 'decode', 'bitcoin', 'solana', 'stellar', 'crypto'],
 
   input: {
@@ -115,8 +112,6 @@ export const base58: ToolModule<Base58Params> = {
       ],
     },
   },
-
-  Component: Base58ComponentStub,
 
   async run(inputs: File[], params: Base58Params, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('base58 accepts exactly one file.');

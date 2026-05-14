@@ -67,8 +67,6 @@ function decodeJwt(token: string): JwtDecoderResult {
   };
 }
 
-const JwtDecoderComponentStub = (): unknown => null;
-
 export const jwtDecoder: ToolModule<JwtDecoderParams> = {
   id: 'jwt-decoder',
   slug: 'jwt-decoder',
@@ -76,7 +74,6 @@ export const jwtDecoder: ToolModule<JwtDecoderParams> = {
   description:
     'Decode JWT header and payload. Does NOT verify the signature — for inspection only.',
   category: 'dev',
-  presence: 'both',
   keywords: ['jwt', 'token', 'decode', 'auth', 'bearer', 'payload', 'header', 'base64url'],
 
   input: {
@@ -96,8 +93,6 @@ export const jwtDecoder: ToolModule<JwtDecoderParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultJwtDecoderParams,
-
-  Component: JwtDecoderComponentStub,
 
   async run(
     inputs: File[],

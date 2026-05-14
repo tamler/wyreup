@@ -175,8 +175,6 @@ async function getSession(ctx: ToolRunContext): Promise<InferenceSession> {
 
 // ──── Component stub ────
 
-const AudioEnhanceComponentStub = (): unknown => null;
-
 // ──── Tool module ────
 
 export const audioEnhance: ToolModule<AudioEnhanceParams> = {
@@ -185,8 +183,9 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
   name: 'Enhance Audio',
   description:
     'Upscale low-quality audio to clean 48 kHz. Great for cleaning up phone recordings, Zoom calls, or old podcasts.',
+  llmDescription:
+    'Enhance audio quality using AI super-resolution (FlashSR, 16kHz to 48kHz upsampling). Use when the user wants higher quality audio from a low-quality recording. CPU/GPU-intensive — may take several seconds.',
   category: 'audio',
-  presence: 'both',
   keywords: [
     'audio',
     'enhance',
@@ -214,8 +213,6 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultAudioEnhanceParams,
-
-  Component: AudioEnhanceComponentStub,
 
   async run(
     inputs: File[],

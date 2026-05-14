@@ -22,8 +22,6 @@ export interface ColorHarmonyResult {
   schemes: Record<HarmonyScheme, string[]>;
 }
 
-const ColorHarmonyComponentStub = (): unknown => null;
-
 // ── Color math ──────────────────────────────────────────────────────────────
 
 interface Rgb { r: number; g: number; b: number }
@@ -131,7 +129,6 @@ export const colorHarmony: ToolModule<ColorHarmonyParams> = {
     'Generate complementary, analogous, triadic, tetradic, split-complementary, and monochromatic color schemes from a base hex color.',
   category: 'create',
   categories: ['inspect'],
-  presence: 'standalone',
   keywords: [
     'color', 'harmony', 'scheme', 'complementary', 'triadic', 'analogous',
     'tetradic', 'monochromatic', 'theory', 'palette', 'design',
@@ -159,8 +156,6 @@ export const colorHarmony: ToolModule<ColorHarmonyParams> = {
       help: 'Hex color in #rgb or #rrggbb form. Schemes are computed by rotating the hue on the HSL color wheel.',
     },
   },
-
-  Component: ColorHarmonyComponentStub,
 
    
   async run(_inputs: File[], params: ColorHarmonyParams, ctx: ToolRunContext): Promise<Blob[]> {

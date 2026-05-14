@@ -21,8 +21,6 @@ export interface PdfCropParams {
   box: PdfCropBox | PdfCropBoxPerPage[];
 }
 
-const PdfCropComponentStub = (): unknown => null;
-
 function validateBox(box: PdfCropBox, label: string): void {
   if (box.width <= 0) throw new Error(`${label}: width must be greater than 0.`);
   if (box.height <= 0) throw new Error(`${label}: height must be greater than 0.`);
@@ -35,7 +33,6 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
   description:
     'Crop PDF pages by setting the crop box. Modifies the viewing area without destroying content (reversible).',
   category: 'edit',
-  presence: 'both',
   keywords: ['pdf', 'crop', 'trim', 'margins', 'pages'],
 
   input: {
@@ -56,8 +53,6 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
   defaults: {
     box: { x: 0, y: 0, width: 595, height: 842 },
   },
-
-  Component: PdfCropComponentStub,
 
   async run(
     inputs: File[],

@@ -14,8 +14,6 @@ export const defaultMorseCodeParams: MorseCodeParams = {
   wordSep: ' / ',
 };
 
-const MorseCodeComponentStub = (): unknown => null;
-
 // ITU Morse code table. Punctuation per ITU-R M.1677-1.
 const ENCODE: Record<string, string> = {
   A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.',
@@ -72,7 +70,6 @@ export const morseCode: ToolModule<MorseCodeParams> = {
   name: 'Morse Code',
   description: 'Encode text to Morse code (ITU table) or decode Morse back to text. Unrecognized characters are skipped silently.',
   category: 'convert',
-  presence: 'both',
   keywords: ['morse', 'code', 'cipher', 'encode', 'decode', 'itu', 'telegraph'],
 
   input: {
@@ -122,8 +119,6 @@ export const morseCode: ToolModule<MorseCodeParams> = {
       showWhen: { field: 'mode', equals: 'encode' },
     },
   },
-
-  Component: MorseCodeComponentStub,
 
   async run(inputs: File[], params: MorseCodeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('morse-code accepts exactly one text input.');

@@ -39,15 +39,12 @@ function slugify(text: string, params: SlugParams): string {
   return result;
 }
 
-const SlugComponentStub = (): unknown => null;
-
 export const slug: ToolModule<SlugParams> = {
   id: 'slug',
   slug: 'slug',
   name: 'Slug Generator',
   description: 'Convert text into URL-friendly slugs. Strips diacritics, collapses whitespace, removes special characters.',
   category: 'create',
-  presence: 'both',
   keywords: ['slug', 'url', 'permalink', 'sanitize', 'kebab', 'friendly'],
 
   input: {
@@ -89,8 +86,6 @@ export const slug: ToolModule<SlugParams> = {
       help: 'Truncate to this many characters (0 = no limit).',
     },
   },
-
-  Component: SlugComponentStub,
 
   async run(
     inputs: File[],

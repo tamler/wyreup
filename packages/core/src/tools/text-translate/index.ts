@@ -52,8 +52,6 @@ const LANGUAGE_OPTIONS = [
   { value: 'ms', label: 'Malay' },
 ];
 
-const TextTranslateComponentStub = (): unknown => null;
-
 /**
  * Try the browser's built-in on-device Translator API. Returns translated
  * text on success, null if unavailable or unsupported pair.
@@ -150,7 +148,6 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
   name: 'Translate Text',
   description: 'Translate between 100+ languages. Uses your browser\'s built-in translator when available (Chrome 131+), falling back to the M2M100 model.',
   category: 'text',
-  presence: 'both',
   keywords: ['translate', 'translation', 'language', 'multilingual', 'm2m', 'localize'],
 
   input: {
@@ -183,8 +180,6 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
       options: LANGUAGE_OPTIONS,
     },
   },
-
-  Component: TextTranslateComponentStub,
 
   async run(inputs: File[], params: TextTranslateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

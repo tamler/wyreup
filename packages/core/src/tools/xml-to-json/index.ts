@@ -15,8 +15,6 @@ export const defaultXmlToJsonParams: XmlToJsonParams = {
   arrayMode: 'auto',
 };
 
-const XmlToJsonComponentStub = (): unknown => null;
-
 export const xmlToJson: ToolModule<XmlToJsonParams> = {
   id: 'xml-to-json',
   slug: 'xml-to-json',
@@ -24,7 +22,6 @@ export const xmlToJson: ToolModule<XmlToJsonParams> = {
   description:
     'Convert XML to JSON via fast-xml-parser. Attributes can be preserved (under @_attr keys), numeric / boolean text can be auto-typed, and repeated child elements get wrapped in arrays consistently. Inverse of json-to-xml.',
   category: 'convert',
-  presence: 'both',
   keywords: ['xml', 'json', 'convert', 'parse', 'soap', 'rss'],
 
   input: {
@@ -63,8 +60,6 @@ export const xmlToJson: ToolModule<XmlToJsonParams> = {
       ],
     },
   },
-
-  Component: XmlToJsonComponentStub,
 
   async run(inputs: File[], params: XmlToJsonParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('xml-to-json accepts exactly one file.');

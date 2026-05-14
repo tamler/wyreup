@@ -32,8 +32,6 @@ export interface CsvMergeResult {
   rightOnly: number;
 }
 
-const CsvMergeComponentStub = (): unknown => null;
-
 function asIndex(token: string, header: string[] | null): number {
   if (header) {
     const idx = header.findIndex((h) => h === token);
@@ -52,7 +50,6 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
   description:
     'Join two CSVs on a key column. Inner, left, right, or outer join — colliding column names get a configurable suffix on the right side.',
   category: 'edit',
-  presence: 'both',
   keywords: ['csv', 'merge', 'join', 'inner', 'outer', 'left', 'combine'],
 
   input: {
@@ -107,8 +104,6 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
       placeholder: '_r',
     },
   },
-
-  Component: CsvMergeComponentStub,
 
   async run(inputs: File[], params: CsvMergeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 2) throw new Error('csv-merge requires exactly two CSV files.');

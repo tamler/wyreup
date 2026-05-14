@@ -4,15 +4,12 @@ import type { UuidGeneratorParams } from './types.js';
 export type { UuidGeneratorParams } from './types.js';
 export { defaultUuidGeneratorParams } from './types.js';
 
-const UuidGeneratorComponentStub = (): unknown => null;
-
 export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
   id: 'uuid-generator',
   slug: 'uuid-generator',
   name: 'UUID Generator',
   description: 'Generate one or more random UUID v4 identifiers.',
   category: 'create',
-  presence: 'both',
   keywords: ['uuid', 'guid', 'generate', 'random', 'identifier', 'id'],
 
   input: {
@@ -50,8 +47,6 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
       step: 1,
     },
   },
-
-  Component: UuidGeneratorComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.
    

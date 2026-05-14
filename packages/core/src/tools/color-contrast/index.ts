@@ -26,8 +26,6 @@ export interface ColorContrastResult {
   verdict: 'AAA' | 'AA' | 'AA-large' | 'fail';
 }
 
-const ColorContrastComponentStub = (): unknown => null;
-
 // WCAG 2.1 contrast thresholds.
 const THRESHOLDS = {
   normal: { aa: 4.5, aaa: 7 },
@@ -41,7 +39,6 @@ export const colorContrast: ToolModule<ColorContrastParams> = {
   description:
     'WCAG 2.1 contrast ratio between two colors. Pass/fail for AA and AAA at normal and large text sizes.',
   category: 'inspect',
-  presence: 'both',
   keywords: [
     'color',
     'contrast',
@@ -88,8 +85,6 @@ export const colorContrast: ToolModule<ColorContrastParams> = {
       help: 'Tick this when the text is at least 18pt regular or 14pt bold — WCAG allows a looser ratio.',
     },
   },
-
-  Component: ColorContrastComponentStub,
 
   async run(_inputs: File[], params: ColorContrastParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading color library' });

@@ -11,15 +11,12 @@ export const defaultPgpEncryptParams: PgpEncryptParams = {
   armor: true,
 };
 
-const PgpEncryptComponentStub = (): unknown => null;
-
 export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
   id: 'pgp-encrypt',
   slug: 'pgp-encrypt',
   name: 'PGP Encrypt',
   description: 'Encrypt a file using a PGP public key. Outputs ASCII-armored or binary ciphertext.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['pgp', 'gpg', 'encrypt', 'openpgp', 'public-key', 'security', 'privacy'],
 
   input: {
@@ -57,8 +54,6 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
       help: 'Stored inside the encrypted message; used by some clients on decrypt.',
     },
   },
-
-  Component: PgpEncryptComponentStub,
 
   async run(
     inputs: File[],

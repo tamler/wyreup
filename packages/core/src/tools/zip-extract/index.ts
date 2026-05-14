@@ -22,15 +22,12 @@ export function shouldInclude(path: string, filter: string | undefined): boolean
   return matchesGlob(path, filter.trim());
 }
 
-const ZipExtractComponentStub = (): unknown => null;
-
 export const zipExtract: ToolModule<ZipExtractParams> = {
   id: 'zip-extract',
   slug: 'zip-extract',
   name: 'Extract ZIP',
   description: 'Extract files from a ZIP archive. Optional glob filter to extract only matching files.',
   category: 'archive',
-  presence: 'both',
   keywords: ['zip', 'extract', 'unzip', 'decompress', 'archive', 'files'],
 
   input: {
@@ -47,8 +44,6 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultZipExtractParams,
-
-  Component: ZipExtractComponentStub,
 
   async run(
     inputs: File[],

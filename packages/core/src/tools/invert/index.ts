@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { InvertParams } from './types.js';
 export { defaultInvertParams } from './types.js';
 
-const InvertComponentStub = (): unknown => null;
-
 export const invert: ToolModule<InvertParams> = {
   id: 'invert',
   slug: 'invert',
   name: 'Invert',
   description: 'Invert the colors of images.',
   category: 'edit',
-  presence: 'both',
   keywords: ['invert', 'negate', 'negative', 'colors'],
 
   input: {
@@ -33,8 +30,6 @@ export const invert: ToolModule<InvertParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: InvertComponentStub,
 
   async run(
     inputs: File[],

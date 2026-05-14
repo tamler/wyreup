@@ -77,17 +77,16 @@ function coerce(value: string): string | number | boolean | null {
   return value;
 }
 
-const CsvToGeoJsonComponentStub = (): unknown => null;
-
 export const csvToGeojson: ToolModule<CsvToGeoJsonParams> = {
   id: 'csv-to-geojson',
   slug: 'csv-to-geojson',
   name: 'CSV to GeoJSON',
   description:
     'Convert a CSV with latitude/longitude columns into a GeoJSON FeatureCollection of points.',
+  llmDescription:
+    'Convert a CSV file with latitude/longitude columns to a GeoJSON FeatureCollection of Points. Auto-detects common column names (lat, latitude, y, lng, lon, longitude, x); the user can override via params. Use when the user has a spreadsheet of coordinates and wants a map-ready file.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'csv',
     'geojson',
@@ -141,8 +140,6 @@ export const csvToGeojson: ToolModule<CsvToGeoJsonParams> = {
       help: 'Field separator. Use a single character (e.g. "," or ";" or "\\t").',
     },
   },
-
-  Component: CsvToGeoJsonComponentStub,
 
   async run(
     inputs: File[],

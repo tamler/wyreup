@@ -33,8 +33,6 @@ export interface UnicodeInfoReport {
   truncated: boolean;
 }
 
-const UnicodeInfoComponentStub = (): unknown => null;
-
 // A small, manually-maintained block table — enough to identify the
 // common offenders (CJK, Hebrew/Arabic for RTL, combining marks,
 // zero-width, BOM, control). Full UCD would bloat the bundle and isn't
@@ -205,7 +203,6 @@ export const unicodeInfo: ToolModule<UnicodeInfoParams> = {
   description:
     'Inspect every character in text — codepoint, UTF-8 bytes, JS escape, Unicode block, category — and flag invisibles, BOMs, RTL marks, and control characters.',
   category: 'inspect',
-  presence: 'both',
   keywords: [
     'unicode',
     'codepoint',
@@ -247,8 +244,6 @@ export const unicodeInfo: ToolModule<UnicodeInfoParams> = {
       step: 100,
     },
   },
-
-  Component: UnicodeInfoComponentStub,
 
   async run(inputs: File[], params: UnicodeInfoParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

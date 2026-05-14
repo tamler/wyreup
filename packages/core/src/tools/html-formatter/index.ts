@@ -25,15 +25,12 @@ function minifyHtml(html: string): string {
     .trim();
 }
 
-const HtmlFormatterComponentStub = (): unknown => null;
-
 export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
   id: 'html-formatter',
   slug: 'html-formatter',
   name: 'HTML Formatter',
   description: 'Beautify or minify HTML with Prettier. Produces clean, consistently indented markup.',
   category: 'dev',
-  presence: 'both',
   keywords: ['html', 'format', 'beautify', 'minify', 'pretty', 'indent', 'markup'],
 
   input: {
@@ -53,8 +50,6 @@ export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultHtmlFormatterParams,
-
-  Component: HtmlFormatterComponentStub,
 
   async run(
     inputs: File[],

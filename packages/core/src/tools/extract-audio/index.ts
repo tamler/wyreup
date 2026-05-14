@@ -34,15 +34,12 @@ export function getExtractMime(format: ExtractAudioFormat): string {
   return FORMAT_MIME[format];
 }
 
-const ExtractAudioComponentStub = (): unknown => null;
-
 export const extractAudio: ToolModule<ExtractAudioParams> = {
   id: 'extract-audio',
   slug: 'extract-audio',
   name: 'Extract Audio',
   description: 'Strip the audio track from a video file. Outputs MP3, WAV, OGG, or M4A.',
   category: 'media',
-  presence: 'both',
   keywords: ['audio', 'extract', 'video', 'strip', 'mp3', 'wav', 'sound', 'rip'],
 
   input: {
@@ -61,8 +58,6 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
   installGroup: 'ffmpeg',
 
   defaults: defaultExtractAudioParams,
-
-  Component: ExtractAudioComponentStub,
 
   async run(
     inputs: File[],

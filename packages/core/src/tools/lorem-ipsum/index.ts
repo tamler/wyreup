@@ -4,8 +4,6 @@ import type { LoremIpsumParams } from './types.js';
 export type { LoremIpsumParams } from './types.js';
 export { defaultLoremIpsumParams } from './types.js';
 
-const LoremIpsumComponentStub = (): unknown => null;
-
 const LOREM_OPENING = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
 
 const WORD_POOL = [
@@ -66,7 +64,6 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
   name: 'Lorem Ipsum',
   description: 'Generate placeholder Latin text (lorem ipsum) with configurable paragraphs and sentence length.',
   category: 'create',
-  presence: 'both',
   keywords: ['lorem', 'ipsum', 'placeholder', 'text', 'dummy', 'generate', 'latin'],
 
   input: {
@@ -111,8 +108,6 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
       label: 'Start with the canonical "Lorem ipsum…"',
     },
   },
-
-  Component: LoremIpsumComponentStub,
 
   // Tool contract requires Promise return; no internal await needed.
    

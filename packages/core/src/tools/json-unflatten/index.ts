@@ -12,8 +12,6 @@ export const defaultJsonUnflattenParams: JsonUnflattenParams = {
   bracketArrays: true,
 };
 
-const JsonUnflattenComponentStub = (): unknown => null;
-
 function parsePath(key: string, separator: string, bracketArrays: boolean): Array<string | number> {
   if (bracketArrays) {
     // Normalize a[0].b → a.0.b before split. Captures consecutive bracket
@@ -77,7 +75,6 @@ export const jsonUnflatten: ToolModule<JsonUnflattenParams> = {
   description:
     'Inverse of json-flatten. Take a flat object with dot-notation keys (a.b.c) and rebuild the nested JSON structure. Round-trips with json-flatten.',
   category: 'convert',
-  presence: 'both',
   keywords: ['json', 'unflatten', 'nest', 'expand', 'dot-notation', 'structure'],
 
   input: {
@@ -112,8 +109,6 @@ export const jsonUnflatten: ToolModule<JsonUnflattenParams> = {
       help: 'Treat keys like a[0].b as a → 0 → b, matching json-flatten\'s bracket array style.',
     },
   },
-
-  Component: JsonUnflattenComponentStub,
 
   async run(inputs: File[], params: JsonUnflattenParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('json-unflatten accepts exactly one JSON input.');

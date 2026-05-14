@@ -107,15 +107,12 @@ export function convertVttToSrt(vtt: string, shiftMs = 0): string {
   return lines.join('\n');
 }
 
-const ConvertSubtitlesComponentStub = (): unknown => null;
-
 export const convertSubtitles: ToolModule<ConvertSubtitlesParams> = {
   id: 'convert-subtitles',
   slug: 'convert-subtitles',
   name: 'Convert Subtitles',
   description: 'Convert subtitle files between SRT and WebVTT formats, with optional time shift.',
   category: 'media',
-  presence: 'both',
   keywords: ['subtitles', 'srt', 'vtt', 'webvtt', 'captions', 'convert'],
 
   input: {
@@ -134,8 +131,6 @@ export const convertSubtitles: ToolModule<ConvertSubtitlesParams> = {
   installGroup: 'ffmpeg',
 
   defaults: defaultConvertSubtitlesParams,
-
-  Component: ConvertSubtitlesComponentStub,
 
   async run(
     inputs: File[],

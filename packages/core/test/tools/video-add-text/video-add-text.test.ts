@@ -26,7 +26,6 @@ describe('video-add-text — metadata', () => {
   it('memoryEstimate is "high"', () => expect(videoAddText.memoryEstimate).toBe('high'));
   it('cost is "free"', () => expect(videoAddText.cost).toBe('free'));
   it('batchable is false', () => expect(videoAddText.batchable).toBe(false));
-  it('presence is "both"', () => expect(videoAddText.presence).toBe('both'));
   it('defaults fontSize is 32', () => expect(defaultVideoAddTextParams.fontSize).toBe(32));
   it('defaults position is bottom', () => expect(defaultVideoAddTextParams.position).toBe('bottom'));
   it('defaults fontColor is #FFFFFF', () => expect(defaultVideoAddTextParams.fontColor).toBe('#FFFFFF'));

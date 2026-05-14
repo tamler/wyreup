@@ -11,15 +11,12 @@ const XLSX_ACCEPT = [
   'application/vnd.ms-excel',
 ];
 
-const ExcelToCsvComponentStub = (): unknown => null;
-
 export const excelToCsv: ToolModule<ExcelToCsvParams> = {
   id: 'excel-to-csv',
   slug: 'excel-to-csv',
   name: 'Excel to CSV',
   description: 'Convert Excel workbooks (XLSX/XLS) to CSV. Export one sheet or all sheets as a ZIP.',
   category: 'convert',
-  presence: 'both',
   keywords: ['excel', 'xlsx', 'xls', 'csv', 'convert', 'spreadsheet', 'table'],
 
   input: {
@@ -66,8 +63,6 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
       help: 'When disabled, the first row is treated as data (not a header row).',
     },
   },
-
-  Component: ExcelToCsvComponentStub,
 
   async run(
     inputs: File[],

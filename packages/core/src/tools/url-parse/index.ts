@@ -30,8 +30,6 @@ export interface UrlParseResult {
   isAbsolute: boolean;
 }
 
-const UrlParseComponentStub = (): unknown => null;
-
 export function parseUrl(input: string): UrlParseResult {
   const trimmed = input.trim();
   if (!trimmed) throw new Error('url-parse requires a non-empty URL.');
@@ -90,7 +88,6 @@ export const urlParse: ToolModule<UrlParseParams> = {
   description:
     'Break a URL into its parts — protocol, host, port, path segments, query parameters, fragment. Handles relative URLs and preserves duplicate query keys.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['url', 'parse', 'query', 'host', 'path', 'protocol', 'fragment', 'split'],
 
   input: {
@@ -115,8 +112,6 @@ export const urlParse: ToolModule<UrlParseParams> = {
       multiline: false,
     },
   },
-
-  Component: UrlParseComponentStub,
 
   async run(_inputs: File[], params: UrlParseParams, ctx: ToolRunContext): Promise<Blob[]> {
     const url = params.url ?? '';

@@ -4,8 +4,6 @@ import type { WordCounterParams, WordCounterResult } from './types.js';
 export type { WordCounterParams, WordCounterResult } from './types.js';
 export { defaultWordCounterParams } from './types.js';
 
-const WordCounterComponentStub = (): unknown => null;
-
 function stripHtmlTags(text: string): string {
   return text.replace(/<[^>]+>/g, ' ');
 }
@@ -26,7 +24,6 @@ export const wordCounter: ToolModule<WordCounterParams> = {
   name: 'Word Counter',
   description: 'Count words, characters, sentences, paragraphs, and estimate reading time.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['word', 'count', 'character', 'sentence', 'paragraph', 'reading', 'time'],
 
   input: {
@@ -46,8 +43,6 @@ export const wordCounter: ToolModule<WordCounterParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: WordCounterComponentStub,
 
   async run(
     inputs: File[],

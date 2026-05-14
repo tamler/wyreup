@@ -33,8 +33,6 @@ export interface TextRedactResult {
   totalRedactions: number;
 }
 
-const TextRedactComponentStub = (): unknown => null;
-
 // Pattern table. Order matters — credit-card before ssn so 16-digit
 // runs aren't first-matched as a fragmentary SSN.
 const PATTERNS: ReadonlyArray<{ key: RedactPreset; re: RegExp }> = [
@@ -133,7 +131,6 @@ export const textRedact: ToolModule<TextRedactParams> = {
   description:
     'Replace PII patterns in text — emails, phones, SSNs, credit cards (Luhn-validated), IPs, URLs, UUIDs, AWS access keys. Optional custom regex patterns. Text-only sibling of pdf-redact.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['redact', 'pii', 'privacy', 'sanitize', 'mask', 'email', 'phone', 'ssn', 'credit-card', 'security'],
 
   input: {
@@ -183,8 +180,6 @@ export const textRedact: ToolModule<TextRedactParams> = {
       placeholder: '\\bpassword[\\s:=]+\\S+\\b, \\bAPI_KEY=\\S+',
     },
   },
-
-  Component: TextRedactComponentStub,
 
   async run(inputs: File[], params: TextRedactParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-redact accepts exactly one text input.');

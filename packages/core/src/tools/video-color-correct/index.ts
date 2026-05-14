@@ -34,15 +34,12 @@ export function buildColorCorrectFilter(params: VideoColorCorrectParams): string
   return filter;
 }
 
-const VideoColorCorrectComponentStub = (): unknown => null;
-
 export const videoColorCorrect: ToolModule<VideoColorCorrectParams> = {
   id: 'video-color-correct',
   slug: 'video-color-correct',
   name: 'Color Correct Video',
   description: 'Adjust brightness, contrast, saturation, gamma, and hue of a video.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'color', 'correction', 'brightness', 'contrast', 'saturation', 'hue', 'gamma', 'grade'],
 
   input: {
@@ -111,8 +108,6 @@ export const videoColorCorrect: ToolModule<VideoColorCorrectParams> = {
       step: 1,
     },
   },
-
-  Component: VideoColorCorrectComponentStub,
 
   async run(
     inputs: File[],

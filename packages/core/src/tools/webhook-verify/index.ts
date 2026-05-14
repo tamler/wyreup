@@ -34,8 +34,6 @@ export interface WebhookVerifyResult {
   payloadBytes: number;
 }
 
-const WebhookVerifyComponentStub = (): unknown => null;
-
 function toHex(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i++) s += bytes[i]!.toString(16).padStart(2, '0');
@@ -71,7 +69,6 @@ export const webhookVerify: ToolModule<WebhookVerifyParams> = {
   description:
     'Verify a webhook signature against its payload using HMAC. Matches the Stripe / GitHub / Slack convention (HMAC-SHA256 with hex digest). Constant-time compare so timing attacks can\'t lift the signature.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['webhook', 'verify', 'hmac', 'signature', 'stripe', 'github', 'slack', 'security'],
 
   input: {
@@ -128,8 +125,6 @@ export const webhookVerify: ToolModule<WebhookVerifyParams> = {
       placeholder: 'sha256=',
     },
   },
-
-  Component: WebhookVerifyComponentStub,
 
   async run(inputs: File[], params: WebhookVerifyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('webhook-verify needs exactly one payload file.');

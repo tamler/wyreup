@@ -4,8 +4,6 @@ import type { SplitPdfParams } from './types.js';
 export type { SplitPdfParams } from './types.js';
 export { defaultSplitPdfParams } from './types.js';
 
-const SplitPdfComponentStub = (): unknown => null;
-
 /**
  * Parse a ranges string like "1-3,5,7-9" into arrays of 0-indexed page
  * indices. Each element of the returned array becomes a separate output PDF.
@@ -55,8 +53,9 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
   slug: 'split-pdf',
   name: 'Split PDF',
   description: 'Split a PDF into separate files by page or custom ranges.',
+  llmDescription:
+    'Split a PDF into individual pages or page ranges. Produces multiple output files — use output_dir. Use when the user wants separate PDFs per page or range.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['split', 'pdf', 'pages', 'extract', 'separate'],
 
   input: {
@@ -95,8 +94,6 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
       showWhen: { field: 'mode', equals: 'ranges' },
     },
   },
-
-  Component: SplitPdfComponentStub,
 
   async run(
     inputs: File[],

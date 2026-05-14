@@ -25,8 +25,6 @@ export interface UrlBuildResult {
   spec: UrlBuildSpec;
 }
 
-const UrlBuildComponentStub = (): unknown => null;
-
 function normalizeProtocol(p: string): string {
   const trimmed = p.trim();
   if (!trimmed) return 'https:';
@@ -82,7 +80,6 @@ export const urlBuild: ToolModule<UrlBuildParams> = {
   description:
     'Assemble a URL from JSON parts (protocol, hostname, port, path, searchParams, hash). Round-trips with url-parse — parse a URL, edit the JSON, build it back.',
   category: 'create',
-  presence: 'both',
   keywords: ['url', 'build', 'compose', 'assemble', 'query', 'construct'],
 
   input: {
@@ -108,8 +105,6 @@ export const urlBuild: ToolModule<UrlBuildParams> = {
       multiline: true,
     },
   },
-
-  Component: UrlBuildComponentStub,
 
   async run(_inputs: File[], params: UrlBuildParams, ctx: ToolRunContext): Promise<Blob[]> {
     const raw = (params.spec ?? '').trim();

@@ -18,15 +18,12 @@ function detectDelimiter(text: string): string {
   return ',';
 }
 
-const CsvToExcelComponentStub = (): unknown => null;
-
 export const csvToExcel: ToolModule<CsvToExcelParams> = {
   id: 'csv-to-excel',
   slug: 'csv-to-excel',
   name: 'CSV to Excel',
   description: 'Convert one or more CSV files into an Excel workbook. Each CSV becomes a sheet.',
   category: 'convert',
-  presence: 'both',
   keywords: ['csv', 'excel', 'xlsx', 'convert', 'spreadsheet', 'table'],
 
   input: {
@@ -73,8 +70,6 @@ export const csvToExcel: ToolModule<CsvToExcelParams> = {
       help: 'Use the CSV filename (without extension) as the sheet name.',
     },
   },
-
-  Component: CsvToExcelComponentStub,
 
   async run(
     inputs: File[],

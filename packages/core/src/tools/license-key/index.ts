@@ -28,8 +28,6 @@ export interface LicenseKeyResult {
   keys: string[];
 }
 
-const LicenseKeyComponentStub = (): unknown => null;
-
 const ALPHABET_FULL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const ALPHABET_UNAMBIGUOUS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
@@ -67,7 +65,6 @@ export const licenseKey: ToolModule<LicenseKeyParams> = {
   description:
     'Generate Microsoft-style license keys — grouped uppercase alphanumeric with hyphens. Default 5×5 = 25 characters. Crockford-style alphabet (no 0/O/I/L/1) so keys are unambiguous when read aloud.',
   category: 'create',
-  presence: 'both',
   keywords: ['license', 'key', 'serial', 'product-key', 'generate', 'random'],
 
   input: {
@@ -121,8 +118,6 @@ export const licenseKey: ToolModule<LicenseKeyParams> = {
       step: 1,
     },
   },
-
-  Component: LicenseKeyComponentStub,
 
   async run(_inputs: File[], params: LicenseKeyParams, ctx: ToolRunContext): Promise<Blob[]> {
     const groupSize = Math.max(3, Math.min(10, params.groupSize ?? 5));

@@ -18,8 +18,6 @@ export const defaultJsonToXmlParams: JsonToXmlParams = {
   attrPrefix: '@_',
 };
 
-const JsonToXmlComponentStub = (): unknown => null;
-
 export const jsonToXml: ToolModule<JsonToXmlParams> = {
   id: 'json-to-xml',
   slug: 'json-to-xml',
@@ -27,7 +25,6 @@ export const jsonToXml: ToolModule<JsonToXmlParams> = {
   description:
     'Serialize JSON as XML via fast-xml-parser. Mirrors xml-to-json — keys prefixed with @_ become attributes, the special key #text becomes the element text content. Round-trip with xml-to-json on simple shapes.',
   category: 'convert',
-  presence: 'both',
   keywords: ['xml', 'json', 'convert', 'serialize', 'soap'],
 
   input: {
@@ -67,8 +64,6 @@ export const jsonToXml: ToolModule<JsonToXmlParams> = {
       placeholder: '@_',
     },
   },
-
-  Component: JsonToXmlComponentStub,
 
   async run(inputs: File[], params: JsonToXmlParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('json-to-xml accepts exactly one file.');

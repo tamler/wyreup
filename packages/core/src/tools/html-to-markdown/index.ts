@@ -4,15 +4,12 @@ import type { HtmlToMarkdownParams } from './types.js';
 export type { HtmlToMarkdownParams } from './types.js';
 export { defaultHtmlToMarkdownParams } from './types.js';
 
-const HtmlToMarkdownComponentStub = (): unknown => null;
-
 export const htmlToMarkdown: ToolModule<HtmlToMarkdownParams> = {
   id: 'html-to-markdown',
   slug: 'html-to-markdown',
   name: 'HTML to Markdown',
   description: 'Convert HTML to clean Markdown text.',
   category: 'convert',
-  presence: 'both',
   keywords: ['html', 'markdown', 'convert', 'turndown', 'markup'],
 
   input: {
@@ -44,8 +41,6 @@ export const htmlToMarkdown: ToolModule<HtmlToMarkdownParams> = {
       ],
     },
   },
-
-  Component: HtmlToMarkdownComponentStub,
 
   async run(
     inputs: File[],

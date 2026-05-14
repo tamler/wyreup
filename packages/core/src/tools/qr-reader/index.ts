@@ -21,15 +21,12 @@ export interface QrReaderResult {
 
 export const defaultQrReaderParams: QrReaderParams = {};
 
-const QrReaderComponentStub = (): unknown => null;
-
 export const qrReader: ToolModule<QrReaderParams> = {
   id: 'qr-reader',
   slug: 'qr-reader',
   name: 'QR Reader',
   description: 'Decode QR codes from images. Returns the embedded data and code location.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['qr', 'barcode', 'decode', 'read', 'scan', 'image'],
 
   input: {
@@ -49,8 +46,6 @@ export const qrReader: ToolModule<QrReaderParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultQrReaderParams,
-
-  Component: QrReaderComponentStub,
 
   async run(
     inputs: File[],

@@ -6,15 +6,12 @@ const XLSX_ACCEPT = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-const SplitSheetsComponentStub = (): unknown => null;
-
 export const splitSheets: ToolModule<SplitSheetsParams> = {
   id: 'split-sheets',
   slug: 'split-sheets',
   name: 'Split Sheets',
   description: 'Split an Excel workbook into one XLSX file per sheet, downloaded as a ZIP.',
   category: 'edit',
-  presence: 'both',
   keywords: ['excel', 'xlsx', 'split', 'sheets', 'workbook', 'spreadsheet'],
 
   input: {
@@ -34,8 +31,6 @@ export const splitSheets: ToolModule<SplitSheetsParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: SplitSheetsComponentStub,
 
   async run(
     inputs: File[],

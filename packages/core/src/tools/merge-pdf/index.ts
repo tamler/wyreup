@@ -4,15 +4,12 @@ import type { MergePdfParams } from './types.js';
 export type { MergePdfParams } from './types.js';
 export { defaultMergePdfParams } from './types.js';
 
-const MergePdfComponentStub = (): unknown => null;
-
 export const mergePdf: ToolModule<MergePdfParams> = {
   id: 'merge-pdf',
   slug: 'merge-pdf',
   name: 'Merge PDFs',
   description: 'Combine multiple PDF files into a single document.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['merge', 'pdf', 'combine', 'concatenate', 'join'],
 
   input: {
@@ -30,8 +27,6 @@ export const mergePdf: ToolModule<MergePdfParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: MergePdfComponentStub,
 
   async run(
     inputs: File[],

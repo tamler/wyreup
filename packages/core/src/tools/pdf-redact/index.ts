@@ -21,8 +21,6 @@ export interface PdfRedactParams {
   color?: [number, number, number];
 }
 
-const PdfRedactComponentStub = (): unknown => null;
-
 export const pdfRedact: ToolModule<PdfRedactParams> = {
   id: 'pdf-redact',
   slug: 'pdf-redact',
@@ -32,7 +30,6 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     'Underlying text objects may still be extractable by specialized tools. ' +
     'For forensic-grade redaction, flatten the output via pdf-compress after redacting.',
   category: 'edit',
-  presence: 'both',
   keywords: ['pdf', 'redact', 'cover', 'hide', 'privacy', 'black'],
 
   input: {
@@ -54,8 +51,6 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     rectangles: [],
     color: [0, 0, 0],
   },
-
-  Component: PdfRedactComponentStub,
 
   async run(
     inputs: File[],

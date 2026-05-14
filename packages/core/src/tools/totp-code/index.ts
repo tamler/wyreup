@@ -35,8 +35,6 @@ export interface TotpCodeResult {
   secondsRemaining: number;
 }
 
-const TotpCodeComponentStub = (): unknown => null;
-
 function counterBytes(counter: number): Uint8Array {
   // RFC 4226: counter is an 8-byte big-endian unsigned integer.
   // JS bitwise ops are 32-bit, so split high/low halves.
@@ -104,7 +102,6 @@ export const totpCode: ToolModule<TotpCodeParams> = {
   description:
     'Generate the current RFC 6238 TOTP code from a base32 secret. Compatible with Google Authenticator, Authy, 1Password, and the rest. Nothing leaves your device.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['totp', 'otp', '2fa', 'auth', 'mfa', 'authenticator', 'rfc6238', 'rfc4226', 'one-time'],
 
   input: {
@@ -157,8 +154,6 @@ export const totpCode: ToolModule<TotpCodeParams> = {
       unit: 's',
     },
   },
-
-  Component: TotpCodeComponentStub,
 
   async run(_inputs: File[], params: TotpCodeParams, ctx: ToolRunContext): Promise<Blob[]> {
     const secret = (params.secret ?? '').trim();

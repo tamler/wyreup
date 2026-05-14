@@ -15,8 +15,6 @@ export const defaultHtmlCleanParams: HtmlCleanParams = {
   decodeEntities: true,
 };
 
-const HtmlCleanComponentStub = (): unknown => null;
-
 const NAMED_ENTITIES: Record<string, string> = {
   amp: '&',
   lt: '<',
@@ -105,7 +103,6 @@ export const htmlClean: ToolModule<HtmlCleanParams> = {
   description:
     'Strip HTML tags and decode entities to produce readable plain text. Drops <script>, <style>, and comments entirely. Different from html-to-markdown — this returns prose, not formatted markdown.',
   category: 'text',
-  presence: 'both',
   keywords: ['html', 'clean', 'strip', 'plain', 'text', 'sanitize', 'extract', 'tags'],
 
   input: {
@@ -140,8 +137,6 @@ export const htmlClean: ToolModule<HtmlCleanParams> = {
       help: 'Turn &amp; into &, &mdash; into —, etc.',
     },
   },
-
-  Component: HtmlCleanComponentStub,
 
   async run(inputs: File[], params: HtmlCleanParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('html-clean accepts exactly one HTML file.');

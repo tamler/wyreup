@@ -43,8 +43,6 @@ export interface OtpauthUriResult {
   parameters: Record<string, string>;
 }
 
-const OtpauthUriComponentStub = (): unknown => null;
-
 export function buildOtpauthUri(params: OtpauthUriParams): OtpauthUriResult {
   const type = params.type ?? 'totp';
   const secret = (params.secret ?? '').trim().toUpperCase().replace(/\s+/g, '');
@@ -97,7 +95,6 @@ export const otpauthUri: ToolModule<OtpauthUriParams> = {
   description:
     'Build an otpauth:// enrollment URI for Google Authenticator / 1Password / Authy / Bitwarden. Optionally renders a scannable QR alongside the URI — drop in secret + issuer + account, get the QR to point your phone at.',
   category: 'create',
-  presence: 'both',
   keywords: ['otpauth', 'totp', 'hotp', '2fa', 'mfa', 'qr', 'enrollment', 'authenticator', 'google'],
 
   input: {
@@ -196,8 +193,6 @@ export const otpauthUri: ToolModule<OtpauthUriParams> = {
       unit: 'px',
     },
   },
-
-  Component: OtpauthUriComponentStub,
 
   async run(_inputs: File[], params: OtpauthUriParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Building URI' });

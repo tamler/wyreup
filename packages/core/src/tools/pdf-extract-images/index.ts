@@ -26,8 +26,6 @@ export interface PdfExtractImagesReport {
   files: { name: string; bytes: number; width: number; height: number; page: number }[];
 }
 
-const PdfExtractImagesComponentStub = (): unknown => null;
-
 const FORMAT_MIME: Record<string, string> = {
   png: 'image/png',
   jpeg: 'image/jpeg',
@@ -115,7 +113,6 @@ export const pdfExtractImages: ToolModule<PdfExtractImagesParams> = {
   description:
     'Pull embedded raster images out of a PDF and pack them into a ZIP. Different from pdf-to-image — that one renders whole pages; this one extracts the original photos and figures. Coverage varies by PDF: pdfjs preserves some image objects after rendering and not others. The ZIP always contains a _report.json listing what was found vs. extracted vs. skipped, so you can see which pages need a follow-up pass.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['pdf', 'extract', 'images', 'photos', 'figures', 'embedded', 'zip'],
 
   input: {
@@ -166,8 +163,6 @@ export const pdfExtractImages: ToolModule<PdfExtractImagesParams> = {
       unit: 'px',
     },
   },
-
-  Component: PdfExtractImagesComponentStub,
 
   async run(inputs: File[], params: PdfExtractImagesParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('pdf-extract-images accepts exactly one PDF file.');

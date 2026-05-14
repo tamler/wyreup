@@ -33,8 +33,6 @@ export interface JsonSchemaValidateResult {
   draft: string;
 }
 
-const JsonSchemaValidateComponentStub = (): unknown => null;
-
 function parseJson(text: string, label: string): unknown {
   try {
     return JSON.parse(text);
@@ -60,7 +58,6 @@ export const jsonSchemaValidate: ToolModule<JsonSchemaValidateParams> = {
   description:
     'Validate a JSON document against a JSON Schema. Built on ajv — supports draft-07 by default, with all errors listed at full JSON-Pointer paths so you can pinpoint the failing field.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['json', 'schema', 'validate', 'ajv', 'jsonschema', 'draft-07', 'openapi'],
 
   input: {
@@ -90,8 +87,6 @@ export const jsonSchemaValidate: ToolModule<JsonSchemaValidateParams> = {
       help: 'Allow ajv to coerce values where it can — e.g. "42" passes an "integer" field.',
     },
   },
-
-  Component: JsonSchemaValidateComponentStub,
 
   async run(inputs: File[], params: JsonSchemaValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 2) throw new Error('json-schema-validate needs two files: schema then data.');

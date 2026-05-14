@@ -26,8 +26,6 @@ export interface HtmlMinifyResult {
   reductionPercent: number;
 }
 
-const HtmlMinifyComponentStub = (): unknown => null;
-
 export const htmlMinify: ToolModule<HtmlMinifyParams> = {
   id: 'html-minify',
   slug: 'html-minify',
@@ -35,7 +33,6 @@ export const htmlMinify: ToolModule<HtmlMinifyParams> = {
   description:
     'Minify HTML with html-minifier-terser — collapse whitespace, drop comments and redundant attributes, optionally minify inline CSS / JS. Inverse direction of the existing html-formatter.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['html', 'minify', 'compress', 'optimize', 'whitespace'],
 
   input: {
@@ -89,8 +86,6 @@ export const htmlMinify: ToolModule<HtmlMinifyParams> = {
       help: 'Replace verbose XHTML doctype with <!DOCTYPE html>.',
     },
   },
-
-  Component: HtmlMinifyComponentStub,
 
   async run(inputs: File[], params: HtmlMinifyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('html-minify accepts exactly one file.');

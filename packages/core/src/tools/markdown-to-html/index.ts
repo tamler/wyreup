@@ -4,15 +4,12 @@ import type { MarkdownToHtmlParams } from './types.js';
 export type { MarkdownToHtmlParams } from './types.js';
 export { defaultMarkdownToHtmlParams } from './types.js';
 
-const MarkdownToHtmlComponentStub = (): unknown => null;
-
 export const markdownToHtml: ToolModule<MarkdownToHtmlParams> = {
   id: 'markdown-to-html',
   slug: 'markdown-to-html',
   name: 'Markdown to HTML',
   description: 'Convert Markdown to HTML with optional GitHub Flavored Markdown support.',
   category: 'convert',
-  presence: 'both',
   keywords: ['markdown', 'html', 'convert', 'gfm', 'github', 'markup'],
 
   input: {
@@ -32,8 +29,6 @@ export const markdownToHtml: ToolModule<MarkdownToHtmlParams> = {
   memoryEstimate: 'low',
 
   defaults: { gfm: true },
-
-  Component: MarkdownToHtmlComponentStub,
 
   async run(
     inputs: File[],

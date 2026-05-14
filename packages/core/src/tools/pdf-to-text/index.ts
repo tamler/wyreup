@@ -4,15 +4,12 @@ import type { PdfToTextParams } from './types.js';
 export type { PdfToTextParams } from './types.js';
 export { defaultPdfToTextParams } from './types.js';
 
-const PdfToTextComponentStub = (): unknown => null;
-
 export const pdfToText: ToolModule<PdfToTextParams> = {
   id: 'pdf-to-text',
   slug: 'pdf-to-text',
   name: 'PDF to Text',
   description: 'Extract plain text from a PDF file.',
   category: 'export',
-  presence: 'both',
   keywords: ['pdf', 'text', 'extract', 'ocr', 'read', 'parse'],
 
   input: {
@@ -33,8 +30,6 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
   defaults: {
     separator: '\n\n=== Page {n} ===\n\n',
   },
-
-  Component: PdfToTextComponentStub,
 
   async run(
     inputs: File[],

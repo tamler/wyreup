@@ -4,15 +4,12 @@ import type { ImageToPdfParams } from './types.js';
 export type { ImageToPdfParams } from './types.js';
 export { defaultImageToPdfParams } from './types.js';
 
-const ImageToPdfComponentStub = (): unknown => null;
-
 export const imageToPdf: ToolModule<ImageToPdfParams> = {
   id: 'image-to-pdf',
   slug: 'image-to-pdf',
   name: 'Images → PDF',
   description: 'Combine one or more images into a single PDF document.',
   category: 'export',
-  presence: 'both',
   keywords: ['pdf', 'image', 'combine', 'document', 'jpg', 'png'],
 
   input: {
@@ -53,8 +50,6 @@ export const imageToPdf: ToolModule<ImageToPdfParams> = {
       showWhen: { field: 'pageSize', in: ['a4', 'letter'] },
     },
   },
-
-  Component: ImageToPdfComponentStub,
 
   async run(
     inputs: File[],

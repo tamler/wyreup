@@ -20,8 +20,6 @@ export interface PdfSuspiciousResult {
   pages?: Array<{ page: number; result: TextSuspiciousResult }>;
 }
 
-const PdfSuspiciousComponentStub = (): unknown => null;
-
 export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
   id: 'pdf-suspicious',
   slug: 'pdf-suspicious',
@@ -29,7 +27,6 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
   description:
     'Scan a PDF for prompt-injection / homoglyph / invisible-character attacks. Extracts the text per page and runs text-suspicious over the whole document — and optionally each page individually. Useful when an LLM is about to ingest a PDF: catches Latin-spoofed phishing strings, zero-width prompt injections, and confusable-script substitutions before the model sees them.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['pdf', 'security', 'prompt-injection', 'confusable', 'audit', 'inspect'],
 
   input: {
@@ -75,8 +72,6 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
       step: 1,
     },
   },
-
-  Component: PdfSuspiciousComponentStub,
 
   async run(inputs: File[], params: PdfSuspiciousParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('pdf-suspicious accepts exactly one PDF.');

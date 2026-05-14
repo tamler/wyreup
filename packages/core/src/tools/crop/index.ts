@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { CropParams } from './types.js';
 export { defaultCropParams } from './types.js';
 
-const CropComponentStub = (): unknown => null;
-
 export const crop: ToolModule<CropParams> = {
   id: 'crop',
   slug: 'crop',
   name: 'Crop',
   description: 'Crop a rectangular region from an image.',
   category: 'edit',
-  presence: 'both',
   keywords: ['crop', 'trim', 'cut', 'region', 'clip'],
 
   input: {
@@ -38,8 +35,6 @@ export const crop: ToolModule<CropParams> = {
     width: 0,
     height: 0,
   },
-
-  Component: CropComponentStub,
 
   async run(
     inputs: File[],

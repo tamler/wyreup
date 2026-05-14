@@ -4,8 +4,6 @@ import type { ColorConverterParams, ColorConverterResult } from './types.js';
 export type { ColorConverterParams, ColorConverterResult } from './types.js';
 export { defaultColorConverterParams } from './types.js';
 
-const ColorConverterComponentStub = (): unknown => null;
-
 function round(n: number, decimals = 4): number {
   const factor = 10 ** decimals;
   return Math.round(n * factor) / factor;
@@ -17,7 +15,6 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
   name: 'Color Converter',
   description: 'Convert a color string to hex, RGB, HSL, Oklch, and Oklab formats.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['color', 'colour', 'hex', 'rgb', 'hsl', 'oklch', 'oklab', 'convert'],
 
   input: {
@@ -37,8 +34,6 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: ColorConverterComponentStub,
 
   async run(
     inputs: File[],

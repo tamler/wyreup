@@ -2,9 +2,7 @@
 // Source of truth for the tool module contract.
 // See /docs/superpowers/specs/2026-04-15-wyreup-tool-library-design.md §5.1
 
-import type { ComponentType } from './ui-types.js';
-
-// ──── Category and presence ────
+// ──── Category ────
 
 export type ToolCategory =
   | 'optimize'
@@ -23,14 +21,10 @@ export type ToolCategory =
   | 'text'
   | 'geo';
 
-export type ToolPresence = 'editor' | 'standalone' | 'both';
-
 /**
- * Runtime surfaces a tool can run on. Distinct from `presence`
- * (which is editor-vs-standalone, a legacy concept). Use this to
- * gate tools that need a browser-only API (microphone, camera,
- * screen-capture) so they don't appear in CLI / MCP listings where
- * they can't possibly work.
+ * Runtime surfaces a tool can run on. Use this to gate tools that need
+ * a browser-only API (microphone, camera, screen-capture) so they don't
+ * appear in CLI / MCP listings where they can't possibly work.
  *
  * Undefined = ['web', 'cli', 'mcp'] (the default — runs everywhere).
  */
@@ -115,23 +109,6 @@ export interface ToolRunContext {
    * backend calls so that retries don't double-charge credits.
    */
   executionId: string;
-}
-
-// ──── UI component contract ────
-
-export interface ToolComponentProps<Params> {
-  /** Where the component is being rendered. */
-  surface: 'landing-page' | 'editor-chip' | 'editor-modal' | 'focused-mode';
-  /** Partial params that pin the tool's config (used by SEO alias pages). */
-  preset?: Partial<Params>;
-  /** Files to operate on (from editor context or picked inline). */
-  inputs: File[];
-  /** Called when the user changes the input file set. */
-  onInputsChange: (files: File[]) => void;
-  /** Called when run() completes with the output blobs. */
-  onComplete: (outputs: Blob[]) => void;
-  /** Called when the user cancels. */
-  onCancel: () => void;
 }
 
 // ──── Declarative param field metadata ────
@@ -256,8 +233,17 @@ export interface ToolModule<Params = unknown> {
    * tool appears once per category but only once total.
    */
   categories?: ToolCategory[];
-  presence: ToolPresence;
   keywords: string[];
+  /**
+   * Optional override for the description exposed to MCP / LLM agents.
+   * Use only when the canonical `description` (written for humans) leaves
+   * out a hint that helps an agent pick the right tool — for example,
+   * naming a chain-pair partner, calling out a critical parameter, or
+   * surfacing a multi-output caveat. When undefined, agents see
+   * `${name}: ${description}` (which is the right default for ~95% of
+   * tools — most descriptions are already LLM-friendly).
+   */
+  llmDescription?: string;
 
   // Capabilities
   input: ToolInputSpec;
@@ -279,9 +265,6 @@ export interface ToolModule<Params = unknown> {
     params: Params,
     ctx: ToolRunContext,
   ) => Promise<ReadableStream<Uint8Array>[]>;
-
-  // UI component (same component renders in all surfaces)
-  Component: ComponentType<ToolComponentProps<Params>>;
 
   // Presets
   defaults: Params;

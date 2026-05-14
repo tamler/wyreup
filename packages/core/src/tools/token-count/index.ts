@@ -18,15 +18,12 @@ export interface TokenCountResult {
   ratio: number;
 }
 
-const TokenCountComponentStub = (): unknown => null;
-
 export const tokenCount: ToolModule<TokenCountParams> = {
   id: 'token-count',
   slug: 'token-count',
   name: 'Token Count',
   description: 'Count tokens for GPT-4, GPT-3.5, and GPT-4o — useful for prompt design and cost estimation.',
   category: 'dev',
-  presence: 'both',
   keywords: ['tokens', 'gpt', 'openai', 'tokenize', 'prompt', 'cost', 'count', 'llm'],
 
   input: {
@@ -44,7 +41,6 @@ export const tokenCount: ToolModule<TokenCountParams> = {
   // No installSize — gpt-tokenizer is in-bundle
 
   defaults: defaultTokenCountParams,
-  Component: TokenCountComponentStub,
 
   async run(inputs: File[], params: TokenCountParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

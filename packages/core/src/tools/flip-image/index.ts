@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { FlipImageParams } from './types.js';
 export { defaultFlipImageParams } from './types.js';
 
-const FlipImageComponentStub = (): unknown => null;
-
 export const flipImage: ToolModule<FlipImageParams> = {
   id: 'flip-image',
   slug: 'flip-image',
   name: 'Flip Image',
   description: 'Flip images horizontally or vertically.',
   category: 'edit',
-  presence: 'both',
   keywords: ['flip', 'mirror', 'reflect', 'horizontal', 'vertical'],
 
   input: {
@@ -44,8 +41,6 @@ export const flipImage: ToolModule<FlipImageParams> = {
       ],
     },
   },
-
-  Component: FlipImageComponentStub,
 
   async run(
     inputs: File[],

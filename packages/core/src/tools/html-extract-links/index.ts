@@ -34,8 +34,6 @@ export interface HtmlExtractLinksResult {
   links: ExtractedLink[];
 }
 
-const HtmlExtractLinksComponentStub = (): unknown => null;
-
 const LINK_PATTERNS: ReadonlyArray<{ kind: LinkKind; attr: 'href' | 'src' | 'action'; re: RegExp }> = [
   { kind: 'a', attr: 'href', re: /<a\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
   { kind: 'link', attr: 'href', re: /<link\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
@@ -107,7 +105,6 @@ export const htmlExtractLinks: ToolModule<HtmlExtractLinksParams> = {
   description:
     'Pull every href / src / action from HTML, classified by element (a / img / script / link / iframe / video / audio / source / form). Optional base URL to resolve relative links. Regex-based so broken HTML still parses.',
   category: 'text',
-  presence: 'both',
   keywords: ['html', 'links', 'extract', 'href', 'src', 'urls', 'scrape', 'crawl'],
 
   input: {
@@ -138,8 +135,6 @@ export const htmlExtractLinks: ToolModule<HtmlExtractLinksParams> = {
       help: 'Drop duplicate (element + URL) combinations.',
     },
   },
-
-  Component: HtmlExtractLinksComponentStub,
 
   async run(inputs: File[], params: HtmlExtractLinksParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('html-extract-links accepts exactly one HTML file.');

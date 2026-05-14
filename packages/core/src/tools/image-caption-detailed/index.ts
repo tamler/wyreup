@@ -26,8 +26,6 @@ const ACCEPTED_MIME_TYPES = [
   'image/bmp',
 ];
 
-const ImageCaptionDetailedComponentStub = (): unknown => null;
-
 export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
   id: 'image-caption-detailed',
   slug: 'image-caption-detailed',
@@ -37,7 +35,6 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
     '~250 MB model downloads on first use, then works offline. ' +
     'Slower but more descriptive than the standard captioner.',
   category: 'export',
-  presence: 'standalone',
   keywords: [
     'caption',
     'describe',
@@ -89,8 +86,6 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
       step: 10,
     },
   },
-
-  Component: ImageCaptionDetailedComponentStub,
 
   async run(
     inputs: File[],

@@ -46,8 +46,6 @@ export interface CsvInfoResult {
   columnInfo: CsvColumnInfo[];
 }
 
-const CsvInfoComponentStub = (): unknown => null;
-
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/;
 // Intentionally excludes '1' / '0' — those should type as integer. CSVs
@@ -90,7 +88,6 @@ export const csvInfo: ToolModule<CsvInfoParams> = {
   description:
     'Per-column statistics for a CSV: inferred type, null count, distinct count, numeric range, length range, plus a row-width consistency check. The diagnostic you want before piping a CSV into anything that cares about schema.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['csv', 'info', 'stats', 'profile', 'columns', 'types', 'schema'],
 
   input: {
@@ -136,8 +133,6 @@ export const csvInfo: ToolModule<CsvInfoParams> = {
       step: 10,
     },
   },
-
-  Component: CsvInfoComponentStub,
 
   async run(inputs: File[], params: CsvInfoParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('csv-info accepts exactly one CSV file.');

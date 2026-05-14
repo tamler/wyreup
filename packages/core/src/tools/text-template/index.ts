@@ -18,8 +18,6 @@ export interface TextTemplateResult {
   missing: string[];
 }
 
-const TextTemplateComponentStub = (): unknown => null;
-
 function lookup(data: unknown, path: string): unknown {
   const segments = path.split('.').map((s) => s.trim()).filter(Boolean);
   let cursor: unknown = data;
@@ -72,7 +70,6 @@ export const textTemplate: ToolModule<TextTemplateParams> = {
   description:
     'Mustache-style {{path.to.value}} substitution. Takes a JSON data file plus a template parameter, returns the rendered text with a report of which placeholders matched and which were missing. Pairs with csv-json to render one document per row.',
   category: 'text',
-  presence: 'both',
   keywords: ['template', 'mustache', 'render', 'substitute', 'placeholder', 'merge'],
 
   input: {
@@ -112,8 +109,6 @@ export const textTemplate: ToolModule<TextTemplateParams> = {
       ],
     },
   },
-
-  Component: TextTemplateComponentStub,
 
   async run(inputs: File[], params: TextTemplateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-template accepts exactly one JSON file.');

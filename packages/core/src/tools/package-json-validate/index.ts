@@ -28,8 +28,6 @@ export interface PackageJsonValidateResult {
   };
 }
 
-const PackageJsonValidateComponentStub = (): unknown => null;
-
 // npm name rules (simplified): lowercase, length 1..214, no leading dot/underscore,
 // no spaces, only URL-safe chars. Supports scoped names @scope/name.
 const VALID_NAME_RE = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/;
@@ -189,7 +187,6 @@ export const packageJsonValidate: ToolModule<PackageJsonValidateParams> = {
   description:
     'Lint a Node package.json for shape errors and npm-publish blockers. Catches invalid names, broken semver, mistyped dependency maps, and weird scripts blocks — without bundling the full npm schema. Strict mode also warns on missing description, repository, keywords, license.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['npm', 'package.json', 'validate', 'lint', 'node', 'package'],
 
   input: {
@@ -214,8 +211,6 @@ export const packageJsonValidate: ToolModule<PackageJsonValidateParams> = {
       help: 'Also flag practices (no description, repository, keywords, license, author).',
     },
   },
-
-  Component: PackageJsonValidateComponentStub,
 
   async run(inputs: File[], params: PackageJsonValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('package-json-validate accepts exactly one file.');

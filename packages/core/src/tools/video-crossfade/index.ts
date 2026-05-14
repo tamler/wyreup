@@ -60,15 +60,12 @@ export function buildCrossfadeArgs(
   ];
 }
 
-const VideoCrossfadeComponentStub = (): unknown => null;
-
 export const videoCrossfade: ToolModule<VideoCrossfadeParams> = {
   id: 'video-crossfade',
   slug: 'video-crossfade',
   name: 'Video Crossfade',
   description: 'Crossfade between two videos with a configurable transition effect.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'crossfade', 'transition', 'blend', 'wipe', 'dissolve', 'fade'],
 
   input: {
@@ -125,8 +122,6 @@ export const videoCrossfade: ToolModule<VideoCrossfadeParams> = {
       step: 1,
     },
   },
-
-  Component: VideoCrossfadeComponentStub,
 
   async run(
     inputs: File[],

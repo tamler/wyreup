@@ -17,15 +17,12 @@ const MODEL_ID = 'Xenova/trocr-small-handwritten';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const OcrProComponentStub = (): unknown => null;
-
 export const ocrPro: ToolModule<OcrProParams> = {
   id: 'ocr-pro',
   slug: 'ocr-pro',
   name: 'OCR Pro',
   description: 'Extract text from handwritten notes and printed documents using a neural model — runs on your device.',
   category: 'export',
-  presence: 'both',
   keywords: ['ocr', 'handwriting', 'text', 'extract', 'recognize', 'neural', 'scan', 'document'],
 
   input: {
@@ -45,7 +42,6 @@ export const ocrPro: ToolModule<OcrProParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultOcrProParams,
-  Component: OcrProComponentStub,
 
   async run(inputs: File[], _params: OcrProParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

@@ -5,20 +5,17 @@ export const WYREUP_CORE_VERSION = '0.0.0';
 export type {
   ToolModule,
   ToolCategory,
-  ToolPresence,
   ToolInputSpec,
   ToolOutputSpec,
   ToolProgress,
   ToolRunContext,
-  ToolComponentProps,
   MemoryEstimate,
   MimePattern,
   ToolRequires,
   ParamFieldSchema,
   ParamSchema,
+  Surface,
 } from './types.js';
-
-export type { ComponentType } from './ui-types.js';
 
 export {
   runChain,

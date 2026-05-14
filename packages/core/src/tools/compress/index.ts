@@ -6,20 +6,14 @@ import { orientImageData } from '../../lib/exif.js';
 export type { CompressParams } from './types.js';
 export { defaultCompressParams } from './types.js';
 
-/**
- * Placeholder UI component. Consuming surfaces (web, cli, mcp) provide
- * their own UIs for this tool. Full "one component, four surfaces" pattern
- * arrives in later waves with the editor.
- */
-const CompressComponentStub = (): unknown => null;
-
 export const compress: ToolModule<CompressParams> = {
   id: 'compress',
   slug: 'compress',
   name: 'Compress',
   description: 'Reduce image file size by re-encoding at a lower quality.',
+  llmDescription:
+    'Compress an image (JPEG/PNG/WebP) to reduce file size. Use when a user wants a smaller image file. Quality is 1-100 (default 80). Preserves the original format unless targetFormat is set.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['compress', 'shrink', 'reduce', 'optimize', 'smaller', 'quality'],
 
   input: {
@@ -50,8 +44,6 @@ export const compress: ToolModule<CompressParams> = {
       help: 'Lower quality = smaller file size.',
     },
   },
-
-  Component: CompressComponentStub,
 
   async run(
     inputs: File[],

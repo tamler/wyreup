@@ -4,8 +4,6 @@ import type { InvestmentDcaParams } from './types.js';
 export type { InvestmentDcaParams } from './types.js';
 export { defaultInvestmentDcaParams } from './types.js';
 
-const InvestmentDcaComponentStub = (): unknown => null;
-
 function round6(n: number): number {
   return Math.round(n * 1e6) / 1e6;
 }
@@ -20,7 +18,6 @@ export const investmentDca: ToolModule<InvestmentDcaParams> = {
   name: 'DCA Calculator',
   description: 'Compare dollar-cost averaging vs. lump-sum investing using historical price data.',
   category: 'finance',
-  presence: 'both',
   keywords: ['dca', 'dollar cost averaging', 'investment', 'shares', 'finance', 'lump sum', 'portfolio'],
 
   input: { accept: [], min: 0, max: 0 },
@@ -35,8 +32,6 @@ export const investmentDca: ToolModule<InvestmentDcaParams> = {
     monthlyContribution: 500,
     priceHistory: [100, 95, 110, 105, 120, 115, 130, 125, 140, 135, 150, 145],
   },
-
-  Component: InvestmentDcaComponentStub,
 
    
   async run(

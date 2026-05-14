@@ -12,16 +12,15 @@ const defaults: Required<PdfCompressParams> = {
   pngToJpeg: true,
 };
 
-const PdfCompressComponentStub = (): unknown => null;
-
 export const pdfCompress: ToolModule<PdfCompressParams> = {
   id: 'pdf-compress',
   slug: 'pdf-compress',
   name: 'Compress PDF',
   description:
     'Reduces PDF size by re-encoding embedded images. Does not remove unused resources, subset fonts, or repair stream encoding.',
+  llmDescription:
+    'Compress a PDF to reduce file size. Use when the user needs to shrink a PDF for email or upload.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['pdf', 'compress', 'optimize', 'reduce', 'size', 'images'],
 
   input: {
@@ -57,8 +56,6 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
       help: 'Re-encode PNG images as JPEG for additional size reduction.',
     },
   },
-
-  Component: PdfCompressComponentStub,
 
   async run(
     inputs: File[],

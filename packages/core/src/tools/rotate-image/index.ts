@@ -12,15 +12,12 @@ import {
 export type { RotateImageParams } from './types.js';
 export { defaultRotateImageParams } from './types.js';
 
-const RotateImageComponentStub = (): unknown => null;
-
 export const rotateImage: ToolModule<RotateImageParams> = {
   id: 'rotate-image',
   slug: 'rotate-image',
   name: 'Rotate Image',
   description: 'Rotate images by 90, 180, or 270 degrees.',
   category: 'edit',
-  presence: 'both',
   keywords: ['rotate', 'turn', 'orientation', 'angle'],
 
   input: {
@@ -51,8 +48,6 @@ export const rotateImage: ToolModule<RotateImageParams> = {
       ],
     },
   },
-
-  Component: RotateImageComponentStub,
 
   async run(
     inputs: File[],

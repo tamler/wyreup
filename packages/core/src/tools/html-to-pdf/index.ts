@@ -17,8 +17,6 @@ const PAGE_SIZES: Record<string, [number, number]> = {
   Legal: [215.9, 355.6],
 };
 
-const HtmlToPdfComponentStub = (): unknown => null;
-
 export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
   id: 'html-to-pdf',
   slug: 'html-to-pdf',
@@ -26,7 +24,6 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
   description:
     'Convert an HTML file to a PDF document. Renders in the browser using html2canvas and jsPDF.',
   category: 'convert',
-  presence: 'both',
   keywords: ['html', 'pdf', 'convert', 'document', 'print', 'web', 'page'],
 
   input: {
@@ -87,8 +84,6 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
       step: 0.1,
     },
   },
-
-  Component: HtmlToPdfComponentStub,
 
   async run(
     inputs: File[],

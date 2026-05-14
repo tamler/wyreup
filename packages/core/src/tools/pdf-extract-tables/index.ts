@@ -19,8 +19,6 @@ export interface TableRow {
   rows: string[][];
 }
 
-const PdfExtractTablesComponentStub = (): unknown => null;
-
 /**
  * Group text items by y-coordinate within a tolerance.
  * Returns rows sorted top-to-bottom, items sorted left-to-right within each row.
@@ -73,8 +71,9 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
     'Extract tabular data from a PDF as JSON or CSV. ' +
     'Works well for simple tables with aligned columns and no merged cells. ' +
     'Complex tables, rotated text, and scanned PDFs (images) will not extract cleanly.',
+  llmDescription:
+    'Extract tabular data from a PDF and return it as JSON or CSV. Use when the user wants the data from tables inside a PDF.',
   category: 'export',
-  presence: 'both',
   keywords: ['pdf', 'table', 'extract', 'csv', 'json', 'data'],
 
   input: {
@@ -93,8 +92,6 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
   memoryEstimate: 'medium',
 
   defaults,
-
-  Component: PdfExtractTablesComponentStub,
 
   async run(
     inputs: File[],

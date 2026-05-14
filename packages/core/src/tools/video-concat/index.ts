@@ -30,15 +30,12 @@ export function buildConcatArgs(
   return args;
 }
 
-const VideoConcatComponentStub = (): unknown => null;
-
 export const videoConcat: ToolModule<VideoConcatParams> = {
   id: 'video-concat',
   slug: 'video-concat',
   name: 'Concatenate Videos',
   description: 'Join multiple video files end-to-end into a single MP4.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'concat', 'join', 'merge', 'combine', 'append', 'stitch'],
 
   input: {
@@ -84,8 +81,6 @@ export const videoConcat: ToolModule<VideoConcatParams> = {
       step: 1,
     },
   },
-
-  Component: VideoConcatComponentStub,
 
   async run(
     inputs: File[],

@@ -4,8 +4,6 @@ export type ShapefileToGeojsonParams = Record<string, never>;
 
 export const defaultShapefileToGeojsonParams: ShapefileToGeojsonParams = {};
 
-const ShapefileToGeojsonComponentStub = (): unknown => null;
-
 interface FeatureCollection {
   type: 'FeatureCollection';
   features: unknown[];
@@ -19,7 +17,6 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
     'Convert a zipped Shapefile bundle (.shp + .dbf + .prj) to GeoJSON. Upload the .zip directly.',
   category: 'convert',
   categories: ['geo'],
-  presence: 'both',
   keywords: [
     'shapefile',
     'shp',
@@ -51,8 +48,6 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
   memoryEstimate: 'medium',
 
   defaults: defaultShapefileToGeojsonParams,
-
-  Component: ShapefileToGeojsonComponentStub,
 
   async run(
     inputs: File[],

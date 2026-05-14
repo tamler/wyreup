@@ -23,15 +23,12 @@ export interface TextNerResult {
 // Entity types: PER (person), ORG (organization), LOC (location), MISC
 const MODEL_ID = 'Xenova/bert-base-NER';
 
-const TextNerComponentStub = (): unknown => null;
-
 export const textNer: ToolModule<TextNerParams> = {
   id: 'text-ner',
   slug: 'text-ner',
   name: 'Named Entity Recognition',
   description: 'Identify people, organizations, and locations in text — runs on your device.',
   category: 'text',
-  presence: 'both',
   keywords: ['ner', 'entities', 'person', 'organization', 'location', 'nlp', 'extract'],
 
   input: {
@@ -51,7 +48,6 @@ export const textNer: ToolModule<TextNerParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultTextNerParams,
-  Component: TextNerComponentStub,
 
   async run(inputs: File[], _params: TextNerParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

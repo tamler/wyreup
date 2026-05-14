@@ -25,7 +25,6 @@ describe('video-overlay-image — metadata', () => {
   it('memoryEstimate is "high"', () => expect(videoOverlayImage.memoryEstimate).toBe('high'));
   it('cost is "free"', () => expect(videoOverlayImage.cost).toBe('free'));
   it('batchable is false', () => expect(videoOverlayImage.batchable).toBe(false));
-  it('presence is "both"', () => expect(videoOverlayImage.presence).toBe('both'));
   it('input min is 2, max is 2', () => {
     expect(videoOverlayImage.input.min).toBe(2);
     expect(videoOverlayImage.input.max).toBe(2);

@@ -24,8 +24,6 @@ export const defaultCsvTemplateParams: CsvTemplateParams = {
   hasHeader: true,
 };
 
-const CsvTemplateComponentStub = (): unknown => null;
-
 function sanitizeFilename(name: string, fallback: string): string {
   // Strip path separators + control chars; keep something resembling a filename.
   // eslint-disable-next-line no-control-regex
@@ -40,7 +38,6 @@ export const csvTemplate: ToolModule<CsvTemplateParams> = {
   description:
     'Mail-merge: take a CSV plus a mustache-style template, render one document per row, return a ZIP of the outputs. Filename pattern can reference row columns (e.g. "{{id}}-{{slug}}.md"). Composes csv-json + text-template + zip-create — the canonical "batch render data into N files" tool.',
   category: 'convert',
-  presence: 'both',
   keywords: ['csv', 'template', 'mustache', 'mail-merge', 'batch', 'render', 'export'],
 
   input: {
@@ -90,8 +87,6 @@ export const csvTemplate: ToolModule<CsvTemplateParams> = {
       label: 'first row is header',
     },
   },
-
-  Component: CsvTemplateComponentStub,
 
   async run(inputs: File[], params: CsvTemplateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('csv-template accepts exactly one CSV file.');

@@ -6,15 +6,12 @@ import { orientImageData } from '../../lib/exif.js';
 export type { SepiaParams } from './types.js';
 export { defaultSepiaParams } from './types.js';
 
-const SepiaComponentStub = (): unknown => null;
-
 export const sepia: ToolModule<SepiaParams> = {
   id: 'sepia',
   slug: 'sepia',
   name: 'Sepia',
   description: 'Apply a warm sepia tone to images.',
   category: 'edit',
-  presence: 'both',
   keywords: ['sepia', 'vintage', 'warm', 'tone', 'filter'],
 
   input: {
@@ -33,8 +30,6 @@ export const sepia: ToolModule<SepiaParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: SepiaComponentStub,
 
   async run(
     inputs: File[],

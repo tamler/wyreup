@@ -4,8 +4,6 @@ import type { WatermarkPdfParams } from './types.js';
 export type { WatermarkPdfParams } from './types.js';
 export { defaultWatermarkPdfParams } from './types.js';
 
-const WatermarkPdfComponentStub = (): unknown => null;
-
 /** Parse a CSS hex color string like '#888888' into [r, g, b] 0-1 range for pdf-lib. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const cleaned = hex.replace('#', '');
@@ -24,7 +22,6 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
   name: 'Watermark PDF',
   description: 'Add a text or image watermark to every page of a PDF.',
   category: 'pdf',
-  presence: 'both',
   keywords: ['watermark', 'pdf', 'stamp', 'overlay', 'text'],
 
   input: {
@@ -99,8 +96,6 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
       unit: '°',
     },
   },
-
-  Component: WatermarkPdfComponentStub,
 
   async run(
     inputs: File[],

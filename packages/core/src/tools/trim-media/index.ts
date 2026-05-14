@@ -21,15 +21,12 @@ function getExtFromFile(file: File): string {
   return parts.length > 1 ? (parts[parts.length - 1] ?? 'bin') : 'bin';
 }
 
-const TrimMediaComponentStub = (): unknown => null;
-
 export const trimMedia: ToolModule<TrimMediaParams> = {
   id: 'trim-media',
   slug: 'trim-media',
   name: 'Trim Media',
   description: 'Trim an audio or video file to a specific start and end time (in seconds).',
   category: 'media',
-  presence: 'both',
   keywords: ['trim', 'cut', 'clip', 'audio', 'video', 'start', 'end', 'duration'],
 
   input: {
@@ -48,8 +45,6 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
   installGroup: 'ffmpeg',
 
   defaults: defaultTrimMediaParams,
-
-  Component: TrimMediaComponentStub,
 
   async run(
     inputs: File[],

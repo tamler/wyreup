@@ -11,8 +11,6 @@ export interface BarcodeParams {
   backgroundColor?: string;
 }
 
-const BarcodeComponentStub = (): unknown => null;
-
 /**
  * Build an SVG string from a JsBarcode encoding object.
  * Works in both Node and browser — no canvas required for SVG output.
@@ -89,7 +87,6 @@ export const barcode: ToolModule<BarcodeParams> = {
   description:
     'Generate barcode images from text or numbers. Supports Code 128, Code 39, EAN, UPC, ITF, and MSI formats.',
   category: 'create',
-  presence: 'both',
   keywords: [
     'barcode',
     'code128',
@@ -189,8 +186,6 @@ export const barcode: ToolModule<BarcodeParams> = {
       placeholder: '#FFFFFF',
     },
   },
-
-  Component: BarcodeComponentStub,
 
   async run(
     _inputs: File[],

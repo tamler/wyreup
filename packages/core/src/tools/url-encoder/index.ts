@@ -4,15 +4,12 @@ import type { UrlEncoderParams } from './types.js';
 export type { UrlEncoderParams } from './types.js';
 export { defaultUrlEncoderParams } from './types.js';
 
-const UrlEncoderComponentStub = (): unknown => null;
-
 export const urlEncoder: ToolModule<UrlEncoderParams> = {
   id: 'url-encoder',
   slug: 'url-encoder',
   name: 'URL Encoder',
   description: 'Encode or decode URL components and full URLs.',
   category: 'convert',
-  presence: 'both',
   keywords: ['url', 'encode', 'decode', 'percent', 'uri', 'query', 'string'],
 
   input: {
@@ -52,8 +49,6 @@ export const urlEncoder: ToolModule<UrlEncoderParams> = {
       ],
     },
   },
-
-  Component: UrlEncoderComponentStub,
 
   async run(
     inputs: File[],

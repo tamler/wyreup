@@ -10,15 +10,12 @@ export const defaultBurnSubtitlesParams: BurnSubtitlesParams = {
   crf: 23,
 };
 
-const BurnSubtitlesComponentStub = (): unknown => null;
-
 export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
   id: 'burn-subtitles',
   slug: 'burn-subtitles',
   name: 'Burn Subtitles',
   description: 'Render subtitles permanently into a video (hardsub). Accepts SRT or WebVTT files.',
   category: 'media',
-  presence: 'both',
   keywords: ['subtitles', 'hardsub', 'burn', 'srt', 'vtt', 'video', 'captions', 'embed'],
 
   input: {
@@ -37,8 +34,6 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
   installGroup: 'ffmpeg',
 
   defaults: defaultBurnSubtitlesParams,
-
-  Component: BurnSubtitlesComponentStub,
 
   async run(
     inputs: File[],

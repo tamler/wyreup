@@ -25,15 +25,12 @@ function minifyCss(css: string): string {
     .trim();
 }
 
-const CssFormatterComponentStub = (): unknown => null;
-
 export const cssFormatter: ToolModule<CssFormatterParams> = {
   id: 'css-formatter',
   slug: 'css-formatter',
   name: 'CSS Formatter',
   description: 'Beautify or minify CSS stylesheets using Prettier.',
   category: 'dev',
-  presence: 'both',
   keywords: ['css', 'format', 'beautify', 'minify', 'stylesheet', 'pretty', 'indent'],
 
   input: {
@@ -53,8 +50,6 @@ export const cssFormatter: ToolModule<CssFormatterParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultCssFormatterParams,
-
-  Component: CssFormatterComponentStub,
 
   async run(
     inputs: File[],

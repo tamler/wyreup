@@ -14,8 +14,6 @@ export const defaultSvgOptimizerParams: SvgOptimizerParams = {
   removeEditorData: true,
 };
 
-const SvgOptimizerComponentStub = (): unknown => null;
-
 export const svgOptimizer: ToolModule<SvgOptimizerParams> = {
   id: 'svg-optimizer',
   slug: 'svg-optimizer',
@@ -23,7 +21,6 @@ export const svgOptimizer: ToolModule<SvgOptimizerParams> = {
   description:
     'Optimize SVG files using SVGO. Removes comments, editor metadata, and rounds decimal precision.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['svg', 'optimize', 'compress', 'svgo', 'vector', 'clean', 'minify'],
 
   input: {
@@ -43,8 +40,6 @@ export const svgOptimizer: ToolModule<SvgOptimizerParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultSvgOptimizerParams,
-
-  Component: SvgOptimizerComponentStub,
 
   async run(
     inputs: File[],

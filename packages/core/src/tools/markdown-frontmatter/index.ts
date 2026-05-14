@@ -18,8 +18,6 @@ export interface MarkdownFrontmatterResult {
   range: { startLine: number; endLine: number } | null;
 }
 
-const MarkdownFrontmatterComponentStub = (): unknown => null;
-
 // Match the very common forms only:
 // - YAML between '---' fences
 // - TOML between '+++' fences
@@ -136,7 +134,6 @@ export const markdownFrontmatter: ToolModule<MarkdownFrontmatterParams> = {
   description:
     'Extract YAML (---), TOML (+++), or JSON frontmatter from a markdown file, returning the metadata as JSON and the body separately. Auto-detects the fence style.',
   category: 'text',
-  presence: 'both',
   keywords: ['markdown', 'frontmatter', 'yaml', 'toml', 'json', 'metadata', 'jekyll', 'hugo', 'gatsby', 'astro'],
 
   input: {
@@ -170,8 +167,6 @@ export const markdownFrontmatter: ToolModule<MarkdownFrontmatterParams> = {
       ],
     },
   },
-
-  Component: MarkdownFrontmatterComponentStub,
 
   async run(inputs: File[], params: MarkdownFrontmatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('markdown-frontmatter accepts exactly one file.');

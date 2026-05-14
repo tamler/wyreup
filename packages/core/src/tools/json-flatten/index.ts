@@ -15,8 +15,6 @@ export const defaultJsonFlattenParams: JsonFlattenParams = {
   preserveArrays: false,
 };
 
-const JsonFlattenComponentStub = (): unknown => null;
-
 export function flattenJson(
   value: unknown,
   params: JsonFlattenParams,
@@ -73,7 +71,6 @@ export const jsonFlatten: ToolModule<JsonFlattenParams> = {
   description:
     'Flatten nested JSON into a single-level object with dot-notation keys (a.b.c). Useful for CSV / spreadsheet export, search-index normalization, and env-var generation.',
   category: 'convert',
-  presence: 'both',
   keywords: ['json', 'flatten', 'flat', 'dot-notation', 'normalize', 'nested', 'object'],
 
   input: {
@@ -117,8 +114,6 @@ export const jsonFlatten: ToolModule<JsonFlattenParams> = {
       help: 'Leave arrays intact instead of flattening their elements into separate keys.',
     },
   },
-
-  Component: JsonFlattenComponentStub,
 
   async run(inputs: File[], params: JsonFlattenParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('json-flatten accepts exactly one JSON input.');

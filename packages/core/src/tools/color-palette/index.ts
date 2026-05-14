@@ -139,15 +139,12 @@ function classifySwatches(hexColors: string[]): SwatchMap {
 
 // ──── Tool module ────────────────────────────────────────────────────────────
 
-const ColorPaletteComponentStub = (): unknown => null;
-
 export const colorPalette: ToolModule<ColorPaletteParams> = {
   id: 'color-palette',
   slug: 'color-palette',
   name: 'Color Palette',
   description: 'Extract dominant colors from an image as hex codes.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['color', 'palette', 'dominant', 'extract', 'vibrant', 'inspect'],
 
   input: {
@@ -166,8 +163,6 @@ export const colorPalette: ToolModule<ColorPaletteParams> = {
   memoryEstimate: 'low',
 
   defaults: { count: 5 },
-
-  Component: ColorPaletteComponentStub,
 
   async run(
     inputs: File[],

@@ -6,8 +6,6 @@ export type { OcrParams } from './types.js';
 export { defaultOcrParams } from './types.js';
 export { TESSERACT_LANGUAGES } from './languages.js';
 
-const OcrComponentStub = (): unknown => null;
-
 const ACCEPTED_MIME_TYPES = [
   'image/jpeg',
   'image/png',
@@ -22,7 +20,6 @@ export const ocr: ToolModule<OcrParams> = {
   name: 'OCR',
   description: 'Extract text from images using optical character recognition.',
   category: 'export',
-  presence: 'both',
   keywords: ['ocr', 'text', 'extract', 'image', 'recognition', 'scan', 'read'],
 
   input: {
@@ -53,8 +50,6 @@ export const ocr: ToolModule<OcrParams> = {
       options: TESSERACT_LANGUAGES,
     },
   },
-
-  Component: OcrComponentStub,
 
   async run(
     inputs: File[],

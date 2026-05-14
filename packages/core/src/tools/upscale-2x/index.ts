@@ -14,15 +14,12 @@ const MODEL_ID = 'Xenova/swin2SR-classical-sr-x2-64';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-const Upscale2xComponentStub = (): unknown => null;
-
 export const upscale2x: ToolModule<Upscale2xParams> = {
   id: 'upscale-2x',
   slug: 'upscale-2x',
   name: 'Upscale 2x',
   description: 'Double the resolution of any image using AI super-resolution — runs on your device.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['upscale', 'super-resolution', 'enlarge', 'resolution', 'sharpen', 'enhance', 'ai'],
 
   input: {
@@ -42,7 +39,6 @@ export const upscale2x: ToolModule<Upscale2xParams> = {
   requires: { webgpu: 'preferred' },
 
   defaults: defaultUpscale2xParams,
-  Component: Upscale2xComponentStub,
 
   async run(inputs: File[], _params: Upscale2xParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {

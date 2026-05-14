@@ -5,15 +5,12 @@ export interface PdfDecryptParams {
   password: string;
 }
 
-const PdfDecryptComponentStub = (): unknown => null;
-
 export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
   id: 'pdf-decrypt',
   slug: 'pdf-decrypt',
   name: 'Decrypt PDF',
   description: 'Remove password protection from a PDF.',
   category: 'optimize',
-  presence: 'both',
   keywords: ['pdf', 'decrypt', 'password', 'unlock', 'security'],
 
   input: {
@@ -34,8 +31,6 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
   defaults: {
     password: '',
   },
-
-  Component: PdfDecryptComponentStub,
 
   async run(
     inputs: File[],

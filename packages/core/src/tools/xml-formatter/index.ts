@@ -17,15 +17,12 @@ function minifyXml(xml: string): string {
     .trim();
 }
 
-const XmlFormatterComponentStub = (): unknown => null;
-
 export const xmlFormatter: ToolModule<XmlFormatterParams> = {
   id: 'xml-formatter',
   slug: 'xml-formatter',
   name: 'XML Formatter',
   description: 'Beautify or minify XML documents. Uses Prettier for beautification.',
   category: 'dev',
-  presence: 'both',
   keywords: ['xml', 'format', 'beautify', 'minify', 'pretty', 'indent'],
 
   input: {
@@ -45,8 +42,6 @@ export const xmlFormatter: ToolModule<XmlFormatterParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultXmlFormatterParams,
-
-  Component: XmlFormatterComponentStub,
 
   async run(
     inputs: File[],

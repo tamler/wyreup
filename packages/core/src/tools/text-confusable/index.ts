@@ -42,8 +42,6 @@ export interface TextConfusableResult {
   verdict: 'clean' | 'low' | 'medium' | 'high';
 }
 
-const TextConfusableComponentStub = (): unknown => null;
-
 // Minimal homoglyph table — the visually-identical Latin lookalikes
 // that show up in real-world impersonation. A full Unicode TR-39
 // confusables table is huge; this covers the cases that matter
@@ -215,7 +213,6 @@ export const textConfusable: ToolModule<TextConfusableParams> = {
   description:
     'Detect Unicode homoglyph attacks. Flags non-Latin lookalikes (Cyrillic а, Greek ο, fullwidth Latin, mathematical alphanumeric) and tokens that mix scripts — exactly the patterns used in domain spoofing, fake usernames, and prompt-injection text.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['confusable', 'homoglyph', 'unicode', 'security', 'phishing', 'spoofing', 'idn', 'mixed-script'],
 
   input: {
@@ -249,8 +246,6 @@ export const textConfusable: ToolModule<TextConfusableParams> = {
       help: 'Mark words that combine multiple Unicode scripts (e.g. a single Cyrillic letter hidden inside a Latin word).',
     },
   },
-
-  Component: TextConfusableComponentStub,
 
   async run(inputs: File[], params: TextConfusableParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-confusable accepts exactly one text input.');

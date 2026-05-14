@@ -37,7 +37,6 @@ export const ${varName}: ToolModule<${paramsType}> = {
   name: '${a.displayName}',
   description: '${a.description}',
   category: '${a.category}',
-  presence: 'both',
   keywords: ['${a.toolId}'],
 
   input: {
@@ -60,9 +59,6 @@ export const ${varName}: ToolModule<${paramsType}> = {
     // Return the first input unchanged as a placeholder.
     return inputs[0]!;
   },
-
-  // No UI component yet — add a Svelte component for browser support.
-  Component: undefined as never,
 
   defaults,
 

@@ -4,8 +4,6 @@ import type { TimestampConverterParams, TimestampConverterResult } from './types
 export type { TimestampConverterParams, TimestampConverterResult } from './types.js';
 export { defaultTimestampConverterParams } from './types.js';
 
-const TimestampConverterComponentStub = (): unknown => null;
-
 function relativeTime(ms: number): string {
   const now = Date.now();
   const diffMs = ms - now;
@@ -55,7 +53,6 @@ export const timestampConverter: ToolModule<TimestampConverterParams> = {
   name: 'Timestamp Converter',
   description: 'Convert epoch seconds, epoch milliseconds, or ISO 8601 timestamps to all common representations.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['timestamp', 'epoch', 'unix', 'date', 'time', 'convert', 'iso8601'],
 
   input: {
@@ -75,8 +72,6 @@ export const timestampConverter: ToolModule<TimestampConverterParams> = {
   memoryEstimate: 'low',
 
   defaults: {},
-
-  Component: TimestampConverterComponentStub,
 
   async run(
     inputs: File[],

@@ -171,15 +171,12 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
 
 // ──── Tool module ────
 
-const FaceBlurComponentStub = (): unknown => null;
-
 export const faceBlur: ToolModule<FaceBlurParams> = {
   id: 'face-blur',
   slug: 'face-blur',
   name: 'Face Blur',
   description: 'Detect every face in a photo and blur it — runs entirely on your device.',
   category: 'privacy',
-  presence: 'both',
   keywords: ['face', 'blur', 'privacy', 'anonymize', 'redact', 'pixelate'],
 
   input: {
@@ -197,8 +194,6 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
   // No `requires` field — MediaPipe runs on WASM universally (no WebGPU needed)
 
   defaults: defaultFaceBlurParams,
-
-  Component: FaceBlurComponentStub,
 
   async run(inputs: File[], params: FaceBlurParams, ctx: ToolRunContext): Promise<Blob[]> {
     for (const input of inputs) {

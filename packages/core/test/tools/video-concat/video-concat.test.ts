@@ -23,7 +23,6 @@ describe('video-concat — metadata', () => {
   it('memoryEstimate is "high"', () => expect(videoConcat.memoryEstimate).toBe('high'));
   it('cost is "free"', () => expect(videoConcat.cost).toBe('free'));
   it('batchable is false', () => expect(videoConcat.batchable).toBe(false));
-  it('presence is "both"', () => expect(videoConcat.presence).toBe('both'));
   it('input min is 2', () => expect(videoConcat.input.min).toBe(2));
   it('input max is 20', () => expect(videoConcat.input.max).toBe(20));
   it('defaults reencode is false', () => expect(defaultVideoConcatParams.reencode).toBe(false));

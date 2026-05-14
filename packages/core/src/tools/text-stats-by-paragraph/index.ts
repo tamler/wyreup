@@ -41,8 +41,6 @@ export interface TextStatsByParagraphResult {
   paragraphs: ParagraphStats[];
 }
 
-const TextStatsByParagraphComponentStub = (): unknown => null;
-
 function splitParagraphs(text: string): Array<{ body: string; start: number }> {
   const out: Array<{ body: string; start: number }> = [];
   // Paragraph boundary = one or more blank lines (allowing for \r\n).
@@ -79,7 +77,6 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
   description:
     'Per-paragraph length and readability stats — word/sentence/char counts plus Flesch / Flesch-Kincaid / Gunning Fog for paragraphs above a minimum size. Flags the dense paragraphs so editors know where to focus.',
   category: 'text',
-  presence: 'both',
   keywords: ['readability', 'paragraph', 'editorial', 'review', 'flesch', 'stats', 'long-form'],
 
   input: {
@@ -115,8 +112,6 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
       step: 1,
     },
   },
-
-  Component: TextStatsByParagraphComponentStub,
 
   async run(inputs: File[], params: TextStatsByParagraphParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('text-stats-by-paragraph accepts exactly one text input.');

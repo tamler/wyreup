@@ -37,8 +37,6 @@ export interface FaviconFromUrlResult {
   candidates: FaviconLink[];
 }
 
-const FaviconFromUrlComponentStub = (): unknown => null;
-
 const REL_TO_KIND: Record<string, FaviconRel> = {
   icon: 'icon',
   'shortcut icon': 'shortcut icon',
@@ -132,7 +130,6 @@ export const faviconFromUrl: ToolModule<FaviconFromUrlParams> = {
   description:
     'Extract every declared favicon from an HTML document — <link rel="icon" / shortcut icon / apple-touch-icon / mask-icon>, <meta name="msapplication-TileImage">, and the /favicon.ico convention as a final fallback. Resolves to absolute URLs when a base URL is provided.',
   category: 'inspect',
-  presence: 'both',
   keywords: ['favicon', 'icon', 'apple-touch-icon', 'extract', 'html', 'metadata'],
 
   input: {
@@ -158,8 +155,6 @@ export const faviconFromUrl: ToolModule<FaviconFromUrlParams> = {
       placeholder: 'https://example.com/article',
     },
   },
-
-  Component: FaviconFromUrlComponentStub,
 
   async run(inputs: File[], params: FaviconFromUrlParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('favicon-from-url accepts exactly one HTML file.');

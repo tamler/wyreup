@@ -21,15 +21,12 @@ export interface ZipInfoParams {}
 
 export const defaultZipInfoParams: ZipInfoParams = {};
 
-const ZipInfoComponentStub = (): unknown => null;
-
 export const zipInfo: ToolModule<ZipInfoParams> = {
   id: 'zip-info',
   slug: 'zip-info',
   name: 'ZIP Info',
   description: 'Inspect a ZIP archive: list entries, sizes, compression ratio, and timestamps.',
   category: 'archive',
-  presence: 'both',
   keywords: ['zip', 'inspect', 'info', 'list', 'archive', 'contents', 'metadata'],
 
   input: {
@@ -46,8 +43,6 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
   memoryEstimate: 'low',
 
   defaults: defaultZipInfoParams,
-
-  Component: ZipInfoComponentStub,
 
   async run(
     inputs: File[],

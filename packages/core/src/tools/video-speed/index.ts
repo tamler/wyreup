@@ -72,15 +72,12 @@ export function buildSpeedArgs(
   ];
 }
 
-const VideoSpeedComponentStub = (): unknown => null;
-
 export const videoSpeed: ToolModule<VideoSpeedParams> = {
   id: 'video-speed',
   slug: 'video-speed',
   name: 'Change Video Speed',
   description: 'Speed up or slow down a video while keeping audio synced.',
   category: 'media',
-  presence: 'both',
   keywords: ['video', 'speed', 'slow', 'fast', 'timelapse', 'slowmo', 'playback', 'tempo'],
 
   input: {
@@ -122,8 +119,6 @@ export const videoSpeed: ToolModule<VideoSpeedParams> = {
       step: 1,
     },
   },
-
-  Component: VideoSpeedComponentStub,
 
   async run(
     inputs: File[],

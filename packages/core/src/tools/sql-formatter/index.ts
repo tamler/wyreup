@@ -12,15 +12,12 @@ export const defaultSqlFormatterParams: SqlFormatterParams = {
   indent: 2,
 };
 
-const SqlFormatterComponentStub = (): unknown => null;
-
 export const sqlFormatter: ToolModule<SqlFormatterParams> = {
   id: 'sql-formatter',
   slug: 'sql-formatter',
   name: 'SQL Formatter',
   description: 'Beautify and format SQL queries with configurable keyword casing and indentation.',
   category: 'dev',
-  presence: 'both',
   keywords: ['sql', 'format', 'beautify', 'query', 'database', 'postgresql', 'mysql', 'sqlite'],
 
   input: {
@@ -70,8 +67,6 @@ export const sqlFormatter: ToolModule<SqlFormatterParams> = {
       step: 1,
     },
   },
-
-  Component: SqlFormatterComponentStub,
 
   async run(
     inputs: File[],
