@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 
   export let accept: string[] = ['*/*'];
   export let multiple: boolean = false;
@@ -11,6 +11,28 @@
 
   let isDragOver = false;
   let zone: HTMLElement;
+
+  // Drops outside any specific zone are caught by the site-wide safety net
+  // in BaseLayout and re-dispatched as `wyreup:filedrop`. Each mounted
+  // DropZone listens for that event and runs the file through its own
+  // accept-list — so dropping a JPG on a JPG-only tool page works
+  // wherever the cursor lands, and a mismatched file shows the same
+  // error message it would on a direct hit.
+  onMount(() => {
+    document.addEventListener('wyreup:filedrop', handleGlobalFileDrop);
+  });
+
+  onDestroy(() => {
+    if (typeof document === 'undefined') return;
+    document.removeEventListener('wyreup:filedrop', handleGlobalFileDrop);
+  });
+
+  function handleGlobalFileDrop(e: Event) {
+    const detail = (e as CustomEvent<{ files: FileList }>).detail;
+    const incoming = Array.from(detail?.files ?? []);
+    if (incoming.length === 0) return;
+    handleFiles(incoming);
+  }
 
   function matchesMime(file: File): boolean {
     if (accept.includes('*/*') || accept.includes('*')) return true;
