@@ -10,6 +10,7 @@
     type KitChain,
   } from './runners/kitStorage';
   import { encodeChainSteps } from './runners/chainUrl';
+  import TriggerRulesSection from './TriggerRulesSection.svelte';
 
   let chains: KitChain[] = [];
   let loaded = false;
@@ -181,6 +182,10 @@
       <span class="import-error" aria-live="polite">{importError}</span>
     {/if}
   </div>
+
+  <hr class="my-kit__divider" />
+
+  <TriggerRulesSection />
 </div>
 
 <style>
@@ -188,6 +193,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  .my-kit__divider {
+    margin: var(--space-4) 0 0;
+    border: 0;
+    border-top: 1px solid var(--border);
   }
 
   .loading {
