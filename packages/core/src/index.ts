@@ -526,6 +526,67 @@ export {
   type HtmlMinifyResult,
   defaultHtmlMinifyParams,
 } from './tools/html-minify/index.js';
+export {
+  apiKeyFormat,
+  type ApiKeyFormatParams,
+  type ApiKeyFormatResult,
+  defaultApiKeyFormatParams,
+} from './tools/api-key-format/index.js';
+export {
+  licenseKey,
+  type LicenseKeyParams,
+  type LicenseKeyResult,
+  defaultLicenseKeyParams,
+} from './tools/license-key/index.js';
+export {
+  textTemplate,
+  type TextTemplateParams,
+  type TextTemplateResult,
+  defaultTextTemplateParams,
+  renderTemplate,
+} from './tools/text-template/index.js';
+export {
+  pgpArmor,
+  type PgpArmorParams,
+  type PgpArmorBlockType,
+  type ArmorDecode,
+  defaultPgpArmorParams,
+  encodeArmor,
+  decodeArmor,
+} from './tools/pgp-armor/index.js';
+export {
+  signedCookieDecode,
+  type SignedCookieDecodeParams,
+  type SignedCookieDecodeResult,
+  type CookieAlgorithm,
+  type CookieStyle,
+  defaultSignedCookieDecodeParams,
+} from './tools/signed-cookie-decode/index.js';
+export {
+  textSuspicious,
+  type TextSuspiciousParams,
+  type TextSuspiciousResult,
+  type SuspiciousFinding,
+  defaultTextSuspiciousParams,
+  analyzeSuspicious,
+} from './tools/text-suspicious/index.js';
+export {
+  openapiValidate,
+  type OpenapiValidateParams,
+  type OpenapiValidateResult,
+  type OpenapiIssue,
+  type OpenapiIssueSeverity,
+  defaultOpenapiValidateParams,
+  validateOpenapi,
+} from './tools/openapi-validate/index.js';
+export {
+  packageJsonValidate,
+  type PackageJsonValidateParams,
+  type PackageJsonValidateResult,
+  type PackageJsonIssue,
+  defaultPackageJsonValidateParams,
+  validatePackageJson,
+} from './tools/package-json-validate/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

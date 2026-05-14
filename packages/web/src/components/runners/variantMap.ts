@@ -70,6 +70,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   hash: 'HashRunner',
   // hmac — single file in + secret key + algo → JSON digest
   hmac: 'JsonResultRunner',
+  // signed-cookie-decode — no file input, JSON output
+  'signed-cookie-decode': 'JsonResultRunner',
   // mime-detect — magic-byte sniff on file head → JSON report
   'mime-detect': 'JsonResultRunner',
   // file-fingerprint — comprehensive file identity bundle
@@ -94,6 +96,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   base64: 'TextResultRunner',
   base32: 'TextResultRunner',
   base58: 'TextResultRunner',
+  'pgp-armor': 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
   'image-caption': 'TextResultRunner',
@@ -121,7 +124,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-frequency': 'TextInputRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
+  'text-suspicious': 'TextInputRunner',
   'text-stats-by-paragraph': 'TextInputRunner',
+  'text-template': 'TextInputRunner',
   // text-redact emits both the redacted text and a counts report
   'text-redact': 'MultiOutputRunner',
   slug: 'TextInputRunner',
@@ -157,6 +162,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'json-path': 'TextInputRunner',
   'yaml-validate': 'TextInputRunner',
   'json-schema-infer': 'TextInputRunner',
+  'openapi-validate': 'TextInputRunner',
+  'package-json-validate': 'TextInputRunner',
 
   // GenerateRunner — no input needed, generates output
   'uuid-generator': 'GenerateRunner',
@@ -165,6 +172,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'password-generator': 'GenerateRunner',
   barcode: 'GenerateRunner',
   'backup-codes': 'GenerateRunner',
+  'api-key-format': 'GenerateRunner',
+  'license-key': 'GenerateRunner',
   // otpauth-uri produces both JSON metadata and an optional QR PNG;
   // MultiOutputRunner shows the URI text and the QR image side by side.
   'otpauth-uri': 'MultiOutputRunner',

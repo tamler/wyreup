@@ -177,6 +177,14 @@ import { xmlToJson } from './tools/xml-to-json/index.js';
 import { jsonToXml } from './tools/json-to-xml/index.js';
 import { cssMinify } from './tools/css-minify/index.js';
 import { htmlMinify } from './tools/html-minify/index.js';
+import { apiKeyFormat } from './tools/api-key-format/index.js';
+import { licenseKey } from './tools/license-key/index.js';
+import { textTemplate } from './tools/text-template/index.js';
+import { pgpArmor } from './tools/pgp-armor/index.js';
+import { signedCookieDecode } from './tools/signed-cookie-decode/index.js';
+import { textSuspicious } from './tools/text-suspicious/index.js';
+import { openapiValidate } from './tools/openapi-validate/index.js';
+import { packageJsonValidate } from './tools/package-json-validate/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -365,6 +373,14 @@ export const defaultTools: ToolModule<any>[] = [
   jsonToXml,
   cssMinify,
   htmlMinify,
+  apiKeyFormat,
+  licenseKey,
+  textTemplate,
+  pgpArmor,
+  signedCookieDecode,
+  textSuspicious,
+  openapiValidate,
+  packageJsonValidate,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
