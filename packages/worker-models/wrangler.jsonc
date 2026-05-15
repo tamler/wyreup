@@ -11,6 +11,13 @@
       "bucket_name": "wyreup-models"
     }
   ],
+  // Rate limiting: relying on Cloudflare's edge cache + allowlist for
+  // cost bounds, not an in-Worker rate-limit binding. The Workers Rate
+  // Limiting API is in beta and didn't enforce reliably in testing
+  // ("unsafe.bindings" with type=ratelimit deployed cleanly but every
+  // request still passed). If a real rate limit is needed later, the
+  // Cloudflare dashboard's WAF rate-limit rules are the path —
+  // configurable per-zone, work on all plans.
   "routes": [
     {
       "pattern": "models.wyreup.com",
