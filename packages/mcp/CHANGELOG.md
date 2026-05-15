@@ -1,5 +1,92 @@
 # @wyreup/mcp
 
+## 0.5.0
+
+### Minor Changes
+
+- 909186d: Self-host every AI model fetch on R2 via `models.wyreup.com`.
+
+  The browser, CLI, and MCP no longer touch huggingface.co,
+  cdn.jsdelivr.net, or storage.googleapis.com at runtime. All model
+  URLs (face-blur WASM + tflite, audio-enhance ONNX, convert-geo
+  gdal3.js bundle, and every transformers.js pipeline) route through
+  `models.wyreup.com` — a first-party Cloudflare Worker
+  (`packages/worker-models/`) backed by the `wyreup-models` R2 bucket.
+
+  The Worker serves cached objects directly from R2 and lazy-mirrors
+  from the original upstream on cache-miss, writing back to R2 in
+  the background. Cold-start cost: one upstream fetch per file ever,
+  happening server-side inside Cloudflare's network. Hot path:
+  first-party R2 origin, no third-party touch.
+
+  Wired automatically in:
+  - **Web app** — `BaseLayout.astro` calls `setModelCdn` before any
+    tool runner hydrates.
+  - **`@wyreup/cli`** — startup; override with `WYREUP_MODEL_CDN=<url>`
+    or `WYREUP_MODEL_CDN=disabled` to fall back to upstream CDNs.
+  - **`@wyreup/mcp`** — same startup pattern.
+
+  Privacy-scan allow-list updated to remove `jsdelivr.net`,
+  `googleapis.com`, and `huggingface.co` — any future code that
+  sneaks them back in will now fail `tools/check-privacy.mjs`.
+
+- bb025af: Wave T — trigger rules: drop a file, get the right pipeline proposed.
+
+  A trigger rule binds a file MIME pattern to a saved chain. When a
+  matching file arrives anywhere on Wyreup, the rule's chain is
+  _proposed_ via a preview sheet — never auto-run. The user confirms;
+  the chain executes locally.
+
+  **`@wyreup/core` additions** (all new public API):
+  - `TriggerRule`, `TriggerKit` types — versioned schema (v1).
+  - `matchRule(fileMime, rules, fires)` — pure-function matcher,
+    most-specific MIME wins, user-`order` tiebreak, deterministic id
+    tiebreak; rate-limit gate is part of the match outcome.
+  - `parseTriggerKit`, `serializeTriggerKit` — validates MIME shape,
+    rejects bare wildcards. Forward-compat migration shape.
+  - `updateTriggerRule(rule, patch)` — enforces G2: meaningful field
+    changes re-arm `confirmed: false`. The receiver has to re-approve.
+  - `strippedForImport(kit)` — every imported rule lands unconfirmed.
+  - `runPreflight(file)` — suspicious-content pre-flight; uses
+    text-suspicious / pdf-suspicious depending on MIME. Returns a
+    verdict the UI surfaces before showing Run.
+  - `readFileHeader(file)` — first 256 bytes + recognised magic
+    (PDF / PNG / JPEG / GIF / ZIP-shaped / GZIP / WebP). Helps users
+    spot MIME-spoofed files.
+  - `validateChain(chain, registry)` — spoof gate. Reports any chain
+    step that references a tool ID not in the built-in registry.
+  - `DEFAULT_RATE_LIMIT`, `MAX_RATE_LIMIT`, `clampRateLimit`,
+    `pruneFires` — flood-prevention helpers.
+
+  **Security model**
+
+  Eight enforced guarantees in code:
+  G1 preview before every run, G2 per-rule "don't ask again",
+  G3 file_handlers route through the preview, G4 suspicious-file
+  pre-flight, G5 no network egress, G6 output-collision reporting,
+  G7 per-rule rate limit, G8 spoof gate (only built-in tools run).
+  Full spec: docs/triggers-security.md.
+
+  **`@wyreup/cli`**: `--from-kit` flag help updated for the
+  "My Kit" → "Toolbelt" rename.
+
+  **`@wyreup/mcp`**: no API surface change; tracks the core minor.
+
+### Patch Changes
+
+- Updated dependencies [490b3d5]
+- Updated dependencies [c31656b]
+- Updated dependencies [84e2a81]
+- Updated dependencies [c0fd450]
+- Updated dependencies [a76433d]
+- Updated dependencies [909186d]
+- Updated dependencies [7adf1f8]
+- Updated dependencies [b8a8027]
+- Updated dependencies [6d8214a]
+- Updated dependencies [a93afa8]
+- Updated dependencies [bb025af]
+  - @wyreup/core@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
