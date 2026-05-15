@@ -658,6 +658,14 @@ export {
   defaultCronFromTextParams,
   generateCronFromText,
 } from './tools/cron-from-text/index.js';
+export {
+  sqlFormatExplain,
+  type SqlFormatExplainParams,
+  type SqlFormatExplainResult,
+  type SqlAnnotation,
+  defaultSqlFormatExplainParams,
+  explainSql,
+} from './tools/sql-format-explain/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

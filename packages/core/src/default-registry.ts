@@ -191,6 +191,7 @@ import { pdfSuspicious } from './tools/pdf-suspicious/index.js';
 import { regexVisualize } from './tools/regex-visualize/index.js';
 import { regexFromText } from './tools/regex-from-text/index.js';
 import { cronFromText } from './tools/cron-from-text/index.js';
+import { sqlFormatExplain } from './tools/sql-format-explain/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -393,6 +394,7 @@ export const defaultTools: ToolModule<any>[] = [
   regexVisualize,
   regexFromText,
   cronFromText,
+  sqlFormatExplain,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
