@@ -18,6 +18,7 @@
   import PercentageCalculatorRunner from './runners/PercentageCalculatorRunner.svelte';
   import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
   import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
+  import PdfCropRunner from './runners/PdfCropRunner.svelte';
   import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
   import ColorPaletteRunner from './runners/ColorPaletteRunner.svelte';
   import ColorHarmonyRunner from './runners/ColorHarmonyRunner.svelte';
@@ -78,6 +79,7 @@
     PercentageCalculatorRunner,
     DateCalculatorRunner,
     PdfRedactRunner,
+    PdfCropRunner,
     RecordAudioRunner,
     ColorPaletteRunner,
     ColorHarmonyRunner,

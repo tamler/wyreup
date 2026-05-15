@@ -17,6 +17,7 @@ export type RunnerVariant =
   | 'PercentageCalculatorRunner'
   | 'DateCalculatorRunner'
   | 'PdfRedactRunner'
+  | 'PdfCropRunner'
   | 'RecordAudioRunner'
   | 'ColorPaletteRunner'
   | 'ColorHarmonyRunner'
@@ -212,7 +213,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // PreviewRunner — single file in, single blob out, prominent preview
   'face-blur': 'PreviewRunner',
   'audio-enhance': 'PreviewRunner',
-  'pdf-crop': 'PreviewRunner',
+  'pdf-crop': 'PdfCropRunner',
   'pdf-extract-pages': 'PreviewRunner',
   'pdf-delete-pages': 'PreviewRunner',
   'pdf-compress': 'PreviewRunner',
