@@ -688,6 +688,16 @@ export {
   defaultPromptInjectionDemoParams,
   analyzePromptInjection,
 } from './tools/prompt-injection-demo/index.js';
+export {
+  pdfExtractData,
+  type PdfExtractDataParams,
+  type PdfExtractDataResult,
+  type PdfLineItem,
+  type MoneyValue,
+  defaultPdfExtractDataParams,
+  extractFieldsFromText,
+  extractPdfData,
+} from './tools/pdf-extract-data/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
