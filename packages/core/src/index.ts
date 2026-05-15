@@ -680,6 +680,14 @@ export {
   defaultImageToAsciiParams,
   imageToAscii,
 } from './tools/image-to-ascii/index.js';
+export {
+  promptInjectionDemo,
+  type PromptInjectionDemoParams,
+  type PromptInjectionDemoResult,
+  type InjectionHighlight,
+  defaultPromptInjectionDemoParams,
+  analyzePromptInjection,
+} from './tools/prompt-injection-demo/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

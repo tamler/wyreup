@@ -194,6 +194,7 @@ import { cronFromText } from './tools/cron-from-text/index.js';
 import { sqlFormatExplain } from './tools/sql-format-explain/index.js';
 import { regexExplain } from './tools/regex-explain/index.js';
 import { imageToAsciiArt } from './tools/image-to-ascii/index.js';
+import { promptInjectionDemo } from './tools/prompt-injection-demo/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -399,6 +400,7 @@ export const defaultTools: ToolModule<any>[] = [
   sqlFormatExplain,
   regexExplain,
   imageToAsciiArt,
+  promptInjectionDemo,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
