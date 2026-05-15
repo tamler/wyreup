@@ -651,6 +651,13 @@ export {
   defaultRegexFromTextParams,
   generateRegexFromText,
 } from './tools/regex-from-text/index.js';
+export {
+  cronFromText,
+  type CronFromTextParams,
+  type CronFromTextResult,
+  defaultCronFromTextParams,
+  generateCronFromText,
+} from './tools/cron-from-text/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
