@@ -345,8 +345,14 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
           e.preventDefault();
           var files = e.dataTransfer ? e.dataTransfer.files : null;
           if (!files || files.length === 0) return;
+          // cancelable so the TriggerRuntime can call preventDefault when
+          // a rule matches, signalling other listeners (HeroDrop,
+          // ToolFilter, DropZone) to back off. See docs/triggers-security.md G1.
           document.dispatchEvent(
-            new CustomEvent('wyreup:filedrop', { detail: { files: files } }),
+            new CustomEvent('wyreup:filedrop', {
+              detail: { files: files },
+              cancelable: true,
+            }),
           );
         });
       })();

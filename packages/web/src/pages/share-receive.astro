@@ -48,10 +48,29 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return;
       }
 
-      // Serialize the first file into sessionStorage so it survives the full
-      // page navigation to '/'. In-memory Svelte stores don't survive
-      // window.location.href. HeroDrop's onMount consumes this payload.
+      // Trigger path (G3 from docs/triggers-security.md): give the
+      // trigger system a chance to claim the shared file before we
+      // navigate. If a trigger rule matches, TriggerRuntime opens the
+      // preview sheet on this page and calls preventDefault; we then
+      // skip the navigation so the user stays on the sheet.
       const file = files[0];
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const matchEvent = new CustomEvent('wyreup:filedrop', {
+        detail: { files: dt.files },
+        cancelable: true,
+      });
+      document.dispatchEvent(matchEvent);
+      if (matchEvent.defaultPrevented) {
+        // A trigger rule claimed it. The preview sheet is on screen.
+        // Replace the "Reading shared file..." copy with a quiet stub.
+        root.innerHTML = '<p class="share-receive__msg">Matched a trigger rule — see the preview above.</p>';
+        return;
+      }
+
+      // No trigger rule matched. Continue the original share-target
+      // flow: stash the file in sessionStorage and navigate to '/' so
+      // HeroDrop can route it to a tool.
       const MAX_SHARE_BYTES = 10 * 1024 * 1024;
       if (file.size > MAX_SHARE_BYTES) {
         root.innerHTML = '<p class="share-receive__msg">Shared file exceeds 10 MB. Open Wyreup directly and upload from <a href="/tools">/tools</a>.</p>';

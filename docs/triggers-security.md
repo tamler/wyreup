@@ -77,13 +77,23 @@ Editing a rule re-arms the preview. New rules start `confirmed: false`.
 ### G3 — `file_handlers` never bypasses G1
 
 When the user installs Wyreup as a PWA, the `file_handlers` manifest
-entries route OS-level "Open with Wyreup" to a page that shows the
-preview sheet — *not* directly to chain execution. The PWA entry point
-for a file-handler invocation is the same code path as an in-page drop;
-both go through G1.
+entries route OS-level "Open with Wyreup" to `/share-receive`. That
+page reads the file and dispatches a `wyreup:filedrop` CustomEvent with
+`cancelable: true`. The globally-mounted `TriggerRuntime` listens for
+this event; on a rule match it calls `event.preventDefault()` *synchronously*
+before any async work, which signals the share-receive script to skip
+its navigation to `/`. The preview sheet renders on the share-receive
+page itself.
+
+If no rule matches, share-receive falls through to its original flow
+(stash file in sessionStorage, navigate to `/`, HeroDrop routes to a
+tool). Either way, no chain runs without the preview sheet.
 
 There is no `file_handlers` mode that auto-runs. There is no URL
-parameter that auto-runs. There is no "headless" trigger surface.
+parameter that auto-runs. There is no "headless" trigger surface. Other
+in-page listeners (`HeroDrop`, `ToolFilter`, `DropZone`) all check
+`event.defaultPrevented` and back off when a trigger has claimed the
+file, so we never both-route the same drop.
 
 ### G4 — Suspicious-file pre-flight on every preview
 

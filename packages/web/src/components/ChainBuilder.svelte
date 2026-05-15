@@ -5,8 +5,9 @@
   import ProgressBar from './runners/ProgressBar.svelte';
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/toolbeltStorage';
+  import { upsertRule, nextOrder } from './runners/triggerStorage';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
-  import { couldFlowTo } from '@wyreup/core';
+  import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core';
   import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
 
   interface ToolSummary {
@@ -60,6 +61,48 @@
   // Post-run inline save prompt
   let showEndOfRunPrompt = false;
   let endOfRunSaved = false;
+
+  // Trigger-register state (G2: any rule registered here lands with
+  // confirmed=false — the user explicitly opts in to the preview-skip
+  // later, per-rule, in /toolbelt).
+  let registerAsTrigger = false;
+  let triggerMime = '';
+
+  // Auto-suggest a MIME pattern from the chain's first step. We pick a
+  // concrete accept entry when there's exactly one; otherwise fall back
+  // to the first one (the user can edit before saving).
+  $: triggerMimeSuggestion = (() => {
+    const first = chainSpec[0];
+    if (!first) return '';
+    const tool = tools.find((t) => t.id === first.toolId);
+    if (!tool || tool.inputAccept.length === 0) return '';
+    return tool.inputAccept[0]!;
+  })();
+
+  // Keep the editable triggerMime in sync with the suggestion when the
+  // user hasn't customised it yet (empty string).
+  $: if (registerAsTrigger && !triggerMime) triggerMime = triggerMimeSuggestion;
+
+  function registerTriggerForChain(chainId: string, chainName: string) {
+    const mime = triggerMime.trim();
+    if (!mime) return;
+    // Defensive: refuse bare wildcards. The core parser will reject
+    // these too, but better to surface early than to throw inside save.
+    if (mime === '*' || mime === '*/*' || !mime.includes('/')) return;
+    const now = Date.now();
+    upsertRule({
+      id: crypto.randomUUID(),
+      name: chainName,
+      mime,
+      chainId,
+      order: nextOrder(),
+      confirmed: false,
+      enabled: true,
+      rateLimit: { ...DEFAULT_RATE_LIMIT },
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
 
   // Build compatible tool list for a given MIME (or all if null).
   // Uses the device-runnable subset so users don't compose chains that
@@ -242,13 +285,15 @@
   function confirmEndOfRunSave() {
     if (!saveName.trim()) return;
     const now = new Date().toISOString();
+    const chainId = crypto.randomUUID();
     saveChain({
-      id: crypto.randomUUID(),
+      id: chainId,
       name: saveName.trim(),
       steps: chainSpec,
       createdAt: now,
       updatedAt: now,
     });
+    if (registerAsTrigger) registerTriggerForChain(chainId, saveName.trim());
     endOfRunSaved = true;
     showEndOfRunPrompt = false;
   }
@@ -290,13 +335,15 @@
   function confirmSave() {
     if (!saveName.trim()) return;
     const now = new Date().toISOString();
+    const chainId = crypto.randomUUID();
     saveChain({
-      id: crypto.randomUUID(),
+      id: chainId,
       name: saveName.trim(),
       steps: chainSpec,
       createdAt: now,
       updatedAt: now,
     });
+    if (registerAsTrigger) registerTriggerForChain(chainId, saveName.trim());
     showSaveDialog = false;
     saveConfirm = true;
     if (saveTimer) clearTimeout(saveTimer);
@@ -450,8 +497,28 @@
         placeholder="My chain"
         on:keydown={(e) => { if (e.key === 'Enter') confirmSave(); if (e.key === 'Escape') showSaveDialog = false; }}
       />
+
+      <label class="trigger-toggle">
+        <input type="checkbox" bind:checked={registerAsTrigger} />
+        <span>Also register as a trigger rule</span>
+      </label>
+      {#if registerAsTrigger}
+        <div class="trigger-fields">
+          <p class="save-dialog__label">MIME pattern</p>
+          <input
+            class="save-dialog__input"
+            type="text"
+            bind:value={triggerMime}
+            placeholder={triggerMimeSuggestion || 'application/pdf or image/*'}
+          />
+          <p class="trigger-hint">
+            When a file of this type lands anywhere on Wyreup, the preview sheet will offer to run this chain. Preview-before-run is on by default — you can mark the rule "trusted" later in /toolbelt.
+          </p>
+        </div>
+      {/if}
+
       <div class="save-dialog__actions">
-        <button class="btn-primary" type="button" on:click={confirmSave} disabled={!saveName.trim()}>Save</button>
+        <button class="btn-primary" type="button" on:click={confirmSave} disabled={!saveName.trim() || (registerAsTrigger && !triggerMime.trim())}>Save</button>
         <button class="btn-ghost-sm" type="button" on:click={() => showSaveDialog = false}>Cancel</button>
       </div>
     </div>
@@ -513,7 +580,7 @@
   <!-- End-of-run save prompt -->
   {#if showEndOfRunPrompt}
     <div class="end-save-prompt" role="region" aria-label="Save this chain">
-      <p class="end-save-prompt__label">Save this chain to your collection?</p>
+      <p class="end-save-prompt__label">Save this chain to your toolbelt?</p>
       <div class="end-save-prompt__row">
         <input
           class="end-save-prompt__input"
@@ -523,9 +590,28 @@
           aria-label="Chain name"
           on:keydown={(e) => { if (e.key === 'Enter') confirmEndOfRunSave(); if (e.key === 'Escape') dismissEndOfRunPrompt(); }}
         />
-        <button class="btn-primary" type="button" on:click={confirmEndOfRunSave} disabled={!saveName.trim()}>Save chain</button>
+        <button class="btn-primary" type="button" on:click={confirmEndOfRunSave} disabled={!saveName.trim() || (registerAsTrigger && !triggerMime.trim())}>Save chain</button>
         <button class="btn-ghost-sm" type="button" on:click={dismissEndOfRunPrompt}>Skip</button>
       </div>
+
+      <label class="trigger-toggle">
+        <input type="checkbox" bind:checked={registerAsTrigger} />
+        <span>Also register as a trigger rule</span>
+      </label>
+      {#if registerAsTrigger}
+        <div class="trigger-fields">
+          <p class="end-save-prompt__label">MIME pattern</p>
+          <input
+            class="end-save-prompt__input"
+            type="text"
+            bind:value={triggerMime}
+            placeholder={triggerMimeSuggestion || 'application/pdf or image/*'}
+          />
+          <p class="trigger-hint">
+            When a file of this type lands anywhere on Wyreup, the preview sheet will offer to run this chain. Preview-before-run is on by default.
+          </p>
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -740,6 +826,34 @@
     display: flex;
     gap: var(--space-2);
     align-items: center;
+  }
+
+  .trigger-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .trigger-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: var(--bg-raised);
+    border-radius: var(--radius-sm);
+  }
+
+  .trigger-hint {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    line-height: 1.5;
   }
 
   /* Buttons */

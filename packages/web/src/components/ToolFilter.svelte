@@ -184,6 +184,10 @@
   // by the site-wide safety net in BaseLayout and re-dispatched as this
   // event. Route them into the same filter-by-MIME flow.
   function handleGlobalFileDrop(e: Event) {
+    // A matched trigger rule preventDefaults this event — back off so
+    // we don't also try to filter the catalog by MIME while the
+    // preview sheet is showing. See docs/triggers-security.md G1.
+    if (e.defaultPrevented) return;
     const files = (e as CustomEvent<{ files: FileList }>).detail?.files;
     const file = files?.[0];
     if (!file) return;

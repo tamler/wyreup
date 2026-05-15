@@ -28,6 +28,11 @@
   });
 
   function handleGlobalFileDrop(e: Event) {
+    // A matched trigger rule preventDefaults this event. When that
+    // happens, the trigger preview sheet is the surface in charge —
+    // we don't also load the file into this runner. See
+    // docs/triggers-security.md G1.
+    if (e.defaultPrevented) return;
     const detail = (e as CustomEvent<{ files: FileList }>).detail;
     const incoming = Array.from(detail?.files ?? []);
     if (incoming.length === 0) return;

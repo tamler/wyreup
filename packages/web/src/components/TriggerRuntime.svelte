@@ -58,6 +58,12 @@
 
     if (outcome.kind === 'no-match') return;
 
+    // We're claiming this file. Tell every other listener (HeroDrop,
+    // ToolFilter, DropZone, share-receive's post-dispatch navigation)
+    // to back off so we don't double-handle. Must be called synchronously
+    // before any await per the dispatcher's contract.
+    event.preventDefault();
+
     if (outcome.kind === 'rate-limited') {
       showToast(
         'error',

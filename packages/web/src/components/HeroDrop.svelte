@@ -51,6 +51,10 @@
   });
 
   function handleGlobalFileDrop(e: Event) {
+    // A matched trigger rule will preventDefault on this event. When
+    // that happens, the preview sheet is taking over — don't also
+    // route the file to a tool from here. See docs/triggers-security.md G1.
+    if (e.defaultPrevented) return;
     const files = (e as CustomEvent<{ files: FileList }>).detail?.files;
     const file = files?.[0];
     if (file) processFile(file);
