@@ -162,9 +162,9 @@ Examples:
   wyreup chain --steps "transcribe|text-summarize" --dry-run   # preview only
 
 Saved chains:
-  Export your kit from /my-kit on the web (uses the same JSON format
-  the CLI's --from-kit reads). Name match is case-insensitive and
-  accepts substrings or chain ids.`,
+  Export your toolbelt from /toolbelt on the web (uses the same JSON
+  format the CLI's --from-kit reads). Name match is case-insensitive
+  and accepts substrings or chain ids.`,
   )
   .action(async (inputs: string[], opts: Record<string, unknown>) => {
     await executeChain(inputs, {

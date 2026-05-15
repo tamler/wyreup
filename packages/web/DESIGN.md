@@ -574,7 +574,7 @@ Drop a file to get started — or click to browse.
 
 **`surface-mode: engineering`** (default — task-first surfaces)
 
-Applied to: `/tools` catalog, per-tool pages, chain builder, settings, `/my-kit`.
+Applied to: `/tools` catalog, per-tool pages, chain builder, settings, `/toolbelt`.
 Uses the original Signal palette unchanged. Density, precision, and information-rich layout are primary concerns.
 No class needed — this is the `:root` default.
 

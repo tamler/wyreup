@@ -109,7 +109,7 @@
   }
 </script>
 
-<div class="my-kit">
+<div class="toolbelt">
   {#if !loaded}
     <p class="loading">Loading...</p>
   {:else if chains.length === 0}
@@ -183,19 +183,19 @@
     {/if}
   </div>
 
-  <hr class="my-kit__divider" />
+  <hr class="toolbelt__divider" />
 
   <TriggerRulesSection />
 </div>
 
 <style>
-  .my-kit {
+  .toolbelt {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
   }
 
-  .my-kit__divider {
+  .toolbelt__divider {
     margin: var(--space-4) 0 0;
     border: 0;
     border-top: 1px solid var(--border);

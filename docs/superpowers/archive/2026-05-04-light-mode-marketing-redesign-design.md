@@ -23,7 +23,7 @@ This brainstorm produces the spec for **Wave 1 only**. Wave 2 (functional-surfac
 
 - Theme toggle UI. Mode follows the user's OS preference via `prefers-color-scheme`.
 - Changes to the engine, tools, MCP server, CLI, or agent skill behavior.
-- Redesign of functional surfaces (tool pages, `/chain/build`, `/my-kit`, `/tools` index, `/settings`, `/share*`, `/share-receive`, `/chains`, `/404`). These get a "doesn't look broken" repaint pass in Wave 1; their proper redesign is Wave 2.
+- Redesign of functional surfaces (tool pages, `/chain/build`, `/toolbelt`, `/tools` index, `/settings`, `/share*`, `/share-receive`, `/toolbelt`, `/404`). These get a "doesn't look broken" repaint pass in Wave 1; their proper redesign is Wave 2.
 - Mobile-first reimagining. Responsive must hold; no new mobile-only flows.
 - README, social cards, OG images. Separate work if desired. (PWA manifest icons and favicon **are** in scope — they're functional brand surfaces that must work in both modes; see Cross-cutting done criteria.)
 
@@ -99,7 +99,7 @@ What changes is the **descriptive copy around them**. Headlines, page titles, an
 | `/about` | Copy rewrite + layout pass + theme |
 | `/category/*` | Light pass — top-of-page intro + theme repaint |
 | `/cli`, `/mcp`, `/skill` | **Theme repaint only** — layout and copy unchanged. If you're there, you're already in. |
-| All functional surfaces (tool pages, `/tools` index, `/chain/build`, `/my-kit`, `/settings`, `/share*`, `/share-receive`, `/chains`, `/404`) | **"Doesn't look broken" pass** — token repaint only, contrast/hover/focus verified, no layout changes. Proper redesign in Wave 2. |
+| All functional surfaces (tool pages, `/tools` index, `/chain/build`, `/toolbelt`, `/settings`, `/share*`, `/share-receive`, `/toolbelt`, `/404`) | **"Doesn't look broken" pass** — token repaint only, contrast/hover/focus verified, no layout changes. Proper redesign in Wave 2. |
 
 ### Token system & theming mechanism
 
@@ -174,7 +174,7 @@ Wave 1 ships when **all** of the following are true.
 - Hover/focus state is not perceivable against the new background.
 - Any usability regression vs. the current dark version of the same surface.
 
-Verification mechanism: capture **side-by-side screenshots** (current dark production vs. new light, full page) for the three highest-complexity functional surfaces — `/chain/build`, a tool result panel (e.g., `/tools/strip-exif` after a file is loaded), and `/my-kit` — and review for the failure modes above before merge. Other functional surfaces get a manual spot-check.
+Verification mechanism: capture **side-by-side screenshots** (current dark production vs. new light, full page) for the three highest-complexity functional surfaces — `/chain/build`, a tool result panel (e.g., `/tools/strip-exif` after a file is loaded), and `/toolbelt` — and review for the failure modes above before merge. Other functional surfaces get a manual spot-check.
 
 Other criteria for the "doesn't look broken" pass:
 - Mono-heavy regions remain legible at their existing sizes on warm white.
@@ -199,7 +199,7 @@ Other criteria for the "doesn't look broken" pass:
 
 ## Wave 2 cadence
 
-Wave 2 (functional-surface redesign — tool pages, `/chain/build`, `/my-kit`, `/tools` index, possibly `/settings` and the share flows) starts **immediately** after Wave 1 ships. It is not a deferred backlog item. To support that:
+Wave 2 (functional-surface redesign — tool pages, `/chain/build`, `/toolbelt`, `/tools` index, possibly `/settings` and the share flows) starts **immediately** after Wave 1 ships. It is not a deferred backlog item. To support that:
 
 - **Wave 1 stays tight on scope.** Resist scope-creep into "small Wave 2 things" because they're nearby. Fastest path to Wave 2 is shipping Wave 1 cleanly.
 - **Wave 2 brainstorming may start during Wave 1 implementation.** The harder design questions (tool page rethink, chain builder onboarding for non-technical users, kit / settings restructure) can be explored in parallel without waiting for Wave 1 to merge.

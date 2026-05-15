@@ -94,7 +94,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 1800 }, colorScheme: 'dark' });
   const page = await ctx.newPage();
-  for (const url of ['/', '/about', '/cli', '/mcp', '/skill', '/tools', '/chain/build', '/my-kit', '/settings']) {
+  for (const url of ['/', '/about', '/cli', '/mcp', '/skill', '/tools', '/chain/build', '/toolbelt', '/settings']) {
     await page.goto('http://localhost:4321' + url, { waitUntil: 'networkidle' });
     const safeName = url === '/' ? 'home' : url.replace(/\\//g, '_').replace(/^_/, '');
     await page.screenshot({ path: '/tmp/wave1-baseline-screenshots/' + safeName + '.png', fullPage: true });
@@ -1047,7 +1047,7 @@ git commit -m "fix(web): code-block tokens for cli/mcp/skill pages in light mode
 **Files:**
 - Modify: any functional surface where verification finds issues.
 
-Per the spec, three high-complexity surfaces require side-by-side screenshot review: `/chain/build`, a tool result panel, `/my-kit`. Other functional surfaces get a manual spot-check.
+Per the spec, three high-complexity surfaces require side-by-side screenshot review: `/chain/build`, a tool result panel, `/toolbelt`. Other functional surfaces get a manual spot-check.
 
 - [ ] **Step 1: Capture new (light) screenshots**
 
@@ -1061,7 +1061,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 1800 }, colorScheme: 'light' });
   const page = await ctx.newPage();
-  for (const url of ['/', '/about', '/cli', '/mcp', '/skill', '/tools', '/chain/build', '/my-kit', '/settings']) {
+  for (const url of ['/', '/about', '/cli', '/mcp', '/skill', '/tools', '/chain/build', '/toolbelt', '/settings']) {
     await page.goto('http://localhost:4321' + url, { waitUntil: 'networkidle' });
     const safeName = url === '/' ? 'home' : url.replace(/\\//g, '_').replace(/^_/, '');
     await page.screenshot({ path: '/tmp/wave1-new-screenshots/' + safeName + '_light.png', fullPage: true });
@@ -1083,7 +1083,7 @@ If any difference is visible, root-cause it in the token system and fix before p
 
 - [ ] **Step 4: Light-mode "broken" inspection**
 
-Open `_light.png` for `/chain/build`, the tool index `/tools`, and `/my-kit`. For each, check the spec's "broken" criteria:
+Open `_light.png` for `/chain/build`, the tool index `/tools`, and `/toolbelt`. For each, check the spec's "broken" criteria:
 
 1. Any text that's hard to read (likely contrast fail)?
 2. Any border that was visible on dark and now invisible?
@@ -1259,7 +1259,7 @@ gh pr create --title "feat(web): light-default theme + marketing redesign (Wave 
 
 - Light-default token system with auto-dark via `prefers-color-scheme`. Three-token accent system (`--accent` fill, `--accent-text` foreground, `--accent-hover` stroke) split for WCAG AA compliance on warm off-white.
 - Marketing redesign on `/`, `/about`, `/category/*`: conversational voice, sentence-case sans, mono restricted to code-like things, larger hero, generous section rhythm.
-- "Doesn't look broken" pass on functional surfaces with token-only repaint, side-by-side screenshot verification on `/chain/build`, tool result panel, `/my-kit`.
+- "Doesn't look broken" pass on functional surfaces with token-only repaint, side-by-side screenshot verification on `/chain/build`, tool result panel, `/toolbelt`.
 - PWA manifest + favicon updated for light-default. Mode-aware `theme-color` meta.
 
 ## Spec
@@ -1273,7 +1273,7 @@ gh pr create --title "feat(web): light-default theme + marketing redesign (Wave 
 - [ ] Toggle to dark mode — page matches current production dark visually.
 - [ ] Walk through `/about`, `/category/*` — copy reads conversationally; layout has breathing room.
 - [ ] Walk through `/cli`, `/mcp`, `/skill` — repaint clean, no copy/layout changes.
-- [ ] `/chain/build`, `/my-kit`, a tool result panel — light mode legible, no broken borders, hover/focus visible.
+- [ ] `/chain/build`, `/toolbelt`, a tool result panel — light mode legible, no broken borders, hover/focus visible.
 - [ ] Install PWA — splash uses warm off-white.
 - [ ] Axe contrast clean on `/`, `/about`, `/tools`, `/chain/build`.
 - [ ] All existing tests pass.

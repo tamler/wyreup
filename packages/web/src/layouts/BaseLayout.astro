@@ -105,27 +105,6 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
     <script is:inline>
       (function () {
         try {
-          // One-time storage migration: my-kit → toolbelt (2026-05). The
-          // personal page renamed; the localStorage keys followed. Reads
-          // the legacy `wyreup:my-kit:*` keys and copies them to
-          // `wyreup:toolbelt:*` if the new keys don't already exist.
-          // Idempotent — safe to run on every load. Old keys are left in
-          // place for a year as a recoverable fallback; can be removed
-          // after 2027-05.
-          var MIGRATION_FLAG = 'wyreup:storage-migration:my-kit-to-toolbelt';
-          if (!localStorage.getItem(MIGRATION_FLAG)) {
-            var migrate = function (oldKey, newKey) {
-              var legacy = localStorage.getItem(oldKey);
-              if (legacy && !localStorage.getItem(newKey)) {
-                localStorage.setItem(newKey, legacy);
-              }
-            };
-            migrate('wyreup:my-kit:chains', 'wyreup:toolbelt:chains');
-            migrate('wyreup:my-kit:trigger-rules', 'wyreup:toolbelt:trigger-rules');
-            migrate('wyreup:my-kit:trigger-fires', 'wyreup:toolbelt:trigger-fires');
-            localStorage.setItem(MIGRATION_FLAG, '1');
-          }
-
           var html = document.documentElement;
 
           // Recent tools strip in ToolFilter. ~24px pill + 16px bottom
@@ -188,7 +167,7 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
 
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="/tools" class="nav-link" aria-current={currentPath.startsWith('/tools') ? 'page' : undefined}>Tools</a>
-          <a href="/toolbelt" class="nav-link" aria-current={currentPath === '/toolbelt' || currentPath === '/chains' || currentPath === '/my-kit' || currentPath.startsWith('/chain') ? 'page' : undefined}>Toolbelt</a>
+          <a href="/toolbelt" class="nav-link" aria-current={currentPath === '/toolbelt' || currentPath.startsWith('/toolbelt') ? 'page' : undefined}>Toolbelt</a>
 
           <!-- "Other surfaces" dropdown — Wyreup is also a CLI + an
                agent skill (MCP). Reframed from "For developers" so
