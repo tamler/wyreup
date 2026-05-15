@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Triggers — Wyreup"
+  description="How Wyreup's trigger rules work and the safety model that backs them. Preview-before-run is always on. Files never upload."
+>
+  <section class="triggers-page">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="breadcrumb__link">Wyreup</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <span class="breadcrumb__current" aria-current="page">Triggers</span>
+      </nav>
+
+      <header class="page-header">
+        <h1 class="page-title">Triggers</h1>
+        <p class="page-subhead">
+          Drop a file; if a rule matches, Wyreup proposes its chain. You confirm, it runs. Files never upload. Auto-run is never on by default.
+        </p>
+      </header>
+
+      <section class="doc-section">
+        <h2>What a trigger is</h2>
+        <p>
+          A trigger is a tiny rule that binds a file type to a saved chain. For example:
+        </p>
+        <pre class="example"><code>application/pdf  →  pdf-redact | pdf-encrypt | page-numbers-pdf</code></pre>
+        <p>
+          When a PDF lands anywhere on Wyreup — dropped on the site, opened via the OS "Open with..." menu — the matching rule's chain is <em>proposed</em>, not run. The preview sheet shows the file, the chain, and a pre-flight check, and waits for you to click Run.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>How to build one</h2>
+        <ol>
+          <li>Go to <a href="/chain/build">/chain/build</a> and compose a chain (drag tools, pick params).</li>
+          <li>When you save, check <strong>"Also register as a trigger rule"</strong>. Pick a MIME pattern — exact (<code>application/pdf</code>) or wildcard (<code>image/*</code>).</li>
+          <li>The chain saves; the rule lands in <a href="/toolbelt">/toolbelt</a> with previews on.</li>
+          <li>Drop a matching file; the preview sheet shows. Click Run.</li>
+        </ol>
+      </section>
+
+      <section class="doc-section">
+        <h2>Safety guarantees</h2>
+        <p>
+          These are enforced in code, not just promises in this page. The full security model is documented in <a href="https://github.com/tamler/wyreup/blob/main/docs/triggers-security.md" rel="noopener" target="_blank">docs/triggers-security.md</a>.
+        </p>
+        <dl class="guarantees">
+          <dt>Preview before every run</dt>
+          <dd>
+            The preview sheet is the only path from a matched rule to chain execution. No URL parameter, manifest entry, or shared chain can bypass it on the first run.
+          </dd>
+
+          <dt>"Don't ask again" is per-rule, never global</dt>
+          <dd>
+            You can mark an individual rule as trusted to skip the preview. Editing any field of the rule (name, MIME, chain, order, enabled) re-arms the prompt. There is no setting that turns off previews globally.
+          </dd>
+
+          <dt>OS "Open with Wyreup" routes through the preview</dt>
+          <dd>
+            Installing Wyreup as a PWA registers it as a file handler. When the OS launches Wyreup with a file, the file still goes through the same preview sheet a drag-and-drop would. There is no auto-run mode.
+          </dd>
+
+          <dt>Suspicious-file pre-flight</dt>
+          <dd>
+            Before the preview sheet renders Run, Wyreup scans the file for prompt-injection patterns (homoglyphs, invisible characters, control codes) and shows the verdict above Run. High-severity files require an extra confirmation click.
+          </dd>
+
+          <dt>No network egress</dt>
+          <dd>
+            Tools that would make network calls (e.g. webhook-replay's send mode) are excluded from auto-run. Chains under triggers run entirely on your device, like every other Wyreup tool.
+          </dd>
+
+          <dt>Output collisions are reported</dt>
+          <dd>
+            If a chain would write a file that collides with an existing one, the preview sheet shows the path and asks before overwriting.
+          </dd>
+
+          <dt>Per-rule rate limit</dt>
+          <dd>
+            Each rule cannot fire more than 10 times per minute by default (configurable up to 200). Prevents a flood of files from chewing through compute behind your back.
+          </dd>
+
+          <dt>Only built-in tools can run</dt>
+          <dd>
+            Wyreup's tool registry is shipped via signed npm publish; it cannot be extended at runtime. Chains imported from JSON or URLs that reference unknown tool IDs are rejected at import — never on first run.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="doc-section">
+        <h2>Threat model</h2>
+        <p>
+          We assume an adversary can deliver any file to you — via email, USB, OS "Open with...", or in-browser drop — with full control over the file's MIME, name, and contents, and knowledge of your trigger rules.
+        </p>
+        <p>
+          What an adversary cannot do, by construction:
+        </p>
+        <ul>
+          <li>Run a chain without you seeing the file metadata and chain summary first.</li>
+          <li>Trick Wyreup into running a tool that doesn't ship with it.</li>
+          <li>Exfiltrate a chain's output — outputs are downloaded via the browser's standard save-as flow; no server path is constructed.</li>
+          <li>Auto-confirm a rule on your behalf based on usage frequency.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section">
+        <h2>Get started</h2>
+        <div class="cta-row">
+          <a href="/chain/build" class="btn-primary">Build a chain &rarr;</a>
+          <a href="/toolbelt" class="btn-secondary">Open your toolbelt &rarr;</a>
+        </div>
+      </section>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .triggers-page { padding: var(--space-8) 0 var(--space-16); }
+  .container { max-width: 760px; }
+  .breadcrumb { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-6); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-subtle); }
+  .breadcrumb__link { color: var(--text-muted); text-decoration: none; }
+  .breadcrumb__link:hover { color: var(--text-primary); }
+  .breadcrumb__sep { color: var(--text-subtle); }
+  .breadcrumb__current { color: var(--text-primary); }
+
+  .page-header { margin-bottom: var(--space-8); }
+  .page-title { font-family: var(--font-sans); font-size: var(--text-2xl); font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); line-height: 1.1; margin-bottom: var(--space-3); }
+  .page-subhead { font-family: var(--font-sans); font-size: var(--text-base); color: var(--text-muted); line-height: 1.6; max-width: 640px; }
+
+  .doc-section { margin-bottom: var(--space-8); }
+  .doc-section h2 { font-family: var(--font-sans); font-size: var(--text-lg); font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-3); }
+  .doc-section p, .doc-section li { font-family: var(--font-sans); font-size: var(--text-base); color: var(--text-primary); line-height: 1.65; }
+  .doc-section p { margin: 0 0 var(--space-3); }
+  .doc-section ol, .doc-section ul { padding-left: var(--space-4); margin: 0 0 var(--space-3); }
+  .doc-section ol li, .doc-section ul li { margin-bottom: var(--space-2); }
+  .doc-section a { color: var(--accent-text); }
+  .doc-section code { font-family: var(--font-mono); font-size: 0.92em; background: var(--bg-raised); padding: 1px 6px; border-radius: var(--radius-sm); }
+
+  .example { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3); margin: var(--space-3) 0; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent-text); overflow-x: auto; }
+  .example code { background: transparent; padding: 0; }
+
+  .guarantees { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin: var(--space-4) 0 0; }
+  .guarantees dt { font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 500; color: var(--text-primary); border-left: 3px solid var(--accent); padding-left: var(--space-3); }
+  .guarantees dd { font-family: var(--font-sans); font-size: var(--text-sm); color: var(--text-muted); line-height: 1.6; margin: var(--space-1) 0 0 calc(var(--space-3) + 3px); }
+
+  .cta-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .btn-primary, .btn-secondary { height: 36px; padding: 0 var(--space-4); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: var(--text-base); font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: 1px solid transparent; }
+  .btn-primary { background: var(--accent); color: var(--black); }
+  .btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border); }
+  .btn-primary:hover { background: var(--accent-hover); }
+</style>

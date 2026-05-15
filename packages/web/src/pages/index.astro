@@ -25,7 +25,7 @@ const popularTools = popularToolIds.map((id) => {
 
 <BaseLayout
   title="Wyreup — File tools that run on your device."
-  description="Privacy-first browser-native tools — compress, convert, transcribe, redact, caption, record, sign, validate. Browser, terminal, or AI agent. Nothing uploads. No signup."
+  description="Drop a file; Wyreup proposes a pipeline. Compress, convert, transcribe, redact, sign — chain tools, save the chain, set a trigger. Preview-before-run is always on. Browser, terminal, or AI agent. Nothing uploads."
   surfaceMode="welcome"
 >
   <script is:inline>
@@ -44,15 +44,16 @@ const popularTools = popularToolIds.map((id) => {
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">Tools for your files. <span class="hero__headline-accent">Nothing uploads.</span></h1>
+        <h1 class="hero__headline">Your files know what to do. <span class="hero__headline-accent">Nothing uploads.</span></h1>
         <p class="hero__body">
-          Drop a file. We'll show you what you can do with it — compress, convert, transcribe, redact, and {allTools.length - 4}+ more. Everything happens on your device. No signup. No tracking.
+          {allTools.length} tools — compress, convert, transcribe, redact, sign. Chain them, save the chain, set a trigger. Drop a file; Wyreup proposes the right pipeline. You confirm, it runs. Everything stays on your device.
         </p>
         <p class="hero__surfaces">
           Use Wyreup in your <a href="/" class="hero__surface-link" aria-current="page">browser</a>, your <a href="/cli" class="hero__surface-link">terminal</a>, or your <a href="/skill" class="hero__surface-link">AI assistant</a>.
         </p>
         <div class="hero__actions">
           <a href="/tools" class="btn btn-primary">Browse all tools &rarr;</a>
+          <a href="/triggers" class="btn btn-secondary">How triggers work &rarr;</a>
         </div>
       </div>
 
