@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { modelUrl } from '../../lib/model-cdn.js';
 
 export type GeoFormat =
   | 'GeoJSON'
@@ -39,7 +40,14 @@ const FORMATS: Record<GeoFormat, FormatSpec> = {
 };
 
 const GDAL_VERSION = '2.8.1';
-const GDAL_CDN_BASE = `https://cdn.jsdelivr.net/npm/gdal3.js@${GDAL_VERSION}/dist/package`;
+const GDAL_PATH = `gdal3.js@${GDAL_VERSION}/dist/package`;
+const GDAL_UPSTREAM_BASE = `https://cdn.jsdelivr.net/npm/${GDAL_PATH}`;
+
+function gdalAsset(name: string): string {
+  // Resolve at call-time so setModelCdn() takes effect even if invoked
+  // after this module was imported.
+  return modelUrl(`${GDAL_PATH}/${name}`, `${GDAL_UPSTREAM_BASE}/${name}`);
+}
 
 interface OgrFilePath {
   local: string;
@@ -96,9 +104,9 @@ async function loadGdal(): Promise<GdalLike> {
   const mod = (await import('gdal3.js')) as { default: (cfg?: unknown) => Promise<GdalLike> };
   return await mod.default({
     paths: {
-      wasm: `${GDAL_CDN_BASE}/gdal3WebAssembly.wasm`,
-      data: `${GDAL_CDN_BASE}/gdal3WebAssembly.data`,
-      js: `${GDAL_CDN_BASE}/gdal3.js`,
+      wasm: gdalAsset('gdal3WebAssembly.wasm'),
+      data: gdalAsset('gdal3WebAssembly.data'),
+      js: gdalAsset('gdal3.js'),
     },
     useWorker: true,
   });

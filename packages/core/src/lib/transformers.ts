@@ -20,6 +20,7 @@
  *     memory pressure.
  */
 import type { ToolRunContext } from '../types.js';
+import { getModelCdn } from './model-cdn.js';
 
 const MAX_PIPELINES = 2;
 const IDLE_EVICT_MS = 5 * 60 * 1000;
@@ -109,7 +110,19 @@ export async function getPipeline(
   // heap is most useful before allocating the next big model.
   evictToFit();
 
-  const { pipeline } = await import('@huggingface/transformers');
+  const transformersMod = await import('@huggingface/transformers');
+  const { pipeline } = transformersMod;
+
+  // If a CDN base is configured (e.g. for the R2 self-hosting cutover),
+  // mirror it into transformers.js's env.remoteHost so model weights are
+  // fetched from the configured host instead of huggingface.co. Set every
+  // time because env state on the library is module-global; another pipeline
+  // call later in the session might be the first one after setModelCdn ran.
+  const cdnBase = getModelCdn();
+  if (cdnBase !== null) {
+    const env = (transformersMod as { env?: { remoteHost?: string } }).env;
+    if (env) env.remoteHost = cdnBase;
+  }
 
   // Aggregate progress across files. Transformers.js emits per-file events
   // (initiate, download, progress, done) which would otherwise show as

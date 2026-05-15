@@ -100,12 +100,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     'wyreup.app',
 
     // Third-party model CDNs for AI tools. The models fetch on first use, which
-    // creates a third-party origin touch. TODO: self-host these on wyreup.com
-    // (e.g. r2://wyreup-models) to eliminate the third-party leak — tracked as
-    // a post-launch privacy upgrade. Until then, these are allow-listed.
-    'jsdelivr.net',       // @mediapipe/tasks-vision WASM (face-blur)
+    // creates a third-party origin touch. Cutover plan: provision an R2 bucket
+    // (wyreup-models, mirroring upstream paths) and call setModelCdn() once at
+    // startup — every URL routes through the new host in one place. See
+    // `packages/core/src/lib/model-cdn.ts` for the abstraction and the
+    // migration steps. Once cutover is live, remove the three domains below;
+    // the scan should then catch any new third-party touch.
+    'jsdelivr.net',       // @mediapipe/tasks-vision WASM (face-blur), gdal3.js (convert-geo)
     'googleapis.com',     // MediaPipe model storage (face-blur)
-    'huggingface.co',     // FlashSR ONNX (audio-enhance), future: BiRefNet, TrOCR, etc.
+    'huggingface.co',     // FlashSR ONNX (audio-enhance), transformers.js model weights (10+ tools)
   ];
 
   let totalViolations = 0;

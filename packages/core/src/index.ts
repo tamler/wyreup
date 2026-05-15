@@ -700,6 +700,7 @@ export {
   extractPdfData,
 } from './tools/pdf-extract-data/index.js';
 export { getPipeline } from './lib/transformers.js';
+export { setModelCdn, getModelCdn, modelUrl } from './lib/model-cdn.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
 

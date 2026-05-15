@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { InferenceSession as OnnxInferenceSession } from 'onnxruntime-web';
+import { modelUrl } from '../../lib/model-cdn.js';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AudioEnhanceParams {
@@ -19,8 +20,10 @@ const ACCEPTED_MIME_TYPES = [
   'audio/webm',
 ];
 
-const FLASHSR_MODEL_URL =
-  'https://huggingface.co/YatharthS/FlashSR/resolve/main/onnx/model.onnx';
+// Resolved via model-cdn.ts at fetch time (not module load) so a
+// setModelCdn() call after this module is imported still takes effect.
+const FLASHSR_MODEL_PATH = 'YatharthS/FlashSR/resolve/main/onnx/model.onnx';
+const FLASHSR_MODEL_UPSTREAM = `https://huggingface.co/${FLASHSR_MODEL_PATH}`;
 
 // ──── WAV encoder ────
 
@@ -150,7 +153,7 @@ async function getSession(ctx: ToolRunContext): Promise<InferenceSession> {
 
   const ort = await import('onnxruntime-web');
 
-  const res = await fetch(FLASHSR_MODEL_URL);
+  const res = await fetch(modelUrl(FLASHSR_MODEL_PATH, FLASHSR_MODEL_UPSTREAM));
   if (!res.ok) {
     throw new Error(
       `Failed to load FlashSR model (HTTP ${res.status}). Check your network connection and try again.`,

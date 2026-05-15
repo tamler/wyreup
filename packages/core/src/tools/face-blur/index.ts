@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { createCanvas, loadImage, canvasToBlob } from '../../lib/canvas.js';
+import { modelUrl } from '../../lib/model-cdn.js';
 
 export interface FaceBlurParams {
   /** Blur radius in pixels. Default 20. Bigger = more anonymized. */
@@ -143,7 +144,11 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
   if (typeof window !== 'undefined') {
     // Browser: use CDN — the package itself is excluded from the browser bundle
     // (externalized in vite config) so we can't resolve a local path.
-    wasmPath = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm';
+    // Resolved through model-cdn so the R2 cutover redirects in one place.
+    wasmPath = modelUrl(
+      '@mediapipe/tasks-vision@0.10.34/wasm',
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm',
+    );
   } else {
     // Node (tests/CLI): resolve the wasm/ directory from the installed package.
     const { createRequire } = await import('node:module');
@@ -157,8 +162,10 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
   const vision = await FilesetResolver.forVisionTasks(wasmPath);
   const detector = await FaceDetector.createFromOptions(vision, {
     baseOptions: {
-      modelAssetPath:
+      modelAssetPath: modelUrl(
+        'mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
         'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
+      ),
       delegate: 'CPU', // GPU requires WebGPU; CPU via WASM is universal
     },
     runningMode: 'IMAGE',

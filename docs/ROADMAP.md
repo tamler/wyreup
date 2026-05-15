@@ -385,27 +385,30 @@ Resume signal (any one):
 
 ## Tech debt (not absorbed by a wave)
 
-Ordered by priority. The `pdf-redact` visual UI and `regex-visualize`
-tool are now in **Now** as the two high-confidence wins.
+Ordered by priority.
 
-1. **Self-host AI model CDNs on R2.** Eliminates third-party touches
-   (jsdelivr, googleapis, huggingface) currently flagged by
-   `tools/check-privacy.mjs`. R2 egress is free. Highest-leverage privacy
-   improvement we have. Affects shipped AI tools, not paused ones.
-2. **Unpublish deprecated skill packages from npm.** `@wyreup/skill`,
-   `@wyreup/cli-skill`, `@wyreup/mcp-skill` were removed from the repo on
-   2026-05-01. The npm tarballs at `0.2.0` still exist — mark them
-   deprecated with a pointer to `wyreup install-skill`, or unpublish.
-3. **`@vite-pwa/astro` dev deps audit.** Run bundle analyzer; verify no
-   dev tooling leaks into production. Cheap, do on next wave boundary.
+1. **Self-host AI model CDNs on R2 — _abstraction shipped 2026-05-15,
+   awaiting R2 bucket._** `packages/core/src/lib/model-cdn.ts` provides
+   `setModelCdn()` and routes all direct fetches (face-blur,
+   audio-enhance, convert-geo) plus transformers.js `env.remoteHost`
+   through a single configurable base. To finish: provision the
+   `wyreup-models` R2 bucket, mirror the upstream model paths into it,
+   call `setModelCdn('https://models.wyreup.com')` once at app
+   startup, drop `jsdelivr.net` / `googleapis.com` / `huggingface.co`
+   from the privacy-scan allow-list.
+2. ~~**Unpublish deprecated skill packages from npm.**~~ Done
+   2026-05-15 — `@wyreup/skill`, `@wyreup/cli-skill`, `@wyreup/mcp-skill`
+   are no longer on the registry.
+3. ~~**`@vite-pwa/astro` dev deps audit.**~~ Done 2026-05-15 — build
+   output verified clean, workbox runtime correctly tree-shaken into
+   the bundled service worker; no dev tooling leaks.
 4. **`face-blur` Node integration test skip.** MediaPipe doesn't init
    under vitest's jsdom-less env. Re-enable if a better headless test
    path emerges.
-5. **Lazy-load runner variants in `ToolRunner.svelte`.** Currently
-   statically imports 11 runners (~162 KB containing 10 unused per page).
-   Real savings ~10–30 KB/variant after Vite hoists shared deps. Pair
-   with `<link rel="modulepreload">` to avoid the waterfall. **Defer**
-   until bundle analysis shows the loading-state UX cost is worth it.
+5. ~~**Lazy-load runner variants in `ToolRunner.svelte`.**~~ Done
+   2026-05-15 — 29 runners converted to dynamic imports keyed off
+   `RunnerVariant`; entry chunk dropped from a ~250KB aggregator to
+   ~17KB. Each runner is now its own Vite chunk fetched on demand.
 7. **PWA manifest screenshots[].** The 2026-05-04 PWA pass added
    manifest id, lang/dir/categories, monochrome icon, msapplication
    tile metas, /offline fallback, and the iOS Safari install hint.
