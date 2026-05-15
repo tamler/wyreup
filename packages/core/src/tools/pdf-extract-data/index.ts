@@ -276,6 +276,45 @@ export const pdfExtractData: ToolModule<PdfExtractDataParams> = {
     return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
   },
 
+  seoContent: {
+    intro:
+      'Drop an invoice or receipt PDF and get back structured JSON — vendor, invoice number, date, total, subtotal, tax, and a list of line items with their amounts. Pure heuristic: pdf.js extracts the text in your browser, then a labelled-money + date + line-item pass identifies the fields. No model download, no upload, no cost per call. The PDF never leaves your device.',
+    useCases: [
+      'Pull totals and dates out of a folder of receipts for expense reporting.',
+      'Bootstrap a small bookkeeping pipeline without paying per-invoice to a hosted API.',
+      'Verify what a vendor charged you against what your accounting software shows.',
+      'Quickly diff two invoices from the same vendor by extracting both and comparing JSON.',
+      'Feed structured invoice fields into a Wyreup chain (e.g., extract → csv-template → render report).',
+    ],
+    faq: [
+      {
+        q: 'Will it work on any invoice?',
+        a: 'It works best on text-based PDFs (the kind your accounting software exports). Scanned image-only PDFs need OCR first — chain through `ocr-pro` or `pdf-vision-ocr`. The heuristics are tuned for English-language invoices using `$`, `£`, `€`, or similar currency symbols.',
+      },
+      {
+        q: 'How accurate is the total detection?',
+        a: 'Two passes: first looks for labelled amounts ("Total:", "Amount Due", "Grand Total"), then falls back to the largest currency value in the document. On well-structured invoices accuracy is high; on unusual layouts (e.g., totals embedded in narrative text) results may be off. The `confidence` field and `warnings` list flag low-confidence extractions.',
+      },
+      {
+        q: 'Does it support non-USD currencies?',
+        a: 'Yes — set the currency symbol parameter to `£`, `€`, `¥`, or any short prefix. The detection logic works the same way for any single-symbol currency.',
+      },
+      {
+        q: 'Is anything sent to a server?',
+        a: 'No. PDF parsing (pdf.js), heuristics, and the entire extraction run in your browser. You can disconnect your network mid-extraction and it still finishes.',
+      },
+      {
+        q: 'Can it extract line items?',
+        a: 'Yes — any row that ends in a currency value and isn\'t the total/subtotal/tax becomes a line item. The description is everything before the amount; the amount is parsed into a structured `{ value, raw }` object.',
+      },
+    ],
+    alsoTry: [
+      { id: 'pdf-to-text', why: 'Just want the raw text without structured extraction.' },
+      { id: 'pdf-extract-tables', why: 'Extract every table in the PDF, not just invoice-shaped fields.' },
+      { id: 'csv-template', why: 'Feed the extracted fields into a CSV report.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

@@ -217,6 +217,23 @@ export type ParamSchema<P> = {
 
 // ──── The ToolModule interface ────
 
+/**
+ * Hand-written content rendered on the public tool page in addition to
+ * the runner. Optional — pages without this fall back to auto-generated
+ * sections from existing metadata. When present, `faq` is also emitted
+ * as FAQPage JSON-LD for SERP enhancement.
+ */
+export interface ToolSeoContent {
+  /** One to three paragraphs explaining what the tool is for. Plain text. */
+  intro?: string;
+  /** Bullet list of common use cases. Rendered as a "Common uses" section. */
+  useCases?: string[];
+  /** Q&A pairs. Rendered as content AND as FAQPage JSON-LD. */
+  faq?: { q: string; a: string }[];
+  /** Curated cross-links — adjacent tools worth trying, with the reason. */
+  alsoTry?: { id: string; why: string }[];
+}
+
 export interface ToolModule<Params = unknown> {
   // Metadata
   id: string;
@@ -244,6 +261,17 @@ export interface ToolModule<Params = unknown> {
    * tools — most descriptions are already LLM-friendly).
    */
   llmDescription?: string;
+
+  /**
+   * Optional richer content for the public tool page — picked up by
+   * `/tools/[slug].astro` to render an extended body (intro paragraphs,
+   * common use cases, FAQ pairs, curated "also try" links). Only the
+   * `faq` is wired into structured data (FAQPage JSON-LD for SERP
+   * enhancement); the rest is plain content. Hand-written per tool;
+   * pages without `seoContent` fall back to auto-generated sections
+   * derived from `description` / `llmDescription` / `input` / `output`.
+   */
+  seoContent?: ToolSeoContent;
 
   // Capabilities
   input: ToolInputSpec;

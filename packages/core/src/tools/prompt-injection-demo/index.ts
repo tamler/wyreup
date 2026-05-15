@@ -228,6 +228,41 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
     return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
   },
 
+  seoContent: {
+    intro:
+      'Paste any text — a scraped page, a PDF body, a chat transcript, a copy-paste from the web — and see exactly where prompt-injection content is hiding. The tool surfaces three categories in one pass: invisible characters that humans cannot see (zero-width Unicode, BOM, control codes), confusable lookalikes where one alphabet impersonates another (Cyrillic `а` masquerading as Latin `a`), and instruction-override patterns ("ignore previous instructions", `[INST]`, `<|im_start|>`, `System:`, named jailbreaks). Each finding is reported with character offsets, severity, and a rendered HTML view ready to display. Runs in your browser — never sends your text to anyone.',
+    useCases: [
+      'Audit text before pasting it into an LLM prompt or fine-tune dataset.',
+      'Defensive scan of scraped pages, PDFs, or user-submitted content fed to an agent.',
+      'Demo prompt-injection risk to a team that hasn\'t internalised the threat model.',
+      'Catch homoglyph attacks in URLs, account names, or imported user data.',
+      'Spot zero-width characters in payment-form values or address fields where they\'re used to bypass filters.',
+    ],
+    faq: [
+      {
+        q: 'What counts as a "prompt injection"?',
+        a: 'Any content embedded in untrusted text designed to alter an LLM\'s behaviour: explicit overrides ("ignore previous instructions"), role-takeover phrases ("you are now"), chat fences from common templates (ChatML `<|im_start|>`, Llama `[INST]`, OpenAI), `System:` role spoofing, and named jailbreaks (DAN). The tool also catches non-instructional but high-risk content: invisible characters (zero-width Unicode) and confusable lookalikes that bypass naïve string filters.',
+      },
+      {
+        q: 'Will it catch every attack?',
+        a: 'No — this is a heuristic over known classes. Novel attacks worded differently from the pattern table will slip past. Use it as one defensive layer, not as the only one. The output is structured enough that you can plug it into your own ranking / blocking pipeline.',
+      },
+      {
+        q: 'Does it work on PDFs?',
+        a: 'Run `pdf-to-text` first, then pipe the output into prompt-injection-demo. The Wyreup chain builder makes that two-step flow a one-click chain.',
+      },
+      {
+        q: 'Can I get the HTML render directly?',
+        a: 'Yes — the JSON output includes an `html` field with `<mark data-kind="…" data-severity="…">` spans around each finding. Drop it into a `<div>` to render the marked-up text inline.',
+      },
+    ],
+    alsoTry: [
+      { id: 'text-suspicious', why: 'Get the verdict layer (clean / low / medium / high) without the per-character highlights.' },
+      { id: 'pdf-suspicious', why: 'Same idea, but extracts text from a PDF first.' },
+      { id: 'text-confusable', why: 'Just the homoglyph / mixed-script analyser without the prompt-injection patterns.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

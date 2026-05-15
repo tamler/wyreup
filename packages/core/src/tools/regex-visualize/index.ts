@@ -383,6 +383,37 @@ export const regexVisualize: ToolModule<RegexVisualizeParams> = {
     return [new Blob([result.svg], { type: 'image/svg+xml' })];
   },
 
+  seoContent: {
+    intro:
+      'See your regex as a railroad-style SVG diagram. Each part of the pattern becomes a labeled box: literal characters, character classes, groups, alternations stacked vertically, repetitions with their quantifier underneath. Useful for code review, learning, or sharing a regex on a slide or in a doc where the symbols alone would be unreadable. The SVG is standalone — save it, embed it, paste it into Figma.',
+    useCases: [
+      'Document a regex in a README or design doc — embed the SVG.',
+      'Code-review a regex pull request — see the structure at a glance.',
+      'Teach regex visually — show what `(?:foo|bar)+` actually means.',
+      'Compare two regexes side by side by rendering both.',
+      'Spot accidental greediness or missing anchors visually before testing.',
+    ],
+    faq: [
+      {
+        q: 'Does the SVG render in every browser?',
+        a: 'Yes — the output is standalone SVG with no external dependencies. Save it as a file, embed it with `<img src="…">`, or paste the markup directly into your HTML.',
+      },
+      {
+        q: 'What about complex patterns?',
+        a: 'Deep nesting (groups inside repetitions inside alternations) is rendered correctly but the diagram gets wide. For very complex regex, also try `regex-explain` for the per-part English breakdown.',
+      },
+      {
+        q: 'Which regex flavour is parsed?',
+        a: 'JavaScript syntax. Most patterns from other flavours render correctly — PCRE-only constructs like `\\K` and atomic groups are not supported.',
+      },
+    ],
+    alsoTry: [
+      { id: 'regex-explain', why: 'Get a plain-English breakdown alongside the visual.' },
+      { id: 'regex-tester', why: 'Test the regex against sample text.' },
+      { id: 'regex-from-text', why: 'Go the other way — describe a pattern, get a regex.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

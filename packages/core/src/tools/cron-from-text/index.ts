@@ -271,6 +271,39 @@ export const cronFromText: ToolModule<CronFromTextParams> = {
     return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
   },
 
+  seoContent: {
+    intro:
+      'Describe a schedule in plain English ("every Monday at 9am", "first of the month at midnight", "every 5 minutes") and get a 5-field cron expression you can paste into crontab, GitHub Actions, GitLab CI, AWS EventBridge, Vercel Cron, or any other scheduler that speaks cron. The heuristic engine parses intervals, times, days of the week, and days of the month — no LLM, no upload.',
+    useCases: [
+      'Translate a schedule from a meeting note ("run every weekday at 9am") into a cron line.',
+      'Bootstrap a GitHub Actions workflow `on.schedule.cron` value without reaching for a cheat sheet.',
+      'Sanity-check a complicated schedule by translating it back from English.',
+      'Generate the cron for a Wyreup trigger rule so it fires on the cadence you describe.',
+    ],
+    faq: [
+      {
+        q: 'What syntax does the output use?',
+        a: 'Standard 5-field POSIX cron: minute, hour, day-of-month, month, day-of-week. The output uses `0-7` for days of the week (where 0 and 7 both mean Sunday), so it works in crontab, GitHub Actions, GitLab, AWS, and Vercel Cron unchanged.',
+      },
+      {
+        q: 'Does it support "every weekday" and "weekends"?',
+        a: 'Yes. "Weekdays" maps to `1,2,3,4,5`; "weekends" to `0,6`. You can also list specific days like "every Monday and Friday at 6pm".',
+      },
+      {
+        q: 'Can I generate cron for "last day of the month"?',
+        a: 'Yes — "last day of the month" emits the `L` token in the day-of-month field. Note: `L` is supported by most modern cron implementations (Quartz, AWS EventBridge, systemd timers with translation) but not all. Pure POSIX cron lacks `L`.',
+      },
+      {
+        q: 'What if my schedule is unusual?',
+        a: 'For phrasings the heuristic can\'t parse the result returns `confidence: "no-match"` plus an `upgrade` field. The hosted-AI Pro tier will handle arbitrary phrasings; meanwhile, simplify or split the schedule.',
+      },
+    ],
+    alsoTry: [
+      { id: 'cron-parser', why: 'Verify the cron expression by parsing it back into a schedule description.' },
+      { id: 'timestamp-converter', why: 'Convert between unix timestamps, ISO dates, and human-readable formats.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

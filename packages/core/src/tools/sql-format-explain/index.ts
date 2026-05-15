@@ -282,6 +282,40 @@ export const sqlFormatExplain: ToolModule<SqlFormatExplainParams> = {
     return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
   },
 
+  seoContent: {
+    intro:
+      'Paste a SQL query and get back a pretty-printed version along with a clause-by-clause plain-English breakdown. Each clause — SELECT, FROM, JOIN, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, and the rest — is identified with its body and a one-line explanation of what it does. Useful for code review, onboarding new engineers, explaining queries to non-DBAs, or auditing a query you inherited. Runs entirely in your browser; no upload, no LLM.',
+    useCases: [
+      'Document a complex query in a PR description without writing the prose yourself.',
+      'Explain a join-heavy report to a stakeholder who doesn\'t speak SQL.',
+      'Audit unfamiliar SQL — see at a glance what every clause is doing.',
+      'Detect features (aggregates, joins, grouping, sorting, limiting) in a single pass.',
+      'Format SQL pasted from a screenshot or chat that lost its whitespace.',
+    ],
+    faq: [
+      {
+        q: 'Which SQL dialects does it support?',
+        a: 'Standard SQL, PostgreSQL, MySQL, SQLite, and BigQuery — selectable via the Dialect parameter. Dialect mainly affects formatting (e.g., backtick vs. quoted identifiers); the clause-by-clause breakdown is the same across dialects.',
+      },
+      {
+        q: 'Does it run my query?',
+        a: 'No. The tool only parses and explains the query — it never executes it. Safe to paste production SQL.',
+      },
+      {
+        q: 'Is the query sent anywhere?',
+        a: 'No. The entire format and explanation happens client-side. You can disconnect your network and it still works.',
+      },
+      {
+        q: 'Will it explain a CTE-led query?',
+        a: 'Yes — the tool detects `WITH` and names the defined CTEs in the explanation. The body of each CTE is treated as a sub-query and gets its own clause breakdown when expanded.',
+      },
+    ],
+    alsoTry: [
+      { id: 'sql-formatter', why: 'Just want pretty-printed SQL without the explanation.' },
+      { id: 'regex-explain', why: 'Same idea, for regular expressions.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

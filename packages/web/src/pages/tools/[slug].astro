@@ -31,6 +31,14 @@ export async function getStaticPaths() {
       ...crossOutput.map((t) => ({ id: t.id, name: t.name, category: t.category, description: t.description })),
     ].slice(0, 8);
 
+    // Resolve any `alsoTry` ids to real tool data so the link panel can render.
+    const alsoTry = (tool.seoContent?.alsoTry ?? [])
+      .map((entry) => {
+        const t = allTools.find((x) => x.id === entry.id);
+        return t ? { id: t.id, name: t.name, category: t.category, description: t.description, why: entry.why } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+
     return {
       params: { slug: tool.id },
       props: {
@@ -39,6 +47,7 @@ export async function getStaticPaths() {
           slug: tool.slug ?? tool.id,
           name: tool.name,
           description: tool.description,
+          llmDescription: tool.llmDescription,
           category: tool.category,
           keywords: tool.keywords ?? [],
           input: {
@@ -61,21 +70,39 @@ export async function getStaticPaths() {
           installGroup: (tool as { installGroup?: string }).installGroup,
           memoryEstimate: tool.memoryEstimate,
           outputDisplay: (tool as { outputDisplay?: 'mono' | 'prose' }).outputDisplay,
+          cost: tool.cost,
+          seoContent: tool.seoContent,
         },
         relatedTools,
+        alsoTry,
       },
     };
   });
 }
 
-const { serializedTool, relatedTools } = Astro.props;
-const { name, description, category, keywords } = serializedTool;
+const { serializedTool, relatedTools, alsoTry } = Astro.props;
+const { name, description, category, keywords, seoContent } = serializedTool;
 
 const seoTitle = `${name} — Wyreup`;
 const seoDescription = description;
 const ogDescription = `${description} Runs entirely in your browser — no uploads.`;
 
-const ldJson = {
+// Auto-generated content. Used for every tool page (whether or not
+// seoContent is present) — adds depth that one-line descriptions miss
+// and gives Google something to rank beyond the runner widget.
+const acceptList = serializedTool.input.accept ?? [];
+const acceptLabel = acceptList.length === 0
+  ? 'No file input — params only.'
+  : acceptList.length === 1
+    ? `Accepts: ${acceptList[0]}.`
+    : `Accepts: ${acceptList.slice(0, -1).join(', ')} or ${acceptList[acceptList.length - 1]}.`;
+const outputLabel = `Outputs: ${serializedTool.output.mime}${serializedTool.output.multiple ? ' (multiple)' : ''}.`;
+const requiresWebgpu = serializedTool.requiresWebgpu;
+const memEstimate = serializedTool.memoryEstimate;
+const installGroup = serializedTool.installGroup;
+
+// LD-JSON: SoftwareApplication for every page; FAQ schema added when seoContent.faq is present.
+const softwareLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name,
@@ -87,6 +114,17 @@ const ldJson = {
   keywords: keywords.join(', '),
   url: `https://wyreup.com/tools/${serializedTool.id}`,
 };
+const faqLd = seoContent?.faq && seoContent.faq.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: seoContent.faq.map((entry) => ({
+        '@type': 'Question',
+        name: entry.q,
+        acceptedAnswer: { '@type': 'Answer', text: entry.a },
+      })),
+    }
+  : null;
 ---
 
 <BaseLayout
@@ -95,7 +133,10 @@ const ldJson = {
   ogDescription={ogDescription}
 >
   <Fragment slot="head">
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(ldJson)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareLd)} />
+    {faqLd && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+    )}
   </Fragment>
 
   <section class="tool-page">
@@ -133,6 +174,117 @@ const ldJson = {
         installGroup={serializedTool.installGroup}
       />
       <ToolRunner client:load tool={serializedTool} />
+
+      {/* Auto-generated rich body — runs for every tool page.
+          Renders the hand-written seoContent.intro when present, else
+          falls back to llmDescription, else just the description. */}
+      <section class="tool-body" aria-labelledby="about-heading">
+        <h2 id="about-heading" class="section-title">About {name}</h2>
+        <div class="tool-prose">
+          {seoContent?.intro
+            ? seoContent.intro.split(/\n\n+/).map((p) => <p>{p}</p>)
+            : (
+                <>
+                  <p>{description}</p>
+                  {serializedTool.llmDescription && <p>{serializedTool.llmDescription}</p>}
+                </>
+              )}
+        </div>
+
+        <dl class="tool-facts">
+          <div class="tool-facts__row">
+            <dt>Category</dt>
+            <dd>{category}</dd>
+          </div>
+          <div class="tool-facts__row">
+            <dt>Input</dt>
+            <dd>{acceptLabel}</dd>
+          </div>
+          <div class="tool-facts__row">
+            <dt>Output</dt>
+            <dd>{outputLabel}</dd>
+          </div>
+          {serializedTool.cost && (
+            <div class="tool-facts__row">
+              <dt>Cost</dt>
+              <dd>{serializedTool.cost === 'free' ? 'Free, runs in your browser' : 'Credit-metered'}</dd>
+            </div>
+          )}
+          {memEstimate && (
+            <div class="tool-facts__row">
+              <dt>Memory</dt>
+              <dd>{memEstimate}</dd>
+            </div>
+          )}
+          {installGroup && (
+            <div class="tool-facts__row">
+              <dt>Install group</dt>
+              <dd>{installGroup}</dd>
+            </div>
+          )}
+          {requiresWebgpu === 'required' && (
+            <div class="tool-facts__row">
+              <dt>Requires</dt>
+              <dd>WebGPU (Chrome / Edge desktop)</dd>
+            </div>
+          )}
+        </dl>
+
+        {/* Standard privacy callout on every page — reinforces the
+            differentiator and ranks for "private / no-upload" queries. */}
+        <div class="privacy-callout" role="note">
+          <strong>Privacy:</strong> {name} runs entirely on your device. Files
+          you provide never leave your browser — no uploads, no server,
+          no tracking. The page works offline once loaded.
+        </div>
+      </section>
+
+      {seoContent?.useCases && seoContent.useCases.length > 0 && (
+        <section class="tool-body" aria-labelledby="usecases-heading">
+          <h2 id="usecases-heading" class="section-title">Common uses</h2>
+          <ul class="usecase-list">
+            {seoContent.useCases.map((u) => <li>{u}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {seoContent?.faq && seoContent.faq.length > 0 && (
+        <section class="tool-body" aria-labelledby="faq-heading">
+          <h2 id="faq-heading" class="section-title">Frequently asked questions</h2>
+          <div class="faq-list">
+            {seoContent.faq.map((entry) => (
+              <details class="faq-item">
+                <summary class="faq-q">{entry.q}</summary>
+                <div class="faq-a"><p>{entry.a}</p></div>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {keywords.length > 0 && (
+        <section class="tool-body" aria-labelledby="kw-heading">
+          <h2 id="kw-heading" class="section-title">Keywords</h2>
+          <ul class="keyword-chips">
+            {keywords.map((k) => <li class="keyword-chip">{k}</li>)}
+          </ul>
+        </section>
+      )}
+
+      {alsoTry.length > 0 && (
+        <section class="tool-body" aria-labelledby="alsotry-heading">
+          <h2 id="alsotry-heading" class="section-title">Try next</h2>
+          <div class="related-grid">
+            {alsoTry.map((t) => (
+              <a href={`/tools/${t.id}`} class="related-card" aria-label={`${t.name} — ${t.category}`}>
+                <div class="related-card__name">{t.name}</div>
+                <div class="related-card__cat">{t.category}</div>
+                <p class="related-card__desc">{t.why}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       <!-- Deliverable 4: Related tools footer -->
       {relatedTools.length > 0 && (
@@ -280,10 +432,182 @@ const ldJson = {
     max-width: 600px;
   }
 
+  /* Rich body sections (about / use cases / FAQ / try next / keywords) */
+  .tool-body {
+    margin-top: var(--space-10);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .section-title {
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4);
+  }
+
+  .tool-prose p {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0 0 var(--space-3);
+    max-width: 70ch;
+  }
+
+  .tool-prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-1) var(--space-4);
+    margin: var(--space-5) 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    max-width: 70ch;
+  }
+
+  .tool-facts__row {
+    display: contents;
+  }
+
+  .tool-facts dt {
+    color: var(--text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--text-xs);
+    padding-top: 4px;
+  }
+
+  .tool-facts dd {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  .privacy-callout {
+    margin-top: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--accent-hover);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 70ch;
+  }
+
+  .privacy-callout strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .usecase-list {
+    list-style: disc;
+    padding-left: var(--space-5);
+    margin: 0;
+    max-width: 70ch;
+  }
+
+  .usecase-list li {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: var(--space-2);
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 70ch;
+  }
+
+  .faq-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .faq-item[open] {
+    border-color: var(--border);
+  }
+
+  .faq-q {
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    list-style: none;
+    padding-right: var(--space-4);
+    position: relative;
+  }
+
+  .faq-q::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-q::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: var(--text-subtle);
+    font-weight: 400;
+    font-size: var(--text-lg);
+    line-height: 1;
+  }
+
+  .faq-item[open] .faq-q::after {
+    content: '−';
+  }
+
+  .faq-a {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .faq-a p {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  .keyword-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .keyword-chip {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 2px var(--space-2);
+  }
+
   /* Related tools footer (Deliverable 4) */
   .related-tools {
-    margin-top: var(--space-12);
-    padding-top: var(--space-8);
+    margin-top: var(--space-10);
+    padding-top: var(--space-6);
     border-top: 1px solid var(--border-subtle);
   }
 

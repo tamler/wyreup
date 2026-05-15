@@ -128,6 +128,40 @@ export const imageToAsciiArt: ToolModule<ImageToAsciiParams> = {
     return [new Blob([text], { type: 'text/plain' })];
   },
 
+  seoContent: {
+    intro:
+      'Convert any image into ASCII art or Unicode-block art. Pick a width (10–400 characters), a character ramp (the classic 70-char Paul Bourke ramp, a simple 10-char ramp, or 5 Unicode blocks), and invert for dark-mode terminals. The result is plain text — paste it into a README, a chat, a terminal banner, anywhere monospace renders. Runs entirely in your browser; the image never leaves your device.',
+    useCases: [
+      'Generate an ASCII banner for a CLI tool\'s `--help` output.',
+      'Make a README header from a logo without bundling an image.',
+      'Convert a photo into terminal-friendly art for a server MOTD or login screen.',
+      'Build retro-style social posts where ASCII matters.',
+      'Quick-preview an image inside a terminal that doesn\'t support sixel or kitty graphics.',
+    ],
+    faq: [
+      {
+        q: 'Which image formats are supported?',
+        a: 'PNG, JPEG, WebP, GIF, and BMP. For GIFs only the first frame is rendered.',
+      },
+      {
+        q: 'Why does the output look stretched?',
+        a: 'Terminal characters are roughly twice as tall as they are wide. The tool compensates automatically (`CHAR_ASPECT = 0.5`), so a square image renders as a square output. If you copy the result into a context with different glyph proportions, expect some stretch.',
+      },
+      {
+        q: 'When should I invert?',
+        a: 'Invert if you plan to display the ASCII on a dark background. The default ramp goes from light characters (sparse) to dark (dense), so dark areas get more ink — perfect on white. Invert flips that so dark areas read as light, which works on black.',
+      },
+      {
+        q: 'What\'s the difference between the three ramps?',
+        a: 'Standard (70 chars) gives the most gradient detail and the best photo reproduction. Simple (10 chars) is more legible at narrow widths and copies cleanly across fonts. Blocks (Unicode ░▒▓█) renders almost like a low-res image — best for logos and simple shapes.',
+      },
+    ],
+    alsoTry: [
+      { id: 'image-info', why: 'See dimensions, format, and metadata before converting.' },
+      { id: 'compress', why: 'Shrink the image before ASCII conversion if it\'s very large.' },
+    ],
+  },
+
   __testFixtures: {
     valid: [],
     weird: [],

@@ -15,6 +15,7 @@ export type {
   ParamFieldSchema,
   ParamSchema,
   Surface,
+  ToolSeoContent,
 } from './types.js';
 
 export {
