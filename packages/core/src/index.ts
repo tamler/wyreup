@@ -644,6 +644,13 @@ export {
   defaultRegexVisualizeParams,
   visualizeRegex,
 } from './tools/regex-visualize/index.js';
+export {
+  regexFromText,
+  type RegexFromTextParams,
+  type RegexFromTextResult,
+  defaultRegexFromTextParams,
+  generateRegexFromText,
+} from './tools/regex-from-text/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

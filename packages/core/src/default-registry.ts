@@ -189,6 +189,7 @@ import { jsonMerge } from './tools/json-merge/index.js';
 import { csvTemplate } from './tools/csv-template/index.js';
 import { pdfSuspicious } from './tools/pdf-suspicious/index.js';
 import { regexVisualize } from './tools/regex-visualize/index.js';
+import { regexFromText } from './tools/regex-from-text/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -389,6 +390,7 @@ export const defaultTools: ToolModule<any>[] = [
   csvTemplate,
   pdfSuspicious,
   regexVisualize,
+  regexFromText,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

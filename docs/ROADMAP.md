@@ -38,11 +38,27 @@ preserved so existing commit messages still resolve.
 
 ## Now (in flight)
 
-Direction set 2026-05-01: **finish Wave T, ship two high-confidence tool
-wins, then push Wave U (standalone tools).** No new ML / LLM work until
-the catalog has visibly grown and the rules engine is in users' hands.
+Direction reset 2026-05-14 (post Wave T + tool wins): **free-push
+period.** No Pro deployment until there's an audience to convert.
+Wave M (monetization) stays scoped but deployment defers until weekly
+active users justify the gate. In the meantime:
 
-Sequence below is the order to land things.
+- Build the Pro-tier catalog **as free tools** so it's battle-tested
+  when the gate flips (just add `requires: 'pro'` to metadata later).
+- Ship more free tools, push SEO surface area, attempt one Show HN.
+- Keep the privacy pitch inviolate: **free is zero tracking, zero upload.**
+
+Wave M shape (decided in design session, deployment deferred):
+- Pricing: hybrid — token packs ($10/200, $25/600, $50/1500) **and**
+  $8/mo sub with included tokens. Sub auto-pauses if unused for one
+  billing cycle (CF Worker watches usage).
+- Pro tier = ~40 hosted-AI tools via Groq + Replicate (no-train
+  providers). Catalog: text/LLM (18), vision (7), audio (4),
+  image gen/manipulation (6), document workflows (5).
+- Free tools that get a hosted Pro variant **keep their in-browser
+  version** — Pro is a quality/speed upgrade, never a takeaway.
+- Landing page sells Pro; per-tool pages show a lock badge for
+  Pro-only entries.
 
 ### 1. Wave T — Triggers, rules, PWA drop entry — **SHIPPED 2026-05-14**
 
@@ -56,7 +72,7 @@ for the load-bearing security model (G1–G8 enforced in code), and
 - ~~Matcher (most-specific MIME wins, user-`order` tiebreak, rate-limit gate)~~
 - ~~Preview-before-run sheet (TriggerPreviewSheet.svelte)~~
 - ~~Suspicious-file pre-flight (G4: text + PDF analyser before Run)~~
-- ~~`/toolbelt` rules management UI (renamed from `/my-kit`)~~
+- ~~`/toolbelt` rules management UI~~
 - ~~Trigger runtime: file-drop interceptor with `cancelable: true` event~~
 - ~~G8 spoof gate: imported chains can't reference unknown tools~~
 - ~~Chain-builder integration: save chain + register trigger in one step~~
@@ -65,22 +81,37 @@ for the load-bearing security model (G1–G8 enforced in code), and
 
 Resolved open questions:
 - Preview-before-run is on **by default**, opt-out per-rule only (never global)
-- Cross-device rule sync deferred to Wave M's Pro tier
 - No default triggers — users build their own
 
-### 2. Two high-confidence tool wins
+### 2. Two high-confidence tool wins — **SHIPPED 2026-05-14**
 
-Both are small, deterministic, and fix real friction in existing tools.
+- ~~**`pdf-crop` visual rectangle UI**~~ — `PdfCropRunner.svelte`,
+  canvas drag-to-draw, single-rect-per-page, applyToAllPages toggle.
+  Replaces the JSON-textarea fallback.
+- ~~**`regex-visualize`**~~ — `regexp-tree` AST → SVG with labeled
+  boxes. Chains after `regex-tester`. 13 tests, ships at
+  `packages/core/src/tools/regex-visualize/`.
 
-- **`pdf-redact` / `pdf-crop` visual rectangle UI** (~1–2 days). Canvas
-  drag-to-draw overlay on the PDF preview, emits the
-  `[{x, y, width, height, page}]` shape the tools already accept. Reuses
-  `PreviewRunner`'s pipeline. Replaces the current JSON-textarea fallback
-  that's unusable for non-developers.
-- **`regex-visualize`** new tool (~1–2 days). `regexp-tree` AST → SVG
-  railroad render (~200 lines of render code). Chains after `regex-tester`.
+### 3. Free-push period (current)
 
-### 3. Wave U — Standalone tool expansion
+Build the audience before flipping Pro. Priorities:
+
+- **Ship Pro-catalog tools as free tools.** Start with cheap wins
+  that don't need a real LLM: `regex-from-text` (heuristic for
+  common patterns), `cron-from-text`, `sql-format-explain`. Once
+  the pattern is established, add transformers.js-backed variants
+  for tools that need real models (those become Pro-gated later).
+- **SEO surface area.** Every tool needs a real page with examples,
+  not just a runner. Long-tail wins.
+- **Toolbelt as the wedge.** Showpiece preset chains on landing
+  (PDF → text → translate; image → describe → alt-text).
+- **One Show HN attempt** with triggers + catalog-breadth angle.
+- **Traffic measurement.** Cloud-hosted analytics (Plausible, Fathom,
+  etc.) is a hard no — see below. Options: server-side log analysis
+  on Cloudflare access logs, or self-hosted Plausible on our own
+  infra. Decision deferred; not load-bearing for the free push.
+
+### 4. Wave U — Standalone tool expansion
 
 The new direction: **deterministic, file-oriented, no models, no
 downloads.** Each tool ships in hours-to-days, validates with a test
@@ -155,19 +186,64 @@ for cross-reference with commit history; full diff in
 
 Ordered by recommended sequence.
 
-### Wave M — Monetization (Lemon Squeezy)
+### Wave M — Monetization (Lemon Squeezy + hosted AI)
 
-The first paid surface. Comes after Wave T + Wave U so Pro tier sits on
-top of a visibly broader catalog instead of one experimental ML feature.
+Scope decided 2026-05-14 in design session; **deployment deferred**
+until the free push produces measurable weekly actives. Build the
+infrastructure (license keys, billing, hosted-AI client) in branches;
+build the catalog tools as free for now; flip the gate when ready.
 
-- Pricing page (`/pricing`), two tiers: Free + Pro
-- Pro scope: CLI Pro features (batch flags, chain scripting), Toolbelt
-  cloud sync, priority support, premium-model surfaces if/when Wave Q
-  resumes
-- Lemon Squeezy overlay checkout (JS embed, no redirect)
-- Cloudflare Worker for webhook validation + license-key state in KV
-- License-key validation endpoint, rate-limited, local cache for offline grace
-- **Paid tier does NOT change the free tier's privacy pitch.**
+**Tier shape:**
+- Free unchanged — zero tracking, zero upload, all current tools.
+- Pro = hosted-AI catalog (~40 tools) via Groq + Replicate (no-train
+  providers). Free tools that get Pro variants keep their in-browser
+  version — Pro is a quality/speed upgrade, never a takeaway.
+
+**Pricing (hybrid):**
+- Token packs — $10/200, $25/600, $50/1500. No subscription.
+- Subscription — $8/mo, 200 included tokens, topup at $0.04/token.
+  **Auto-pause if unused for one billing cycle** (CF Worker watches
+  usage). Differentiator: forgotten subs don't generate revenue.
+
+**Catalog (40 tools, build progressively as free now):**
+- Text/LLM (Groq Llama 70B) — 18 tools: regex-from-text,
+  sql-from-text, cron-from-text, summarize-text, summarize-pdf,
+  extract-structured-data, classify-text, sentiment-analyze,
+  translate-hq, detect-language, rephrase, simplify-reading-level,
+  expand-bullets, compress-bullets, explain-code, document-code,
+  mock-data-generate, json-from-text.
+- Vision (Replicate / Groq) — 7 tools: image-describe, image-ocr,
+  extract-table-from-image, read-handwriting, detect-objects,
+  analyze-chart, pdf-vision-ocr.
+- Audio (Groq Whisper-large) — 4 tools: transcribe-hq,
+  transcribe-and-translate, diarize, audio-summarize.
+- Image gen / manipulation (Replicate) — 6 tools: image-generate
+  (Flux schnell), bg-remove-hq, upscale (Real-ESRGAN), inpaint,
+  style-transfer, image-variants.
+- Document workflows — 5 tools: pdf-summarize, pdf-extract-data,
+  pdf-translate-full, pdf-rewrite-format, pdf-q-and-a.
+
+**Infrastructure:**
+- Lemon Squeezy overlay checkout (JS embed, no redirect).
+- Cloudflare Worker: webhook validation, license-key state in KV,
+  per-key token balance, usage metering, auto-pause logic.
+- License-key validation endpoint, rate-limited, local cache for
+  offline grace. License key paste-in via Settings panel.
+- No accounts. Key is the credential.
+
+**Marketing surface:** landing page sells Pro (headline split between
+"Free: zero upload" and "Pro: hosted AI, no-train"); per-tool pages
+show a small lock badge for Pro entries; Settings adds a License
+panel. No separate `/pro` page.
+
+**Paid tier does NOT change the free tier's privacy pitch.**
+Pro is hosted on contractually no-train providers and is opt-in.
+
+Out of Wave-M scope (kept on the wishlist, not in launch):
+- E2E encrypted Toolbelt cloud sync (passphrase-derived key, R2).
+- `wyreup serve` daemon for scheduled triggers.
+- CLI Pro features (batch flags, chain scripting).
+- Priority support — dropped 2026-05-14; "most things just work."
 
 ### Wave S — Browser extension
 
