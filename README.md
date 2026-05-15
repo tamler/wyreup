@@ -88,7 +88,7 @@ Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save 
 
 ---
 
-## The toolbelt
+## The catalog
 
 - **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette and harmony, color-blind simulation, background removal, 2× upscale, image captioning
 - **PDFs** — merge, split, compress, crop, rotate, reorder, extract and delete pages, extract images, page numbers, encrypt and decrypt, redact, extract tables and text, convert to and from images, watermark, metadata, prompt-injection scan

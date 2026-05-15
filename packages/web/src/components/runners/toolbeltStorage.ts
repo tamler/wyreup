@@ -1,11 +1,11 @@
 /**
- * My Kit — localStorage-backed saved chains.
- * Schema version 1.
+ * Toolbelt — localStorage-backed saved chains. The personal collection
+ * a user assembles from the /tools catalog. Schema version 1.
  */
 
 import { createDefaultRegistry, validateChain, type Chain } from '@wyreup/core';
 
-const KIT_KEY = 'wyreup:my-kit:chains';
+const TOOLBELT_KEY = 'wyreup:toolbelt:chains';
 const SCHEMA_VERSION = 1;
 
 let cachedRegistry: ReturnType<typeof createDefaultRegistry> | null = null;
@@ -14,41 +14,41 @@ function getRegistry() {
   return cachedRegistry;
 }
 
-export function validateKitChain(chain: KitChain): { ok: boolean; unknownTools: string[] } {
+export function validateToolbeltChain(chain: ToolbeltChain): { ok: boolean; unknownTools: string[] } {
   const asChain: Chain = chain.steps.map((s) => ({ toolId: s.toolId, params: s.params }));
   const r = validateChain(asChain, getRegistry());
   return { ok: r.ok, unknownTools: r.unknownTools };
 }
 
-export interface KitChainStep {
+export interface ToolbeltChainStep {
   toolId: string;
   params: Record<string, unknown>;
 }
 
-export interface KitChain {
+export interface ToolbeltChain {
   id: string;
   name: string;
-  steps: KitChainStep[];
+  steps: ToolbeltChainStep[];
   createdAt: string; // ISO
   updatedAt: string; // ISO
   schemaVersion: number;
 }
 
-function loadAll(): KitChain[] {
+function loadAll(): ToolbeltChain[] {
   try {
-    const raw = localStorage.getItem(KIT_KEY);
+    const raw = localStorage.getItem(TOOLBELT_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed as KitChain[];
+    return parsed as ToolbeltChain[];
   } catch {
     return [];
   }
 }
 
-function saveAll(chains: KitChain[]): void {
+function saveAll(chains: ToolbeltChain[]): void {
   try {
-    localStorage.setItem(KIT_KEY, JSON.stringify(chains));
+    localStorage.setItem(TOOLBELT_KEY, JSON.stringify(chains));
   } catch {
     // localStorage full or unavailable
   }
@@ -59,18 +59,18 @@ function saveAll(chains: KitChain[]): void {
   }
 }
 
-export function getAllChains(): KitChain[] {
+export function getAllChains(): ToolbeltChain[] {
   return loadAll();
 }
 
-export function getChain(id: string): KitChain | undefined {
+export function getChain(id: string): ToolbeltChain | undefined {
   return loadAll().find((c) => c.id === id);
 }
 
-export function saveChain(chain: Omit<KitChain, 'schemaVersion'>): void {
+export function saveChain(chain: Omit<ToolbeltChain, 'schemaVersion'>): void {
   const all = loadAll();
   const existing = all.findIndex((c) => c.id === chain.id);
-  const withVersion: KitChain = { ...chain, schemaVersion: SCHEMA_VERSION };
+  const withVersion: ToolbeltChain = { ...chain, schemaVersion: SCHEMA_VERSION };
   if (existing >= 0) {
     all[existing] = withVersion;
   } else {
@@ -94,11 +94,11 @@ export function renameChain(id: string, name: string): void {
   }
 }
 
-export function duplicateChain(id: string): KitChain | null {
+export function duplicateChain(id: string): ToolbeltChain | null {
   const chain = getChain(id);
   if (!chain) return null;
   const now = new Date().toISOString();
-  const copy: KitChain = {
+  const copy: ToolbeltChain = {
     ...chain,
     id: crypto.randomUUID(),
     name: `${chain.name} (copy)`,
@@ -149,10 +149,10 @@ export function importChainsJson(json: string): { added: number; updated: number
       continue;
     }
 
-    const chain: KitChain = {
+    const chain: ToolbeltChain = {
       id: entry.id,
       name: entry.name,
-      steps: entry.steps as KitChainStep[],
+      steps: entry.steps as ToolbeltChainStep[],
       createdAt: typeof entry.createdAt === 'string' ? entry.createdAt : new Date().toISOString(),
       updatedAt: typeof entry.updatedAt === 'string' ? entry.updatedAt : new Date().toISOString(),
       schemaVersion: SCHEMA_VERSION,
@@ -163,7 +163,7 @@ export function importChainsJson(json: string): { added: number; updated: number
     // extended at runtime, so an "unknown tool" in an imported chain
     // is either stale (old version of Wyreup) or a spoofing attempt.
     // Either way: refuse it at import, never on first run.
-    const validation = validateKitChain(chain);
+    const validation = validateToolbeltChain(chain);
     if (!validation.ok) {
       errors.push(
         `Skipped "${chain.name}" — references unknown tool(s): ${validation.unknownTools.join(', ')}.`,

@@ -4,7 +4,7 @@
   import ProgressBar from './runners/ProgressBar.svelte';
   import BatchFolderRun from './BatchFolderRun.svelte';
   import { decodeChainSteps } from './runners/chainUrl';
-  import { saveChain } from './runners/kitStorage';
+  import { saveChain } from './runners/toolbeltStorage';
   import { peekChainFile, consumeChainFile } from './runners/chainStorage';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -467,7 +467,7 @@
         </div>
       {/if}
       {#if saveConfirm}
-        <span class="confirm-msg" aria-live="polite">Saved to your Chains.</span>
+        <span class="confirm-msg" aria-live="polite">Saved to your toolbelt.</span>
       {/if}
 
       <!-- End-of-run save prompt -->
@@ -490,7 +490,7 @@
       {/if}
 
       {#if endOfRunSaved}
-        <p class="end-save-confirm" aria-live="polite">Saved to your Chains. <a href="/chains" class="end-save-link">View Chains</a></p>
+        <p class="end-save-confirm" aria-live="polite">Saved to your toolbelt. <a href="/toolbelt" class="end-save-link">View toolbelt</a></p>
       {/if}
     {/if}
   {/if}

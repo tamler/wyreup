@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getAllChains, deleteChain, type KitChain } from './runners/kitStorage';
+  import { getAllChains, deleteChain, type ToolbeltChain } from './runners/toolbeltStorage';
   import { encodeChainSteps } from './runners/chainUrl';
 
   // Surfaces a user's saved chains (from localStorage) at the top of
@@ -8,7 +8,7 @@
   // routes to /chain/run?steps=<encoded>; the existing ChainRunner handles
   // file drop + auto-run consent.
 
-  let chains: KitChain[] = [];
+  let chains: ToolbeltChain[] = [];
   let menuOpenId: string | null = null;
   let copiedId: string | null = null;
 
@@ -25,12 +25,12 @@
     chains = getAllChains().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
-  function chainHref(chain: KitChain): string {
+  function chainHref(chain: ToolbeltChain): string {
     const encoded = encodeChainSteps(chain.steps);
     return `/chain/run?steps=${encodeURIComponent(encoded)}`;
   }
 
-  function fmtSteps(chain: KitChain): string {
+  function fmtSteps(chain: ToolbeltChain): string {
     return chain.steps.map((s) => s.toolId).join(' → ');
   }
 
@@ -50,17 +50,17 @@
     menuOpenId = null;
   }
 
-  function handleDelete(e: MouseEvent, chain: KitChain) {
+  function handleDelete(e: MouseEvent, chain: ToolbeltChain) {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm(`Delete chain "${chain.name}"? This can't be undone.`)) return;
     deleteChain(chain.id);
     menuOpenId = null;
     // Refresh happens via the wyreup:chains-changed event dispatched by
-    // kitStorage's saveAll; no manual call needed here.
+    // toolbeltStorage's saveAll; no manual call needed here.
   }
 
-  function shareUrl(chain: KitChain): string {
+  function shareUrl(chain: ToolbeltChain): string {
     const encoded = encodeChainSteps(chain.steps);
     const params = new URLSearchParams();
     params.set('steps', encoded);
@@ -68,7 +68,7 @@
     return `${window.location.origin}/chain/run?${params.toString()}`;
   }
 
-  async function handleCopyShare(e: MouseEvent, chain: KitChain) {
+  async function handleCopyShare(e: MouseEvent, chain: ToolbeltChain) {
     e.preventDefault();
     e.stopPropagation();
     try {

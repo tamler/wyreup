@@ -70,7 +70,7 @@ A rule loses `confirmed: true` whenever:
 - Its chain string is edited
 - Its MIME pattern is edited
 - Its name is edited
-- The user explicitly toggles confirmed off in `/my-kit`
+- The user explicitly toggles confirmed off in `/toolbelt`
 
 Editing a rule re-arms the preview. New rules start `confirmed: false`.
 

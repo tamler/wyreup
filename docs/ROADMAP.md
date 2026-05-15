@@ -62,8 +62,8 @@ chains) into one product story.
 
 **Remaining scope:**
 - **Trigger rules** — persistent declarative `"any audio/* → run chain X"`
-  in localStorage / `/my-kit`. Resolution: most-specific MIME first, then
-  user-defined order. UI in `/my-kit`.
+  in localStorage / `/toolbelt`. Resolution: most-specific MIME first, then
+  user-defined order. UI in `/toolbelt`.
 - **Trigger node primitive** in the chain builder — first step declares
   the MIME match. Saving a chain with a trigger registers the rule.
 - **`file_handlers` wired through the trigger system** — OS-level "Open
@@ -170,7 +170,7 @@ The first paid surface. Comes after Wave T + Wave U so Pro tier sits on
 top of a visibly broader catalog instead of one experimental ML feature.
 
 - Pricing page (`/pricing`), two tiers: Free + Pro
-- Pro scope: CLI Pro features (batch flags, chain scripting), My Kit
+- Pro scope: CLI Pro features (batch flags, chain scripting), Toolbelt
   cloud sync, priority support, premium-model surfaces if/when Wave Q
   resumes
 - Lemon Squeezy overlay checkout (JS embed, no redirect)

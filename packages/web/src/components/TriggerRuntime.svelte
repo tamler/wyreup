@@ -20,7 +20,7 @@
   import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core';
   import TriggerPreviewSheet from './TriggerPreviewSheet.svelte';
   import { getAllRules, getFires, recordFire, updateRule } from './runners/triggerStorage';
-  import { getChain, type KitChain } from './runners/kitStorage';
+  import { getChain, type ToolbeltChain } from './runners/toolbeltStorage';
 
   // Reactive state for the currently-open sheet, if any.
   let pendingFile: File | null = null;
@@ -42,7 +42,7 @@
     }
   }
 
-  function kitChainToChain(kc: KitChain): Chain {
+  function toolbeltChainToChain(kc: ToolbeltChain): Chain {
     return kc.steps.map((s) => ({ toolId: s.toolId, params: s.params }));
   }
 
@@ -72,13 +72,13 @@
     if (!savedChain) {
       showToast(
         'error',
-        `Rule "${rule.name}" points at a deleted chain. Edit it in /my-kit.`,
+        `Rule "${rule.name}" points at a deleted chain. Edit it in /toolbelt.`,
         6000,
       );
       return;
     }
 
-    const chain = kitChainToChain(savedChain);
+    const chain = toolbeltChainToChain(savedChain);
 
     // Spoof gate: if the saved chain references tool IDs that aren't in
     // the built-in registry, force the preview sheet open so the user

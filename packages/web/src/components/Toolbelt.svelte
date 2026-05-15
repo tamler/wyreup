@@ -7,12 +7,12 @@
     duplicateChain,
     exportChainsJson,
     importChainsJson,
-    type KitChain,
-  } from './runners/kitStorage';
+    type ToolbeltChain,
+  } from './runners/toolbeltStorage';
   import { encodeChainSteps } from './runners/chainUrl';
   import TriggerRulesSection from './TriggerRulesSection.svelte';
 
-  let chains: KitChain[] = [];
+  let chains: ToolbeltChain[] = [];
   let loaded = false;
 
   let renamingId: string | null = null;
@@ -36,7 +36,7 @@
     refresh();
   }
 
-  function startRename(chain: KitChain) {
+  function startRename(chain: ToolbeltChain) {
     renamingId = chain.id;
     renameValue = chain.name;
   }
@@ -54,7 +54,7 @@
     refresh();
   }
 
-  function chainToUrl(chain: KitChain, page: 'run' | 'build'): string {
+  function chainToUrl(chain: ToolbeltChain, page: 'run' | 'build'): string {
     const encoded = encodeChainSteps(chain.steps);
     return `/${page === 'run' ? 'chain/run' : 'chain/build'}?steps=${encoded}`;
   }
@@ -95,7 +95,7 @@
     input.click();
   }
 
-  function shareChain(chain: KitChain) {
+  function shareChain(chain: ToolbeltChain) {
     const url = `${window.location.origin}${chainToUrl(chain, 'run')}`;
     navigator.clipboard.writeText(url).catch(() => {});
   }

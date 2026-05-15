@@ -21,8 +21,8 @@ import {
   TRIGGER_KIT_VERSION,
 } from '@wyreup/core';
 
-const RULES_KEY = 'wyreup:my-kit:trigger-rules';
-const FIRES_KEY = 'wyreup:my-kit:trigger-fires';
+const RULES_KEY = 'wyreup:toolbelt:trigger-rules';
+const FIRES_KEY = 'wyreup:toolbelt:trigger-fires';
 const FIRES_MAX = 500;
 
 function emptyKit(): TriggerKit {

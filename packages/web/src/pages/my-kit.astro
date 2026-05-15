@@ -1,4 +1,5 @@
 ---
-// Permanent redirect to /chains
-return Astro.redirect('/chains', 301);
+// Legacy redirect — /my-kit → /toolbelt. Preserves bookmarks from
+// before the rename. Safe to remove after 2027-05.
+return Astro.redirect('/toolbelt', 301);
 ---

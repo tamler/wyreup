@@ -4,7 +4,7 @@
   import ParamsForm from './runners/ParamsForm.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
-  import { saveChain } from './runners/kitStorage';
+  import { saveChain } from './runners/toolbeltStorage';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
   import { couldFlowTo } from '@wyreup/core';
   import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
@@ -530,7 +530,7 @@
   {/if}
 
   {#if endOfRunSaved}
-    <p class="end-save-confirm" aria-live="polite">Saved to your Chains. <a href="/chains" class="end-save-link">View Chains</a></p>
+    <p class="end-save-confirm" aria-live="polite">Saved to your toolbelt. <a href="/toolbelt" class="end-save-link">View toolbelt</a></p>
   {/if}
 </div>
 

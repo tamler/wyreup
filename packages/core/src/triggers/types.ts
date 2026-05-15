@@ -9,7 +9,7 @@
 export interface TriggerRule {
   /** Stable opaque id (UUID-shape recommended). */
   id: string;
-  /** Human-readable name shown in /my-kit and on the preview sheet. */
+  /** Human-readable name shown in /toolbelt and on the preview sheet. */
   name: string;
   /**
    * MIME match. Supports trailing wildcard ('audio/*', 'image/*') and

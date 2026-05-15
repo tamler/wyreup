@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Trigger rules management UI — slots into /my-kit alongside saved chains.
+  // Trigger rules management UI — slots into /toolbelt alongside saved chains.
   //
   // Every "edit" path here goes through coreUpdate (updateRule()), which
   // enforces G2: any meaningful field change re-arms confirmed=false. The
@@ -15,12 +15,12 @@
     reorderRule,
     nextOrder,
   } from './runners/triggerStorage';
-  import { getAllChains, type KitChain } from './runners/kitStorage';
+  import { getAllChains, type ToolbeltChain } from './runners/toolbeltStorage';
   import type { TriggerRule } from '@wyreup/core';
   import { DEFAULT_RATE_LIMIT } from '@wyreup/core';
 
   let rules: TriggerRule[] = [];
-  let chains: KitChain[] = [];
+  let chains: ToolbeltChain[] = [];
   let loaded = false;
 
   // Edit form state
