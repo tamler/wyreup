@@ -674,6 +674,12 @@ export {
   defaultRegexExplainParams,
   explainRegex,
 } from './tools/regex-explain/index.js';
+export {
+  imageToAsciiArt,
+  type ImageToAsciiParams,
+  defaultImageToAsciiParams,
+  imageToAscii,
+} from './tools/image-to-ascii/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
