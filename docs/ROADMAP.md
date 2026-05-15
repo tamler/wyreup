@@ -1,6 +1,6 @@
 # Wyreup Roadmap
 
-_Updated: 2026-05-14_
+_Updated: 2026-05-14 (post Wave T)_
 
 Three sections: **Now** (in flight), **Next** (scoped, not started), **Later**
 (one-liners). Tech debt is inlined into the wave that absorbs it; the rest
@@ -44,38 +44,29 @@ the catalog has visibly grown and the rules engine is in users' hands.
 
 Sequence below is the order to land things.
 
-### 1. Wave T — Triggers, rules, PWA drop entry
+### 1. Wave T — Triggers, rules, PWA drop entry — **SHIPPED 2026-05-14**
 
-Make Wyreup automatic. The foundation is shipped; the rules engine is the
-missing 20% that turns the existing pieces (auto-run, batch, watch, saved
-chains) into one product story.
+Make Wyreup automatic. Foundation + rules engine + preview-before-run
+all landed in one sustained session. See `docs/triggers-security.md`
+for the load-bearing security model (G1–G8 enforced in code), and
+`packages/core/src/triggers/` for the implementation.
 
-**Already shipped (foundation):**
-- `/chain/run?steps=...&auto=1` — runs immediately when a file is available
-- `chainStorage` IndexedDB hand-off for cross-page chain navigation
-- PWA standalone redirect to `/tools` (installed users skip the marketing landing)
-- Saved chains as first-class cards on `/tools`
-- Batch mode — run a chain on every file in a folder, ZIP outputs
-- `wyreup watch` daemon — runs a chain on every new file in a folder
-- Consent gate for auto-run chains with AI/heavy install footprint
-- Shareable chain URLs with name display + step-count cap
+**Shipped (full Wave T):**
+- ~~Trigger rules persistence (`@wyreup/core` types + storage)~~
+- ~~Matcher (most-specific MIME wins, user-`order` tiebreak, rate-limit gate)~~
+- ~~Preview-before-run sheet (TriggerPreviewSheet.svelte)~~
+- ~~Suspicious-file pre-flight (G4: text + PDF analyser before Run)~~
+- ~~`/toolbelt` rules management UI (renamed from `/my-kit`)~~
+- ~~Trigger runtime: file-drop interceptor with `cancelable: true` event~~
+- ~~G8 spoof gate: imported chains can't reference unknown tools~~
+- ~~Chain-builder integration: save chain + register trigger in one step~~
+- ~~`file_handlers` wired through `/share-receive` to the preview sheet~~
+- ~~`/triggers` public security-model doc + landing hero rewrite~~
 
-**Remaining scope:**
-- **Trigger rules** — persistent declarative `"any audio/* → run chain X"`
-  in localStorage / `/toolbelt`. Resolution: most-specific MIME first, then
-  user-defined order. UI in `/toolbelt`.
-- **Trigger node primitive** in the chain builder — first step declares
-  the MIME match. Saving a chain with a trigger registers the rule.
-- **`file_handlers` wired through the trigger system** — OS-level "Open
-  with Wyreup" routes to the matching saved chain.
-- **Conflict resolution UX** — reorderable list when two chains claim the
-  same MIME.
-
-**Open questions:**
-- Default off vs on for auto-run on first use (preview-before-run toggle?)
-- Cross-device rule sync — Pro tier feature (Wave M)
-- Should `record-audio → transcribe` be a default trigger? Probably no —
-  better as a pre-built saved chain users opt into.
+Resolved open questions:
+- Preview-before-run is on **by default**, opt-out per-rule only (never global)
+- Cross-device rule sync deferred to Wave M's Pro tier
+- No default triggers — users build their own
 
 ### 2. Two high-confidence tool wins
 

@@ -54,6 +54,11 @@ function saveAll(chains: ToolbeltChain[]): void {
   }
   // Notify any listening UI (e.g. SavedChainsSection on /tools) to refresh.
   // localStorage doesn't fire `storage` events for same-tab writes.
+  //
+  // Note: the event name kept `chains-changed` (not `toolbelt-changed`)
+  // because it specifically signals "saved chains were modified" — rule
+  // changes get their own `wyreup:trigger-rules-changed` event in
+  // triggerStorage. Two events, two concerns, decoupled subscribers.
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('wyreup:chains-changed'));
   }

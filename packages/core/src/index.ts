@@ -55,7 +55,6 @@ export {
   updateTriggerRule,
   strippedForImport,
   matchRule,
-  clampRateLimit,
   pruneFires,
   runPreflight,
   readFileHeader,

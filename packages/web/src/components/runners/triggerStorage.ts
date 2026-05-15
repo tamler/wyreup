@@ -15,6 +15,7 @@ import {
   serializeTriggerKit,
   strippedForImport,
   updateTriggerRule as coreUpdate,
+  pruneFires,
   type TriggerKit,
   type TriggerRule,
   type FireRecord,
@@ -170,5 +171,9 @@ export function getFires(): FireRecord[] {
 export function recordFire(ruleId: string): void {
   const fires = loadFires();
   fires.push({ ruleId, firedAt: Date.now() });
-  saveFires(fires);
+  // Drop entries older than the longest active rate-limit window —
+  // they can no longer influence any G7 decision and just inflate
+  // localStorage. The FIRES_MAX hard cap stays as belt-and-suspenders.
+  const rules = loadKit().rules;
+  saveFires(pruneFires(fires, rules));
 }

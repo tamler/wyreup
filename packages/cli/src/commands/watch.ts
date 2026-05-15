@@ -28,14 +28,14 @@ export interface WatchOptions {
   maxFiles?: number;
 }
 
-interface KitChainStep {
+interface ToolbeltChainStep {
   toolId: string;
   params: Record<string, unknown>;
 }
-interface KitChain {
+interface ToolbeltChain {
   id: string;
   name: string;
-  steps: KitChainStep[];
+  steps: ToolbeltChainStep[];
 }
 
 // ──── chain loaders (mirror chain.ts) ─────────────────────────────────────────
@@ -56,15 +56,15 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   const raw = await readFile(path, 'utf8');
   const parsed = JSON.parse(raw) as unknown;
   if (!Array.isArray(parsed)) {
-    throw new Error(`Kit file must be a JSON array of chains: ${path}`);
+    throw new Error(`Toolbelt file must be a JSON array of chains: ${path}`);
   }
-  const chains = parsed as KitChain[];
+  const chains = parsed as ToolbeltChain[];
   const needle = nameOrId.trim().toLowerCase();
   const exactId = chains.find((c) => c.id === nameOrId);
   if (exactId) return serializeChain(exactId.steps);
   const exactName = chains.filter((c) => c.name.toLowerCase() === needle);
   if (exactName.length === 1) return serializeChain(exactName[0]!.steps);
-  if (exactName.length > 1) throw new Error(`Multiple chains named "${nameOrId}" in kit file.`);
+  if (exactName.length > 1) throw new Error(`Multiple chains named "${nameOrId}" in toolbelt file.`);
   const partial = chains.filter((c) => c.name.toLowerCase().includes(needle));
   if (partial.length === 1) return serializeChain(partial[0]!.steps);
   throw new Error(`No unique chain matching "${nameOrId}" in ${path}.`);

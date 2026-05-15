@@ -49,20 +49,20 @@ export interface ChainOptions {
   dryRun?: boolean;
 }
 
-interface KitChainStep {
+interface ToolbeltChainStep {
   toolId: string;
   params: Record<string, unknown>;
 }
-interface KitChain {
+interface ToolbeltChain {
   id: string;
   name: string;
-  steps: KitChainStep[];
+  steps: ToolbeltChainStep[];
 }
 
 /**
- * Read a chain by name (or id, or substring) from a kit JSON file —
- * the same format the web's My Kit exports via "Export kit" on
- * `/my-kit`. Returns the steps as a chain string, or throws on
+ * Read a chain by name (or id, or substring) from a toolbelt JSON file —
+ * the same format the web's Toolbelt exports via "Export kit" on
+ * `/toolbelt`. Returns the steps as a chain string, or throws on
  * missing file / no match / ambiguous match.
  */
 async function loadFromKit(path: string, nameOrId: string): Promise<string> {
@@ -70,18 +70,18 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   try {
     raw = await readFile(path, 'utf8');
   } catch {
-    throw new Error(`Could not read kit file: ${path}`);
+    throw new Error(`Could not read toolbelt file: ${path}`);
   }
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
-    throw new Error(`Kit file is not valid JSON: ${path}`);
+    throw new Error(`Toolbelt file is not valid JSON: ${path}`);
   }
   if (!Array.isArray(parsed)) {
-    throw new Error(`Kit file must be a JSON array of chains: ${path}`);
+    throw new Error(`Toolbelt file must be a JSON array of chains: ${path}`);
   }
-  const chains = parsed as KitChain[];
+  const chains = parsed as ToolbeltChain[];
 
   const needle = nameOrId.trim().toLowerCase();
   const exactId = chains.find((c) => c.id === nameOrId);
@@ -91,7 +91,7 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   if (exactName.length === 1) return serializeChain(exactName[0]!.steps);
   if (exactName.length > 1) {
     throw new Error(
-      `Multiple chains named "${nameOrId}" in kit file; use a unique id instead.`,
+      `Multiple chains named "${nameOrId}" in toolbelt file; use a unique id instead.`,
     );
   }
 
@@ -100,7 +100,7 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   if (partial.length > 1) {
     const opts = partial.map((c) => `  ${c.name}`).join('\n');
     throw new Error(
-      `"${nameOrId}" matches multiple chains in kit file:\n${opts}\nUse the full name or id.`,
+      `"${nameOrId}" matches multiple chains in toolbelt file:\n${opts}\nUse the full name or id.`,
     );
   }
 
