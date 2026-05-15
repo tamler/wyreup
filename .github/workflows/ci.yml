@@ -107,6 +107,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: node tools/check-doc-references.mjs
 
+  model-allowlist:
+    # Verifies every HuggingFace model id referenced by a core tool
+    # appears in the wyreup-models Worker's ALLOWED_HF_MODELS set.
+    # Without this, a new AI tool would 403 in production after deploy.
+    name: Model allowlist sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tools/check-model-allowlist.mjs
+
   privacy-scan:
     name: Privacy scan
     runs-on: ubuntu-latest
