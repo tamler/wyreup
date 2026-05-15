@@ -1,38 +1,46 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { ComponentType } from 'svelte';
   import type { SerializedTool } from './runners/types';
-  import { VARIANT_MAP } from './runners/variantMap';
+  import { VARIANT_MAP, type RunnerVariant } from './runners/variantMap';
   import { clearChainFile, consumeChainFile, peekChainFile } from './runners/chainStorage';
 
-  import SimpleImageRunner from './runners/SimpleImageRunner.svelte';
-  import PreviewRunner from './runners/PreviewRunner.svelte';
-  import MultiInputRunner from './runners/MultiInputRunner.svelte';
-  import MultiOutputRunner from './runners/MultiOutputRunner.svelte';
-  import JsonResultRunner from './runners/JsonResultRunner.svelte';
-  import TextResultRunner from './runners/TextResultRunner.svelte';
-  import TextInputRunner from './runners/TextInputRunner.svelte';
-  import TwoTextInputRunner from './runners/TwoTextInputRunner.svelte';
-  import GenerateRunner from './runners/GenerateRunner.svelte';
-  import CompoundInterestRunner from './runners/CompoundInterestRunner.svelte';
-  import InvestmentDcaRunner from './runners/InvestmentDcaRunner.svelte';
-  import PercentageCalculatorRunner from './runners/PercentageCalculatorRunner.svelte';
-  import DateCalculatorRunner from './runners/DateCalculatorRunner.svelte';
-  import PdfRedactRunner from './runners/PdfRedactRunner.svelte';
-  import PdfCropRunner from './runners/PdfCropRunner.svelte';
-  import RecordAudioRunner from './runners/RecordAudioRunner.svelte';
-  import ColorPaletteRunner from './runners/ColorPaletteRunner.svelte';
-  import ColorHarmonyRunner from './runners/ColorHarmonyRunner.svelte';
-  import HashRunner from './runners/HashRunner.svelte';
-  import ColorConverterRunner from './runners/ColorConverterRunner.svelte';
-  import ImageInfoRunner from './runners/ImageInfoRunner.svelte';
-  import PdfInfoRunner from './runners/PdfInfoRunner.svelte';
-  import PdfMetadataRunner from './runners/PdfMetadataRunner.svelte';
-  import QrReaderRunner from './runners/QrReaderRunner.svelte';
-  import ImageSimilarityRunner from './runners/ImageSimilarityRunner.svelte';
-  import TrimMediaRunner from './runners/TrimMediaRunner.svelte';
-  import ZipInfoRunner from './runners/ZipInfoRunner.svelte';
-  import ExcelInfoRunner from './runners/ExcelInfoRunner.svelte';
-  import VideoConcatRunner from './runners/VideoConcatRunner.svelte';
+  // Dynamic-import map: each runner becomes its own Vite chunk, fetched only
+  // when the matching tool page mounts. Saves ~150KB on the initial ToolRunner
+  // bundle (29 variants × ~5-15KB each after gzip and hoisted shared deps).
+  // The keys match the RunnerVariant union; TS will error if a variant is added
+  // to variantMap without a loader here.
+  const variantLoaders: Record<RunnerVariant, () => Promise<{ default: ComponentType }>> = {
+    SimpleImageRunner: () => import('./runners/SimpleImageRunner.svelte'),
+    PreviewRunner: () => import('./runners/PreviewRunner.svelte'),
+    MultiInputRunner: () => import('./runners/MultiInputRunner.svelte'),
+    MultiOutputRunner: () => import('./runners/MultiOutputRunner.svelte'),
+    JsonResultRunner: () => import('./runners/JsonResultRunner.svelte'),
+    TextResultRunner: () => import('./runners/TextResultRunner.svelte'),
+    TextInputRunner: () => import('./runners/TextInputRunner.svelte'),
+    TwoTextInputRunner: () => import('./runners/TwoTextInputRunner.svelte'),
+    GenerateRunner: () => import('./runners/GenerateRunner.svelte'),
+    CompoundInterestRunner: () => import('./runners/CompoundInterestRunner.svelte'),
+    InvestmentDcaRunner: () => import('./runners/InvestmentDcaRunner.svelte'),
+    PercentageCalculatorRunner: () => import('./runners/PercentageCalculatorRunner.svelte'),
+    DateCalculatorRunner: () => import('./runners/DateCalculatorRunner.svelte'),
+    PdfRedactRunner: () => import('./runners/PdfRedactRunner.svelte'),
+    PdfCropRunner: () => import('./runners/PdfCropRunner.svelte'),
+    RecordAudioRunner: () => import('./runners/RecordAudioRunner.svelte'),
+    ColorPaletteRunner: () => import('./runners/ColorPaletteRunner.svelte'),
+    ColorHarmonyRunner: () => import('./runners/ColorHarmonyRunner.svelte'),
+    HashRunner: () => import('./runners/HashRunner.svelte'),
+    ColorConverterRunner: () => import('./runners/ColorConverterRunner.svelte'),
+    ImageInfoRunner: () => import('./runners/ImageInfoRunner.svelte'),
+    PdfInfoRunner: () => import('./runners/PdfInfoRunner.svelte'),
+    PdfMetadataRunner: () => import('./runners/PdfMetadataRunner.svelte'),
+    QrReaderRunner: () => import('./runners/QrReaderRunner.svelte'),
+    ImageSimilarityRunner: () => import('./runners/ImageSimilarityRunner.svelte'),
+    TrimMediaRunner: () => import('./runners/TrimMediaRunner.svelte'),
+    ZipInfoRunner: () => import('./runners/ZipInfoRunner.svelte'),
+    ExcelInfoRunner: () => import('./runners/ExcelInfoRunner.svelte'),
+    VideoConcatRunner: () => import('./runners/VideoConcatRunner.svelte'),
+  };
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -64,40 +72,8 @@
     chainBanner = false;
   }
 
-  const variantComponents = {
-    SimpleImageRunner,
-    PreviewRunner,
-    MultiInputRunner,
-    MultiOutputRunner,
-    JsonResultRunner,
-    TextResultRunner,
-    TextInputRunner,
-    TwoTextInputRunner,
-    GenerateRunner,
-    CompoundInterestRunner,
-    InvestmentDcaRunner,
-    PercentageCalculatorRunner,
-    DateCalculatorRunner,
-    PdfRedactRunner,
-    PdfCropRunner,
-    RecordAudioRunner,
-    ColorPaletteRunner,
-    ColorHarmonyRunner,
-    HashRunner,
-    ColorConverterRunner,
-    ImageInfoRunner,
-    PdfInfoRunner,
-    PdfMetadataRunner,
-    QrReaderRunner,
-    ImageSimilarityRunner,
-    TrimMediaRunner,
-    ZipInfoRunner,
-    ExcelInfoRunner,
-    VideoConcatRunner,
-  } as const;
-
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
-  $: RunnerComponent = variantComponents[variant];
+  $: runnerPromise = variantLoaders[variant]().then((m) => m.default);
   $: effectivePreloaded = chainFile ?? preloadedFile;
 </script>
 
@@ -115,7 +91,15 @@
     </div>
   {/if}
 
-  <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} />
+  {#await runnerPromise}
+    <div class="runner-loading" role="status" aria-live="polite">Loading…</div>
+  {:then RunnerComponent}
+    <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} />
+  {:catch error}
+    <div class="runner-error" role="alert">
+      Failed to load the tool runner: {error.message}. Please refresh the page.
+    </div>
+  {/await}
 </div>
 
 <style>
@@ -123,6 +107,32 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  /* Reserves vertical space while the runner variant chunk is fetched.
+     Without a minimum height the page would jump when the runner mounts. */
+  .runner-loading {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .runner-error {
+    padding: var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
   }
 
   .chain-banner {
