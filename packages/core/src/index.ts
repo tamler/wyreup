@@ -637,6 +637,13 @@ export {
   type PdfSuspiciousResult,
   defaultPdfSuspiciousParams,
 } from './tools/pdf-suspicious/index.js';
+export {
+  regexVisualize,
+  type RegexVisualizeParams,
+  type VisualizeResult,
+  defaultRegexVisualizeParams,
+  visualizeRegex,
+} from './tools/regex-visualize/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';

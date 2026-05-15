@@ -133,6 +133,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   slug: 'TextInputRunner',
   'case-converter': 'TextInputRunner',
   'regex-tester': 'TextInputRunner',
+  'regex-visualize': 'GenerateRunner',
   'url-encoder': 'TextInputRunner',
   'jwt-decoder': 'TextInputRunner',
   'cron-parser': 'TextInputRunner',
