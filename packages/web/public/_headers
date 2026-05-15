@@ -10,11 +10,13 @@
 # multi-threaded model inference paths). Without them, `SharedArrayBuffer is
 # not defined` at runtime.
 #
-# `credentialless` was chosen over `require-corp` because Wyreup's AI and
-# media tools fetch models/wasm from third-party CDNs (cdn.jsdelivr.net,
-# storage.googleapis.com, huggingface.co) at runtime. `credentialless` lets
-# those fetches succeed without the remote hosts having to set
-# Cross-Origin-Resource-Policy headers.
+# `credentialless` was chosen over `require-corp` historically because
+# AI/media tools fetched models/wasm from third-party CDNs. As of
+# 2026-05-15 every model fetch routes through models.wyreup.com (a
+# first-party Cloudflare Worker — see `packages/worker-models/`), so
+# `require-corp` would now work if we want it. Keeping `credentialless`
+# for the moment because there's no concrete benefit to flipping it;
+# revisit if a future tool needs `require-corp`-only behavior.
 #
 # Browser support: Chrome 96+, Edge 96+, Firefox 123+, Safari 17.4+ — ~95%
 # of sessions. Older browsers fall through to require-corp semantics which

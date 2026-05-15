@@ -99,16 +99,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     'example.net',
     'wyreup.app',
 
-    // Third-party model CDNs for AI tools. The models fetch on first use, which
-    // creates a third-party origin touch. Cutover plan: provision an R2 bucket
-    // (wyreup-models, mirroring upstream paths) and call setModelCdn() once at
-    // startup — every URL routes through the new host in one place. See
-    // `packages/core/src/lib/model-cdn.ts` for the abstraction and the
-    // migration steps. Once cutover is live, remove the three domains below;
-    // the scan should then catch any new third-party touch.
-    'jsdelivr.net',       // @mediapipe/tasks-vision WASM (face-blur), gdal3.js (convert-geo)
-    'googleapis.com',     // MediaPipe model storage (face-blur)
-    'huggingface.co',     // FlashSR ONNX (audio-enhance), transformers.js model weights (10+ tools)
+    // All AI-model fetches now route through `models.wyreup.com` (R2-backed
+    // Cloudflare Worker — see `packages/worker-models/`). The browser never
+    // touches jsdelivr / googleapis / huggingface; the Worker fetches from
+    // those upstreams once per file ever, server-side, on cache-miss.
+    // The three former third-party origins are NOT in this allow-list — if
+    // anything sneaks back in (a forgotten hard-coded URL, a vendored
+    // library with an embedded link), the scan should catch it.
   ];
 
   let totalViolations = 0;

@@ -88,6 +88,16 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
 
     <slot name="head" />
 
+    {/* Routes every AI-model fetch through models.wyreup.com (R2-backed,
+        first-party origin). Runs before any tool runner hydrates so the
+        configured base is in place when the first pipeline() / fetch()
+        executes. The Astro bundler turns this into a deferred module
+        chunk; setModelCdn is small and synchronous, no UX cost. */}
+    <script>
+      import { setModelCdn } from '@wyreup/core';
+      setModelCdn('https://models.wyreup.com');
+    </script>
+
     <!-- Pre-paint layout reservation. Several components hydrate from
          localStorage (saved chains, recent tools, PWA install state) and
          render nothing during SSR. Without reservation, when those

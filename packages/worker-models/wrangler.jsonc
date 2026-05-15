@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wyreup-models",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "r2_buckets": [
+    {
+      "binding": "MODELS",
+      "bucket_name": "wyreup-models"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "models.wyreup.com",
+      "custom_domain": true
+    }
+  ]
+}

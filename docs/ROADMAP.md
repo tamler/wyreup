@@ -387,15 +387,19 @@ Resume signal (any one):
 
 Ordered by priority.
 
-1. **Self-host AI model CDNs on R2 — _abstraction shipped 2026-05-15,
-   awaiting R2 bucket._** `packages/core/src/lib/model-cdn.ts` provides
-   `setModelCdn()` and routes all direct fetches (face-blur,
-   audio-enhance, convert-geo) plus transformers.js `env.remoteHost`
-   through a single configurable base. To finish: provision the
-   `wyreup-models` R2 bucket, mirror the upstream model paths into it,
-   call `setModelCdn('https://models.wyreup.com')` once at app
-   startup, drop `jsdelivr.net` / `googleapis.com` / `huggingface.co`
-   from the privacy-scan allow-list.
+1. ~~**Self-host AI model CDNs on R2.**~~ Done 2026-05-15 — every
+   model fetch now routes through `models.wyreup.com`, a first-party
+   Cloudflare Worker backed by the `wyreup-models` R2 bucket. The
+   Worker (`packages/worker-models/`) serves cached objects from R2
+   and lazy-mirrors from the relevant upstream (huggingface.co,
+   cdn.jsdelivr.net, storage.googleapis.com) on cache-miss, then
+   writes back to R2 in the background via `ctx.waitUntil`. The
+   browser never touches a third-party origin; the upstream fetch
+   happens server-side, once per file ever, inside Cloudflare. The
+   three former third-party domains were dropped from the privacy
+   allow-list — if anything sneaks back in, the scan catches it.
+   Override path for testing or upstream-fallback:
+   `WYREUP_MODEL_CDN=disabled` (or any URL) for CLI / MCP.
 2. ~~**Unpublish deprecated skill packages from npm.**~~ Done
    2026-05-15 — `@wyreup/skill`, `@wyreup/cli-skill`, `@wyreup/mcp-skill`
    are no longer on the registry.

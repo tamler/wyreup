@@ -9,7 +9,17 @@ import { executeChain } from './commands/chain.js';
 import { executeWatch } from './commands/watch.js';
 import { prefetchCommand } from './commands/prefetch.js';
 import { cacheListCommand, cacheClearCommand } from './commands/cache.js';
-import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
+import { createDefaultRegistry, setModelCdn, toolRunsOnSurface } from '@wyreup/core';
+
+// Route every AI-model fetch through models.wyreup.com (R2-backed,
+// first-party origin). Override with WYREUP_MODEL_CDN=disabled to fall
+// back to upstream CDNs (escape hatch for testing or if R2 is down).
+const cdnOverride = process.env.WYREUP_MODEL_CDN;
+if (cdnOverride === 'disabled') {
+  setModelCdn(null);
+} else {
+  setModelCdn(cdnOverride && cdnOverride.length > 0 ? cdnOverride : 'https://models.wyreup.com');
+}
 
 // Read version from package.json at runtime so it never drifts.
 import { createRequire } from 'node:module';
