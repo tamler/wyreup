@@ -192,6 +192,7 @@ import { regexVisualize } from './tools/regex-visualize/index.js';
 import { regexFromText } from './tools/regex-from-text/index.js';
 import { cronFromText } from './tools/cron-from-text/index.js';
 import { sqlFormatExplain } from './tools/sql-format-explain/index.js';
+import { regexExplain } from './tools/regex-explain/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -395,6 +396,7 @@ export const defaultTools: ToolModule<any>[] = [
   regexFromText,
   cronFromText,
   sqlFormatExplain,
+  regexExplain,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

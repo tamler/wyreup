@@ -666,6 +666,14 @@ export {
   defaultSqlFormatExplainParams,
   explainSql,
 } from './tools/sql-format-explain/index.js';
+export {
+  regexExplain,
+  type RegexExplainParams,
+  type RegexExplainResult,
+  type RegexExplainNode,
+  defaultRegexExplainParams,
+  explainRegex,
+} from './tools/regex-explain/index.js';
 export { getPipeline } from './lib/transformers.js';
 
 export { defaultTools, createDefaultRegistry } from './default-registry.js';
