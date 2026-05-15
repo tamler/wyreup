@@ -41,24 +41,40 @@ preserved so existing commit messages still resolve.
 Direction reset 2026-05-14 (post Wave T + tool wins): **free-push
 period.** No Pro deployment until there's an audience to convert.
 Wave M (monetization) stays scoped but deployment defers until weekly
-active users justify the gate. In the meantime:
+active users justify the gate.
 
-- Build the Pro-tier catalog **as free tools** so it's battle-tested
-  when the gate flips (just add `requires: 'pro'` to metadata later).
-- Ship more free tools, push SEO surface area, attempt one Show HN.
+### Pro framing (refined 2026-05-15)
+
+The earlier framing — "Pro is 40 tools shipped as free for now" —
+was wrong. Sharpened version:
+
+- **Heuristic tools are permanent free.** If a tool costs us $0/call
+  to run, it stays free forever. `regex-from-text`, `cron-from-text`,
+  `sql-format-explain`, `regex-explain`, `prompt-injection-demo`,
+  `image-to-ascii`, `pdf-extract-data` — all permanent free.
+- **Small/medium models are free.** Anything in our existing
+  in-browser model size band (~75-250 MB) stays free. Adding a
+  ~180 MB zero-shot classifier doesn't justify a paywall.
+- **Pro = cloud-hosted variants of capabilities the in-browser tier
+  genuinely can't match.** Whisper-large-v3 hosted (vs. our
+  whisper-tiny), Llama 70B / 405B hosted (vs. small heuristics),
+  hosted vision models for higher-quality OCR / captioning, Flux
+  hosted for image generation (we have no in-browser equivalent).
+- **The `upgrade` field** on no-match results from heuristic tools
+  is the **only** Pro touchpoint on free tools. When a heuristic
+  returns `confidence: 'no-match'`, the response carries an
+  `upgrade` field pointing to the hosted-AI fallback. Free users
+  see "no match" and an opt-in path; the tool itself stays free.
+
+Pitch: *"Everything that runs in-browser is free, forever. Pro is
+the stuff that genuinely needs a GPU we can't put in your tab."*
+
+### Free-push priorities
+
+- Build heuristic / small-model versions of every "Pro candidate"
+  capability. Ship them free.
+- More free tools, SEO surface area, one Show HN attempt.
 - Keep the privacy pitch inviolate: **free is zero tracking, zero upload.**
-
-Wave M shape (decided in design session, deployment deferred):
-- Pricing: hybrid — token packs ($10/200, $25/600, $50/1500) **and**
-  $8/mo sub with included tokens. Sub auto-pauses if unused for one
-  billing cycle (CF Worker watches usage).
-- Pro tier = ~40 hosted-AI tools via Groq + Replicate (no-train
-  providers). Catalog: text/LLM (18), vision (7), audio (4),
-  image gen/manipulation (6), document workflows (5).
-- Free tools that get a hosted Pro variant **keep their in-browser
-  version** — Pro is a quality/speed upgrade, never a takeaway.
-- Landing page sells Pro; per-tool pages show a lock badge for
-  Pro-only entries.
 
 ### 1. Wave T — Triggers, rules, PWA drop entry — **SHIPPED 2026-05-14**
 
@@ -92,15 +108,32 @@ Resolved open questions:
   boxes. Chains after `regex-tester`. 13 tests, ships at
   `packages/core/src/tools/regex-visualize/`.
 
-### 3. Free-push period (current)
+### 3. Free-push period (current) — heuristic tool sweep
 
-Build the audience before flipping Pro. Priorities:
+Audience-building period. Permanent-free heuristic tools that compose
+into the Pro story later as fallback seams.
 
-- **Ship Pro-catalog tools as free tools.** Start with cheap wins
-  that don't need a real LLM: `regex-from-text` (heuristic for
-  common patterns), `cron-from-text`, `sql-format-explain`. Once
-  the pattern is established, add transformers.js-backed variants
-  for tools that need real models (those become Pro-gated later).
+**Shipped 2026-05-14 / 2026-05-15:**
+- ~~`regex-from-text`~~ — heuristic regex generator, 30+ patterns,
+  `upgrade` seam for the Pro AI fallback.
+- ~~`cron-from-text`~~ — heuristic cron generator covering intervals,
+  times, days of week, days of month.
+- ~~`sql-format-explain`~~ — pretty-print + clause-by-clause English
+  breakdown. SELECT / JOIN / WHERE / GROUP BY / etc.
+- ~~`regex-explain`~~ — regex → AST → per-part English breakdown.
+  Cross-recognises known patterns via `regex-from-text`'s table.
+  Completes the regex suite: from-text → tester → visualize → explain.
+- ~~`image-to-ascii`~~ — image → ASCII / Unicode-block art.
+  Configurable width, three ramps, dark/light invert.
+- ~~`prompt-injection-demo`~~ — visualise where prompt-injection
+  content hides. Invisible chars, confusables, mixed-script,
+  override phrases, ChatML / Llama / OpenAI fences. Returns
+  positions + pre-rendered HTML with `<mark>` spans.
+- ~~`pdf-extract-data`~~ — heuristic invoice/receipt field
+  extraction (vendor, invoice #, date, total, subtotal, tax,
+  line items). No LLM, no upload. Configurable currency.
+
+**Still to ship:**
 - **SEO surface area.** Every tool needs a real page with examples,
   not just a runner. Long-tail wins.
 - **Toolbelt as the wedge.** Showpiece preset chains on landing
@@ -188,16 +221,20 @@ Ordered by recommended sequence.
 
 ### Wave M — Monetization (Lemon Squeezy + hosted AI)
 
-Scope decided 2026-05-14 in design session; **deployment deferred**
-until the free push produces measurable weekly actives. Build the
-infrastructure (license keys, billing, hosted-AI client) in branches;
-build the catalog tools as free for now; flip the gate when ready.
+Scope decided 2026-05-14, framing sharpened 2026-05-15;
+**deployment deferred** until the free push produces measurable
+weekly actives. Build the infrastructure (license keys, billing,
+hosted-AI client) in branches; flip the gate when ready.
 
-**Tier shape:**
-- Free unchanged — zero tracking, zero upload, all current tools.
-- Pro = hosted-AI catalog (~40 tools) via Groq + Replicate (no-train
-  providers). Free tools that get Pro variants keep their in-browser
-  version — Pro is a quality/speed upgrade, never a takeaway.
+**Tier shape (refined):**
+- Free unchanged — zero tracking, zero upload, all current tools
+  (including heuristic versions of every "Pro" capability).
+- Pro = **cloud-hosted-only** capabilities the in-browser tier
+  genuinely can't match: hosted Whisper-large vs. our whisper-tiny,
+  hosted Llama 70B / 405B vs. small heuristics, hosted vision
+  models, hosted image generation (we have no in-browser equivalent).
+- Heuristic Pro candidates ship as free permanently; their `upgrade`
+  field on no-match results is the only Pro touchpoint.
 
 **Pricing (hybrid):**
 - Token packs — $10/200, $25/600, $50/1500. No subscription.
@@ -205,23 +242,30 @@ build the catalog tools as free for now; flip the gate when ready.
   **Auto-pause if unused for one billing cycle** (CF Worker watches
   usage). Differentiator: forgotten subs don't generate revenue.
 
-**Catalog (40 tools, build progressively as free now):**
-- Text/LLM (Groq Llama 70B) — 18 tools: regex-from-text,
-  sql-from-text, cron-from-text, summarize-text, summarize-pdf,
-  extract-structured-data, classify-text, sentiment-analyze,
-  translate-hq, detect-language, rephrase, simplify-reading-level,
-  expand-bullets, compress-bullets, explain-code, document-code,
-  mock-data-generate, json-from-text.
-- Vision (Replicate / Groq) — 7 tools: image-describe, image-ocr,
-  extract-table-from-image, read-handwriting, detect-objects,
-  analyze-chart, pdf-vision-ocr.
-- Audio (Groq Whisper-large) — 4 tools: transcribe-hq,
-  transcribe-and-translate, diarize, audio-summarize.
-- Image gen / manipulation (Replicate) — 6 tools: image-generate
-  (Flux schnell), bg-remove-hq, upscale (Real-ESRGAN), inpaint,
-  style-transfer, image-variants.
-- Document workflows — 5 tools: pdf-summarize, pdf-extract-data,
-  pdf-translate-full, pdf-rewrite-format, pdf-q-and-a.
+**Pro-only catalog (genuinely cloud-only):**
+- **Audio (Groq Whisper-large-v3-turbo)** — `transcribe-hq` and
+  `transcribe-and-translate`. Whisper-tiny stays as free baseline;
+  Pro is the quality / speed upgrade.
+- **Text LLM (Groq Llama 70B)** — `summarize-hq`, `classify-hq`,
+  `translate-hq`, `extract-hq`, generic LLM fallback for the
+  `upgrade` field on `regex-from-text`, `cron-from-text`,
+  `sql-from-text`, etc. Free heuristics handle the 80% case;
+  Pro handles the 20% the heuristic can't.
+- **Vision (Replicate vision LLMs)** — `image-ocr-hq`,
+  `image-describe-hq`, `extract-table-from-image-hq`,
+  `read-handwriting`, `analyze-chart`. tesseract OCR stays free
+  baseline.
+- **Image generation (Replicate Flux schnell + Real-ESRGAN)** —
+  `image-generate`, `upscale-hq`, `inpaint`, `style-transfer`,
+  `image-variants`. We have **no** in-browser image generation
+  today, so these are pure-Pro.
+- **Document workflows (Llama 70B over PDF text)** —
+  `pdf-summarize-hq`, `pdf-q-and-a`, `pdf-translate-full`,
+  `pdf-rewrite-format`. Free `pdf-extract-data` (heuristic) and
+  `pdf-to-text` stay free.
+
+Scale: ~15-20 cloud-only tools, not the original 40. The other
+20+ candidates fit the heuristic / small-model tier and stay free.
 
 **Infrastructure:**
 - Lemon Squeezy overlay checkout (JS embed, no redirect).
@@ -232,9 +276,10 @@ build the catalog tools as free for now; flip the gate when ready.
 - No accounts. Key is the credential.
 
 **Marketing surface:** landing page sells Pro (headline split between
-"Free: zero upload" and "Pro: hosted AI, no-train"); per-tool pages
-show a small lock badge for Pro entries; Settings adds a License
-panel. No separate `/pro` page.
+"Free: 200+ tools, zero upload, zero tracking" and "Pro: cloud-only
+capabilities, no-train providers"); per-tool pages show a small lock
+badge for Pro entries; Settings adds a License panel. No separate
+`/pro` page.
 
 **Paid tier does NOT change the free tier's privacy pitch.**
 Pro is hosted on contractually no-train providers and is opt-in.
