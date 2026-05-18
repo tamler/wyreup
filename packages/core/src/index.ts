@@ -144,6 +144,8 @@ export { textKeywords, type TextKeywordsParams, defaultTextKeywordsParams, type 
 export { textDates, type TextDatesParams, defaultTextDatesParams, type TextDatesResult } from './tools/text-dates/index.js';
 export { docxToText, type DocxToTextParams, defaultDocxToTextParams } from './tools/docx-to-text/index.js';
 export { extractArticleText, type ExtractArticleTextParams, defaultExtractArticleTextParams } from './tools/extract-article-text/index.js';
+export { pdfFlatten, type PdfFlattenParams, defaultPdfFlattenParams } from './tools/pdf-flatten/index.js';
+export { pdfFormFields, type PdfFormFieldsParams, defaultPdfFormFieldsParams, type PdfFormFieldsResult } from './tools/pdf-form-fields/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';

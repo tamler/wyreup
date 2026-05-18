@@ -59,6 +59,8 @@ import { textKeywords } from './tools/text-keywords/index.js';
 import { textDates } from './tools/text-dates/index.js';
 import { docxToText } from './tools/docx-to-text/index.js';
 import { extractArticleText } from './tools/extract-article-text/index.js';
+import { pdfFlatten } from './tools/pdf-flatten/index.js';
+import { pdfFormFields } from './tools/pdf-form-fields/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -272,6 +274,8 @@ export const defaultTools: ToolModule<any>[] = [
   textDates,
   docxToText,
   extractArticleText,
+  pdfFlatten,
+  pdfFormFields,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

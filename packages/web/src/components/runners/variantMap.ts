@@ -129,6 +129,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-dates': 'TextInputRunner',
   'docx-to-text': 'TextResultRunner',
   'extract-article-text': 'TextInputRunner',
+  'pdf-flatten': 'PreviewRunner',
+  'pdf-form-fields': 'JsonResultRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
   'text-suspicious': 'TextInputRunner',
