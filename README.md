@@ -84,7 +84,7 @@ Every Wyreup tool takes a file and produces a file. Chain them to solve real pro
 
 ![Chain diagram](./assets/readme/chain-diagram.svg)
 
-Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save it to your Kit. Share the URL with anyone — they drop a file, it runs the exact pipeline on their device. No accounts. No data leaves.
+Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save it to your Kit. Share the URL with anyone — they drop a file, it runs the exact pipeline on their device. No accounts required, no data leaves. (PRO is an optional credit-based tier for hosted-model tools — see below.)
 
 ---
 
@@ -93,7 +93,7 @@ Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save 
 - **Images** — compress, convert, resize, crop, rotate, flip, watermark, face blur, strip EXIF, image diff, OCR, SVG rendering, favicon generation, color palette and harmony, color-blind simulation, background removal, 2× upscale, image captioning
 - **PDFs** — merge, split, compress, crop, rotate, reorder, extract and delete pages, extract images, page numbers, encrypt and decrypt, redact, extract tables and text, convert to and from images, watermark, metadata, prompt-injection scan
 - **Audio + video** — trim, convert, compress, extract audio, transcribe (Whisper), burn or convert subtitles, video concat / crossfade / overlay / colour, video to GIF, enhance low-quality voice memos
-- **Text** — diff, redact, suspicious-scan, confusable detection, template (mustache), word count, summarisation, translation, sentiment, NER, stats, readability, unicode info, Markdown ↔ HTML
+- **Text** — diff, redact, suspicious-scan, confusable detection, template (mustache), word count, summarisation, translation, sentiment, NER, stats, readability, sentences, keywords, dates, unicode info, Markdown ↔ HTML
 - **Dev** — JSON (format / diff / merge / flatten / path / schema infer + validate), YAML, XML ↔ JSON, SQL / HTML / CSS formatting and minify, regex, JWT decode, OpenAPI and `package.json` validation
 - **Security & auth** — hash, HMAC, base32/58/64, TOTP / HOTP, JWT sign, signed URLs, signed cookies, backup codes, API and license keys, OTP-auth URIs, webhook verify and replay, file fingerprint
 - **Privacy** — strip EXIF, face blur, PGP encrypt / decrypt / sign / verify / armor
@@ -101,8 +101,23 @@ Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save 
 - **Geo** — GeoJSON, KML, GPX, shapefile conversion
 - **Create** — QR codes and barcodes, UUIDs, secure passwords, lorem ipsum, slugs
 - **Finance** — compound interest, dollar-cost averaging, percentages, dates
+- **Docs** — DOCX → text, article-text extraction (Reader-view), PDF form-field inspection and flattening
+- **Archives** — ZIP create, extract, info, remove-by-glob, flatten
 
 Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
+
+---
+
+## Wyreup PRO
+
+Everything above is free, forever. **PRO** is an optional credit-based tier for tools that genuinely need a GPU we can't put in your browser tab — large-model transcription (Whisper-large-v3), summarisation, translation, and high-quality image background removal / upscale via hosted models.
+
+- Credits start at **50 for $4.99**. Never expire. No subscription.
+- Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable.
+- Same API key works across browser, CLI, and MCP. Buying credits in one surface funds usage on every surface.
+- Free tools and the anonymous experience are unchanged.
+
+See [wyreup.com/pro](https://wyreup.com/pro) for what's hosted, [wyreup.com/legal/pricing](https://wyreup.com/legal/pricing) for prices, and [`docs/pro-auth-spec.md`](./docs/pro-auth-spec.md) for the full spec (D1 schema, atomic credit reservation, webhook idempotency, sanitization, CSP).
 
 ---
 
@@ -139,6 +154,8 @@ Open [wyreup.com](https://wyreup.com) and install as a PWA. On mobile, share any
 | `packages/web` | Astro 4 static site — wyreup.com, fully static, PWA |
 | `packages/cli` | `wyreup` CLI (`@wyreup/cli`) |
 | `packages/mcp` | MCP server (`@wyreup/mcp`) |
+| `functions/` | Cloudflare Pages Functions for the PRO tier — auth, credits, admin, hosted-model dispatch. Only loaded for `/api/*` routes; doesn't ship to npm. |
+| `migrations/` | D1 schema migrations applied via `pnpm db:apply:remote` / `db:apply:local`. |
 
 Agent skills are installed via `wyreup install-skill [cli|mcp|combined]` —
 the CLI fetches the current `skill.md` from GitHub and writes it into the
@@ -163,6 +180,13 @@ Run the web app locally:
 
 ```bash
 pnpm --filter @wyreup/web dev
+```
+
+Run the full stack with Pages Functions + local D1 (for PRO development):
+
+```bash
+pnpm dev:pages          # builds the static site and serves it under wrangler
+pnpm db:apply:local     # applies pending migrations to the local D1 instance
 ```
 
 Run just the core library tests:
