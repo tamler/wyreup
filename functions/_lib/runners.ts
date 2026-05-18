@@ -56,12 +56,24 @@ interface TranscribeInput {
   language?: string;
 }
 
+// 25 MB — same as the client-side input.sizeLimit on transcribe-pro. Caps
+// the per-run inference cost so a malicious caller can't bypass the
+// client check and burn margin with a 10-hour file for 5 credits.
+const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
+
 async function transcribePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const input = raw as TranscribeInput;
   if (typeof input.audioBase64 !== 'string' || input.audioBase64.length === 0) {
     throw new Error('audioBase64 required');
   }
+  // Cheap upper bound check before base64 decode (base64 is ~4/3 raw size).
+  if (input.audioBase64.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
   const bytes = base64ToUint8Array(input.audioBase64);
+  if (bytes.length > TRANSCRIBE_MAX_BYTES) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
   // Workers AI expects audio as an integer array of byte values.
   const audioArr = Array.from(bytes);
 
