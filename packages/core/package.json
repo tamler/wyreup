@@ -82,6 +82,7 @@
     "@xmldom/xmldom": "^0.9.10",
     "ajv": "^8.20.0",
     "clean-css": "^5.3.3",
+    "compromise": "^14.15.0",
     "cron-parser": "^4.9.0",
     "culori": "^4.0.0",
     "diff": "^7.0.0",

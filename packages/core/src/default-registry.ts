@@ -54,6 +54,9 @@ import { faceBlur } from './tools/face-blur/index.js';
 import { audioEnhance } from './tools/audio-enhance/index.js';
 import { transcribe } from './tools/transcribe/index.js';
 import { transcribePro } from './tools/transcribe-pro/index.js';
+import { textSentences } from './tools/text-sentences/index.js';
+import { textKeywords } from './tools/text-keywords/index.js';
+import { textDates } from './tools/text-dates/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -262,6 +265,9 @@ export const defaultTools: ToolModule<any>[] = [
   audioEnhance,
   transcribe,
   transcribePro,
+  textSentences,
+  textKeywords,
+  textDates,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

@@ -139,6 +139,9 @@ export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/fa
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
 export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
 export { transcribePro, type TranscribeProParams, defaultTranscribeProParams } from './tools/transcribe-pro/index.js';
+export { textSentences, type TextSentencesParams, defaultTextSentencesParams } from './tools/text-sentences/index.js';
+export { textKeywords, type TextKeywordsParams, defaultTextKeywordsParams, type TextKeywordsResult } from './tools/text-keywords/index.js';
+export { textDates, type TextDatesParams, defaultTextDatesParams, type TextDatesResult } from './tools/text-dates/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';
