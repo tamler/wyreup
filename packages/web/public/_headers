@@ -4,6 +4,9 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Service-Worker-Allowed: /
+  X-Frame-Options: DENY
+  Permissions-Policy: interest-cohort=(), browsing-topics=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://models.wyreup.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
 
 # The two Cross-Origin-* headers above enable SharedArrayBuffer, which is
 # required by ffmpeg.wasm (multi-threaded WASM) and Transformers.js (some
@@ -27,6 +30,24 @@
 # requests under the entire origin, not just /sw.js's own directory. This
 # is the default scope for a root-served SW, but spelling it out keeps the
 # behavior stable if someone moves the file later.
+#
+# CSP notes:
+#   - 'unsafe-inline' is needed for the BaseLayout's inline scripts
+#     (pre-paint reservation, PWA-mode redirect) and for Astro's scoped
+#     <style> tags. Could be tightened with nonce-based CSP later; not
+#     worth the build-step complexity until we have a reason.
+#   - 'wasm-unsafe-eval' allows WebAssembly compilation — required by
+#     ffmpeg.wasm, ONNX Runtime, transformers.js. The non-eval
+#     alternative would require shipping pre-compiled module bytes,
+#     which is incompatible with our model CDN.
+#   - connect-src is intentionally tight: 'self' for /api/* + same-origin
+#     fetches, models.wyreup.com for model/WASM downloads. No third-party
+#     hosts. Model providers (Workers AI, Replicate, ZeptoMail) are all
+#     called server-side from Pages Functions; the browser never reaches
+#     them directly.
+#   - frame-ancestors 'none' + X-Frame-Options: DENY blocks clickjacking
+#     (admin /grant click hijacking in particular).
+#   - object-src 'none' kills <embed>/<object> Flash/PDF plugin attacks.
 
 # PWA: ensure manifest and service worker updates roll out fast. Browsers
 # cache these aggressively otherwise; users would stay on a stale SW for

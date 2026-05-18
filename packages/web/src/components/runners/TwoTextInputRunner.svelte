@@ -2,6 +2,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
@@ -42,6 +43,8 @@
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
   $: isHtml = resultMime === 'text/html';
+  // Sanitize before {@html} — see TextResultRunner for rationale.
+  $: safeHtml = isHtml ? DOMPurify.sanitize(resultText) : '';
 
   async function run() {
     if (!canRun) return;
@@ -211,7 +214,7 @@
 
         {#if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
-            {@html resultText}
+            {@html safeHtml}
           </div>
         {:else}
           <pre class="text-viewer" role="region" aria-label={isJson ? 'JSON result' : 'Text result'}>{resultText}</pre>

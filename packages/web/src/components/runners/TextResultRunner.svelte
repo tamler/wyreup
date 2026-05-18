@@ -3,6 +3,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
@@ -31,6 +32,12 @@
 
   $: canRun = (requiresFile ? files.length >= tool.input.min : true) && state !== 'running';
   $: isHtml = resultMime === 'text/html';
+  // Tool output is user-derived (file content / typed params). When the
+  // tool emits text/html we render it with {@html}, so anything
+  // <script>-shaped from a hostile input would otherwise run with
+  // wyreup.com's privileges (including the admin session cookie).
+  // DOMPurify strips scripts, event handlers, and javascript: URLs.
+  $: safeHtml = isHtml ? DOMPurify.sanitize(resultText) : '';
 
   function onFiles(e: CustomEvent<File[]>) {
     files = e.detail;
@@ -180,7 +187,7 @@
 
         {#if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
-            {@html resultText}
+            {@html safeHtml}
           </div>
         {:else}
           <pre

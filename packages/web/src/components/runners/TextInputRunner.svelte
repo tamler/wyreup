@@ -2,6 +2,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
@@ -35,6 +36,11 @@
   $: isHtml = resultMime === 'text/html';
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
+  // Strip <script>, event handlers, javascript: URLs before {@html}.
+  // Input is user-typed text — markdown-to-html and friends are designed
+  // to convert it into rendered HTML, but a hostile chain/trigger could
+  // pipe attacker-controlled text through these tools to inject script.
+  $: safeHtml = isHtml ? DOMPurify.sanitize(resultText) : '';
 
   async function run() {
     if (!canRun) return;
@@ -224,7 +230,7 @@
 
         {#if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
-            {@html resultText}
+            {@html safeHtml}
           </div>
         {:else}
           <pre class="text-viewer" role="region" aria-label={isJson ? 'JSON result' : 'Text result'}>{resultText}</pre>
