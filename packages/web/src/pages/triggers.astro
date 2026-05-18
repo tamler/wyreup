@@ -136,7 +136,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .doc-section p { margin: 0 0 var(--space-3); }
   .doc-section ol, .doc-section ul { padding-left: var(--space-4); margin: 0 0 var(--space-3); }
   .doc-section ol li, .doc-section ul li { margin-bottom: var(--space-2); }
-  .doc-section a { color: var(--accent-text); }
+  /* In-prose links should be amber; the .btn-* CTAs at the bottom of the
+     page have their own colors and would otherwise inherit amber and
+     vanish against the amber button background. */
+  .doc-section a:not(.btn-primary):not(.btn-secondary) { color: var(--accent-text); }
   .doc-section code { font-family: var(--font-mono); font-size: 0.92em; background: var(--bg-raised); padding: 1px 6px; border-radius: var(--radius-sm); }
 
   .example { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3); margin: var(--space-3) 0; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--accent-text); overflow-x: auto; }
@@ -148,11 +151,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   .cta-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
   .btn-primary, .btn-secondary { height: 36px; padding: 0 var(--space-4); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: var(--text-base); font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: 1px solid transparent; }
-  /* `.doc-section a` above sets every anchor in the section to
-     var(--accent-text) (amber). That collides with the amber button
-     background and makes the label invisible. Using `a.btn-*` raises
-     specificity above the section rule so the button text stays dark. */
-  a.btn-primary { background: var(--accent); color: var(--black); }
-  a.btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border); }
-  a.btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary { background: var(--accent); color: var(--black); }
+  .btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border); }
+  .btn-primary:hover { background: var(--accent-hover); }
 </style>
