@@ -58,6 +58,20 @@ export interface Env {
   LS_VARIANT_STARTER?: string;      // LS variant IDs for the 3 packs
   LS_VARIANT_STANDARD?: string;
   LS_VARIANT_POWER?: string;
+
+  // Comma-separated list of emails allowed to access /api/admin/*.
+  // Treat as a secret — its disclosure alone doesn't grant access (the
+  // owner still needs the matching API key), but there's no reason to
+  // expose the operator set publicly either.
+  ADMIN_EMAILS?: string;
+}
+
+export function isAdminEmail(email: string, env: Env): boolean {
+  const list = (env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return list.includes(email.toLowerCase());
 }
 
 export function appOrigin(env: Env): string {

@@ -4,6 +4,7 @@
 // See docs/pro-auth-spec.md §6 + §7.
 
 import type { Env } from './env';
+import { isAdminEmail } from './env';
 import { parseCookies, sha256hex, verifySessionCookie } from './crypto';
 
 export interface AuthedUser {
@@ -62,6 +63,23 @@ export async function resolveUser(
 
 export function unauthorized(): Response {
   return json({ error: 'Unauthorized' }, 401);
+}
+
+export function forbidden(): Response {
+  return json({ error: 'Forbidden' }, 403);
+}
+
+// Resolve the caller and verify they're in the ADMIN_EMAILS allowlist.
+// Returns the user when admin, or a Response (401/403) the handler should
+// return as-is.
+export async function requireAdmin(
+  request: Request,
+  env: Env,
+): Promise<AuthedUser | Response> {
+  const user = await resolveUser(request, env);
+  if (!user) return unauthorized();
+  if (!isAdminEmail(user.email, env)) return forbidden();
+  return user;
 }
 
 export function json(body: unknown, status = 200, extraHeaders: HeadersInit = {}): Response {

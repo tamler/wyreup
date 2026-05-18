@@ -32,6 +32,7 @@ SECRETS=(
   ZEPTOMAIL_SENDER
   ZEPTOMAIL_SENDER_NAME
   IMAGE_MODEL_TOKEN
+  ADMIN_EMAILS
 )
 
 # Read KEY="value" lines from .dev.vars into an associative-style lookup.

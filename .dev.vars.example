@@ -34,3 +34,7 @@ IMAGE_MODEL_TOKEN=""
 
 # Optional: override origin for local dev so emails point at localhost
 APP_ORIGIN="http://localhost:8788"
+
+# Comma-separated emails allowed at /admin. Must match the email on the
+# account whose API key the operator uses to sign in.
+ADMIN_EMAILS=""
