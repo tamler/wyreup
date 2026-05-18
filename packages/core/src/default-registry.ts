@@ -61,6 +61,8 @@ import { docxToText } from './tools/docx-to-text/index.js';
 import { extractArticleText } from './tools/extract-article-text/index.js';
 import { pdfFlatten } from './tools/pdf-flatten/index.js';
 import { pdfFormFields } from './tools/pdf-form-fields/index.js';
+import { zipRemove } from './tools/zip-remove/index.js';
+import { zipFlatten } from './tools/zip-flatten/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -276,6 +278,8 @@ export const defaultTools: ToolModule<any>[] = [
   extractArticleText,
   pdfFlatten,
   pdfFormFields,
+  zipRemove,
+  zipFlatten,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

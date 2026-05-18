@@ -146,6 +146,8 @@ export { docxToText, type DocxToTextParams, defaultDocxToTextParams } from './to
 export { extractArticleText, type ExtractArticleTextParams, defaultExtractArticleTextParams } from './tools/extract-article-text/index.js';
 export { pdfFlatten, type PdfFlattenParams, defaultPdfFlattenParams } from './tools/pdf-flatten/index.js';
 export { pdfFormFields, type PdfFormFieldsParams, defaultPdfFormFieldsParams, type PdfFormFieldsResult } from './tools/pdf-form-fields/index.js';
+export { zipRemove, type ZipRemoveParams, defaultZipRemoveParams } from './tools/zip-remove/index.js';
+export { zipFlatten, type ZipFlattenParams, defaultZipFlattenParams } from './tools/zip-flatten/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';
