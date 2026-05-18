@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import nlp from 'compromise';
+// compromise (~2.5 MB) dynamic-imported inside run() to keep it out of the
+// base bundle.
 
 export interface TextDatesParams {
   /** Output verbatim mentions only, or also include a normalized ISO guess where possible. */
@@ -63,6 +64,9 @@ export const textDates: ToolModule<TextDatesParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const text = await inputs[0]!.text();
+    if (ctx.signal.aborted) throw new Error('Aborted');
+
+    const nlp = (await import('compromise')).default;
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const doc = nlp(text);

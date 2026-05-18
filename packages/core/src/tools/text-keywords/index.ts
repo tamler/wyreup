@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import nlp from 'compromise';
+// compromise (~2.5 MB) dynamic-imported inside run() to keep it out of the
+// base bundle.
 
 export interface TextKeywordsParams {
   /** How many top entries to return per category. */
@@ -96,6 +97,9 @@ export const textKeywords: ToolModule<TextKeywordsParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const text = await inputs[0]!.text();
+    if (ctx.signal.aborted) throw new Error('Aborted');
+
+    const nlp = (await import('compromise')).default;
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const topN = Math.max(1, Math.min(100, params.topN ?? 15));

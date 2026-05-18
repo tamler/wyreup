@@ -19,6 +19,12 @@
   let error = '';
   let polling = false;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let pollDeadline = 0;
+  // Stop polling after 5 minutes regardless of balance movement. Without
+  // this, a user who spends in another tab during checkout (driving the
+  // post-purchase balance back below startBalance) would never see the
+  // poll resolve.
+  const POLL_MAX_MS = 5 * 60 * 1000;
   let startBalance = 0;
 
   async function buy(pack: Pack) {
@@ -46,7 +52,7 @@
         error = data.error || `Couldn't start checkout (${res.status})`;
         return;
       }
-      window.open(data.checkoutUrl, '_blank', 'noopener');
+      window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
       startPolling();
     } finally {
       busy = null;
@@ -55,7 +61,14 @@
 
   function startPolling() {
     polling = true;
+    pollDeadline = Date.now() + POLL_MAX_MS;
     pollTimer = setInterval(async () => {
+      if (Date.now() > pollDeadline) {
+        stopPolling();
+        error =
+          "We didn't see the credits land in 5 minutes. Check the LS receipt — if it shows paid, refresh /account; if not, the purchase didn't go through.";
+        return;
+      }
       try {
         const res = await fetch('/api/account/balance', { credentials: 'same-origin' });
         if (!res.ok) return;

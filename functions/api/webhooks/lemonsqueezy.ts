@@ -50,6 +50,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const userId = payload.meta?.custom_data?.userId;
   if (!userId) return new Response('Missing custom_data.userId', { status: 400 });
 
+  // Confirm the user exists before any INSERT. Without this, a malformed
+  // or replayed webhook with a fabricated userId would hit a D1 FK
+  // constraint and surface as a 500 — which LS then retries indefinitely.
+  // 400 here tells LS to stop retrying.
+  const userExists = await env.DB.prepare(`SELECT 1 AS ok FROM users WHERE id = ?`)
+    .bind(userId)
+    .first<{ ok: number }>();
+  if (!userExists) return new Response('Unknown user', { status: 400 });
+
   const orderId = payload.data?.id != null ? String(payload.data.id) : '';
   if (!orderId) return new Response('Missing order id', { status: 400 });
 

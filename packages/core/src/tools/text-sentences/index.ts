@@ -1,5 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import nlp from 'compromise';
+// compromise (~2.5 MB) is dynamic-imported inside run() — see siblings
+// text-keywords and text-dates for the same pattern. Keeps the base
+// bundle slim for users who never invoke an NLP tool.
 
 export interface TextSentencesParams {
   /** Emit one sentence per line (true) or wrap each in quotes joined by commas (false). */
@@ -61,6 +63,9 @@ export const textSentences: ToolModule<TextSentencesParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const text = await inputs[0]!.text();
+    if (ctx.signal.aborted) throw new Error('Aborted');
+
+    const nlp = (await import('compromise')).default;
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const sentences = (nlp(text).sentences().out('array') as string[])

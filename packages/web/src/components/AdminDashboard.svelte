@@ -109,6 +109,16 @@
       grantError = 'Amount must be a non-zero integer (negative = debit).';
       return;
     }
+    // Second-look for anything outside a low-risk "tip" range — mis-clicks
+    // can't be undone except by a compensating grant, so confirm first.
+    if (grantAmount < 0 || grantAmount > 100) {
+      const verb = grantAmount < 0 ? 'debit' : 'grant';
+      const amt = Math.abs(grantAmount);
+      const ok = confirm(
+        `About to ${verb} ${amt} credits ${grantAmount < 0 ? 'from' : 'to'} ${grantOpen.email}.\n\nThis writes to the ledger and can only be undone by a compensating grant. Continue?`,
+      );
+      if (!ok) return;
+    }
     grantBusy = true;
     try {
       const res = await fetch('/api/admin/grant', {
