@@ -20,8 +20,14 @@ export interface UpscaleInput {
   scale?: 2 | 4;
 }
 export interface ImageOutput {
-  /** Provider-hosted URL with a short TTL — fetch + return to client, don't relay raw bytes. */
-  url: string;
+  /** Output MIME (image/png most often). */
+  contentType: string;
+  /** Base64-encoded image bytes. Client decodes back to a Blob.
+   *  We don't return the provider URL directly because CSP locks
+   *  connect-src to self + models.wyreup.com — the client can't
+   *  fetch from a third-party CDN. Proxying through the response
+   *  adds ~33% overhead but keeps the vendor name out of the CSP. */
+  base64: string;
   scale?: number;
 }
 
@@ -34,7 +40,7 @@ const UPSCALE_MODEL = 'nightmareai/real-esrgan';
 
 export async function runBgRemove(input: BgRemoveInput, env: Env): Promise<ImageOutput> {
   const url = await runPrediction(env, BG_REMOVE_MODEL, { image: input.image });
-  return { url };
+  return fetchAsBase64(url);
 }
 
 export async function runUpscale(input: UpscaleInput, env: Env): Promise<ImageOutput> {
@@ -43,7 +49,29 @@ export async function runUpscale(input: UpscaleInput, env: Env): Promise<ImageOu
     image: input.image,
     scale,
   });
-  return { url, scale };
+  const out = await fetchAsBase64(url);
+  return { ...out, scale };
+}
+
+// Fetch the provider-hosted result and return its bytes inline so the
+// client never has to hit a third-party CDN. Done server-side to keep
+// the CSP and the codebase's "no vendor in client" posture intact.
+async function fetchAsBase64(url: string): Promise<ImageOutput> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
+  const contentType = res.headers.get('Content-Type') || 'image/png';
+  const buf = new Uint8Array(await res.arrayBuffer());
+  return { contentType, base64: bytesToBase64(buf) };
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  // Chunked to avoid RangeError on large outputs (~6 MB upscale results).
+  let s = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    s += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CHUNK)));
+  }
+  return btoa(s);
 }
 
 // ─── Provider-specific transport (rip and replace on swap) ──────────────

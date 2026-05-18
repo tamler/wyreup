@@ -138,6 +138,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-sentiment-pro': 'TextInputRunner',
   'text-ner-pro': 'TextInputRunner',
   'text-redact-pro': 'TextInputRunner',
+  'bg-remove-pro': 'PreviewRunner',
+  'upscale-2x-pro': 'PreviewRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
   'text-suspicious': 'TextInputRunner',

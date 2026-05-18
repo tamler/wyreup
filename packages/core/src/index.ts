@@ -153,6 +153,8 @@ export { textTranslatePro, type TextTranslateProParams, defaultTextTranslateProP
 export { textSentimentPro, type TextSentimentProParams, defaultTextSentimentProParams } from './tools/text-sentiment-pro/index.js';
 export { textNerPro, type TextNerProParams, defaultTextNerProParams } from './tools/text-ner-pro/index.js';
 export { textRedactPro, type TextRedactProParams, defaultTextRedactProParams } from './tools/text-redact-pro/index.js';
+export { bgRemovePro, type BgRemoveProParams, defaultBgRemoveProParams } from './tools/bg-remove-pro/index.js';
+export { upscale2xPro, type UpscaleProParams, defaultUpscaleProParams } from './tools/upscale-2x-pro/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';

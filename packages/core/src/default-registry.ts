@@ -68,6 +68,8 @@ import { textTranslatePro } from './tools/text-translate-pro/index.js';
 import { textSentimentPro } from './tools/text-sentiment-pro/index.js';
 import { textNerPro } from './tools/text-ner-pro/index.js';
 import { textRedactPro } from './tools/text-redact-pro/index.js';
+import { bgRemovePro } from './tools/bg-remove-pro/index.js';
+import { upscale2xPro } from './tools/upscale-2x-pro/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -290,6 +292,8 @@ export const defaultTools: ToolModule<any>[] = [
   textSentimentPro,
   textNerPro,
   textRedactPro,
+  bgRemovePro,
+  upscale2xPro,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,
