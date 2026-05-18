@@ -100,6 +100,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'pgp-armor': 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
+  'transcribe-pro': 'TextResultRunner',
   'image-caption': 'TextResultRunner',
   'image-caption-detailed': 'TextResultRunner',
 

@@ -53,6 +53,7 @@ import { pdfCrop } from './tools/pdf-crop/index.js';
 import { faceBlur } from './tools/face-blur/index.js';
 import { audioEnhance } from './tools/audio-enhance/index.js';
 import { transcribe } from './tools/transcribe/index.js';
+import { transcribePro } from './tools/transcribe-pro/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -260,6 +261,7 @@ export const defaultTools: ToolModule<any>[] = [
   faceBlur,
   audioEnhance,
   transcribe,
+  transcribePro,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

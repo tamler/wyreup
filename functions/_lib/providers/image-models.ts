@@ -1,0 +1,108 @@
+// Image-model provider wrapper.
+//
+// One file, one vendor — replace the body when switching backends. Public
+// signature (`runBgRemove`, `runUpscale`) is what the rest of the code
+// imports, so swaps don't ripple beyond this module.
+//
+// Token comes from env.IMAGE_MODEL_TOKEN. Add/rename per the new vendor's
+// auth scheme but keep the variable name generic so the rest of the
+// codebase, wrangler.toml, and the secret-set commands don't change.
+
+import type { Env } from '../env';
+
+export interface BgRemoveInput {
+  /** https URL or data: URL. */
+  image: string;
+}
+export interface UpscaleInput {
+  image: string;
+  /** 2 (default) or 4. */
+  scale?: 2 | 4;
+}
+export interface ImageOutput {
+  /** Provider-hosted URL with a short TTL — fetch + return to client, don't relay raw bytes. */
+  url: string;
+  scale?: number;
+}
+
+// ─── Current backend: Replicate ─────────────────────────────────────────
+// To swap providers: replace the bodies below and the constants at top.
+// The exported function signatures must stay the same.
+
+const BG_REMOVE_MODEL = '851-labs/background-remover';
+const UPSCALE_MODEL = 'nightmareai/real-esrgan';
+
+export async function runBgRemove(input: BgRemoveInput, env: Env): Promise<ImageOutput> {
+  const url = await runPrediction(env, BG_REMOVE_MODEL, { image: input.image });
+  return { url };
+}
+
+export async function runUpscale(input: UpscaleInput, env: Env): Promise<ImageOutput> {
+  const scale = input.scale === 4 ? 4 : 2;
+  const url = await runPrediction(env, UPSCALE_MODEL, {
+    image: input.image,
+    scale,
+  });
+  return { url, scale };
+}
+
+// ─── Provider-specific transport (rip and replace on swap) ──────────────
+
+async function runPrediction(
+  env: Env,
+  modelRef: string,
+  input: Record<string, unknown>,
+): Promise<string> {
+  if (!env.IMAGE_MODEL_TOKEN) {
+    throw new Error('IMAGE_MODEL_TOKEN not configured');
+  }
+
+  const createRes = await fetch(
+    `https://api.replicate.com/v1/models/${modelRef}/predictions`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}`,
+        'Content-Type': 'application/json',
+        Prefer: 'wait',
+      },
+      body: JSON.stringify({ input }),
+    },
+  );
+
+  if (!createRes.ok) {
+    throw new Error(`Image-model create failed: ${createRes.status}`);
+  }
+
+  let prediction = (await createRes.json()) as {
+    id: string;
+    status: string;
+    output?: unknown;
+    error?: string;
+    urls?: { get: string };
+  };
+
+  const deadline = Date.now() + 60_000;
+  while (
+    prediction.status !== 'succeeded' &&
+    prediction.status !== 'failed' &&
+    Date.now() < deadline
+  ) {
+    if (!prediction.urls?.get) break;
+    await new Promise((r) => setTimeout(r, 1500));
+    const poll = await fetch(prediction.urls.get, {
+      headers: { Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}` },
+    });
+    if (!poll.ok) throw new Error(`Image-model poll failed: ${poll.status}`);
+    prediction = (await poll.json()) as typeof prediction;
+  }
+
+  if (prediction.status !== 'succeeded') {
+    throw new Error(`Image-model prediction ${prediction.status}: ${prediction.error ?? 'unknown'}`);
+  }
+
+  const output = prediction.output;
+  if (typeof output === 'string') return output;
+  if (Array.isArray(output) && typeof output[0] === 'string') return output[0];
+  throw new Error('Image-model prediction returned no usable output URL');
+}

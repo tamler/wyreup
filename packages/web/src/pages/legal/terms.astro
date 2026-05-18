@@ -1,0 +1,188 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const lastUpdated = '2026-05-17';
+---
+
+<BaseLayout
+  title="Terms of Service — Wyreup"
+  description="The terms that govern your use of Wyreup, including free tools, the PRO tier, and credits."
+>
+  <article class="legal">
+    <header>
+      <h1>Terms of Service</h1>
+      <p class="meta">Last updated: {lastUpdated}</p>
+    </header>
+
+    <h2>1. Who we are</h2>
+    <p>
+      "Wyreup," "we," "us," and "our" refer to <strong>Wyreup</strong>,
+      operated from Indiana, United States. We publish the website
+      wyreup.com and the <code>@wyreup/core</code>, <code>@wyreup/cli</code>,
+      and <code>@wyreup/mcp</code> packages on npm. You can reach us at
+      <strong>hello@wyreup.com</strong>.
+    </p>
+
+    <h2>2. What Wyreup is</h2>
+    <p>
+      Wyreup is a collection of file and text utilities. There are two tiers:
+    </p>
+    <ul>
+      <li>
+        <strong>Free tools</strong> run entirely in your browser (or locally
+        via the CLI). We never receive your input files, parameters, or
+        outputs. Free tools have no account requirement.
+      </li>
+      <li>
+        <strong>PRO tools</strong> route your input to hosted models on
+        Cloudflare Workers AI and an external image-model provider. PRO usage requires an account
+        and consumes credits.
+      </li>
+    </ul>
+
+    <h2>3. Accounts and API keys</h2>
+    <p>
+      An account is identified by an email and one or more API keys. We
+      store the SHA-256 hash of each key — never the raw value. Treat your
+      keys like passwords. You can revoke or rotate them at any time from
+      your account page.
+    </p>
+    <p>
+      You are responsible for activity originating from your keys. If you
+      believe a key has been compromised, revoke it immediately at
+      <a href="/account">wyreup.com/account</a>.
+    </p>
+
+    <h2>4. Credits</h2>
+    <p>
+      Credits are a prepaid unit that fund PRO tool runs. Pricing and the
+      credit cost per tool are listed on
+      <a href="/legal/pricing">our pricing page</a>. Credits do not expire,
+      do not transfer between accounts, and have no cash value outside
+      Wyreup. See <a href="/legal/refund">our refund policy</a> for refunds.
+    </p>
+
+    <h2>5. Acceptable use</h2>
+    <p>You agree not to use Wyreup to:</p>
+    <ul>
+      <li>process content you don't have the right to process,</li>
+      <li>attempt to extract model weights, reverse-engineer hosted endpoints, or otherwise abuse the PRO infrastructure,</li>
+      <li>circumvent the rate limits, credit checks, or webhook signatures of our API,</li>
+      <li>produce material that is illegal under the laws of the United States or the State of Indiana (including but not limited to CSAM, content that incites violence, or content that violates intellectual property law).</li>
+    </ul>
+    <p>
+      We may suspend or revoke access for violation of these rules without
+      a refund of unused credits associated with the violating activity.
+    </p>
+
+    <h2>6. No warranty</h2>
+    <p>
+      Wyreup is provided <strong>"as is"</strong> and <strong>"as available"</strong>
+      without warranties of any kind, express or implied. We do not warrant
+      that the service will be uninterrupted, accurate, or fit for any
+      particular purpose. PRO tool outputs are produced by third-party AI
+      models and may be incorrect — verify before relying on them for
+      important decisions.
+    </p>
+
+    <h2>7. Limitation of liability</h2>
+    <p>
+      To the maximum extent permitted by law, our aggregate liability for any
+      claim arising out of your use of Wyreup is limited to the greater of
+      (a) the total amount you have paid us in the 12 months preceding the
+      claim, or (b) US $50.
+    </p>
+    <p>
+      We are not liable for indirect, consequential, special, or punitive
+      damages, including lost profits or lost data, even if advised of the
+      possibility.
+    </p>
+
+    <h2>8. Subprocessors</h2>
+    <p>For PRO usage we route your inputs through:</p>
+    <ul>
+      <li><strong>Cloudflare</strong> — hosting, edge compute (Pages Functions), database (D1), and AI inference (Workers AI).</li>
+      <li><strong>An external image-model provider</strong> — hosts image PRO tools (background removal, upscaling). Current vendor disclosed on request.</li>
+      <li><strong>Lemon Squeezy</strong> — merchant of record for credit purchases; receives your billing info, not your tool inputs.</li>
+      <li><strong>Zoho (ZeptoMail)</strong> — transactional email delivery (welcome key, account notices).</li>
+    </ul>
+    <p>
+      See <a href="/legal/privacy">our privacy policy</a> for what each
+      subprocessor receives.
+    </p>
+
+    <h2>9. Changes</h2>
+    <p>
+      We may update these terms. Material changes will be noted by
+      updating the "Last updated" date and, where appropriate, by sending
+      an email to your account address. Continued use of Wyreup after a
+      change constitutes acceptance.
+    </p>
+
+    <h2>10. Termination</h2>
+    <p>
+      You may close your account at any time by emailing
+      <strong>hello@wyreup.com</strong>. Unused credits at the time of
+      closure are refundable per the
+      <a href="/legal/refund">refund policy</a>.
+    </p>
+
+    <h2>11. Governing law</h2>
+    <p>
+      These terms are governed by the laws of the State of Indiana and
+      the United States, without regard to conflict-of-law provisions.
+      Disputes are subject to the exclusive jurisdiction of the state
+      and federal courts located in Indiana.
+    </p>
+
+    <h2>12. Contact</h2>
+    <p>
+      Questions about these terms: <strong>hello@wyreup.com</strong>.<br />
+      Security disclosures: <strong>security@wyreup.com</strong>.
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-12);
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .legal h1 {
+    font-size: var(--text-2xl, 28px);
+    margin: 0 0 var(--space-2);
+  }
+  .legal h2 {
+    font-size: var(--text-md);
+    margin: var(--space-6) 0 var(--space-2);
+    color: var(--text-primary);
+  }
+  .legal p,
+  .legal ul {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: 0 0 var(--space-3);
+  }
+  .legal ul {
+    padding-left: var(--space-5);
+  }
+  .legal li {
+    margin-bottom: var(--space-2);
+  }
+  .legal code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    padding: 1px 4px;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    margin-bottom: var(--space-4);
+  }
+</style>

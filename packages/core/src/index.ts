@@ -138,6 +138,7 @@ export { pdfCrop, type PdfCropParams, type PdfCropBox, type PdfCropBoxPerPage } 
 export { faceBlur, type FaceBlurParams, defaultFaceBlurParams } from './tools/face-blur/index.js';
 export { audioEnhance, type AudioEnhanceParams, defaultAudioEnhanceParams } from './tools/audio-enhance/index.js';
 export { transcribe, type TranscribeParams, defaultTranscribeParams } from './tools/transcribe/index.js';
+export { transcribePro, type TranscribeProParams, defaultTranscribeProParams } from './tools/transcribe-pro/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';

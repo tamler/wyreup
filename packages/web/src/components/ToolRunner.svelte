@@ -4,6 +4,9 @@
   import type { SerializedTool } from './runners/types';
   import { VARIANT_MAP, type RunnerVariant } from './runners/variantMap';
   import { clearChainFile, consumeChainFile, peekChainFile } from './runners/chainStorage';
+  import { user, authReady } from '../stores/user';
+  import ProBadge from './ProBadge.svelte';
+  import BuyCreditsSheet from './BuyCreditsSheet.svelte';
 
   // Dynamic-import map: each runner becomes its own Vite chunk, fetched only
   // when the matching tool page mounts. Saves ~150KB on the initial ToolRunner
@@ -75,6 +78,29 @@
   $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
   $: runnerPromise = variantLoaders[variant]().then((m) => m.default);
   $: effectivePreloaded = chainFile ?? preloadedFile;
+
+  // PRO gate -------------------------------------------------------------
+  // A PRO tool (cost === 'credit') is loaded into the regular runner only
+  // once the user is signed in and has enough credits. Below the gate, the
+  // runner mounts normally and the tool's run() is expected to call
+  // /api/tools/pro/run internally.
+  $: isPro = tool.cost === 'credit';
+  $: requiredCredits = (tool.creditCost ?? 1) as number;
+  $: gateState = !isPro
+    ? 'pass'
+    : !$authReady
+      ? 'loading'
+      : !$user
+        ? 'signed-out'
+        : ($user.balance ?? 0) < requiredCredits
+          ? 'insufficient'
+          : 'pass';
+
+  let showBuySheet = false;
+
+  function openAuth() {
+    window.dispatchEvent(new Event('wyreup:auth-open'));
+  }
 </script>
 
 <div class="tool-runner">
@@ -91,16 +117,51 @@
     </div>
   {/if}
 
-  {#await runnerPromise}
-    <div class="runner-loading" role="status" aria-live="polite">Loading…</div>
-  {:then RunnerComponent}
-    <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} />
-  {:catch error}
-    <div class="runner-error" role="alert">
-      Failed to load the tool runner: {error.message}. Please refresh the page.
+  {#if gateState === 'pass'}
+    {#await runnerPromise}
+      <div class="runner-loading" role="status" aria-live="polite">Loading…</div>
+    {:then RunnerComponent}
+      <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} />
+    {:catch error}
+      <div class="runner-error" role="alert">
+        Failed to load the tool runner: {error.message}. Please refresh the page.
+      </div>
+    {/await}
+  {:else if gateState === 'loading'}
+    <div class="runner-loading" role="status" aria-live="polite">Checking access…</div>
+  {:else}
+    <div class="pro-gate" role="region" aria-label="PRO tool">
+      <div class="pro-gate__header">
+        <ProBadge cost={requiredCredits} />
+        <span class="pro-gate__title">{tool.name}</span>
+      </div>
+      {#if gateState === 'signed-out'}
+        <p class="pro-gate__body">
+          This is a PRO tool. Activate your API key to use it
+          ({requiredCredits} credits per run).
+          Don't have a key? You can get one in seconds — no credit card needed.
+        </p>
+        <div class="pro-gate__actions">
+          <button type="button" class="pro-gate__primary" on:click={openAuth}>Activate / Get key</button>
+        </div>
+      {:else}
+        <p class="pro-gate__body">
+          You have <strong>{$user?.balance ?? 0}</strong> credits — this tool needs
+          <strong>{requiredCredits}</strong>.
+        </p>
+        <div class="pro-gate__actions">
+          <button type="button" class="pro-gate__primary" on:click={() => (showBuySheet = true)}>
+            Buy credits
+          </button>
+        </div>
+      {/if}
     </div>
-  {/await}
+  {/if}
 </div>
+
+{#if showBuySheet}
+  <BuyCreditsSheet on:close={() => (showBuySheet = false)} />
+{/if}
 
 <style>
   .tool-runner {
@@ -203,4 +264,50 @@
 
   .btn-ghost-sm:hover { color: var(--text-muted); }
   .btn-ghost-sm:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+
+  .pro-gate {
+    padding: var(--space-5);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .pro-gate__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .pro-gate__title {
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .pro-gate__body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .pro-gate__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .pro-gate__primary {
+    height: 32px;
+    padding: 0 var(--space-4);
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+  .pro-gate__primary:hover {
+    background: var(--accent-hover);
+  }
 </style>

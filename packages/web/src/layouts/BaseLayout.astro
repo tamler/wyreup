@@ -5,6 +5,8 @@ import '../styles/global.css';
 import '../styles/motifs.css';
 import PwaShell from '../components/PwaShell.svelte';
 import TriggerRuntime from '../components/TriggerRuntime.svelte';
+import AccountMenu from '../components/AccountMenu.svelte';
+import AuthModal from '../components/AuthModal.svelte';
 
 interface Props {
   title: string;
@@ -245,8 +247,17 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </button>
+
+        <!-- Account widget. Hydrates from /api/account/balance on mount;
+             shows [Get PRO] when signed-out, ⚡ badge + email dropdown when
+             signed-in. -->
+        <AccountMenu client:load />
       </div>
     </header>
+
+    <!-- Global auth modal — any component can open it by dispatching the
+         `wyreup:auth-open` event on window. -->
+    <AuthModal client:load />
 
     <main class="site-main" id="main-content">
       <slot />
@@ -262,9 +273,16 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
           <a href="/about" class="footer-link">About</a>
+          <a href="/pro" class="footer-link">PRO</a>
           <a href="/settings" class="footer-link">Settings</a>
           <a href="/sitemap.xml" class="footer-link">Sitemap</a>
           <a href="mailto:hello@wyreup.com?subject=Tool%20suggestion" class="footer-link">Suggest a tool</a>
+        </nav>
+        <nav class="footer-legal" aria-label="Legal">
+          <a href="/legal/terms" class="footer-link">Terms</a>
+          <a href="/legal/privacy" class="footer-link">Privacy</a>
+          <a href="/legal/refund" class="footer-link">Refunds</a>
+          <a href="/legal/pricing" class="footer-link">Pricing</a>
         </nav>
       </div>
     </footer>
@@ -401,7 +419,7 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
 
   .header-inner {
     display: grid;
-    grid-template-columns: auto 1fr auto auto;
+    grid-template-columns: auto 1fr auto auto auto;
     align-items: center;
     gap: var(--space-4);
     height: 100%;
@@ -492,10 +510,19 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
     flex-shrink: 0;
   }
 
-  .footer-nav {
+  .footer-nav,
+  .footer-legal {
     display: flex;
     align-items: center;
     gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .footer-legal {
+    gap: var(--space-3);
+  }
+  .footer-legal .footer-link {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
   }
 
   .footer-link {

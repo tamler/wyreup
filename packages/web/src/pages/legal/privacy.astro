@@ -1,0 +1,202 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const lastUpdated = '2026-05-17';
+---
+
+<BaseLayout
+  title="Privacy Policy — Wyreup"
+  description="What Wyreup collects, what it doesn't, and how the PRO tier differs from free tools."
+>
+  <article class="legal">
+    <header>
+      <h1>Privacy Policy</h1>
+      <p class="meta">Last updated: {lastUpdated}</p>
+    </header>
+
+    <h2>The short version</h2>
+    <p>
+      <strong>Free tools run entirely in your browser.</strong> Your files,
+      parameters, and outputs never reach our servers. No accounts, no
+      cookies, no analytics, no telemetry.
+    </p>
+    <p>
+      <strong>PRO tools send your input to a hosted model.</strong> We
+      process the input on our edge, hand it to the model provider
+      (Cloudflare Workers AI or our image-model provider), and return the result. We do
+      not retain the input or output beyond the request. We do log
+      metadata (which tool ran, when, file name) for your run history.
+    </p>
+
+    <h2>What we collect</h2>
+
+    <h3>For free tools</h3>
+    <p><strong>Nothing.</strong> Free tools never reach our backend.</p>
+
+    <h3>For PRO accounts</h3>
+    <ul>
+      <li><strong>Email address.</strong> Used to deliver your API key and account notices.</li>
+      <li><strong>SHA-256 hash of each API key.</strong> The raw key is never stored — it's delivered once via email and shown once at creation.</li>
+      <li>
+        <strong>Run history metadata.</strong> Tool ID, credits consumed,
+        timestamp, and the file name you submitted (not the file content).
+        We use this only to show you your own history.
+      </li>
+      <li>
+        <strong>Credit ledger.</strong> Purchases, spends, refunds — for
+        billing transparency and to compute your balance.
+      </li>
+      <li>
+        <strong>Connection IP</strong> for the <code>/api/account/create</code>
+        endpoint, retained for 24 hours to enforce rate limits. Never linked
+        to your account thereafter.
+      </li>
+    </ul>
+
+    <h3>What we never store</h3>
+    <ul>
+      <li>File contents — your files are streamed through us to the model and discarded.</li>
+      <li>Output contents — returned to you and discarded.</li>
+      <li>Card numbers — handled by Lemon Squeezy, never by us.</li>
+      <li>Plain-text API keys.</li>
+      <li>Analytics, fingerprints, third-party tracking, or advertising cookies.</li>
+    </ul>
+
+    <h2>Cookies</h2>
+    <p>
+      We set a single cookie, <code>wyreup_session</code>, after you
+      activate your API key in the browser. It's HttpOnly, Secure,
+      SameSite=Lax, and expires after 24 hours. It is strictly necessary
+      for sign-in and is exempt from consent requirements under most
+      regimes (including the GDPR ePrivacy Directive). We set no other
+      cookies.
+    </p>
+
+    <h2>Subprocessors</h2>
+    <p>
+      For PRO usage your input passes through the providers listed
+      below. Under GDPR/CCPA we are required to disclose categories of
+      recipients; we name them specifically here for transparency
+      where we can. If we change a provider, we will update this list
+      promptly.
+    </p>
+    <p>For PRO usage your input passes through:</p>
+    <ul>
+      <li>
+        <strong>Cloudflare</strong> — site hosting, edge compute (Pages
+        Functions), database (D1, in the Eastern North America region),
+        and AI inference (Workers AI). See Cloudflare's
+        <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+      </li>
+      <li>
+        <strong>An external image-model provider</strong> — hosts the
+        models that power the image PRO tools (background removal,
+        upscaling). The provider receives the image you submit but,
+        under our agreement with them, does not retain inputs or
+        outputs beyond the request. We may change providers from time
+        to time; the current provider's name and privacy policy are
+        available on request at <strong>hello@wyreup.com</strong>.
+      </li>
+      <li>
+        <strong>Lemon Squeezy</strong> — merchant of record for credit
+        purchases. Receives your billing info (name, billing address,
+        payment instrument). Never sees your tool inputs or API keys.
+        See Lemon Squeezy's <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+      </li>
+      <li>
+        <strong>Zoho (ZeptoMail)</strong> — transactional email delivery.
+        Receives your email address and the message body (welcome key,
+        account notices). See Zoho's
+        <a href="https://www.zoho.com/privacy.html" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+      </li>
+    </ul>
+
+    <h2>Your rights</h2>
+    <p>You can, at any time:</p>
+    <ul>
+      <li><strong>Access:</strong> view your run history and account at <a href="/account">wyreup.com/account</a>.</li>
+      <li><strong>Export:</strong> email <strong>hello@wyreup.com</strong> for a JSON export of everything we have on you.</li>
+      <li><strong>Delete:</strong> email <strong>hello@wyreup.com</strong> to close your account; unused credits are refunded per the <a href="/legal/refund">refund policy</a>.</li>
+      <li><strong>Rectify:</strong> change your email by emailing <strong>hello@wyreup.com</strong> from the address on file.</li>
+    </ul>
+    <p>
+      If you are in the EU/UK, you also have the right to lodge a
+      complaint with your local supervisory authority.
+    </p>
+
+    <h2>Children</h2>
+    <p>
+      Wyreup is not directed at children under 13 (or under 16 in the EU).
+      We do not knowingly collect their information.
+    </p>
+
+    <h2>Data transfers</h2>
+    <p>
+      Wyreup is operated from Indiana, United States. Cloudflare and
+      our image-model provider may process data in any region where
+      they operate infrastructure, including elsewhere in the United States.
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      We may update this policy. Material changes will be noted by updating
+      the "Last updated" date and by emailing your account address where
+      appropriate.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Privacy questions or rights requests: <strong>hello@wyreup.com</strong>.<br />
+      Security disclosures (vulnerability reports, suspected key
+      compromise): <strong>security@wyreup.com</strong>.
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-12);
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .legal h1 {
+    font-size: var(--text-2xl, 28px);
+    margin: 0 0 var(--space-2);
+  }
+  .legal h2 {
+    font-size: var(--text-md);
+    margin: var(--space-6) 0 var(--space-2);
+  }
+  .legal h3 {
+    font-size: var(--text-sm);
+    margin: var(--space-4) 0 var(--space-2);
+    color: var(--text-primary);
+  }
+  .legal p,
+  .legal ul {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: 0 0 var(--space-3);
+  }
+  .legal ul {
+    padding-left: var(--space-5);
+  }
+  .legal li {
+    margin-bottom: var(--space-2);
+  }
+  .legal code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    padding: 1px 4px;
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    margin-bottom: var(--space-4);
+  }
+</style>

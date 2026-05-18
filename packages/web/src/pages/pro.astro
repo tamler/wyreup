@@ -1,0 +1,286 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProBadge from '../components/ProBadge.svelte';
+---
+
+<BaseLayout
+  title="Wyreup PRO — credits for hosted-model tools"
+  description="Free tools stay free. PRO unlocks hosted-model variants — transcribe, summarize, translate, upscale, background-remove — with credits that never expire."
+>
+  <article class="pro-page">
+    <header class="hero">
+      <div class="hero__chip">
+        <ProBadge />
+        <span>Wyreup PRO</span>
+      </div>
+      <h1>The free tier stays free.<br />PRO is the rest.</h1>
+      <p class="hero__sub">
+        Everything that can reasonably run in your browser is — and stays —
+        free. PRO is the credits-based tier for tools that genuinely need
+        a GPU we can't put in your tab.
+      </p>
+      <div class="hero__cta">
+        <button
+          type="button"
+          class="primary"
+          onclick="window.dispatchEvent(new Event('wyreup:auth-open'))"
+        >
+          Get an API key
+        </button>
+        <a href="/legal/pricing" class="secondary">See pricing</a>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Free, forever</h2>
+        <p>
+          Compression, format conversion, PDF editing, image work,
+          audio utilities, code & data helpers — everything that runs
+          in-browser. No account. No upload. No tracking.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Credits, not subscriptions</h2>
+        <p>
+          One-time purchase. Credits never expire. Use them in the
+          browser, the CLI, or from an AI agent (MCP) — same key,
+          same balance.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Failed runs are auto-refunded</h2>
+        <p>
+          If a hosted model errors, the credits go straight back to
+          your balance — no support ticket needed. The platform's
+          built around an append-only credit ledger.
+        </p>
+      </div>
+      <div class="card">
+        <h2>Same privacy posture</h2>
+        <p>
+          We don't retain your inputs or outputs after a PRO run.
+          Tool metadata (which tool, when, file name) is kept for
+          your run history; the content is not.
+        </p>
+      </div>
+    </section>
+
+    <section class="what">
+      <h2>What's in PRO right now</h2>
+      <table>
+        <thead>
+          <tr><th>Tool</th><th>What it does</th><th>Credits</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Transcribe</td><td>Whisper-large-v3 hosted (vs. our in-browser whisper-tiny)</td><td>5</td></tr>
+          <tr><td>Background remove</td><td>Large RMBG model — cleaner edges, hair, glass</td><td>4</td></tr>
+          <tr><td>Upscale 2×</td><td>Large Real-ESRGAN variant</td><td>4</td></tr>
+          <tr><td>Summarize</td><td>Llama-class model — long, structured content</td><td>3</td></tr>
+          <tr><td>Translate</td><td>Same model — high-quality translation</td><td>3</td></tr>
+          <tr><td>Redact PII</td><td>LLM-driven PII detection</td><td>3</td></tr>
+          <tr><td>Sentiment</td><td>Higher-accuracy sentiment than the in-browser heuristic</td><td>2</td></tr>
+          <tr><td>Named-entity recognition</td><td>LLM NER</td><td>2</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="how">
+      <h2>How it works</h2>
+      <ol>
+        <li><strong>Get a key.</strong> One click, email-delivered. Free to create — you only pay when you buy credits.</li>
+        <li><strong>Pick a PRO tool.</strong> It shows a <ProBadge cost={5} /> chip with the credit cost up front.</li>
+        <li><strong>Run.</strong> Credits deduct on success. Failed runs refund automatically.</li>
+        <li><strong>Need more?</strong> Buy a top-up. No subscription, no recurring charge.</li>
+      </ol>
+    </section>
+
+    <section class="self-host">
+      <h2>Don't want a hosted tier at all?</h2>
+      <p>
+        Wyreup is MIT-licensed. Run <code>@wyreup/core</code> entirely on
+        your own infrastructure — the PRO tier exists because hosted GPU
+        inference has a per-call cost, not because the free tools are
+        crippled.
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .pro-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-12);
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: var(--space-10);
+  }
+  .hero__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+  }
+  .hero h1 {
+    font-size: var(--text-3xl, 36px);
+    line-height: 1.2;
+    margin: 0 0 var(--space-3);
+    color: var(--text-primary);
+  }
+  .hero__sub {
+    max-width: 580px;
+    margin: 0 auto var(--space-5);
+    font-size: var(--text-md);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .hero__cta {
+    display: inline-flex;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .primary,
+  .secondary {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .primary {
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+    border-color: var(--accent);
+  }
+  .primary:hover {
+    background: var(--accent-hover);
+  }
+  .secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border);
+  }
+  .secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    margin-bottom: var(--space-10);
+  }
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .card {
+    padding: var(--space-5);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .card h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .card p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .what {
+    margin-bottom: var(--space-10);
+  }
+  .what h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+  .what table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+  .what th,
+  .what td {
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .what th {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+  .what td:last-child {
+    text-align: right;
+    font-family: var(--font-mono);
+    color: var(--accent-text);
+  }
+
+  .how {
+    margin-bottom: var(--space-10);
+  }
+  .how h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+  .how ol {
+    padding-left: var(--space-5);
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-size: var(--text-sm);
+  }
+  .how li {
+    margin-bottom: var(--space-2);
+  }
+  .how strong {
+    color: var(--text-primary);
+  }
+
+  .self-host {
+    padding: var(--space-5);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .self-host h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .self-host p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .self-host code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 1px 4px;
+  }
+</style>

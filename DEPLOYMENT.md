@@ -31,6 +31,61 @@ Wyreup deploys to Cloudflare Pages via GitHub Actions on every push to `main`.
 
 After that, every push to `main` triggers a build and deploy automatically.
 
+## PRO tier infrastructure
+
+The PRO tier (account creation, credits, hosted-model tools) adds D1, Pages
+Functions, Workers AI, ZeptoMail (transactional email), an external image-model
+provider (swappable — see `functions/_lib/providers/image-models.ts`), and
+Lemon Squeezy (payments).
+
+### One-time D1 setup
+
+```bash
+# Create the database (only once per environment)
+pnpm wrangler d1 create wyreup-prod
+# Paste the returned database_id into wrangler.toml ([[d1_databases]])
+
+# Apply migrations to both remote and local
+pnpm db:apply:remote
+pnpm db:apply:local
+```
+
+### Production secrets (CF Pages → wyreup project)
+
+Set each via the wrangler CLI so values never enter the repo or git history:
+
+```bash
+pnpm wrangler pages secret put SESSION_SECRET     --project-name=wyreup  # openssl rand -hex 32
+pnpm wrangler pages secret put LS_API_KEY         --project-name=wyreup
+pnpm wrangler pages secret put LS_WEBHOOK_SECRET  --project-name=wyreup
+pnpm wrangler pages secret put LS_STORE_ID        --project-name=wyreup
+pnpm wrangler pages secret put LS_VARIANT_STARTER --project-name=wyreup
+pnpm wrangler pages secret put LS_VARIANT_STANDARD --project-name=wyreup
+pnpm wrangler pages secret put LS_VARIANT_POWER   --project-name=wyreup
+pnpm wrangler pages secret put ZEPTOMAIL_TOKEN    --project-name=wyreup
+pnpm wrangler pages secret put ZEPTOMAIL_SENDER   --project-name=wyreup  # e.g. noreply@wyreup.com
+pnpm wrangler pages secret put IMAGE_MODEL_TOKEN  --project-name=wyreup
+```
+
+### Local development
+
+`.dev.vars` at the repo root is gitignored and read by `wrangler pages dev`.
+Copy `.dev.vars.example`, fill it in with local values (use a *different*
+`SESSION_SECRET` from prod), then:
+
+```bash
+# Builds the static site and serves it with Pages Functions + local D1
+pnpm dev:pages
+```
+
+Bindings (D1, AI) come from `wrangler.toml`. Secrets come from `.dev.vars`.
+
+### Webhook for Lemon Squeezy
+
+LS webhook URL: `https://wyreup.com/api/webhooks/lemonsqueezy`. Set this in
+the LS store's webhook settings; the signing secret you paste there must
+match `LS_WEBHOOK_SECRET`.
+
 ## CI/CD workflows
 
 - **`ci.yml`** — runs on all PRs and pushes to `main`: lint, types, unit tests, full build, isolation check, privacy scan, bundle size check

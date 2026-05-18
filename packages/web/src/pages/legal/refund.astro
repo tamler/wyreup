@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const lastUpdated = '2026-05-17';
+---
+
+<BaseLayout
+  title="Refund Policy — Wyreup"
+  description="When you can get a refund on Wyreup credits and how to request one."
+>
+  <article class="legal">
+    <header>
+      <h1>Refund Policy</h1>
+      <p class="meta">Last updated: {lastUpdated}</p>
+    </header>
+
+    <h2>The short version</h2>
+    <p>
+      Unused credits are refundable within 30 days of purchase. Used
+      credits are not, except in cases of clear product malfunction on
+      our end.
+    </p>
+
+    <h2>Unused credits — 30-day refund</h2>
+    <p>
+      If you purchased credits in the last 30 days and you have at least
+      as many credits in your account as you purchased in that order, we
+      will refund that order in full. Email <strong>hello@wyreup.com</strong>
+      from the address on your account with your order ID; refunds are
+      processed back to the original payment instrument within 10
+      business days.
+    </p>
+
+    <h2>Partial refunds</h2>
+    <p>
+      If you've used some but not all of the credits from a recent
+      purchase, we will refund the pro-rated amount for the unused
+      portion at the per-credit price you paid.
+    </p>
+
+    <h2>Used credits</h2>
+    <p>
+      Credits already consumed by a successful PRO tool run are not
+      refundable. Exception: if a tool returned a clearly broken result
+      due to our infrastructure failure (not a model accuracy issue or
+      bad input), email <strong>hello@wyreup.com</strong> with the run ID
+      from your account history and we will refund the credits used.
+    </p>
+
+    <h2>Failed runs are auto-refunded</h2>
+    <p>
+      If a PRO tool fails to complete (e.g. the model provider returns
+      an error), we automatically refund the credits to your balance.
+      No action needed — you'll see a "refund" entry in your account
+      history. This is built into the platform, not a manual process.
+    </p>
+
+    <h2>Chargebacks</h2>
+    <p>
+      If you have a billing dispute, please email us first. Filing a
+      chargeback before contacting us, when a refund would have been
+      issued anyway, results in your account being suspended pending
+      resolution because chargebacks carry fees that we cannot absorb at
+      our pricing.
+    </p>
+
+    <h2>Account closure</h2>
+    <p>
+      If you close your account, we refund any unused credits in your
+      balance regardless of the 30-day window. Email
+      <strong>hello@wyreup.com</strong> to close.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Refund requests: <strong>hello@wyreup.com</strong>. Include your
+      order ID (from the Lemon Squeezy receipt) and the email on your
+      Wyreup account.
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4) var(--space-12);
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  .legal h1 {
+    font-size: var(--text-2xl, 28px);
+    margin: 0 0 var(--space-2);
+  }
+  .legal h2 {
+    font-size: var(--text-md);
+    margin: var(--space-6) 0 var(--space-2);
+  }
+  .legal p,
+  .legal ul {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    margin: 0 0 var(--space-3);
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    margin-bottom: var(--space-4);
+  }
+</style>

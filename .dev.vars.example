@@ -1,0 +1,36 @@
+# Wyreup Pages Functions — local development secrets.
+#
+# Copy this file to .dev.vars (gitignored) and fill in real values.
+# `wrangler pages dev` reads .dev.vars automatically.
+#
+# For production, push each secret via:
+#   wrangler pages secret put <NAME> --project-name=wyreup
+# (never check real values into the repo).
+
+# 32-byte hex. Generate with:  openssl rand -hex 32
+SESSION_SECRET=""
+
+# Lemon Squeezy ---------------------------------------------------------
+LS_API_KEY=""
+LS_STORE_ID=""
+LS_WEBHOOK_SECRET=""
+# Variant IDs from LS after you create the 3 credit-pack products.
+LS_VARIANT_STARTER=""
+LS_VARIANT_STANDARD=""
+LS_VARIANT_POWER=""
+
+# ZeptoMail (Zoho transactional) ----------------------------------------
+# Token from Zoho → Mail Agents → API. Format starts "Zoho-enczapikey ..."
+# (the helper tolerates raw token too).
+ZEPTOMAIL_TOKEN=""
+ZEPTOMAIL_SENDER="noreply@wyreup.com"
+ZEPTOMAIL_SENDER_NAME="Wyreup"
+
+# Image-model provider (bg-remove-pro, upscale-2x-pro) ------------------
+# Token for whatever backend is currently wired in
+# functions/_lib/providers/image-models.ts. Swap that file + this token
+# together when changing vendors.
+IMAGE_MODEL_TOKEN=""
+
+# Optional: override origin for local dev so emails point at localhost
+APP_ORIGIN="http://localhost:8788"

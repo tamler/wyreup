@@ -251,14 +251,14 @@ hosted-AI client) in branches; flip the gate when ready.
   `upgrade` field on `regex-from-text`, `cron-from-text`,
   `sql-from-text`, etc. Free heuristics handle the 80% case;
   Pro handles the 20% the heuristic can't.
-- **Vision (Replicate vision LLMs)** — `image-ocr-hq`,
-  `image-describe-hq`, `extract-table-from-image-hq`,
-  `read-handwriting`, `analyze-chart`. tesseract OCR stays free
-  baseline.
-- **Image generation (Replicate Flux schnell + Real-ESRGAN)** —
-  `image-generate`, `upscale-hq`, `inpaint`, `style-transfer`,
-  `image-variants`. We have **no** in-browser image generation
-  today, so these are pure-Pro.
+- **Vision (hosted vision LLMs via external image-model provider)** —
+  `image-ocr-hq`, `image-describe-hq`,
+  `extract-table-from-image-hq`, `read-handwriting`,
+  `analyze-chart`. tesseract OCR stays free baseline.
+- **Image generation (Flux-class + Real-ESRGAN via external image-model
+  provider)** — `image-generate`, `upscale-hq`, `inpaint`,
+  `style-transfer`, `image-variants`. We have **no** in-browser image
+  generation today, so these are pure-Pro.
 - **Document workflows (Llama 70B over PDF text)** —
   `pdf-summarize-hq`, `pdf-q-and-a`, `pdf-translate-full`,
   `pdf-rewrite-format`. Free `pdf-extract-data` (heuristic) and
@@ -507,6 +507,45 @@ The previously-listed heavy-ML candidates (LaMa, GFPGAN, DDColor,
 optical-flow video interpolation, ML video upscaling) move under the
 Paused section's resume signal. They're not rejected — just not on the
 horizon while AI work is on hold.
+
+### Library expansion backlog (added 2026-05-17)
+
+Seven libraries already trusted, browser-compatible, and zero-API
+required — each unlocks several free tools. Listed in rough
+implementation order; pick whichever has highest user demand.
+
+- **PDF-lib** — create/edit/merge/split/rotate/redact/fill PDFs. We
+  already use pdf.js (`pdfjs-dist`) for rendering and JSZip for archive
+  work. PDF-lib fills the **write** side of the PDF surface. Tool
+  candidates: `pdf-merge`, `pdf-split`, `pdf-rotate`, `pdf-stamp`,
+  `pdf-encrypt`, `pdf-form-fill`. Some may already exist — audit
+  before adding.
+- **SheetJS (`xlsx`)** — XLSX/CSV/ODS read & write, fully client-side.
+  Highest "missing capability" lift for office workers. Tool
+  candidates: `xlsx-to-csv`, `csv-to-xlsx`, `sheet-inspector`,
+  `xlsx-extract-tables`, `csv-dedupe`, `csv-sort-filter`.
+- **Mammoth.js** — `.docx` → plain text or semantic HTML. Tool
+  candidates: `docx-to-text`, `docx-to-markdown`, `docx-preview`.
+  Strong chain source: any `docx` → text → `summarize` / `transcribe`-
+  analog pipelines.
+- **remark** — Markdown parse/transform AST. Tool candidates:
+  `markdown-lint`, `markdown-format`, `markdown-to-html`,
+  `markdown-strip-frontmatter`, `markdown-toc`. Useful in chains as a
+  text-cleanup hop.
+- **@mozilla/readability** — Reader-mode extractor used in Firefox.
+  Tool candidates: `extract-article-text` (paste-URL or paste-HTML
+  input → clean prose). Pairs especially well with PRO summarize /
+  translate via the chain runner. Note: needs HTML input — paste-URL
+  mode requires either browser CORS-allowed fetch or a CLI-only
+  variant.
+- **JSZip** — already in `packages/web/package.json`. Audit current
+  usage; potential extras: `zip-create`, `zip-extract-preview`,
+  `zip-rename-inside`. Several may already exist.
+- **pdf.js (`pdfjs-dist`)** — already in `packages/web/package.json`.
+  Same audit note: likely already powering preview / extract flows.
+
+All seven are **permanent free tier** per the Pro framing in Now §
+(in-browser cost is zero). None are PRO candidates.
 
 ---
 

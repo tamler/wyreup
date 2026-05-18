@@ -1,3 +1,24 @@
 name = "wyreup"
 compatibility_date = "2026-04-21"
 pages_build_output_dir = "packages/web/dist"
+
+# Pages Functions live in /functions at the repo root and pick up these
+# bindings automatically. See docs/pro-auth-spec.md §4 for the schema.
+#
+# Before first deploy, run:
+#   wrangler d1 create wyreup-prod
+# and paste the returned database_id below. Until then, the binding is
+# inert and PRO-auth endpoints will 500 — but the rest of the site is
+# unaffected since all free tools run client-side.
+[[d1_databases]]
+binding        = "DB"
+database_name  = "wyreup-prod"
+database_id    = "527284f4-352f-4c97-9e1d-9e82a94297f9"
+migrations_dir = "migrations"
+
+# Workers AI binding — powers text PRO tools (summarize, translate, sentiment,
+# NER, redact) and `transcribe-pro` via the on-platform Whisper models.
+# Image PRO tools (bg-remove, upscale) call out via IMAGE_MODEL_TOKEN — see
+# functions/_lib/providers/image-models.ts for the swappable wrapper.
+[ai]
+binding = "AI"

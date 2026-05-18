@@ -279,6 +279,13 @@ export interface ToolModule<Params = unknown> {
   interactive: boolean;
   batchable: boolean;
   cost: 'free' | 'credit';
+  /**
+   * Credits consumed per invocation when `cost === 'credit'`. Ignored for
+   * free tools. The client uses this for the "X credits" badge and the
+   * pre-run confirm; the server has its own authoritative price table in
+   * `functions/_lib/pricing.ts` so the client value can't be tampered with.
+   */
+  creditCost?: number;
   memoryEstimate: MemoryEstimate;
   /** Runtime capability requirements. Undefined = universal (runs everywhere). */
   requires?: ToolRequires;

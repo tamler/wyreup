@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AccountDashboard from '../components/AccountDashboard.svelte';
+---
+
+<BaseLayout
+  title="Account — Wyreup"
+  description="Manage your Wyreup PRO account, credits, and API keys."
+>
+  <div class="container account-page">
+    <h1>Account</h1>
+    <AccountDashboard client:load />
+  </div>
+</BaseLayout>
+
+<style>
+  .account-page {
+    padding: var(--space-6) var(--space-4) var(--space-12);
+    max-width: 880px;
+  }
+  h1 {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-xl, 24px);
+    font-weight: 600;
+  }
+</style>

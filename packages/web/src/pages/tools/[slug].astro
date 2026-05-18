@@ -71,6 +71,7 @@ export async function getStaticPaths() {
           memoryEstimate: tool.memoryEstimate,
           outputDisplay: (tool as { outputDisplay?: 'mono' | 'prose' }).outputDisplay,
           cost: tool.cost,
+          creditCost: tool.creditCost,
           seoContent: tool.seoContent,
         },
         relatedTools,
