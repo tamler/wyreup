@@ -142,6 +142,8 @@ export { transcribePro, type TranscribeProParams, defaultTranscribeProParams } f
 export { textSentences, type TextSentencesParams, defaultTextSentencesParams } from './tools/text-sentences/index.js';
 export { textKeywords, type TextKeywordsParams, defaultTextKeywordsParams, type TextKeywordsResult } from './tools/text-keywords/index.js';
 export { textDates, type TextDatesParams, defaultTextDatesParams, type TextDatesResult } from './tools/text-dates/index.js';
+export { docxToText, type DocxToTextParams, defaultDocxToTextParams } from './tools/docx-to-text/index.js';
+export { extractArticleText, type ExtractArticleTextParams, defaultExtractArticleTextParams } from './tools/extract-article-text/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';

@@ -57,6 +57,8 @@ import { transcribePro } from './tools/transcribe-pro/index.js';
 import { textSentences } from './tools/text-sentences/index.js';
 import { textKeywords } from './tools/text-keywords/index.js';
 import { textDates } from './tools/text-dates/index.js';
+import { docxToText } from './tools/docx-to-text/index.js';
+import { extractArticleText } from './tools/extract-article-text/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -268,6 +270,8 @@ export const defaultTools: ToolModule<any>[] = [
   textSentences,
   textKeywords,
   textDates,
+  docxToText,
+  extractArticleText,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

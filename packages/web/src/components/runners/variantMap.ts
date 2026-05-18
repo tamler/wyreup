@@ -127,6 +127,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'text-sentences': 'TextInputRunner',
   'text-keywords': 'TextInputRunner',
   'text-dates': 'TextInputRunner',
+  'docx-to-text': 'TextResultRunner',
+  'extract-article-text': 'TextInputRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
   'text-suspicious': 'TextInputRunner',
