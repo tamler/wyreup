@@ -16,6 +16,8 @@
 
 import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
+import { chat } from './providers/text-models';
+import { transcribe as runTranscribe } from './providers/audio-models';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -74,38 +76,13 @@ async function transcribePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> 
   if (bytes.length > TRANSCRIBE_MAX_BYTES) {
     throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
-  // Workers AI expects audio as an integer array of byte values.
-  const audioArr = Array.from(bytes);
 
-  const res = (await env.AI.run('@cf/openai/whisper-large-v3-turbo', {
-    audio: audioArr,
-    language: input.language,
-  })) as { text?: string; vtt?: string };
-
-  if (!res || typeof res.text !== 'string') {
-    throw new Error('Whisper returned no text');
-  }
-  return { text: res.text, vtt: res.vtt ?? null };
+  return runTranscribe(env, { bytes, language: input.language });
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// Workers AI — text tools (LLM)
+// Text tools — go through the swappable text-model wrapper
 // ────────────────────────────────────────────────────────────────────────
-
-const TEXT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-
-async function chat(env: Env, system: string, user: string): Promise<string> {
-  const res = (await env.AI.run(TEXT_MODEL, {
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-  })) as { response?: string };
-  if (!res || typeof res.response !== 'string') {
-    throw new Error('Text model returned no response');
-  }
-  return res.response.trim();
-}
 
 async function summarizePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const text = readText(raw, 'text');

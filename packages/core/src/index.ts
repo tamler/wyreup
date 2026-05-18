@@ -148,6 +148,11 @@ export { pdfFlatten, type PdfFlattenParams, defaultPdfFlattenParams } from './to
 export { pdfFormFields, type PdfFormFieldsParams, defaultPdfFormFieldsParams, type PdfFormFieldsResult } from './tools/pdf-form-fields/index.js';
 export { zipRemove, type ZipRemoveParams, defaultZipRemoveParams } from './tools/zip-remove/index.js';
 export { zipFlatten, type ZipFlattenParams, defaultZipFlattenParams } from './tools/zip-flatten/index.js';
+export { textSummarizePro, type TextSummarizeProParams, defaultTextSummarizeProParams } from './tools/text-summarize-pro/index.js';
+export { textTranslatePro, type TextTranslateProParams, defaultTextTranslateProParams } from './tools/text-translate-pro/index.js';
+export { textSentimentPro, type TextSentimentProParams, defaultTextSentimentProParams } from './tools/text-sentiment-pro/index.js';
+export { textNerPro, type TextNerProParams, defaultTextNerProParams } from './tools/text-ner-pro/index.js';
+export { textRedactPro, type TextRedactProParams, defaultTextRedactProParams } from './tools/text-redact-pro/index.js';
 export { imageCaption, type ImageCaptionParams, defaultImageCaptionParams } from './tools/image-caption/index.js';
 export { imageCaptionDetailed, type ImageCaptionDetailedParams, defaultImageCaptionDetailedParams } from './tools/image-caption-detailed/index.js';
 export { recordAudio, type RecordAudioParams, defaultRecordAudioParams } from './tools/record-audio/index.js';

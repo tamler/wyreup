@@ -63,6 +63,11 @@ import { pdfFlatten } from './tools/pdf-flatten/index.js';
 import { pdfFormFields } from './tools/pdf-form-fields/index.js';
 import { zipRemove } from './tools/zip-remove/index.js';
 import { zipFlatten } from './tools/zip-flatten/index.js';
+import { textSummarizePro } from './tools/text-summarize-pro/index.js';
+import { textTranslatePro } from './tools/text-translate-pro/index.js';
+import { textSentimentPro } from './tools/text-sentiment-pro/index.js';
+import { textNerPro } from './tools/text-ner-pro/index.js';
+import { textRedactPro } from './tools/text-redact-pro/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -280,6 +285,11 @@ export const defaultTools: ToolModule<any>[] = [
   pdfFormFields,
   zipRemove,
   zipFlatten,
+  textSummarizePro,
+  textTranslatePro,
+  textSentimentPro,
+  textNerPro,
+  textRedactPro,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,
