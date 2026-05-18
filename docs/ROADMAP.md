@@ -39,9 +39,11 @@ preserved so existing commit messages still resolve.
 ## Now (in flight)
 
 Direction reset 2026-05-14 (post Wave T + tool wins): **free-push
-period.** No Pro deployment until there's an audience to convert.
-Wave M (monetization) stays scoped but deployment defers until weekly
-active users justify the gate.
+period.** Original plan was to defer Pro deployment until weekly
+actives justified it; that was reversed on 2026-05-18 — Pro
+infrastructure shipped end-to-end so the gate is in place when
+audience arrives rather than scrambling to build it then. Free push
+continues in parallel.
 
 ### Pro framing (refined 2026-05-15)
 
@@ -133,6 +135,24 @@ into the Pro story later as fallback seams.
   extraction (vendor, invoice #, date, total, subtotal, tax,
   line items). No LLM, no upload. Configurable currency.
 
+**Shipped 2026-05-17 / 2026-05-18 (library-driven batch):**
+- ~~`text-sentences`~~ — compromise-powered sentence splitter,
+  strong chain primitive.
+- ~~`text-keywords`~~ — topic-bearing noun + phrase extraction
+  (compromise). Distinct from text-frequency (statistical).
+- ~~`text-dates`~~ — pull `#Date` mentions with best-effort ISO
+  normalization for absolute forms (compromise).
+- ~~`docx-to-text`~~ — extract plain text from `.docx` via mammoth.
+- ~~`extract-article-text`~~ — Reader-mode declutter via Mozilla
+  Readability. Pastes-only for v1 (URL fetch deferred — CORS).
+- ~~`pdf-flatten`~~ — lock AcroForm field values into static content
+  (pdf-lib).
+- ~~`pdf-form-fields`~~ — read-only inspection of interactive form
+  field metadata + values (pdf-lib).
+- ~~`zip-remove`~~ — glob-based entry stripping (JSZip).
+- ~~`zip-flatten`~~ — collapse directory structure to root with
+  configurable collision handling (JSZip).
+
 **Still to ship:**
 - **SEO surface area.** Every tool needs a real page with examples,
   not just a runner. Long-tail wins.
@@ -144,7 +164,78 @@ into the Pro story later as fallback seams.
   on Cloudflare access logs, or self-hosted Plausible on our own
   infra. Decision deferred; not load-bearing for the free push.
 
-### 4. Wave U — Standalone tool expansion
+### 4. Wave M — Monetization — **SHIPPED 2026-05-17 / 2026-05-18**
+
+Original Wave M scope (line items below) was scaled back during
+implementation — these are the decisions we made vs. the spec:
+
+| Aspect | Original plan | What shipped |
+|---|---|---|
+| Deployment | Defer until weekly actives | Live in production |
+| Auth | Anonymous license key | Account-based (email + multiple keys per account) |
+| Infra | CF Worker + KV | CF Pages Functions + D1 |
+| Pricing | $10/200, $25/600, $50/1500 + $8/mo sub | $4.99/50, $9.99/150, $19.99/400 packs only (migration to roadmap pricing pending LS variant updates) |
+| Checkout | LS overlay (no redirect) | LS overlay (lemon.js) with redirect fallback |
+| Tool naming | `transcribe-hq`, `summarize-hq` (`-hq`) | `transcribe-pro`, `text-summarize-pro` (`-pro`) |
+| Marketing | "No separate /pro page" | `/pro` landing page exists |
+| Free-tier seam | `upgrade` field on heuristic no-match | **Not built** — PRO touchpoints are ProBadge chip + /pro page |
+
+**Shipped surfaces:**
+- ~~D1 schema, append-only credit ledger, UNIQUE(ls_order_id)
+  webhook idempotency.~~
+- ~~Account create / verify (signed HttpOnly session cookie) /
+  signout / balance / history / keys (list+create+revoke).~~
+- ~~/api/tools/pro/run with reserve-then-refund credit pattern
+  and per-account 30/min rate limit.~~
+- ~~/api/credits/checkout — server-side userId stamping into LS
+  checkout custom_data.~~
+- ~~/api/webhooks/lemonsqueezy — constant-time HMAC verify, INSERT
+  OR IGNORE for purchase + refund, userId validation guard.~~
+- ~~Provider abstraction layer (functions/_lib/providers/) for
+  text, audio, image models — swap vendor by editing one file
+  per modality. Today: Workers AI (text + audio) + Replicate
+  (image) via generic IMAGE_MODEL_TOKEN.~~
+- ~~AuthModal, AccountMenu (header ⚡ badge + dropdown),
+  BuyCreditsSheet (LS overlay + 5-min poll fallback),
+  CreditBadge, ProBadge, /account dashboard.~~
+- ~~/admin dashboard, gated by ADMIN_EMAILS allowlist — metrics,
+  recent signups, accounts table with email search + per-row
+  grant button (confirm() guard on > 100 credits or debits),
+  recent PRO runs, per-tool refund-rate.~~
+- ~~ToolRunner PRO gate (cost === 'credit') with sign-in /
+  buy-credits / pass states.~~
+- ~~Live ⚡ balance refresh after PRO runs via
+  `wyreup:balance-changed` event.~~
+- ~~CSP, X-Frame-Options: DENY, DOMPurify on every {@html},
+  audited via two background-agent reviews.~~
+- ~~Legal: /legal/terms, /legal/privacy, /legal/refund,
+  /legal/pricing.~~
+- ~~Eight PRO tools wired end-to-end:
+  transcribe-pro (5cr), text-summarize-pro (3cr),
+  text-translate-pro (3cr), text-sentiment-pro (2cr),
+  text-ner-pro (2cr), text-redact-pro (3cr),
+  bg-remove-pro (4cr), upscale-2x-pro (4cr).
+  All `surfaces: ['web']` for v1 — CLI/MCP support requires
+  extending ToolRunContext with an API key.~~
+
+**Pending (blocked on LS work):**
+- New LS variant IDs for the roadmap pricing ($10/200,
+  $25/600, $50/1500).
+- New $8/mo subscription product, 200 included tokens, $0.04
+  per overage.
+- Subscription state in D1, subscription_* webhook events,
+  auto-pause cron worker for unused subscriptions.
+
+**Deliberately not done (deviations from original spec):**
+- `upgrade` field on heuristic no-match results. Was framed
+  as "the only Pro touchpoint on free tools" but we shipped
+  PRO without it. Reconsider once we have data on whether
+  /pro page conversion is sufficient.
+- CLI/MCP PRO support. Tools ship with `surfaces: ['web']`;
+  enabling CLI/MCP needs ToolRunContext to carry an API key
+  and the runner variants to wire that through.
+
+### 5. Wave U — Standalone tool expansion
 
 The new direction: **deterministic, file-oriented, no models, no
 downloads.** Each tool ships in hours-to-days, validates with a test
@@ -219,12 +310,12 @@ for cross-reference with commit history; full diff in
 
 Ordered by recommended sequence.
 
-### Wave M — Monetization (Lemon Squeezy + hosted AI)
+### Wave M — Monetization (Lemon Squeezy + hosted AI) — **SHIPPED 2026-05-18, see Now §4**
 
-Scope decided 2026-05-14, framing sharpened 2026-05-15;
-**deployment deferred** until the free push produces measurable
-weekly actives. Build the infrastructure (license keys, billing,
-hosted-AI client) in branches; flip the gate when ready.
+Original scope kept below for posterity. Adopted version is recorded
+in the Now section with the deviation table. The remainder of this
+entry describes what was planned but not all of which was built —
+read alongside the "Deliberately not done" callout in §4.
 
 **Tier shape (refined):**
 - Free unchanged — zero tracking, zero upload, all current tools
@@ -508,44 +599,45 @@ optical-flow video interpolation, ML video upscaling) move under the
 Paused section's resume signal. They're not rejected — just not on the
 horizon while AI work is on hold.
 
-### Library expansion backlog (added 2026-05-17)
+### Library expansion backlog (added 2026-05-17, closed 2026-05-18)
 
-Seven libraries already trusted, browser-compatible, and zero-API
-required — each unlocks several free tools. Listed in rough
-implementation order; pick whichever has highest user demand.
+Seven libraries reviewed during the 2026-05-17 / 2026-05-18 push.
+Outcomes:
 
-- **PDF-lib** — create/edit/merge/split/rotate/redact/fill PDFs. We
-  already use pdf.js (`pdfjs-dist`) for rendering and JSZip for archive
-  work. PDF-lib fills the **write** side of the PDF surface. Tool
-  candidates: `pdf-merge`, `pdf-split`, `pdf-rotate`, `pdf-stamp`,
-  `pdf-encrypt`, `pdf-form-fill`. Some may already exist — audit
-  before adding.
-- **SheetJS (`xlsx`)** — XLSX/CSV/ODS read & write, fully client-side.
-  Highest "missing capability" lift for office workers. Tool
-  candidates: `xlsx-to-csv`, `csv-to-xlsx`, `sheet-inspector`,
-  `xlsx-extract-tables`, `csv-dedupe`, `csv-sort-filter`.
-- **Mammoth.js** — `.docx` → plain text or semantic HTML. Tool
-  candidates: `docx-to-text`, `docx-to-markdown`, `docx-preview`.
-  Strong chain source: any `docx` → text → `summarize` / `transcribe`-
-  analog pipelines.
-- **remark** — Markdown parse/transform AST. Tool candidates:
-  `markdown-lint`, `markdown-format`, `markdown-to-html`,
-  `markdown-strip-frontmatter`, `markdown-toc`. Useful in chains as a
-  text-cleanup hop.
-- **@mozilla/readability** — Reader-mode extractor used in Firefox.
-  Tool candidates: `extract-article-text` (paste-URL or paste-HTML
-  input → clean prose). Pairs especially well with PRO summarize /
-  translate via the chain runner. Note: needs HTML input — paste-URL
-  mode requires either browser CORS-allowed fetch or a CLI-only
-  variant.
-- **JSZip** — already in `packages/web/package.json`. Audit current
-  usage; potential extras: `zip-create`, `zip-extract-preview`,
-  `zip-rename-inside`. Several may already exist.
-- **pdf.js (`pdfjs-dist`)** — already in `packages/web/package.json`.
-  Same audit note: likely already powering preview / extract flows.
+- **PDF-lib** — ~~Already installed; covered by 22+ existing PDF
+  tools.~~ Closed 2026-05-18 — added `pdf-flatten` (lock AcroForm
+  fields into static content) and `pdf-form-fields` (read-only
+  inspection of interactive fields). The CommonForms ML-based
+  variant remains in Later.
+- **SheetJS (`xlsx`)** — Already installed; 10+ csv/xlsx tools
+  cover the surface (`csv-deduplicate`, `csv-diff`, `csv-info`,
+  `csv-json`, `csv-merge`, `csv-template`, `csv-to-excel`,
+  `csv-to-geojson`, `csv-to-json-schema`, `excel-info`,
+  `excel-to-csv`). No new tools needed.
+- **Mammoth.js** — ~~Closed 2026-05-18~~. `docx-to-text` shipped
+  with text + Markdown-heading output modes. Dynamic-import keeps
+  the ~120 KB gz cost out of the base bundle.
+- **remark** — Closed without adding the dep. Existing markdown
+  tools (`html-to-markdown`, `markdown-frontmatter`,
+  `markdown-to-html`, `markdown-toc`) cover the surface via a
+  different stack. Revisit only if a specific need arises.
+- **@mozilla/readability** — ~~Closed 2026-05-18~~.
+  `extract-article-text` shipped — text / HTML output with optional
+  title prepend. URL-fetch variant deferred (browser CORS limits;
+  CLI surface could ship later with a server fetcher).
+- **JSZip** — Already installed (used by 6+ existing tools).
+  ~~Closed 2026-05-18~~ with `zip-remove` (glob-based stripping)
+  and `zip-flatten` (collapse to root with collision strategies).
+- **pdf.js (`pdfjs-dist`)** — Already installed; no new tools
+  identified beyond what `pdf-to-text` / `pdf-to-image` /
+  `pdf-info` cover.
 
-All seven are **permanent free tier** per the Pro framing in Now §
-(in-browser cost is zero). None are PRO candidates.
+Net: **9 new free tools** from the audit (Mammoth ×1, Readability
+×1, pdf-lib ×2, JSZip ×2, compromise ×3). All `permanent free`.
+The compromise additions (`text-sentences`, `text-keywords`,
+`text-dates`) weren't on the original list — added because
+compromise enables the "free heuristic, PRO upgrade" pattern with
+real semantic primitives.
 
 ---
 

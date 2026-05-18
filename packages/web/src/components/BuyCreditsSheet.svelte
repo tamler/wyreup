@@ -6,6 +6,40 @@
   import { createEventDispatcher, onDestroy } from 'svelte';
   import { refreshBalance } from '../stores/user';
 
+  // LS overlay — loaded on demand the first time the user clicks Buy.
+  // Avoids paying the script cost on page loads where the user never
+  // opens this sheet. Resolves once Lemon.Setup is callable.
+  declare global {
+    interface Window {
+      Lemon?: {
+        Setup: (opts: { eventHandler: (e: { event: string }) => void }) => void;
+        Url: { Open: (url: string) => void; Close: () => void };
+      };
+      createLemonSqueezy?: () => void;
+    }
+  }
+
+  let lemonReady: Promise<void> | null = null;
+  function ensureLemonLoaded(): Promise<void> {
+    if (lemonReady) return lemonReady;
+    lemonReady = new Promise<void>((resolve, reject) => {
+      if (window.Lemon) {
+        resolve();
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = 'https://assets.lemonsqueezy.com/lemon.js';
+      s.defer = true;
+      s.onload = () => {
+        if (window.Lemon) resolve();
+        else reject(new Error('Lemon.js loaded but Lemon global is missing'));
+      };
+      s.onerror = () => reject(new Error('Could not load Lemon.js'));
+      document.head.appendChild(s);
+    });
+    return lemonReady;
+  }
+
   const dispatch = createEventDispatcher<{ close: void; success: void }>();
 
   type Pack = 'starter' | 'standard' | 'power';
@@ -52,7 +86,27 @@
         error = data.error || `Couldn't start checkout (${res.status})`;
         return;
       }
-      window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+      try {
+        await ensureLemonLoaded();
+        // Setup is idempotent — calling it again replaces the handler.
+        // We hook Checkout.Success so balance refresh fires the moment
+        // the user completes payment, without waiting for the poll.
+        window.Lemon!.Setup({
+          eventHandler: async (evt) => {
+            if (evt.event === 'Checkout.Success') {
+              stopPolling();
+              await refreshBalance();
+              dispatch('success');
+              dispatch('close');
+            }
+          },
+        });
+        window.Lemon!.Url.Open(data.checkoutUrl);
+      } catch {
+        // Fall back to a new tab if the overlay script failed to load
+        // (CSP misconfig, network drop) so the user can still purchase.
+        window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+      }
       startPolling();
     } finally {
       busy = null;
