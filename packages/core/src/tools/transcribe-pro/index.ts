@@ -147,6 +147,13 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
       throw new Error('Hosted transcribe returned no text');
     }
 
+    // Tell the browser shell to re-fetch the balance so the header ⚡
+    // badge updates without a page reload. Guarded for non-browser
+    // surfaces (CLI/MCP would import this module too if PRO ships there).
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('wyreup:balance-changed'));
+    }
+
     ctx.onProgress({ stage: 'done', percent: 100 });
     return new Blob([text], { type: 'text/plain' });
   },

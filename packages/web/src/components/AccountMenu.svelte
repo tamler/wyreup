@@ -6,7 +6,7 @@
   // Mount once globally in BaseLayout; it hydrates on load.
 
   import { onMount } from 'svelte';
-  import { user, authReady, hydrateUser, signOut } from '../stores/user';
+  import { user, authReady, hydrateUser, refreshBalance, signOut } from '../stores/user';
   import CreditBadge from './CreditBadge.svelte';
 
   let menuOpen = false;
@@ -33,10 +33,20 @@
     if (rootEl && !rootEl.contains(e.target as Node)) closeMenu();
   }
 
+  function onBalanceChanged() {
+    refreshBalance();
+  }
+
   onMount(() => {
     hydrateUser();
     document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
+    // PRO tools dispatch this after a successful run so the header
+    // badge updates without a page reload.
+    window.addEventListener('wyreup:balance-changed', onBalanceChanged);
+    return () => {
+      document.removeEventListener('click', onDocClick);
+      window.removeEventListener('wyreup:balance-changed', onBalanceChanged);
+    };
   });
 </script>
 

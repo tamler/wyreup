@@ -29,6 +29,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const creditCost = priceFor(toolId);
   if (creditCost == null) return json({ error: 'Not a PRO tool' }, 400);
 
+  // 0. Per-account rate limit. Stops a stolen key from draining a balance
+  // in the time it takes the legitimate owner to notice and revoke.
+  // 30 PRO runs in any 60-second window is well above human use but still
+  // bounds the worst-case loss to ~150 credits / minute (= $15 at our
+  // top-tier rate).
+  const recent = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM credit_events
+       WHERE user_id = ? AND kind = 'spend' AND created_at >= ?`,
+  )
+    .bind(user.id, Date.now() - 60_000)
+    .first<{ n: number }>();
+  if ((recent?.n ?? 0) >= 30) {
+    return json(
+      { error: 'Rate limit: too many PRO runs in the last minute' },
+      429,
+    );
+  }
+
   // 1. Reserve credits atomically. The INSERT only runs if the current
   //    ledger sum is sufficient. D1 serializes writes per-DB, so concurrent
   //    requests at the boundary are safe — only one will satisfy the WHERE.

@@ -148,7 +148,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   .cta-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
   .btn-primary, .btn-secondary { height: 36px; padding: 0 var(--space-4); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: var(--text-base); font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; border: 1px solid transparent; }
-  .btn-primary { background: var(--accent); color: var(--black); }
-  .btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border); }
-  .btn-primary:hover { background: var(--accent-hover); }
+  /* `.doc-section a` above sets every anchor in the section to
+     var(--accent-text) (amber). That collides with the amber button
+     background and makes the label invisible. Using `a.btn-*` raises
+     specificity above the section rule so the button text stays dark. */
+  a.btn-primary { background: var(--accent); color: var(--black); }
+  a.btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border); }
+  a.btn-primary:hover { background: var(--accent-hover); }
 </style>
