@@ -199,6 +199,26 @@ function tryParseJson(s: string): unknown {
   }
 }
 
+// 10 MB cap on vision inputs — bounds the per-run inference cost so a
+// malicious caller can't bypass the client check. Exported as
+// __readImageBytes for unit testing only.
+const IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+
+export function __readImageBytes(raw: RunnerInput): Uint8Array {
+  const v = (raw as Record<string, unknown>).imageBase64;
+  if (typeof v !== 'string' || v.length === 0) {
+    throw new Error('imageBase64 required');
+  }
+  if (v.length > Math.ceil(IMAGE_MAX_BYTES * 1.4)) {
+    throw new Error(`Image exceeds ${IMAGE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  const bytes = base64ToUint8Array(v);
+  if (bytes.length > IMAGE_MAX_BYTES) {
+    throw new Error(`Image exceeds ${IMAGE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  return bytes;
+}
+
 function base64ToUint8Array(b64: string): Uint8Array {
   // Strip data: prefix if present.
   const cleaned = b64.replace(/^data:[^;]+;base64,/, '');
