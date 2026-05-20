@@ -1,17 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { runPro } from '../../lib/pro-runner.js';
+import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 
 interface DetectedObject {
   label: string;
   score: number;
   box: { xmin: number; ymin: number; xmax: number; ymax: number };
-}
-
-async function fileToBase64(file: File): Promise<string> {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let binary = '';
-  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]!);
-  return btoa(binary);
 }
 
 export const detectObjects: ToolModule<Record<string, never>> = {

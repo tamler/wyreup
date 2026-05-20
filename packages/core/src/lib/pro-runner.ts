@@ -13,6 +13,20 @@ export interface ProRunError {
 }
 
 /**
+ * Read a File's bytes and base64-encode them. Chunked to avoid a
+ * RangeError from `String.fromCharCode` spread on large inputs.
+ */
+export async function fileToBase64(file: File): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+/**
  * POST to /api/tools/pro/run with credentials and parse the wrapped result.
  * Throws an Error whose message is the server's user-facing copy when
  * available (401, 402 insufficient credits, 429 rate limit, 502 model

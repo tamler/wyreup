@@ -1,18 +1,11 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { runPro } from '../../lib/pro-runner.js';
+import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 
 export interface ImageQandAParams {
   question: string;
 }
 
 export const defaultImageQandAParams: ImageQandAParams = { question: '' };
-
-async function fileToBase64(file: File): Promise<string> {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let binary = '';
-  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]!);
-  return btoa(binary);
-}
 
 export const imageQandA: ToolModule<ImageQandAParams> = {
   id: 'image-q-and-a',

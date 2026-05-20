@@ -1,12 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { runPro } from '../../lib/pro-runner.js';
-
-async function fileToBase64(file: File): Promise<string> {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let binary = '';
-  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]!);
-  return btoa(binary);
-}
+import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 
 export const imageDescribe: ToolModule<Record<string, never>> = {
   id: 'image-describe',

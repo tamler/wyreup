@@ -1,20 +1,15 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { runPro } from '../../lib/pro-runner.js';
+import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 
 export interface TranscribeAndTranslateParams {
   target: string;
+  language: string;
 }
 
 export const defaultTranscribeAndTranslateParams: TranscribeAndTranslateParams = {
   target: 'English',
+  language: 'en',
 };
-
-async function fileToBase64(file: File): Promise<string> {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  let binary = '';
-  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]!);
-  return btoa(binary);
-}
 
 export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = {
   id: 'transcribe-and-translate',
@@ -51,6 +46,24 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
       placeholder: 'English',
       help: 'The language to translate the transcript into.',
     },
+    language: {
+      type: 'enum',
+      label: 'spoken language',
+      help: 'Source language hint for transcription. "auto" works but is slower.',
+      options: [
+        { value: 'auto', label: 'auto-detect' },
+        { value: 'en', label: 'English' },
+        { value: 'es', label: 'Spanish' },
+        { value: 'fr', label: 'French' },
+        { value: 'de', label: 'German' },
+        { value: 'pt', label: 'Portuguese' },
+        { value: 'it', label: 'Italian' },
+        { value: 'ja', label: 'Japanese' },
+        { value: 'zh', label: 'Chinese' },
+        { value: 'ar', label: 'Arabic' },
+        { value: 'hi', label: 'Hindi' },
+      ],
+    },
   },
 
   async run(
@@ -64,7 +77,12 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
     const audioBase64 = await fileToBase64(inputs[0]!);
     const result = await runPro<{ translation: string; transcript: string; target: string }>(
       'transcribe-and-translate',
-      { audioBase64, target: params.target?.trim() || 'English', fileName: inputs[0]!.name },
+      {
+        audioBase64,
+        target: params.target?.trim() || 'English',
+        language: params.language || 'en',
+        fileName: inputs[0]!.name,
+      },
       ctx,
     );
     ctx.onProgress({ stage: 'done', percent: 100 });
