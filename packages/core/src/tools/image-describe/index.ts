@@ -6,7 +6,7 @@ export const imageDescribe: ToolModule<Record<string, never>> = {
   slug: 'image-describe',
   name: 'Describe Image (PRO)',
   description:
-    'Generates a concise description / alt-text for an image using a hosted vision model. Output is plain text. Uses 2 credits per run.',
+    'Generates a concise description / alt-text for an image using a hosted vision model. Output is plain text. Uses 1 credit per run.',
   category: 'export',
   keywords: ['describe', 'caption', 'alt-text', 'accessibility', 'pro', 'vision'],
 
@@ -21,7 +21,7 @@ export const imageDescribe: ToolModule<Record<string, never>> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

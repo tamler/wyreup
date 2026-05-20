@@ -25,7 +25,7 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
   name: 'Transcribe Audio (PRO)',
   description:
     'Hosted Whisper-large-v3 transcription — higher accuracy and better with' +
-    ' noisy or accented speech than the free in-browser version. Uses 5 credits per run.',
+    ' noisy or accented speech than the free in-browser version. Uses 3 credits per run.',
   category: 'export',
   keywords: [
     'transcribe',
@@ -59,7 +59,7 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 5,
+  creditCost: 3,
   memoryEstimate: 'low', // server does the heavy lifting
   // Browser only for now — server-side auth depends on the wyreup_session
   // cookie. CLI/MCP variants ship when ToolRunContext carries an API key.

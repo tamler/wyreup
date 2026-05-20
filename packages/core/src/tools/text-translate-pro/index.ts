@@ -15,7 +15,7 @@ export const textTranslatePro: ToolModule<TextTranslateProParams> = {
   slug: 'text-translate-pro',
   name: 'Translate (PRO)',
   description:
-    'Hosted Llama-class translation. Higher quality than browser-only models — particularly for less common language pairs. Uses 3 credits per run.',
+    'Hosted Llama-class translation. Higher quality than browser-only models — particularly for less common language pairs. Uses 2 credits per run.',
   category: 'text',
   keywords: ['translate', 'translation', 'language', 'pro', 'llm', 'hosted'],
 
@@ -30,7 +30,7 @@ export const textTranslatePro: ToolModule<TextTranslateProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 3,
+  creditCost: 2,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

@@ -12,7 +12,7 @@ export const translateImage: ToolModule<TranslateImageParams> = {
   slug: 'translate-image',
   name: 'Translate Image Text (PRO)',
   description:
-    'Extracts text from an image and translates it. Photograph a sign or document, get the translation. Uses 3 credits per run.',
+    'Extracts text from an image and translates it. Photograph a sign or document, get the translation. Uses 2 credits per run.',
   category: 'export',
   keywords: ['translate', 'image', 'ocr', 'sign', 'pro', 'vision'],
 
@@ -27,7 +27,7 @@ export const translateImage: ToolModule<TranslateImageParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 3,
+  creditCost: 2,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

@@ -15,7 +15,7 @@ export const textSummarizePro: ToolModule<TextSummarizeProParams> = {
   slug: 'text-summarize-pro',
   name: 'Summarize (PRO)',
   description:
-    'Higher-quality summarization powered by a hosted Llama-class model. Pairs well with transcribe-pro for "audio → notes" flows. Uses 3 credits per run.',
+    'Higher-quality summarization powered by a hosted Llama-class model. Pairs well with transcribe-pro for "audio → notes" flows. Uses 2 credits per run.',
   category: 'text',
   keywords: ['summarize', 'summary', 'tldr', 'pro', 'llm', 'hosted'],
 
@@ -30,7 +30,7 @@ export const textSummarizePro: ToolModule<TextSummarizeProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 3,
+  creditCost: 2,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

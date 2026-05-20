@@ -15,7 +15,7 @@ export const bgRemovePro: ToolModule<BgRemoveProParams> = {
   slug: 'bg-remove-pro',
   name: 'Background Remove (PRO)',
   description:
-    'Hosted large RMBG model — cleaner edges on hair, glass, and fine detail than the in-browser version. Output is a transparent PNG. Uses 4 credits per run.',
+    'Hosted large RMBG model — cleaner edges on hair, glass, and fine detail than the in-browser version. Output is a transparent PNG. Uses 3 credits per run.',
   category: 'edit',
   keywords: ['background', 'remove', 'rmbg', 'transparent', 'cutout', 'pro'],
 
@@ -30,7 +30,7 @@ export const bgRemovePro: ToolModule<BgRemoveProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 4,
+  creditCost: 3,
   memoryEstimate: 'low',
   surfaces: ['web'],
 

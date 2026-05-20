@@ -10,7 +10,7 @@ export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   slug: 'text-sentiment-pro',
   name: 'Sentiment (PRO)',
   description:
-    'Hosted LLM sentiment classification — handles sarcasm, mixed tone, and domain language the in-browser heuristic misses. Returns positive / negative / neutral. Uses 2 credits per run.',
+    'Hosted LLM sentiment classification — handles sarcasm, mixed tone, and domain language the in-browser heuristic misses. Returns positive / negative / neutral. Uses 1 credit per run.',
   category: 'text',
   keywords: ['sentiment', 'tone', 'classification', 'pro', 'llm', 'hosted'],
 
@@ -25,7 +25,7 @@ export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
 

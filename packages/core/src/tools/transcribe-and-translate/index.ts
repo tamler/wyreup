@@ -16,7 +16,7 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   slug: 'transcribe-and-translate',
   name: 'Transcribe & Translate (PRO)',
   description:
-    'Transcribes an audio file and translates the transcript in one step. Uses 6 credits per run.',
+    'Transcribes an audio file and translates the transcript in one step. Uses 5 credits per run.',
   category: 'export',
   keywords: ['transcribe', 'translate', 'audio', 'speech', 'pro', 'hosted'],
 
@@ -31,7 +31,7 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 6,
+  creditCost: 5,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

@@ -6,7 +6,7 @@ export const analyzeChart: ToolModule<Record<string, never>> = {
   slug: 'analyze-chart',
   name: 'Analyze Chart (PRO)',
   description:
-    'Reads a chart, graph, or diagram image and explains the data and main trend in plain text. Uses 2 credits per run.',
+    'Reads a chart, graph, or diagram image and explains the data and main trend in plain text. Uses 1 credit per run.',
   category: 'export',
   keywords: ['chart', 'graph', 'diagram', 'analyze', 'data', 'pro', 'vision'],
 
@@ -21,7 +21,7 @@ export const analyzeChart: ToolModule<Record<string, never>> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

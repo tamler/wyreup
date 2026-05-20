@@ -20,7 +20,7 @@ export const upscale2xPro: ToolModule<UpscaleProParams> = {
   slug: 'upscale-2x-pro',
   name: 'Upscale (PRO)',
   description:
-    'Hosted Real-ESRGAN upscale, 2× or 4×. Sharper edges, better fine detail than the in-browser variant — and faster on large inputs since the GPU does the heavy lifting. Uses 4 credits per run.',
+    'Hosted Real-ESRGAN upscale, 2× or 4×. Sharper edges, better fine detail than the in-browser variant — and faster on large inputs since the GPU does the heavy lifting. Uses 3 credits per run.',
   category: 'edit',
   keywords: ['upscale', 'enhance', 'real-esrgan', 'resolution', 'pro'],
 
@@ -35,7 +35,7 @@ export const upscale2xPro: ToolModule<UpscaleProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 4,
+  creditCost: 3,
   memoryEstimate: 'low',
   surfaces: ['web'],
 

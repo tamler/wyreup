@@ -7,7 +7,7 @@ export const ocrHq: ToolModule<Record<string, never>> = {
   slug: 'ocr-hq',
   name: 'OCR (PRO)',
   description:
-    'High-quality text extraction from images and scans, powered by a hosted vision model. Output is plain text — chains into translate, summarize, and other text tools. Uses 2 credits per run.',
+    'High-quality text extraction from images and scans, powered by a hosted vision model. Output is plain text — chains into translate, summarize, and other text tools. Uses 1 credit per run.',
   category: 'export',
   keywords: ['ocr', 'text', 'extract', 'scan', 'pro', 'vision', 'hosted'],
 
@@ -22,7 +22,7 @@ export const ocrHq: ToolModule<Record<string, never>> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

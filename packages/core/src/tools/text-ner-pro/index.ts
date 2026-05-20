@@ -15,7 +15,7 @@ export const textNerPro: ToolModule<TextNerProParams> = {
   slug: 'text-ner-pro',
   name: 'Named Entity Recognition (PRO)',
   description:
-    'Hosted LLM named-entity extraction — pulls people, organisations, places, dates, and money references with much better recall than browser models on long-form text. Uses 2 credits per run.',
+    'Hosted LLM named-entity extraction — pulls people, organisations, places, dates, and money references with much better recall than browser models on long-form text. Uses 1 credit per run.',
   category: 'text',
   keywords: ['ner', 'entities', 'extraction', 'people', 'orgs', 'pro', 'llm'],
 
@@ -30,7 +30,7 @@ export const textNerPro: ToolModule<TextNerProParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
 

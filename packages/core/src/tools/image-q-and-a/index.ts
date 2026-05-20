@@ -12,7 +12,7 @@ export const imageQandA: ToolModule<ImageQandAParams> = {
   slug: 'image-q-and-a',
   name: 'Ask About Image (PRO)',
   description:
-    'Ask a question about an image and get an answer from a hosted vision model. Uses 2 credits per run.',
+    'Ask a question about an image and get an answer from a hosted vision model. Uses 1 credit per run.',
   category: 'export',
   keywords: ['question', 'answer', 'vqa', 'image', 'ask', 'pro', 'vision'],
 
@@ -27,7 +27,7 @@ export const imageQandA: ToolModule<ImageQandAParams> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

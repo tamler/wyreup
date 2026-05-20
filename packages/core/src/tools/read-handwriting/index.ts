@@ -6,7 +6,7 @@ export const readHandwriting: ToolModule<Record<string, never>> = {
   slug: 'read-handwriting',
   name: 'Read Handwriting (PRO)',
   description:
-    'Transcribes handwritten text from an image using a hosted vision model. Output is plain text. Uses 2 credits per run.',
+    'Transcribes handwritten text from an image using a hosted vision model. Output is plain text. Uses 1 credit per run.',
   category: 'export',
   keywords: ['handwriting', 'handwritten', 'transcribe', 'ocr', 'pro', 'vision'],
 
@@ -21,7 +21,7 @@ export const readHandwriting: ToolModule<Record<string, never>> = {
   interactive: false,
   batchable: false,
   cost: 'credit',
-  creditCost: 2,
+  creditCost: 1,
   memoryEstimate: 'low',
   surfaces: ['web'],
   outputDisplay: 'prose',

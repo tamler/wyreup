@@ -6,22 +6,22 @@
 // entries in @wyreup/core.
 
 export const PRICING: Readonly<Record<string, number>> = {
-  'transcribe-pro': 5,
-  'text-summarize-pro': 3,
-  'text-translate-pro': 3,
-  'text-sentiment-pro': 2,
-  'text-ner-pro': 2,
-  'bg-remove-pro': 4,
-  'upscale-2x-pro': 4,
-  'text-redact-pro': 3,
-  'ocr-hq': 2,
-  'image-describe': 2,
-  'analyze-chart': 2,
-  'image-q-and-a': 2,
-  'read-handwriting': 2,
+  'transcribe-pro': 3,
+  'text-summarize-pro': 2,
+  'text-translate-pro': 2,
+  'text-sentiment-pro': 1,
+  'text-ner-pro': 1,
+  'bg-remove-pro': 3,
+  'upscale-2x-pro': 3,
+  'text-redact-pro': 2,
+  'ocr-hq': 1,
+  'image-describe': 1,
+  'analyze-chart': 1,
+  'image-q-and-a': 1,
+  'read-handwriting': 1,
   'detect-objects': 1,
-  'translate-image': 3,
-  'transcribe-and-translate': 6,
+  'translate-image': 2,
+  'transcribe-and-translate': 5,
 };
 
 export function priceFor(toolId: string): number | null {

@@ -11,14 +11,14 @@ import { hmacSha256Hex, nanoid, timingSafeEqualHex } from '../../_lib/crypto';
 // We do this lookup at the edge instead of trusting the webhook payload's
 // price/qty fields. variant_id → credits is the only signal we honor.
 function creditsForVariant(env: Env, variantId: string): number | null {
-  if (variantId === env.LS_VARIANT_STARTER) return 50;
-  if (variantId === env.LS_VARIANT_STANDARD) return 150;
-  if (variantId === env.LS_VARIANT_POWER) return 400;
+  if (variantId === env.LS_VARIANT_STARTER) return 150;
+  if (variantId === env.LS_VARIANT_STANDARD) return 330;
+  if (variantId === env.LS_VARIANT_POWER) return 680;
   return null;
 }
 
 // Single monthly plan today. If we add tiers, key off variant_id like packs.
-const MONTHLY_CREDITS_PER_CYCLE = 200;
+const MONTHLY_CREDITS_PER_CYCLE = 275;
 
 interface WebhookPayload {
   meta?: { event_name?: string; custom_data?: { userId?: string } };
