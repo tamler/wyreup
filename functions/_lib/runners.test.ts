@@ -71,6 +71,20 @@ describe('read-handwriting runner', () => {
   });
 });
 
+describe('detect-objects runner', () => {
+  it('returns detected objects sorted by score', async () => {
+    const env = aiEnv([
+      { score: 0.5, label: 'dog', box: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 } },
+      { score: 0.9, label: 'cat', box: { xmin: 2, ymin: 2, xmax: 3, ymax: 3 } },
+    ]);
+    const out = (await runPro('detect-objects', { imageBase64: TINY_PNG }, env)) as {
+      objects: { label: string; score: number }[];
+    };
+    expect(out.objects[0].label).toBe('cat');
+    expect(out.objects.length).toBe(2);
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });

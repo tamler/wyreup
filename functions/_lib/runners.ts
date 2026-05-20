@@ -18,7 +18,7 @@ import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
 import { chat } from './providers/text-models';
 import { transcribe as runTranscribe } from './providers/audio-models';
-import { visionPrompt } from './providers/vision-models';
+import { visionPrompt, detectObjects } from './providers/vision-models';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -51,6 +51,7 @@ const RUNNERS: Record<string, Runner> = {
   'analyze-chart': analyzeChart,
   'image-q-and-a': imageQandA,
   'read-handwriting': readHandwriting,
+  'detect-objects': detectObjectsPro,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -209,6 +210,21 @@ async function readHandwriting(raw: RunnerInput, env: Env): Promise<RunnerOutput
     'This image contains handwritten text. Transcribe the handwriting as accurately as possible, preserving line breaks. If a word is illegible, write [illegible]. Return ONLY the transcription.',
   );
   return { text };
+}
+
+async function detectObjectsPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const found = await detectObjects(env, image);
+  // Highest-confidence first; round scores for a clean UI / chainable JSON.
+  const objects = found
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .map((o) => ({
+      label: o.label,
+      score: Math.round(o.score * 1000) / 1000,
+      box: o.box,
+    }));
+  return { objects, count: objects.length };
 }
 
 async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
