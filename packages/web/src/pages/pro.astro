@@ -1,114 +1,180 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProBadge from '../components/ProBadge.svelte';
+import ProSignup from '../components/ProSignup.svelte';
+
+// Pro tool catalog, grouped for the page. Credit costs mirror the
+// server-authoritative table in functions/_lib/pricing.ts.
+const catalog = [
+  {
+    group: 'Document & image reading',
+    tools: [
+      { name: 'OCR', desc: 'Pull text out of photos, screenshots, and scans.', cost: 1 },
+      { name: 'Read handwriting', desc: 'Transcribe handwritten notes and forms.', cost: 1 },
+      { name: 'Describe image', desc: 'Plain-language alt-text for any image.', cost: 1 },
+      { name: 'Analyze chart', desc: 'Read a chart or graph and explain the data.', cost: 1 },
+      { name: 'Ask about an image', desc: 'Ask a question, get an answer from the picture.', cost: 1 },
+      { name: 'Detect objects', desc: 'Find and label objects, with bounding boxes.', cost: 1 },
+      { name: 'Translate image text', desc: 'Photograph foreign text, get the translation.', cost: 2 },
+    ],
+  },
+  {
+    group: 'Audio',
+    tools: [
+      { name: 'Transcribe', desc: 'Large-model transcription — accurate on noisy, accented speech.', cost: 3 },
+      { name: 'Transcribe & translate', desc: 'Audio in, translated transcript out, one step.', cost: 5 },
+    ],
+  },
+  {
+    group: 'Text',
+    tools: [
+      { name: 'Summarize', desc: 'Tight summaries of long or messy text.', cost: 2 },
+      { name: 'Translate', desc: 'High-quality translation, including rare language pairs.', cost: 2 },
+      { name: 'Redact PII', desc: 'Strip names, emails, and IDs — even free-form mentions.', cost: 2 },
+      { name: 'Sentiment', desc: 'Tone classification that handles sarcasm and mixed signals.', cost: 1 },
+      { name: 'Named entities', desc: 'Pull people, orgs, places, dates, and money.', cost: 1 },
+    ],
+  },
+  {
+    group: 'Image editing',
+    tools: [
+      { name: 'Background remove', desc: 'Clean cutouts — hair, glass, fine detail.', cost: 3 },
+      { name: 'Upscale', desc: 'Sharpen and enlarge images 2× or 4×.', cost: 3 },
+    ],
+  },
+];
+
+const packs = [
+  { credits: 150, price: '$5' },
+  { credits: 330, price: '$10', featured: true },
+  { credits: 680, price: '$20' },
+];
 ---
 
 <BaseLayout
-  title="Wyreup PRO — credits for hosted-model tools"
-  description="Free tools stay free. PRO unlocks hosted-model variants — transcribe, summarize, translate, upscale, background-remove — with credits that never expire."
+  title="Wyreup PRO — hosted-AI tools, pay only for what you run"
+  description="Sign up free in one step. PRO unlocks OCR, transcription, translation, image understanding and more — most tools cost 1–2 credits. Packs from $5, or $8/mo."
 >
-  <article class="pro-page">
+  <article class="pro">
+    <!-- Hero -->
     <header class="hero">
-      <div class="hero__chip">
-        <ProBadge />
-        <span>Wyreup PRO</span>
-      </div>
-      <h1>The free tier stays free.<br />PRO is the rest.</h1>
+      <div class="hero__chip"><ProBadge /><span>Wyreup PRO</span></div>
+      <h1>Hosted-AI tools.<br />Pay only for what you run.</h1>
       <p class="hero__sub">
-        Everything that can reasonably run in your browser is — and stays —
-        free. PRO is the credits-based tier for tools that genuinely need
-        a GPU we can't put in your tab.
+        Every tool that runs in your browser is free, forever. PRO adds the
+        AI tools that need real servers — OCR, transcription, translation,
+        image understanding. Most cost just 1–2 credits a run, and failed
+        runs refund automatically.
       </p>
-      <div class="hero__cta">
-        <button
-          type="button"
-          class="primary"
-          onclick="window.dispatchEvent(new Event('wyreup:auth-open'))"
-        >
-          Get an API key
-        </button>
-        <a href="/legal/pricing" class="secondary">See pricing</a>
-      </div>
     </header>
 
-    <section class="grid">
-      <div class="card">
-        <h2>Free, forever</h2>
-        <p>
-          Compression, format conversion, PDF editing, image work,
-          audio utilities, code & data helpers — everything that runs
-          in-browser. No account. No upload. No tracking.
-        </p>
+    <!-- Signup — the one-step path -->
+    <section class="signup-section">
+      <ProSignup client:load />
+      <p class="signup-note">
+        Free to create. No password, no card. You only pay if you buy credits.
+      </p>
+    </section>
+
+    <!-- Why -->
+    <section class="why">
+      <div class="why__card">
+        <h2>Free stays free</h2>
+        <p>Compression, PDF, image and audio tools, code &amp; data helpers — all in-browser, no account, no upload, no tracking.</p>
       </div>
-      <div class="card">
-        <h2>Buy packs or subscribe</h2>
-        <p>
-          Pay-as-you-go packs (credits never expire) or an $8/mo plan
-          (200 credits per cycle). Use them in the browser, the CLI, or
-          from an AI agent (MCP) — same key, same balance.
-        </p>
+      <div class="why__card">
+        <h2>Failed runs auto-refund</h2>
+        <p>If a hosted model errors, the credits go straight back to your balance. No ticket, no waiting.</p>
       </div>
-      <div class="card">
-        <h2>Failed runs are auto-refunded</h2>
-        <p>
-          If a hosted model errors, the credits go straight back to
-          your balance — no support ticket needed. The platform's
-          built around an append-only credit ledger.
-        </p>
-      </div>
-      <div class="card">
+      <div class="why__card">
         <h2>Same privacy posture</h2>
-        <p>
-          We don't retain your inputs or outputs after a PRO run.
-          Tool metadata (which tool, when, file name) is kept for
-          your run history; the content is not.
-        </p>
+        <p>We don't keep your inputs or outputs after a PRO run. Only run metadata (which tool, when) for your history.</p>
+      </div>
+      <div class="why__card">
+        <h2>One key, everywhere</h2>
+        <p>Browser, CLI, and AI agents (MCP) all draw from the same balance with the same key.</p>
       </div>
     </section>
 
-    <section class="what">
-      <h2>What's in PRO right now</h2>
-      <table>
-        <thead>
-          <tr><th>Tool</th><th>What it does</th><th>Credits</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Transcribe</td><td>Whisper-large-v3 hosted (vs. our in-browser whisper-tiny)</td><td>5</td></tr>
-          <tr><td>Background remove</td><td>Large RMBG model — cleaner edges, hair, glass</td><td>4</td></tr>
-          <tr><td>Upscale 2×</td><td>Large Real-ESRGAN variant</td><td>4</td></tr>
-          <tr><td>Summarize</td><td>Llama-class model — long, structured content</td><td>3</td></tr>
-          <tr><td>Translate</td><td>Same model — high-quality translation</td><td>3</td></tr>
-          <tr><td>Redact PII</td><td>LLM-driven PII detection</td><td>3</td></tr>
-          <tr><td>Sentiment</td><td>Higher-accuracy sentiment than the in-browser heuristic</td><td>2</td></tr>
-          <tr><td>Named-entity recognition</td><td>LLM NER</td><td>2</td></tr>
-        </tbody>
-      </table>
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+      <h2 class="section-title">Simple credit pricing</h2>
+      <p class="section-lead">
+        Buy a pack once (credits never expire) or subscribe monthly. Most
+        tools cost 1–2 credits — a starter pack covers roughly 150 image
+        reads, 75 text jobs, or 50 transcriptions.
+      </p>
+
+      <div class="packs">
+        {packs.map((p) => (
+          <div class={`pack${p.featured ? ' pack--featured' : ''}`}>
+            {p.featured && <span class="pack__tag">Best value</span>}
+            <div class="pack__credits">{p.credits}</div>
+            <div class="pack__label">credits</div>
+            <div class="pack__price">{p.price}</div>
+          </div>
+        ))}
+      </div>
+      <div class="packs packs--single">
+        <div class="pack pack--monthly">
+          <span class="pack__tag">Subscription</span>
+          <div class="pack__credits">275</div>
+          <div class="pack__label">credits / month</div>
+          <div class="pack__price">$8 / mo</div>
+        </div>
+      </div>
+      <p class="pricing-fine">
+        Pack credits never expire. The monthly plan grants 275 credits each
+        cycle into the same balance; cancel anytime. Buy from your account
+        in two clicks once you're signed in.
+      </p>
     </section>
 
+    <!-- Catalog -->
+    <section class="catalog">
+      <h2 class="section-title">What PRO unlocks</h2>
+      {catalog.map((g) => (
+        <div class="cat-group">
+          <h3 class="cat-group__name">{g.group}</h3>
+          <ul class="cat-list">
+            {g.tools.map((t) => (
+              <li class="cat-item">
+                <div class="cat-item__main">
+                  <span class="cat-item__name">{t.name}</span>
+                  <span class="cat-item__desc">{t.desc}</span>
+                </div>
+                <span class="cat-item__cost">{t.cost} {t.cost === 1 ? 'credit' : 'credits'}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+
+    <!-- How -->
     <section class="how">
-      <h2>How it works</h2>
+      <h2 class="section-title">How it works</h2>
       <ol>
-        <li><strong>Get a key.</strong> One click, email-delivered. Free to create — you only pay when you buy credits.</li>
-        <li><strong>Pick a PRO tool.</strong> It shows a <ProBadge cost={5} /> chip with the credit cost up front.</li>
-        <li><strong>Run.</strong> Credits deduct on success. Failed runs refund automatically.</li>
-        <li><strong>Need more?</strong> Buy a top-up pack, or switch to the $8/mo plan for a steady 200 credits per cycle.</li>
+        <li><strong>Sign up.</strong> One field, instant — you're signed in right away.</li>
+        <li><strong>Add credits.</strong> Pick a pack or the monthly plan. Payment is handled by Lemon Squeezy; we never see your card.</li>
+        <li><strong>Run any PRO tool.</strong> Each shows its credit cost up front. Credits deduct on success; failed runs refund automatically.</li>
       </ol>
     </section>
 
+    <!-- Self-host -->
     <section class="self-host">
       <h2>Don't want a hosted tier at all?</h2>
       <p>
-        Wyreup is MIT-licensed. Run <code>@wyreup/core</code> entirely on
-        your own infrastructure — the PRO tier exists because hosted GPU
-        inference has a per-call cost, not because the free tools are
-        crippled.
+        Wyreup is MIT-licensed. Run <code>@wyreup/core</code> entirely on your
+        own infrastructure. PRO exists because hosted AI inference has a
+        real per-call cost — not because the free tools are limited.
       </p>
     </section>
   </article>
 </BaseLayout>
 
 <style>
-  .pro-page {
+  .pro {
     max-width: 880px;
     margin: 0 auto;
     padding: var(--space-6) var(--space-4) var(--space-12);
@@ -118,7 +184,7 @@ import ProBadge from '../components/ProBadge.svelte';
 
   .hero {
     text-align: center;
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-8);
   }
   .hero__chip {
     display: inline-flex;
@@ -131,122 +197,199 @@ import ProBadge from '../components/ProBadge.svelte';
   }
   .hero h1 {
     font-size: var(--text-3xl, 36px);
-    line-height: 1.2;
+    line-height: 1.15;
     margin: 0 0 var(--space-3);
-    color: var(--text-primary);
   }
   .hero__sub {
-    max-width: 580px;
-    margin: 0 auto var(--space-5);
+    max-width: 600px;
+    margin: 0 auto;
     font-size: var(--text-md);
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .signup-section {
+    margin-bottom: var(--space-10);
+  }
+  .signup-note {
+    text-align: center;
+    margin: var(--space-3) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .section-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin: 0 0 var(--space-2);
+    text-align: center;
+  }
+  .section-lead {
+    max-width: 560px;
+    margin: 0 auto var(--space-5);
+    text-align: center;
+    font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.5;
   }
-  .hero__cta {
-    display: inline-flex;
-    gap: var(--space-3);
-    align-items: center;
-  }
 
-  .primary,
-  .secondary {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    padding: var(--space-3) var(--space-5);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    text-decoration: none;
-    border: 1px solid transparent;
-  }
-  .primary {
-    background: var(--accent);
-    color: var(--text-on-accent, #000);
-    border-color: var(--accent);
-  }
-  .primary:hover {
-    background: var(--accent-hover);
-  }
-  .secondary {
-    background: transparent;
-    color: var(--text-primary);
-    border-color: var(--border);
-  }
-  .secondary:hover {
-    border-color: var(--accent);
-    color: var(--accent-text);
-  }
-
-  .grid {
+  .why {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
+    gap: var(--space-3);
     margin-bottom: var(--space-10);
   }
   @media (max-width: 640px) {
-    .grid {
+    .why {
       grid-template-columns: 1fr;
     }
   }
-  .card {
+  .why__card {
     padding: var(--space-5);
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
   }
-  .card h2 {
+  .why__card h2 {
     margin: 0 0 var(--space-2);
     font-size: var(--text-md);
     font-weight: 600;
   }
-  .card p {
+  .why__card p {
     margin: 0;
     font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.5;
   }
 
-  .what {
+  .pricing {
     margin-bottom: var(--space-10);
   }
-  .what h2 {
+  .packs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
     margin: 0 0 var(--space-3);
-    font-size: var(--text-lg);
+  }
+  .packs--single {
+    grid-template-columns: minmax(0, 240px);
+    justify-content: center;
+  }
+  @media (max-width: 560px) {
+    .packs {
+      grid-template-columns: 1fr;
+    }
+  }
+  .pack {
+    position: relative;
+    padding: var(--space-5) var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    text-align: center;
+  }
+  .pack--featured,
+  .pack--monthly {
+    border-color: var(--accent);
+  }
+  .pack__tag {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+  .pack__credits {
+    font-family: var(--font-mono);
+    font-size: 32px;
     font-weight: 600;
   }
-  .what table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--text-sm);
-  }
-  .what th,
-  .what td {
-    text-align: left;
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .what th {
+  .pack__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
     color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pack__price {
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+  }
+  .pricing-fine {
+    max-width: 560px;
+    margin: var(--space-4) auto 0;
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    line-height: 1.5;
+  }
+
+  .catalog {
+    margin-bottom: var(--space-10);
+  }
+  .cat-group {
+    margin-bottom: var(--space-5);
+  }
+  .cat-group__name {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-2);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .what td:last-child {
-    text-align: right;
+  .cat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .cat-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
+  }
+  .cat-item__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cat-item__name {
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .cat-item__desc {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .cat-item__cost {
+    flex-shrink: 0;
     font-family: var(--font-mono);
+    font-size: var(--text-xs);
     color: var(--accent-text);
+    white-space: nowrap;
   }
 
   .how {
     margin-bottom: var(--space-10);
   }
-  .how h2 {
-    margin: 0 0 var(--space-3);
-    font-size: var(--text-lg);
-    font-weight: 600;
-  }
   .how ol {
+    max-width: 600px;
+    margin: 0 auto;
     padding-left: var(--space-5);
     color: var(--text-muted);
     line-height: 1.6;

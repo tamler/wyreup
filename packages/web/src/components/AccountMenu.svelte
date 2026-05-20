@@ -12,10 +12,6 @@
   let menuOpen = false;
   let rootEl: HTMLDivElement | null = null;
 
-  function openAuth() {
-    window.dispatchEvent(new Event('wyreup:auth-open'));
-  }
-
   function toggleMenu() {
     menuOpen = !menuOpen;
   }
@@ -74,7 +70,7 @@
       </div>
     {/if}
   {:else}
-    <button type="button" class="get-pro" on:click={openAuth}>Get PRO</button>
+    <a href="/pro" class="get-pro">Get PRO</a>
   {/if}
 </div>
 
@@ -98,11 +94,14 @@
     color: var(--text-primary);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 4px 10px;
+    padding: 0 10px;
     cursor: pointer;
     transition: border-color var(--duration-instant) var(--ease-sharp);
     line-height: 1;
     height: 26px;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
   .get-pro:hover {
     border-color: var(--accent);

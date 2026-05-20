@@ -4,12 +4,13 @@
 import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
 import { json } from '../../_lib/auth';
-import { generateApiKey, nanoid, sha256hex } from '../../_lib/crypto';
+import { generateApiKey, nanoid, sha256hex, signSessionCookie } from '../../_lib/crypto';
 import { existingAccountNoticeEmail, sendEmail, welcomeEmail } from '../../_lib/email';
 
 const EMAIL_LIMIT_PER_DAY = 5;
 const IP_LIMIT_PER_DAY = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const SESSION_MAX_AGE_SECONDS = 24 * 60 * 60;
 
 interface CreateBody {
   email?: unknown;
@@ -101,14 +102,35 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: 'Could not deliver welcome email — please retry' }, 502);
   }
 
-  return json({
-    status: 'created',
-    keyPreview,
-    // Raw key is returned ONLY for the browser surface so the create-modal
-    // can show it once. CLI/MCP must get it from email.
-    ...(surface === 'browser' ? { rawKey } : {}),
-    emailDelivered: sent.ok,
-  });
+  // Browser surface: sign the user in immediately by setting the same
+  // HMAC-signed, HttpOnly session cookie that /api/account/verify issues.
+  // No email-verification gate — a fresh account has 0 credits, so an
+  // unverified address cannot cost anything; the emailed key remains the
+  // durable credential for CLI/MCP and for sessions beyond 24h.
+  if (surface === 'browser') {
+    const exp = now + SESSION_MAX_AGE_SECONDS * 1000;
+    const cookie = await signSessionCookie(
+      { uid: userId, kid: keyId, exp },
+      env.SESSION_SECRET,
+    );
+    return json(
+      { status: 'created', keyPreview, rawKey, emailDelivered: sent.ok },
+      200,
+      {
+        'Set-Cookie': [
+          `wyreup_session=${cookie}`,
+          `Path=/`,
+          `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
+          `HttpOnly`,
+          `Secure`,
+          `SameSite=Lax`,
+        ].join('; '),
+      },
+    );
+  }
+
+  // CLI/MCP: key is delivered by email only.
+  return json({ status: 'created', keyPreview, emailDelivered: sent.ok });
 };
 
 function isValidEmail(s: string): boolean {
