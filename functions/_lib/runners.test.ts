@@ -22,6 +22,16 @@ describe('ocr-hq runner', () => {
   });
 });
 
+describe('image-describe runner', () => {
+  it('returns a description', async () => {
+    const env = aiEnv({ response: 'A red bicycle leaning on a wall.' });
+    const out = (await runPro('image-describe', { imageBase64: TINY_PNG }, env)) as {
+      description: string;
+    };
+    expect(out.description).toBe('A red bicycle leaning on a wall.');
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });

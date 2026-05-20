@@ -15,6 +15,7 @@ export const PRICING: Readonly<Record<string, number>> = {
   'upscale-2x-pro': 4,
   'text-redact-pro': 3,
   'ocr-hq': 2,
+  'image-describe': 2,
 };
 
 export function priceFor(toolId: string): number | null {

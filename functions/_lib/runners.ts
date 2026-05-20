@@ -47,6 +47,7 @@ const RUNNERS: Record<string, Runner> = {
   'bg-remove-pro': bgRemovePro,
   'upscale-2x-pro': upscalePro,
   'ocr-hq': ocrHq,
+  'image-describe': imageDescribe,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -165,6 +166,16 @@ async function upscalePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
 // ────────────────────────────────────────────────────────────────────────
 // Vision tools — Workers AI vision model via the vision-models wrapper
 // ────────────────────────────────────────────────────────────────────────
+
+async function imageDescribe(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const description = await visionPrompt(
+    env,
+    image,
+    'Describe this image in 1-3 clear sentences suitable as alt-text. Be factual and concise. Return ONLY the description.',
+  );
+  return { description };
+}
 
 async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const image = __readImageBytes(raw);
