@@ -8,7 +8,7 @@
   // trigger it by dispatching `window.dispatchEvent(new Event('wyreup:auth-open'))`.
 
   import { onMount } from 'svelte';
-  import { activate } from '../stores/user';
+  import { activate, hydrateUser } from '../stores/user';
 
   type Screen = 'closed' | 'activate' | 'create' | 'created';
 
@@ -23,9 +23,12 @@
   let firstFocusEl: HTMLInputElement | null = null;
 
   function open() {
-    screen = 'activate';
+    // Default to sign-up — the common case for someone hitting a PRO
+    // tool without an account. Returning key-holders use the activate link.
+    screen = 'create';
     error = '';
     keyInput = '';
+    emailInput = '';
     setTimeout(() => firstFocusEl?.focus(), 30);
   }
 
@@ -86,7 +89,10 @@
         return;
       }
       if (data.rawKey) {
+        // The server set the session cookie — the user is already signed
+        // in. Hydrate the store so the rest of the UI reflects it.
         createdKey = data.rawKey;
+        await hydrateUser();
         screen = 'created';
         return;
       }
@@ -106,11 +112,6 @@
     } catch {
       /* clipboard blocked — user can still select manually */
     }
-  }
-
-  async function activateFromCreated() {
-    keyInput = createdKey;
-    await onActivate();
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -199,18 +200,18 @@
           </div>
         </form>
       {:else if screen === 'created'}
-        <h2 id="auth-modal-title">Save your key</h2>
+        <h2 id="auth-modal-title">You're in</h2>
         <p class="hint">
-          This is the only time it will be shown in the browser. We've also emailed
-          it to you — close this and check your inbox if you'd rather.
+          Your account is ready and you're signed in. Here's your API key
+          for the CLI and MCP — we've emailed it to you as well.
         </p>
         <div class="key-display" tabindex="0">{createdKey}</div>
         <div class="row">
           <button type="button" class="primary" on:click={copyKey}>
             {createdKeyCopied ? 'Copied' : 'Copy key'}
           </button>
-          <button type="button" class="secondary" on:click={activateFromCreated}>
-            Activate now
+          <button type="button" class="secondary" on:click={close}>
+            Done
           </button>
         </div>
       {/if}
