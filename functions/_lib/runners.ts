@@ -48,6 +48,7 @@ const RUNNERS: Record<string, Runner> = {
   'upscale-2x-pro': upscalePro,
   'ocr-hq': ocrHq,
   'image-describe': imageDescribe,
+  'analyze-chart': analyzeChart,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -166,6 +167,16 @@ async function upscalePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
 // ────────────────────────────────────────────────────────────────────────
 // Vision tools — Workers AI vision model via the vision-models wrapper
 // ────────────────────────────────────────────────────────────────────────
+
+async function analyzeChart(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const analysis = await visionPrompt(
+    env,
+    image,
+    'This image is a chart, graph, or diagram. Identify the chart type, then summarize the data and the main trend or takeaway in plain text. List key data points if readable. Return ONLY the analysis.',
+  );
+  return { analysis };
+}
 
 async function imageDescribe(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const image = __readImageBytes(raw);

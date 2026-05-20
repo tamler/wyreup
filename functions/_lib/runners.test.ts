@@ -32,6 +32,16 @@ describe('image-describe runner', () => {
   });
 });
 
+describe('analyze-chart runner', () => {
+  it('returns an analysis', async () => {
+    const env = aiEnv({ response: 'Bar chart: sales rose Q1 to Q4.' });
+    const out = (await runPro('analyze-chart', { imageBase64: TINY_PNG }, env)) as {
+      analysis: string;
+    };
+    expect(out.analysis).toBe('Bar chart: sales rose Q1 to Q4.');
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });
