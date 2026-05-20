@@ -74,18 +74,7 @@ const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
 
 async function transcribePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const input = raw as TranscribeInput;
-  if (typeof input.audioBase64 !== 'string' || input.audioBase64.length === 0) {
-    throw new Error('audioBase64 required');
-  }
-  // Cheap upper bound check before base64 decode (base64 is ~4/3 raw size).
-  if (input.audioBase64.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
-    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
-  }
-  const bytes = base64ToUint8Array(input.audioBase64);
-  if (bytes.length > TRANSCRIBE_MAX_BYTES) {
-    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
-  }
-
+  const bytes = __readAudioBytes(raw);
   return runTranscribe(env, { bytes, language: input.language });
 }
 
@@ -272,16 +261,7 @@ async function transcribeAndTranslate(
   env: Env,
 ): Promise<RunnerOutput> {
   const input = raw as TranscribeInput;
-  if (typeof input.audioBase64 !== 'string' || input.audioBase64.length === 0) {
-    throw new Error('audioBase64 required');
-  }
-  if (input.audioBase64.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
-    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
-  }
-  const bytes = base64ToUint8Array(input.audioBase64);
-  if (bytes.length > TRANSCRIBE_MAX_BYTES) {
-    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
-  }
+  const bytes = __readAudioBytes(raw);
   const rawTarget = (raw as Record<string, unknown>).target;
   const target =
     typeof rawTarget === 'string' && rawTarget.trim().length > 0
@@ -358,6 +338,25 @@ export function __readImageBytes(raw: RunnerInput): Uint8Array {
   const bytes = base64ToUint8Array(v);
   if (bytes.length > IMAGE_MAX_BYTES) {
     throw new Error(`Image exceeds ${IMAGE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  return bytes;
+}
+
+// Decodes the base64 `audioBase64` field and enforces the two-phase
+// TRANSCRIBE_MAX_BYTES cap. Shared by transcribePro and transcribeAndTranslate.
+// Exported as __readAudioBytes for unit testing only.
+export function __readAudioBytes(raw: RunnerInput): Uint8Array {
+  const v = (raw as Record<string, unknown>).audioBase64;
+  if (typeof v !== 'string' || v.length === 0) {
+    throw new Error('audioBase64 required');
+  }
+  // Cheap upper bound check before base64 decode (base64 is ~4/3 raw size).
+  if (v.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  const bytes = base64ToUint8Array(v);
+  if (bytes.length > TRANSCRIBE_MAX_BYTES) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
   return bytes;
 }

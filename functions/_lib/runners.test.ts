@@ -114,6 +114,7 @@ describe('transcribe-and-translate runner', () => {
       .mockResolvedValueOnce({ text: 'Bonjour le monde' }) // whisper
       .mockResolvedValueOnce({ response: 'Hello world' }); // translate
     const env = { AI: { run } } as unknown as import('./env').Env;
+    // 'QUJD' = base64 of "ABC" — any non-empty payload works; AI.run is mocked.
     const out = (await runPro(
       'transcribe-and-translate',
       { audioBase64: 'QUJD', target: 'English' },
