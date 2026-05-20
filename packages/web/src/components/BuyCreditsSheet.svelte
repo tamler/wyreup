@@ -4,7 +4,7 @@
   // the webhook land.
 
   import { createEventDispatcher, onDestroy } from 'svelte';
-  import { refreshBalance } from '../stores/user';
+  import { refreshBalance, user } from '../stores/user';
 
   // LS overlay — loaded on demand the first time the user clicks Buy.
   // Avoids paying the script cost on page loads where the user never
@@ -42,12 +42,14 @@
 
   const dispatch = createEventDispatcher<{ close: void; success: void }>();
 
-  type Pack = 'starter' | 'standard' | 'power';
+  type Pack = 'starter' | 'standard' | 'power' | 'monthly';
   const PACKS: { id: Pack; credits: number; price: string; tag?: string }[] = [
     { id: 'starter', credits: 50, price: '$4.99' },
     { id: 'standard', credits: 150, price: '$9.99', tag: 'Best value' },
     { id: 'power', credits: 400, price: '$19.99' },
   ];
+
+  $: hasActiveSubscription = $user?.subscriptionStatus === 'active';
 
   let busy: Pack | null = null;
   let error = '';
@@ -175,8 +177,8 @@
     <button type="button" class="close" aria-label="Close" on:click={close}>×</button>
     <h2 id="buy-credits-title">Buy credits</h2>
     <p class="hint">
-      Credits never expire. One-time purchase, no subscription. Payment is processed
-      by Lemon Squeezy — we never see your card.
+      Pay-as-you-go credits never expire. Payment is processed by Lemon
+      Squeezy — we never see your card.
     </p>
 
     <div class="cards">
@@ -200,6 +202,39 @@
         </button>
       {/each}
     </div>
+
+    <div class="divider"><span>or subscribe</span></div>
+
+    <button
+      type="button"
+      class="monthly"
+      on:click={() => buy('monthly')}
+      disabled={busy !== null || hasActiveSubscription}
+      aria-label={hasActiveSubscription
+        ? 'You already have an active monthly subscription'
+        : 'Subscribe — 200 credits per month for $8'}
+    >
+      <div class="monthly__main">
+        <span class="monthly__title">Monthly · 200 credits</span>
+        <span class="monthly__sub">
+          200 credits granted each month. Renews automatically; cancel
+          anytime in your Lemon Squeezy receipt. If you run out before
+          the next grant, buy a pack or wait for the next cycle.
+        </span>
+      </div>
+      <div class="monthly__right">
+        <span class="monthly__price">$8<span class="monthly__per">/mo</span></span>
+        <span class="cta">
+          {#if hasActiveSubscription}
+            Active
+          {:else if busy === 'monthly'}
+            Opening…
+          {:else}
+            Subscribe
+          {/if}
+        </span>
+      </div>
+    </button>
 
     {#if error}
       <p class="error" role="alert">{error}</p>
@@ -339,5 +374,79 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--text-muted);
+  }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .monthly {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color var(--duration-instant) var(--ease-sharp);
+  }
+  .monthly:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  .monthly:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .monthly__main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .monthly__title {
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .monthly__sub {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .monthly__right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .monthly__price {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl, 28px);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .monthly__per {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    font-weight: 400;
   }
 </style>

@@ -14,10 +14,12 @@ SESSION_SECRET=""
 LS_API_KEY=""
 LS_STORE_ID=""
 LS_WEBHOOK_SECRET=""
-# Variant IDs from LS after you create the 3 credit-pack products.
+# Variant IDs from LS after you create the 3 credit-pack products
+# and the $8/mo subscription product.
 LS_VARIANT_STARTER=""
 LS_VARIANT_STANDARD=""
 LS_VARIANT_POWER=""
+LS_VARIANT_MONTHLY=""
 
 # ZeptoMail (Zoho transactional) ----------------------------------------
 # Token from Zoho → Mail Agents → API. Format starts "Zoho-enczapikey ..."

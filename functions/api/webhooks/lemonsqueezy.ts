@@ -1,7 +1,8 @@
 // POST /api/webhooks/lemonsqueezy
 // Constant-time HMAC verify; idempotent insert via UNIQUE(ls_order_id).
-// Handles `order_created` (purchase) and `order_refunded`.
-// See docs/pro-auth-spec.md §11.
+// Handles order_created/order_refunded for one-time packs and
+// subscription_created / _payment_success / _cancelled / _expired /
+// _paused for the monthly plan. See docs/pro-auth-spec.md §11.
 
 import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
@@ -16,13 +17,20 @@ function creditsForVariant(env: Env, variantId: string): number | null {
   return null;
 }
 
+// Single monthly plan today. If we add tiers, key off variant_id like packs.
+const MONTHLY_CREDITS_PER_CYCLE = 200;
+
 interface WebhookPayload {
   meta?: { event_name?: string; custom_data?: { userId?: string } };
   data?: {
     id?: string | number;
+    type?: string;
     attributes?: {
       status?: string;
       first_order_item?: { variant_id?: string | number };
+      // subscription event fields
+      variant_id?: string | number;
+      subscription_id?: string | number;
     };
   };
 }
@@ -65,6 +73,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // order_created --------------------------------------------------------
   if (event === 'order_created' && payload.data?.attributes?.status === 'paid') {
     const variantId = String(payload.data.attributes.first_order_item?.variant_id ?? '');
+    // LS fires order_created for subscription sign-ups too. Credits for
+    // those flow through subscription_payment_success — ack and skip
+    // here so the order-pack path doesn't 400 on a known variant.
+    if (env.LS_VARIANT_MONTHLY && variantId === env.LS_VARIANT_MONTHLY) {
+      return new Response('OK');
+    }
     const credits = creditsForVariant(env, variantId);
     if (!credits) return new Response('Unknown variant', { status: 400 });
 
@@ -111,6 +125,116 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       )
       .run();
 
+    return new Response('OK');
+  }
+
+  // subscription_created -------------------------------------------------
+  // Record the LS subscription id on the user. Credits are NOT granted
+  // here — the first paid invoice fires subscription_payment_success
+  // immediately after and grants there. Validates variant matches the
+  // configured monthly plan to reject unrelated subscription products.
+  if (event === 'subscription_created') {
+    const variantId = String(payload.data?.attributes?.variant_id ?? '');
+    if (!env.LS_VARIANT_MONTHLY || variantId !== env.LS_VARIANT_MONTHLY) {
+      return new Response('Unknown subscription variant', { status: 400 });
+    }
+    const status = payload.data?.attributes?.status ?? 'active';
+    await env.DB.prepare(
+      `UPDATE users
+          SET ls_subscription_id = ?,
+              subscription_status = ?
+        WHERE id = ?`,
+    )
+      .bind(orderId, status, userId)
+      .run();
+    return new Response('OK');
+  }
+
+  // subscription_payment_success -----------------------------------------
+  // Fires on the initial invoice and every renewal. Grants credits
+  // idempotently via UNIQUE(ls_order_id) keyed by invoice id. Also
+  // upserts the subscription on the user in case events arrived out of
+  // order (payment_success before subscription_created).
+  if (event === 'subscription_payment_success') {
+    const subscriptionId = String(payload.data?.attributes?.subscription_id ?? '');
+    if (!subscriptionId) return new Response('Missing subscription id', { status: 400 });
+
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO credit_events
+         (id, user_id, kind, amount, ls_order_id, note, created_at)
+       VALUES (?, ?, 'subscription_grant', ?, ?, ?, ?)`,
+    )
+      .bind(
+        `evt_${nanoid(16)}`,
+        userId,
+        MONTHLY_CREDITS_PER_CYCLE,
+        `sub_${subscriptionId}:inv_${orderId}`,
+        `Monthly subscription — ${MONTHLY_CREDITS_PER_CYCLE} credits`,
+        Date.now(),
+      )
+      .run();
+
+    // Keep subscription state in sync. Two concerns handled here:
+    //   1. A user who cancels and re-subscribes generates a new
+    //      subscription_id; overwrite ls_subscription_id unconditionally
+    //      so the cancel handler below can match against the current sub.
+    //   2. A late payment_success arriving after a cancelled/expired
+    //      event must not flip status back to 'active'. The guard limits
+    //      the status overwrite to non-terminal states.
+    await env.DB.prepare(
+      `UPDATE users
+          SET ls_subscription_id = ?,
+              subscription_status = CASE
+                WHEN subscription_status IN ('cancelled','expired')
+                  THEN subscription_status
+                ELSE 'active'
+              END
+        WHERE id = ?`,
+    )
+      .bind(subscriptionId, userId)
+      .run();
+
+    return new Response('OK');
+  }
+
+  // subscription_cancelled / _expired / _paused --------------------------
+  // Status-only updates. Credits already granted to date are kept (the
+  // user paid for that cycle). New grants stop because no further
+  // payment_success events will fire.
+  if (
+    event === 'subscription_cancelled' ||
+    event === 'subscription_expired' ||
+    event === 'subscription_paused'
+  ) {
+    const status =
+      event === 'subscription_cancelled'
+        ? 'cancelled'
+        : event === 'subscription_expired'
+          ? 'expired'
+          : 'paused';
+    const res = await env.DB.prepare(
+      `UPDATE users
+          SET subscription_status = ?
+        WHERE id = ? AND ls_subscription_id = ?`,
+    )
+      .bind(status, userId, orderId)
+      .run();
+    // Out-of-order delivery: if subscription_created hasn't landed yet
+    // we'd silently no-op and the status would never reflect the cancel.
+    // Returning 500 makes LS retry with backoff; by then _created has
+    // typically arrived and the UPDATE will match.
+    if ((res.meta?.changes ?? 0) === 0) {
+      console.warn(
+        'LS webhook',
+        event,
+        'no-op for user',
+        userId,
+        'sub',
+        orderId,
+        '— retrying',
+      );
+      return new Response('Subscription not yet recorded — retry', { status: 500 });
+    }
     return new Response('OK');
   }
 

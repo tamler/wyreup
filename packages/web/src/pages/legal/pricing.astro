@@ -1,11 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-05-17';
+const lastUpdated = '2026-05-18';
 ---
 
 <BaseLayout
   title="Pricing — Wyreup"
-  description="Free tools stay free. PRO is pay-as-you-go credits — no subscription, never expires."
+  description="Free tools stay free. PRO is pay-as-you-go credit packs (never expire) or an $8/mo plan with 200 credits per cycle."
 >
   <article class="legal">
     <header>
@@ -51,6 +51,24 @@ const lastUpdated = '2026-05-17';
       </div>
     </div>
 
+    <h3>Monthly plan</h3>
+    <div class="packs packs--single">
+      <div class="pack pack--monthly">
+        <div class="pack__credits">200</div>
+        <div class="pack__label">credits / month</div>
+        <div class="pack__price">$8 / mo</div>
+        <div class="pack__per">$0.040 / credit</div>
+      </div>
+    </div>
+    <p>
+      Recurring monthly plan: 200 credits are granted each cycle and
+      land in the same balance as pack credits. If you run out before
+      the next grant, top up with a one-time pack or wait for the next
+      cycle — we don't auto-charge for overages. Cancel anytime from
+      your Lemon Squeezy receipt; previously granted credits stay in
+      your account.
+    </p>
+
     <h3>What a credit gets you</h3>
     <table class="cost-table">
       <thead>
@@ -70,8 +88,8 @@ const lastUpdated = '2026-05-17';
 
     <h2>How credits work</h2>
     <ul>
-      <li><strong>One-time purchase.</strong> No subscription. Buy when you need them.</li>
-      <li><strong>Never expire.</strong> Credits stay in your account forever.</li>
+      <li><strong>Pack credits never expire.</strong> Buy a one-time pack and the credits stay in your account until you spend them.</li>
+      <li><strong>Monthly grants stack with pack credits.</strong> They land in the same balance and are spent in the order they were granted.</li>
       <li><strong>Failed runs are auto-refunded.</strong> If a hosted model errors out, your credits come back to your balance automatically. See the <a href="/legal/refund">refund policy</a> for details.</li>
       <li><strong>Use anywhere.</strong> Browser, CLI, and MCP all draw from the same balance with the same API key.</li>
     </ul>
@@ -150,10 +168,17 @@ const lastUpdated = '2026-05-17';
     gap: var(--space-3);
     margin: 0 0 var(--space-6);
   }
+  .packs--single {
+    grid-template-columns: minmax(0, 220px);
+    justify-content: start;
+  }
   @media (max-width: 540px) {
     .packs {
       grid-template-columns: 1fr;
     }
+  }
+  .pack--monthly {
+    border-color: var(--accent);
   }
   .pack {
     position: relative;

@@ -8,9 +8,13 @@
 
 import { writable, get } from 'svelte/store';
 
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'paused';
+
 export interface AuthedUser {
   email: string;
   balance: number;
+  // Null = never subscribed. Active = monthly grant fires each cycle.
+  subscriptionStatus?: SubscriptionStatus | null;
 }
 
 export const apiKey = writable<string>('');

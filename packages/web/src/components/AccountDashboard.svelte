@@ -155,8 +155,17 @@
     </div>
     <div class="acct-header__meta">
       <div class="email">{$user.email}</div>
+      {#if $user.subscriptionStatus === 'active'}
+        <span class="sub-badge sub-badge--active">Monthly · active</span>
+      {:else if $user.subscriptionStatus === 'cancelled'}
+        <span class="sub-badge">Monthly · cancelled (runs until period end)</span>
+      {:else if $user.subscriptionStatus === 'paused'}
+        <span class="sub-badge">Monthly · paused</span>
+      {:else if $user.subscriptionStatus === 'expired'}
+        <span class="sub-badge">Monthly · expired</span>
+      {/if}
       <button type="button" class="primary" on:click={() => (showBuySheet = true)}>
-        Buy more credits
+        {$user.subscriptionStatus === 'active' ? 'Buy more credits' : 'Buy credits / subscribe'}
       </button>
     </div>
   </header>
@@ -296,6 +305,19 @@
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     color: var(--text-muted);
+  }
+  .sub-badge {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+  }
+  .sub-badge--active {
+    border-color: var(--accent);
+    color: var(--accent-text);
   }
 
   .card {

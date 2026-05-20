@@ -58,6 +58,7 @@ export interface Env {
   LS_VARIANT_STARTER?: string;      // LS variant IDs for the 3 packs
   LS_VARIANT_STANDARD?: string;
   LS_VARIANT_POWER?: string;
+  LS_VARIANT_MONTHLY?: string;      // LS variant ID for the $8/mo subscription
 
   // Comma-separated list of emails allowed to access /api/admin/*.
   // Treat as a secret — its disclosure alone doesn't grant access (the

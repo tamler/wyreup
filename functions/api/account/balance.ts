@@ -9,6 +9,17 @@ import { getBalance, json, resolveUser, unauthorized } from '../../_lib/auth';
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
-  const balance = await getBalance(user.id, env);
-  return json({ email: user.email, balance });
+  const [balance, subRow] = await Promise.all([
+    getBalance(user.id, env),
+    env.DB.prepare(
+      `SELECT subscription_status FROM users WHERE id = ?`,
+    )
+      .bind(user.id)
+      .first<{ subscription_status: string | null }>(),
+  ]);
+  return json({
+    email: user.email,
+    balance,
+    subscriptionStatus: subRow?.subscription_status ?? null,
+  });
 };

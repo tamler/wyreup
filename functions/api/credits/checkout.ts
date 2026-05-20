@@ -8,7 +8,7 @@ import type { PagesFunction } from '../../_lib/types';
 import { appOrigin } from '../../_lib/env';
 import { json, resolveUser, unauthorized } from '../../_lib/auth';
 
-type Pack = 'starter' | 'standard' | 'power';
+type Pack = 'starter' | 'standard' | 'power' | 'monthly';
 
 function variantFor(env: Env, pack: Pack): string | undefined {
   switch (pack) {
@@ -18,6 +18,8 @@ function variantFor(env: Env, pack: Pack): string | undefined {
       return env.LS_VARIANT_STANDARD;
     case 'power':
       return env.LS_VARIANT_POWER;
+    case 'monthly':
+      return env.LS_VARIANT_MONTHLY;
   }
 }
 
@@ -31,7 +33,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const body = (await request.json().catch(() => ({}))) as CheckoutBody;
   const pack = body.pack;
-  if (pack !== 'starter' && pack !== 'standard' && pack !== 'power') {
+  if (pack !== 'starter' && pack !== 'standard' && pack !== 'power' && pack !== 'monthly') {
     return json({ error: 'Unknown pack' }, 400);
   }
 

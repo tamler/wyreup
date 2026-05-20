@@ -20,10 +20,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     env.SESSION_SECRET,
   );
 
-  const balance = await getBalance(user.id, env);
+  const [balance, subRow] = await Promise.all([
+    getBalance(user.id, env),
+    env.DB.prepare(
+      `SELECT subscription_status FROM users WHERE id = ?`,
+    )
+      .bind(user.id)
+      .first<{ subscription_status: string | null }>(),
+  ]);
 
   return json(
-    { email: user.email, balance },
+    {
+      email: user.email,
+      balance,
+      subscriptionStatus: subRow?.subscription_status ?? null,
+    },
     200,
     {
       'Set-Cookie': [
