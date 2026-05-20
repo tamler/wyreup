@@ -18,9 +18,21 @@ interface RunBody {
   input?: unknown;
 }
 
+// Largest legitimate input is a 25 MB audio file (~33.3 MB once base64-
+// encoded); 36 MB leaves headroom for the JSON envelope. Rejecting early
+// on Content-Length avoids buffering a huge body before the per-runner
+// size caps would catch it. Absent header (chunked encoding) falls
+// through — the per-runner caps remain the definitive guard.
+const MAX_BODY_BYTES = 36 * 1024 * 1024;
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
+
+  const contentLength = Number(request.headers.get('Content-Length') ?? '0');
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    return json({ error: 'Request body too large' }, 413);
+  }
 
   const body = (await request.json().catch(() => ({}))) as RunBody;
   const toolId = typeof body.toolId === 'string' ? body.toolId : '';
