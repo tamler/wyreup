@@ -79,9 +79,11 @@ describe('detect-objects runner', () => {
     ]);
     const out = (await runPro('detect-objects', { imageBase64: TINY_PNG }, env)) as {
       objects: { label: string; score: number }[];
+      count: number;
     };
     expect(out.objects[0].label).toBe('cat');
     expect(out.objects.length).toBe(2);
+    expect(out.count).toBe(2);
   });
 });
 
