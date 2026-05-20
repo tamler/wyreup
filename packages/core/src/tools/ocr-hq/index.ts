@@ -15,7 +15,7 @@ export const ocrHq: ToolModule<Record<string, never>> = {
   name: 'OCR (PRO)',
   description:
     'High-quality text extraction from images and scans, powered by a hosted vision model. Output is plain text — chains into translate, summarize, and other text tools. Uses 2 credits per run.',
-  category: 'edit',
+  category: 'export',
   keywords: ['ocr', 'text', 'extract', 'scan', 'pro', 'vision', 'hosted'],
 
   input: {
