@@ -49,6 +49,7 @@ const RUNNERS: Record<string, Runner> = {
   'ocr-hq': ocrHq,
   'image-describe': imageDescribe,
   'analyze-chart': analyzeChart,
+  'image-q-and-a': imageQandA,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -186,6 +187,17 @@ async function imageDescribe(raw: RunnerInput, env: Env): Promise<RunnerOutput> 
     'Describe this image in 1-3 clear sentences suitable as alt-text. Be factual and concise. Return ONLY the description.',
   );
   return { description };
+}
+
+async function imageQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const question = readText(raw, 'question');
+  const answer = await visionPrompt(
+    env,
+    image,
+    `Answer this question about the image based only on what is visible. Question: ${question}\nReturn ONLY the answer.`,
+  );
+  return { answer };
 }
 
 async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {

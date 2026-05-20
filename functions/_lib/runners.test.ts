@@ -42,6 +42,25 @@ describe('analyze-chart runner', () => {
   });
 });
 
+describe('image-q-and-a runner', () => {
+  it('returns an answer to the question', async () => {
+    const env = aiEnv({ response: 'Three people are visible.' });
+    const out = (await runPro(
+      'image-q-and-a',
+      { imageBase64: TINY_PNG, question: 'How many people?' },
+      env,
+    )) as { answer: string };
+    expect(out.answer).toBe('Three people are visible.');
+  });
+
+  it('rejects a missing question', async () => {
+    const env = aiEnv({ response: 'x' });
+    await expect(
+      runPro('image-q-and-a', { imageBase64: TINY_PNG }, env),
+    ).rejects.toThrow("'question'");
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });
