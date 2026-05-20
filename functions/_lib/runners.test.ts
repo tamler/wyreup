@@ -61,6 +61,16 @@ describe('image-q-and-a runner', () => {
   });
 });
 
+describe('read-handwriting runner', () => {
+  it('returns transcribed handwriting', async () => {
+    const env = aiEnv({ response: 'Meeting at 3pm' });
+    const out = (await runPro('read-handwriting', { imageBase64: TINY_PNG }, env)) as {
+      text: string;
+    };
+    expect(out.text).toBe('Meeting at 3pm');
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });

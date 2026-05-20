@@ -50,6 +50,7 @@ const RUNNERS: Record<string, Runner> = {
   'image-describe': imageDescribe,
   'analyze-chart': analyzeChart,
   'image-q-and-a': imageQandA,
+  'read-handwriting': readHandwriting,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -198,6 +199,16 @@ async function imageQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
     `Answer this question about the image based only on what is visible. Question: ${question}\nReturn ONLY the answer.`,
   );
   return { answer };
+}
+
+async function readHandwriting(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const text = await visionPrompt(
+    env,
+    image,
+    'This image contains handwritten text. Transcribe the handwriting as accurately as possible, preserving line breaks. If a word is illegible, write [illegible]. Return ONLY the transcription.',
+  );
+  return { text };
 }
 
 async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {

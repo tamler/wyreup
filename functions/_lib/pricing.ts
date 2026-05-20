@@ -18,6 +18,7 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-describe': 2,
   'analyze-chart': 2,
   'image-q-and-a': 2,
+  'read-handwriting': 2,
 };
 
 export function priceFor(toolId: string): number | null {
