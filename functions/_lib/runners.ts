@@ -18,6 +18,7 @@ import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
 import { chat } from './providers/text-models';
 import { transcribe as runTranscribe } from './providers/audio-models';
+import { visionPrompt } from './providers/vision-models';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -45,6 +46,7 @@ const RUNNERS: Record<string, Runner> = {
   'text-redact-pro': redactPro,
   'bg-remove-pro': bgRemovePro,
   'upscale-2x-pro': upscalePro,
+  'ocr-hq': ocrHq,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -158,6 +160,20 @@ async function upscalePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const imageUrl = readImageRef(raw);
   const scale = (raw as Record<string, unknown>).scale === 4 ? 4 : 2;
   return runUpscale({ image: imageUrl, scale }, env);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Vision tools — Workers AI vision model via the vision-models wrapper
+// ────────────────────────────────────────────────────────────────────────
+
+async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const text = await visionPrompt(
+    env,
+    image,
+    'Extract all text from this image exactly as it appears, preserving line breaks and reading order. Return ONLY the extracted text — no commentary, no description.',
+  );
+  return { text };
 }
 
 // ────────────────────────────────────────────────────────────────────────
