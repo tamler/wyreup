@@ -53,6 +53,7 @@ const RUNNERS: Record<string, Runner> = {
   'read-handwriting': readHandwriting,
   'detect-objects': detectObjectsPro,
   'translate-image': translateImage,
+  'transcribe-and-translate': transcribeAndTranslate,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -264,6 +265,42 @@ async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput>
     sourceText,
   );
   return { sourceText, translation, target };
+}
+
+async function transcribeAndTranslate(
+  raw: RunnerInput,
+  env: Env,
+): Promise<RunnerOutput> {
+  const input = raw as TranscribeInput;
+  if (typeof input.audioBase64 !== 'string' || input.audioBase64.length === 0) {
+    throw new Error('audioBase64 required');
+  }
+  if (input.audioBase64.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  const bytes = base64ToUint8Array(input.audioBase64);
+  if (bytes.length > TRANSCRIBE_MAX_BYTES) {
+    throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
+  }
+  const rawTarget = (raw as Record<string, unknown>).target;
+  const target =
+    typeof rawTarget === 'string' && rawTarget.trim().length > 0
+      ? rawTarget.trim()
+      : 'English';
+
+  const { text: transcript } = await runTranscribe(env, {
+    bytes,
+    language: input.language,
+  });
+  if (transcript.trim().length === 0) {
+    throw new Error('No speech found in the audio to translate');
+  }
+  const translation = await chat(
+    env,
+    `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
+    transcript,
+  );
+  return { transcript, translation, target };
 }
 
 // ────────────────────────────────────────────────────────────────────────

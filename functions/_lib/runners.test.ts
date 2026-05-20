@@ -107,6 +107,31 @@ describe('translate-image runner', () => {
   });
 });
 
+describe('transcribe-and-translate runner', () => {
+  it('transcribes then translates', async () => {
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({ text: 'Bonjour le monde' }) // whisper
+      .mockResolvedValueOnce({ response: 'Hello world' }); // translate
+    const env = { AI: { run } } as unknown as import('./env').Env;
+    const out = (await runPro(
+      'transcribe-and-translate',
+      { audioBase64: 'QUJD', target: 'English' },
+      env,
+    )) as { transcript: string; translation: string; target: string };
+    expect(out.transcript).toBe('Bonjour le monde');
+    expect(out.translation).toBe('Hello world');
+    expect(out.target).toBe('English');
+  });
+
+  it('rejects missing audio', async () => {
+    const env = aiEnv({ text: 'x' });
+    await expect(
+      runPro('transcribe-and-translate', { target: 'English' }, env),
+    ).rejects.toThrow('audioBase64 required');
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });
