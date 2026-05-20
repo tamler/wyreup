@@ -45,5 +45,9 @@ export async function detectObjects(
   if (!Array.isArray(res)) {
     throw new Error('Detection model returned no array');
   }
+  const first = res[0] as Partial<DetectedObject> | undefined;
+  if (res.length > 0 && (typeof first?.score !== 'number' || typeof first?.label !== 'string')) {
+    throw new Error('Detection model returned unexpected object shape');
+  }
   return res as DetectedObject[];
 }

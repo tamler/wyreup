@@ -19,6 +19,13 @@ describe('visionPrompt', () => {
       'Vision model returned no response',
     );
   });
+
+  it('converts imageBytes to a plain number array before calling AI.run', async () => {
+    const env = mockEnv({ response: 'ok' });
+    await visionPrompt(env, new Uint8Array([10, 20]), 'x');
+    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(call[1].image).toEqual([10, 20]);
+  });
 });
 
 describe('detectObjects', () => {
@@ -34,5 +41,19 @@ describe('detectObjects', () => {
     await expect(detectObjects(env, new Uint8Array([1]))).rejects.toThrow(
       'Detection model returned no array',
     );
+  });
+
+  it('throws when array elements have an unexpected shape', async () => {
+    const env = mockEnv([{ label: 'cat' }]);
+    await expect(detectObjects(env, new Uint8Array([1]))).rejects.toThrow(
+      'Detection model returned unexpected object shape',
+    );
+  });
+
+  it('converts imageBytes to a plain number array before calling AI.run', async () => {
+    const env = mockEnv([]);
+    await detectObjects(env, new Uint8Array([10, 20]));
+    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(call[1].image).toEqual([10, 20]);
   });
 });
