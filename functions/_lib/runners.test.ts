@@ -103,6 +103,7 @@ describe('translate-image runner', () => {
     expect(out.sourceText).toBe('Hola mundo');
     expect(out.translation).toBe('Hello world');
     expect(out.target).toBe('English');
+    expect(run).toHaveBeenCalledTimes(2);
   });
 });
 

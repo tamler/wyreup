@@ -244,10 +244,10 @@ async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
 
 async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const image = __readImageBytes(raw);
+  const rawTarget = (raw as Record<string, unknown>).target;
   const target =
-    typeof (raw as Record<string, unknown>).target === 'string' &&
-    ((raw as Record<string, unknown>).target as string).trim().length > 0
-      ? ((raw as Record<string, unknown>).target as string).trim()
+    typeof rawTarget === 'string' && rawTarget.trim().length > 0
+      ? rawTarget.trim()
       : 'English';
 
   const sourceText = await visionPrompt(
