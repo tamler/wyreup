@@ -87,6 +87,25 @@ describe('detect-objects runner', () => {
   });
 });
 
+describe('translate-image runner', () => {
+  it('OCRs then translates, returning both', async () => {
+    // First AI.run = vision OCR, second = text translation.
+    const run = vi
+      .fn()
+      .mockResolvedValueOnce({ response: 'Hola mundo' })
+      .mockResolvedValueOnce({ response: 'Hello world' });
+    const env = { AI: { run } } as unknown as import('./env').Env;
+    const out = (await runPro(
+      'translate-image',
+      { imageBase64: TINY_PNG, target: 'English' },
+      env,
+    )) as { sourceText: string; translation: string; target: string };
+    expect(out.sourceText).toBe('Hola mundo');
+    expect(out.translation).toBe('Hello world');
+    expect(out.target).toBe('English');
+  });
+});
+
 describe('__readImageBytes', () => {
   it('decodes a valid base64 image', () => {
     const bytes = __readImageBytes({ imageBase64: TINY_PNG });

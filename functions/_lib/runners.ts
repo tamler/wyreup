@@ -52,6 +52,7 @@ const RUNNERS: Record<string, Runner> = {
   'image-q-and-a': imageQandA,
   'read-handwriting': readHandwriting,
   'detect-objects': detectObjectsPro,
+  'translate-image': translateImage,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -235,6 +236,34 @@ async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
     'Extract all text from this image exactly as it appears, preserving line breaks and reading order. Return ONLY the extracted text — no commentary, no description.',
   );
   return { text };
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Chain tools — combine more than one model in a single runner
+// ────────────────────────────────────────────────────────────────────────
+
+async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const image = __readImageBytes(raw);
+  const target =
+    typeof (raw as Record<string, unknown>).target === 'string' &&
+    ((raw as Record<string, unknown>).target as string).trim().length > 0
+      ? ((raw as Record<string, unknown>).target as string).trim()
+      : 'English';
+
+  const sourceText = await visionPrompt(
+    env,
+    image,
+    'Extract all text from this image exactly as it appears. Return ONLY the text.',
+  );
+  if (sourceText.trim().length === 0) {
+    throw new Error('No text found in the image to translate');
+  }
+  const translation = await chat(
+    env,
+    `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
+    sourceText,
+  );
+  return { sourceText, translation, target };
 }
 
 // ────────────────────────────────────────────────────────────────────────
