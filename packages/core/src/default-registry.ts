@@ -70,6 +70,14 @@ import { textNerPro } from './tools/text-ner-pro/index.js';
 import { textRedactPro } from './tools/text-redact-pro/index.js';
 import { bgRemovePro } from './tools/bg-remove-pro/index.js';
 import { upscale2xPro } from './tools/upscale-2x-pro/index.js';
+import { ocrHq } from './tools/ocr-hq/index.js';
+import { imageDescribe } from './tools/image-describe/index.js';
+import { analyzeChart } from './tools/analyze-chart/index.js';
+import { imageQandA } from './tools/image-q-and-a/index.js';
+import { readHandwriting } from './tools/read-handwriting/index.js';
+import { detectObjects } from './tools/detect-objects/index.js';
+import { translateImage } from './tools/translate-image/index.js';
+import { transcribeAndTranslate } from './tools/transcribe-and-translate/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -294,6 +302,14 @@ export const defaultTools: ToolModule<any>[] = [
   textRedactPro,
   bgRemovePro,
   upscale2xPro,
+  ocrHq,
+  imageDescribe,
+  analyzeChart,
+  imageQandA,
+  readHandwriting,
+  detectObjects,
+  translateImage,
+  transcribeAndTranslate,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,
