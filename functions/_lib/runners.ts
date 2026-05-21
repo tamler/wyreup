@@ -56,6 +56,8 @@ const RUNNERS: Record<string, Runner> = {
   'transcribe-and-translate': transcribeAndTranslate,
   'regex-from-text-pro': regexFromTextPro,
   'cron-from-text-pro': cronFromTextPro,
+  'pdf-summarize': pdfSummarize,
+  'pdf-q-and-a': pdfQandA,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -335,6 +337,35 @@ async function cronFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput
     cron: parsed.cron,
     explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
   };
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Document tools — LLM over text the client extracted from a PDF
+// ────────────────────────────────────────────────────────────────────────
+
+async function pdfSummarize(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const summary = await chat(
+    env,
+    'You summarize documents. Return a tight, well-structured summary in ' +
+      '4-8 sentences covering the key points and conclusions. No preamble — ' +
+      'just the summary itself.',
+    text,
+  );
+  return { summary };
+}
+
+async function pdfQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const question = readText(raw, 'question');
+  const answer = await chat(
+    env,
+    'You answer questions about a document. Use ONLY the information in the ' +
+      'document below. If the answer is not in the document, say so plainly. ' +
+      'Return only the answer — no preamble.',
+    `Document:\n${text}\n\nQuestion: ${question}`,
+  );
+  return { answer };
 }
 
 // ────────────────────────────────────────────────────────────────────────

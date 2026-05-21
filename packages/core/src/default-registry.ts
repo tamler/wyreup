@@ -80,6 +80,8 @@ import { translateImage } from './tools/translate-image/index.js';
 import { transcribeAndTranslate } from './tools/transcribe-and-translate/index.js';
 import { regexFromTextPro } from './tools/regex-from-text-pro/index.js';
 import { cronFromTextPro } from './tools/cron-from-text-pro/index.js';
+import { pdfSummarize } from './tools/pdf-summarize/index.js';
+import { pdfQandA } from './tools/pdf-q-and-a/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -314,6 +316,8 @@ export const defaultTools: ToolModule<any>[] = [
   transcribeAndTranslate,
   regexFromTextPro,
   cronFromTextPro,
+  pdfSummarize,
+  pdfQandA,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

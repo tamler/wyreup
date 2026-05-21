@@ -191,3 +191,39 @@ describe('cron-from-text-pro runner', () => {
     expect(out.explanation).toBe('every Monday at 9am');
   });
 });
+
+describe('pdf-summarize runner', () => {
+  it('returns a summary of the document text', async () => {
+    const env = aiEnv({ response: 'The document covers quarterly results.' });
+    const out = (await runPro(
+      'pdf-summarize',
+      { text: 'Long document text here.' },
+      env,
+    )) as { summary: string };
+    expect(out.summary).toBe('The document covers quarterly results.');
+  });
+
+  it('rejects missing document text', async () => {
+    const env = aiEnv({ response: 'x' });
+    await expect(runPro('pdf-summarize', {}, env)).rejects.toThrow("'text'");
+  });
+});
+
+describe('pdf-q-and-a runner', () => {
+  it('returns an answer to the question', async () => {
+    const env = aiEnv({ response: 'The total is $420.' });
+    const out = (await runPro(
+      'pdf-q-and-a',
+      { text: 'Invoice. Total: $420.', question: 'What is the total?' },
+      env,
+    )) as { answer: string };
+    expect(out.answer).toBe('The total is $420.');
+  });
+
+  it('rejects a missing question', async () => {
+    const env = aiEnv({ response: 'x' });
+    await expect(
+      runPro('pdf-q-and-a', { text: 'some document' }, env),
+    ).rejects.toThrow("'question'");
+  });
+});
