@@ -126,6 +126,23 @@ const faqLd = seoContent?.faq && seoContent.faq.length > 0
       })),
     }
   : null;
+
+// BreadcrumbList — mirrors the visual breadcrumb so search engines can
+// render breadcrumb rich results (Wyreup › Tools › <tool>).
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: 'https://wyreup.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Tools', item: 'https://wyreup.com/tools' },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name,
+      item: `https://wyreup.com/tools/${serializedTool.id}`,
+    },
+  ],
+};
 ---
 
 <BaseLayout
@@ -135,6 +152,7 @@ const faqLd = seoContent?.faq && seoContent.faq.length > 0
 >
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
     {faqLd && (
       <script is:inline type="application/ld+json" set:html={JSON.stringify(faqLd)} />
     )}
