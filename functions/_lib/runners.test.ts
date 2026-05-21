@@ -148,3 +148,46 @@ describe('__readImageBytes', () => {
     expect(() => __readImageBytes({ imageBase64: huge })).toThrow('exceeds');
   });
 });
+
+describe('regex-from-text-pro runner', () => {
+  it('parses the model JSON into a regex result', async () => {
+    const env = aiEnv({
+      response: '{"pattern":"\\\\d+","flags":"g","explanation":"one or more digits"}',
+    });
+    const out = (await runPro(
+      'regex-from-text-pro',
+      { description: 'match numbers' },
+      env,
+    )) as { pattern: string; flags: string; fullRegex: string };
+    expect(out.pattern).toBe('\\d+');
+    expect(out.flags).toBe('g');
+    expect(out.fullRegex).toBe('/\\d+/g');
+  });
+
+  it('rejects a missing description', async () => {
+    const env = aiEnv({ response: '{}' });
+    await expect(runPro('regex-from-text-pro', {}, env)).rejects.toThrow("'description'");
+  });
+
+  it('throws on unparseable model output', async () => {
+    const env = aiEnv({ response: 'not json at all' });
+    await expect(
+      runPro('regex-from-text-pro', { description: 'x' }, env),
+    ).rejects.toThrow('unparseable');
+  });
+});
+
+describe('cron-from-text-pro runner', () => {
+  it('parses the model JSON into a cron result', async () => {
+    const env = aiEnv({
+      response: '{"cron":"0 9 * * 1","explanation":"every Monday at 9am"}',
+    });
+    const out = (await runPro(
+      'cron-from-text-pro',
+      { description: 'every monday at 9am' },
+      env,
+    )) as { cron: string; explanation: string };
+    expect(out.cron).toBe('0 9 * * 1');
+    expect(out.explanation).toBe('every Monday at 9am');
+  });
+});

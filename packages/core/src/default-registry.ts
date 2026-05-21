@@ -78,6 +78,8 @@ import { readHandwriting } from './tools/read-handwriting/index.js';
 import { detectObjects } from './tools/detect-objects/index.js';
 import { translateImage } from './tools/translate-image/index.js';
 import { transcribeAndTranslate } from './tools/transcribe-and-translate/index.js';
+import { regexFromTextPro } from './tools/regex-from-text-pro/index.js';
+import { cronFromTextPro } from './tools/cron-from-text-pro/index.js';
 import { imageCaption } from './tools/image-caption/index.js';
 import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
@@ -310,6 +312,8 @@ export const defaultTools: ToolModule<any>[] = [
   detectObjects,
   translateImage,
   transcribeAndTranslate,
+  regexFromTextPro,
+  cronFromTextPro,
   imageCaption,
   imageCaptionDetailed,
   recordAudio,

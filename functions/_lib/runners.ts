@@ -54,6 +54,8 @@ const RUNNERS: Record<string, Runner> = {
   'detect-objects': detectObjectsPro,
   'translate-image': translateImage,
   'transcribe-and-translate': transcribeAndTranslate,
+  'regex-from-text-pro': regexFromTextPro,
+  'cron-from-text-pro': cronFromTextPro,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -281,6 +283,58 @@ async function transcribeAndTranslate(
     transcript,
   );
   return { transcript, translation, target };
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Upgrade-seam tools — LLM fallback for the free heuristic from-text tools
+// (regex-from-text, cron-from-text) when they return confidence: no-match.
+// ────────────────────────────────────────────────────────────────────────
+
+async function regexFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const description = readText(raw, 'description');
+  const out = await chat(
+    env,
+    'You generate JavaScript regular expressions from natural-language descriptions. ' +
+      'Reply with ONLY a JSON object — no markdown, no preamble — of the form ' +
+      '{"pattern":"...","flags":"...","explanation":"..."}. "pattern" is the regex body ' +
+      'with no enclosing slashes. "flags" is the flag string (e.g. "g", "gi"), or "" if none. ' +
+      '"explanation" is one plain sentence.',
+    description,
+  );
+  const parsed = tryParseJson(out) as
+    | { pattern?: unknown; flags?: unknown; explanation?: unknown }
+    | null;
+  if (!parsed || typeof parsed.pattern !== 'string') {
+    throw new Error('Regex model returned unparseable output');
+  }
+  const pattern = parsed.pattern;
+  const flags = typeof parsed.flags === 'string' ? parsed.flags : '';
+  return {
+    pattern,
+    flags,
+    fullRegex: `/${pattern}/${flags}`,
+    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+  };
+}
+
+async function cronFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const description = readText(raw, 'description');
+  const out = await chat(
+    env,
+    'You convert natural-language schedule descriptions into standard 5-field cron ' +
+      'expressions (minute hour day-of-month month day-of-week). Reply with ONLY a JSON ' +
+      'object — no markdown, no preamble — of the form {"cron":"...","explanation":"..."}. ' +
+      '"cron" is the 5-field expression. "explanation" is one plain sentence.',
+    description,
+  );
+  const parsed = tryParseJson(out) as { cron?: unknown; explanation?: unknown } | null;
+  if (!parsed || typeof parsed.cron !== 'string') {
+    throw new Error('Cron model returned unparseable output');
+  }
+  return {
+    cron: parsed.cron,
+    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────

@@ -22,6 +22,8 @@ export const PRICING: Readonly<Record<string, number>> = {
   'detect-objects': 1,
   'translate-image': 2,
   'transcribe-and-translate': 5,
+  'regex-from-text-pro': 1,
+  'cron-from-text-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {
