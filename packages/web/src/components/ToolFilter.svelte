@@ -23,6 +23,7 @@
     installSize?: number;
     installGroup?: string;
     accept: string[];
+    cost?: string;
   }
 
   function toolInCategory(t: Tool, cat: string): boolean {
@@ -54,6 +55,12 @@
 
   function isAiTool(t: { installGroup?: string }): boolean {
     return !!t.installGroup && AI_GROUPS.has(t.installGroup);
+  }
+
+  // PRO tools are credit-gated, hosted-AI tools. Drives the PRO badge on
+  // cards and the PRO filter chip.
+  function isProTool(t: { cost?: string }): boolean {
+    return t.cost === 'credit';
   }
 
   function formatInstallSize(bytes: number | undefined): string | null {
@@ -218,8 +225,10 @@
   let query = '';
   let activeCategories: Set<string> = new Set();
   let aiOnly = false;
+  let proOnly = false;
 
   $: aiCount = visibleTools.list.filter(isAiTool).length;
+  $: proCount = visibleTools.list.filter(isProTool).length;
   let filtered: Tool[] = tools;
   // Incremented on each filter change to re-trigger stagger animation
   let filterEpoch = 0;
@@ -251,9 +260,9 @@
     const q = query.trim();
     // Filter-by-dropped-file: treat the dropped MIME as the constraint.
     const droppedMimeFilter = droppedFile ? [droppedFile.mime] : null;
-    const pool = aiOnly
-      ? visibleTools.list.filter(isAiTool)
-      : visibleTools.list;
+    let pool = visibleTools.list;
+    if (aiOnly) pool = pool.filter(isAiTool);
+    if (proOnly) pool = pool.filter(isProTool);
 
     if (q) {
       const fuse = createToolSearch(pool.map((t) => ({
@@ -283,6 +292,7 @@
     query = '';
     activeCategories = new Set();
     aiOnly = false;
+    proOnly = false;
     droppedFile = null;
     applyFilter();
   }
@@ -291,6 +301,7 @@
     activeCategories;
     visibleTools;
     aiOnly;
+    proOnly;
     applyFilter();
   }
 
@@ -425,6 +436,23 @@
         <span class="filter-chip__count">({aiCount})</span>
       </button>
     {/if}
+    {#if proCount > 0}
+      <button
+        class="filter-chip filter-chip--pro"
+        class:active={proOnly}
+        on:click={() => { proOnly = !proOnly; }}
+        aria-pressed={proOnly}
+        title="Show only PRO (hosted-AI, credit) tools"
+      >
+        <span class="filter-chip__icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5z" fill="currentColor" stroke="none"/>
+          </svg>
+        </span>
+        <span class="filter-chip__label">PRO</span>
+        <span class="filter-chip__count">({proCount})</span>
+      </button>
+    {/if}
     {#each categories as cat}
       <button
         class="filter-chip"
@@ -486,6 +514,9 @@
             <div class="tool-card__badges">
               {#if isAiTool(tool)}
                 <span class="badge badge--ai" title="On-device AI / ML model">AI</span>
+              {/if}
+              {#if isProTool(tool)}
+                <span class="badge badge--pro" title="PRO — hosted-AI, credit-based">PRO</span>
               {/if}
               {#if tool.requiresWebgpu === 'required'}
                 <span class="badge badge--required" title="Requires WebGPU">WebGPU only</span>
@@ -771,6 +802,22 @@
     color: var(--black);
   }
 
+  /* PRO filter chip — mirrors the AI chip. */
+  .filter-chip--pro .filter-chip__icon {
+    color: var(--accent-text);
+  }
+
+  .filter-chip--pro.active {
+    background: var(--accent);
+    color: var(--black);
+    border-color: var(--accent-hover);
+  }
+
+  .filter-chip--pro.active .filter-chip__icon,
+  .filter-chip--pro.active .filter-chip__count {
+    color: var(--black);
+  }
+
   /* Results meta */
   .results-meta {
     display: flex;
@@ -1023,6 +1070,13 @@
   .badge--ai {
     background: var(--accent);
     color: var(--black);
+    border: 1px solid var(--accent-hover);
+    font-weight: 600;
+  }
+
+  .badge--pro {
+    background: var(--accent-dim);
+    color: var(--accent-text);
     border: 1px solid var(--accent-hover);
     font-weight: 600;
   }

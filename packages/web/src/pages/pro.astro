@@ -2,47 +2,28 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProBadge from '../components/ProBadge.svelte';
 import ProSignup from '../components/ProSignup.svelte';
+import { createDefaultRegistry } from '@wyreup/core';
 
-// Pro tool catalog, grouped for the page. Credit costs mirror the
-// server-authoritative table in functions/_lib/pricing.ts.
-const catalog = [
-  {
-    group: 'Document & image reading',
-    tools: [
-      { name: 'OCR', desc: 'Pull text out of photos, screenshots, and scans.', cost: 1 },
-      { name: 'Read handwriting', desc: 'Transcribe handwritten notes and forms.', cost: 1 },
-      { name: 'Describe image', desc: 'Plain-language alt-text for any image.', cost: 1 },
-      { name: 'Analyze chart', desc: 'Read a chart or graph and explain the data.', cost: 1 },
-      { name: 'Ask about an image', desc: 'Ask a question, get an answer from the picture.', cost: 1 },
-      { name: 'Detect objects', desc: 'Find and label objects, with bounding boxes.', cost: 1 },
-      { name: 'Translate image text', desc: 'Photograph foreign text, get the translation.', cost: 2 },
-    ],
-  },
-  {
-    group: 'Audio',
-    tools: [
-      { name: 'Transcribe', desc: 'Large-model transcription — accurate on noisy, accented speech.', cost: 3 },
-      { name: 'Transcribe & translate', desc: 'Audio in, translated transcript out, one step.', cost: 5 },
-    ],
-  },
-  {
-    group: 'Text',
-    tools: [
-      { name: 'Summarize', desc: 'Tight summaries of long or messy text.', cost: 2 },
-      { name: 'Translate', desc: 'High-quality translation, including rare language pairs.', cost: 2 },
-      { name: 'Redact PII', desc: 'Strip names, emails, and IDs — even free-form mentions.', cost: 2 },
-      { name: 'Sentiment', desc: 'Tone classification that handles sarcasm and mixed signals.', cost: 1 },
-      { name: 'Named entities', desc: 'Pull people, orgs, places, dates, and money.', cost: 1 },
-    ],
-  },
-  {
-    group: 'Image editing',
-    tools: [
-      { name: 'Background remove', desc: 'Clean cutouts — hair, glass, fine detail.', cost: 3 },
-      { name: 'Upscale', desc: 'Sharpen and enlarge images 2× or 4×.', cost: 3 },
-    ],
-  },
-];
+// Catalog is derived from the registry — every tool with cost: 'credit'
+// is a PRO tool. Grouping by credit cost is self-maintaining: add a PRO
+// tool anywhere and it appears here at the right tier, no edit needed.
+const registry = createDefaultRegistry();
+const proTools = Array.from(registry.toolsById.values())
+  .filter((t) => t.cost === 'credit')
+  .map((t) => ({
+    name: t.name.replace(/\s*\(PRO\)\s*$/i, ''),
+    desc: t.description.replace(/\s*Uses \d+ credits? per run\.\s*$/i, '').trim(),
+    cost: t.creditCost ?? 0,
+  }));
+
+const catalog = [...new Set(proTools.map((t) => t.cost))]
+  .sort((a, b) => a - b)
+  .map((cost) => ({
+    cost,
+    tools: proTools
+      .filter((t) => t.cost === cost)
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }));
 
 const packs = [
   { credits: 150, price: '$5', note: 'Starter' },
@@ -129,20 +110,16 @@ const why = [
     <section class="pro-section pro-section--bordered">
       <div class="container">
         <h2 class="section-title">What PRO unlocks</h2>
-        <p class="section-sub">Sixteen hosted-AI tools. Each shows its credit cost before you run it.</p>
+        <p class="section-sub">{proTools.length} hosted-AI tools, grouped by what they cost to run. Each shows its credit cost before you run it.</p>
         <div class="cat-grid">
           {catalog.map((g) => (
             <div class="cat-group">
-              <h3 class="cat-group__name">{g.group}</h3>
+              <h3 class="cat-group__name">{g.cost} {g.cost === 1 ? 'credit' : 'credits'} per run</h3>
               <ul class="cat-list">
                 {g.tools.map((t) => (
                   <li class="cat-item">
-                    <div class="cat-item__main">
-                      <span class="cat-item__name">{t.name}</span>
-                      <span class="cat-item__desc">{t.desc}</span>
-                    </div>
-                    <span class="cat-item__rule" aria-hidden="true"></span>
-                    <span class="cat-item__cost">{t.cost} {t.cost === 1 ? 'credit' : 'credits'}</span>
+                    <span class="cat-item__name">{t.name}</span>
+                    <span class="cat-item__desc">{t.desc}</span>
                   </li>
                 ))}
               </ul>
@@ -413,19 +390,15 @@ const why = [
     margin: 0;
     padding: 0;
   }
-  /* Solder-pad terminator row — label · rule · ■ · value */
   .cat-item {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-    padding: var(--space-3) 0;
-  }
-  .cat-item__main {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex-shrink: 0;
-    max-width: 70%;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .cat-item:last-child {
+    border-bottom: none;
   }
   .cat-item__name {
     font-family: var(--font-sans);
@@ -438,19 +411,6 @@ const why = [
     font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.45;
-  }
-  .cat-item__rule {
-    flex: 1;
-    height: 1px;
-    background: var(--border-subtle);
-    align-self: center;
-  }
-  .cat-item__cost {
-    flex-shrink: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--accent);
-    white-space: nowrap;
   }
 
   /* ── How it works ── */
