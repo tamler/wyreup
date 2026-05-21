@@ -18,7 +18,7 @@ function creditsForVariant(env: Env, variantId: string): number | null {
 }
 
 // Single monthly plan today. If we add tiers, key off variant_id like packs.
-const MONTHLY_CREDITS_PER_CYCLE = 275;
+const MONTHLY_CREDITS_PER_CYCLE = 300;
 
 interface WebhookPayload {
   meta?: { event_name?: string; custom_data?: { userId?: string } };

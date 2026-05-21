@@ -212,12 +212,12 @@
       disabled={busy !== null || hasActiveSubscription}
       aria-label={hasActiveSubscription
         ? 'You already have an active monthly subscription'
-        : 'Subscribe — 275 credits per month for $8'}
+        : 'Subscribe — 300 credits per month for $8'}
     >
       <div class="monthly__main">
-        <span class="monthly__title">Monthly · 275 credits</span>
+        <span class="monthly__title">Monthly · 300 credits</span>
         <span class="monthly__sub">
-          275 credits granted each month. Renews automatically; cancel
+          300 credits granted each month. Renews automatically; cancel
           anytime in your Lemon Squeezy receipt. If you run out before
           the next grant, buy a pack or wait for the next cycle.
         </span>
