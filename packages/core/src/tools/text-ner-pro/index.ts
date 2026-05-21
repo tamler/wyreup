@@ -13,7 +13,7 @@ interface NerHit {
 export const textNerPro: ToolModule<TextNerProParams> = {
   id: 'text-ner-pro',
   slug: 'text-ner-pro',
-  name: 'Named Entity Recognition (PRO)',
+  name: 'Named Entity Recognition',
   description:
     'Hosted LLM named-entity extraction — pulls people, organisations, places, dates, and money references with much better recall than browser models on long-form text. Uses 1 credit per run.',
   category: 'text',

@@ -8,7 +8,7 @@ export const defaultTextRedactProParams: TextRedactProParams = {};
 export const textRedactPro: ToolModule<TextRedactProParams> = {
   id: 'text-redact-pro',
   slug: 'text-redact-pro',
-  name: 'Redact PII (PRO)',
+  name: 'Redact PII',
   description:
     'Hosted LLM strips personal data — names, emails, phones, addresses, SSNs, card-shaped numbers — replacing each with [REDACTED]. Catches free-form mentions ("met Joe at Acme HQ in March") that pattern-based redaction misses. Uses 2 credits per run.',
   category: 'privacy',

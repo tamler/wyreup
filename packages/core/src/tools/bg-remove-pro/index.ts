@@ -13,7 +13,7 @@ interface BgRemoveResult {
 export const bgRemovePro: ToolModule<BgRemoveProParams> = {
   id: 'bg-remove-pro',
   slug: 'bg-remove-pro',
-  name: 'Background Remove (PRO)',
+  name: 'Background Remove',
   description:
     'Hosted large RMBG model — cleaner edges on hair, glass, and fine detail than the in-browser version. Output is a transparent PNG. Uses 3 credits per run.',
   category: 'edit',

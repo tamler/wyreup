@@ -4,7 +4,7 @@ import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 export const readHandwriting: ToolModule<Record<string, never>> = {
   id: 'read-handwriting',
   slug: 'read-handwriting',
-  name: 'Read Handwriting (PRO)',
+  name: 'Read Handwriting',
   description:
     'Transcribes handwritten text from an image using a hosted vision model. Output is plain text. Uses 1 credit per run.',
   category: 'export',

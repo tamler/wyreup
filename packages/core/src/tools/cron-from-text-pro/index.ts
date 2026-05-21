@@ -15,7 +15,7 @@ interface CronFromTextProResult {
 export const cronFromTextPro: ToolModule<CronFromTextProParams> = {
   id: 'cron-from-text-pro',
   slug: 'cron-from-text-pro',
-  name: 'Cron From Text (PRO)',
+  name: 'Cron From Text',
   description:
     'AI-generated cron expressions for schedules the free heuristic engine cannot parse. A hosted LLM handles arbitrary, open-ended phrasings. Uses 1 credit per run.',
   category: 'inspect',

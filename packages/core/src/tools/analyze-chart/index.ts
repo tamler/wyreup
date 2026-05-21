@@ -4,7 +4,7 @@ import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 export const analyzeChart: ToolModule<Record<string, never>> = {
   id: 'analyze-chart',
   slug: 'analyze-chart',
-  name: 'Analyze Chart (PRO)',
+  name: 'Analyze Chart',
   description:
     'Reads a chart, graph, or diagram image and explains the data and main trend in plain text. Uses 1 credit per run.',
   category: 'export',

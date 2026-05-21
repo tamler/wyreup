@@ -13,7 +13,7 @@ export const defaultTextSummarizeProParams: TextSummarizeProParams = {
 export const textSummarizePro: ToolModule<TextSummarizeProParams> = {
   id: 'text-summarize-pro',
   slug: 'text-summarize-pro',
-  name: 'Summarize (PRO)',
+  name: 'Summarize',
   description:
     'Higher-quality summarization powered by a hosted Llama-class model. Pairs well with transcribe-pro for "audio → notes" flows. Uses 2 credits per run.',
   category: 'text',

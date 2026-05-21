@@ -10,7 +10,7 @@ export const defaultTranslateImageParams: TranslateImageParams = { target: 'Engl
 export const translateImage: ToolModule<TranslateImageParams> = {
   id: 'translate-image',
   slug: 'translate-image',
-  name: 'Translate Image Text (PRO)',
+  name: 'Translate Image Text',
   description:
     'Extracts text from an image and translates it. Photograph a sign or document, get the translation. Uses 2 credits per run.',
   category: 'export',

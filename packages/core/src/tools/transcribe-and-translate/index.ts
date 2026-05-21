@@ -14,7 +14,7 @@ export const defaultTranscribeAndTranslateParams: TranscribeAndTranslateParams =
 export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = {
   id: 'transcribe-and-translate',
   slug: 'transcribe-and-translate',
-  name: 'Transcribe & Translate (PRO)',
+  name: 'Transcribe & Translate',
   description:
     'Transcribes an audio file and translates the transcript in one step. Uses 5 credits per run.',
   category: 'export',

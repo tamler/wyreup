@@ -17,7 +17,7 @@ interface RegexFromTextProResult {
 export const regexFromTextPro: ToolModule<RegexFromTextProParams> = {
   id: 'regex-from-text-pro',
   slug: 'regex-from-text-pro',
-  name: 'Regex From Text (PRO)',
+  name: 'Regex From Text',
   description:
     'AI-generated regular expressions for descriptions the free heuristic engine cannot match. A hosted LLM handles arbitrary, open-ended phrasings. Uses 1 credit per run.',
   category: 'inspect',

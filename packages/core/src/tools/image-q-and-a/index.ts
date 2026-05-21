@@ -10,7 +10,7 @@ export const defaultImageQandAParams: ImageQandAParams = { question: '' };
 export const imageQandA: ToolModule<ImageQandAParams> = {
   id: 'image-q-and-a',
   slug: 'image-q-and-a',
-  name: 'Ask About Image (PRO)',
+  name: 'Ask About Image',
   description:
     'Ask a question about an image and get an answer from a hosted vision model. Uses 1 credit per run.',
   category: 'export',

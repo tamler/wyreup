@@ -10,7 +10,7 @@ interface DetectedObject {
 export const detectObjects: ToolModule<Record<string, never>> = {
   id: 'detect-objects',
   slug: 'detect-objects',
-  name: 'Detect Objects (PRO)',
+  name: 'Detect Objects',
   description:
     'Detects and locates objects in an image, returning labels, confidence scores, and bounding boxes as JSON. Uses 1 credit per run.',
   category: 'export',

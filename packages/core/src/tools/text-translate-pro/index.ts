@@ -13,7 +13,7 @@ export const defaultTextTranslateProParams: TextTranslateProParams = {
 export const textTranslatePro: ToolModule<TextTranslateProParams> = {
   id: 'text-translate-pro',
   slug: 'text-translate-pro',
-  name: 'Translate (PRO)',
+  name: 'Translate',
   description:
     'Hosted Llama-class translation. Higher quality than browser-only models — particularly for less common language pairs. Uses 2 credits per run.',
   category: 'text',

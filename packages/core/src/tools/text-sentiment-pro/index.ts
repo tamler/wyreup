@@ -8,7 +8,7 @@ export const defaultTextSentimentProParams: TextSentimentProParams = {};
 export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   id: 'text-sentiment-pro',
   slug: 'text-sentiment-pro',
-  name: 'Sentiment (PRO)',
+  name: 'Sentiment',
   description:
     'Hosted LLM sentiment classification — handles sarcasm, mixed tone, and domain language the in-browser heuristic misses. Returns positive / negative / neutral. Uses 1 credit per run.',
   category: 'text',

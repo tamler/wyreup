@@ -18,7 +18,7 @@ interface UpscaleResult {
 export const upscale2xPro: ToolModule<UpscaleProParams> = {
   id: 'upscale-2x-pro',
   slug: 'upscale-2x-pro',
-  name: 'Upscale (PRO)',
+  name: 'Upscale',
   description:
     'Hosted Real-ESRGAN upscale, 2× or 4×. Sharper edges, better fine detail than the in-browser variant — and faster on large inputs since the GPU does the heavy lifting. Uses 3 credits per run.',
   category: 'edit',

@@ -4,7 +4,7 @@ import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 export const imageDescribe: ToolModule<Record<string, never>> = {
   id: 'image-describe',
   slug: 'image-describe',
-  name: 'Describe Image (PRO)',
+  name: 'Describe Image',
   description:
     'Generates a concise description / alt-text for an image using a hosted vision model. Output is plain text. Uses 1 credit per run.',
   category: 'export',

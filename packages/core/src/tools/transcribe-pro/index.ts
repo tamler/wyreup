@@ -22,7 +22,7 @@ export const defaultTranscribeProParams: TranscribeProParams = {
 export const transcribePro: ToolModule<TranscribeProParams> = {
   id: 'transcribe-pro',
   slug: 'transcribe-pro',
-  name: 'Transcribe Audio (PRO)',
+  name: 'Transcribe Audio',
   description:
     'Hosted Whisper-large-v3 transcription — higher accuracy and better with' +
     ' noisy or accented speech than the free in-browser version. Uses 3 credits per run.',
