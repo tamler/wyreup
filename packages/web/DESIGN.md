@@ -1,7 +1,7 @@
 # Wyreup Design System
 ## Signal — Visual Identity Reference
 
-Version 1.4 | Dark-only at launch | Last updated: 2026-04-17
+Version 1.5 | Dark-only at launch | Last updated: 2026-05-20
 
 ---
 
@@ -9,13 +9,13 @@ Version 1.4 | Dark-only at launch | Last updated: 2026-04-17
 
 **Signal over noise.** Every visual element earns its place by conveying information or reinforcing trust. Decoration that does not carry meaning is removed.
 
-**Engineering trust.** The interface looks like it was built by engineers, for engineers. Monospace type, hairline borders, precise spacing — the visual language of a tool that respects the user's intelligence.
+**Credible, not cliquish.** The interface earns a technical user's trust — monospace type, hairline borders, precise spacing — without shutting anyone else out. The target is the *sophisticated user*, not the engineer specifically: simple enough for a non-technical person, capable enough for an engineer. *(Amended v1.5, 2026-05-20 — previously "built by engineers, for engineers". Lean too far toward engineers and they just build it themselves; the engineer is not the buyer.)*
 
 **Restraint is the brand.** One accent color. One primary typeface. No gradients, no blur, no shadows on flat surfaces. Constraint is the aesthetic.
 
 **The metaphor is structural.** "Wire up" is not a logo treatment — it is the product's information architecture. Wires connect nodes. Circuits have signal paths. Every UI pattern should be expressible in those terms.
 
-**Density is a feature.** Power users want information-rich interfaces. Generous whitespace is a consumer pattern. Wyreup presents data at density, with clear hierarchy enforced by type weight and color — not padding.
+**Density where it earns its place.** Task-first surfaces — the tool catalog, per-tool pages, chain builder — are information-rich; power users want that, with hierarchy enforced by type weight and color, not padding. Value surfaces — the homepage and marketing pages — breathe. Density is a deliberate choice per surface, not a global default. *(Amended v1.5, 2026-05-20 — softened from "generous whitespace is a consumer pattern".)*
 
 **Homepage is value-first. Tool pages are task-first.** The density principle above applies to task-first surfaces: `/tools` catalog, per-tool pages, chain builder. The homepage is a value surface — the job is to answer "What is this? Why should I care? What can I do right now?" in the first viewport. That means generous breathing room, narrative over metadata, and concrete scenarios over tool names. Signal's restraint is preserved through typography, palette, and motifs; not through cramming.
 
