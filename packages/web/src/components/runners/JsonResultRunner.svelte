@@ -26,6 +26,24 @@
   let resultJson = '';
   let resultBlob: Blob | null = null;
 
+  // Upgrade seam: the heuristic from-text tools emit confidence: 'no-match'
+  // when the input is beyond their pattern library. Turn that dead-end
+  // into a one-click path to the hosted-AI Pro fallback.
+  const PRO_FALLBACK: Record<string, string> = {
+    'regex-from-text': 'regex-from-text-pro',
+    'cron-from-text': 'cron-from-text-pro',
+  };
+  $: upgradeTool = (() => {
+    const fallback = PRO_FALLBACK[tool.id];
+    if (!fallback || !resultJson) return null;
+    try {
+      const parsed = JSON.parse(resultJson) as { confidence?: string };
+      return parsed.confidence === 'no-match' ? fallback : null;
+    } catch {
+      return null;
+    }
+  })();
+
   $: if (preloadedFile && files.length === 0) {
     files = [preloadedFile];
   }
@@ -156,6 +174,16 @@
         <div class="panel-divider"></div>
         <pre class="json-viewer" role="region" aria-label="JSON result">{resultJson}</pre>
 
+        {#if upgradeTool}
+          <a class="upgrade-seam" href={`/tools/${upgradeTool}`}>
+            <span class="upgrade-seam__chip">PRO</span>
+            <span class="upgrade-seam__text">
+              The free engine didn't recognize this. Generate it with hosted AI — 1 credit.
+            </span>
+            <span class="upgrade-seam__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        {/if}
+
         {#if resultBlob}
           <ChainSection
             resultBlob={resultBlob}
@@ -232,6 +260,44 @@
     overflow-y: auto;
     line-height: 1.5;
     margin: 0;
+  }
+
+  .upgrade-seam {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-hover);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background var(--duration-instant) var(--ease-sharp);
+  }
+  .upgrade-seam:hover {
+    background: var(--bg-raised);
+  }
+  .upgrade-seam__chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    background: var(--accent);
+    color: var(--black);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+  .upgrade-seam__text {
+    flex: 1;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    line-height: 1.45;
+  }
+  .upgrade-seam__arrow {
+    font-family: var(--font-mono);
+    color: var(--accent-text);
+    flex-shrink: 0;
   }
 
   .brackets::before, .brackets::after { content: ''; position: absolute; width: 8px; height: 8px; pointer-events: none; }
