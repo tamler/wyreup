@@ -186,6 +186,7 @@ import { csvFilter } from './tools/csv-filter/index.js';
 import { diffApply } from './tools/diff-apply/index.js';
 import { ocrSuspicious } from './tools/ocr-suspicious/index.js';
 import { htmlRedact } from './tools/html-redact/index.js';
+import { openapiReport } from './tools/openapi-report/index.js';
 import { jsonFlatten } from './tools/json-flatten/index.js';
 import { jsonUnflatten } from './tools/json-unflatten/index.js';
 import { otpauthUri } from './tools/otpauth-uri/index.js';
@@ -427,6 +428,7 @@ export const defaultTools: ToolModule<any>[] = [
   diffApply,
   ocrSuspicious,
   htmlRedact,
+  openapiReport,
   jsonFlatten,
   jsonUnflatten,
   otpauthUri,
