@@ -154,8 +154,10 @@ into the Pro story later as fallback seams.
   configurable collision handling (JSZip).
 
 **Still to ship:**
-- **SEO surface area.** Every tool needs a real page with examples,
-  not just a runner. Long-tail wins.
+- ~~**SEO surface area.**~~ Shipped 2026-05-21 — per-tool pages carry
+  SoftwareApplication + FAQ + BreadcrumbList JSON-LD, canonical URLs,
+  and an auto-generated facts table + About section for every tool.
+  Hand-written `seoContent` is enriched per tool as signal warrants.
 - **Toolbelt as the wedge.** Showpiece preset chains on landing
   (PDF → text → translate; image → describe → alt-text).
 - **One Show HN attempt** with triggers + catalog-breadth angle.
@@ -174,11 +176,11 @@ implementation — these are the decisions we made vs. the spec:
 | Deployment | Defer until weekly actives | Live in production |
 | Auth | Anonymous license key | Account-based (email + multiple keys per account) |
 | Infra | CF Worker + KV | CF Pages Functions + D1 |
-| Pricing | $10/200, $25/600, $50/1500 + $8/mo sub | $4.99/50, $9.99/150, $19.99/400 packs only (migration to roadmap pricing pending LS variant updates) |
+| Pricing | $10/200, $25/600, $50/1500 + $8/mo sub | $5/150, $10/330, $20/680 packs + $8/mo for 300 credits (shipped 2026-05-20) |
 | Checkout | LS overlay (no redirect) | LS overlay (lemon.js) with redirect fallback |
 | Tool naming | `transcribe-hq`, `summarize-hq` (`-hq`) | `transcribe-pro`, `text-summarize-pro` (`-pro`) |
 | Marketing | "No separate /pro page" | `/pro` landing page exists |
-| Free-tier seam | `upgrade` field on heuristic no-match | **Not built** — PRO touchpoints are ProBadge chip + /pro page |
+| Free-tier seam | `upgrade` field on heuristic no-match | Shipped 2026-05-21 — regex/cron-from-text no-match results show an in-result CTA to the PRO fallback tools |
 
 **Shipped surfaces:**
 - ~~D1 schema, append-only credit ledger, UNIQUE(ls_order_id)
@@ -210,27 +212,27 @@ implementation — these are the decisions we made vs. the spec:
   audited via two background-agent reviews.~~
 - ~~Legal: /legal/terms, /legal/privacy, /legal/refund,
   /legal/pricing.~~
-- ~~Eight PRO tools wired end-to-end:
-  transcribe-pro (5cr), text-summarize-pro (3cr),
-  text-translate-pro (3cr), text-sentiment-pro (2cr),
-  text-ner-pro (2cr), text-redact-pro (3cr),
-  bg-remove-pro (4cr), upscale-2x-pro (4cr).
-  All `surfaces: ['web']` for v1 — CLI/MCP support requires
-  extending ToolRunContext with an API key.~~
+- ~~PRO tools wired end-to-end. Initial eight: transcribe-pro,
+  text-summarize/translate/sentiment/ner/redact-pro, bg-remove-pro,
+  upscale-2x-pro. Expanded 2026-05-20/21 to 20 tools — a 5-tool
+  vision flow (ocr-hq, image-describe, analyze-chart, image-q-and-a,
+  read-handwriting), detect-objects, two chain tools (translate-image,
+  transcribe-and-translate), the regex/cron-from-text upgrade-seam
+  pair, and pdf-summarize / pdf-q-and-a. All on Workers AI except
+  bg-remove/upscale (Replicate). Per-tool credit costs are
+  server-authoritative in functions/_lib/pricing.ts. All
+  `surfaces: ['web']` — CLI/MCP needs ToolRunContext to carry a key.~~
 
-**Pending (blocked on LS work):**
-- New LS variant IDs for the roadmap pricing ($10/200,
-  $25/600, $50/1500).
-- New $8/mo subscription product, 200 included tokens, $0.04
-  per overage.
-- Subscription state in D1, subscription_* webhook events,
-  auto-pause cron worker for unused subscriptions.
+**Pending — Lemon Squeezy store approval only:**
+- All monetization code is shipped — packs, the $8/mo subscription
+  (300 credits/cycle, D1 subscription state, subscription_* webhook
+  handlers), checkout, and the credit ledger. What remains is LS
+  approving the store for live sales; the end-to-end purchase test
+  (T21) waits on that. The auto-pause cron was dropped — the
+  subscription is blocked-on-empty: run out and you wait for the next
+  cycle or buy a pack.
 
 **Deliberately not done (deviations from original spec):**
-- `upgrade` field on heuristic no-match results. Was framed
-  as "the only Pro touchpoint on free tools" but we shipped
-  PRO without it. Reconsider once we have data on whether
-  /pro page conversion is sufficient.
 - CLI/MCP PRO support. Tools ship with `surfaces: ['web']`;
   enabling CLI/MCP needs ToolRunContext to carry an API key
   and the runner variants to wire that through.
@@ -292,17 +294,16 @@ for cross-reference with commit history; full diff in
 - Anything that needs a server roundtrip
 - Anything beyond a single command's worth of UX
 
-**Remaining Wave-U deck (Bucket 2, defer until user signal):**
-- **`openapi-report`** — chain `openapi-validate` → `text-template`
-  → Markdown summary for CI / PR comments.
-- **`html-redact`** — `text-redact` PII patterns over HTML preserving
-  structure (today's `text-redact` is plaintext-only).
-- **`ocr-suspicious`** — `ocr` + `text-suspicious` on images.
-  Threat model: prompt-injection in product/poster screenshots.
-- **`csv-sort`** / **`csv-filter`** — close the papaparse family
-  (dedupe + merge + diff exist, sort/filter don't).
-- **`diff-apply`** — apply a unified diff to a file. Consumer of the
-  text-diff producer.
+**Wave-U Bucket 2 — all shipped 2026-05-21:**
+- ~~`csv-sort` / `csv-filter`~~ — close the papaparse family.
+- ~~`diff-apply`~~ — apply a unified diff to a file; verifies each
+  hunk against the source and fails loudly on a mismatch.
+- ~~`ocr-suspicious`~~ — `ocr` + `text-suspicious` on images
+  (prompt-injection in screenshots / poster photos).
+- ~~`html-redact`~~ — `text-redact` PII patterns over HTML,
+  structure-preserving (tags and attributes left untouched).
+- ~~`openapi-report`~~ — `openapi-validate` → Markdown report for
+  CI logs / PR comments.
 
 ---
 
@@ -386,6 +387,11 @@ Out of Wave-M scope (kept on the wishlist, not in launch):
 Fifth surface alongside web/CLI/MCP/library. Reuses Wave T's rules engine
 (right-click → one-shot trigger).
 
+- Full-page screenshot of the current tab — a native extension
+  capability (debugger `Page.captureScreenshot` with
+  `captureBeyondViewport`, or scroll-stitch). The "full-length
+  screenshot" the web app provably cannot do — cross-origin iframes
+  can't be captured and there is no in-tab headless browser.
 - Hybrid architecture: popup for light tools (~30 of catalog),
   offscreen document for medium (compress, convert, rotate),
   tab hand-off via `chainStorage` for heavy ML, optional Native Messaging
@@ -560,13 +566,14 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   FFDNet-S/L models (paper arXiv:2509.16506, ~1k stars on
   github.com/jbarrow/commonforms) take a PDF and return a fillable
   version. Solves a real pain ("make this PDF fillable") that none of
-  our 20+ PDF tools cover. Gating questions before we commit:
-  (a) does FFDNet have an ONNX export that runs under
-  `onnxruntime-web` — if yes, drops in alongside `bg-remove`/`ocr-pro`
-  cleanly; if no, we're stuck with CLI-only via a Python sidecar,
-  which doesn't fit the cross-surface story.
-  (b) license is unstated in the repo; README invites non-academic use
-  to email the author. Resolve before shipping.
+  our 20+ PDF tools cover.
+  Gate (a) — ONNX export — **RESOLVED 2026-05-21**: huggingface.co/
+  jbarrow/FFDNet-S-cpu and FFDNet-L-cpu ship ONNX-only weights
+  (`FFDNet-S.onnx` is 38.4 MB), so it runs under `onnxruntime-web` and
+  drops in alongside `bg-remove`/`ocr-pro`/`upscale`.
+  Gate (b) — the license is still unstated; the README invites
+  non-academic use by emailing the author. Resolve the license before
+  shipping; the technical path is otherwise clear.
 - **PDF chat-fill assistant** (revisit after Wave AI-Chrome lands).
   Inspired by SimplePDF Copilot
   (github.com/SimplePDF/simplepdf-embed/tree/main/copilot) — a chat
@@ -673,6 +680,10 @@ real semantic primitives.
 - **Pomodoro / basic calculator** — not file-oriented.
 - **CAD (DXF/DWG)** — needs ODA File Converter binary.
 - **PDF → Word (`.docx`)** — heavy and niche in-browser.
+- **DjVu support (`djvujs`)** — the only mature in-browser DjVu
+  decoder, `RussCoder/djvujs`, is GPL-licensed (v3+). Bundling it into
+  MIT-licensed `@wyreup/core` is a copyleft conflict. Reopen only if a
+  permissively-licensed DjVu decoder appears. (Evaluated 2026-05-21.)
 
 ---
 
