@@ -264,26 +264,32 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
     </main>
 
     <footer class="site-footer">
-      <div class="container footer-inner">
-        <span class="footer-copy">&copy; {new Date().getFullYear()} Wyreup</span>
-        <div class="footer-rule" aria-hidden="true">
-          <span class="footer-rule__line"></span>
-          <span class="footer-rule__pad"></span>
+      <div class="container">
+        <div class="footer-cols">
+          <nav class="footer-col" aria-label="Wyreup">
+            <span class="footer-col__head">Wyreup</span>
+            <a href="/tools" class="footer-link">All tools</a>
+            <a href="/pro" class="footer-link">Pricing</a>
+            <a href="/about" class="footer-link">About</a>
+            <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+          </nav>
+          <nav class="footer-col" aria-label="Help">
+            <span class="footer-col__head">Help</span>
+            <a href="/settings" class="footer-link">Settings</a>
+            <a href="mailto:hello@wyreup.com?subject=Tool%20suggestion" class="footer-link">Suggest a tool</a>
+            <a href="/sitemap.xml" class="footer-link">Sitemap</a>
+          </nav>
+          <nav class="footer-col" aria-label="Legal">
+            <span class="footer-col__head">Legal</span>
+            <a href="/legal/terms" class="footer-link">Terms</a>
+            <a href="/legal/privacy" class="footer-link">Privacy</a>
+            <a href="/legal/refund" class="footer-link">Refunds</a>
+          </nav>
         </div>
-        <nav class="footer-nav" aria-label="Footer navigation">
-          <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
-          <a href="/about" class="footer-link">About</a>
-          <a href="/pro" class="footer-link">PRO</a>
-          <a href="/settings" class="footer-link">Settings</a>
-          <a href="/sitemap.xml" class="footer-link">Sitemap</a>
-          <a href="mailto:hello@wyreup.com?subject=Tool%20suggestion" class="footer-link">Suggest a tool</a>
-        </nav>
-        <nav class="footer-legal" aria-label="Legal">
-          <a href="/legal/terms" class="footer-link">Terms</a>
-          <a href="/legal/privacy" class="footer-link">Privacy</a>
-          <a href="/legal/refund" class="footer-link">Refunds</a>
-          <a href="/pro" class="footer-link">Pricing</a>
-        </nav>
+        <div class="footer-base">
+          <span class="footer-copy">&copy; {new Date().getFullYear()} Wyreup</span>
+          <span class="footer-base__tag">File tools that run on your device.</span>
+        </div>
       </div>
     </footer>
 
@@ -476,53 +482,47 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
   /* Footer */
   .site-footer {
     border-top: 1px solid var(--border);
-    padding: var(--space-4) 0;
+    padding: var(--space-8) 0 var(--space-6);
     margin-top: var(--space-12);
   }
 
-  .footer-inner {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    font-size: var(--text-sm);
-    color: var(--text-subtle);
+  .footer-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
   }
 
-  .footer-rule {
+  .footer-col {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--space-2);
-    flex: 1;
   }
 
-  .footer-rule__line {
-    display: block;
-    flex: 1;
-    height: 1px;
-    background: var(--border-subtle);
-  }
-
-  .footer-rule__pad {
-    display: block;
-    width: 3px;
-    height: 3px;
-    background: var(--border);
-    flex-shrink: 0;
-  }
-
-  .footer-nav,
-  .footer-legal {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-  }
-  .footer-legal {
-    gap: var(--space-3);
-  }
-  .footer-legal .footer-link {
-    color: var(--text-subtle);
+  .footer-col__head {
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+  }
+
+  .footer-base {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .footer-copy,
+  .footer-base__tag {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
   }
 
   .footer-link {
@@ -535,6 +535,13 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
 
   .footer-link:hover {
     color: var(--text-muted);
+  }
+
+  @media (max-width: 560px) {
+    .footer-cols {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+    }
   }
 
   @media (max-width: 640px) {
