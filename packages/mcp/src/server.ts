@@ -9,6 +9,27 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+// ──── Pro auth from environment ───────────────────────────────────────────────
+//
+// Pro tools (cost: 'credit') route through /api/tools/pro/run with a
+// Bearer header. We read the key from WYREUP_API_KEY and the origin from
+// WYREUP_ORIGIN at server startup. If the key is missing we degrade
+// gracefully — free tools still work, Pro tools are hidden from the
+// listing, and the operator gets a stderr nudge to set the env var.
+
+const DEFAULT_PRO_ORIGIN = 'https://wyreup.com';
+
+function resolveProApiKey(): string | undefined {
+  const raw = process.env['WYREUP_API_KEY'];
+  return raw && raw.trim() ? raw.trim() : undefined;
+}
+
+function resolveProOrigin(): string {
+  const raw = process.env['WYREUP_ORIGIN'];
+  if (raw && raw.trim()) return raw.trim().replace(/\/+$/, '');
+  return DEFAULT_PRO_ORIGIN;
+}
+
 // ──── MIME helpers ────────────────────────────────────────────────────────────
 
 const EXT_TO_MIME: Record<string, string> = {
@@ -130,13 +151,24 @@ function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boo
 
 export function createWyreupMcpServer(): Server {
   const registry = createDefaultRegistry();
-  // Hide tools that can't run via MCP (e.g. web-only capture
-  // primitives like record-audio that need getUserMedia). They aren't
-  // listed and aren't callable — the agent never sees them as an
-  // option, so there's no fail path.
-  const tools = Array.from(registry.toolsById.values()).filter((t) =>
-    toolRunsOnSurface(t, 'mcp'),
-  );
+  const proApiKey = resolveProApiKey();
+  const proOrigin = resolveProOrigin();
+
+  // Without a Pro API key, hide credit-gated tools so the agent never
+  // sees an option it can't actually invoke. Print a one-shot stderr
+  // hint so the operator knows what to set; don't hard-fail the
+  // server — free tools still work and that's the whole point of the
+  // graceful-degrade path.
+  if (!proApiKey) {
+    process.stderr.write(
+      'wyreup MCP: WYREUP_API_KEY not set — Pro tools are hidden. ' +
+        'Set the env var (or run `wyreup login` and pipe ~/.wyreup/config.json) to enable them.\n',
+    );
+  }
+
+  const tools = Array.from(registry.toolsById.values())
+    .filter((t) => toolRunsOnSurface(t, 'mcp'))
+    .filter((t) => proApiKey || t.cost !== 'credit');
 
   const server = new Server(
     { name: 'wyreup', version: '0.1.0' },
@@ -307,6 +339,20 @@ export function createWyreupMcpServer(): Server {
       if (!readResult.ok) return errorResult(readResult.error);
       const inputFiles = readResult.files;
 
+      // If any step in the chain is a Pro tool, the whole chain needs
+      // the API key. Fail fast with a clear message instead of letting
+      // runPro throw mid-pipeline (which would have already done
+      // billable steps).
+      const chainHasPro = chain.some(
+        (s) => registry.toolsById.get(s.toolId)?.cost === 'credit',
+      );
+      if (chainHasPro && !proApiKey) {
+        return errorResult(
+          'wyreup_chain includes a Pro tool but WYREUP_API_KEY is not set. ' +
+            'Set the env var on the MCP server process and restart.',
+        );
+      }
+
       const effectiveTimeout = timeoutMs ?? 1800000; // 30 min default
       let result: Blob[] | Blob;
       try {
@@ -318,6 +364,8 @@ export function createWyreupMcpServer(): Server {
             signal: makeTimeoutSignal(effectiveTimeout),
             cache: new Map(),
             executionId: randomUUID(),
+            apiKey: proApiKey,
+            proOrigin,
           },
           registry,
         );
@@ -377,6 +425,15 @@ export function createWyreupMcpServer(): Server {
       return errorResult(`Unknown tool: ${name}`);
     }
 
+    // Pro tools need an API key. Without one we'd have already hidden
+    // it from the listing, but a stale agent / forced invocation could
+    // still target it — fail loud rather than silently doing nothing.
+    if (tool.cost === 'credit' && !proApiKey) {
+      return errorResult(
+        `Tool "${tool.id}" is a Pro tool. Set WYREUP_API_KEY on the MCP server process and restart.`,
+      );
+    }
+
     const rawArgs = args ?? {};
     const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
     const outputPath = rawArgs['output_path'] as string | undefined;
@@ -397,6 +454,8 @@ export function createWyreupMcpServer(): Server {
         signal: new AbortController().signal,
         cache: new Map(),
         executionId: randomUUID(),
+        apiKey: proApiKey,
+        proOrigin,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

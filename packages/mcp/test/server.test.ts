@@ -49,13 +49,20 @@ async function callTool(
 describe('createWyreupMcpServer', () => {
   let server: McpServer;
   let tmpDir: string;
+  const ORIG_KEY = process.env['WYREUP_API_KEY'];
 
   beforeAll(async () => {
+    // Provide a sentinel key so Pro tools are listed and callable in
+    // the structural tests below. Per-test no-key behavior is covered
+    // by the separate "Pro auth env gate" describe block at the bottom.
+    process.env['WYREUP_API_KEY'] = 'wk_test_mcp_unit';
     server = createWyreupMcpServer();
     tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-mcp-test-'));
   });
 
   afterAll(async () => {
+    if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
+    else process.env['WYREUP_API_KEY'] = ORIG_KEY;
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -254,5 +261,63 @@ describe('createWyreupMcpServer', () => {
     expect(result.content[0]?.text).toContain(outputPath);
     const data = await readFile(outputPath);
     expect(data.length).toBeGreaterThan(0);
+  });
+});
+
+// ──── Pro auth env gate ──────────────────────────────────────────────────────
+
+describe('createWyreupMcpServer — Pro auth env gate', () => {
+  const ORIG_KEY = process.env['WYREUP_API_KEY'];
+
+  afterAll(() => {
+    if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
+    else process.env['WYREUP_API_KEY'] = ORIG_KEY;
+  });
+
+  it('hides credit-gated tools from the listing when WYREUP_API_KEY is unset', async () => {
+    delete process.env['WYREUP_API_KEY'];
+    const server = createWyreupMcpServer();
+    const result = await listTools(server);
+    const names = new Set(result.tools.map((t) => t.name));
+    // Known Pro tools should be absent...
+    expect(names.has('transcribe-pro')).toBe(false);
+    expect(names.has('text-summarize-pro')).toBe(false);
+    expect(names.has('text-to-speech-pro')).toBe(false);
+    // ...but free tools and the chain meta-tool should still be present.
+    expect(names.has('hash')).toBe(true);
+    expect(names.has('wyreup_chain')).toBe(true);
+  });
+
+  it('lists credit-gated tools when WYREUP_API_KEY is set', async () => {
+    process.env['WYREUP_API_KEY'] = 'wk_test_listed';
+    const server = createWyreupMcpServer();
+    const result = await listTools(server);
+    const names = new Set(result.tools.map((t) => t.name));
+    expect(names.has('transcribe-pro')).toBe(true);
+    expect(names.has('text-summarize-pro')).toBe(true);
+  });
+
+  it('returns a structured error when a Pro tool is invoked without a key', async () => {
+    delete process.env['WYREUP_API_KEY'];
+    const server = createWyreupMcpServer();
+    // Even though the listing hides it, an agent could still hit the
+    // tool by name from a stale context. Server must reject loudly.
+    const result = await callTool(server, 'text-sentiment-pro', {
+      input_paths: [],
+      params: {},
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toMatch(/WYREUP_API_KEY/);
+  });
+
+  it('rejects a chain that includes a Pro tool when no key is set', async () => {
+    delete process.env['WYREUP_API_KEY'];
+    const server = createWyreupMcpServer();
+    const result = await callTool(server, 'wyreup_chain', {
+      steps: 'transcribe|text-summarize-pro',
+      input_paths: [join(FIXTURES, 'photo.jpg')],
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toMatch(/Pro tool|WYREUP_API_KEY/);
   });
 });
