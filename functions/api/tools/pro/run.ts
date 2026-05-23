@@ -1,10 +1,10 @@
 // POST /api/tools/pro/run
 // Reserve-then-refund pattern — see docs/pro-auth-spec.md §10.
 //
-// The hosted-model call is intentionally a stub for now (`runHostedTool`
-// throws "not implemented"). This lets us land the auth + ledger plumbing
-// end-to-end, exercise the gate from the browser, and prove the
-// reservation+refund cycle works before any model is actually hosted.
+// Flow: resolve user → check rate limit → atomic reserve (conditional
+// INSERT keyed off SUM(amount) >= cost) → dispatch to runPro() →
+// on throw, idempotent refund row → otherwise log to run_history.
+// Every write is append-only; the ledger never mutates a prior row.
 
 import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
@@ -41,7 +41,45 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const creditCost = priceFor(toolId);
   if (creditCost == null) return json({ error: 'Not a PRO tool' }, 400);
 
-  // 0. Per-account rate limit. Stops a stolen key from draining a balance
+  // 0a. Sweep orphan spend rows from prior mid-handler crashes. A `spend`
+  // row with no matching run_history (success) and no matching refund
+  // (handled failure) older than 5 minutes means the runtime died between
+  // reserve and outcome — auto-refund so the user isn't billed for
+  // nothing. The partial UNIQUE index on credit_events(refund_of) keeps
+  // this idempotent if it ever races a normal refund path.
+  const orphans = await env.DB.prepare(
+    `SELECT spend.id AS spend_id, spend.amount AS amount, spend.tool_id AS tool_id
+       FROM credit_events spend
+       LEFT JOIN run_history rh ON rh.spend_event_id = spend.id
+       LEFT JOIN credit_events ref ON ref.refund_of = spend.id
+      WHERE spend.user_id = ?
+        AND spend.kind = 'spend'
+        AND spend.created_at < ?
+        AND rh.id IS NULL
+        AND ref.id IS NULL
+      LIMIT 10`,
+  )
+    .bind(user.id, Date.now() - 5 * 60 * 1000)
+    .all<{ spend_id: string; amount: number; tool_id: string | null }>();
+  for (const orphan of orphans.results ?? []) {
+    await env.DB.prepare(
+      `INSERT OR IGNORE INTO credit_events
+         (id, user_id, kind, amount, tool_id, refund_of, note, created_at)
+       VALUES (?, ?, 'refund', ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        `evt_${nanoid(16)}`,
+        user.id,
+        Math.abs(orphan.amount),
+        orphan.tool_id,
+        orphan.spend_id,
+        `Auto-refund for orphan spend ${orphan.spend_id}`,
+        Date.now(),
+      )
+      .run();
+  }
+
+  // 0b. Per-account rate limit. Stops a stolen key from draining a balance
   // in the time it takes the legitimate owner to notice and revoke.
   // 30 PRO runs in any 60-second window is well above human use but still
   // bounds the worst-case loss to ~150 credits / minute (= $15 at our
@@ -90,20 +128,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: 'Insufficient credits', balance }, 402);
   }
 
-  // 2. Run the hosted model. On failure, refund idempotently.
+  // 2. Run the hosted model. On failure, refund idempotently. The
+  //    refund_of column links the refund to its originating spend so the
+  //    orphan sweep above can tell handled failures from real crashes.
   let result: unknown;
   try {
     result = await runPro(toolId, input, env);
   } catch (err) {
     await env.DB.prepare(
-      `INSERT INTO credit_events (id, user_id, kind, amount, tool_id, note, created_at)
-       VALUES (?, ?, 'refund', ?, ?, ?, ?)`,
+      `INSERT OR IGNORE INTO credit_events
+         (id, user_id, kind, amount, tool_id, refund_of, note, created_at)
+       VALUES (?, ?, 'refund', ?, ?, ?, ?, ?)`,
     )
       .bind(
         `evt_${nanoid(16)}`,
         user.id,
         creditCost,
         toolId,
+        spendId,
         `Refund for failed run ${spendId}`,
         Date.now(),
       )
@@ -111,14 +153,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: 'Run failed', detail: String(err) }, 502);
   }
 
-  // 3. Log run history (no file content, only filename for the user's own UI).
+  // 3. Log run history (no file content, only filename for the user's own
+  //    UI). The spend_event_id links the success record to its spend row
+  //    so the orphan sweep can recognise this as a settled run.
   const fileName =
-    typeof input.fileName === 'string' ? (input.fileName as string).slice(0, 256) : null;
+    typeof input.fileName === 'string' ? input.fileName.slice(0, 256) : null;
   await env.DB.prepare(
-    `INSERT INTO run_history (id, user_id, tool_id, tier, credits_used, file_name, ran_at)
-     VALUES (?, ?, ?, 'pro', ?, ?, ?)`,
+    `INSERT INTO run_history
+       (id, user_id, tool_id, tier, credits_used, file_name, ran_at, spend_event_id)
+     VALUES (?, ?, ?, 'pro', ?, ?, ?, ?)`,
   )
-    .bind(`run_${nanoid(16)}`, user.id, toolId, creditCost, fileName, Date.now())
+    .bind(`run_${nanoid(16)}`, user.id, toolId, creditCost, fileName, Date.now(), spendId)
     .run();
 
   return json({ result });
