@@ -340,6 +340,38 @@ The hypothetical "Wave V-CLI" (a `wyreup db` REPL) is **explicitly
 out of scope** — agents and CLI users get all the value via the
 `csv-sql` tool already, no stateful CLI surface needed.
 
+### Wave W — Semantic-search Pro tools (embeddings + reranker)
+
+Surveyed 2026-05-23 against the Cloudflare AI catalog. A new category
+we don't have: native-pricing embedding + reranker models that unlock
+"find similar" / "rank these" workflows.
+
+**Candidate tools:**
+- **`text-find-similar-pro`** (1 credit) — input: target text + JSON
+  array of candidate strings. Output: ranked similarities. Backend:
+  `@cf/baai/bge-m3` ($0.012/M input tokens, dirt cheap). The
+  mom-friendly framing: "find me documents that match this one."
+- **`rank-results-pro`** (1 credit) — input: query + array of candidate
+  answers/passages. Output: scored ranking. Backend:
+  `@cf/baai/bge-reranker-base` ($0.003/M, even cheaper). Pairs
+  naturally with `text-find-similar-pro` for "search then rerank."
+- **`text-cluster-pro`** (2 credits) — input: JSON array of texts.
+  Output: cluster labels per row. Backend: embeddings + k-means or
+  HDBSCAN client-side. Useful for "group my customer feedback by
+  theme."
+
+**Why native pricing matters:** all three backends are Workers AI
+native, billed in neurons. At ~$0.001/run typical, every tool clears
+the 50% margin floor by a wide margin.
+
+**Tradeoff to note:** vectors aren't a useful end-state on their own
+— these tools only chain well into each other or into csv-sql
+(`SELECT … ORDER BY score`). Not as flashy as TTS or image-gen, but
+genuinely missing capability for any "search inside my data" flow.
+
+**Estimated effort:** 2-3 hours per tool. Could ship all three in one
+session.
+
 ### Wave M — Monetization (Lemon Squeezy + hosted AI) — **SHIPPED 2026-05-18, see Now §4**
 
 Original scope kept below for posterity. Adopted version is recorded
@@ -535,6 +567,14 @@ Ordered by priority.
 4. **`face-blur` Node integration test skip.** MediaPipe doesn't init
    under vitest's jsdom-less env. Re-enable if a better headless test
    path emerges.
+
+4a. **`detr-resnet-50` is tagged Beta on Workers AI** (the backend for
+    our `detect-objects` Pro tool). No deprecation date yet, but
+    Cloudflare's Beta tier can change without warning. Migration
+    candidates if/when it disappears: switch to a vision LLM call
+    via llama-4-scout asking for structured `{label, box}` JSON, or
+    move object detection to a Replicate model alongside bg-remove.
+    Watch the catalog; no action until then.
 5. ~~**Lazy-load runner variants in `ToolRunner.svelte`.**~~ Done
    2026-05-15 — 29 runners converted to dynamic imports keyed off
    `RunnerVariant`; entry chunk dropped from a ~250KB aggregator to
@@ -629,6 +669,76 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   to bring Chrome Built-in AI into CLI/MCP — bundling 200 MB of Chromium
   to access an API our transformers.js fallback already covers in CLI
   is the wrong tradeoff.
+- **`explain-code-pro`** (Pro, 1–2 credits) — paste a code snippet,
+  get a plain-English walkthrough. Backend: `@cf/qwen/qwen2.5-coder-
+  32b-instruct` (native Workers AI). Pairs with the free `regex-
+  explain` and `sql-format-explain` heuristic tools — fills the
+  general-code slot. Engineer-leaning audience. ~1-2 hours to ship
+  once we want a code-focused Pro entry.
+- **Alternative backend candidates for existing tools** (surveyed
+  2026-05-23). Not new tools — model swaps to evaluate if the current
+  backend hits a quality or pricing wall:
+  - `@cf/openai/gpt-oss-120b` / `gpt-oss-20b` — reasoning + function
+    calls, alternative to DeepSeek R1 for `deep-analysis-pro`. Open-
+    weight, native pricing.
+  - `@cf/google/gemma-4-26b-a4b-it` — multimodal (text + image),
+    alternative to llama-3.2-11b-vision for the OCR/vision flow.
+  - `@cf/nvidia/nemotron-3-120b-a12b` — reasoning, agentic. Another
+    deep-analysis backend option.
+  - `@cf/moonshotai/kimi-k2.6` — frontier-class 1T param successor to
+    k2.5. **Rejected 2026-05-23** as a chat-long-pdf-pro target:
+    pricing 60% higher than k2.5 ($0.95 + $4.00/M vs $0.60 + $3.00/M)
+    would drop margin to 30% at our 2-credit price. Migrated to
+    `llama-4-scout` instead (10M context, 4× cheaper). Keep noted
+    in case quality complaints surface.
+  - `@cf/qwen/qwen3-30b-a3b-fp8` — function-calling specialist for
+    a future `json-extract-pro` swap if Llama 4 Scout disappoints.
+
+### Catalog items evaluated 2026-05-23 — partner-billed, deferred
+
+Surveyed against the full Cloudflare AI catalog (not just Workers
+AI). These all exist as Cloudflare-hosted models, but with **partner
+pass-through pricing** instead of Workers AI's neuron-cheap model.
+Per-call cost at provider rates breaks our $0.02/credit gross
+revenue math. Revisit if/when wyreup adds a higher-priced "Premium"
+credit tier or a per-call billing surface.
+
+- **`@cf/recraftv4-pro-vector` / `recraftv4-vector`** — text-to-SVG
+  generation. **Unique in our catalog** (no in-browser equivalent;
+  Flux gives raster). ~$0.025-0.04/call → would need 3+ credits to
+  hit the 50% margin floor.
+- **`@cf/black-forest-labs/flux-2-dev`, `flux-2-klein-4b`, `flux-2-
+  klein-9b`** — premium image generation tiers above schnell.
+  Klein-9b was specced as a 2-credit "HD" companion to image-
+  generate-pro in Wave 2; still queued there.
+- **`@cf/leonardo/phoenix-1.0`, `lucid-origin`** — premium image
+  generation (Leonardo). Same partner-billing constraint.
+- **`@cf/deepgram/aura-1`, `aura-2-en`, `aura-2-es`** — premium TTS.
+  Specced as Wave 2 "text-to-speech-premium" with a 2-credit/800-char
+  cap; still queued there.
+- **`@cf/deepgram/nova-3`, `flux`** — conversational / real-time ASR.
+  Better for multi-speaker meetings than Whisper but real-time
+  surface (WebSocket/Durable Object) is its own engineering project.
+- **`@cf/minimax/speech-2.8-turbo`, `speech-2.8-hd`** — voice cloning
+  + emotion control. Only valuable if we build a voice-focused
+  product.
+- **`@cf/openai/gpt-image-1.5`, `@cf/bytedance/seedream-4.0`,
+  `@cf/google/imagen-*`, `@cf/black-forest-labs/flux-kontext-*`** —
+  image editing (vs generation). True "edit this photo from a
+  prompt" surface; proxied at provider rates.
+- **Video gen — `@cf/google/veo-3`, `veo-3.1`, `@cf/hailuo/hailuo-
+  2.3`, `@cf/runwayml/gen-4.5`, `@cf/pixverse/*`, `@cf/wan/*`,
+  `@cf/vidu/*`** — 13 partner-billed text-to-video models. Way out
+  of our cost band.
+- **`@cf/minimax/music-2.6`** — music generation. Cool, partner-
+  billed, no chain story.
+- **`@cf/pipecat-ai/smart-turn-v2`** — voice activity / turn detec-
+  tion. Only useful as part of a voice-product surface; if we ever
+  build that, this is a primitive.
+
+Revisit conditions for any of the above: (1) wyreup ships a higher-
+tier credit pack at $0.05+/credit, OR (2) Cloudflare moves the model
+to native neuron pricing.
 
 The previously-listed heavy-ML candidates (LaMa, GFPGAN, DDColor,
 optical-flow video interpolation, ML video upscaling) move under the
