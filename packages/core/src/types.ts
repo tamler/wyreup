@@ -109,6 +109,22 @@ export interface ToolRunContext {
    * backend calls so that retries don't double-charge credits.
    */
   executionId: string;
+  /**
+   * Caller-supplied API key for Pro tools. Required when running a Pro
+   * tool outside the browser (CLI, MCP). Ignored in the browser, which
+   * uses the wyreup_session cookie instead. When set anywhere, the
+   * Pro runner sends `Authorization: Bearer <apiKey>` instead of the
+   * cookie — so the same path also works for browser scripts that
+   * carry a Bearer key (e.g. a notebook embedding wyreup).
+   */
+  apiKey?: string;
+  /**
+   * Origin to POST Pro requests to. Defaults to '' (same-origin) in
+   * the browser; CLI/MCP must set this to the production URL —
+   * typically `https://wyreup.com` — so `fetch()` resolves correctly
+   * outside the browser. The CLI exposes `WYREUP_ORIGIN` for tests.
+   */
+  proOrigin?: string;
 }
 
 // ──── Declarative param field metadata ────

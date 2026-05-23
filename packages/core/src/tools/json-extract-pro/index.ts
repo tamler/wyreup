@@ -30,7 +30,6 @@ export const jsonExtractPro: ToolModule<JsonExtractProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['json-formatter', 'csv-json', 'json-schema-validate'],
 

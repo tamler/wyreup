@@ -27,7 +27,6 @@ export const textRedactPro: ToolModule<TextRedactProParams> = {
   cost: 'credit',
   creditCost: 2,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-summarize-pro', 'text-translate-pro'],

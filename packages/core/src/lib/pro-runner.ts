@@ -4,6 +4,12 @@
 // /api/tools/pro/run, surface errors clearly, and ping the browser shell
 // so the header balance refreshes. This helper centralizes that, so
 // individual tool modules stay focused on input shaping + output framing.
+//
+// Auth: cookie OR Bearer. The browser path leans on the wyreup_session
+// cookie set by /api/account/verify. CLI and MCP pass an explicit API
+// key via `ctx.apiKey`, which switches us to a Bearer header. The
+// server-side `resolveUser()` accepts either form (see
+// functions/_lib/auth.ts).
 
 import type { ToolRunContext } from '../types.js';
 
@@ -27,11 +33,12 @@ export async function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * POST to /api/tools/pro/run with credentials and parse the wrapped result.
- * Throws an Error whose message is the server's user-facing copy when
- * available (401, 402 insufficient credits, 429 rate limit, 502 model
- * failure). Dispatches `wyreup:balance-changed` on success so the header
- * ⚡ badge re-fetches without a page reload.
+ * POST to /api/tools/pro/run with the right auth for the surface, then
+ * parse the wrapped result. Throws an Error whose message is the
+ * server's user-facing copy when available (401, 402 insufficient
+ * credits, 429 rate limit, 502 model failure). Dispatches
+ * `wyreup:balance-changed` on success so the header ⚡ badge re-fetches
+ * without a page reload (no-op outside the browser).
  */
 export async function runPro<TResult>(
   toolId: string,
@@ -40,18 +47,45 @@ export async function runPro<TResult>(
 ): Promise<TResult> {
   if (ctx.signal.aborted) throw new Error('Aborted');
 
-  const res = await fetch('/api/tools/pro/run', {
+  const isBrowser = typeof window !== 'undefined';
+  const base = ctx.proOrigin ?? '';
+  const url = `${base}/api/tools/pro/run`;
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const init: RequestInit = {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
+    headers,
     body: JSON.stringify({ toolId, input }),
     signal: ctx.signal,
-  });
+  };
+
+  if (ctx.apiKey) {
+    // Explicit key wins on every surface. This is how CLI and MCP
+    // authenticate, and how a browser script with a Bearer key can
+    // run Pro tools without relying on the wyreup_session cookie.
+    headers.Authorization = `Bearer ${ctx.apiKey}`;
+  } else if (isBrowser) {
+    // Browser default — the wyreup_session cookie was set by
+    // /api/account/verify when the user activated their key.
+    init.credentials = 'same-origin';
+  } else {
+    // Non-browser without a key — fail fast with the recovery path.
+    throw new Error(
+      'PRO tools require an API key when not in a browser. ' +
+        'Run `wyreup login` (CLI) or set WYREUP_API_KEY (MCP).',
+    );
+  }
+
+  const res = await fetch(url, init);
 
   if (!res.ok) {
     const detail = (await res.json().catch(() => ({}))) as { error?: string };
     if (res.status === 401) {
-      throw new Error('Please sign in with your Wyreup API key to use PRO tools.');
+      throw new Error(
+        isBrowser && !ctx.apiKey
+          ? 'Please sign in with your Wyreup API key to use PRO tools.'
+          : 'Your Wyreup API key was rejected. Re-run `wyreup login` or check WYREUP_API_KEY.',
+      );
     }
     if (res.status === 402) {
       throw new Error(detail.error ?? 'Not enough credits. Buy more from /account.');
@@ -68,8 +102,7 @@ export async function runPro<TResult>(
   }
 
   // Tell the browser shell to re-fetch the balance. Guarded for non-browser
-  // surfaces (PRO tools ship with surfaces: ['web'] today, but the import
-  // graph is shared with CLI/MCP so window may be undefined.)
+  // surfaces (CLI / MCP have no DOM to dispatch into).
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('wyreup:balance-changed'));
   }

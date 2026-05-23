@@ -31,7 +31,6 @@ export const regexFromTextPro: ToolModule<RegexFromTextProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'mono',
 
   chainSuggestions: ['regex-tester', 'regex-visualize', 'regex-explain'],

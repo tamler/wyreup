@@ -31,7 +31,6 @@ export const chatLongPdfPro: ToolModule<ChatLongPdfProParams> = {
   cost: 'credit',
   creditCost: 2,
   memoryEstimate: 'medium',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-summarize-pro', 'text-to-speech-pro'],

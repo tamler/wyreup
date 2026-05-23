@@ -31,7 +31,6 @@ export const pdfQandA: ToolModule<PdfQandAParams> = {
   cost: 'credit',
   creditCost: 2,
   memoryEstimate: 'medium',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-translate-pro'],

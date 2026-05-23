@@ -23,7 +23,6 @@ export const analyzeChart: ToolModule<Record<string, never>> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-summarize-pro', 'text-translate-pro'],

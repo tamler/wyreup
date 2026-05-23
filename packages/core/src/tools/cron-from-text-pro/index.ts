@@ -29,7 +29,6 @@ export const cronFromTextPro: ToolModule<CronFromTextProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'mono',
 
   chainSuggestions: ['cron-parser'],

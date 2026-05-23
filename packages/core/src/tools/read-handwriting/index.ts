@@ -23,7 +23,6 @@ export const readHandwriting: ToolModule<Record<string, never>> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-translate-pro', 'text-summarize-pro'],

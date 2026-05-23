@@ -32,7 +32,6 @@ export const bgRemovePro: ToolModule<BgRemoveProParams> = {
   cost: 'credit',
   creditCost: 3,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['compress', 'image-watermark', 'convert'],
 

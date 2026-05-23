@@ -33,7 +33,6 @@ export const translateManyPro: ToolModule<TranslateManyProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-to-speech-pro', 'text-summarize-pro'],

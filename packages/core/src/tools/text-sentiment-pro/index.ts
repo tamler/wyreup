@@ -27,7 +27,6 @@ export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['text-keywords', 'text-ner-pro'],
 

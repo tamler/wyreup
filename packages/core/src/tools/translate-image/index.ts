@@ -29,7 +29,6 @@ export const translateImage: ToolModule<TranslateImageParams> = {
   cost: 'credit',
   creditCost: 2,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-summarize-pro', 'text-sentences'],

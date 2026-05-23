@@ -32,7 +32,6 @@ export const textNerPro: ToolModule<TextNerProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['text-summarize-pro', 'text-redact-pro', 'text-keywords'],
 

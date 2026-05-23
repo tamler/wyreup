@@ -29,7 +29,6 @@ export const detectObjects: ToolModule<Record<string, never>> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'mono',
 
   chainSuggestions: ['json-path', 'json-to-xml'],

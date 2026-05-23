@@ -33,7 +33,6 @@ export const contentSafetyPro: ToolModule<ContentSafetyProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['text-redact-pro', 'text-sentiment-pro'],
 

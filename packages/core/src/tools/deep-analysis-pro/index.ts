@@ -34,7 +34,6 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
   cost: 'credit',
   creditCost: 3,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['text-summarize-pro', 'text-to-speech-pro'],
 

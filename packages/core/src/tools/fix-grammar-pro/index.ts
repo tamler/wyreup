@@ -27,7 +27,6 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['rewrite-tone-pro', 'text-to-speech-pro', 'text-translate-pro'],

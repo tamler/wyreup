@@ -25,7 +25,6 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
   cost: 'credit',
   creditCost: 2,
   memoryEstimate: 'medium',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-translate-pro', 'text-sentences'],

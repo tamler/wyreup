@@ -37,7 +37,6 @@ export const upscale2xPro: ToolModule<UpscaleProParams> = {
   cost: 'credit',
   creditCost: 3,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['compress', 'convert', 'bg-remove-pro'],
 

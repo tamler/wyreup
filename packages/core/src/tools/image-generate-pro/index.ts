@@ -35,7 +35,6 @@ export const imageGeneratePro: ToolModule<ImageGenerateProParams> = {
   cost: 'credit',
   creditCost: 1,
   memoryEstimate: 'low',
-  surfaces: ['web'],
 
   chainSuggestions: ['bg-remove-pro', 'upscale-2x-pro', 'image-watermark'],
 

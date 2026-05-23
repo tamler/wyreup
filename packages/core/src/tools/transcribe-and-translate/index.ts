@@ -33,7 +33,6 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   cost: 'credit',
   creditCost: 5,
   memoryEstimate: 'low',
-  surfaces: ['web'],
   outputDisplay: 'prose',
 
   chainSuggestions: ['text-summarize-pro', 'text-sentences'],
