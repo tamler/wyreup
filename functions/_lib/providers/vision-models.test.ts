@@ -23,7 +23,10 @@ describe('visionPrompt', () => {
   it('converts imageBytes to a plain number array before calling AI.run', async () => {
     const env = mockEnv({ response: 'ok' });
     await visionPrompt(env, new Uint8Array([10, 20]), 'x');
-    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0];
+    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0] as [
+      string,
+      { image: unknown[] },
+    ];
     expect(call[1].image).toEqual([10, 20]);
   });
 });
@@ -53,7 +56,10 @@ describe('detectObjects', () => {
   it('converts imageBytes to a plain number array before calling AI.run', async () => {
     const env = mockEnv([]);
     await detectObjects(env, new Uint8Array([10, 20]));
-    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0];
+    const call = (env.AI.run as ReturnType<typeof vi.fn>).mock.calls[0] as [
+      string,
+      { image: unknown[] },
+    ];
     expect(call[1].image).toEqual([10, 20]);
   });
 });

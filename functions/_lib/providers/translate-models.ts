@@ -9,6 +9,7 @@
 // stack by replacing the bodies and exporting the same signatures.
 
 import type { Env } from '../env';
+import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 const M2M100_MODEL = '@cf/meta/m2m100-1.2b';
 const INDICTRANS2_MODEL = '@cf/ai4bharat/indictrans2-en-indic-1B';
@@ -26,11 +27,15 @@ export interface TranslateResult {
 }
 
 export async function translateMany(env: Env, args: TranslateArgs): Promise<TranslateResult> {
-  const res = (await env.AI.run(M2M100_MODEL, {
-    text: args.text,
-    source_lang: args.source ?? 'en',
-    target_lang: args.target,
-  })) as { translated_text?: string };
+  const res = (await withTimeout(
+    env.AI.run(M2M100_MODEL, {
+      text: args.text,
+      source_lang: args.source ?? 'en',
+      target_lang: args.target,
+    }),
+    INFERENCE_TIMEOUTS.translate,
+    'translate-m2m100',
+  )) as { translated_text?: string };
   if (!res || typeof res.translated_text !== 'string') {
     throw new Error('Translation model returned no text');
   }
@@ -61,11 +66,15 @@ export async function translateIndic(
   env: Env,
   args: IndicTranslateArgs,
 ): Promise<TranslateResult> {
-  const res = (await env.AI.run(INDICTRANS2_MODEL, {
-    source_language: 'eng_Latn',
-    target_language: args.target,
-    contents: [args.text],
-  })) as { translations?: string[]; translation?: string };
+  const res = (await withTimeout(
+    env.AI.run(INDICTRANS2_MODEL, {
+      source_language: 'eng_Latn',
+      target_language: args.target,
+      contents: [args.text],
+    }),
+    INFERENCE_TIMEOUTS.translate,
+    'translate-indictrans2',
+  )) as { translations?: string[]; translation?: string };
   // The model has historically returned both shapes — accept either.
   const out =
     (Array.isArray(res.translations) ? res.translations[0] : undefined) ?? res.translation;

@@ -17,6 +17,7 @@
 import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
 import { chat, chatWith } from './providers/text-models';
+import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from './timeout';
 import { transcribe as runTranscribe } from './providers/audio-models';
 import { visionPrompt, detectObjects } from './providers/vision-models';
 import { synthesize, TTS_MAX_CHARS, type TtsLang } from './providers/tts-models';
@@ -416,9 +417,14 @@ async function textToSpeechPro(raw: RunnerInput, env: Env): Promise<RunnerOutput
 // refunds the credit instead of returning a silent false-negative.
 async function contentSafetyPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const text = readText(raw, 'text');
-  const res = (await env.AI.run(MODEL_GUARD, {
-    messages: [{ role: 'user', content: text }],
-  })) as { response?: string };
+  const res = (await withTimeout(
+    env.AI.run(MODEL_GUARD, {
+      messages: [{ role: 'user', content: text }],
+      max_tokens: MAX_TOKENS.classification,
+    }),
+    INFERENCE_TIMEOUTS.text,
+    'llama-guard',
+  )) as { response?: string };
   const out = typeof res?.response === 'string' ? res.response.trim() : '';
   if (!out) {
     throw new Error('Safety classifier returned no output');
@@ -461,6 +467,7 @@ async function deepAnalysisPro(raw: RunnerInput, env: Env): Promise<RunnerOutput
     MODEL_DEEPSEEK,
     'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
     `Document:\n${text}\n\nQuestion: ${question}`,
+    { maxTokens: MAX_TOKENS.reasoning },
   );
   const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
   const reasoning = thinkMatch?.[1]?.trim() ?? '';
@@ -511,6 +518,7 @@ async function chatLongPdfPro(raw: RunnerInput, env: Env): Promise<RunnerOutput>
     MODEL_KIMI,
     'You answer questions about long documents. Use ONLY the document below. If the answer is not present, say so plainly. Return only the answer.',
     `Document:\n${text}\n\nQuestion: ${question}`,
+    { maxTokens: MAX_TOKENS.reasoning },
   );
   return { answer };
 }

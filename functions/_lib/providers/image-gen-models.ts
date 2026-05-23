@@ -8,6 +8,7 @@
 // binding ships with Pages Functions — no token needed.
 
 import type { Env } from '../env';
+import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 const FLUX_SCHNELL_MODEL = '@cf/black-forest-labs/flux-1-schnell';
 
@@ -33,10 +34,14 @@ export async function generateImage(
   input: ImageGenInput,
 ): Promise<ImageGenOutput> {
   const steps = Math.min(Math.max(input.steps ?? 4, 1), MAX_STEPS);
-  const res = (await env.AI.run(FLUX_SCHNELL_MODEL, {
-    prompt: input.prompt,
-    steps,
-  })) as { image?: string };
+  const res = (await withTimeout(
+    env.AI.run(FLUX_SCHNELL_MODEL, {
+      prompt: input.prompt,
+      steps,
+    }),
+    INFERENCE_TIMEOUTS.image,
+    'image-gen-flux',
+  )) as { image?: string };
   if (!res || typeof res.image !== 'string') {
     throw new Error('Image-gen model returned no image');
   }

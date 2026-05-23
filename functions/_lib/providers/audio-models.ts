@@ -10,6 +10,7 @@
 // replacing this body and adding AUDIO_MODEL_TOKEN to env.ts.
 
 import type { Env } from '../env';
+import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 export interface TranscribeArgs {
   /** Raw audio bytes — Workers AI accepts most common containers. */
@@ -31,10 +32,14 @@ export async function transcribe(
   // Workers AI expects audio as an integer array of byte values.
   const audioArr = Array.from(args.bytes);
 
-  const res = (await env.AI.run('@cf/openai/whisper-large-v3-turbo', {
-    audio: audioArr,
-    language: args.language,
-  })) as { text?: string; vtt?: string };
+  const res = (await withTimeout(
+    env.AI.run('@cf/openai/whisper-large-v3-turbo', {
+      audio: audioArr,
+      language: args.language,
+    }),
+    INFERENCE_TIMEOUTS.audio,
+    'whisper',
+  )) as { text?: string; vtt?: string };
 
   if (!res || typeof res.text !== 'string') {
     throw new Error('Audio model returned no text');

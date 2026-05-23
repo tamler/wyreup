@@ -8,6 +8,7 @@
 // Pages Functions — no token needed.
 
 import type { Env } from '../env';
+import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
 const VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const DETECTION_MODEL = '@cf/facebook/detr-resnet-50';
@@ -24,11 +25,15 @@ export async function visionPrompt(
   imageBytes: Uint8Array,
   prompt: string,
 ): Promise<string> {
-  const res = (await env.AI.run(VISION_MODEL, {
-    image: Array.from(imageBytes),
-    prompt,
-    max_tokens: 1024,
-  })) as { response?: string };
+  const res = (await withTimeout(
+    env.AI.run(VISION_MODEL, {
+      image: Array.from(imageBytes),
+      prompt,
+      max_tokens: MAX_TOKENS.vision,
+    }),
+    INFERENCE_TIMEOUTS.vision,
+    'vision-model',
+  )) as { response?: string };
   if (!res || typeof res.response !== 'string') {
     throw new Error('Vision model returned no response');
   }
@@ -39,9 +44,13 @@ export async function detectObjects(
   env: Env,
   imageBytes: Uint8Array,
 ): Promise<DetectedObject[]> {
-  const res = (await env.AI.run(DETECTION_MODEL, {
-    image: Array.from(imageBytes),
-  })) as unknown;
+  const res = await withTimeout(
+    env.AI.run(DETECTION_MODEL, {
+      image: Array.from(imageBytes),
+    }),
+    INFERENCE_TIMEOUTS.detection,
+    'detection-model',
+  );
   if (!Array.isArray(res)) {
     throw new Error('Detection model returned no array');
   }

@@ -9,6 +9,7 @@
 // aura-2) lands here too when Wave 2 ships.
 
 import type { Env } from '../env';
+import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 const TTS_MODEL = '@cf/myshell-ai/melotts';
 
@@ -37,10 +38,14 @@ export async function synthesize(env: Env, args: SynthesizeArgs): Promise<Synthe
   if (args.text.length > TTS_MAX_CHARS) {
     throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
   }
-  const res = (await env.AI.run(TTS_MODEL, {
-    prompt: args.text,
-    lang: args.language ?? 'EN',
-  })) as { audio?: string };
+  const res = (await withTimeout(
+    env.AI.run(TTS_MODEL, {
+      prompt: args.text,
+      lang: args.language ?? 'EN',
+    }),
+    INFERENCE_TIMEOUTS.tts,
+    'tts-melotts',
+  )) as { audio?: string };
   if (!res || typeof res.audio !== 'string') {
     throw new Error('TTS model returned no audio');
   }
