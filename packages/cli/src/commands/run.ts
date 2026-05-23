@@ -6,20 +6,30 @@ import { createDefaultRegistry } from '@wyreup/core';
 import type { ToolModule, ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
+import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
-function makeCtx(verbose: boolean, ac: AbortController): ToolRunContext {
+interface CtxOptions {
+  verbose: boolean;
+  ac: AbortController;
+  apiKey?: string;
+  proOrigin?: string;
+}
+
+function makeCtx(opts: CtxOptions): ToolRunContext {
   return {
-    onProgress: verbose
+    onProgress: opts.verbose
       ? (p) => {
           const pct = p.percent !== undefined ? ` ${p.percent}%` : '';
           process.stderr.write(`[${p.stage}]${pct}${p.message ? ' ' + p.message : ''}\n`);
         }
       : () => {},
-    signal: ac.signal,
+    signal: opts.ac.signal,
     cache: new Map(),
     executionId: randomUUID(),
+    apiKey: opts.apiKey,
+    proOrigin: opts.proOrigin,
   };
 }
 
@@ -204,7 +214,30 @@ export async function executeTool(
   const ac = new AbortController();
   process.on('SIGINT', () => ac.abort());
 
-  const ctx = makeCtx(opts.verbose ?? false, ac);
+  // Pro tools (cost: 'credit') need an API key for the Bearer-auth
+  // path in lib/pro-runner.ts. Resolve from env / config, fail fast
+  // if missing so we don't waste the inference call.
+  let apiKey: string | undefined;
+  let proOrigin: string | undefined;
+  if (tool.cost === 'credit') {
+    const key = await readApiKey();
+    if (!key) {
+      process.stderr.write(
+        `Tool "${tool.id}" is a PRO tool — it needs a Wyreup API key.\n` +
+          `Run \`wyreup login\` (interactive) or set WYREUP_API_KEY.\n`,
+      );
+      process.exit(1);
+    }
+    apiKey = key;
+    proOrigin = resolveProOrigin();
+  }
+
+  const ctx = makeCtx({
+    verbose: opts.verbose ?? false,
+    ac,
+    apiKey,
+    proOrigin,
+  });
 
   let result: Blob | Blob[];
   try {

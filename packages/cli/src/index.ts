@@ -9,6 +9,9 @@ import { executeChain } from './commands/chain.js';
 import { executeWatch } from './commands/watch.js';
 import { prefetchCommand } from './commands/prefetch.js';
 import { cacheListCommand, cacheClearCommand } from './commands/cache.js';
+import { loginCommand } from './commands/login.js';
+import { logoutCommand } from './commands/logout.js';
+import { balanceCommand } from './commands/balance.js';
 import { createDefaultRegistry, setModelCdn, toolRunsOnSurface } from '@wyreup/core';
 
 // Route every AI-model fetch through models.wyreup.com (R2-backed,
@@ -241,6 +244,31 @@ Behavior:
     });
   });
 
+// ──── account / Pro auth ──────────────────────────────────────────────────────
+
+program
+  .command('login')
+  .description('Save your Wyreup API key locally for Pro tool runs')
+  .argument('[apiKey]', 'API key — prompts on stdin if omitted')
+  .action(async (apiKey: string | undefined) => {
+    await loginCommand(apiKey);
+  });
+
+program
+  .command('logout')
+  .description('Remove the locally saved Wyreup API key')
+  .action(async () => {
+    await logoutCommand();
+  });
+
+program
+  .command('balance')
+  .description('Show your Wyreup PRO credit balance + subscription status')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(async (opts: Record<string, unknown>) => {
+    await balanceCommand({ json: opts['json'] as boolean | undefined });
+  });
+
 // ──── tool-id shorthand (fall-through) ───────────────────────────────────────
 //
 // If the first argument is a known tool ID and not a built-in subcommand,
@@ -256,6 +284,9 @@ const BUILTIN_COMMANDS = new Set([
   'chain',
   'watch',
   'help',
+  'login',
+  'logout',
+  'balance',
 ]);
 
 // Check if argv[2] is a known tool ID before Commander gets its hands on it.
