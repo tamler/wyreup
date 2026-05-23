@@ -35,7 +35,7 @@ describe('excel-to-csv — metadata', () => {
 
 describe('excel-to-csv — run()', () => {
   it('converts first sheet to CSV by default', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const csv = await run(file);
     expect(csv).toContain('name,age,city');
     expect(csv).toContain('Alice,30,NY');
@@ -43,27 +43,27 @@ describe('excel-to-csv — run()', () => {
   });
 
   it('uses semicolon delimiter', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const csv = await run(file, { delimiter: ';' });
     expect(csv).toContain('name;age;city');
     expect(csv).toContain('Alice;30;NY');
   });
 
   it('uses tab delimiter', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const csv = await run(file, { delimiter: '\t' });
     expect(csv).toContain('name\tage\tcity');
   });
 
   it('strips header row when includeHeaders=false', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const csv = await run(file, { includeHeaders: false });
     expect(csv).not.toContain('name,age');
     expect(csv).toContain('Alice');
   });
 
   it('exports specific sheet by name', async () => {
-    const file = makeMultiSheetXlsxFile([
+    const file = await makeMultiSheetXlsxFile([
       { name: 'Sales', rows: [['product', 'qty'], ['Widget', 10]] },
       { name: 'Costs', rows: [['item', 'cost'], ['Rent', 500]] },
     ]);
@@ -74,12 +74,12 @@ describe('excel-to-csv — run()', () => {
   });
 
   it('throws on non-existent sheet name', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     await expect(run(file, { sheet: 'NoSuchSheet' })).rejects.toThrow(/not found/);
   });
 
   it('exports all sheets as ZIP when sheet=all', async () => {
-    const file = makeMultiSheetXlsxFile([
+    const file = await makeMultiSheetXlsxFile([
       { name: 'Alpha', rows: [['a'], [1]] },
       { name: 'Beta', rows: [['b'], [2]] },
     ]);
@@ -90,14 +90,14 @@ describe('excel-to-csv — run()', () => {
   });
 
   it('returns text/csv for single sheet', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await excelToCsv.run([file], {}, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('text/csv');
   });
 
   it('handles empty sheet gracefully', async () => {
-    const file = makeXlsxFile([]);
+    const file = await makeXlsxFile([]);
     const csv = await run(file);
     // empty sheet returns empty or minimal CSV
     expect(typeof csv).toBe('string');

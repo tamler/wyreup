@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { readWorkbook, sheetToAOA } from '../../lib/excel.js';
 
 export type ExcelInfoParams = Record<string, never>;
 
@@ -6,6 +7,13 @@ const XLSX_ACCEPT = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-excel',
 ];
+
+interface SheetSummary {
+  name: string;
+  rows: number;
+  cols: number;
+  preview: unknown[][];
+}
 
 export const excelInfo: ToolModule<ExcelInfoParams> = {
   id: 'excel-info',
@@ -40,35 +48,30 @@ export const excelInfo: ToolModule<ExcelInfoParams> = {
   ): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const XLSX = await import('xlsx');
-
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });
 
     const buffer = await inputs[0]!.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+    const wb = await readWorkbook(buffer);
 
     let totalCells = 0;
+    const names: string[] = [];
 
-    const perSheet = wb.SheetNames.map((name) => {
-      const ws = wb.Sheets[name]!;
-      const ref = ws['!ref'];
-      if (!ref) {
-        return { name, rows: 0, cols: 0, preview: [] };
-      }
-      const range = XLSX.utils.decode_range(ref);
-      const rows = range.e.r - range.s.r + 1;
-      const cols = range.e.c - range.s.c + 1;
+    const perSheet: SheetSummary[] = wb.worksheets.map((ws) => {
+      names.push(ws.name);
+      // Compute "used range" from actual row/col content rather than
+      // trusting ws.rowCount (which can over-report on workbooks with
+      // styled-but-empty rows). SheetJS's old behavior was to derive
+      // from the data; matching that.
+      const aoa = sheetToAOA(ws);
+      const rows = aoa.length;
+      const cols = aoa.reduce((max, row) => Math.max(max, row.length), 0);
       totalCells += rows * cols;
-
-      const allRows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: null });
-      const preview = allRows.slice(0, 5);
-
-      return { name, rows, cols, preview };
+      return { name: ws.name, rows, cols, preview: aoa.slice(0, 5) };
     });
 
     const result = {
-      sheetCount: wb.SheetNames.length,
-      sheetNames: wb.SheetNames,
+      sheetCount: names.length,
+      sheetNames: names,
       totalCells,
       perSheet,
     };

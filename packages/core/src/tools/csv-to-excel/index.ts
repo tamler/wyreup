@@ -1,4 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import {
+  newWorkbook,
+  addWorksheet,
+  addAOAToSheet,
+  writeWorkbookBuffer,
+} from '../../lib/excel.js';
 
 export interface CsvToExcelParams {
   delimiter?: ',' | ';' | '\t' | 'auto';
@@ -78,12 +84,13 @@ export const csvToExcel: ToolModule<CsvToExcelParams> = {
   ): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const XLSX = await import('xlsx');
-
-    const wb = XLSX.utils.book_new();
+    const Papa = (await import('papaparse')).default;
+    const wb = await newWorkbook();
     const delimParam = params.delimiter ?? 'auto';
     const boldHeaders = params.boldHeaders ?? false;
     const sheetNameFromFilename = params.sheetNameFromFilename !== false;
+
+    const usedNames = new Set<string>();
 
     for (let i = 0; i < inputs.length; i++) {
       if (ctx.signal.aborted) throw new Error('Aborted');
@@ -99,35 +106,41 @@ export const csvToExcel: ToolModule<CsvToExcelParams> = {
 
       const delim = delimParam === 'auto' ? detectDelimiter(text) : delimParam;
 
-      // SheetJS's built-in CSV parser handles quoting/escaping correctly.
-      // Note: SheetJS community edition (0.18.x) does not support cell styles,
-      // so boldHeaders is accepted as a param but has no visual effect without xlsx-style.
-      void boldHeaders;
-      const parsedWb = XLSX.read(text, { type: 'string', FS: delim });
-      const parsedWs = parsedWb.Sheets[parsedWb.SheetNames[0]!]!;
+      const parsed = Papa.parse<string[]>(text, {
+        header: false,
+        delimiter: delim,
+        skipEmptyLines: true,
+      });
+      const rows = parsed.data;
 
       let sheetName: string;
       if (sheetNameFromFilename) {
         const base = file.name.replace(/\.[^.]+$/, '');
-        // Sheet names max 31 chars, no special chars
         sheetName = base.slice(0, 31).replace(/[/\\?*[\]:]/g, '_') || `Sheet${i + 1}`;
       } else {
         sheetName = `Sheet${i + 1}`;
       }
 
-      // Avoid duplicate sheet names
       let finalName = sheetName;
       let suffix = 2;
-      while (wb.SheetNames.includes(finalName)) {
+      while (usedNames.has(finalName)) {
         finalName = `${sheetName.slice(0, 28)}_${suffix++}`;
       }
+      usedNames.add(finalName);
 
-      XLSX.utils.book_append_sheet(wb, parsedWs, finalName);
+      const ws = addWorksheet(wb, finalName);
+      addAOAToSheet(ws, rows);
+
+      if (boldHeaders && rows.length > 0) {
+        const headerRow = ws.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.commit();
+      }
     }
 
     ctx.onProgress({ stage: 'encoding', percent: 95, message: 'Writing workbook' });
 
-    const xlsxBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    const xlsxBuffer = await writeWorkbookBuffer(wb);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return new Blob([xlsxBuffer], {

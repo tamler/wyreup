@@ -1,4 +1,12 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import {
+  readWorkbook,
+  newWorkbook,
+  addWorksheet,
+  addAOAToSheet,
+  sheetToAOA,
+  writeWorkbookBuffer,
+} from '../../lib/excel.js';
 
 export type SplitSheetsParams = Record<string, never>;
 
@@ -39,33 +47,34 @@ export const splitSheets: ToolModule<SplitSheetsParams> = {
   ): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const XLSX = await import('xlsx');
     const { default: JSZip } = await import('jszip');
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Reading workbook' });
 
     const buffer = await inputs[0]!.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+    const wb = await readWorkbook(buffer);
 
-    if (wb.SheetNames.length === 0) throw new Error('Workbook has no sheets');
+    if (wb.worksheets.length === 0) throw new Error('Workbook has no sheets');
 
     const zip = new JSZip();
+    const total = wb.worksheets.length;
 
-    for (let i = 0; i < wb.SheetNames.length; i++) {
+    for (let i = 0; i < total; i++) {
       if (ctx.signal.aborted) throw new Error('Aborted');
 
-      const name = wb.SheetNames[i]!;
+      const src = wb.worksheets[i]!;
       ctx.onProgress({
         stage: 'processing',
-        percent: 10 + Math.floor((i / wb.SheetNames.length) * 80),
-        message: `Splitting ${name}`,
+        percent: 10 + Math.floor((i / total) * 80),
+        message: `Splitting ${src.name}`,
       });
 
-      const singleWb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(singleWb, wb.Sheets[name]!, name);
+      const singleWb = await newWorkbook();
+      const destWs = addWorksheet(singleWb, src.name);
+      addAOAToSheet(destWs, sheetToAOA(src));
 
-      const xlsxBuffer = XLSX.write(singleWb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
-      const safeName = name.replace(/[/\\?*[\]:]/g, '_');
+      const xlsxBuffer = await writeWorkbookBuffer(singleWb);
+      const safeName = src.name.replace(/[/\\?*[\]:]/g, '_');
       zip.file(`${safeName}.xlsx`, xlsxBuffer);
     }
 

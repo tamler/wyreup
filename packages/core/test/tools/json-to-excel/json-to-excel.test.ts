@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import * as XLSX from 'xlsx';
 import { jsonToExcel } from '../../../src/tools/json-to-excel/index.js';
+import {
+  readWorkbook,
+  sheetNames,
+  getSheet,
+  sheetToAOA,
+  sheetToObjects,
+} from '../../../src/lib/excel.js';
 import { makeCtx, makeJsonFile } from '../excel-helpers.js';
 
 const OBJECTS = [{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }];
@@ -12,8 +18,8 @@ const MULTI = {
   },
 };
 
-function readXlsx(blob: Blob): Promise<XLSX.WorkBook> {
-  return blob.arrayBuffer().then((buf) => XLSX.read(new Uint8Array(buf), { type: 'array' }));
+async function loadXlsx(blob: Blob) {
+  return readWorkbook(new Uint8Array(await blob.arrayBuffer()));
 }
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
@@ -31,36 +37,40 @@ describe('json-to-excel — run()', () => {
   it('converts array of objects to xlsx', async () => {
     const file = makeJsonFile(OBJECTS);
     const blob = (await jsonToExcel.run([file], {}, makeCtx())) as Blob;
-    const wb = await readXlsx(blob);
-    expect(wb.SheetNames).toHaveLength(1);
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets['Sheet1']!);
+    const wb = await loadXlsx(blob);
+    expect(sheetNames(wb)).toHaveLength(1);
+    const ws = getSheet(wb, 'Sheet1');
+    const rows = sheetToObjects(ws!);
     expect(rows[0]!['name']).toBe('Alice');
+    // ExcelJS reads numeric cells as numbers — assert as number.
     expect(rows[1]!['age']).toBe(25);
   });
 
   it('uses sheetName param', async () => {
     const file = makeJsonFile(OBJECTS);
     const blob = (await jsonToExcel.run([file], { sheetName: 'People' }, makeCtx())) as Blob;
-    const wb = await readXlsx(blob);
-    expect(wb.SheetNames[0]).toBe('People');
+    const wb = await loadXlsx(blob);
+    expect(sheetNames(wb)[0]).toBe('People');
   });
 
   it('converts array of arrays to xlsx', async () => {
     const file = makeJsonFile(ARRAYS);
     const blob = (await jsonToExcel.run([file], {}, makeCtx())) as Blob;
-    const wb = await readXlsx(blob);
-    const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets['Sheet1']!, { header: 1 });
-    expect((rows[0] as unknown[])[0]).toBe('name');
-    expect((rows[1] as unknown[])[0]).toBe('Alice');
+    const wb = await loadXlsx(blob);
+    const ws = getSheet(wb, 'Sheet1');
+    const rows = sheetToAOA(ws!);
+    expect(rows[0]![0]).toBe('name');
+    expect(rows[1]![0]).toBe('Alice');
   });
 
   it('converts multi-sheet {sheets: ...} format', async () => {
     const file = makeJsonFile(MULTI);
     const blob = (await jsonToExcel.run([file], {}, makeCtx())) as Blob;
-    const wb = await readXlsx(blob);
-    expect(wb.SheetNames).toContain('Sales');
-    expect(wb.SheetNames).toContain('Returns');
-    const salesRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(wb.Sheets['Sales']!);
+    const wb = await loadXlsx(blob);
+    const names = sheetNames(wb);
+    expect(names).toContain('Sales');
+    expect(names).toContain('Returns');
+    const salesRows = sheetToObjects(getSheet(wb, 'Sales')!);
     expect(salesRows[0]!['product']).toBe('Widget');
   });
 

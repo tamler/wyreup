@@ -30,13 +30,13 @@ describe('excel-info — metadata', () => {
 
 describe('excel-info — run()', () => {
   it('returns sheetCount', async () => {
-    const file = makeXlsxFile([['a', 'b'], [1, 2]]);
+    const file = await makeXlsxFile([['a', 'b'], [1, 2]]);
     const result = await run(file);
     expect(result.sheetCount).toBe(1);
   });
 
   it('returns sheetNames', async () => {
-    const file = makeMultiSheetXlsxFile([
+    const file = await makeMultiSheetXlsxFile([
       { name: 'Alpha', rows: [['a'], [1]] },
       { name: 'Beta', rows: [['b'], [2]] },
     ]);
@@ -47,7 +47,7 @@ describe('excel-info — run()', () => {
   });
 
   it('returns row and column counts per sheet', async () => {
-    const file = makeXlsxFile([
+    const file = await makeXlsxFile([
       ['x', 'y', 'z'],
       [1, 2, 3],
       [4, 5, 6],
@@ -60,19 +60,19 @@ describe('excel-info — run()', () => {
 
   it('returns preview of first 5 rows', async () => {
     const rows = Array.from({ length: 10 }, (_, i) => [i + 1]);
-    const file = makeXlsxFile(rows);
+    const file = await makeXlsxFile(rows);
     const result = await run(file);
     expect(result.perSheet[0]!.preview).toHaveLength(5);
   });
 
   it('returns totalCells', async () => {
-    const file = makeXlsxFile([['a', 'b'], [1, 2]]);
+    const file = await makeXlsxFile([['a', 'b'], [1, 2]]);
     const result = await run(file);
     expect(result.totalCells).toBe(4); // 2 rows x 2 cols
   });
 
   it('output is valid JSON', async () => {
-    const file = makeXlsxFile([['col'], ['val']]);
+    const file = await makeXlsxFile([['col'], ['val']]);
     const result = await excelInfo.run([file], {}, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     const text = await blob.text();

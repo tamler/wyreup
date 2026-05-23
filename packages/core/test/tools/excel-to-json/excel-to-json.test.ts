@@ -26,7 +26,7 @@ describe('excel-to-json — metadata', () => {
 
 describe('excel-to-json — run()', () => {
   it('converts sheet to array of objects by default', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await run(file);
     expect(result.sheets['Sheet1']).toHaveLength(2);
     expect((result.sheets['Sheet1']![0] as Record<string, unknown>)['name']).toBe('Alice');
@@ -34,14 +34,14 @@ describe('excel-to-json — run()', () => {
   });
 
   it('wraps output in {sheets} envelope', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await run(file);
     expect(typeof result.sheets).toBe('object');
     expect('Sheet1' in result.sheets).toBe(true);
   });
 
   it('exports all sheets when sheet=all (default)', async () => {
-    const file = makeMultiSheetXlsxFile([
+    const file = await makeMultiSheetXlsxFile([
       { name: 'A', rows: [['x'], [1]] },
       { name: 'B', rows: [['y'], [2]] },
     ]);
@@ -51,7 +51,7 @@ describe('excel-to-json — run()', () => {
   });
 
   it('exports single sheet by name', async () => {
-    const file = makeMultiSheetXlsxFile([
+    const file = await makeMultiSheetXlsxFile([
       { name: 'Sales', rows: [['product', 'qty'], ['Widget', 5]] },
       { name: 'Returns', rows: [['product', 'qty'], ['Widget', 1]] },
     ]);
@@ -61,12 +61,12 @@ describe('excel-to-json — run()', () => {
   });
 
   it('throws on missing sheet', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     await expect(run(file, { sheet: 'Ghost' })).rejects.toThrow(/not found/);
   });
 
   it('uses array of arrays when arrayStyle=arrays', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await run(file, { arrayStyle: 'arrays' });
     const rows = result.sheets['Sheet1']!;
     expect(Array.isArray(rows[0])).toBe(true);
@@ -74,7 +74,7 @@ describe('excel-to-json — run()', () => {
   });
 
   it('strips header row from arrays when includeHeaders=false', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await run(file, { arrayStyle: 'arrays', includeHeaders: false });
     const rows = result.sheets['Sheet1']!;
     // first row should be data, not headers
@@ -82,7 +82,7 @@ describe('excel-to-json — run()', () => {
   });
 
   it('output is valid JSON blob', async () => {
-    const file = makeXlsxFile(ROWS);
+    const file = await makeXlsxFile(ROWS);
     const result = await excelToJson.run([file], {}, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/json');

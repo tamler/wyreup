@@ -1,5 +1,12 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import type * as XLSXType from 'xlsx';
+import type { Workbook } from 'exceljs';
+import {
+  newWorkbook,
+  addWorksheet,
+  addAOAToSheet,
+  addObjectsToSheet,
+  writeWorkbookBuffer,
+} from '../../lib/excel.js';
 
 export interface JsonToExcelParams {
   sheetName?: string;
@@ -12,29 +19,34 @@ export interface JsonToExcelParams {
  *   - [[a, b], [c, d], ...]           — array of arrays
  *   - {sheets: {name: [rows], ...}}   — multi-sheet
  */
-function buildWorkbook(
-  XLSX: typeof XLSXType,
+async function buildWorkbook(
   data: unknown,
   sheetName: string,
-): XLSXType.WorkBook {
-  const wb = XLSX.utils.book_new();
+  boldHeaders: boolean,
+): Promise<Workbook> {
+  const wb = await newWorkbook();
+  const usedNames = new Set<string>();
 
   const appendSheet = (name: string, rows: unknown[]): void => {
-    let ws: XLSXType.WorkSheet;
-    if (Array.isArray(rows[0])) {
-      // array of arrays
-      ws = XLSX.utils.aoa_to_sheet(rows as unknown[][]);
-    } else {
-      // array of objects
-      ws = XLSX.utils.json_to_sheet(rows as Record<string, unknown>[]);
-    }
     let safeName = name.slice(0, 31).replace(/[/\\?*[\]:]/g, '_') || 'Sheet1';
     let suffix = 2;
     const base = safeName;
-    while (wb.SheetNames.includes(safeName)) {
+    while (usedNames.has(safeName)) {
       safeName = `${base.slice(0, 28)}_${suffix++}`;
     }
-    XLSX.utils.book_append_sheet(wb, ws, safeName);
+    usedNames.add(safeName);
+
+    const ws = addWorksheet(wb, safeName);
+    if (Array.isArray(rows[0])) {
+      addAOAToSheet(ws, rows as unknown[][]);
+    } else {
+      addObjectsToSheet(ws, rows as Record<string, unknown>[]);
+    }
+    if (boldHeaders && rows.length > 0) {
+      const headerRow = ws.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.commit();
+    }
   };
 
   if (
@@ -99,7 +111,7 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
     boldHeaders: {
       type: 'boolean',
       label: 'Bold header row',
-      help: 'Note: style support requires the xlsx-style extension; this flag is recorded but may not render.',
+      help: 'Make the first row bold in the output workbook.',
     },
   },
 
@@ -120,16 +132,15 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
       throw new Error(`Invalid JSON: ${(e as Error).message}`);
     }
 
-    const XLSX = await import('xlsx');
-
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Building workbook' });
 
     const sheetName = (params.sheetName ?? 'Sheet1').trim() || 'Sheet1';
-    const wb = buildWorkbook(XLSX, data, sheetName);
+    const boldHeaders = params.boldHeaders ?? false;
+    const wb = await buildWorkbook(data, sheetName, boldHeaders);
 
     ctx.onProgress({ stage: 'encoding', percent: 90, message: 'Writing workbook' });
 
-    const xlsxBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    const xlsxBuffer = await writeWorkbookBuffer(wb);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return new Blob([xlsxBuffer], {

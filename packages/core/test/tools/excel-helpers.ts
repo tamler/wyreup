@@ -1,8 +1,9 @@
 /**
- * Shared test helpers for Excel tool tests.
- * Builds minimal XLSX buffers using SheetJS — works in Node without browser APIs.
+ * Shared test helpers for Excel tool tests. Builds minimal XLSX buffers
+ * using ExcelJS (migrated from SheetJS — see packages/core/src/lib/excel.ts
+ * for the migration story).
  */
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { ToolRunContext } from '../../src/types.js';
 
 export function makeCtx(): ToolRunContext {
@@ -14,36 +15,39 @@ export function makeCtx(): ToolRunContext {
   };
 }
 
+async function writeWorkbookToBuffer(wb: ExcelJS.Workbook): Promise<Uint8Array> {
+  const out = await wb.xlsx.writeBuffer();
+  if (out instanceof Uint8Array) return out;
+  if (out instanceof ArrayBuffer) return new Uint8Array(out);
+  return new Uint8Array(out as ArrayBufferLike);
+}
+
 /** Build an XLSX File with one sheet containing the given rows (array of arrays). */
-export function makeXlsxFile(
+export async function makeXlsxFile(
   rows: unknown[][],
   sheetName = 'Sheet1',
   fileName = 'test.xlsx',
-): File {
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
-  // The DOM lib's BlobPart type insists on ArrayBuffer (not ArrayBufferLike),
-  // but Uint8Array's underlying buffer is fine here at runtime.
+): Promise<File> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(sheetName);
+  for (const row of rows) ws.addRow(row as ExcelJS.CellValue[]);
+  const buf = await writeWorkbookToBuffer(wb);
   return new File([buf as BlobPart], fileName, {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 }
 
 /** Build an XLSX File with multiple sheets. */
-export function makeMultiSheetXlsxFile(
+export async function makeMultiSheetXlsxFile(
   sheets: { name: string; rows: unknown[][] }[],
   fileName = 'test.xlsx',
-): File {
-  const wb = XLSX.utils.book_new();
+): Promise<File> {
+  const wb = new ExcelJS.Workbook();
   for (const { name, rows } of sheets) {
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, name);
+    const ws = wb.addWorksheet(name);
+    for (const row of rows) ws.addRow(row as ExcelJS.CellValue[]);
   }
-  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
-  // The DOM lib's BlobPart type insists on ArrayBuffer (not ArrayBufferLike),
-  // but Uint8Array's underlying buffer is fine here at runtime.
+  const buf = await writeWorkbookToBuffer(wb);
   return new File([buf as BlobPart], fileName, {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });

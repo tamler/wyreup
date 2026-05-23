@@ -88,6 +88,7 @@
     "cron-parser": "^4.9.0",
     "culori": "^4.0.0",
     "diff": "^7.0.0",
+    "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.8.0",
     "gdal3.js": "^2.8.1",
     "gpt-tokenizer": "^2.5.0",
@@ -116,7 +117,6 @@
     "svgo": "^3.3.2",
     "tesseract.js": "^5.1.0",
     "text-readability": "^1.1.0",
-    "turndown": "^7.2.0",
-    "xlsx": "^0.18.5"
+    "turndown": "^7.2.0"
   }
 }

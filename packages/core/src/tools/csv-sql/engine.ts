@@ -94,16 +94,13 @@ async function parseFile(file: FileToLoad): Promise<{ headers: string[]; rows: u
   }
 
   if (isXlsx) {
-    const XLSX = await import('xlsx');
-    const wb = XLSX.read(file.bytes, { type: 'array' });
-    const firstSheetName = wb.SheetNames[0];
-    if (!firstSheetName) {
+    const { readWorkbook, sheetToObjects } = await import('../../lib/excel.js');
+    const wb = await readWorkbook(file.bytes);
+    const firstWs = wb.worksheets[0];
+    if (!firstWs) {
       throw new Error(`${file.name}: workbook has no sheets.`);
     }
-    const sheet = wb.Sheets[firstSheetName]!;
-    const rowsArr = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-      defval: null,
-    });
+    const rowsArr = sheetToObjects(firstWs);
     if (rowsArr.length === 0) {
       return { headers: [], rows: [] };
     }

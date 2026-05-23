@@ -1,4 +1,11 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import {
+  readWorkbook,
+  sheetNames as listSheetNames,
+  getSheet,
+  sheetToAOA,
+  sheetToObjects,
+} from '../../lib/excel.js';
 
 export interface ExcelToJsonParams {
   sheet?: string;
@@ -70,30 +77,26 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
   ): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const XLSX = await import('xlsx');
-
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });
 
     const buffer = await inputs[0]!.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+    const wb = await readWorkbook(buffer);
 
     const sheetParam = (params.sheet ?? 'all').trim();
     const arrayStyle = params.arrayStyle ?? 'objects';
     const includeHeaders = params.includeHeaders !== false;
 
     const exportAll = sheetParam === '' || sheetParam.toLowerCase() === 'all';
-    const sheetNames: string[] = exportAll
-      ? wb.SheetNames
-      : [sheetParam];
+    const allNames = listSheetNames(wb);
+    const sheetNamesToExport: string[] = exportAll ? allNames : [sheetParam];
 
     const rowsOf = (name: string): unknown[] => {
-      const ws = wb.Sheets[name];
+      const ws = getSheet(wb, name);
       if (!ws) throw new Error(`Sheet "${name}" not found`);
       if (arrayStyle === 'objects') {
-        return XLSX.utils.sheet_to_json<unknown>(ws, { defval: null });
+        return sheetToObjects(ws);
       }
-      // arrays mode
-      const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: null });
+      const rows = sheetToAOA(ws);
       if (!includeHeaders && rows.length > 0) {
         return rows.slice(1);
       }
@@ -101,13 +104,13 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
     };
 
     const result: Record<string, unknown[]> = {};
-    for (let i = 0; i < sheetNames.length; i++) {
+    for (let i = 0; i < sheetNamesToExport.length; i++) {
       ctx.onProgress({
         stage: 'processing',
-        percent: 20 + Math.floor((i / sheetNames.length) * 70),
-        message: `Converting ${sheetNames[i]}`,
+        percent: 20 + Math.floor((i / sheetNamesToExport.length) * 70),
+        message: `Converting ${sheetNamesToExport[i]}`,
       });
-      result[sheetNames[i]!] = rowsOf(sheetNames[i]!);
+      result[sheetNamesToExport[i]!] = rowsOf(sheetNamesToExport[i]!);
     }
 
     const output = { sheets: result };

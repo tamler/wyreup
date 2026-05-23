@@ -1,4 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import {
+  readWorkbook,
+  sheetNames as listSheetNames,
+  getSheet,
+  sheetToCsv,
+} from '../../lib/excel.js';
 
 export interface ExcelToCsvParams {
   sheet?: string;
@@ -71,12 +77,10 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
   ): Promise<Blob | Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const XLSX = await import('xlsx');
-
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });
 
     const buffer = await inputs[0]!.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+    const wb = await readWorkbook(buffer);
 
     const sheetParam = (params.sheet ?? '').trim();
     const delimiter = params.delimiter ?? ',';
@@ -84,29 +88,26 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
 
     const exportAll = sheetParam.toLowerCase() === 'all';
 
-    const sheetNames: string[] = exportAll
-      ? wb.SheetNames
-      : [sheetParam || wb.SheetNames[0]!];
+    const allNames = listSheetNames(wb);
+    if (allNames.length === 0) throw new Error('Workbook has no sheets');
 
-    if (sheetNames.length === 0) throw new Error('Workbook has no sheets');
+    const sheetNamesToExport: string[] = exportAll
+      ? allNames
+      : [sheetParam || allNames[0]!];
 
     const csvOf = (name: string): string => {
-      const ws = wb.Sheets[name];
+      const ws = getSheet(wb, name);
       if (!ws) throw new Error(`Sheet "${name}" not found`);
-      const csv = XLSX.utils.sheet_to_csv(ws, {
-        FS: delimiter,
-        blankrows: false,
-      });
+      const csv = sheetToCsv(ws, delimiter);
       if (!includeHeaders) {
-        // Strip first line
         const nl = csv.indexOf('\n');
         return nl === -1 ? '' : csv.slice(nl + 1);
       }
       return csv;
     };
 
-    if (!exportAll || sheetNames.length === 1) {
-      const csv = csvOf(sheetNames[0]!);
+    if (!exportAll || sheetNamesToExport.length === 1) {
+      const csv = csvOf(sheetNamesToExport[0]!);
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
       return new Blob([csv], { type: 'text/csv' });
     }
@@ -114,14 +115,14 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
     // Multiple sheets → ZIP
     const { default: JSZip } = await import('jszip');
     const zip = new JSZip();
-    for (let i = 0; i < sheetNames.length; i++) {
+    for (let i = 0; i < sheetNamesToExport.length; i++) {
       ctx.onProgress({
         stage: 'processing',
-        percent: 20 + Math.floor((i / sheetNames.length) * 70),
-        message: `Exporting ${sheetNames[i]}`,
+        percent: 20 + Math.floor((i / sheetNamesToExport.length) * 70),
+        message: `Exporting ${sheetNamesToExport[i]}`,
       });
-      const csv = csvOf(sheetNames[i]!);
-      const safeName = sheetNames[i]!.replace(/[/\\?*[\]:]/g, '_');
+      const csv = csvOf(sheetNamesToExport[i]!);
+      const safeName = sheetNamesToExport[i]!.replace(/[/\\?*[\]:]/g, '_');
       zip.file(`${safeName}.csv`, csv);
     }
     const zipBlob = await zip.generateAsync({ type: 'blob' });
