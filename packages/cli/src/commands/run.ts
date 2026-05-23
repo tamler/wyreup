@@ -165,9 +165,6 @@ export async function executeTool(
     process.exit(1);
   }
 
-  // Collect input files
-  let inputFiles: File[];
-
   const useStdin =
     inputPaths.length === 0 ||
     (inputPaths.length === 1 && inputPaths[0] === '-');
@@ -193,6 +190,51 @@ export async function executeTool(
     process.exit(1);
   }
 
+  // Pro tools (cost: 'credit') need an API key for the Bearer-auth
+  // path in lib/pro-runner.ts. Resolve this BEFORE reading any input —
+  // if a TTY user runs `wyreup run <pro-tool> -` and we drain stdin
+  // first, the interactive login prompt's readline gets immediate EOF
+  // and silently fails. Order: env/file lookup → maybe prompt → then
+  // read tool input.
+  let apiKey: string | undefined;
+  let proOrigin: string | undefined;
+  if (tool.cost === 'credit') {
+    let key = await readApiKey();
+    if (!key) {
+      if (isStdinMode) {
+        // Stdin is already earmarked for tool input — we can't also use
+        // it for an interactive prompt. Tell the user explicitly so
+        // they don't get a confusing "no API key found" after their
+        // pipe finishes.
+        process.stderr.write(
+          `Tool "${tool.id}" is a Pro tool, but stdin is reserved for tool input.\n` +
+            `Save your key first with \`wyreup login\`, or set WYREUP_API_KEY in your shell.\n`,
+        );
+        process.exit(1);
+      }
+      key = await interactiveLogin({
+        intro:
+          `\n"${tool.id}" is a Wyreup Pro tool. It needs your API key to run.\n` +
+          'Get one at https://wyreup.com/account (free signup, packs start at $5/220 credits).',
+      });
+    }
+    if (!key) {
+      process.stderr.write(
+        `Tool "${tool.id}" is a Pro tool — no API key found.\n` +
+          `Get one at https://wyreup.com/account, then either:\n` +
+          `  • run \`wyreup login\` to save it locally, or\n` +
+          `  • export WYREUP_API_KEY=...\n`,
+      );
+      process.exit(1);
+    }
+    apiKey = key;
+    proOrigin = resolveProOrigin();
+  }
+
+  // Collect input files — stdin is safe to drain now that any Pro
+  // login prompt has already completed.
+  let inputFiles: File[];
+
   if (isStdinMode && tool.input.min > 0) {
     if (!opts.inputFormat) {
       process.stderr.write(
@@ -214,35 +256,6 @@ export async function executeTool(
 
   const ac = new AbortController();
   process.on('SIGINT', () => ac.abort());
-
-  // Pro tools (cost: 'credit') need an API key for the Bearer-auth
-  // path in lib/pro-runner.ts. Resolve from env / config; if missing
-  // AND stdin is a TTY, prompt inline so the user doesn't have to
-  // bail out, run a separate `wyreup login`, and retry. Non-TTY
-  // contexts (CI, piped) fall through to the recovery hint.
-  let apiKey: string | undefined;
-  let proOrigin: string | undefined;
-  if (tool.cost === 'credit') {
-    let key = await readApiKey();
-    if (!key) {
-      key = await interactiveLogin({
-        intro:
-          `\n"${tool.id}" is a Wyreup Pro tool. It needs your API key to run.\n` +
-          'Get one at https://wyreup.com/account (free signup, packs start at $5/220 credits).',
-      });
-    }
-    if (!key) {
-      process.stderr.write(
-        `Tool "${tool.id}" is a Pro tool — no API key found.\n` +
-          `Get one at https://wyreup.com/account, then either:\n` +
-          `  • run \`wyreup login\` to save it locally, or\n` +
-          `  • export WYREUP_API_KEY=...\n`,
-      );
-      process.exit(1);
-    }
-    apiKey = key;
-    proOrigin = resolveProOrigin();
-  }
 
   const ctx = makeCtx({
     verbose: opts.verbose ?? false,
