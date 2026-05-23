@@ -34,7 +34,12 @@ const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
 const MODEL_DEEPSEEK = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 const MODEL_LLAMA_SMALL = '@cf/meta/llama-3.2-3b-instruct';
 const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
-const MODEL_KIMI = '@cf/moonshotai/kimi-k2.5';
+// MODEL_SCOUT — Llama 4 Scout, used for both json-extract-pro and
+// chat-long-pdf-pro. 10M token context window (succeeds kimi-k2.5 here
+// — k2.5 was planned-deprecation and k2.6 raised input/output pricing
+// 60%, eating margin on a 2-credit tool). Scout is ~3-4× cheaper per
+// token than the kimi family at typical sizes, and the bigger context
+// means we can take genuinely huge PDFs without chunking.
 const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
 
 export type RunnerInput = Record<string, unknown>;
@@ -515,7 +520,7 @@ async function chatLongPdfPro(raw: RunnerInput, env: Env): Promise<RunnerOutput>
   const question = readText(raw, 'question');
   const answer = await chatWith(
     env,
-    MODEL_KIMI,
+    MODEL_SCOUT,
     'You answer questions about long documents. Use ONLY the document below. If the answer is not present, say so plainly. Return only the answer.',
     `Document:\n${text}\n\nQuestion: ${question}`,
     { maxTokens: MAX_TOKENS.reasoning },

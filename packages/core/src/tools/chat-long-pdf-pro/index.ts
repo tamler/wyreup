@@ -19,9 +19,9 @@ export const chatLongPdfPro: ToolModule<ChatLongPdfProParams> = {
   slug: 'chat-long-pdf-pro',
   name: 'Ask a Long PDF',
   description:
-    'Hosted Kimi K2 with a 256k-token context window — for textbooks, court transcripts, large contracts, and books that exceed the standard Ask-a-PDF tool. Extracts text in your browser then sends to the long-context model. Uses 2 credits per run.',
+    'Hosted Llama 4 Scout with a 10M-token context window — for textbooks, court transcripts, large contracts, and books that exceed the standard Ask-a-PDF tool. Extracts text in your browser then sends to the long-context model. Uses 2 credits per run.',
   category: 'export',
-  keywords: ['pdf', 'long', 'kimi', 'document', 'q-and-a', 'pro', 'llm'],
+  keywords: ['pdf', 'long', 'llama', 'scout', 'document', 'q-and-a', 'pro', 'llm'],
 
   input: { accept: ['application/pdf'], min: 1, max: 1, sizeLimit: 50 * 1024 * 1024 },
   output: { mime: 'text/plain' },
