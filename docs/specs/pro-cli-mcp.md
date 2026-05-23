@@ -305,10 +305,66 @@ and every Pro tool just works."*
 ## Estimated effort
 
 - Engine + client (`ToolRunContext`, `pro-runner`, drop surfaces): half a
-  session.
+  session. **Shipped 2026-05-23 in commit `f7848e7`.**
 - CLI (credentials, login/logout/balance commands, dispatch wiring,
-  tests): one session.
+  tests): one session. **Shipped 2026-05-23 in commit `6002e23`.**
 - MCP (env-var injection, graceful degrade, tests): half a session.
+  **Shipped 2026-05-23 in commit `bf54eb7`.**
 - Docs (cli.astro, mcp.astro, README, pro-auth-spec): half a session.
+  **Shipped 2026-05-23 in commit `98b4ce7`.**
+- Inline auto-prompt for missing-key case (followup): half a session.
+  **Shipped 2026-05-23 in `lib/interactive-login.ts`.**
 
-**Total: ~2 sessions.**
+**Total: shipped in one session 2026-05-23.**
+
+---
+
+## Appendix A — Browser-launch login (v2)
+
+Out of scope for the v1 ship above. Captured here so it doesn't get
+lost; not a blocker on anything queued.
+
+**Goal:** replace the "go find your API key, copy-paste it" step with
+a one-click flow modeled on `gh auth login`, `gcloud auth login`,
+`npm login`.
+
+**Flow:**
+1. User runs `wyreup login --browser`.
+2. CLI starts an ephemeral HTTP server on a free localhost port
+   (`http://127.0.0.1:<port>/callback`). Port chosen by Node, not
+   hardcoded, so multiple CLIs can run concurrently.
+3. CLI generates a one-time, single-use random `state` token, opens
+   the user's browser to
+   `https://wyreup.com/cli-auth?port=<port>&state=<state>`. (Use
+   `node:child_process` + platform-specific opener, with a printed
+   URL fallback for headless environments.)
+4. The wyreup.com page resolves the user's session, lets them pick
+   an existing API key or mint a new one ("Authorize wyreup CLI on
+   this device — name: macbook-pro"), then POSTs
+   `{ apiKey, state }` to the localhost callback.
+5. CLI validates `state`, validates the key against
+   `/api/account/balance`, persists via `writeApiKey()`, exits.
+
+**New server surface:**
+- `/cli-auth` page on wyreup.com (Astro + ProSignup if logged out;
+  key picker + "Send to CLI" button if logged in)
+- No new API endpoint needed — the page POSTs directly to the
+  localhost callback in the user's own browser.
+
+**Security:**
+- `state` is HMAC-signed with a session-secret so the localhost
+  callback can verify the POST originated from the user's authorized
+  browser session, not a drive-by.
+- The localhost server only accepts a single POST then shuts down.
+- Bind to `127.0.0.1` only, not `0.0.0.0`.
+
+**Estimated effort:** ~1 session — the Astro page + a small Node
+HTTP server in the CLI + state handling.
+
+**Why this is queued, not shipped:** the inline auto-prompt (v1
+covers the activation case for ~95% of users — they paste a key
+they already have in their dashboard. Browser flow becomes valuable
+when (a) the dashboard makes minting a key the natural next step
+after signup, and (b) we want to eliminate the "find the dashboard"
+step entirely. Revisit when signup → first-Pro-run conversion data
+suggests the copy-paste is the bottleneck.

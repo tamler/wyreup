@@ -7,6 +7,7 @@ import type { ToolModule, ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
 import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
+import { interactiveLogin } from '../lib/interactive-login.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
@@ -215,16 +216,27 @@ export async function executeTool(
   process.on('SIGINT', () => ac.abort());
 
   // Pro tools (cost: 'credit') need an API key for the Bearer-auth
-  // path in lib/pro-runner.ts. Resolve from env / config, fail fast
-  // if missing so we don't waste the inference call.
+  // path in lib/pro-runner.ts. Resolve from env / config; if missing
+  // AND stdin is a TTY, prompt inline so the user doesn't have to
+  // bail out, run a separate `wyreup login`, and retry. Non-TTY
+  // contexts (CI, piped) fall through to the recovery hint.
   let apiKey: string | undefined;
   let proOrigin: string | undefined;
   if (tool.cost === 'credit') {
-    const key = await readApiKey();
+    let key = await readApiKey();
+    if (!key) {
+      key = await interactiveLogin({
+        intro:
+          `\n"${tool.id}" is a Wyreup Pro tool. It needs your API key to run.\n` +
+          'Get one at https://wyreup.com/account (free signup, packs start at $5/220 credits).',
+      });
+    }
     if (!key) {
       process.stderr.write(
-        `Tool "${tool.id}" is a PRO tool — it needs a Wyreup API key.\n` +
-          `Run \`wyreup login\` (interactive) or set WYREUP_API_KEY.\n`,
+        `Tool "${tool.id}" is a Pro tool — no API key found.\n` +
+          `Get one at https://wyreup.com/account, then either:\n` +
+          `  • run \`wyreup login\` to save it locally, or\n` +
+          `  • export WYREUP_API_KEY=...\n`,
       );
       process.exit(1);
     }
