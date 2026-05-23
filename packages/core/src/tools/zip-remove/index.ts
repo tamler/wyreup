@@ -5,7 +5,7 @@ export interface ZipRemoveParams {
   /**
    * Glob pattern matching entries to remove. Supports `*` (any non-slash
    * chars), `**` (any chars including slashes), and `?` (single char).
-   * Example: `**​/.env` to drop all dotenvs, `*.log` to drop top-level logs.
+   * Example: combine `**` with `/.env` to drop all dotenvs; `*.log` drops top-level logs.
    */
   pattern?: string;
   /** Operate on directory entries too (matches stripped, descendants also removed). */

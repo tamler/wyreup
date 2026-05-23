@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import type * as PdfLib from '@cantoo/pdf-lib';
 
 export interface PdfFormFieldsParams {
   /** Include the current value for fields that have one set. */
@@ -128,7 +129,7 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
   },
 };
 
-function detectType(f: unknown, lib: typeof import('@cantoo/pdf-lib')): FieldEntry['type'] {
+function detectType(f: unknown, lib: typeof PdfLib): FieldEntry['type'] {
   if (f instanceof lib.PDFTextField) return 'text';
   if (f instanceof lib.PDFCheckBox) return 'checkbox';
   if (f instanceof lib.PDFRadioGroup) return 'radio-group';

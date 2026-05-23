@@ -51,8 +51,8 @@ export async function activate(rawKey: string): Promise<{ ok: true } | { ok: fal
     credentials: 'same-origin',
   });
   if (!res.ok) {
-    const detail = await res.json().catch(() => ({}));
-    return { ok: false, error: (detail as { error?: string }).error || `Key not accepted (${res.status})` };
+    const detail = (await res.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, error: detail.error || `Key not accepted (${res.status})` };
   }
   const data = (await res.json()) as AuthedUser;
   user.set(data);

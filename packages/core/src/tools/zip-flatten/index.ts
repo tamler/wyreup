@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { JSZipObject } from 'jszip';
 
 export interface ZipFlattenParams {
   /** How to handle name collisions when two files in different folders share a basename. */
@@ -70,7 +71,7 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Flattening entries' });
 
     // Pull all non-directory entries out, in path order, and rewrite to root.
-    const entries: Array<{ path: string; file: import('jszip').JSZipObject }> = [];
+    const entries: Array<{ path: string; file: JSZipObject }> = [];
     src.forEach((path, file) => {
       if (!file.dir) entries.push({ path, file });
     });
