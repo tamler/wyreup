@@ -110,11 +110,11 @@ Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 
 ## Wyreup PRO
 
-Everything above is free, forever. **PRO** is an optional credit-based tier for tools that genuinely need a GPU we can't put in your browser tab — large-model transcription (Whisper-large-v3), summarisation, translation, and high-quality image background removal / upscale via hosted models.
+Everything above is free, forever. **PRO** is an optional credit-based tier for hosted-AI tools that need real servers — transcription (Whisper-large-v3), OCR, translation (100+ languages plus a dedicated Indic model), text-to-speech, image generation, long-context PDF Q&A (256k tokens), structured-JSON extraction, content safety classification, grammar fixing, tone rewriting, deep reasoning analysis, plus image background removal and upscaling. 30 tools today and growing.
 
-- Credits start at **50 for $4.99**. Never expire. No subscription.
-- Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable.
-- Same API key works across browser, CLI, and MCP. Buying credits in one surface funds usage on every surface.
+- Credits start at **220 for $5** (pay-as-you-go pack, never expire). Or **$8/mo** for 440 credits a cycle. Packs at $5 / $10 / $20 share the same ~$0.02/credit rate.
+- Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable. Orphan spends from mid-handler crashes are auto-refunded on the next request.
+- PRO is browser-only today. CLI and MCP keys exist for free-tool usage; CLI/MCP PRO runs are on the roadmap and will share the same balance when they ship.
 - Free tools and the anonymous experience are unchanged.
 
 See [wyreup.com/pro](https://wyreup.com/pro) for what's hosted, [wyreup.com/legal/pricing](https://wyreup.com/legal/pricing) for prices, and [`docs/pro-auth-spec.md`](./docs/pro-auth-spec.md) for the full spec (D1 schema, atomic credit reservation, webhook idempotency, sanitization, CSP).
