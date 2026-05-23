@@ -231,6 +231,17 @@ import { regexExplain } from './tools/regex-explain/index.js';
 import { imageToAsciiArt } from './tools/image-to-ascii/index.js';
 import { promptInjectionDemo } from './tools/prompt-injection-demo/index.js';
 import { pdfExtractData } from './tools/pdf-extract-data/index.js';
+// Wave 1 — Workers AI expansion (2026-05-22)
+import { textToSpeechPro } from './tools/text-to-speech-pro/index.js';
+import { contentSafetyPro } from './tools/content-safety-pro/index.js';
+import { translateManyPro } from './tools/translate-many-pro/index.js';
+import { deepAnalysisPro } from './tools/deep-analysis-pro/index.js';
+import { fixGrammarPro } from './tools/fix-grammar-pro/index.js';
+import { rewriteTonePro } from './tools/rewrite-tone-pro/index.js';
+import { chatLongPdfPro } from './tools/chat-long-pdf-pro/index.js';
+import { imageGeneratePro } from './tools/image-generate-pro/index.js';
+import { jsonExtractPro } from './tools/json-extract-pro/index.js';
+import { translateIndicPro } from './tools/translate-indic-pro/index.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -473,6 +484,17 @@ export const defaultTools: ToolModule<any>[] = [
   imageToAsciiArt,
   promptInjectionDemo,
   pdfExtractData,
+  // Wave 1 — Workers AI expansion (2026-05-22)
+  textToSpeechPro,
+  contentSafetyPro,
+  translateManyPro,
+  deepAnalysisPro,
+  fixGrammarPro,
+  rewriteTonePro,
+  chatLongPdfPro,
+  imageGeneratePro,
+  jsonExtractPro,
+  translateIndicPro,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {

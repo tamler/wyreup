@@ -26,6 +26,17 @@ export const PRICING: Readonly<Record<string, number>> = {
   'cron-from-text-pro': 1,
   'pdf-summarize': 2,
   'pdf-q-and-a': 2,
+  // Wave 1 — Workers AI expansion (2026-05-22)
+  'text-to-speech-pro': 2,
+  'content-safety-pro': 1,
+  'translate-many-pro': 1,
+  'deep-analysis-pro': 3,
+  'fix-grammar-pro': 1,
+  'rewrite-tone-pro': 1,
+  'chat-long-pdf-pro': 2,
+  'image-generate-pro': 1,
+  'json-extract-pro': 1,
+  'translate-indic-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {

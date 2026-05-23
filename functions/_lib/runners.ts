@@ -16,9 +16,25 @@
 
 import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
-import { chat } from './providers/text-models';
+import { chat, chatWith } from './providers/text-models';
 import { transcribe as runTranscribe } from './providers/audio-models';
 import { visionPrompt, detectObjects } from './providers/vision-models';
+import { synthesize, TTS_MAX_CHARS, type TtsLang } from './providers/tts-models';
+import {
+  translateMany as runTranslateMany,
+  translateIndic as runTranslateIndic,
+  type IndicLang,
+} from './providers/translate-models';
+import { generateImage } from './providers/image-gen-models';
+
+// Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
+// a model only touches this block.
+const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
+const MODEL_DEEPSEEK = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
+const MODEL_LLAMA_SMALL = '@cf/meta/llama-3.2-3b-instruct';
+const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
+const MODEL_KIMI = '@cf/moonshotai/kimi-k2.5';
+const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -58,6 +74,16 @@ const RUNNERS: Record<string, Runner> = {
   'cron-from-text-pro': cronFromTextPro,
   'pdf-summarize': pdfSummarize,
   'pdf-q-and-a': pdfQandA,
+  'text-to-speech-pro': textToSpeechPro,
+  'content-safety-pro': contentSafetyPro,
+  'translate-many-pro': translateManyPro,
+  'deep-analysis-pro': deepAnalysisPro,
+  'fix-grammar-pro': fixGrammarPro,
+  'rewrite-tone-pro': rewriteTonePro,
+  'chat-long-pdf-pro': chatLongPdfPro,
+  'image-generate-pro': imageGeneratePro,
+  'json-extract-pro': jsonExtractPro,
+  'translate-indic-pro': translateIndicPro,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -366,6 +392,178 @@ async function pdfQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
     `Document:\n${text}\n\nQuestion: ${question}`,
   );
   return { answer };
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Wave 1 — Workers AI expansion (2026-05-22)
+// ────────────────────────────────────────────────────────────────────────
+
+async function textToSpeechPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  if (text.length > TTS_MAX_CHARS) {
+    throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
+  }
+  const langRaw = (raw as Record<string, unknown>).language;
+  const language: TtsLang =
+    typeof langRaw === 'string' && /^[A-Z]{2}$/.test(langRaw) ? (langRaw as TtsLang) : 'EN';
+  return synthesize(env, { text, language });
+}
+
+// Llama Guard 3 has its own trained safety template — passing a custom
+// system prompt fights the model. Send just the user content and let the
+// built-in template produce the canonical "safe" or "unsafe\nS1,S2,..."
+// classification. Then throw on empty/unrecognized output so the caller
+// refunds the credit instead of returning a silent false-negative.
+async function contentSafetyPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const res = (await env.AI.run(MODEL_GUARD, {
+    messages: [{ role: 'user', content: text }],
+  })) as { response?: string };
+  const out = typeof res?.response === 'string' ? res.response.trim() : '';
+  if (!out) {
+    throw new Error('Safety classifier returned no output');
+  }
+  const lines = out
+    .toLowerCase()
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const first = lines[0];
+  if (first !== 'safe' && first !== 'unsafe') {
+    throw new Error('Safety classifier returned unrecognized output');
+  }
+  const safe = first === 'safe';
+  const categories = safe
+    ? []
+    : (lines[1] ?? '')
+        .split(/[,\s]+/)
+        .map((s) => s.toUpperCase())
+        .filter((s) => /^S\d+$/.test(s));
+  return { safe, categories, raw: out };
+}
+
+async function translateManyPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const target = readText(raw, 'target');
+  const sourceRaw = (raw as Record<string, unknown>).source;
+  const source = typeof sourceRaw === 'string' && sourceRaw.length > 0 ? sourceRaw : 'en';
+  const result = await runTranslateMany(env, { text, source, target });
+  return { ...result, source, target };
+}
+
+// DeepSeek R1 emits a <think>...</think> reasoning trace before the final
+// answer. We return both so callers can show or hide the reasoning.
+async function deepAnalysisPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const question = readText(raw, 'question');
+  const out = await chatWith(
+    env,
+    MODEL_DEEPSEEK,
+    'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
+    `Document:\n${text}\n\nQuestion: ${question}`,
+  );
+  const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
+  const reasoning = thinkMatch?.[1]?.trim() ?? '';
+  // R1 sometimes returns its full answer inside the <think> block and
+  // nothing after the closing tag. Fall back to the reasoning so the
+  // user gets a usable answer; only throw if the whole output is empty.
+  let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
+  if (!answer) answer = reasoning;
+  if (!answer) {
+    throw new Error('Analysis model returned no answer');
+  }
+  return { answer, reasoning };
+}
+
+async function fixGrammarPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const corrected = await chatWith(
+    env,
+    MODEL_LLAMA_SMALL,
+    'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
+    text,
+  );
+  return { corrected };
+}
+
+async function rewriteTonePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const toneRaw = (raw as Record<string, unknown>).tone;
+  const tone =
+    typeof toneRaw === 'string' &&
+    ['formal', 'casual', 'kid-friendly', 'concise', 'professional', 'friendly'].includes(toneRaw)
+      ? toneRaw
+      : 'professional';
+  const rewritten = await chatWith(
+    env,
+    MODEL_GLM_FLASH,
+    `Rewrite the user message in a ${tone} tone. Preserve the meaning. Return ONLY the rewritten text — no preamble, no quotes.`,
+    text,
+  );
+  return { rewritten, tone };
+}
+
+async function chatLongPdfPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const question = readText(raw, 'question');
+  const answer = await chatWith(
+    env,
+    MODEL_KIMI,
+    'You answer questions about long documents. Use ONLY the document below. If the answer is not present, say so plainly. Return only the answer.',
+    `Document:\n${text}\n\nQuestion: ${question}`,
+  );
+  return { answer };
+}
+
+async function imageGeneratePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const prompt = readText(raw, 'prompt');
+  const stepsRaw = (raw as Record<string, unknown>).steps;
+  const steps = typeof stepsRaw === 'number' && Number.isFinite(stepsRaw) ? stepsRaw : 4;
+  return generateImage(env, { prompt, steps });
+}
+
+async function jsonExtractPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const schemaRaw = (raw as Record<string, unknown>).schema;
+  const schemaHint =
+    typeof schemaRaw === 'string' && schemaRaw.trim().length > 0
+      ? schemaRaw.trim()
+      : 'Pick the most descriptive fields you can find. Use snake_case keys.';
+  const out = await chatWith(
+    env,
+    MODEL_SCOUT,
+    'You extract structured data from text. Reply with ONLY a valid JSON object — no markdown, no preamble, no explanation. If a field is not present, omit it rather than guessing.',
+    `Schema hint: ${schemaHint}\n\nText:\n${text}`,
+  );
+  const parsed = tryParseJson(out);
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('Extraction model returned unparseable JSON');
+  }
+  return { data: parsed };
+}
+
+async function translateIndicPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const text = readText(raw, 'text');
+  const targetRaw = (raw as Record<string, unknown>).target;
+  const allowed: IndicLang[] = [
+    'hin_Deva',
+    'ben_Beng',
+    'tam_Taml',
+    'tel_Telu',
+    'mar_Deva',
+    'guj_Gujr',
+    'pan_Guru',
+    'mal_Mlym',
+    'kan_Knda',
+    'urd_Arab',
+    'asm_Beng',
+  ];
+  const target: IndicLang =
+    typeof targetRaw === 'string' && allowed.includes(targetRaw as IndicLang)
+      ? (targetRaw as IndicLang)
+      : 'hin_Deva';
+  const result = await runTranslateIndic(env, { text, target });
+  return { ...result, target };
 }
 
 // ────────────────────────────────────────────────────────────────────────
