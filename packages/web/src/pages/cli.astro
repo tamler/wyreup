@@ -102,6 +102,45 @@ wyreup compress --help</code></pre>
         <span class="section-rule__pad"></span>
       </div>
 
+      <!-- Pro tools in the CLI -->
+      <section class="dist-section" aria-labelledby="cli-pro-heading">
+        <h2 id="cli-pro-heading" class="dist-section__title">Pro tools in the CLI</h2>
+        <p class="dist-section__body">
+          Every <a href="/pro" class="inline-link">Pro tool</a> runs from
+          the shell too — same credits, same balance as the web. Sign in
+          once with your API key (get one at
+          <a href="/account" class="inline-link">/account</a>):
+        </p>
+        <div class="code-block">
+          <div class="code-block__label">One-time sign-in</div>
+          <pre class="code-block__pre"><code>wyreup login                                  # prompts for the key
+wyreup balance                                # confirms it worked</code></pre>
+        </div>
+        <p class="dist-section__body">
+          The key is saved to <code class="inline-code">~/.wyreup/config.json</code>
+          (mode 0600). Prefer to keep it out of the filesystem? Set
+          <code class="inline-code">WYREUP_API_KEY</code> in your shell
+          and the CLI uses that instead — useful for CI and ephemeral
+          shells.
+        </p>
+        <div class="code-block">
+          <div class="code-block__label">Run any Pro tool</div>
+          <pre class="code-block__pre"><code>wyreup transcribe-pro meeting.mp3 -o transcript.txt
+wyreup text-to-speech-pro draft.txt --language EN -o draft.mp3
+wyreup image-generate-pro prompt.txt --steps 4 -o art.jpg</code></pre>
+        </div>
+        <p class="dist-section__body">
+          Failed runs auto-refund. <code class="inline-code">wyreup logout</code>
+          clears the local key — revoke server-side at
+          <a href="/account" class="inline-link">/account</a>.
+        </p>
+      </section>
+
+      <div class="section-rule" aria-hidden="true">
+        <span class="section-rule__line"></span>
+        <span class="section-rule__pad"></span>
+      </div>
+
       <!-- Why CLI -->
       <section class="dist-section" aria-labelledby="why-heading">
         <h2 id="why-heading" class="dist-section__title">Why CLI</h2>

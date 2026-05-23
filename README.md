@@ -114,7 +114,7 @@ Everything above is free, forever. **PRO** is an optional credit-based tier for 
 
 - Credits start at **220 for $5** (pay-as-you-go pack, never expire). Or **$8/mo** for 440 credits a cycle. Packs at $5 / $10 / $20 share the same ~$0.02/credit rate.
 - Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable. Orphan spends from mid-handler crashes are auto-refunded on the next request.
-- PRO is browser-only today. CLI and MCP keys exist for free-tool usage; CLI/MCP PRO runs are on the roadmap and will share the same balance when they ship.
+- Same API key works across **browser**, **CLI** (`wyreup login` once, then any Pro tool runs from the shell), and **MCP** (set `WYREUP_API_KEY` in your MCP server config to expose Pro tools to your agent). Buying credits in one surface funds usage on every surface.
 - Free tools and the anonymous experience are unchanged.
 
 See [wyreup.com/pro](https://wyreup.com/pro) for what's hosted, [wyreup.com/legal/pricing](https://wyreup.com/legal/pricing) for prices, and [`docs/pro-auth-spec.md`](./docs/pro-auth-spec.md) for the full spec (D1 schema, atomic credit reservation, webhook idempotency, sanitization, CSP).

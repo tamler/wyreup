@@ -51,11 +51,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   "mcpServers": {
     "wyreup": {
       "command": "npx",
-      "args": ["-y", "@wyreup/mcp"]
+      "args": ["-y", "@wyreup/mcp"],
+      "env": {
+        "WYREUP_API_KEY": "wk_live_..."
+      }
     }
   }
 }`}</code></pre>
         </div>
+        <p class="dist-section__body">
+          The <code class="inline-code">WYREUP_API_KEY</code> field is optional — omit it
+          and the free in-browser-class tools still work. Provide it
+          (get one at <a href="/account" class="inline-link">/account</a>) to
+          unlock the 30 hosted-AI Pro tools (transcription, OCR,
+          translation, text-to-speech, image generation, long-context
+          PDF Q&amp;A, structured-JSON extraction, and more). The agent
+          sees only the tools your config has unlocked, so there's no
+          fail path from missing auth.
+        </p>
 
         <ul class="config-locations">
           <li class="config-loc">

@@ -220,8 +220,9 @@ implementation — these are the decisions we made vs. the spec:
   transcribe-and-translate), the regex/cron-from-text upgrade-seam
   pair, and pdf-summarize / pdf-q-and-a. All on Workers AI except
   bg-remove/upscale (Replicate). Per-tool credit costs are
-  server-authoritative in functions/_lib/pricing.ts. All
-  `surfaces: ['web']` — CLI/MCP needs ToolRunContext to carry a key.~~
+  server-authoritative in functions/_lib/pricing.ts. Surface
+  restriction lifted 2026-05-23 — Pro tools now run on web, CLI, and
+  MCP via a shared API key (see "CLI/MCP PRO support" below).~~
 
 **Pending — Lemon Squeezy store approval only:**
 - All monetization code is shipped — packs, the $8/mo subscription
@@ -233,9 +234,15 @@ implementation — these are the decisions we made vs. the spec:
   cycle or buy a pack.
 
 **Deliberately not done (deviations from original spec):**
-- CLI/MCP PRO support. Tools ship with `surfaces: ['web']`;
+- ~~CLI/MCP PRO support. Tools ship with `surfaces: ['web']`;
   enabling CLI/MCP needs ToolRunContext to carry an API key
-  and the runner variants to wire that through.
+  and the runner variants to wire that through.~~ Shipped 2026-05-23
+  per docs/specs/pro-cli-mcp.md — ToolRunContext gained `apiKey` and
+  `proOrigin`, pro-runner picks cookie vs Bearer based on context,
+  CLI added `wyreup login/logout/balance` with `~/.wyreup/config.json`
+  + WYREUP_API_KEY env-var fallback, and the MCP server reads the key
+  from env and degrades gracefully (Pro tools hidden) when it's
+  absent.
 
 ### 5. Wave U — Standalone tool expansion
 
