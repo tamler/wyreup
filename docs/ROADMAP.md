@@ -311,6 +311,28 @@ for cross-reference with commit history; full diff in
 
 Ordered by recommended sequence.
 
+### Wave V — Data workbench (`/workbench` page, persistent local SQL)
+
+Companion to the just-shipped `csv-sql` tool. Same SQLite-WASM engine,
+but a dedicated UI surface (not a tool):
+
+- New route `/workbench` (alongside `/triggers`, `/chain/build`).
+- File-drop pane (left) → table list + schema view (middle) → SQL
+  editor + result grid (right).
+- Persists to **OPFS** (Origin Private File System) as a single
+  `.sqlite` file, so "export workspace" = download the file and
+  "import workspace" = drop the file. Stays on-brand for a file-first
+  tool library.
+- Query history, named queries, schema export, result download as
+  CSV/Parquet/JSON.
+- Engine code shared with `csv-sql`; this wave is mostly UX +
+  persistence wiring.
+- Free tier; nothing uploads; no account required.
+
+The hypothetical "Wave V-CLI" (a `wyreup db` REPL) is **explicitly
+out of scope** — agents and CLI users get all the value via the
+`csv-sql` tool already, no stateful CLI surface needed.
+
 ### Wave M — Monetization (Lemon Squeezy + hosted AI) — **SHIPPED 2026-05-18, see Now §4**
 
 Original scope kept below for posterity. Adopted version is recorded
