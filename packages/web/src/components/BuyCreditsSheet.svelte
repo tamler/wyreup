@@ -44,9 +44,9 @@
 
   type Pack = 'starter' | 'standard' | 'power' | 'monthly';
   const PACKS: { id: Pack; credits: number; price: string; tag?: string }[] = [
-    { id: 'starter', credits: 150, price: '$5' },
-    { id: 'standard', credits: 330, price: '$10', tag: 'Best value' },
-    { id: 'power', credits: 680, price: '$20' },
+    { id: 'starter', credits: 220, price: '$5' },
+    { id: 'standard', credits: 480, price: '$10', tag: 'Best value' },
+    { id: 'power', credits: 1000, price: '$20' },
   ];
 
   $: hasActiveSubscription = $user?.subscriptionStatus === 'active';
@@ -212,12 +212,12 @@
       disabled={busy !== null || hasActiveSubscription}
       aria-label={hasActiveSubscription
         ? 'You already have an active monthly subscription'
-        : 'Subscribe — 300 credits per month for $8'}
+        : 'Subscribe — 440 credits per month for $8'}
     >
       <div class="monthly__main">
-        <span class="monthly__title">Monthly · 300 credits</span>
+        <span class="monthly__title">Monthly · 440 credits</span>
         <span class="monthly__sub">
-          300 credits granted each month. Renews automatically; cancel
+          440 credits granted each month. Renews automatically; cancel
           anytime in your Lemon Squeezy receipt. If you run out before
           the next grant, buy a pack or wait for the next cycle.
         </span>

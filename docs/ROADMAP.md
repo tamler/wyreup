@@ -176,7 +176,7 @@ implementation — these are the decisions we made vs. the spec:
 | Deployment | Defer until weekly actives | Live in production |
 | Auth | Anonymous license key | Account-based (email + multiple keys per account) |
 | Infra | CF Worker + KV | CF Pages Functions + D1 |
-| Pricing | $10/200, $25/600, $50/1500 + $8/mo sub | $5/150, $10/330, $20/680 packs + $8/mo for 300 credits (shipped 2026-05-20) |
+| Pricing | $10/200, $25/600, $50/1500 + $8/mo sub | $5/220, $10/480, $20/1000 packs + $8/mo for 440 credits (initial pack sizes 2026-05-20; bumped +45% on 2026-05-22 alongside Wave 1 Workers AI expansion) |
 | Checkout | LS overlay (no redirect) | LS overlay (lemon.js) with redirect fallback |
 | Tool naming | `transcribe-hq`, `summarize-hq` (`-hq`) | `transcribe-pro`, `text-summarize-pro` (`-pro`) |
 | Marketing | "No separate /pro page" | `/pro` landing page exists |
@@ -225,7 +225,7 @@ implementation — these are the decisions we made vs. the spec:
 
 **Pending — Lemon Squeezy store approval only:**
 - All monetization code is shipped — packs, the $8/mo subscription
-  (300 credits/cycle, D1 subscription state, subscription_* webhook
+  (440 credits/cycle, D1 subscription state, subscription_* webhook
   handlers), checkout, and the credit ledger. What remains is LS
   approving the store for live sales; the end-to-end purchase test
   (T21) waits on that. The auto-pause cron was dropped — the

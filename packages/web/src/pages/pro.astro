@@ -26,9 +26,9 @@ const catalog = [...new Set(proTools.map((t) => t.cost))]
   }));
 
 const packs = [
-  { credits: 150, price: '$5', note: 'Starter' },
-  { credits: 330, price: '$10', note: 'Best value', featured: true },
-  { credits: 680, price: '$20', note: 'Power' },
+  { credits: 220, price: '$5', note: 'Starter' },
+  { credits: 480, price: '$10', note: 'Best value', featured: true },
+  { credits: 1000, price: '$20', note: 'Power' },
 ];
 
 const why = [
@@ -76,8 +76,8 @@ const why = [
         <h2 class="section-title">Simple credit pricing</h2>
         <p class="section-sub">
           Buy a pack once — credits never expire — or subscribe monthly.
-          Most tools cost 1–2 credits, so a starter pack covers roughly 150
-          image reads, 75 text jobs, or 50 transcriptions.
+          Most tools cost 1–2 credits, so a starter pack covers roughly 220
+          image reads, 110 text jobs, or 70 transcriptions.
         </p>
 
         <div class="packs">
@@ -91,14 +91,14 @@ const why = [
           ))}
           <div class="pack pack--monthly">
             <span class="pack__note">Monthly</span>
-            <div class="pack__credits">300</div>
+            <div class="pack__credits">440</div>
             <div class="pack__label">credits / month</div>
             <div class="pack__price">$8<span class="pack__per">/mo</span></div>
           </div>
         </div>
 
         <p class="pricing-fine">
-          Pack credits never expire. The monthly plan grants 300 credits each
+          Pack credits never expire. The monthly plan grants 440 credits each
           cycle into the same balance — the best per-credit rate — and you
           can cancel anytime. Payment is handled by Lemon Squeezy; we never
           see your card.

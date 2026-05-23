@@ -414,11 +414,19 @@ Trade-off: a model run that succeeds but whose response fails to reach the clien
 
 | Pack | Credits | Price | Notes |
 |------|---------|-------|-------|
-| Starter | 50 | $4.99 | First-time buyers |
-| Standard | 150 | $9.99 | Best value callout |
-| Power | 400 | $19.99 | Heavy users |
+| Starter | 220 | $5 | First-time buyers |
+| Standard | 480 | $10 | Best value callout |
+| Power | 1000 | $20 | Heavy users |
 
-~$0.10/credit. A transcription (5 credits) = $0.50. Sustainable for hosted inference.
+~$0.020/credit gross (~$0.018 net of Lemon Squeezy fees). A 2-credit
+text-summarize-pro run = $0.04 net revenue. Worst-case Pro tool today is
+chat-long-pdf-pro on Kimi K2.5 (~$0.015/run) — at 2 credits that clears
+the 50% margin floor on every pack and on the $8/mo subscription.
+
+Monthly subscription: $8 / 440 credits per cycle (best per-credit rate).
+
+Pack sizes bumped +45% on 2026-05-22 alongside the Wave 1 Workers AI
+expansion. The customer story: *"Every pack just got bigger — same price."*
 
 ### Checkout Flow
 
@@ -572,7 +580,7 @@ Sections:
 |-----------|------|-------|
 | `AuthModal.svelte` | `src/components/AuthModal.svelte` | API key input + "Get one" flow |
 | `BuyCreditsSheet.svelte` | `src/components/BuyCreditsSheet.svelte` | 3 pack cards → LS checkout |
-| `CreditBadge.svelte` | `src/components/CreditBadge.svelte` | "⚡ 150" in header when active |
+| `CreditBadge.svelte` | `src/components/CreditBadge.svelte` | "⚡ 220" in header when active |
 | `ProBadge.svelte` | `src/components/ProBadge.svelte` | Small "PRO" chip on tool cards |
 | `AccountMenu.svelte` | `src/components/AccountMenu.svelte` | Email + balance dropdown in header |
 
@@ -581,7 +589,7 @@ Sections:
 ## 14. Header Changes
 
 - **No key active:** `[Get PRO]` ghost button (right side)
-- **Key active:** `[⚡ 150 credits]` badge + email dropdown
+- **Key active:** `[⚡ 220 credits]` badge + email dropdown
 - Both trigger `AuthModal` — no page navigation, tool context preserved
 
 ---
