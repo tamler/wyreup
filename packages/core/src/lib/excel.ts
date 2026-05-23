@@ -41,15 +41,14 @@ export async function newWorkbook(): Promise<Workbook> {
 /** Parse an XLSX file (bytes or ArrayBuffer) into a workbook. */
 export async function readWorkbook(bytes: Uint8Array | ArrayBuffer): Promise<Workbook> {
   const wb = await newWorkbook();
-  // ExcelJS's xlsx.load wants an ArrayBuffer; accept either form.
-  const buf =
-    bytes instanceof Uint8Array
-      ? (bytes.buffer.slice(
-          bytes.byteOffset,
-          bytes.byteOffset + bytes.byteLength,
-        ) as ArrayBuffer)
-      : bytes;
-  await wb.xlsx.load(buf);
+  // ExcelJS's xlsx.load wants an ArrayBuffer. When given a Uint8Array,
+  // use .slice().buffer rather than .buffer.slice(byteOffset, …) —
+  // the former always returns a fresh, exactly-sized ArrayBuffer
+  // regardless of whether the source view sits over a pooled Node
+  // Buffer or a SharedArrayBuffer. The latter has subtle corruption
+  // modes on shared / non-zero-offset buffers.
+  const buf = bytes instanceof Uint8Array ? bytes.slice().buffer : bytes;
+  await wb.xlsx.load(buf as ArrayBuffer);
   return wb;
 }
 
