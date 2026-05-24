@@ -9,6 +9,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
+import { Auditor, type AuditRecord } from './audit.js';
 import { tmpdir } from 'node:os';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
@@ -172,6 +173,12 @@ export async function createWyreupMcpServer(): Promise<Server> {
     );
   }
 
+  const auditor = new Auditor({
+    path: process.env['WYREUP_AUDIT_LOG'],
+    strict: process.env['WYREUP_AUDIT_REQUIRED'] === '1',
+    apiKey: proApiKey,
+  });
+
   // Without a Pro API key, hide credit-gated tools so the agent never
   // sees an option it can't actually invoke. Print a one-shot stderr
   // hint so the operator knows what to set; don't hard-fail the
@@ -248,6 +255,27 @@ export async function createWyreupMcpServer(): Promise<Server> {
 
   function errorResult(text: string): CallResult {
     return { content: [{ type: 'text', text }], isError: true };
+  }
+
+  async function withAudit<T extends CallResult>(
+    toolName: string,
+    inputPaths: string[],
+    outputPath: string | undefined,
+    body: () => Promise<T>,
+  ): Promise<T> {
+    const start = performance.now();
+    const result = await body();
+    const record: AuditRecord = {
+      ts: new Date().toISOString(),
+      tool: toolName,
+      input_paths: inputPaths,
+      output_path: outputPath,
+      status: result.isError ? 'error' : 'ok',
+      duration_ms: Math.round(performance.now() - start),
+      error: result.isError ? result.content[0]?.text : undefined,
+    };
+    await auditor.append(record);
+    return result;
   }
 
   async function validatePaths(
@@ -354,111 +382,113 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const outputDir = rawArgs['output_dir'] as string | undefined;
       const timeoutMs = rawArgs['timeout_ms'] as number | undefined;
 
-      if (!stepsStr) {
-        return errorResult('wyreup_chain requires a "steps" chain string.');
-      }
-      const chain = parseChainString(stepsStr);
-      if (chain.length === 0) {
-        return errorResult('wyreup_chain: no valid steps parsed from input.');
-      }
-      // Validate every step references a real, MCP-runnable tool.
-      for (const step of chain) {
-        const t = registry.toolsById.get(step.toolId);
-        if (!t) return errorResult(`wyreup_chain: unknown tool "${step.toolId}".`);
-        if (!toolRunsOnSurface(t, 'mcp')) {
+      return withAudit('wyreup_chain', inputPaths, outputPath, async () => {
+        if (!stepsStr) {
+          return errorResult('wyreup_chain requires a "steps" chain string.');
+        }
+        const chain = parseChainString(stepsStr);
+        if (chain.length === 0) {
+          return errorResult('wyreup_chain: no valid steps parsed from input.');
+        }
+        // Validate every step references a real, MCP-runnable tool.
+        for (const step of chain) {
+          const t = registry.toolsById.get(step.toolId);
+          if (!t) return errorResult(`wyreup_chain: unknown tool "${step.toolId}".`);
+          if (!toolRunsOnSurface(t, 'mcp')) {
+            return errorResult(
+              `wyreup_chain: tool "${step.toolId}" is not available on MCP. ` +
+                'Web-only capture primitives (record-audio, take-photo, etc.) cannot run in a chain from MCP.',
+            );
+          }
+        }
+
+        const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
+        if (pathErr) return errorResult(pathErr);
+
+        const readResult = await safeReadAllInputs(inputPaths);
+        if (!readResult.ok) return errorResult(readResult.error);
+        const inputFiles = readResult.files;
+
+        // If any step in the chain is a Pro tool, the whole chain needs
+        // the API key. Fail fast with a clear message instead of letting
+        // runPro throw mid-pipeline (which would have already done
+        // billable steps).
+        const chainHasPro = chain.some(
+          (s) => registry.toolsById.get(s.toolId)?.cost === 'credit',
+        );
+        if (chainHasPro && !proApiKey) {
           return errorResult(
-            `wyreup_chain: tool "${step.toolId}" is not available on MCP. ` +
-              'Web-only capture primitives (record-audio, take-photo, etc.) cannot run in a chain from MCP.',
+            'wyreup_chain includes a Pro tool but WYREUP_API_KEY is not set. ' +
+              'Set the env var on the MCP server process and restart.',
           );
         }
-      }
 
-      const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
-      if (pathErr) return errorResult(pathErr);
-
-      const readResult = await safeReadAllInputs(inputPaths);
-      if (!readResult.ok) return errorResult(readResult.error);
-      const inputFiles = readResult.files;
-
-      // If any step in the chain is a Pro tool, the whole chain needs
-      // the API key. Fail fast with a clear message instead of letting
-      // runPro throw mid-pipeline (which would have already done
-      // billable steps).
-      const chainHasPro = chain.some(
-        (s) => registry.toolsById.get(s.toolId)?.cost === 'credit',
-      );
-      if (chainHasPro && !proApiKey) {
-        return errorResult(
-          'wyreup_chain includes a Pro tool but WYREUP_API_KEY is not set. ' +
-            'Set the env var on the MCP server process and restart.',
-        );
-      }
-
-      const effectiveTimeout = timeoutMs ?? 1800000; // 30 min default
-      let result: Blob[] | Blob;
-      try {
-        result = await runChain(
-          chain,
-          inputFiles,
-          {
-            onProgress: () => {},
-            signal: makeTimeoutSignal(effectiveTimeout),
-            cache: new Map(),
-            executionId: randomUUID(),
-            apiKey: proApiKey,
-            proOrigin,
-          },
-          registry,
-        );
-      } catch (err) {
-        const isTimeout = err instanceof Error && err.name === 'TimeoutError';
-        const msg = err instanceof Error ? err.message : String(err);
-        if (isTimeout) {
-          return errorResult(
-            `wyreup_chain timed out after ${effectiveTimeout} ms. Pass a larger timeout_ms (or 0 to disable) for chains that include slow tools (transcribe, audio-enhance, ocr-pro, convert-geo on large inputs).`,
+        const effectiveTimeout = timeoutMs ?? 1800000; // 30 min default
+        let chainResult: Blob[] | Blob;
+        try {
+          chainResult = await runChain(
+            chain,
+            inputFiles,
+            {
+              onProgress: () => {},
+              signal: makeTimeoutSignal(effectiveTimeout),
+              cache: new Map(),
+              executionId: randomUUID(),
+              apiKey: proApiKey,
+              proOrigin,
+            },
+            registry,
           );
+        } catch (err) {
+          const isTimeout = err instanceof Error && err.name === 'TimeoutError';
+          const msg = err instanceof Error ? err.message : String(err);
+          if (isTimeout) {
+            return errorResult(
+              `wyreup_chain timed out after ${effectiveTimeout} ms. Pass a larger timeout_ms (or 0 to disable) for chains that include slow tools (transcribe, audio-enhance, ocr-pro, convert-geo on large inputs).`,
+            );
+          }
+          return errorResult(`wyreup_chain failed: ${msg}`);
         }
-        return errorResult(`wyreup_chain failed: ${msg}`);
-      }
 
-      const outputs = Array.isArray(result) ? result : [result];
-      const writtenPaths: string[] = [];
+        const outputs = Array.isArray(chainResult) ? chainResult : [chainResult];
+        const writtenPaths: string[] = [];
 
-      if (outputs.length === 1 && outputPath) {
-        const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
-        if (writeErr) return errorResult(writeErr);
-        writtenPaths.push(outputPath);
-      } else if (outputDir) {
-        // Use the final step's tool ID in the filename so multi-output
-        // chains stay traceable: the user/agent can see which tool produced
-        // each artifact rather than getting opaque "chain-0", "chain-1".
-        const finalToolId = chain[chain.length - 1]!.toolId;
-        for (let i = 0; i < outputs.length; i++) {
-          const ext = extFromMime(outputs[i]!.type);
-          const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
-          const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+        if (outputs.length === 1 && outputPath) {
+          const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
           if (writeErr) return errorResult(writeErr);
-          writtenPaths.push(outPath);
+          writtenPaths.push(outputPath);
+        } else if (outputDir) {
+          // Use the final step's tool ID in the filename so multi-output
+          // chains stay traceable: the user/agent can see which tool produced
+          // each artifact rather than getting opaque "chain-0", "chain-1".
+          const finalToolId = chain[chain.length - 1]!.toolId;
+          for (let i = 0; i < outputs.length; i++) {
+            const ext = extFromMime(outputs[i]!.type);
+            const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
+            const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+            if (writeErr) return errorResult(writeErr);
+            writtenPaths.push(outPath);
+          }
+        } else if (outputs.length > 0 && !outputDir && !outputPath) {
+          const blob = outputs[0]!;
+          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+            const text = await blob.text();
+            return { content: [{ type: 'text', text }] };
+          }
+          return errorResult(
+            'Chain produced binary output but no output_path was provided. Rerun with output_path or output_dir.',
+          );
         }
-      } else if (outputs.length > 0 && !outputDir && !outputPath) {
-        const blob = outputs[0]!;
-        if (blob.type.startsWith('text/') || blob.type === 'application/json') {
-          const text = await blob.text();
-          return { content: [{ type: 'text', text }] };
-        }
-        return errorResult(
-          'Chain produced binary output but no output_path was provided. Rerun with output_path or output_dir.',
-        );
-      }
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Chain completed (${chain.length} step${chain.length === 1 ? '' : 's'}). Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
-          },
-        ],
-      };
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Chain completed (${chain.length} step${chain.length === 1 ? '' : 's'}). Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
+            },
+          ],
+        };
+      });
     }
 
     const tool = registry.toolsById.get(name);
@@ -481,67 +511,69 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const outputDir = rawArgs['output_dir'] as string | undefined;
     const params = (rawArgs['params'] as Record<string, unknown> | undefined) ?? tool.defaults;
 
-    const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
-    if (pathErr) return errorResult(pathErr);
+    return withAudit(name, inputPaths, outputPath, async () => {
+      const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
+      if (pathErr) return errorResult(pathErr);
 
-    // Read input files from disk with structured error reporting.
-    const readResult = await safeReadAllInputs(inputPaths);
-    if (!readResult.ok) return errorResult(readResult.error);
-    const inputFiles = readResult.files;
+      // Read input files from disk with structured error reporting.
+      const readResult = await safeReadAllInputs(inputPaths);
+      if (!readResult.ok) return errorResult(readResult.error);
+      const inputFiles = readResult.files;
 
-    // Run the tool. Errors from tool.run() are tool-level, not transport —
-    // surface them as isError content so the LLM can act on them.
-    let result: Blob[] | Blob;
-    try {
-      result = await tool.run(inputFiles, params, {
-        onProgress: () => {},
-        signal: new AbortController().signal,
-        cache: new Map(),
-        executionId: randomUUID(),
-        apiKey: proApiKey,
-        proOrigin,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return errorResult(`Tool "${tool.id}" failed: ${msg}`);
-    }
+      // Run the tool. Errors from tool.run() are tool-level, not transport —
+      // surface them as isError content so the LLM can act on them.
+      let toolResult: Blob[] | Blob;
+      try {
+        toolResult = await tool.run(inputFiles, params, {
+          onProgress: () => {},
+          signal: new AbortController().signal,
+          cache: new Map(),
+          executionId: randomUUID(),
+          apiKey: proApiKey,
+          proOrigin,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return errorResult(`Tool "${tool.id}" failed: ${msg}`);
+      }
 
-    const outputs = Array.isArray(result) ? result : [result];
-    const writtenPaths: string[] = [];
+      const outputs = Array.isArray(toolResult) ? toolResult : [toolResult];
+      const writtenPaths: string[] = [];
 
-    if (outputs.length === 1 && outputPath) {
-      const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
-      if (writeErr) return errorResult(writeErr);
-      writtenPaths.push(outputPath);
-    } else if (outputDir) {
-      for (let i = 0; i < outputs.length; i++) {
-        const ext = extFromMime(outputs[i]!.type);
-        const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
-        const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+      if (outputs.length === 1 && outputPath) {
+        const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
         if (writeErr) return errorResult(writeErr);
-        writtenPaths.push(outPath);
+        writtenPaths.push(outputPath);
+      } else if (outputDir) {
+        for (let i = 0; i < outputs.length; i++) {
+          const ext = extFromMime(outputs[i]!.type);
+          const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
+          const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+          if (writeErr) return errorResult(writeErr);
+          writtenPaths.push(outPath);
+        }
+      } else if (outputs.length > 0 && !outputDir && !outputPath) {
+        // No output path given — return content inline for text/JSON tools
+        const blob = outputs[0]!;
+        if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          const text = await blob.text();
+          return { content: [{ type: 'text', text }] };
+        }
+        // Binary with no output path — surface a helpful error
+        return errorResult(
+          `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
+        );
       }
-    } else if (outputs.length > 0 && !outputDir && !outputPath) {
-      // No output path given — return content inline for text/JSON tools
-      const blob = outputs[0]!;
-      if (blob.type.startsWith('text/') || blob.type === 'application/json') {
-        const text = await blob.text();
-        return { content: [{ type: 'text', text }] };
-      }
-      // Binary with no output path — surface a helpful error
-      return errorResult(
-        `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
-      );
-    }
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `Successfully processed. Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
-        },
-      ],
-    };
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Successfully processed. Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
+          },
+        ],
+      };
+    });
   });
 
   return server;

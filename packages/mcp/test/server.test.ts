@@ -270,6 +270,54 @@ describe('createWyreupMcpServer', () => {
   });
 });
 
+// ──── Audit log [spec §#6] ────────────────────────────────────────────────────
+
+describe('audit log [spec §#6]', () => {
+  let tmpDir: string;
+  const ORIG_KEY = process.env['WYREUP_API_KEY'];
+  const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
+
+  beforeAll(async () => {
+    process.env['WYREUP_API_KEY'] = 'wk_test_audit';
+    tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-audit-test-'));
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpDir}`;
+  });
+
+  afterAll(async () => {
+    if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
+    else process.env['WYREUP_API_KEY'] = ORIG_KEY;
+    if (ORIG_ALLOW === undefined) delete process.env['WYREUP_ALLOW_PATHS'];
+    else process.env['WYREUP_ALLOW_PATHS'] = ORIG_ALLOW;
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('writes a JSONL record per call when WYREUP_AUDIT_LOG is set', async () => {
+    const audit = join(tmpDir, 'audit.jsonl');
+    const ORIG_AUDIT = process.env['WYREUP_AUDIT_LOG'];
+    process.env['WYREUP_AUDIT_LOG'] = audit;
+    try {
+      const srv = await createWyreupMcpServer();
+      const result = await callTool(srv, 'compress', {
+        input_paths: [join(FIXTURES, 'photo.jpg')],
+        output_path: join(tmpDir, 'audit-out.jpg'),
+      });
+      // Audit must be emitted on both success and error paths.
+      const content = (await readFile(audit, 'utf8')).trim();
+      expect(content.length).toBeGreaterThan(0);
+      const line = content.split('\n')[0]!;
+      const rec = JSON.parse(line) as Record<string, unknown>;
+      expect(rec.tool).toBe('compress');
+      expect(rec.status).toBeDefined();
+      expect(rec).not.toHaveProperty('params');
+      expect(typeof rec.duration_ms).toBe('number');
+      void result;
+    } finally {
+      if (ORIG_AUDIT === undefined) delete process.env['WYREUP_AUDIT_LOG'];
+      else process.env['WYREUP_AUDIT_LOG'] = ORIG_AUDIT;
+    }
+  });
+});
+
 // ──── Pro auth env gate ──────────────────────────────────────────────────────
 
 describe('createWyreupMcpServer — Pro auth env gate', () => {
