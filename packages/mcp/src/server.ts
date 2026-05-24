@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
@@ -32,6 +32,16 @@ function resolveProOrigin(): string {
   const raw = process.env['WYREUP_ORIGIN'];
   if (raw && raw.trim()) return raw.trim().replace(/\/+$/, '');
   return DEFAULT_PRO_ORIGIN;
+}
+
+// ──── Size cap ────────────────────────────────────────────────────────────────
+
+function resolveMaxBytes(): number {
+  const raw = process.env['WYREUP_MAX_INPUT_BYTES'];
+  if (!raw) return 500 * 1024 * 1024;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return 500 * 1024 * 1024;
+  return Math.floor(n);
 }
 
 // ──── MIME helpers ────────────────────────────────────────────────────────────
@@ -165,6 +175,8 @@ export async function createWyreupMcpServer(): Promise<Server> {
   const registry = createDefaultRegistry();
   const proApiKey = resolveProApiKey();
   const proOrigin = resolveProOrigin();
+
+  const maxBytes = resolveMaxBytes();
 
   const allowedRoots = await resolveAllowedRoots(
     process.env['WYREUP_ALLOW_PATHS']
@@ -325,6 +337,20 @@ export async function createWyreupMcpServer(): Promise<Server> {
     return null;
   }
 
+  async function assertInputSize(paths: string[]): Promise<string | null> {
+    let total = 0;
+    for (const p of paths) {
+      try {
+        const s = await stat(p);
+        total += s.size;
+      } catch { /* missing file is caught later in read */ }
+    }
+    if (total > maxBytes) {
+      return `Input size ${(total / 1024 / 1024).toFixed(1)} MB exceeds limit ${(maxBytes / 1024 / 1024).toFixed(0)} MB. Raise WYREUP_MAX_INPUT_BYTES if intentional.`;
+    }
+    return null;
+  }
+
   // Read an absolute path into a File. On any I/O error (missing file,
   // permission denied, EISDIR, etc.) returns a structured error message
   // instead of throwing — the LLM sees a clear path to retry.
@@ -455,6 +481,9 @@ export async function createWyreupMcpServer(): Promise<Server> {
         const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
         if (pathErr) return errorResult(pathErr);
 
+        const sizeErr = await assertInputSize(inputPaths);
+        if (sizeErr) return errorResult(sizeErr);
+
         const readResult = await safeReadAllInputs(inputPaths);
         if (!readResult.ok) return errorResult(readResult.error);
         const inputFiles = readResult.files;
@@ -570,6 +599,9 @@ export async function createWyreupMcpServer(): Promise<Server> {
     return withAudit(name, inputPaths, outputPath, async () => {
       const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
       if (pathErr) return errorResult(pathErr);
+
+      const sizeErr = await assertInputSize(inputPaths);
+      if (sizeErr) return errorResult(sizeErr);
 
       // Read input files from disk with structured error reporting.
       const readResult = await safeReadAllInputs(inputPaths);
