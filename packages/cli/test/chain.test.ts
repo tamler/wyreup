@@ -6,13 +6,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ──── fs/promises mock ────────────────────────────────────────────────────────
 
 const mockReadFile = vi.fn();
-const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockMkdir = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('node:fs/promises', () => ({
   readFile: (...args: unknown[]) => mockReadFile(...args) as unknown,
-  writeFile: (...args: unknown[]) => mockWriteFile(...args) as unknown,
   mkdir: (...args: unknown[]) => mockMkdir(...args) as unknown,
+}));
+
+// ──── atomicPublish mock ──────────────────────────────────────────────────────
+
+const mockAtomicPublish = vi.fn().mockResolvedValue(null);
+
+vi.mock('../src/lib/safety/atomic-publish.js', () => ({
+  atomicPublish: (...args: unknown[]) => mockAtomicPublish(...args) as unknown,
 }));
 
 vi.mock('node:crypto', () => ({
@@ -95,8 +101,8 @@ beforeEach(() => {
   exitCode = undefined;
 
   mockReadFile.mockReset();
-  mockWriteFile.mockReset().mockResolvedValue(undefined);
   mockMkdir.mockReset().mockResolvedValue(undefined);
+  mockAtomicPublish.mockReset().mockResolvedValue(null);
   mockRunChain.mockReset();
   mockParseChainString.mockReset();
   mockStripExifRun.mockReset();
@@ -182,7 +188,7 @@ describe('executeChain — basic run', () => {
     });
 
     expect(mockRunChain).toHaveBeenCalledOnce();
-    expect(mockWriteFile).toHaveBeenCalledWith('/tmp/clean.jpg', expect.any(Buffer));
+    expect(mockAtomicPublish).toHaveBeenCalledWith('/tmp/clean.jpg', expect.any(Uint8Array), false);
     expect(exitCode).toBeUndefined();
   });
 
@@ -305,7 +311,7 @@ describe('executeChain — multi-output', () => {
     });
 
     expect(mockMkdir).toHaveBeenCalledWith('/tmp/out-dir', { recursive: true });
-    expect(mockWriteFile).toHaveBeenCalledTimes(2);
+    expect(mockAtomicPublish).toHaveBeenCalledTimes(2);
   });
 });
 

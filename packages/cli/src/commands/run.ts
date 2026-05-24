@@ -1,5 +1,5 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { basename, join, dirname } from 'node:path';
+import { readFile, mkdir } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Command } from 'commander';
 import { createDefaultRegistry } from '@wyreup/core';
@@ -8,6 +8,8 @@ import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
 import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
 import { interactiveLogin } from '../lib/interactive-login.js';
+import { atomicPublish } from '../lib/safety/atomic-publish.js';
+import { resolveTimeout } from '../lib/safety/timeout.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
@@ -65,6 +67,7 @@ async function writeOutputs(
   outputDir: string | undefined,
   json: boolean,
   multi: boolean,
+  overwrite: boolean,
 ): Promise<void> {
   // JSON-style output: text or json MIME with no output path → stdout
   if (!outputPath && !outputDir) {
@@ -106,7 +109,8 @@ async function writeOutputs(
       const blob = outputs[i]!;
       const ext = extFromMime(blob.type);
       const outPath = join(outputDir, `${toolId}-${i}${ext}`);
-      await writeFile(outPath, Buffer.from(await blob.arrayBuffer()));
+      const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), overwrite);
+      if (writeErr) throw new Error(writeErr);
       process.stderr.write(`Written: ${outPath}\n`);
     }
     return;
@@ -115,8 +119,8 @@ async function writeOutputs(
   // Single output
   const blob = outputs[0]!;
   const outPath = outputPath!;
-  await mkdir(dirname(outPath), { recursive: true });
-  await writeFile(outPath, Buffer.from(await blob.arrayBuffer()));
+  const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), overwrite);
+  if (writeErr) throw new Error(writeErr);
 }
 
 // ──── param parsing ───────────────────────────────────────────────────────────
@@ -151,6 +155,8 @@ export interface RunOptions {
   inputFormat?: string;
   json?: boolean;
   verbose?: boolean;
+  overwrite?: boolean;
+  timeout?: number;
 }
 
 export async function executeTool(
@@ -254,8 +260,19 @@ export async function executeTool(
   const paramOverrides = parseKeyValuePairs(opts.param ?? []);
   const params = { ...(tool.defaults as Record<string, unknown>), ...paramOverrides };
 
+  const timeoutResult = resolveTimeout(opts.timeout);
+  if (!timeoutResult.ok) {
+    process.stderr.write(`${timeoutResult.error}\n`);
+    process.exit(1);
+  }
+  const { ms: timeoutMs } = timeoutResult;
+
   const ac = new AbortController();
   process.on('SIGINT', () => ac.abort());
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  if (timeoutMs > 0) {
+    timeoutHandle = setTimeout(() => ac.abort(new Error(`Tool timed out after ${timeoutMs}ms`)), timeoutMs);
+  }
 
   const ctx = makeCtx({
     verbose: opts.verbose ?? false,
@@ -271,6 +288,8 @@ export async function executeTool(
     const msg = err instanceof Error ? err.message : String(err);
     process.stderr.write(`Error running ${toolId}: ${msg}\n`);
     process.exit(1);
+  } finally {
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
   }
 
   const outputs = Array.isArray(result) ? result : [result];
@@ -301,6 +320,7 @@ export async function executeTool(
     opts.outputDir,
     opts.json ?? false,
     outputs.length > 1,
+    opts.overwrite ?? false,
   );
 }
 

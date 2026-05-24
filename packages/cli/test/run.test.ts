@@ -6,13 +6,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ──── fs/promises mock ────────────────────────────────────────────────────────
 
 const mockReadFile = vi.fn();
-const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockMkdir = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('node:fs/promises', () => ({
   readFile: (...args: unknown[]) => mockReadFile(...args) as unknown,
-  writeFile: (...args: unknown[]) => mockWriteFile(...args) as unknown,
   mkdir: (...args: unknown[]) => mockMkdir(...args) as unknown,
+}));
+
+// ──── atomicPublish mock ──────────────────────────────────────────────────────
+
+const mockAtomicPublish = vi.fn().mockResolvedValue(null);
+
+vi.mock('../src/lib/safety/atomic-publish.js', () => ({
+  atomicPublish: (...args: unknown[]) => mockAtomicPublish(...args) as unknown,
 }));
 
 // ──── crypto mock ─────────────────────────────────────────────────────────────
@@ -124,8 +130,8 @@ beforeEach(() => {
   stdoutOutput = [];
   exitCode = undefined;
   mockReadFile.mockReset();
-  mockWriteFile.mockReset().mockResolvedValue(undefined);
   mockMkdir.mockReset().mockResolvedValue(undefined);
+  mockAtomicPublish.mockReset().mockResolvedValue(null);
   mockHashRun.mockReset();
   mockCompressRun.mockReset();
   mockSplitRun.mockReset();
@@ -182,9 +188,10 @@ describe('executeTool — hash (JSON output)', () => {
 
     await executeTool('hash', ['/tmp/file.bin'], { output: '/tmp/out.json' });
 
-    expect(mockWriteFile).toHaveBeenCalledWith(
+    expect(mockAtomicPublish).toHaveBeenCalledWith(
       '/tmp/out.json',
-      expect.any(Buffer),
+      expect.any(Uint8Array),
+      false,
     );
   });
 
@@ -227,7 +234,7 @@ describe('executeTool — compress (binary output)', () => {
 
     await executeTool('compress', ['/tmp/photo.jpg'], { output: '/tmp/out.jpg' });
 
-    expect(mockWriteFile).toHaveBeenCalledWith('/tmp/out.jpg', expect.any(Buffer));
+    expect(mockAtomicPublish).toHaveBeenCalledWith('/tmp/out.jpg', expect.any(Uint8Array), false);
     expect(exitCode).toBeUndefined();
   });
 
@@ -269,7 +276,7 @@ describe('executeTool — split-pdf (multi-output)', () => {
     await executeTool('split-pdf', ['/tmp/doc.pdf'], { outputDir: '/tmp/pages' });
 
     expect(mockMkdir).toHaveBeenCalledWith('/tmp/pages', { recursive: true });
-    expect(mockWriteFile).toHaveBeenCalledTimes(2);
+    expect(mockAtomicPublish).toHaveBeenCalledTimes(2);
   });
 
   it('errors when multiple outputs and no -O', async () => {

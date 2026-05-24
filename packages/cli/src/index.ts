@@ -127,6 +127,8 @@ const runCmd = program
   .option('--input-format <mime>', 'Override input MIME type (useful when piping)')
   .option('--json', 'Force JSON output to stdout')
   .option('--verbose', 'Print progress to stderr')
+  .option('--overwrite', 'Overwrite existing output files (default: refuse)')
+  .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10))
   .action(async (toolId: string, inputs: string[], opts: Record<string, unknown>) => {
     await executeTool(toolId, inputs, {
       output: opts['output'] as string | undefined,
@@ -135,6 +137,8 @@ const runCmd = program
       inputFormat: opts['inputFormat'] as string | undefined,
       json: opts['json'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
+      overwrite: opts['overwrite'] as boolean | undefined,
+      timeout: opts['timeout'] as number | undefined,
     });
   });
 
@@ -160,6 +164,8 @@ program
   .option('--input-format <mime>', 'Override input MIME type')
   .option('--dry-run', 'Print the parsed plan, MIME flow, and install-group totals without running anything')
   .option('--verbose', 'Print progress to stderr')
+  .option('--overwrite', 'Overwrite existing output files (default: refuse)')
+  .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10))
   .addHelpText(
     'after',
     `
@@ -192,6 +198,8 @@ Saved chains:
       inputFormat: opts['inputFormat'] as string | undefined,
       dryRun: opts['dryRun'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
+      overwrite: opts['overwrite'] as boolean | undefined,
+      timeout: opts['timeout'] as number | undefined,
     });
   });
 
@@ -318,7 +326,9 @@ if (
       )
       .option('--input-format <mime>', 'Override input MIME type')
       .option('--json', 'Force JSON output to stdout')
-      .option('--verbose', 'Print progress to stderr');
+      .option('--verbose', 'Print progress to stderr')
+      .option('--overwrite', 'Overwrite existing output files (default: refuse)')
+      .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10));
 
     addToolOptions(toolCmd, tool);
 
@@ -332,6 +342,8 @@ if (
         inputFormat: opts['inputFormat'] as string | undefined,
         json: opts['json'] as boolean | undefined,
         verbose: opts['verbose'] as boolean | undefined,
+        overwrite: opts['overwrite'] as boolean | undefined,
+        timeout: opts['timeout'] as number | undefined,
       });
     });
 

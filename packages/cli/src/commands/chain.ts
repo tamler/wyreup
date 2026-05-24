@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { basename, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
@@ -6,6 +6,8 @@ import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
 import { buildDryRun } from './chain-dryrun.js';
+import { atomicPublish } from '../lib/safety/atomic-publish.js';
+import { resolveTimeout } from '../lib/safety/timeout.js';
 
 // ──── chain URL parser ────────────────────────────────────────────────────────
 
@@ -47,6 +49,8 @@ export interface ChainOptions {
   verbose?: boolean;
   /** Print the parsed plan + MIME flow + install groups; do not execute. */
   dryRun?: boolean;
+  overwrite?: boolean;
+  timeout?: number;
 }
 
 interface ToolbeltChainStep {
@@ -200,9 +204,21 @@ export async function executeChain(
     await mkdir(saveDir, { recursive: true });
   }
 
+  // Validate timeout
+  const timeoutResult = resolveTimeout(opts.timeout);
+  if (!timeoutResult.ok) {
+    process.stderr.write(`${timeoutResult.error}\n`);
+    process.exit(1);
+  }
+  const { ms: timeoutMs } = timeoutResult;
+
   // Build a wrapped context that saves intermediates per step
   const ac = new AbortController();
   process.on('SIGINT', () => ac.abort());
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  if (timeoutMs > 0) {
+    timeoutHandle = setTimeout(() => ac.abort(new Error(`Chain timed out after ${timeoutMs}ms`)), timeoutMs);
+  }
 
   const ctx: ToolRunContext = {
     onProgress: opts.verbose
@@ -233,7 +249,8 @@ export async function executeChain(
         const blob = blobs[j]!;
         const ext = extFromMime(blob.type);
         const outPath = join(saveDir, `step-${i + 1}-${step.toolId}-${j}${ext}`);
-        await writeFile(outPath, Buffer.from(await blob.arrayBuffer()));
+        const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+        if (writeErr) throw new Error(writeErr);
         if (opts.verbose) {
           process.stderr.write(`Intermediate: ${outPath}\n`);
         }
@@ -251,8 +268,11 @@ export async function executeChain(
       const msg = err instanceof Error ? err.message : String(err);
       process.stderr.write(`Chain error: ${msg}\n`);
       process.exit(1);
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
     }
   }
+  if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
 
   if (outputs.length === 0) {
     process.stderr.write('Chain produced no output.\n');
@@ -277,7 +297,8 @@ export async function executeChain(
       const blob = outputs[i]!;
       const ext = extFromMime(blob.type);
       const outPath = join(opts.outputDir, `chain-output-${i}${ext}`);
-      await writeFile(outPath, Buffer.from(await blob.arrayBuffer()));
+      const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+      if (writeErr) throw new Error(writeErr);
       process.stderr.write(`Written: ${outPath}\n`);
     }
     return;
@@ -310,5 +331,6 @@ export async function executeChain(
   }
 
   await mkdir(dirname(opts.output), { recursive: true });
-  await writeFile(opts.output, Buffer.from(await blob.arrayBuffer()));
+  const writeErr = await atomicPublish(opts.output, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+  if (writeErr) throw new Error(writeErr);
 }
