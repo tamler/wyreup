@@ -64,3 +64,31 @@ describe('timeout validation [spec §#3]', () => {
     }
   });
 });
+
+describe('worker supervisor timeout=0 [spec §#3]', () => {
+  it('with WYREUP_ALLOW_DISABLE_TIMEOUT=1, timeout_ms=0 runs without scheduling a kill timer', async () => {
+    const { runInWorker } = await import('../src/supervisor.js');
+    const ORIG_PERMIT = process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'];
+    process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'] = '1';
+    try {
+      const { mkdtemp } = await import('node:fs/promises');
+      const tmp = await mkdtemp(join(tmpdir(), 'wymcp-no-timer-'));
+      const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
+      const r = await runInWorker({
+        toolId: 'compress',
+        inputPaths: [join(FIXTURES, 'photo.jpg')],
+        params: { quality: 80 },
+        outputPath: join(tmp, 'out.jpg'),
+        timeoutMs: 0,
+        proOrigin: 'https://wyreup.com',
+        allowedRoots: '*',
+        allowOverwrite: true,
+        maxBytes: 500 * 1024 * 1024,
+      });
+      expect(r.ok).toBe(true);
+    } finally {
+      if (ORIG_PERMIT === undefined) delete process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'];
+      else process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'] = ORIG_PERMIT;
+    }
+  });
+});
