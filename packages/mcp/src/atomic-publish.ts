@@ -24,7 +24,7 @@ export async function atomicPublish(
   await mkdir(dirname(target), { recursive: true });
   const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;
   try {
-    await writeFile(tmp, bytes, { flag: 'wx', mode: 0o644 });
+    await writeFile(tmp, bytes, { flag: 'wx', mode: 0o600 });
     if (allowOverwrite) {
       await rename(tmp, target);
     } else {

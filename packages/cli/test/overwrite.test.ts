@@ -36,4 +36,17 @@ describe('CLI atomic publish', () => {
       expect(await readFile(sensitive, 'utf8')).toBe('protected');
     }
   });
+
+  it('writes published files with mode 0o600 (owner-only) in both no-overwrite and overwrite paths', async () => {
+    const linkPath = join(dir, 'fresh.bin');
+    const err1 = await atomicPublish(linkPath, new Uint8Array([0x01]), false);
+    expect(err1).toBeNull();
+    expect((await stat(linkPath)).mode & 0o777).toBe(0o600);
+
+    const overTarget = join(dir, 'existing.bin');
+    await writeFile(overTarget, 'old');
+    const err2 = await atomicPublish(overTarget, new Uint8Array([0x02]), true);
+    expect(err2).toBeNull();
+    expect((await stat(overTarget)).mode & 0o777).toBe(0o600);
+  });
 });

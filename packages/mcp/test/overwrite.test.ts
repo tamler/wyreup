@@ -91,3 +91,26 @@ describe('atomicPublish concurrent writes', () => {
     expect(losses).toBe(1);
   });
 });
+
+describe('atomicPublish file mode', () => {
+  it('writes the published file with mode 0o600 (owner-only)', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-mode-'));
+    const target = join(tmp, 'mode.bin');
+    const err = await atomicPublish(target, new Uint8Array([0xde, 0xad, 0xbe, 0xef]), false);
+    expect(err).toBeNull();
+    const s = await stat(target);
+    expect(s.mode & 0o777).toBe(0o600);
+  });
+
+  it('preserves 0o600 across overwrite (tmp+rename path)', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-mode-ow-'));
+    const target = join(tmp, 'mode.bin');
+    await writeFile(target, 'existing');
+    const err = await atomicPublish(target, new Uint8Array([0x00]), true);
+    expect(err).toBeNull();
+    const s = await stat(target);
+    expect(s.mode & 0o777).toBe(0o600);
+  });
+});
