@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './lib/safety/install-egress.js';
 import { Command } from 'commander';
 import { createReadStream } from 'node:fs';
 import { listCommand } from './commands/list.js';
