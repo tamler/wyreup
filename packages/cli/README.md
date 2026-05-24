@@ -226,6 +226,36 @@ Tools span image, PDF, audio, video, text, dev, geo, and other categories. Run `
 
 Everything runs locally on your machine. No files leave your device. No network calls during tool execution.
 
+## Security & environment
+
+The CLI ships with defense-in-depth on every tool invocation. Defaults are conservative; tune as needed.
+
+### Environment variables
+
+| Var | Default | Purpose |
+| --- | --- | --- |
+| `WYREUP_API_KEY` | — | Bearer token for Pro tools and account commands. Read via `wyreup login` and stored in `~/.wyreup/config.json`. |
+| `WYREUP_ORIGIN` | `https://wyreup.com` | Pro endpoint + auth origin. One of two permitted fetch destinations. |
+| `WYREUP_MODEL_CDN` | `https://models.wyreup.com` | Model weight CDN. `disabled` falls back to upstream CDNs and also disables the egress lock. |
+| `WYREUP_ALLOW_DISABLE_TIMEOUT` | — | `1` permits `--timeout 0` (disable). |
+| `WYREUP_DISABLE_EGRESS_LOCK` | — | `1` skips installing the `fetch` egress lock. |
+
+### Per-command flags
+
+`wyreup run` and `wyreup chain` accept:
+
+- `--overwrite` — overwrite existing output files (default: refuse)
+- `--timeout <ms>` — max runtime per tool, default 300000, range `[1, 3600000]`
+
+### What this does NOT defend against
+
+- Raw socket egress (`node:http`/`node:https`/`node:net`/native bindings)
+- Tools that spawn their own subprocesses
+- DNS-channel exfiltration
+- Hostile `~/.wyreup/config.json` (if another process can write to your home, you have bigger problems)
+
+See `docs/superpowers/specs/2026-05-24-wyreup-mcp-hardening-design.md § Security limitations` for the full list — the CLI inherits the same limitations as MCP.
+
 ## More
 
 - [wyreup.com](https://wyreup.com) — browser version, no install needed

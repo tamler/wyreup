@@ -1,5 +1,21 @@
 # @wyreup/cli
 
+## Unreleased
+
+### Added
+- `--overwrite` flag on `run` and `chain` (default `false`). Output files are no longer silently overwritten — pass `--overwrite` to keep old behavior.
+- `--timeout <ms>` flag on `run` and `chain`, default 300000, range [1, 3600000]. `0` requires `WYREUP_ALLOW_DISABLE_TIMEOUT=1`.
+- Symlink-safe atomic publishing: refuses to write to a symlink target, regardless of `--overwrite`.
+- Fetch egress lock at CLI entry: blocks any `fetch` to origins other than `WYREUP_ORIGIN` (default `https://wyreup.com`) and `WYREUP_MODEL_CDN` (default `https://models.wyreup.com`). Disable with `WYREUP_DISABLE_EGRESS_LOCK=1` or `WYREUP_MODEL_CDN=disabled` (which disables both the model CDN pin and the egress lock — they're coupled because the upstream CDN set isn't enumerable).
+- Bearer-token sanitization plumbing on CLI error output paths.
+
+### Security limitations (documented)
+- Egress lock covers `fetch` only. Raw `node:http`/`node:https`/`node:net` and native sockets are NOT intercepted.
+- See `docs/superpowers/specs/2026-05-24-wyreup-mcp-hardening-design.md § Security limitations` for the authoritative list — CLI inherits the same limitations as MCP.
+
+### Behavioral changes
+- Output files are no longer silently overwritten. Pass `--overwrite` to keep old behavior.
+
 ## 0.4.0
 
 ### Minor Changes
