@@ -8,6 +8,7 @@ import { formatSuggestion } from '../lib/fuzzy.js';
 import { buildDryRun } from './chain-dryrun.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
 import { resolveTimeout } from '../lib/safety/timeout.js';
+import { printError } from '../lib/safety/print-error.js';
 
 // ──── chain URL parser ────────────────────────────────────────────────────────
 
@@ -265,8 +266,7 @@ export async function executeChain(
     try {
       outputs = await runChain(chain, inputFiles, ctx, registry);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      process.stderr.write(`Chain error: ${msg}\n`);
+      await printError('Chain error', err);
       process.exit(1);
     } finally {
       if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);

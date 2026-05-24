@@ -10,6 +10,7 @@ import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
 import { interactiveLogin } from '../lib/interactive-login.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
 import { resolveTimeout } from '../lib/safety/timeout.js';
+import { printError } from '../lib/safety/print-error.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
@@ -285,8 +286,7 @@ export async function executeTool(
   try {
     result = await tool.run(inputFiles, params, ctx);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`Error running ${toolId}: ${msg}\n`);
+    await printError(`Error running ${toolId}`, err);
     process.exit(1);
   } finally {
     if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);

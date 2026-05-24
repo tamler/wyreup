@@ -5,6 +5,7 @@
 // effects.
 
 import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
+import { printError } from '../lib/safety/print-error.js';
 
 interface BalanceResponse {
   email?: string;
@@ -29,8 +30,7 @@ export async function balanceCommand(opts: { json?: boolean }): Promise<void> {
       headers: { Authorization: `Bearer ${key}` },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`Could not reach ${origin}: ${msg}\n`);
+    await printError(`Could not reach ${origin}`, err);
     process.exit(2);
   }
 
