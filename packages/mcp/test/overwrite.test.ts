@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, readFile, symlink, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createWyreupMcpServer } from '../src/server.js';
+import { atomicPublish } from '../src/atomic-publish.js';
 
 const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
 
@@ -72,5 +73,21 @@ describe('atomic overwrite [spec §#4]', () => {
       expect(r.content[0]?.text).toMatch(/symlink/i);
       expect(await readFile(sensitive, 'utf8')).toBe('protected');
     }
+  });
+});
+
+describe('atomicPublish concurrent writes', () => {
+  it('two concurrent atomicPublish calls to the same target — exactly one wins, one fails', async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-race-'));
+    const target = join(tmp, 'race.bin');
+    const [a, b] = await Promise.all([
+      atomicPublish(target, new Uint8Array([1]), false),
+      atomicPublish(target, new Uint8Array([2]), false),
+    ]);
+    const wins = [a, b].filter((r) => r === null).length;
+    const losses = [a, b].filter((r) => r !== null).length;
+    expect(wins).toBe(1);
+    expect(losses).toBe(1);
   });
 });

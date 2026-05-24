@@ -1,45 +1,14 @@
 import './install-egress.js';
 import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
-import { readFile, writeFile, mkdir, lstat, link, rename, unlink } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { assertPathAllowed } from './paths.js';
+import { atomicPublish } from './atomic-publish.js';
 import type { WorkerJob, WorkerResult } from './worker-types.js';
 
 const TEXT_OUTPUT_CAP = 10 * 1024 * 1024; // 10 MB per [spec §#8]
-
-async function atomicPublish(
-  target: string,
-  bytes: Uint8Array,
-  allowOverwrite: boolean,
-): Promise<string | null> {
-  try {
-    const s = await lstat(target);
-    if (s.isSymbolicLink()) return `Refusing to write to symlink: ${target}`;
-    if (!allowOverwrite && (s.isFile() || s.isDirectory())) {
-      return `Target exists and allow_overwrite is false: ${target}`;
-    }
-  } catch { /* ENOENT — fine */ }
-  await mkdir(dirname(target), { recursive: true });
-  const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;
-  try {
-    await writeFile(tmp, bytes, { flag: 'wx', mode: 0o644 });
-    if (allowOverwrite) {
-      await rename(tmp, target);
-    } else {
-      await link(tmp, target);
-      await unlink(tmp);
-    }
-    return null;
-  } catch (err) {
-    await unlink(tmp).catch(() => {});
-    const code = (err as NodeJS.ErrnoException).code;
-    if (code === 'EEXIST') return `Target exists and allow_overwrite is false: ${target}`;
-    const msg = err instanceof Error ? err.message : String(err);
-    return `Could not publish ${target}: ${msg}`;
-  }
-}
 
 function inferMimeFromPath(p: string): string {
   const ext = p.split('.').pop()?.toLowerCase() ?? '';

@@ -5,9 +5,10 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
-import { readFile, writeFile, mkdir, stat, link, lstat, rename, unlink } from 'node:fs/promises';
-import { dirname, basename, join } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { atomicPublish } from './atomic-publish.js';
 import { resolveAllowedRoots, assertPathAllowed } from './paths.js';
 import { Auditor, type AuditRecord } from './audit.js';
 import { isIdempotent } from './idempotency.js';
@@ -387,43 +388,6 @@ export async function createWyreupMcpServer(): Promise<Server> {
       files.push(r.file);
     }
     return { ok: true, files };
-  }
-
-  async function atomicPublish(
-    target: string,
-    bytes: Uint8Array,
-    allowOverwrite: boolean,
-  ): Promise<string | null> {
-    // lstat-reject: never publish to a symlink, regardless of mode.
-    try {
-      const s = await lstat(target);
-      if (s.isSymbolicLink()) {
-        return `Refusing to write to symlink: ${target}`;
-      }
-      if (!allowOverwrite && (s.isFile() || s.isDirectory())) {
-        return `Target exists and allow_overwrite is false: ${target}`;
-      }
-    } catch { /* ENOENT — fine, target doesn't exist yet */ }
-
-    await mkdir(dirname(target), { recursive: true });
-    const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;
-    try {
-      await writeFile(tmp, bytes, { flag: 'wx', mode: 0o644 });
-      if (allowOverwrite) {
-        await rename(tmp, target); // replaces a regular file or symlink entry atomically
-      } else {
-        // Atomic exclusive create: fails EEXIST if target appeared between lstat and link.
-        await link(tmp, target);
-        await unlink(tmp);
-      }
-      return null;
-    } catch (err) {
-      await unlink(tmp).catch(() => {});
-      const code = (err as NodeJS.ErrnoException).code;
-      if (code === 'EEXIST') return `Target exists and allow_overwrite is false: ${target}`;
-      const msg = err instanceof Error ? err.message : String(err);
-      return `Could not publish ${target}: ${msg}`;
-    }
   }
 
   // Build an AbortSignal that fires after `timeoutMs` (or never if 0/undefined).
