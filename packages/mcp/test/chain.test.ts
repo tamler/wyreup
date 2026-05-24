@@ -47,7 +47,7 @@ describe('wyreup_chain audit [spec §#6]', () => {
     const { readFile } = await import('node:fs/promises');
     const lines = (await readFile(auditPath, 'utf8')).trim().split('\n');
     expect(lines).toHaveLength(1);
-    const rec: { tool: string } = JSON.parse(lines[0]!);
+    const rec = JSON.parse(lines[0]!) as { tool: string };
     expect(rec.tool).toBe('wyreup_chain');
   });
 });
