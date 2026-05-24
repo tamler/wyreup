@@ -109,17 +109,19 @@ if (!process.send) {
   process.exit(2);
 }
 
-process.once('message', async (msg) => {
+process.once('message', (msg) => {
   const job = msg as WorkerJob;
-  try {
-    const result = await runJob(job);
-    process.send!(result);
-    process.exit(result.ok ? 0 : 1);
-  } catch (err) {
-    const m2 = err instanceof Error ? err.message : String(err);
-    process.send!({ ok: false, error: `worker uncaught: ${m2}`, stage: 'run' } satisfies WorkerResult);
-    process.exit(1);
-  }
+  void (async () => {
+    try {
+      const result = await runJob(job);
+      process.send!(result);
+      process.exit(result.ok ? 0 : 1);
+    } catch (err) {
+      const m2 = err instanceof Error ? err.message : String(err);
+      process.send!({ ok: false, error: `worker uncaught: ${m2}`, stage: 'run' } satisfies WorkerResult);
+      process.exit(1);
+    }
+  })();
 });
 
 process.on('uncaughtException', (err) => {
