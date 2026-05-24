@@ -10,6 +10,7 @@ import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
 import { Auditor, type AuditRecord } from './audit.js';
+import { isIdempotent } from './idempotency.js';
 import { tmpdir } from 'node:os';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
@@ -361,11 +362,25 @@ export async function createWyreupMcpServer(): Promise<Server> {
   // eslint-disable-next-line @typescript-eslint/require-await
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
-      CHAIN_TOOL,
+      {
+        ...CHAIN_TOOL,
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,    // defensive worst case across the chain
+          openWorldHint: true,       // chain may include Pro steps
+        },
+      },
       ...tools.map((tool) => ({
         name: tool.id,
         description: tool.llmDescription ?? `${tool.name}: ${tool.description}`,
         inputSchema: buildMcpInputSchema(tool),
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: isIdempotent(tool.id),
+          openWorldHint: tool.cost === 'credit',
+        },
       })),
     ],
   }));
