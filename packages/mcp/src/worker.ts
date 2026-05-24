@@ -1,6 +1,6 @@
 import './install-egress.js';
 import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, lstat, link, rename, unlink } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -8,6 +8,38 @@ import { assertPathAllowed } from './paths.js';
 import type { WorkerJob, WorkerResult } from './worker-types.js';
 
 const TEXT_OUTPUT_CAP = 10 * 1024 * 1024; // 10 MB per [spec §#8]
+
+async function atomicPublish(
+  target: string,
+  bytes: Uint8Array,
+  allowOverwrite: boolean,
+): Promise<string | null> {
+  try {
+    const s = await lstat(target);
+    if (s.isSymbolicLink()) return `Refusing to write to symlink: ${target}`;
+    if (!allowOverwrite && (s.isFile() || s.isDirectory())) {
+      return `Target exists and allow_overwrite is false: ${target}`;
+    }
+  } catch { /* ENOENT — fine */ }
+  await mkdir(dirname(target), { recursive: true });
+  const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;
+  try {
+    await writeFile(tmp, bytes, { flag: 'wx', mode: 0o644 });
+    if (allowOverwrite) {
+      await rename(tmp, target);
+    } else {
+      await link(tmp, target);
+      await unlink(tmp);
+    }
+    return null;
+  } catch (err) {
+    await unlink(tmp).catch(() => {});
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === 'EEXIST') return `Target exists and allow_overwrite is false: ${target}`;
+    const msg = err instanceof Error ? err.message : String(err);
+    return `Could not publish ${target}: ${msg}`;
+  }
+}
 
 function inferMimeFromPath(p: string): string {
   const ext = p.split('.').pop()?.toLowerCase() ?? '';
@@ -74,33 +106,58 @@ async function runJob(job: WorkerJob): Promise<WorkerResult> {
   // AND (c) under TEXT_OUTPUT_CAP.
   if (outputs.length === 1 && !job.outputPath && !job.outputDir) {
     const b = outputs[0]!;
-    if ((b.type.startsWith('text/') || b.type === 'application/json')) {
+    if (b.type.startsWith('text/') || b.type === 'application/json') {
       const text = await b.text();
       if (Buffer.byteLength(text, 'utf8') <= TEXT_OUTPUT_CAP) {
         return { ok: true, writtenPaths: [], textOutput: text };
       }
-      // Fall through to spill path below.
+      // Fall through to write path below.
+    } else {
+      // Binary output with no output path — caller must retry with output_path.
+      const isMultiple = tool.output.multiple === true;
+      return {
+        ok: false,
+        error: `Tool "${tool.id}" produced binary output but no output_path${isMultiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
+        stage: 'write',
+      };
     }
   }
 
-  // Placeholder writes (atomic publish moves here in Task 17).
+  // Write outputs using atomic publish (symlink-safe, TOCTOU-safe).
   const writtenPaths: string[] = [];
-  for (let i = 0; i < outputs.length; i++) {
-    const buf = Buffer.from(await outputs[i]!.arrayBuffer());
-    const target = job.outputPath
-      ? job.outputPath
-      : job.outputDir
-        ? join(job.outputDir, `${job.toolId}-${i}`)
-        : join(tmpdir(), `wyreup-mcp-${randomUUID()}.bin`);
-    try {
-      await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, buf);
+
+  if (outputs.length === 1 && job.outputPath) {
+    const buf = new Uint8Array(await outputs[0]!.arrayBuffer());
+    const writeErr = await atomicPublish(job.outputPath, buf, job.allowOverwrite);
+    if (writeErr) return { ok: false, error: writeErr, stage: 'write' };
+    writtenPaths.push(job.outputPath);
+  } else if (job.outputDir) {
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp',
+      'image/gif': '.gif', 'image/bmp': '.bmp', 'image/svg+xml': '.svg',
+      'application/pdf': '.pdf', 'text/plain': '.txt', 'text/html': '.html',
+      'text/markdown': '.md', 'application/json': '.json', 'text/csv': '.csv',
+      'audio/wav': '.wav', 'audio/mpeg': '.mp3', 'video/mp4': '.mp4',
+    };
+    for (let i = 0; i < outputs.length; i++) {
+      const ext = mimeToExt[outputs[i]!.type] ?? '.bin';
+      const target = join(job.outputDir, `${job.toolId}-${i}${ext}`);
+      const buf = new Uint8Array(await outputs[i]!.arrayBuffer());
+      const writeErr = await atomicPublish(target, buf, job.allowOverwrite);
+      if (writeErr) return { ok: false, error: writeErr, stage: 'write' };
       writtenPaths.push(target);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { ok: false, error: `write ${target}: ${msg}`, stage: 'write' };
+    }
+  } else {
+    // Spill large text to a temp file.
+    for (let i = 0; i < outputs.length; i++) {
+      const target = join(tmpdir(), `wyreup-mcp-${randomUUID()}.bin`);
+      const buf = new Uint8Array(await outputs[i]!.arrayBuffer());
+      const writeErr = await atomicPublish(target, buf, true);
+      if (writeErr) return { ok: false, error: writeErr, stage: 'write' };
+      writtenPaths.push(target);
     }
   }
+
   return { ok: true, writtenPaths };
 }
 

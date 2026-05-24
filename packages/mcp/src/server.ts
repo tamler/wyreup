@@ -12,6 +12,8 @@ import { resolveAllowedRoots, assertPathAllowed } from './paths.js';
 import { Auditor, type AuditRecord } from './audit.js';
 import { isIdempotent } from './idempotency.js';
 import { tmpdir } from 'node:os';
+import { runInWorker } from './supervisor.js';
+import { sanitize } from './sanitize.js';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
 //
@@ -465,6 +467,10 @@ export async function createWyreupMcpServer(): Promise<Server> {
 
     // Meta-tool: run a chain in one shot.
     if (name === 'wyreup_chain') {
+      // CHAIN STAYS IN-PROCESS: chains orchestrate Blob handoffs between steps
+      // (intermediates never touch disk). Round-tripping each intermediate through
+      // child_process.fork would double the cost of every chain. The intermediate
+      // size-cap defense for chains is deferred to a future task — see plan.md.
       const rawArgs = args ?? {};
       const stepsStr = rawArgs['steps'] as string | undefined;
       const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
@@ -624,63 +630,93 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const sizeErr = await assertInputSize(inputPaths);
       if (sizeErr) return errorResult(sizeErr);
 
-      // Read input files from disk with structured error reporting.
-      const readResult = await safeReadAllInputs(inputPaths);
-      if (!readResult.ok) return errorResult(readResult.error);
-      const inputFiles = readResult.files;
+      const disableIsolation = process.env['WYREUP_DISABLE_WORKER_ISOLATION'] === '1';
 
-      // Run the tool. Errors from tool.run() are tool-level, not transport —
-      // surface them as isError content so the LLM can act on them.
-      let toolResult: Blob[] | Blob;
-      try {
-        toolResult = await tool.run(inputFiles, params, {
-          onProgress: () => {},
-          signal: makeTimeoutSignal(timeoutMs),
-          cache: new Map(),
-          executionId: randomUUID(),
-          apiKey: proApiKey,
-          proOrigin,
-        });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        return errorResult(`Tool "${tool.id}" failed: ${msg}`);
+      if (disableIsolation) {
+        // Legacy in-process path for debugging. The worker path is the default.
+        const readResult = await safeReadAllInputs(inputPaths);
+        if (!readResult.ok) return errorResult(readResult.error);
+        const inputFiles = readResult.files;
+
+        let toolResult: Blob[] | Blob;
+        try {
+          toolResult = await tool.run(inputFiles, params, {
+            onProgress: () => {},
+            signal: makeTimeoutSignal(timeoutMs),
+            cache: new Map(),
+            executionId: randomUUID(),
+            apiKey: proApiKey,
+            proOrigin,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return errorResult(`Tool "${tool.id}" failed: ${msg}`);
+        }
+
+        const outputs = Array.isArray(toolResult) ? toolResult : [toolResult];
+        const writtenPaths: string[] = [];
+
+        if (outputs.length === 1 && outputPath) {
+          const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
+          if (writeErr) return errorResult(writeErr);
+          writtenPaths.push(outputPath);
+        } else if (outputDir) {
+          for (let i = 0; i < outputs.length; i++) {
+            const ext = extFromMime(outputs[i]!.type);
+            const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
+            const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
+            if (writeErr) return errorResult(writeErr);
+            writtenPaths.push(outPath);
+          }
+        } else if (outputs.length > 0 && !outputDir && !outputPath) {
+          const blob = outputs[0]!;
+          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+            const text = await blob.text();
+            return { content: [{ type: 'text', text }] };
+          }
+          return errorResult(
+            `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
+          );
+        }
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Successfully processed. Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
+            },
+          ],
+        };
       }
 
-      const outputs = Array.isArray(toolResult) ? toolResult : [toolResult];
-      const writtenPaths: string[] = [];
+      // Worker path (default).
+      const workerResult = await runInWorker({
+        toolId: tool.id,
+        inputPaths,
+        params: params as Record<string, unknown>,
+        outputPath,
+        outputDir,
+        timeoutMs,
+        proApiKey: tool.cost === 'credit' ? proApiKey : undefined,
+        proOrigin,
+        allowedRoots,
+        allowOverwrite,
+        maxBytes,
+      });
 
-      if (outputs.length === 1 && outputPath) {
-        const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
-        if (writeErr) return errorResult(writeErr);
-        writtenPaths.push(outputPath);
-      } else if (outputDir) {
-        for (let i = 0; i < outputs.length; i++) {
-          const ext = extFromMime(outputs[i]!.type);
-          const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
-          const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
-          if (writeErr) return errorResult(writeErr);
-          writtenPaths.push(outPath);
-        }
-      } else if (outputs.length > 0 && !outputDir && !outputPath) {
-        // No output path given — return content inline for text/JSON tools
-        const blob = outputs[0]!;
-        if (blob.type.startsWith('text/') || blob.type === 'application/json') {
-          const text = await blob.text();
-          return { content: [{ type: 'text', text }] };
-        }
-        // Binary with no output path — surface a helpful error
-        return errorResult(
-          `Tool "${tool.id}" produced binary output but no output_path${tool.output.multiple ? '/output_dir' : ''} was provided. Rerun with an output path.`,
-        );
+      if (!workerResult.ok) {
+        return errorResult(sanitize(workerResult.error, proApiKey));
+      }
+
+      if (workerResult.textOutput !== undefined) {
+        return { content: [{ type: 'text', text: workerResult.textOutput }] };
       }
 
       return {
-        content: [
-          {
-            type: 'text',
-            text: `Successfully processed. Output${writtenPaths.length > 1 ? 's' : ''}:\n${writtenPaths.join('\n')}`,
-          },
-        ],
+        content: [{
+          type: 'text',
+          text: `Successfully processed. Output${workerResult.writtenPaths.length > 1 ? 's' : ''}:\n${workerResult.writtenPaths.join('\n')}`,
+        }],
       };
     });
   });

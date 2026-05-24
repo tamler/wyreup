@@ -414,3 +414,47 @@ describe('path allowlist [spec §#1]', () => {
     expect(result.content[0]?.text).toMatch(/outside allowed roots/);
   });
 });
+
+// ──── Worker dispatch [spec §#8] ──────────────────────────────────────────────
+
+describe('worker dispatch [spec §#8]', () => {
+  let tmpDir: string;
+  const ORIG_KEY = process.env['WYREUP_API_KEY'];
+  const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
+  let server: Awaited<ReturnType<typeof createWyreupMcpServer>>;
+
+  beforeAll(async () => {
+    process.env['WYREUP_API_KEY'] = 'wk_test_worker_dispatch';
+    tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-worker-test-'));
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpDir}`;
+    server = await createWyreupMcpServer();
+  });
+
+  afterAll(async () => {
+    if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
+    else process.env['WYREUP_API_KEY'] = ORIG_KEY;
+    if (ORIG_ALLOW === undefined) delete process.env['WYREUP_ALLOW_PATHS'];
+    else process.env['WYREUP_ALLOW_PATHS'] = ORIG_ALLOW;
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('compresses an image via the worker dispatch path', async () => {
+    const out = join(tmpDir, 'out-worker.jpg');
+    const r = await callTool(server, 'compress', { input_paths: [join(FIXTURES, 'photo.jpg')], output_path: out });
+    expect(r.isError).toBeFalsy();
+  });
+
+  it('runs in-process when WYREUP_DISABLE_WORKER_ISOLATION=1', async () => {
+    const ORIG = process.env['WYREUP_DISABLE_WORKER_ISOLATION'];
+    process.env['WYREUP_DISABLE_WORKER_ISOLATION'] = '1';
+    try {
+      const srv = await createWyreupMcpServer();
+      const out = join(tmpDir, 'out-inprocess.jpg');
+      const r = await callTool(srv, 'compress', { input_paths: [join(FIXTURES, 'photo.jpg')], output_path: out });
+      expect(r.isError).toBeFalsy();
+    } finally {
+      if (ORIG === undefined) delete process.env['WYREUP_DISABLE_WORKER_ISOLATION'];
+      else process.env['WYREUP_DISABLE_WORKER_ISOLATION'] = ORIG;
+    }
+  });
+});
