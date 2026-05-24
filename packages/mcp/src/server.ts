@@ -8,7 +8,7 @@ import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } 
 import { readFile, writeFile, mkdir, stat, link, lstat, rename, unlink } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
+import { resolveAllowedRoots, assertPathAllowed } from './paths.js';
 import { Auditor, type AuditRecord } from './audit.js';
 import { isIdempotent } from './idempotency.js';
 import { tmpdir } from 'node:os';
@@ -306,7 +306,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
   function resolveTimeout(raw: unknown): { ok: true; ms: number } | { ok: false; error: string } {
     if (raw === undefined) return { ok: true, ms: 300_000 };
     if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0 || !Number.isInteger(raw)) {
-      return { ok: false, error: `timeout_ms must be a non-negative integer (got ${String(raw)})` };
+      return { ok: false, error: `timeout_ms must be a non-negative integer (got ${JSON.stringify(raw)})` };
     }
     if (raw === 0) {
       if (process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'] !== '1') {

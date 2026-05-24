@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtemp, rm, mkdir, symlink, writeFile, realpath as realpathFs } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, sep } from 'node:path';
+import { join } from 'node:path';
 import { assertPathAllowed, resolveAllowedRoots } from '../src/paths.js';
 
 let root: string;             // realpath'd ephemeral allowed root

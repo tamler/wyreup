@@ -23,8 +23,8 @@ describe('Auditor [spec §#6]', () => {
     expect(s.mode & 0o777).toBe(0o600);
     const lines = (await readFile(p, 'utf8')).trim().split('\n');
     expect(lines).toHaveLength(2);
-    expect(JSON.parse(lines[0]!).tool).toBe('compress');
-    expect(JSON.parse(lines[1]!).error).toBe('bad');
+    expect((JSON.parse(lines[0]!) as Record<string, unknown>)['tool']).toBe('compress');
+    expect((JSON.parse(lines[1]!) as Record<string, unknown>)['error']).toBe('bad');
   });
 
   it('sanitizes the bearer token from the error field', async () => {
