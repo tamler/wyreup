@@ -10,7 +10,7 @@ const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
 // ──── Direct handler access helpers ──────────────────────────────────────────
 // Avoids needing a live transport while still exercising the real handler logic.
 
-type McpServer = ReturnType<typeof createWyreupMcpServer>;
+type McpServer = Awaited<ReturnType<typeof createWyreupMcpServer>>;
 
 function getHandler(server: McpServer, method: string) {
   // The MCP SDK Protocol base class stores handlers in _requestHandlers (Map<string, fn>).
@@ -50,19 +50,25 @@ describe('createWyreupMcpServer', () => {
   let server: McpServer;
   let tmpDir: string;
   const ORIG_KEY = process.env['WYREUP_API_KEY'];
+  const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
 
   beforeAll(async () => {
     // Provide a sentinel key so Pro tools are listed and callable in
     // the structural tests below. Per-test no-key behavior is covered
     // by the separate "Pro auth env gate" describe block at the bottom.
     process.env['WYREUP_API_KEY'] = 'wk_test_mcp_unit';
-    server = createWyreupMcpServer();
+    // Allow both the fixtures directory and tmpdir so path validation
+    // does not block the functional tool tests.
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpdir()}`;
+    server = await createWyreupMcpServer();
     tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-mcp-test-'));
   });
 
   afterAll(async () => {
     if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
     else process.env['WYREUP_API_KEY'] = ORIG_KEY;
+    if (ORIG_ALLOW === undefined) delete process.env['WYREUP_ALLOW_PATHS'];
+    else process.env['WYREUP_ALLOW_PATHS'] = ORIG_ALLOW;
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -268,15 +274,22 @@ describe('createWyreupMcpServer', () => {
 
 describe('createWyreupMcpServer — Pro auth env gate', () => {
   const ORIG_KEY = process.env['WYREUP_API_KEY'];
+  const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
+
+  beforeAll(() => {
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpdir()}`;
+  });
 
   afterAll(() => {
     if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
     else process.env['WYREUP_API_KEY'] = ORIG_KEY;
+    if (ORIG_ALLOW === undefined) delete process.env['WYREUP_ALLOW_PATHS'];
+    else process.env['WYREUP_ALLOW_PATHS'] = ORIG_ALLOW;
   });
 
   it('hides credit-gated tools from the listing when WYREUP_API_KEY is unset', async () => {
     delete process.env['WYREUP_API_KEY'];
-    const server = createWyreupMcpServer();
+    const server = await createWyreupMcpServer();
     const result = await listTools(server);
     const names = new Set(result.tools.map((t) => t.name));
     // Known Pro tools should be absent...
@@ -290,7 +303,7 @@ describe('createWyreupMcpServer — Pro auth env gate', () => {
 
   it('lists credit-gated tools when WYREUP_API_KEY is set', async () => {
     process.env['WYREUP_API_KEY'] = 'wk_test_listed';
-    const server = createWyreupMcpServer();
+    const server = await createWyreupMcpServer();
     const result = await listTools(server);
     const names = new Set(result.tools.map((t) => t.name));
     expect(names.has('transcribe-pro')).toBe(true);
@@ -299,7 +312,7 @@ describe('createWyreupMcpServer — Pro auth env gate', () => {
 
   it('returns a structured error when a Pro tool is invoked without a key', async () => {
     delete process.env['WYREUP_API_KEY'];
-    const server = createWyreupMcpServer();
+    const server = await createWyreupMcpServer();
     // Even though the listing hides it, an agent could still hit the
     // tool by name from a stale context. Server must reject loudly.
     const result = await callTool(server, 'text-sentiment-pro', {
@@ -312,12 +325,44 @@ describe('createWyreupMcpServer — Pro auth env gate', () => {
 
   it('rejects a chain that includes a Pro tool when no key is set', async () => {
     delete process.env['WYREUP_API_KEY'];
-    const server = createWyreupMcpServer();
+    const server = await createWyreupMcpServer();
     const result = await callTool(server, 'wyreup_chain', {
       steps: 'transcribe|text-summarize-pro',
       input_paths: [join(FIXTURES, 'photo.jpg')],
     });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toMatch(/Pro tool|WYREUP_API_KEY/);
+  });
+});
+
+// ──── Path allowlist [spec §#1] ───────────────────────────────────────────────
+
+describe('path allowlist [spec §#1]', () => {
+  const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
+  let restrictedRoot: string;
+  let outsideFile: string;
+
+  beforeAll(async () => {
+    const { mkdtemp: mkd, writeFile: wf } = await import('node:fs/promises');
+    restrictedRoot = await mkd(join(tmpdir(), 'wymcp-allowed-'));
+    const outsideDir = await mkd(join(tmpdir(), 'wymcp-bad-'));
+    outsideFile = join(outsideDir, 'secret.txt');
+    await wf(outsideFile, 'forbidden');
+    process.env['WYREUP_ALLOW_PATHS'] = restrictedRoot;
+  });
+
+  afterAll(() => {
+    if (ORIG_ALLOW === undefined) delete process.env['WYREUP_ALLOW_PATHS'];
+    else process.env['WYREUP_ALLOW_PATHS'] = ORIG_ALLOW;
+  });
+
+  it('rejects an input_path outside the allowed root', async () => {
+    const srv = await createWyreupMcpServer();
+    const result = await callTool(srv, 'compress', {
+      input_paths: [outsideFile],
+      output_path: join(restrictedRoot, 'out.jpg'),
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toMatch(/outside allowed roots/);
   });
 });

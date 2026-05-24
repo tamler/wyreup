@@ -8,6 +8,8 @@ import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } 
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
+import { tmpdir } from 'node:os';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
 //
@@ -149,10 +151,26 @@ function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boo
 
 // ──── Server factory ──────────────────────────────────────────────────────────
 
-export function createWyreupMcpServer(): Server {
+export async function createWyreupMcpServer(): Promise<Server> {
   const registry = createDefaultRegistry();
   const proApiKey = resolveProApiKey();
   const proOrigin = resolveProOrigin();
+
+  const allowedRoots = await resolveAllowedRoots(
+    process.env['WYREUP_ALLOW_PATHS']
+      ? process.env['WYREUP_ALLOW_PATHS'] === '*'
+        ? '*'
+        : process.env['WYREUP_ALLOW_PATHS'].split(':').filter(Boolean)
+      : [process.cwd(), tmpdir()],
+  );
+
+  if (allowedRoots === '*') {
+    process.stderr.write('wyreup MCP: WYREUP_ALLOW_PATHS=* — path allowlist DISABLED\n');
+  } else {
+    process.stderr.write(
+      `wyreup MCP: allowed paths: ${allowedRoots.join(', ')}\n`,
+    );
+  }
 
   // Without a Pro API key, hide credit-gated tools so the agent never
   // sees an option it can't actually invoke. Print a one-shot stderr
@@ -230,6 +248,26 @@ export function createWyreupMcpServer(): Server {
 
   function errorResult(text: string): CallResult {
     return { content: [{ type: 'text', text }], isError: true };
+  }
+
+  async function validatePaths(
+    inputs: string[],
+    outputPath: string | undefined,
+    outputDir: string | undefined,
+  ): Promise<string | null> {
+    for (const p of inputs) {
+      const r = await assertPathAllowed(p, 'read', allowedRoots);
+      if (!r.ok) return r.error;
+    }
+    if (outputPath) {
+      const r = await assertPathAllowed(outputPath, 'write', allowedRoots);
+      if (!r.ok) return r.error;
+    }
+    if (outputDir) {
+      const r = await assertPathAllowed(outputDir, 'write', allowedRoots);
+      if (!r.ok) return r.error;
+    }
+    return null;
   }
 
   // Read an absolute path into a File. On any I/O error (missing file,
@@ -335,6 +373,9 @@ export function createWyreupMcpServer(): Server {
         }
       }
 
+      const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
+      if (pathErr) return errorResult(pathErr);
+
       const readResult = await safeReadAllInputs(inputPaths);
       if (!readResult.ok) return errorResult(readResult.error);
       const inputFiles = readResult.files;
@@ -439,6 +480,9 @@ export function createWyreupMcpServer(): Server {
     const outputPath = rawArgs['output_path'] as string | undefined;
     const outputDir = rawArgs['output_dir'] as string | undefined;
     const params = (rawArgs['params'] as Record<string, unknown> | undefined) ?? tool.defaults;
+
+    const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
+    if (pathErr) return errorResult(pathErr);
 
     // Read input files from disk with structured error reporting.
     const readResult = await safeReadAllInputs(inputPaths);

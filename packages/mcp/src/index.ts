@@ -18,7 +18,7 @@ import { createWyreupMcpServer } from './server.js';
 }
 
 async function main(): Promise<void> {
-  const server = createWyreupMcpServer();
+  const server = await createWyreupMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   const registry = createDefaultRegistry();
