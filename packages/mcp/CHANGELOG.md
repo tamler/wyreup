@@ -1,5 +1,19 @@
 # @wyreup/mcp
 
+## Unreleased
+
+### Added
+- Path allowlist enforcement on `input_paths`, `output_path`, `output_dir`. Configure via `WYREUP_ALLOW_PATHS` (colon-separated absolute paths, `*` to disable). Defaults to CWD + os.tmpdir().
+- MCP capability annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) on every tool listing.
+- `timeout_ms` parameter on every tool, default 300000, range [1, 3600000]. `0` requires `WYREUP_ALLOW_DISABLE_TIMEOUT=1`.
+- `allow_overwrite` parameter on every tool, default `false`. Atomic+symlink-safe publishing.
+- `WYREUP_MAX_INPUT_BYTES` aggregate input size cap (default 500 MB).
+- `WYREUP_AUDIT_LOG` opt-in JSONL audit log. Strict mode via `WYREUP_AUDIT_REQUIRED=1`.
+- Bearer-token sanitization plumbing on all error paths.
+
+### Behavioral changes
+- Output files are no longer silently overwritten. Pass `allow_overwrite: true` to keep old behavior.
+
 ## 0.4.0
 
 ### Minor Changes
