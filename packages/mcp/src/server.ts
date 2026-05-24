@@ -131,6 +131,14 @@ function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boo
       ...buildParamsSchema(tool.defaults),
       description: 'Tool-specific parameters. Uses defaults if omitted.',
     },
+    timeout_ms: {
+      type: 'number',
+      description: 'Max runtime in ms. Default 300000 (5 min). Range [1, 3600000]. 0 disables (requires WYREUP_ALLOW_DISABLE_TIMEOUT=1).',
+    },
+    allow_overwrite: {
+      type: 'boolean',
+      description: 'Overwrite existing output files. Default false.',
+    },
   };
 
   if (isMultiOutput) {
@@ -238,6 +246,10 @@ export async function createWyreupMcpServer(): Promise<Server> {
           description:
             'Optional max runtime in milliseconds before the chain is aborted. Default 1800000 (30 min). Override upward for chains that include slow models — transcribe (~5–10 min/hour of audio), audio-enhance, ocr-pro — or downward for known-fast chains. Pass 0 to disable.',
         },
+        allow_overwrite: {
+          type: 'boolean',
+          description: 'Overwrite existing output files. Default false.',
+        },
       },
       required: ['steps', 'input_paths'],
     },
@@ -277,6 +289,20 @@ export async function createWyreupMcpServer(): Promise<Server> {
     };
     await auditor.append(record);
     return result;
+  }
+
+  function resolveTimeout(raw: unknown): { ok: true; ms: number } | { ok: false; error: string } {
+    if (raw === undefined) return { ok: true, ms: 300_000 };
+    if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0 || !Number.isInteger(raw)) {
+      return { ok: false, error: `timeout_ms must be a non-negative integer (got ${String(raw)})` };
+    }
+    if (raw === 0) {
+      if (process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'] !== '1') {
+        return { ok: false, error: 'timeout_ms: 0 (disable) requires WYREUP_ALLOW_DISABLE_TIMEOUT=1 on the MCP server process.' };
+      }
+      return { ok: true, ms: 0 };
+    }
+    return { ok: true, ms: Math.min(raw, 3_600_000) };
   }
 
   async function validatePaths(
@@ -395,9 +421,18 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
       const outputPath = rawArgs['output_path'] as string | undefined;
       const outputDir = rawArgs['output_dir'] as string | undefined;
-      const timeoutMs = rawArgs['timeout_ms'] as number | undefined;
-
       return withAudit('wyreup_chain', inputPaths, outputPath, async () => {
+        let effectiveTimeout: number;
+        if (rawArgs['timeout_ms'] === undefined) {
+          effectiveTimeout = 1_800_000;
+        } else {
+          const check = resolveTimeout(rawArgs['timeout_ms']);
+          if (!check.ok) return errorResult(check.error);
+          effectiveTimeout = check.ms;
+        }
+        const allowOverwrite = rawArgs['allow_overwrite'] === true;
+        void allowOverwrite; // used in Task 10
+
         if (!stepsStr) {
           return errorResult('wyreup_chain requires a "steps" chain string.');
         }
@@ -438,7 +473,6 @@ export async function createWyreupMcpServer(): Promise<Server> {
           );
         }
 
-        const effectiveTimeout = timeoutMs ?? 1800000; // 30 min default
         let chainResult: Blob[] | Blob;
         try {
           chainResult = await runChain(
@@ -526,6 +560,13 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const outputDir = rawArgs['output_dir'] as string | undefined;
     const params = (rawArgs['params'] as Record<string, unknown> | undefined) ?? tool.defaults;
 
+    const timeoutCheck = resolveTimeout(rawArgs['timeout_ms']);
+    if (!timeoutCheck.ok) return errorResult(timeoutCheck.error);
+    const timeoutMs = timeoutCheck.ms;
+
+    const allowOverwrite = rawArgs['allow_overwrite'] === true;
+    void allowOverwrite; // used in Task 10
+
     return withAudit(name, inputPaths, outputPath, async () => {
       const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
       if (pathErr) return errorResult(pathErr);
@@ -541,7 +582,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
       try {
         toolResult = await tool.run(inputFiles, params, {
           onProgress: () => {},
-          signal: new AbortController().signal,
+          signal: makeTimeoutSignal(timeoutMs),
           cache: new Map(),
           executionId: randomUUID(),
           apiKey: proApiKey,
