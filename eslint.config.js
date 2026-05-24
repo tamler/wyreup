@@ -51,6 +51,7 @@ export default tseslint.config(
       '**/tools/**/*.js',
       '**/tools/**/*.mjs',
       '**/scripts/**/*.mjs',
+      '**/test/fixtures/**/*.js',
       '**/env.d.ts',
     ],
   },
