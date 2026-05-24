@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './install-egress.js'; // MUST be first — installs egress lock before any module captures fetch
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createDefaultRegistry, setModelCdn } from '@wyreup/core';
 import { createWyreupMcpServer } from './server.js';
