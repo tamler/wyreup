@@ -5,7 +5,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
-import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, link, lstat, rename, unlink } from 'node:fs/promises';
 import { dirname, basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { resolveAllowedRoots, assertPathAllowed, type AllowedRoots } from './paths.js';
@@ -387,17 +387,40 @@ export async function createWyreupMcpServer(): Promise<Server> {
     return { ok: true, files };
   }
 
-  async function safeWriteFile(target: string, bytes: Uint8Array): Promise<string | null> {
+  async function atomicPublish(
+    target: string,
+    bytes: Uint8Array,
+    allowOverwrite: boolean,
+  ): Promise<string | null> {
+    // lstat-reject: never publish to a symlink, regardless of mode.
     try {
-      await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, bytes);
+      const s = await lstat(target);
+      if (s.isSymbolicLink()) {
+        return `Refusing to write to symlink: ${target}`;
+      }
+      if (!allowOverwrite && (s.isFile() || s.isDirectory())) {
+        return `Target exists and allow_overwrite is false: ${target}`;
+      }
+    } catch { /* ENOENT — fine, target doesn't exist yet */ }
+
+    await mkdir(dirname(target), { recursive: true });
+    const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;
+    try {
+      await writeFile(tmp, bytes, { flag: 'wx', mode: 0o644 });
+      if (allowOverwrite) {
+        await rename(tmp, target); // replaces a regular file or symlink entry atomically
+      } else {
+        // Atomic exclusive create: fails EEXIST if target appeared between lstat and link.
+        await link(tmp, target);
+        await unlink(tmp);
+      }
       return null;
     } catch (err) {
+      await unlink(tmp).catch(() => {});
       const code = (err as NodeJS.ErrnoException).code;
+      if (code === 'EEXIST') return `Target exists and allow_overwrite is false: ${target}`;
       const msg = err instanceof Error ? err.message : String(err);
-      if (code === 'EACCES') return `Permission denied writing to ${target}`;
-      if (code === 'ENOSPC') return `No space left on device writing ${target}`;
-      return `Could not write ${target}: ${msg}`;
+      return `Could not publish ${target}: ${msg}`;
     }
   }
 
@@ -457,7 +480,6 @@ export async function createWyreupMcpServer(): Promise<Server> {
           effectiveTimeout = check.ms;
         }
         const allowOverwrite = rawArgs['allow_overwrite'] === true;
-        void allowOverwrite; // used in Task 10
 
         if (!stepsStr) {
           return errorResult('wyreup_chain requires a "steps" chain string.');
@@ -532,7 +554,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         const writtenPaths: string[] = [];
 
         if (outputs.length === 1 && outputPath) {
-          const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
+          const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
           if (writeErr) return errorResult(writeErr);
           writtenPaths.push(outputPath);
         } else if (outputDir) {
@@ -543,7 +565,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           for (let i = 0; i < outputs.length; i++) {
             const ext = extFromMime(outputs[i]!.type);
             const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
-            const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+            const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
             if (writeErr) return errorResult(writeErr);
             writtenPaths.push(outPath);
           }
@@ -594,7 +616,6 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const timeoutMs = timeoutCheck.ms;
 
     const allowOverwrite = rawArgs['allow_overwrite'] === true;
-    void allowOverwrite; // used in Task 10
 
     return withAudit(name, inputPaths, outputPath, async () => {
       const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
@@ -629,14 +650,14 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const writtenPaths: string[] = [];
 
       if (outputs.length === 1 && outputPath) {
-        const writeErr = await safeWriteFile(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()));
+        const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
         if (writeErr) return errorResult(writeErr);
         writtenPaths.push(outputPath);
       } else if (outputDir) {
         for (let i = 0; i < outputs.length; i++) {
           const ext = extFromMime(outputs[i]!.type);
           const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
-          const writeErr = await safeWriteFile(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()));
+          const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
           if (writeErr) return errorResult(writeErr);
           writtenPaths.push(outPath);
         }
