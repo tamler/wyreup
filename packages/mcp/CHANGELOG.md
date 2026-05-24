@@ -14,6 +14,17 @@
 ### Behavioral changes
 - Output files are no longer silently overwritten. Pass `allow_overwrite: true` to keep old behavior.
 
+### Added (Stage B)
+- Free and Pro tools run in a `child_process.fork` worker per call. Worker inherits a scrubbed environment (no `NODE_OPTIONS`, no `WYREUP_API_KEY`); Pro key passed via IPC.
+- Fetch egress lock: `globalThis.fetch` accepts only `WYREUP_ORIGIN` (default `https://wyreup.com`). Cross-origin redirects are blocked. Disable with `WYREUP_DISABLE_EGRESS_LOCK=1`.
+- Worker isolation can be disabled for debugging via `WYREUP_DISABLE_WORKER_ISOLATION=1`.
+- Bounded worker stderr ring buffer (8 KB cap) prevents audit log inflation.
+
+### Security limitations (documented)
+- Egress lock covers `fetch` only. Raw `node:http`/`node:https`/`node:net`/native sockets are NOT intercepted.
+- Subprocesses spawned by tools are not sandboxed.
+- See `docs/superpowers/specs/2026-05-24-wyreup-mcp-hardening-design.md § Security limitations` for the full list.
+
 ## 0.4.0
 
 ### Minor Changes
