@@ -9,9 +9,13 @@ import { join } from 'node:path';
  * @param {object} options
  * @param {string} options.distDir
  * @param {string[]} options.allowlist
+ * @param {RegExp[]} [options.pathExemptions] - file paths matching any of
+ *   these regexes are skipped from the scan. Used for pages that
+ *   legitimately reference third-party vendors in user-facing copy (e.g.
+ *   the privacy / refund policies disclose data processors by name).
  * @returns {Promise<{ ok: boolean, violations: Array<{ file: string, domain: string }> }>}
  */
-export async function checkPrivacy({ distDir, allowlist }) {
+export async function checkPrivacy({ distDir, allowlist, pathExemptions = [] }) {
   const violations = [];
   const files = await walkDir(distDir);
 
@@ -20,6 +24,7 @@ export async function checkPrivacy({ distDir, allowlist }) {
 
   for (const file of files) {
     if (!isScannable(file)) continue;
+    if (pathExemptions.some((re) => re.test(file))) continue;
     const content = await readFile(file, 'utf8');
 
     for (const match of content.matchAll(urlRegex)) {
@@ -108,9 +113,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // library with an embedded link), the scan should catch it.
   ];
 
+  // Pages that legitimately reference third-party vendors in user-facing
+  // copy. Privacy/refund/terms policies disclose data processors by name
+  // (Cloudflare, LemonSqueezy, Zoho) — those references are required for
+  // legal transparency, not runtime fetches. Static text in these pages
+  // is exempt; CSP still gates actual network behavior at runtime.
+  const pathExemptions = [
+    /\/legal\/privacy\/index\.html$/,
+    /\/legal\/refund\/index\.html$/,
+    /\/legal\/terms\/index\.html$/,
+  ];
+
   let totalViolations = 0;
   for (const dir of distDirs) {
-    const result = await checkPrivacy({ distDir: dir, allowlist });
+    const result = await checkPrivacy({ distDir: dir, allowlist, pathExemptions });
     if (!result.ok) {
       console.error(`Privacy scan FAILED in ${dir}:`);
       for (const v of result.violations) {

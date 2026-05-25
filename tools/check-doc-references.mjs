@@ -29,6 +29,21 @@ const RETIRED_PACKAGES = new Set([
 // you've verified the false-positive rate.
 const ALLOWED_NON_TOOL_REFS = new Set([
   'gen-pwa-icons', // build script under tools/, invoked as `node tools/gen-pwa-icons.mjs`
+  // Natural-language prose that the `wyreup <verb>` regex picks up from
+  // grammar like "wyreup adds X" or "wyreup ships Y" inside a sentence.
+  // Listed explicitly so future false positives surface in review.
+  'adds',
+  'ships',
+  'project', // "(CF Pages → wyreup project)" in DEPLOYMENT.md
+  'account', // "Most users have one wyreup account" in pro-cli-mcp.md
+  // Aspirational / hypothetical commands mentioned in roadmap planning
+  // but not implemented. Roadmap doc is explicit that these are TBD.
+  'db',
+  'serve',
+  // Spec doc references an older proposed CLI shape (`wyreup auth set`).
+  // Final shape became `wyreup login` (CLI subcommand list below). The
+  // historical spec is left intact for audit trail.
+  'auth',
 ]);
 
 // Lines may legitimately mention a retired package when the context is
@@ -125,6 +140,10 @@ for (const baseDir of SCAN_DIRS) {
             'list',
             'help',
             'version',
+            // Pro / account commands shipped in CLI 0.5.0
+            'login',
+            'logout',
+            'balance',
           ].includes(id)
         ) {
           continue;
@@ -134,8 +153,10 @@ for (const baseDir of SCAN_DIRS) {
         record(file, i + 1, 'unknown-tool-id', id, line.trim());
       }
 
-      // /tools/<tool-id> page links
-      const pageRe = /\/tools\/([a-z][a-z0-9-]*)(?![a-z0-9-])/g;
+      // /tools/<tool-id> page links — must be the top-level /tools/ path,
+      // not the /api/tools/... server-side endpoint family. Negative
+      // lookbehind enforces that.
+      const pageRe = /(?<!\/api)\/tools\/([a-z][a-z0-9-]*)(?![a-z0-9-])/g;
       while ((m = pageRe.exec(line)) !== null) {
         const id = m[1];
         if (validToolIds.has(id)) continue;

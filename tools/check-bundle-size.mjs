@@ -40,6 +40,10 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'ort.bundle.', budgetKb: 500, why: 'onnxruntime-web; AI tools only' },
   // xlsx (SheetJS); loaded by Excel tools.
   { prefix: 'xlsx.', budgetKb: 500, why: 'sheetjs; excel-* tools only' },
+  // exceljs; richer Excel parser used alongside sheetjs by some excel-* tools.
+  { prefix: 'exceljs.min.', budgetKb: 300, why: 'exceljs; excel-* tools only' },
+  // Astro page chunk that wraps an excel tool's runner.
+  { prefix: 'excel-', budgetKb: 250, why: 'excel-* tool page chunks; lazy-loaded' },
   // Main app entry. Larger than ideal — see ROADMAP "Tech debt" #5
   // (lazy-load runner variants in ToolRunner.svelte). Capped at 500 KB
   // to ring the alarm if it grows further while we work toward shrinking
