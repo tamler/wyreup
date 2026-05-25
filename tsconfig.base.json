@@ -3,6 +3,12 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // TypeScript 5.0 deprecated `baseUrl`. tsup still injects it internally
+    // when generating .d.ts files, so we explicitly acknowledge the
+    // deprecation to keep the dts build green. Revisit when tsup drops the
+    // internal baseUrl (or when we migrate to a TS major that removes the
+    // option entirely).
+    "ignoreDeprecations": "5.0",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
