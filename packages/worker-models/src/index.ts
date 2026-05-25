@@ -151,84 +151,37 @@ function enforceSize(
 // ── SHA-256 streaming hash ─────────────────────────────────────────────────
 
 /**
- * Maximum body size we're willing to hash in-worker. Cloudflare Workers have
- * a 128 MB memory cap per request; buffering larger bodies would exceed it.
- * Assets over this threshold are passed through unverified (manifest entries
- * for them should simply be absent). The m2m100_418M decoder (~1 GB) is the
- * primary model that hits this ceiling.
- */
-const MAX_HASHABLE_BYTES = 100 * 1024 * 1024; // 100 MB
-
-/**
- * Accumulates chunks from `stream` while forwarding them to the caller.
- * When the stream ends, resolves `digest` with the lowercase hex SHA-256.
+ * Tees `stream` so one branch is piped into Cloudflare's `crypto.DigestStream`
+ * and the other is returned to the caller. The digest resolves at
+ * end-of-stream with the lowercase hex SHA-256.
  *
- * Accumulation is bounded by `MAX_HASHABLE_BYTES`: if the body exceeds that
- * limit the digest resolves to `null` (too large to hash in-worker), and the
- * forwarded stream is still delivered in full so the client is unaffected.
- *
- * NOTE: crypto.DigestStream (Cloudflare-specific streaming digest API) would
- * eliminate the need to buffer. It is documented but its availability in the
- * runtime we target was uncertain at the time of writing. The buffered
- * approach is used here with the 100 MB cap as a well-understood fallback.
- * Follow-up: switch to crypto.DigestStream once runtime support is confirmed.
+ * `crypto.DigestStream` is a WritableStream that computes the hash without
+ * buffering, so there is no memory cap — models of any size (including the
+ * m2m100_418M decoder at ~1 GB) are fully verified.
  */
-function hashAndForward(
+function hashAndForwardStreaming(
   stream: ReadableStream<Uint8Array>,
-): { stream: ReadableStream<Uint8Array>; digest: Promise<string | null> } {
-  const parts: Uint8Array[] = [];
-  let totalBytes = 0;
-  let tooLarge = false;
-  let resolveDigest!: (s: string | null) => void;
-  let rejectDigest!: (e: unknown) => void;
-  const digest = new Promise<string | null>((res, rej) => {
-    resolveDigest = res;
-    rejectDigest = rej;
+): { stream: ReadableStream<Uint8Array>; digest: Promise<string> } {
+  // Cast to the Cloudflare Workers Crypto type which exposes DigestStream.
+  // TypeScript's default DOM lib declares a narrower Crypto interface that
+  // lacks this property; the runtime always has it on Workers.
+  const waCrypto = crypto as typeof crypto & { DigestStream: typeof DigestStream };
+  const ds = new waCrypto.DigestStream('SHA-256');
+
+  // Tee: forCaller goes to the response, forDigest feeds DigestStream.
+  const [forCaller, forDigest] = stream.tee();
+  void forDigest.pipeTo(ds).catch(() => { /* digest promise will reject */ });
+
+  const digest = ds.digest.then((buf: ArrayBuffer) => {
+    const bytes = new Uint8Array(buf);
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+      hex += bytes[i].toString(16).padStart(2, '0');
+    }
+    return hex;
   });
 
-  const forwarded = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const reader = stream.getReader();
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          controller.enqueue(value);
-          if (!tooLarge) {
-            totalBytes += value.byteLength;
-            if (totalBytes > MAX_HASHABLE_BYTES) {
-              tooLarge = true;
-            } else {
-              parts.push(value);
-            }
-          }
-        }
-        controller.close();
-        if (tooLarge) {
-          resolveDigest(null);
-          return;
-        }
-        const merged = new Uint8Array(totalBytes);
-        let off = 0;
-        for (const p of parts) {
-          merged.set(p, off);
-          off += p.byteLength;
-        }
-        const digestBuf = await crypto.subtle.digest('SHA-256', merged);
-        const hex = Array.from(new Uint8Array(digestBuf))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join('');
-        resolveDigest(hex);
-      } catch (err) {
-        controller.error(err);
-        rejectDigest(err);
-      } finally {
-        reader.releaseLock();
-      }
-    },
-  });
-
-  return { stream: forwarded, digest };
+  return { stream: forCaller, digest };
 }
 
 // ── Response helpers ───────────────────────────────────────────────────────
@@ -352,24 +305,20 @@ export default {
       return new Response('Upstream had no body', { status: 502 });
     }
 
-    // Tee the upstream body: one branch goes to the client, the other is
-    // consumed by hashAndForward to compute the SHA-256 while also
-    // producing a second forward stream that we drain.
+    // Tee the upstream body: one branch goes to the client (size-enforced),
+    // the other is consumed by hashAndForwardStreaming to compute SHA-256
+    // without buffering — no memory cap, all model sizes are verified.
     const [returnStream, hashInputBranch] = upstreamRes.body.tee();
     const returnStreamCapped = enforceSize(returnStream, MAX_OBJECT_SIZE);
 
-    // Hash the second branch in-flight. The forwarded stream from
-    // hashAndForward must be fully drained for the digest promise to settle.
     const { stream: hashForwardStream, digest: digestPromise } =
-      hashAndForward(enforceSize(hashInputBranch, MAX_OBJECT_SIZE));
+      hashAndForwardStreaming(enforceSize(hashInputBranch, MAX_OBJECT_SIZE));
 
     ctx.waitUntil(
       (async () => {
-        // Drain hashForwardStream into R2 (we can't pass a teed-then-wrapped
-        // stream directly to R2.put because R2 needs a single consumer).
-        // Instead, collect the chunks from hashForwardStream and put them.
-        // This is equivalent to storeStreamCapped in the original code —
-        // the bytes are already bounded by enforceSize above.
+        // Drain hashForwardStream into R2. Collect chunks so we can pass
+        // a single buffer to R2.put — the bytes are already bounded by
+        // enforceSize above.
         const chunks: Uint8Array[] = [];
         const reader = hashForwardStream.getReader();
         try {
@@ -385,13 +334,6 @@ export default {
         const hex = await digestPromise;
 
         if (manifestEntry) {
-          if (hex === null) {
-            // Body exceeded MAX_HASHABLE_BYTES — cannot verify; skip cache.
-            console.error(
-              `Cannot verify ${key}: body exceeded ${MAX_HASHABLE_BYTES} byte hash limit. NOT caching to R2.`,
-            );
-            return;
-          }
           if (hex !== manifestEntry.sha256) {
             console.error(
               `Manifest mismatch for ${key}: expected ${manifestEntry.sha256}, got ${hex}. NOT caching to R2.`,

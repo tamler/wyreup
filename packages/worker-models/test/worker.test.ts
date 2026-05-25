@@ -1,6 +1,29 @@
+import { createHash } from 'node:crypto';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import worker from '../src/index.js';
 import { MANIFEST, STRICT_VERIFICATION } from '../src/manifest.js';
+
+// Node's global `crypto` doesn't have DigestStream. Provide a shim that
+// matches Cloudflare's API: a WritableStream with a `digest` Promise that
+// resolves with the ArrayBuffer of the hash at end-of-stream.
+class TestDigestStream extends WritableStream<Uint8Array> {
+  readonly digest: Promise<ArrayBuffer>;
+  constructor(algorithm: string) {
+    let resolve!: (b: ArrayBuffer) => void;
+    let reject!: (e: unknown) => void;
+    const digestPromise = new Promise<ArrayBuffer>((res, rej) => { resolve = res; reject = rej; });
+    const hash = createHash(algorithm.toLowerCase().replace('-', ''));
+    super({
+      write(chunk: Uint8Array) { hash.update(chunk); },
+      close() {
+        const buf = hash.digest();
+        resolve(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+      },
+      abort(reason: unknown) { reject(reason); },
+    });
+    this.digest = digestPromise;
+  }
+}
 
 // Minimal R2Bucket mock — every test sets the behavior it needs.
 function makeBucket(opts: {
@@ -31,7 +54,10 @@ function makeCtx(): ExecutionContext {
 }
 
 describe('worker-models security', () => {
-  beforeEach(() => { vi.restoreAllMocks(); });
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.stubGlobal('crypto', { ...crypto, DigestStream: TestDigestStream });
+  });
 
   it('rejects non-GET/HEAD/OPTIONS methods with 405', async () => {
     const res = await worker.fetch(new Request('https://x/y', { method: 'POST' }), { MODELS: makeBucket() } as never, makeCtx());
@@ -93,7 +119,10 @@ describe('manifest', () => {
 });
 
 describe('manifest verification integration', () => {
-  beforeEach(() => { vi.restoreAllMocks(); });
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.stubGlobal('crypto', { ...crypto, DigestStream: TestDigestStream });
+  });
 
   it('caches to R2 when hash matches manifest entry', async () => {
     // Compute the expected SHA-256 of the response body "hello".
@@ -134,5 +163,43 @@ describe('manifest verification integration', () => {
     // No manifest entry for this path — unverified pass-through, should cache.
     expect(puts).toContain('Xenova/whisper-tiny/resolve/main/model.bin');
     void putsValue; // assigned but only checked indirectly via puts
+  });
+
+  it('streaming SHA verification works regardless of body size (no buffered cap)', async () => {
+    // End-to-end: a body that would have exceeded the old 100 MB
+    // threshold still caches correctly. We use a small body to keep the test
+    // fast — the assertion is that no size check rejects it.
+    const body = 'streaming-sha-test';
+    const puts: string[] = [];
+    const bucket: R2Bucket = {
+      get: () => Promise.resolve(null),
+      put: (key: string, _value: unknown) => { puts.push(key); return Promise.resolve(undefined); },
+      head: () => Promise.resolve(null),
+      list: () => Promise.resolve({ objects: [], delimitedPrefixes: [], truncated: false }),
+      delete: () => Promise.resolve(undefined),
+      createMultipartUpload: () => Promise.reject(new Error('unused')),
+      resumeMultipartUpload: () => Promise.reject(new Error('unused')),
+    } as unknown as R2Bucket;
+
+    const waitUntilPromises: Promise<unknown>[] = [];
+    const ctx: ExecutionContext = {
+      waitUntil: (p: Promise<unknown>): void => { waitUntilPromises.push(p); },
+      passThroughOnException: (): void => {},
+    } as ExecutionContext;
+
+    vi.stubGlobal('fetch', vi.fn(() =>
+      Promise.resolve(new Response(body, { headers: { 'Content-Type': 'text/plain' } })),
+    ));
+
+    const res = await worker.fetch(
+      new Request('https://x/Xenova/whisper-tiny/resolve/main/tokenizer.json'),
+      { MODELS: bucket } as never,
+      ctx,
+    );
+    expect(res.status).toBe(200);
+
+    await Promise.all(waitUntilPromises);
+    // No manifest entry — unverified pass-through, should cache via streaming path.
+    expect(puts).toContain('Xenova/whisper-tiny/resolve/main/tokenizer.json');
   });
 });

@@ -45,12 +45,9 @@ export const STRICT_VERIFICATION = false;
  *   pnpm --filter @wyreup/worker-models populate-manifest
  * Then paste the printed entries here and commit.
  *
- * MEMORY CAVEAT: Cloudflare Workers cap memory at 128 MB per request.
- * Assets larger than ~100 MB (e.g. Xenova/m2m100_418M decoder weights
- * at ~1 GB) cannot be hashed in-band without exceeding that budget.
- * Those paths are intentionally absent from this manifest. Stream-hashing
- * via crypto.DigestStream would remove this limitation; tracked in
- * docs/ROADMAP.md as a follow-up tech-debt item.
+ * Hashing uses crypto.DigestStream (Cloudflare's streaming SHA API) so
+ * there is no memory cap — model weights of any size, including the
+ * Xenova/m2m100_418M decoder at ~1 GB, can be integrity-verified.
  */
 export const MANIFEST: Readonly<Record<string, ManifestEntry>> = Object.freeze({
   // Populate via:

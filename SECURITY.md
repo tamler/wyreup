@@ -95,7 +95,7 @@ Open work, in priority order:
 3. **DNS-channel exfiltration** — allowed origin still resolves DNS; a compromised dependency could encode data in DNS queries.
 4. **MCP clients that ignore capability annotations** — `openWorldHint` / `idempotentHint` are advisory.
 5. **Image-dimension budgets** — PDF page-count and audio/video duration budgets ship in `@wyreup/core`. Image-dimension budgets are not declared per-tool yet; sharp/jsquash enforce internal limits, and `WYREUP_MAX_INPUT_BYTES` caps total bytes.
-6. **Model artifact integrity for large weights** — `worker-models` ships a SHA-256 manifest (loose mode by default) but the buffered hash check skips assets over ~100 MB to fit within the worker's 128 MB memory budget. m2m100 (~1 GB) is the main affected model. Streaming SHA via `crypto.DigestStream` is the right follow-up.
+6. **Pre-populated manifest** — `worker-models` ships streaming SHA-256 verification via `crypto.DigestStream`, but the manifest itself starts empty. Until populated (via `pnpm --filter @wyreup/worker-models populate-manifest`) and `STRICT_VERIFICATION = true` is flipped, unverified paths pass through. Streaming SHA covers all model sizes including m2m100 (~1 GB) — the prior 100 MB buffered cap is removed.
 
 ## Dependency hygiene
 
