@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { sanitizeZipEntryName, assertEntryBudget, MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
 
 export interface ZipExtractParams {
   filter?: string;
@@ -60,6 +61,10 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
 
     const zip = await JSZip.loadAsync(bytes);
 
+    if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
+      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+    }
+
     const entries = Object.values(zip.files).filter(
       (f) => !f.dir && shouldInclude(f.name, params.filter),
     );
@@ -68,17 +73,21 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
       throw new Error('No files found in the archive matching the filter.');
     }
 
+    let accumulated = 0;
     const blobs: Blob[] = [];
     for (let i = 0; i < entries.length; i++) {
       if (ctx.signal.aborted) throw new Error('Aborted');
       const entry = entries[i]!;
+      const safeName = sanitizeZipEntryName(entry.name);
       ctx.onProgress({
         stage: 'processing',
         percent: 20 + Math.floor((i / entries.length) * 70),
-        message: `Extracting ${entry.name}`,
+        message: `Extracting ${safeName}`,
       });
       const content = await entry.async('uint8array');
-      blobs.push(new File([content.buffer as ArrayBuffer], entry.name, { type: 'application/octet-stream' }));
+      accumulated += content.byteLength;
+      assertEntryBudget(i + 1, accumulated);
+      blobs.push(new File([content.buffer as ArrayBuffer], safeName, { type: 'application/octet-stream' }));
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { JSZipObject } from 'jszip';
+import { sanitizeZipEntryName, assertEntryBudget, MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
 
 export interface ZipFlattenParams {
   /** How to handle name collisions when two files in different folders share a basename. */
@@ -67,6 +68,10 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
     const src = await JSZip.loadAsync(bytes);
     const dst = new JSZip();
 
+    if (Object.keys(src.files).length > MAX_ZIP_ENTRIES) {
+      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(src.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+    }
+
     if (ctx.signal.aborted) throw new Error('Aborted');
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Flattening entries' });
 
@@ -76,10 +81,19 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
       if (!file.dir) entries.push({ path, file });
     });
 
+    let accumulated = 0;
     const used = new Set<string>();
-    for (const { path, file } of entries) {
+    for (let idx = 0; idx < entries.length; idx++) {
+      const { path, file } = entries[idx]!;
       if (ctx.signal.aborted) throw new Error('Aborted');
-      const base = path.split('/').pop() || path;
+      // Sanitize the entry path before extracting.
+      let safePath: string;
+      try {
+        safePath = sanitizeZipEntryName(path);
+      } catch {
+        continue; // skip unrecoverable entries
+      }
+      const base = safePath.split('/').pop() || safePath;
       let target = base;
 
       if (used.has(target)) {
@@ -93,6 +107,8 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
       used.add(target);
 
       const content = await file.async('arraybuffer');
+      accumulated += content.byteLength;
+      assertEntryBudget(idx + 1, accumulated);
       dst.file(target, content);
     }
 

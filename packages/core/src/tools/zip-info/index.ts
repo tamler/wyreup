@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { sanitizeZipEntryName, MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
 
 export interface ZipEntryInfo {
   path: string;
@@ -59,11 +60,15 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
 
     const zip = await JSZip.loadAsync(bytes);
 
+    if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
+      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+    }
+
     let totalUncompressed = 0;
     let totalCompressed = 0;
     const files: ZipEntryInfo[] = [];
 
-    for (const [path, entry] of Object.entries(zip.files)) {
+    for (const [rawPath, entry] of Object.entries(zip.files)) {
       // JSZip doesn't expose raw compressed sizes directly, so we use the
       // internal _data field which is set after loading.
       const internalData = (entry as unknown as { _data?: { uncompressedSize?: number; compressedSize?: number } })._data;
@@ -73,6 +78,15 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
       if (!entry.dir) {
         totalUncompressed += uncompressedSize;
         totalCompressed += compressedSize;
+      }
+
+      // Sanitize the displayed path; fall back to the raw name if unrecoverable.
+      let path: string;
+      try {
+        path = sanitizeZipEntryName(rawPath);
+        if (entry.dir && rawPath.endsWith('/')) path += '/';
+      } catch {
+        path = rawPath;
       }
 
       files.push({

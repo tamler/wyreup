@@ -48,7 +48,7 @@ export async function readWorkbook(bytes: Uint8Array | ArrayBuffer): Promise<Wor
   // Buffer or a SharedArrayBuffer. The latter has subtle corruption
   // modes on shared / non-zero-offset buffers.
   const buf = bytes instanceof Uint8Array ? bytes.slice().buffer : bytes;
-  await wb.xlsx.load(buf as ArrayBuffer);
+  await wb.xlsx.load(buf);
   return wb;
 }
 

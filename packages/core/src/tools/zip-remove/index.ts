@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { shouldInclude } from '../zip-extract/index.js';
+import { MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
 
 export interface ZipRemoveParams {
   /**
@@ -74,6 +75,10 @@ export const zipRemove: ToolModule<ZipRemoveParams> = {
     const bytes = await inputs[0]!.arrayBuffer();
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Reading archive' });
     const zip = await JSZip.loadAsync(bytes);
+
+    if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
+      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+    }
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
