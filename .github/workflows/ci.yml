@@ -146,3 +146,26 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: node tools/check-bundle-size.mjs
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    # `continue-on-error: true` while we work through the existing
+    # backlog of advisories (notably Astro 4.x → 5.x, GHSA-wrwg-2hg8-v723).
+    # Flip to required once the backlog is clear. New high/critical
+    # advisories still surface in PR checks — they just don't block.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `pnpm audit --prod` exits non-zero on any vulnerability in
+      # production dependencies. Dev-only advisories don't block CI
+      # because they don't ship to users. `--audit-level=high` gates
+      # the build on high+critical only — moderate/low are reported
+      # via Dependabot.
+      - run: pnpm audit --prod --audit-level=high
