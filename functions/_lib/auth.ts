@@ -19,7 +19,7 @@ export async function resolveUser(
 ): Promise<AuthedUser | null> {
   // 1. Cookie path (browser)
   const cookies = parseCookies(request.headers.get('Cookie'));
-  const sessionCookie = cookies['wyreup_session'];
+  const sessionCookie = cookies['__Host-wyreup_session'];
   if (sessionCookie) {
     const payload = await verifySessionCookie(sessionCookie, env.SESSION_SECRET);
     if (payload) {
@@ -91,6 +91,33 @@ export function json(body: unknown, status = 200, extraHeaders: HeadersInit = {}
       ...extraHeaders,
     },
   });
+}
+
+/**
+ * Cheap CSRF guard for authenticated state-changing endpoints. Requires
+ * the caller to send a custom header. Cross-site browser POSTs cannot
+ * set custom headers without a CORS preflight, which we don't ACK — so
+ * a forged form post from evil.com is blocked even if SameSite=Lax
+ * unexpectedly lets the cookie through (browser quirks, future spec
+ * changes).
+ *
+ * Bypassed for Bearer-authed callers — CLI/MCP send a Bearer header
+ * directly, no cookie, no CSRF surface. Only browsers carry cookies
+ * cross-site, so the header check is meaningful only for cookie auth.
+ */
+export function requireCsrfHeader(request: Request, user: AuthedUser): Response | null {
+  // Bearer-authed callers (CLI/MCP) — cookie isn't in play, skip.
+  if (request.headers.get('Authorization')?.startsWith('Bearer ')) return null;
+
+  const header = request.headers.get('X-Wyreup-CSRF');
+  if (header !== '1') {
+    return json(
+      { error: 'Missing X-Wyreup-CSRF header. Cookie-authed callers must send X-Wyreup-CSRF: 1.' },
+      403,
+    );
+  }
+  void user; // reserved for future per-user token; signature kept stable
+  return null;
 }
 
 export async function getBalance(userId: string, env: Env): Promise<number> {

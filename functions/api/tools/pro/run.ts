@@ -8,7 +8,7 @@
 
 import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
-import { getBalance, json, resolveUser, unauthorized } from '../../../_lib/auth';
+import { getBalance, json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
 import { nanoid } from '../../../_lib/crypto';
 import { priceFor } from '../../../_lib/pricing';
 import { runPro } from '../../../_lib/runners';
@@ -28,6 +28,9 @@ const MAX_BODY_BYTES = 36 * 1024 * 1024;
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
+
+  const csrfErr = requireCsrfHeader(request, user);
+  if (csrfErr) return csrfErr;
 
   const contentLength = Number(request.headers.get('Content-Length') ?? '0');
   if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
@@ -150,7 +153,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         Date.now(),
       )
       .run();
-    return json({ error: 'Run failed', detail: String(err) }, 502);
+
+    // Keep full detail server-side. Return only a generic message + a
+    // correlation ID; raw error strings may leak internal URLs, model
+    // names, prompt fragments, or upstream HTTP details.
+    console.error('runPro failed', {
+      toolId,
+      userId: user.id,
+      spendId,
+      err: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+    });
+    return json(
+      {
+        error: 'Run failed',
+        requestId: spendId, // operator can grep ops logs for this
+      },
+      502,
+    );
   }
 
   // 3. Log run history (no file content, only filename for the user's own

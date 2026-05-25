@@ -5,7 +5,7 @@
 
 import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
-import { json, resolveUser, unauthorized } from '../../../_lib/auth';
+import { json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
 
 interface RevokeBody {
   kid?: unknown;
@@ -14,6 +14,9 @@ interface RevokeBody {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
+
+  const csrfErr = requireCsrfHeader(request, user);
+  if (csrfErr) return csrfErr;
 
   const body = (await request.json().catch(() => ({}))) as RevokeBody;
   const kid = typeof body.kid === 'string' ? body.kid : '';

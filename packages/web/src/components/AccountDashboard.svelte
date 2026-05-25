@@ -66,7 +66,7 @@
     try {
       const res = await fetch('/api/account/keys', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
         credentials: 'same-origin',
         body: JSON.stringify({ name: newKeyName.trim() }),
       });
@@ -90,7 +90,7 @@
     if (!confirm('Revoke this key? CLI/MCP installs using it will stop working immediately.')) return;
     const res = await fetch('/api/account/keys/revoke', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
       credentials: 'same-origin',
       body: JSON.stringify({ kid }),
     });

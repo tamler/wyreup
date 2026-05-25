@@ -2,7 +2,7 @@
   // ProSignup — inline signup for the /pro page.
   //
   // Flow (lowest-friction path): enter email -> POST /api/account/create
-  // -> the server sets the wyreup_session cookie on the browser surface
+  // -> the server sets the __Host-wyreup_session cookie on the browser surface
   // -> hydrateUser() populates $user -> you're signed in. The wk_live_ key
   // is emailed for CLI/MCP use and shown once here for convenience.
   //

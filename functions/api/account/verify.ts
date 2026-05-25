@@ -1,6 +1,6 @@
 // POST /api/account/verify
 // Body: optional — auth is via Authorization: Bearer wk_live_...
-// Sets a signed wyreup_session cookie, returns { email, balance }.
+// Sets a signed __Host-wyreup_session cookie, returns { email, balance }.
 // See docs/pro-auth-spec.md §5 + §7.
 
 import type { Env } from '../../_lib/env';
@@ -38,7 +38,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     200,
     {
       'Set-Cookie': [
-        `wyreup_session=${cookie}`,
+        `__Host-wyreup_session=${cookie}`,
         `Path=/`,
         `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
         `HttpOnly`,

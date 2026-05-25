@@ -118,7 +118,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       200,
       {
         'Set-Cookie': [
-          `wyreup_session=${cookie}`,
+          `__Host-wyreup_session=${cookie}`,
           `Path=/`,
           `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
           `HttpOnly`,

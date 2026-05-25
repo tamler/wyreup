@@ -5,7 +5,7 @@
 // so the header balance refreshes. This helper centralizes that, so
 // individual tool modules stay focused on input shaping + output framing.
 //
-// Auth: cookie OR Bearer. The browser path leans on the wyreup_session
+// Auth: cookie OR Bearer. The browser path leans on the __Host-wyreup_session
 // cookie set by /api/account/verify. CLI and MCP pass an explicit API
 // key via `ctx.apiKey`, which switches us to a Bearer header. The
 // server-side `resolveUser()` accepts either form (see
@@ -62,12 +62,14 @@ export async function runPro<TResult>(
   if (ctx.apiKey) {
     // Explicit key wins on every surface. This is how CLI and MCP
     // authenticate, and how a browser script with a Bearer key can
-    // run Pro tools without relying on the wyreup_session cookie.
+    // run Pro tools without relying on the __Host-wyreup_session cookie.
     headers.Authorization = `Bearer ${ctx.apiKey}`;
   } else if (isBrowser) {
-    // Browser default — the wyreup_session cookie was set by
+    // Browser default — the __Host-wyreup_session cookie was set by
     // /api/account/verify when the user activated their key.
+    // X-Wyreup-CSRF satisfies the CSRF guard on the server side.
     init.credentials = 'same-origin';
+    headers['X-Wyreup-CSRF'] = '1';
   } else {
     // Non-browser without a key — fail fast with the recovery path.
     throw new Error(

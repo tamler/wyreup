@@ -6,7 +6,7 @@
 import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
 import { appOrigin } from '../../_lib/env';
-import { json, resolveUser, unauthorized } from '../../_lib/auth';
+import { json, requireCsrfHeader, resolveUser, unauthorized } from '../../_lib/auth';
 
 type Pack = 'starter' | 'standard' | 'power' | 'monthly';
 
@@ -30,6 +30,9 @@ interface CheckoutBody {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
+
+  const csrfErr = requireCsrfHeader(request, user);
+  if (csrfErr) return csrfErr;
 
   const body = (await request.json().catch(() => ({}))) as CheckoutBody;
   const pack = body.pack;

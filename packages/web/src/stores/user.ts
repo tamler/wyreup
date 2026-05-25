@@ -1,7 +1,7 @@
 // Wyreup PRO user stores.
 //
 // $user reflects the signed-in state, hydrated on page load from the
-// wyreup_session cookie via GET /api/account/balance.
+// __Host-wyreup_session cookie via GET /api/account/balance.
 //
 // $apiKey is transient — it holds the raw key just long enough to call
 // /api/account/verify, then we clear it. Never persisted.
@@ -40,7 +40,7 @@ export async function hydrateUser(): Promise<void> {
 }
 
 // POST /api/account/verify with the typed key. On success the server sets
-// the wyreup_session cookie and we mirror { email, balance } into $user.
+// the __Host-wyreup_session cookie and we mirror { email, balance } into $user.
 export async function activate(rawKey: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!rawKey.startsWith('wk_live_') && !rawKey.startsWith('wk_test_')) {
     return { ok: false, error: 'That doesn\'t look like a Wyreup key.' };
@@ -61,7 +61,11 @@ export async function activate(rawKey: string): Promise<{ ok: true } | { ok: fal
 }
 
 export async function signOut(): Promise<void> {
-  await fetch('/api/account/signout', { method: 'POST', credentials: 'same-origin' }).catch(() => undefined);
+  await fetch('/api/account/signout', {
+    method: 'POST',
+    headers: { 'X-Wyreup-CSRF': '1' },
+    credentials: 'same-origin',
+  }).catch(() => undefined);
   user.set(null);
 }
 

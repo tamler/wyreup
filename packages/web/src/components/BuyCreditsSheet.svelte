@@ -76,7 +76,7 @@
 
       const res = await fetch('/api/credits/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
         credentials: 'same-origin',
         body: JSON.stringify({ pack }),
       });

@@ -4,7 +4,7 @@
 
 import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
-import { json, requireAdmin } from '../../_lib/auth';
+import { json, requireAdmin, requireCsrfHeader } from '../../_lib/auth';
 import { nanoid } from '../../_lib/crypto';
 
 interface GrantBody {
@@ -16,6 +16,9 @@ interface GrantBody {
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const admin = await requireAdmin(request, env);
   if (admin instanceof Response) return admin;
+
+  const csrfErr = requireCsrfHeader(request, admin);
+  if (csrfErr) return csrfErr;
 
   const body = (await request.json().catch(() => ({}))) as GrantBody;
   const userId = typeof body.userId === 'string' ? body.userId : '';
