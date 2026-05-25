@@ -22,20 +22,29 @@ const KILL_GRACE_MS = 5_000;   // SIGTERM → SIGKILL grace
 const ALLOWED_EXEC_ARGV = new Set(['--enable-source-maps']);
 
 function scrubbedEnv(): NodeJS.ProcessEnv {
-  const carry = [
+  // Strict allowlist of environment variables passed to the worker. Anything
+  // not in this list — including dynamic loader controls (LD_PRELOAD,
+  // LD_LIBRARY_PATH, DYLD_INSERT_LIBRARIES, DYLD_LIBRARY_PATH), Node controls
+  // (NODE_OPTIONS, NODE_EXTRA_CA_CERTS), TLS overrides (SSL_CERT_FILE,
+  // SSL_CERT_DIR), and the Pro bearer (WYREUP_API_KEY) — is dropped.
+  // The Pro key reaches Pro tools via the WorkerJob IPC payload, never env.
+  const CARRY: readonly string[] = [
     'PATH', 'HOME', 'TMPDIR', 'LANG',
     'WYREUP_DISABLE_EGRESS_LOCK', 'WYREUP_ALLOW_PATHS',
     'WYREUP_MAX_INPUT_BYTES', 'WYREUP_ORIGIN',
+    // Explicit LC_* allowlist — previously a prefix wildcard. Locale vars
+    // are needed for libraries that format numbers/dates/text by user locale
+    // (sharp, ffmpeg, etc.). Tighten to the standard POSIX set so an
+    // attacker can't sneak a custom LC_<garbage> variable through.
+    'LC_ALL', 'LC_CTYPE', 'LC_COLLATE', 'LC_MESSAGES', 'LC_MONETARY',
+    'LC_NUMERIC', 'LC_TIME', 'LC_PAPER', 'LC_NAME', 'LC_ADDRESS',
+    'LC_TELEPHONE', 'LC_MEASUREMENT', 'LC_IDENTIFICATION',
   ];
   const env: NodeJS.ProcessEnv = {};
-  for (const k of carry) {
+  for (const k of CARRY) {
     const v = process.env[k];
     if (v !== undefined) env[k] = v;
   }
-  for (const k of Object.keys(process.env)) {
-    if (k.startsWith('LC_')) env[k] = process.env[k];
-  }
-  // Explicitly NOT carried: NODE_OPTIONS, WYREUP_API_KEY (Pro key passed via IPC).
   return env;
 }
 

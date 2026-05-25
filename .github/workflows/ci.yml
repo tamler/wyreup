@@ -178,6 +178,23 @@ jobs:
             exit 1
           fi
           echo "OK — no Astro server-island directives in packages/web/src."
+      - name: "Assert astro.config.mjs keeps output: 'static'"
+        run: |
+          set -e
+          # The grep above is defense-in-depth. The actual invariant that
+          # keeps server islands unreachable is `output: 'static'` in
+          # astro.config.mjs — Astro builds will refuse server-side
+          # features without an SSR adapter when this is set. If the
+          # output mode is ever changed to 'server' or 'hybrid', the
+          # GHSA-wrwg-2hg8-v723 attack surface re-opens regardless of
+          # whether anyone writes server:defer.
+          if ! grep -qE "output:\s*['\"]static['\"]" packages/web/astro.config.mjs; then
+            echo "::error::packages/web/astro.config.mjs no longer declares output: 'static'." \
+                 "This re-opens the GHSA-wrwg-2hg8-v723 attack surface." \
+                 "Either restore output: 'static' OR complete the Astro 5 + Svelte 5 migration first."
+            exit 1
+          fi
+          echo "OK — packages/web is output: 'static'."
 
   audit:
     name: Dependency audit
