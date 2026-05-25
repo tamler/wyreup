@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import { analyzeSuspicious, type TextSuspiciousParams, type TextSuspiciousResult } from '../text-suspicious/index.js';
 
 export interface PdfSuspiciousParams extends TextSuspiciousParams {
@@ -41,6 +42,7 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
   batchable: true,
   cost: 'free',
   memoryEstimate: 'medium',
+  budget: { maxPages: 500 },
 
   defaults: defaultPdfSuspiciousParams,
 
@@ -91,6 +93,7 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
     const numPages = pdf.numPages;
+    assertPdfPageBudget(numPages, { maxPages: 500 });
     const pageTexts: string[] = [];
 
     for (let i = 1; i <= numPages; i++) {

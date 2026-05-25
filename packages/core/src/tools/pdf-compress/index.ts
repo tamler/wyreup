@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfCompressParams {
   /** JPEG quality for embedded images, 1-100. Default 75. */
@@ -37,6 +38,7 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'high',
+  budget: { maxPages: 2_000 },
 
   defaults,
 
@@ -76,6 +78,7 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
     const { PDFDocument, PDFName, PDFRawStream } = await import('pdf-lib');
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer);
+    assertPdfPageBudget(pdfDoc.getPageCount(), { maxPages: 2_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfExtractTablesParams {
   /** Output format. Default 'json'. */
@@ -90,6 +91,7 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'medium',
+  budget: { maxPages: 2_000 },
 
   defaults,
 
@@ -130,6 +132,7 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
     const pageCount: number = pdf.numPages;
+    assertPdfPageBudget(pageCount, { maxPages: 2_000 });
 
     if (targetPage !== undefined && targetPage > pageCount) {
       throw new Error(

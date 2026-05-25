@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { RotatePdfParams } from './types.js';
 
 export type { RotatePdfParams } from './types.js';
@@ -67,6 +68,7 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 2_000 },
 
   defaults: { degrees: 90, pages: 'all' },
 
@@ -108,6 +110,7 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const doc = await PDFDocument.load(buffer);
     const pageCount = doc.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 2_000 });
 
     const toRotate = resolvePageIndices(params.pages ?? 'all', pageCount);
 

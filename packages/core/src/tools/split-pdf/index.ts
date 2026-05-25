@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { SplitPdfParams } from './types.js';
 
 export type { SplitPdfParams } from './types.js';
@@ -73,6 +74,7 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: { mode: 'all', ranges: '' },
 
@@ -108,6 +110,7 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const src = await PDFDocument.load(buffer);
     const pageCount = src.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 5_000 });
 
     if (pageCount === 0) {
       throw new Error('The input PDF has no pages.');

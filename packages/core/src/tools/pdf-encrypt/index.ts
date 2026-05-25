@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfEncryptPermissions {
   printing?: 'none' | 'lowResolution' | 'highResolution';
@@ -41,6 +42,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: {
     userPassword: '',
@@ -66,6 +68,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
 
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    assertPdfPageBudget(pdfDoc.getPageCount(), { maxPages: 5_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type * as PdfLib from '@cantoo/pdf-lib';
 
 export interface PdfFormFieldsParams {
@@ -45,6 +46,7 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   chainSuggestions: ['pdf-flatten', 'pdf-info', 'pdf-metadata'],
 
@@ -72,6 +74,7 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
 
     const bytes = await inputs[0]!.arrayBuffer();
     const doc = await lib.PDFDocument.load(bytes);
+    assertPdfPageBudget(doc.getPageCount(), { maxPages: 5_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
     ctx.onProgress({ stage: 'processing', percent: 70, message: 'Reading fields' });

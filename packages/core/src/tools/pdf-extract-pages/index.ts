@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import { parseRangeSpec } from '../../lib/pdf-ranges.js';
 
 export interface PdfExtractPagesParams {
@@ -28,6 +29,7 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 2_000 },
 
   defaults: {
     pages: [1],
@@ -51,6 +53,7 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const src = await PDFDocument.load(buffer);
     const pageCount = src.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 2_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

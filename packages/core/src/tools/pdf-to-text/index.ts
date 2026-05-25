@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { PdfToTextParams } from './types.js';
 
 export type { PdfToTextParams } from './types.js';
@@ -26,6 +27,7 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'medium',
+  budget: { maxPages: 5_000 },
 
   defaults: {
     separator: '\n\n=== Page {n} ===\n\n',
@@ -68,6 +70,7 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
     const pdf = await loadingTask.promise;
 
     const numPages = pdf.numPages;
+    assertPdfPageBudget(numPages, { maxPages: 5_000 });
     const pageParts: string[] = [];
 
     for (let i = 1; i <= numPages; i++) {

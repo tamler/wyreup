@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { ReorderPdfParams } from './types.js';
 
 export type { ReorderPdfParams } from './types.js';
@@ -51,6 +52,7 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: { order: '' },
 
@@ -66,6 +68,7 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const src = await PDFDocument.load(buffer);
     const pageCount = src.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 5_000 });
 
     const indices = parseOrder(params.order ?? '', pageCount);
 

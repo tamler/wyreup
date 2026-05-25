@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfMetadataWriteFields {
   title?: string;
@@ -40,6 +41,7 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: {
     mode: 'read',
@@ -75,6 +77,7 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Loading PDF' });
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    assertPdfPageBudget(pdfDoc.getPageCount(), { maxPages: 5_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

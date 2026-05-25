@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfFlattenParams {
   /** Update the document's "Title" field to reflect that the PDF is flattened. */
@@ -30,6 +31,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'medium',
+  budget: { maxPages: 2_000 },
 
   chainSuggestions: ['pdf-encrypt', 'pdf-redact', 'pdf-info'],
 
@@ -57,6 +59,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
 
     const inputBytes = await inputs[0]!.arrayBuffer();
     const doc = await PDFDocument.load(inputBytes);
+    assertPdfPageBudget(doc.getPageCount(), { maxPages: 2_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
     ctx.onProgress({ stage: 'processing', percent: 60, message: 'Flattening fields' });

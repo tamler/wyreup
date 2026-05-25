@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfRedactRectangle {
   /** Page number (1-indexed). */
@@ -46,6 +47,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 2_000 },
 
   defaults: {
     rectangles: [],
@@ -71,6 +73,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer);
     const pageCount = pdfDoc.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 2_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

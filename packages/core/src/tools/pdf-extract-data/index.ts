@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfExtractDataParams {
   /** Currency symbol expected in amounts. Defaults to '$' but accepts any single char or short prefix. */
@@ -48,6 +49,7 @@ async function extractTextFromPdf(blob: Blob): Promise<string> {
   }
   const buffer = await blob.arrayBuffer();
   const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
+  assertPdfPageBudget(pdf.numPages, { maxPages: 2_000 });
   const parts: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -255,6 +257,7 @@ export const pdfExtractData: ToolModule<PdfExtractDataParams> = {
   batchable: true,
   cost: 'free',
   memoryEstimate: 'medium',
+  budget: { maxPages: 2_000 },
 
   defaults: defaultPdfExtractDataParams,
 

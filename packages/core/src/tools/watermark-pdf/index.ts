@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { WatermarkPdfParams } from './types.js';
 
 export type { WatermarkPdfParams } from './types.js';
@@ -38,6 +39,7 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 2_000 },
 
   defaults: {
     mode: 'text',
@@ -123,6 +125,7 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
     const buffer = await input.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer);
     const pages = pdfDoc.getPages();
+    assertPdfPageBudget(pages.length, { maxPages: 2_000 });
 
     if (mode === 'text') {
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);

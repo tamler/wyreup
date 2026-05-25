@@ -65,6 +65,25 @@ export interface ToolRequires {
 
 export type MimePattern = string;
 
+// ──── Shape-level input budget ────
+
+/**
+ * Shape-level limits beyond raw bytes. Declared per-tool and checked at
+ * runtime before the expensive parse / transform / LLM call. A 5 MB PDF can
+ * still have 50 000 pages and DoS a parser; a 1 MB audio file can still be
+ * 24 hours long. Each field is opt-in: omit fields the tool doesn't care about.
+ *
+ * See `lib/budget.ts` for the corresponding runtime assert helpers.
+ */
+export interface ToolBudget {
+  /** Max number of pages in a PDF input. Tools that don't process PDFs ignore this. */
+  maxPages?: number;
+  /** Max duration in seconds for audio/video input. */
+  maxDuration?: number;
+  /** Max width × height for image input. */
+  maxDimensions?: { width: number; height: number };
+}
+
 // ──── Input / output specifications ────
 
 export interface ToolInputSpec {
@@ -305,6 +324,11 @@ export interface ToolModule<Params = unknown> {
   memoryEstimate: MemoryEstimate;
   /** Runtime capability requirements. Undefined = universal (runs everywhere). */
   requires?: ToolRequires;
+  /**
+   * Shape-level input limits beyond bytes. Checked at the start of run()
+   * before any expensive parse or LLM call. See `lib/budget.ts`.
+   */
+  budget?: ToolBudget;
 
   // Core operation (v1 tools use this)
   run(inputs: File[], params: Params, ctx: ToolRunContext): Promise<Blob[] | Blob>;

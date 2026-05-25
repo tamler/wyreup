@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import { runPro } from '../../lib/pro-runner.js';
 import { pdfToText } from '../pdf-to-text/index.js';
 
@@ -26,6 +27,7 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
   creditCost: 2,
   memoryEstimate: 'medium',
   outputDisplay: 'prose',
+  budget: { maxPages: 500 },
 
   chainSuggestions: ['text-translate-pro', 'text-sentences'],
 
@@ -38,6 +40,22 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
     ctx: ToolRunContext,
   ): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('pdf-summarize accepts exactly one PDF.');
+
+    const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    if (typeof window === 'undefined') {
+      const { createRequire } = await import('node:module');
+      const require = createRequire(import.meta.url);
+      try {
+        GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+      } catch {
+        GlobalWorkerOptions.workerSrc = 'pdf.worker.mjs';
+      }
+    }
+    const probeBuffer = await inputs[0]!.arrayBuffer();
+    const probeDoc = await getDocument({ data: new Uint8Array(probeBuffer), disableFontFace: true, disableRange: true, disableStream: true }).promise;
+    assertPdfPageBudget(probeDoc.numPages, { maxPages: 500 });
+    await probeDoc.destroy();
+
     const text = await extractPdfText(inputs[0]!, ctx);
     if (!text) throw new Error('No extractable text found in the PDF.');
     const result = await runPro<{ summary: string }>(

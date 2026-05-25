@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfCropBox {
   x: number;
@@ -49,6 +50,7 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 2_000 },
 
   defaults: {
     box: { x: 0, y: 0, width: 595, height: 842 },
@@ -72,6 +74,7 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer);
     const pageCount = pdfDoc.getPageCount();
+    assertPdfPageBudget(pageCount, { maxPages: 2_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

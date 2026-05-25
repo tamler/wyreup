@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { MergePdfParams } from './types.js';
 
 export type { MergePdfParams } from './types.js';
@@ -25,6 +26,7 @@ export const mergePdf: ToolModule<MergePdfParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: {},
 
@@ -50,6 +52,7 @@ export const mergePdf: ToolModule<MergePdfParams> = {
 
       const buffer = await input.arrayBuffer();
       const src = await PDFDocument.load(buffer);
+      assertPdfPageBudget(merged.getPageCount() + src.getPageCount(), { maxPages: 5_000 });
       const copiedPages = await merged.copyPages(src, src.getPageIndices());
       for (const page of copiedPages) {
         merged.addPage(page);

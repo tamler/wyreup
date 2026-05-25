@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 
 export interface PdfDecryptParams {
   /** The password that unlocks the PDF. Required. */
@@ -27,6 +28,7 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: {
     password: '',
@@ -70,6 +72,8 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
       }
       throw err;
     }
+
+    assertPdfPageBudget(pdfDoc.getPageCount(), { maxPages: 5_000 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

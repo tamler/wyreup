@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import { parseRangeSpec } from '../../lib/pdf-ranges.js';
 import { createCanvas, canvasToBlob } from '../../lib/canvas.js';
 
@@ -42,6 +43,7 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'high',
+  budget: { maxPages: 5_000 },
 
   defaults: {
     format: 'png',
@@ -119,6 +121,7 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
     const buffer = await inputs[0]!.arrayBuffer();
     const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
     const pageCount: number = pdf.numPages;
+    assertPdfPageBudget(pageCount, { maxPages: 5_000 });
 
     let pageNumbers: number[];
     if (params.pages && params.pages.length > 0) {

@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { assertPdfPageBudget } from '../../lib/budget.js';
 import type { PdfInfoParams, PdfInfoResult } from './types.js';
 
 export type { PdfInfoParams, PdfInfoResult } from './types.js';
@@ -27,6 +28,7 @@ export const pdfInfo: ToolModule<PdfInfoParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'low',
+  budget: { maxPages: 5_000 },
 
   defaults: {},
 
@@ -43,6 +45,7 @@ export const pdfInfo: ToolModule<PdfInfoParams> = {
     const { PDFDocument } = await import('pdf-lib');
     const buffer = await input.arrayBuffer();
     const doc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    assertPdfPageBudget(doc.getPageCount(), { maxPages: 5_000 });
 
     const toIso = (d: Date | undefined): string | null =>
       d instanceof Date && !isNaN(d.getTime()) ? d.toISOString() : null;
