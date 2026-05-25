@@ -60,8 +60,8 @@
     "@types/js-yaml": "^4.0.9",
     "@types/turndown": "^5.0.6",
     "tsup": "^8.3.0",
-    "typescript": "^5.5.0",
-    "vitest": "^2.1.0"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.6.5",
