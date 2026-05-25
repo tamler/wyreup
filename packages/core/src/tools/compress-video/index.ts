@@ -1,4 +1,5 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
+import { assertDurationBudget } from '../../lib/budget.js';
 
 export interface CompressVideoParams {
   crf?: number;
@@ -9,6 +10,8 @@ export const defaultCompressVideoParams: CompressVideoParams = {
   crf: 28,
   preset: 'fast',
 };
+
+const COMPRESS_VIDEO_BUDGET: ToolBudget = { maxDuration: 7_200 };
 
 export const compressVideo: ToolModule<CompressVideoParams> = {
   id: 'compress-video',
@@ -32,6 +35,7 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
   memoryEstimate: 'high',
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
+  budget: COMPRESS_VIDEO_BUDGET,
 
   defaults: defaultCompressVideoParams,
 
@@ -62,7 +66,7 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     params: CompressVideoParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
-    const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
+    const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
     const ff = await getFFmpeg(ctx);
@@ -73,6 +77,13 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     const ext = input.name.split('.').pop() ?? 'video';
     const inputName = `input.${ext}`;
     const outputName = 'output.mp4';
+
+    // Write once, probe duration, then transform.
+    await ff.writeFile(inputName, inputBytes);
+    const durationSec = await probeDuration(ff, inputName);
+    if (!isNaN(durationSec)) {
+      assertDurationBudget(durationSec, COMPRESS_VIDEO_BUDGET);
+    }
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Compressing video' });
 
@@ -88,7 +99,13 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
       outputName,
     ];
 
-    const outputBytes = await runFFmpeg(ff, inputName, inputBytes, outputName, args);
+    await ff.exec(args);
+    const output = await ff.readFile(outputName);
+    await ff.deleteFile(inputName);
+    await ff.deleteFile(outputName);
+    const outputBytes = typeof output === 'string'
+      ? new TextEncoder().encode(output)
+      : (output as Uint8Array);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: 'video/mp4' })];

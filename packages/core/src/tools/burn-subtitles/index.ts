@@ -1,4 +1,5 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
+import { assertDurationBudget } from '../../lib/budget.js';
 
 export interface BurnSubtitlesParams {
   fontSize?: number;
@@ -9,6 +10,8 @@ export const defaultBurnSubtitlesParams: BurnSubtitlesParams = {
   fontSize: 16,
   crf: 23,
 };
+
+const BURN_SUBTITLES_BUDGET: ToolBudget = { maxDuration: 7_200 };
 
 export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
   id: 'burn-subtitles',
@@ -32,6 +35,7 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
   memoryEstimate: 'high',
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
+  budget: BURN_SUBTITLES_BUDGET,
 
   defaults: defaultBurnSubtitlesParams,
 
@@ -40,7 +44,7 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
     params: BurnSubtitlesParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
-    const { getFFmpeg } = await import('../../lib/ffmpeg.js');
+    const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     if (inputs.length < 2) {
       throw new Error('burn-subtitles requires two files: a video and a subtitle file.');
@@ -71,6 +75,11 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
 
     await ff.writeFile(inputName, videoBytes);
     await ff.writeFile(subName, subBytes);
+
+    const durationSec = await probeDuration(ff, inputName);
+    if (!isNaN(durationSec)) {
+      assertDurationBudget(durationSec, BURN_SUBTITLES_BUDGET);
+    }
 
     if (ctx.signal.aborted) {
       await ff.deleteFile(inputName);

@@ -1,4 +1,5 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
+import { assertDurationBudget } from '../../lib/budget.js';
 
 export type ExtractAudioFormat = 'mp3' | 'wav' | 'ogg' | 'm4a';
 
@@ -11,6 +12,8 @@ export const defaultExtractAudioParams: ExtractAudioParams = {
   format: 'mp3',
   bitrate: '192k',
 };
+
+const EXTRACT_AUDIO_BUDGET: ToolBudget = { maxDuration: 14_400 };
 
 const FORMAT_MIME: Record<ExtractAudioFormat, string> = {
   mp3: 'audio/mpeg',
@@ -56,6 +59,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
   memoryEstimate: 'high',
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
+  budget: EXTRACT_AUDIO_BUDGET,
 
   defaults: defaultExtractAudioParams,
 
@@ -64,7 +68,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
     params: ExtractAudioParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
-    const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
+    const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
     const ff = await getFFmpeg(ctx);
@@ -75,6 +79,13 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
     const ext = input.name.split('.').pop() ?? 'video';
     const inputName = `input.${ext}`;
     const outputName = `output.${params.format}`;
+
+    // Write once, probe duration, then transform.
+    await ff.writeFile(inputName, inputBytes);
+    const durationSec = await probeDuration(ff, inputName);
+    if (!isNaN(durationSec)) {
+      assertDurationBudget(durationSec, EXTRACT_AUDIO_BUDGET);
+    }
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Extracting audio' });
 
@@ -87,7 +98,13 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
 
     args.push(outputName);
 
-    const outputBytes = await runFFmpeg(ff, inputName, inputBytes, outputName, args);
+    await ff.exec(args);
+    const output = await ff.readFile(outputName);
+    await ff.deleteFile(inputName);
+    await ff.deleteFile(outputName);
+    const outputBytes = typeof output === 'string'
+      ? new TextEncoder().encode(output)
+      : (output as Uint8Array);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getExtractMime(params.format) })];

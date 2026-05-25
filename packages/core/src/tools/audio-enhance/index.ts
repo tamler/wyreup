@@ -1,6 +1,7 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
 import type { InferenceSession as OnnxInferenceSession } from 'onnxruntime-web';
 import { modelUrl } from '../../lib/model-cdn.js';
+import { assertDurationBudget } from '../../lib/budget.js';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AudioEnhanceParams {
@@ -9,6 +10,8 @@ export interface AudioEnhanceParams {
 }
 
 export const defaultAudioEnhanceParams: AudioEnhanceParams = {};
+
+const AUDIO_ENHANCE_BUDGET: ToolBudget = { maxDuration: 7_200 };
 
 const ACCEPTED_MIME_TYPES = [
   'audio/wav',
@@ -214,6 +217,7 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
   memoryEstimate: 'medium',
   installSize: 15_500_000, // ~15 MB onnxruntime-web WASM + ~500 KB FlashSR ONNX model
   requires: { webgpu: 'preferred' },
+  budget: AUDIO_ENHANCE_BUDGET,
 
   defaults: defaultAudioEnhanceParams,
 
@@ -244,6 +248,8 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
         'The audio-enhance tool is not supported in the current environment.',
       );
     }
+
+    assertDurationBudget(mono16k.length / 16000, AUDIO_ENHANCE_BUDGET);
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

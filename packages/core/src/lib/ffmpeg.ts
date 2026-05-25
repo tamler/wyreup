@@ -3,6 +3,32 @@ import type { ToolRunContext } from '../types.js';
 
 let ffmpegSingleton: FFmpeg | null = null;
 
+/**
+ * Probe an already-written MEMFS file for its duration in seconds.
+ * Returns NaN if ffprobe fails or the output can't be parsed.
+ * The caller is responsible for writing the file to MEMFS first.
+ */
+export async function probeDuration(ff: FFmpeg, inputName: string): Promise<number> {
+  const probeOut = `${inputName}.probe.txt`;
+  try {
+    await ff.ffprobe([
+      '-v', 'error',
+      '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      inputName,
+      '-o', probeOut,
+    ]);
+    const raw = await ff.readFile(probeOut);
+    await ff.deleteFile(probeOut);
+    const text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw as Uint8Array);
+    return parseFloat(text.trim());
+  } catch {
+    // If probe fails (e.g. unknown format), return NaN — callers treat NaN
+    // as "unknown" and skip the budget check rather than blocking the user.
+    return NaN;
+  }
+}
+
 export async function getFFmpeg(ctx: ToolRunContext): Promise<FFmpeg> {
   const cached = ctx.cache.get('ffmpeg:instance') as FFmpeg | undefined;
   if (cached) return cached;

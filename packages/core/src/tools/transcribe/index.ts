@@ -1,5 +1,6 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
 import { getPipeline } from '../../lib/transformers.js';
+import { assertDurationBudget } from '../../lib/budget.js';
 
 export type WhisperModel = 'tiny' | 'base' | 'small';
 
@@ -41,6 +42,8 @@ const MODEL_IDS: Record<WhisperModel, string> = {
   base: 'Xenova/whisper-base',
   small: 'Xenova/whisper-small',
 };
+
+const TRANSCRIBE_BUDGET: ToolBudget = { maxDuration: 14_400 };
 
 const ACCEPTED_MIME_TYPES = [
   'audio/wav',
@@ -146,6 +149,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
   installSize: 250_000_000,
   installGroup: 'speech',
   requires: { webgpu: 'preferred' },
+  budget: TRANSCRIBE_BUDGET,
 
   // Sensible chain follow-ups for a transcript: language work + analysis,
   // not "is this a hex color" tools that happen to accept text/plain.
@@ -252,12 +256,15 @@ export const transcribe: ToolModule<TranscribeParams> = {
     const audioBuffer = await input.arrayBuffer();
     const samples = await decodeToMono16k(audioBuffer);
 
+    const durationSec = samples.length / 16000;
+    assertDurationBudget(durationSec, TRANSCRIBE_BUDGET);
+
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({
       stage: 'processing',
       percent: 50,
-      message: `Transcribing ${(samples.length / 16000).toFixed(1)}s of audio`,
+      message: `Transcribing ${durationSec.toFixed(1)}s of audio`,
     });
 
     const language = params.language ?? 'en';
