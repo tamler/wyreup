@@ -101,6 +101,46 @@ function routeRequest(key: string): RouteMatch | null {
   return null;
 }
 
+/** Abort upstream fetches that take longer than this. */
+const UPSTREAM_TIMEOUT_MS = 30_000;
+
+// ── Streaming size enforcement ─────────────────────────────────────────────
+
+/**
+ * Wraps a ReadableStream and errors the stream if more than `max` bytes are
+ * read. Used as a defense-in-depth check when Content-Length is absent.
+ */
+function enforceSize(
+  stream: ReadableStream<Uint8Array>,
+  max: number,
+): ReadableStream<Uint8Array> {
+  let total = 0;
+  return new ReadableStream({
+    async start(controller) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          total += value.byteLength;
+          if (total > max) {
+            controller.error(
+              new Error(`Upstream object exceeded size cap (>${max} bytes)`),
+            );
+            return;
+          }
+          controller.enqueue(value);
+        }
+        controller.close();
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        reader.releaseLock();
+      }
+    },
+  });
+}
+
 // ── Response helpers ───────────────────────────────────────────────────────
 
 const CACHE_HEADERS: Record<string, string> = {
@@ -167,7 +207,25 @@ export default {
     }
 
     // 2) R2 miss — fetch the matching upstream and stream the response.
-    const upstreamRes = await fetch(route.upstreamUrl, { cf: { cacheTtl: 0 } });
+    let upstreamRes: Response;
+    try {
+      upstreamRes = await fetch(route.upstreamUrl, {
+        cf: { cacheTtl: 0 },
+        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+      });
+    } catch (err) {
+      const isTimeout = err instanceof Error && err.name === 'TimeoutError';
+      if (isTimeout) {
+        return new Response(
+          `Upstream fetch timed out after ${UPSTREAM_TIMEOUT_MS} ms`,
+          { status: 504 },
+        );
+      }
+      return new Response(
+        `Upstream fetch failed: ${err instanceof Error ? err.message : String(err)}`,
+        { status: 502 },
+      );
+    }
     if (!upstreamRes.ok) {
       return new Response(
         `Upstream ${upstreamRes.status}: ${upstreamRes.statusText}`,
@@ -194,9 +252,11 @@ export default {
       return new Response('Upstream had no body', { status: 502 });
     }
     const [returnStream, storeStream] = upstreamRes.body.tee();
+    const returnStreamCapped = enforceSize(returnStream, MAX_OBJECT_SIZE);
+    const storeStreamCapped = enforceSize(storeStream, MAX_OBJECT_SIZE);
 
     ctx.waitUntil(
-      env.MODELS.put(key, storeStream, {
+      env.MODELS.put(key, storeStreamCapped, {
         httpMetadata: { contentType },
       }).catch((err) => {
         console.error(`Failed to cache ${key} to R2:`, err);
@@ -207,6 +267,6 @@ export default {
     headers.set('Content-Type', contentType);
     headers.set('X-Wyreup-Cache', 'miss');
     if (cl) headers.set('Content-Length', cl);
-    return new Response(returnStream, { headers });
+    return new Response(returnStreamCapped, { headers });
   },
 };
