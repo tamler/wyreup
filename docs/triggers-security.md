@@ -110,12 +110,27 @@ on the sheet *above* the Run button:
 The pre-flight is read-only and runs locally. It never blocks the user
 from running — it makes the security state legible before they decide.
 
-### G5 — No network egress from chain execution
+### G5 — No third-party network egress from chain execution
 
-This is an existing invariant of `@wyreup/core` enforced by
-`tools/check-privacy.mjs`. The trigger system does not loosen it.
-Tools that need network access (currently: none in the auto-run set)
-are explicitly excluded from being chainable behind a trigger.
+The trigger system never initiates a fetch on its own. Every network
+call comes from a tool inside the chain the user explicitly attached
+to the rule.
+
+**Third-party egress is fully blocked** by the runtime CSP
+(`connect-src 'self' https://models.wyreup.com`) and verified at build
+time by `tools/check-privacy.mjs`. No tool — Pro or free — can reach
+an arbitrary host.
+
+**First-party egress** (`fetch('/api/tools/pro/run')` and the
+`models.wyreup.com` model CDN) is possible IF the user attached a
+chain containing a Pro tool to a trigger rule. Enforcement:
+
+- The trigger system disables the "confirmed-bypass" path for any chain
+  that contains a Pro tool (`tool.cost === 'credit'`). Same pattern as
+  G4 forcing the sheet on a high-suspicion verdict.
+- Result: the user always sees the preview sheet — with the full chain
+  string visible — before any file content reaches wyreup.com, even
+  for rules they previously clicked "Trust this rule" on.
 
 In particular: `webhook-replay` runs in `analyze`-only mode under
 trigger context. The `--send` mode that actually fires the request is
