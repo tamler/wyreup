@@ -166,10 +166,29 @@ const lastUpdated = '2026-05-25';
     <p>You agree not to use Wyreup to:</p>
     <ul>
       <li>
-        process content you don't have the right to process, including
+        submit content you don't have the right to submit, including
         copyrighted material without license, personal data of third
         parties without their consent, or trade secrets you don't have
         authority over;
+      </li>
+      <li>
+        submit data that violates the laws of your jurisdiction or any
+        jurisdiction with applicable cross-border-data rules — including
+        but not limited to GDPR transfer restrictions, UK data
+        residency requirements, US export controls (ITAR, EAR), and
+        sectoral data-localization rules;
+      </li>
+      <li>
+        submit data subject to a special compliance regime you have not
+        independently confirmed is satisfied by using Wyreup —
+        including but not limited to HIPAA-protected health
+        information, PCI-DSS cardholder data, classified or
+        export-controlled government information, attorney-client
+        privileged material, financial data covered by GLBA / SOX, or
+        biometric data covered by BIPA-style statutes. Wyreup makes no
+        compliance certification for any such regime. If you are not
+        certain your submission is permitted by the rules that apply
+        to you, don't submit it;
       </li>
       <li>
         attempt to extract model weights, reverse-engineer hosted
@@ -196,6 +215,34 @@ const lastUpdated = '2026-05-25';
         infrastructure under a different brand.
       </li>
     </ul>
+
+    <h3>Cross-border processing — your responsibility</h3>
+    <p>
+      PRO requests are routed through Cloudflare's global edge
+      network. Cloudflare may handle any individual request from any
+      of its data centers worldwide, and the third-party model
+      provider that runs against your input may operate in any region
+      where it has infrastructure. <strong>Wyreup does not select the
+      region, and we do not guarantee which country a given request
+      will pass through.</strong>
+    </p>
+    <p>
+      Your data does not see Wyreup's own servers in any meaningful
+      sense — Wyreup itself is an edge-compute application running on
+      Cloudflare's network. If your data is subject to data-residency,
+      cross-border-transfer, or sovereignty requirements (such as GDPR
+      transfer rules, UK data localization, healthcare or government
+      sectoral regimes, or financial-services egress restrictions),
+      <strong>it is your responsibility to independently verify
+      whether routing the data through Cloudflare's network and the
+      relevant model provider is permitted under the rules that apply
+      to you.</strong> If you cannot make that determination, do not
+      use PRO tools with that data.
+    </p>
+    <p>
+      Free tools are not affected — they run entirely on your device
+      and never touch Cloudflare's network or any third-party model.
+    </p>
     <p>
       We may suspend or revoke access for violation of these rules
       without refund of unused credits associated with the violating
@@ -281,9 +328,10 @@ const lastUpdated = '2026-05-25';
     <ul>
       <li>your use of Wyreup in violation of these terms or applicable law;</li>
       <li>
-        content you submit, process, or produce through Wyreup — including
-        claims that you didn't have the right to process the input or that
-        the output infringes a third party's rights;
+        content you submit through Wyreup or produce using it —
+        including claims that you didn't have the right to submit the
+        input under applicable copyright, privacy, or data-protection
+        law, or that the output infringes a third party's rights;
       </li>
       <li>
         chains or trigger rules you configure — including compositions
@@ -315,7 +363,11 @@ const lastUpdated = '2026-05-25';
     </p>
 
     <h2>11. Subprocessors</h2>
-    <p>For PRO usage we route your inputs through:</p>
+    <p>
+      When you invoke a PRO tool, your input is forwarded through the
+      following providers. The actual processing of your input is
+      performed by the third-party model provider, not by Wyreup.
+    </p>
     <ul>
       <li><strong>Cloudflare</strong> — hosting, edge compute (Pages Functions), database (D1), and AI inference (Workers AI).</li>
       <li><strong>An external image-model provider</strong> — hosts image PRO tools (background removal, upscaling). Current vendor disclosed on request.</li>
@@ -417,6 +469,11 @@ const lastUpdated = '2026-05-25';
   .legal h2 {
     font-size: var(--text-md);
     margin: var(--space-6) 0 var(--space-2);
+    color: var(--text-primary);
+  }
+  .legal h3 {
+    font-size: var(--text-sm);
+    margin: var(--space-4) 0 var(--space-2);
     color: var(--text-primary);
   }
   .legal p,

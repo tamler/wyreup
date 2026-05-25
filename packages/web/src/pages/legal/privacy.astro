@@ -145,11 +145,35 @@ const lastUpdated = '2026-05-25';
       We do not knowingly collect their information.
     </p>
 
-    <h2>Data transfers</h2>
+    <h2>Data transfers and edge routing</h2>
     <p>
-      Wyreup is operated from Indiana, United States. Cloudflare and
-      our image-model provider may process data in any region where
-      they operate infrastructure, including elsewhere in the United States.
+      Wyreup is operated from Indiana, United States, but Wyreup itself
+      runs as an edge-compute application on Cloudflare's global
+      network. Your data does not see Wyreup-owned servers in any
+      meaningful sense — when you invoke a PRO tool, the request is
+      handled by whichever Cloudflare data center is nearest to you (or
+      to the routing path), forwarded to the model provider (Cloudflare
+      Workers AI or our image-model provider), and the response is
+      returned to you. The model provider in turn may operate in any
+      region where it has infrastructure, including but not limited to
+      regions outside the United States.
+    </p>
+    <p>
+      <strong>Wyreup does not select the region for any individual
+      request, and we do not guarantee which country a given request
+      will pass through.</strong> If your data is subject to
+      data-residency, cross-border-transfer, or sovereignty
+      requirements — GDPR Chapter V transfer rules, UK data-residency
+      requirements, healthcare or government sectoral regimes,
+      financial-services egress restrictions, or any equivalent — it
+      is your responsibility to independently verify whether routing
+      through Cloudflare's network and the relevant model provider is
+      permitted under the rules that apply to you. See section 6 of
+      the <a href="/legal/terms">Terms of Service</a>.
+    </p>
+    <p>
+      Free tools are not affected — they run entirely on your device
+      and never touch Cloudflare's network or any third-party model.
     </p>
 
     <h2>Changes</h2>
