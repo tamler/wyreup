@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Forbid Astro server: directives in web/src
+      - name: "Forbid Astro server: directives in web/src"
         run: |
           set -e
           # grep returns exit 1 when there are zero matches — which is what we want.
