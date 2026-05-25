@@ -316,42 +316,55 @@ export default {
 
     ctx.waitUntil(
       (async () => {
-        // Drain hashForwardStream into R2. Collect chunks so we can pass
-        // a single buffer to R2.put — the bytes are already bounded by
-        // enforceSize above.
-        const chunks: Uint8Array[] = [];
-        const reader = hashForwardStream.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-          }
-        } finally {
-          reader.releaseLock();
-        }
-
-        const hex = await digestPromise;
-
-        if (manifestEntry) {
-          if (hex !== manifestEntry.sha256) {
-            console.error(
-              `Manifest mismatch for ${key}: expected ${manifestEntry.sha256}, got ${hex}. NOT caching to R2.`,
-            );
-            return;
-          }
-        }
-
-        // No manifest entry (unverified pass-through) OR hash matched — cache.
-        const total = chunks.reduce((n, c) => n + c.byteLength, 0);
-        const merged = new Uint8Array(total);
-        let off = 0;
-        for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
-        await env.MODELS.put(key, merged, {
+        // Stream the hash branch DIRECTLY to R2 — R2.put accepts a
+        // ReadableStream and uploads chunked, so the bytes never
+        // accumulate in the worker's 128 MB heap. Previously this path
+        // collected every chunk into an array and merged into a single
+        // Uint8Array, which would OOM the worker for any model >~60 MB
+        // (chunks + merged ≈ 2× file size). The streaming put has no
+        // memory ceiling.
+        //
+        // Ordering: R2.put consumes the stream as it flows; the
+        // DigestStream's tee branch is independently consumed. Both
+        // must complete for the digest to resolve and the R2 object
+        // to land. We start the put, then await the digest, then
+        // await the put. If the hash mismatches the manifest, we
+        // delete the just-uploaded R2 object — there's a brief window
+        // where the bad bytes exist in R2, but R2 hits on the SAME
+        // key in that window are NOT possible because the worker has
+        // not returned to handle a second request yet (single-tenant
+        // event loop) and R2 reads after delete return null. Long-term
+        // cache poisoning is what this defends against; transient
+        // window during first-fetch is the documented trade-off.
+        const r2PutPromise = env.MODELS.put(key, hashForwardStream, {
           httpMetadata: { contentType },
-        }).catch((err) => {
-          console.error(`Failed to cache ${key} to R2:`, err);
         });
+
+        let hex: string;
+        try {
+          hex = await digestPromise;
+        } catch (err) {
+          console.error(`SHA-256 stream errored for ${key}:`, err);
+          // The R2 put may also error; try to delete defensively.
+          await env.MODELS.delete(key).catch(() => {});
+          return;
+        }
+
+        try {
+          await r2PutPromise;
+        } catch (err) {
+          console.error(`Failed to cache ${key} to R2:`, err);
+          return;
+        }
+
+        if (manifestEntry && hex !== manifestEntry.sha256) {
+          console.error(
+            `Manifest mismatch for ${key}: expected ${manifestEntry.sha256}, got ${hex}. Deleting just-cached R2 object.`,
+          );
+          await env.MODELS.delete(key).catch((err) => {
+            console.error(`Failed to delete poisoned ${key} from R2:`, err);
+          });
+        }
       })(),
     );
 

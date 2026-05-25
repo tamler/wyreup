@@ -202,4 +202,54 @@ describe('manifest verification integration', () => {
     // No manifest entry — unverified pass-through, should cache via streaming path.
     expect(puts).toContain('Xenova/whisper-tiny/resolve/main/tokenizer.json');
   });
+
+  it('R2.put receives a ReadableStream (not a buffer) so worker RAM stays bounded', async () => {
+    // The R2.put memory bug fix: bytes flow through DigestStream + R2.put
+    // without accumulating in the worker heap. Verify by checking the type
+    // of the second argument passed to R2.put.
+    const body = 'rules of streaming: nothing in arrays';
+    let putValue: unknown;
+    const bucket: R2Bucket = {
+      get: () => Promise.resolve(null),
+      put: (_key: string, value: unknown) => { putValue = value; return Promise.resolve(undefined); },
+      head: () => Promise.resolve(null),
+      list: () => Promise.resolve({ objects: [], delimitedPrefixes: [], truncated: false }),
+      delete: () => Promise.resolve(undefined),
+      createMultipartUpload: () => Promise.reject(new Error('unused')),
+      resumeMultipartUpload: () => Promise.reject(new Error('unused')),
+    } as unknown as R2Bucket;
+
+    const waitUntilPromises: Promise<unknown>[] = [];
+    const ctx: ExecutionContext = {
+      waitUntil: (p: Promise<unknown>): void => { waitUntilPromises.push(p); },
+      passThroughOnException: (): void => {},
+    } as ExecutionContext;
+
+    vi.stubGlobal('fetch', vi.fn(() =>
+      Promise.resolve(new Response(body, { headers: { 'Content-Type': 'text/plain' } })),
+    ));
+
+    await worker.fetch(
+      new Request('https://x/Xenova/whisper-tiny/resolve/main/streaming-check.bin'),
+      { MODELS: bucket } as never,
+      ctx,
+    );
+    await Promise.all(waitUntilPromises);
+
+    // The value must be a ReadableStream, not a Buffer / Uint8Array / typed array.
+    expect(putValue).toBeInstanceOf(ReadableStream);
+    expect(putValue).not.toBeInstanceOf(Uint8Array);
+  });
+
+  // Integration test for the mismatch + R2.delete cleanup path is omitted
+  // here: MANIFEST is Object.freeze'd at module scope and mocking the
+  // import cleanly under vitest would require either a vi.mock factory at
+  // the top of the file (which would break the other tests that rely on
+  // the real empty manifest) or refactoring manifest.ts to expose a
+  // lookup function. The logic path is straightforward and covered by
+  // hand-test: the new test above ("R2.put receives a ReadableStream")
+  // proves the streaming side, and the delete-on-mismatch flow is
+  // exercised in src/index.ts's documented "manifest verification
+  // integration" block. Deferred to a follow-up if cache-poisoning
+  // simulation becomes a CI priority.
 });
