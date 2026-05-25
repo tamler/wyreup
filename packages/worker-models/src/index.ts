@@ -17,6 +17,11 @@
  *  - Max object size cap (`MAX_OBJECT_SIZE`) — large model files are
  *    fine; arbitrary uploads beyond that are refused.
  *  - Only GET / HEAD are accepted. No PUT / DELETE / etc. ever.
+ *  - Optional SHA-256 manifest (see src/manifest.ts). On R2 miss, the
+ *    upstream response is hashed and compared against the manifest. A
+ *    mismatch blocks the R2 write so cache poisoning cannot persist.
+ *    The client still receives the original bytes (streaming trade-off
+ *    — see manifest.ts for the full threat-model discussion).
  *
  * **Keep in sync with the model IDs in `packages/core/src/tools/*`**.
  * Whenever a new AI tool is added that pulls a new HuggingFace model
@@ -24,6 +29,8 @@
  * `ALLOWED_HF_MODELS` below. The pinned versions for jsdelivr and
  * googleapis paths must match the strings hard-coded in those tools.
  */
+
+import { MANIFEST, STRICT_VERIFICATION } from './manifest.js';
 
 export interface Env {
   MODELS: R2Bucket;
@@ -141,6 +148,89 @@ function enforceSize(
   });
 }
 
+// ── SHA-256 streaming hash ─────────────────────────────────────────────────
+
+/**
+ * Maximum body size we're willing to hash in-worker. Cloudflare Workers have
+ * a 128 MB memory cap per request; buffering larger bodies would exceed it.
+ * Assets over this threshold are passed through unverified (manifest entries
+ * for them should simply be absent). The m2m100_418M decoder (~1 GB) is the
+ * primary model that hits this ceiling.
+ */
+const MAX_HASHABLE_BYTES = 100 * 1024 * 1024; // 100 MB
+
+/**
+ * Accumulates chunks from `stream` while forwarding them to the caller.
+ * When the stream ends, resolves `digest` with the lowercase hex SHA-256.
+ *
+ * Accumulation is bounded by `MAX_HASHABLE_BYTES`: if the body exceeds that
+ * limit the digest resolves to `null` (too large to hash in-worker), and the
+ * forwarded stream is still delivered in full so the client is unaffected.
+ *
+ * NOTE: crypto.DigestStream (Cloudflare-specific streaming digest API) would
+ * eliminate the need to buffer. It is documented but its availability in the
+ * runtime we target was uncertain at the time of writing. The buffered
+ * approach is used here with the 100 MB cap as a well-understood fallback.
+ * Follow-up: switch to crypto.DigestStream once runtime support is confirmed.
+ */
+function hashAndForward(
+  stream: ReadableStream<Uint8Array>,
+): { stream: ReadableStream<Uint8Array>; digest: Promise<string | null> } {
+  const parts: Uint8Array[] = [];
+  let totalBytes = 0;
+  let tooLarge = false;
+  let resolveDigest!: (s: string | null) => void;
+  let rejectDigest!: (e: unknown) => void;
+  const digest = new Promise<string | null>((res, rej) => {
+    resolveDigest = res;
+    rejectDigest = rej;
+  });
+
+  const forwarded = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(value);
+          if (!tooLarge) {
+            totalBytes += value.byteLength;
+            if (totalBytes > MAX_HASHABLE_BYTES) {
+              tooLarge = true;
+            } else {
+              parts.push(value);
+            }
+          }
+        }
+        controller.close();
+        if (tooLarge) {
+          resolveDigest(null);
+          return;
+        }
+        const merged = new Uint8Array(totalBytes);
+        let off = 0;
+        for (const p of parts) {
+          merged.set(p, off);
+          off += p.byteLength;
+        }
+        const digestBuf = await crypto.subtle.digest('SHA-256', merged);
+        const hex = Array.from(new Uint8Array(digestBuf))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('');
+        resolveDigest(hex);
+      } catch (err) {
+        controller.error(err);
+        rejectDigest(err);
+      } finally {
+        reader.releaseLock();
+      }
+    },
+  });
+
+  return { stream: forwarded, digest };
+}
+
 // ── Response helpers ───────────────────────────────────────────────────────
 
 const CACHE_HEADERS: Record<string, string> = {
@@ -187,6 +277,16 @@ export default {
         status: 403,
         headers: { 'Cache-Control': 'public, max-age=300' },
       });
+    }
+
+    // Manifest gate (strict mode only). If STRICT_VERIFICATION is true,
+    // refuse any path that has no manifest entry at all.
+    const manifestEntry = MANIFEST[key];
+    if (STRICT_VERIFICATION && !manifestEntry) {
+      return new Response(
+        `Path ${key} is not in the verification manifest`,
+        { status: 502 },
+      );
     }
 
     // 1) R2 hit — serve directly.
@@ -251,16 +351,66 @@ export default {
     if (!upstreamRes.body) {
       return new Response('Upstream had no body', { status: 502 });
     }
-    const [returnStream, storeStream] = upstreamRes.body.tee();
+
+    // Tee the upstream body: one branch goes to the client, the other is
+    // consumed by hashAndForward to compute the SHA-256 while also
+    // producing a second forward stream that we drain.
+    const [returnStream, hashInputBranch] = upstreamRes.body.tee();
     const returnStreamCapped = enforceSize(returnStream, MAX_OBJECT_SIZE);
-    const storeStreamCapped = enforceSize(storeStream, MAX_OBJECT_SIZE);
+
+    // Hash the second branch in-flight. The forwarded stream from
+    // hashAndForward must be fully drained for the digest promise to settle.
+    const { stream: hashForwardStream, digest: digestPromise } =
+      hashAndForward(enforceSize(hashInputBranch, MAX_OBJECT_SIZE));
 
     ctx.waitUntil(
-      env.MODELS.put(key, storeStreamCapped, {
-        httpMetadata: { contentType },
-      }).catch((err) => {
-        console.error(`Failed to cache ${key} to R2:`, err);
-      }),
+      (async () => {
+        // Drain hashForwardStream into R2 (we can't pass a teed-then-wrapped
+        // stream directly to R2.put because R2 needs a single consumer).
+        // Instead, collect the chunks from hashForwardStream and put them.
+        // This is equivalent to storeStreamCapped in the original code —
+        // the bytes are already bounded by enforceSize above.
+        const chunks: Uint8Array[] = [];
+        const reader = hashForwardStream.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+
+        const hex = await digestPromise;
+
+        if (manifestEntry) {
+          if (hex === null) {
+            // Body exceeded MAX_HASHABLE_BYTES — cannot verify; skip cache.
+            console.error(
+              `Cannot verify ${key}: body exceeded ${MAX_HASHABLE_BYTES} byte hash limit. NOT caching to R2.`,
+            );
+            return;
+          }
+          if (hex !== manifestEntry.sha256) {
+            console.error(
+              `Manifest mismatch for ${key}: expected ${manifestEntry.sha256}, got ${hex}. NOT caching to R2.`,
+            );
+            return;
+          }
+        }
+
+        // No manifest entry (unverified pass-through) OR hash matched — cache.
+        const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+        const merged = new Uint8Array(total);
+        let off = 0;
+        for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+        await env.MODELS.put(key, merged, {
+          httpMetadata: { contentType },
+        }).catch((err) => {
+          console.error(`Failed to cache ${key} to R2:`, err);
+        });
+      })(),
     );
 
     const headers = new Headers(CACHE_HEADERS);
