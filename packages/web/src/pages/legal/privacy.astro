@@ -15,22 +15,30 @@ const lastUpdated = '2026-05-25';
 
     <h2>The short version</h2>
     <p>
-      <strong>Free tools run entirely in your browser.</strong> Your files,
-      parameters, and outputs never reach our servers. No accounts, no
-      cookies, no analytics, no telemetry.
+      <strong>Free tools run entirely on your device.</strong> When you
+      use a free tool in the browser or via the CLI / MCP, Wyreup is
+      not involved at runtime — your files, parameters, and outputs
+      never reach our infrastructure. No accounts, no cookies, no
+      analytics, no telemetry.
     </p>
     <p>
-      <strong>PRO tools send your input to a hosted-AI model.</strong> We
-      process the input on our edge, hand it to the model provider
-      (Cloudflare Workers AI or our image-model provider), and return the result. We do
-      not retain the input or output beyond the request. We do log
-      metadata (which tool ran, when, file name) for your run history.
+      <strong>PRO tools forward your input to a third-party
+      hosted-AI model when you invoke them.</strong> When <strong>you</strong>
+      choose a PRO tool and submit an input, the input is routed
+      through Wyreup's edge to the model provider (Cloudflare Workers
+      AI or our image-model provider) that runs against it. The model —
+      not Wyreup — acts on your data. Wyreup is the conduit: we route
+      the request, deduct the credit, and return the model's response
+      to you. We do not retain the input or output beyond the request.
+      We do log metadata (which tool ran, when, file name) for your run
+      history.
     </p>
     <p>
-      <strong>What you submit is what gets processed.</strong> We process
-      inputs at your direction. You are responsible for what you choose
-      to submit and for confirming you have the right to process it. See
-      section 5 of the <a href="/legal/terms">Terms of Service</a>.
+      <strong>You decide what gets sent.</strong> You choose which
+      tools to invoke and which inputs to submit. You are responsible
+      for confirming you have the right to submit the input and for
+      whatever you do with the output. See section 5 of the
+      <a href="/legal/terms">Terms of Service</a>.
     </p>
 
     <h2>What we collect</h2>
@@ -60,9 +68,9 @@ const lastUpdated = '2026-05-25';
 
     <h3>What we never store</h3>
     <ul>
-      <li>File contents — your files are streamed through us to the model and discarded.</li>
-      <li>Output contents — returned to you and discarded.</li>
-      <li>Card numbers — handled by Lemon Squeezy, never by us.</li>
+      <li>File contents — your files are forwarded through Wyreup to the model provider and discarded on our side immediately after the request returns.</li>
+      <li>Output contents — the model's response is returned to you and not retained on our side.</li>
+      <li>Card numbers — handled by Lemon Squeezy, never by Wyreup.</li>
       <li>Plain-text API keys.</li>
       <li>Analytics, fingerprints, third-party tracking, or advertising cookies.</li>
     </ul>
@@ -79,13 +87,15 @@ const lastUpdated = '2026-05-25';
 
     <h2>Subprocessors</h2>
     <p>
-      For PRO usage your input passes through the providers listed
-      below. Under GDPR/CCPA we are required to disclose categories of
-      recipients; we name them specifically here for transparency
-      where we can. If we change a provider, we will update this list
-      promptly.
+      When you invoke a PRO tool, your input is forwarded through the
+      providers listed below. Under GDPR/CCPA we are required to
+      disclose categories of recipients; we name them specifically
+      here for transparency where we can. If we change a provider, we
+      will update this list promptly. The actual processing of your
+      input is performed by the third-party model provider, not by
+      Wyreup.
     </p>
-    <p>For PRO usage your input passes through:</p>
+    <p>When you invoke a PRO tool, your input is forwarded through:</p>
     <ul>
       <li>
         <strong>Cloudflare</strong> — site hosting, edge compute (Pages

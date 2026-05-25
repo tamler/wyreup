@@ -14,12 +14,11 @@ const lastUpdated = '2026-05-25';
     </header>
 
     <p class="lede">
-      Plain summary: Wyreup organizes freely available file utilities
-      into a workflow you control. Each tool runs on your input, at your
-      direction, in a chain you configure. The inputs you provide, the
-      chains you build, and the outputs you produce are <strong>yours</strong> —
-      we don't review them, vouch for them, or assume responsibility for
-      what you do with them.
+      Plain summary: Wyreup provides access to freely available file
+      utilities, organized for convenience. <strong>You use them.</strong>
+      You choose the inputs, build the chains, run the tools, and decide
+      what to do with the outputs. Wyreup is the access layer, not the
+      author of what you build with it.
     </p>
 
     <h2>1. Who we are</h2>
@@ -33,25 +32,33 @@ const lastUpdated = '2026-05-25';
 
     <h2>2. What Wyreup is — and what it isn't</h2>
     <p>
-      Wyreup is a collection of independent file and text utilities,
-      organized into a workflow you assemble. Most of the underlying
-      capabilities (image compression, PDF extraction, regex generation,
-      etc.) are commonly available on their own; we package them with a
-      consistent interface, a chain runner, and an optional hosted-AI
-      tier. The convenience of composition does not make us the author
-      of the compositions you build.
+      Wyreup provides access to a collection of independent file and
+      text utilities. Most of the underlying capabilities (image
+      compression, PDF extraction, regex generation, etc.) are
+      commonly available on their own; we organize them behind a
+      consistent interface, an optional chain runner, and an optional
+      hosted-AI tier. The convenience of access does not make us the
+      author of the work you do with the tools, the compositions you
+      assemble, or the outputs you generate.
     </p>
     <p>There are two tiers:</p>
     <ul>
       <li>
-        <strong>Free tools</strong> run entirely in your browser (or
-        locally via the CLI / MCP). We never receive your input files,
-        parameters, or outputs. Free tools require no account.
+        <strong>Free tools</strong> run entirely on your device — in
+        your browser, or locally via the CLI / MCP. Wyreup is not
+        involved at runtime; your input files, parameters, and outputs
+        never reach our infrastructure. Free tools require no account.
       </li>
       <li>
-        <strong>PRO tools</strong> route your input to hosted-AI models
-        on Cloudflare Workers AI and an external image-model provider.
-        PRO usage requires an account and consumes credits.
+        <strong>PRO tools</strong> are tools where, when <strong>you</strong>
+        invoke them, <strong>your</strong> input is forwarded through
+        Wyreup's edge to a third-party hosted-AI model (Cloudflare
+        Workers AI, or an external image-model provider) that
+        <strong>you</strong> have selected by choosing the PRO tool.
+        The model — not Wyreup — runs against your input. Wyreup is
+        the conduit between you and the model; we route the request,
+        bill the credit, and return the model's response to you. PRO
+        usage requires an account and consumes credits.
       </li>
     </ul>
     <p>
@@ -103,9 +110,12 @@ const lastUpdated = '2026-05-25';
 
     <h2>5. Your inputs, your chains, your outputs</h2>
     <p>
-      Wyreup executes the tools and chains <strong>you choose</strong>
-      against the inputs <strong>you provide</strong>, producing outputs
-      that we deliver to you and do not retain. You are solely
+      You — not Wyreup — use the tools. You select which tools to run,
+      you provide the inputs, you configure any chains or trigger rules,
+      and you decide what to do with the outputs. Wyreup provides access
+      to the tools and (for PRO) routes your input to the third-party
+      model you've selected; we don't review, vouch for, or take
+      responsibility for what you do with that access. You are solely
       responsible for:
     </p>
     <ul>
@@ -120,6 +130,22 @@ const lastUpdated = '2026-05-25';
         of being composed, produces a result with greater impact than
         any single step. Composing legal individual operations into an
         illegal aggregate operation is your responsibility, not ours.
+      </li>
+      <li>
+        <strong>Every action you take.</strong> Wyreup does not select
+        files, choose tools, build chains, or fire actions on your
+        behalf. <strong>You</strong> drop the file. <strong>You</strong>
+        click the button. <strong>You</strong> save the trigger rule
+        and choose to confirm it when a matching file arrives. Even
+        when a configured trigger rule appears to act automatically,
+        the rule itself is something you previously authored and
+        confirmed; each match still surfaces a preview that requires
+        your action to proceed unless you have explicitly marked the
+        rule as trusted. Wyreup never initiates work against your data
+        of its own accord. If you experience an outcome you didn't
+        intend, the cause is your input, your tool choice, your chain,
+        your trigger configuration, or your downstream use — not an
+        action Wyreup took independently.
       </li>
       <li>
         <strong>Outputs.</strong> Anything you generate using Wyreup —
