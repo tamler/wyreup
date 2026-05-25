@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-05-17';
+const lastUpdated = '2026-05-25';
 ---
 
 <BaseLayout
@@ -13,6 +13,15 @@ const lastUpdated = '2026-05-17';
       <p class="meta">Last updated: {lastUpdated}</p>
     </header>
 
+    <p class="lede">
+      Plain summary: Wyreup organizes freely available file utilities
+      into a workflow you control. Each tool runs on your input, at your
+      direction, in a chain you configure. The inputs you provide, the
+      chains you build, and the outputs you produce are <strong>yours</strong> —
+      we don't review them, vouch for them, or assume responsibility for
+      what you do with them.
+    </p>
+
     <h2>1. Who we are</h2>
     <p>
       "Wyreup," "we," "us," and "our" refer to <strong>Wyreup</strong>,
@@ -22,82 +31,264 @@ const lastUpdated = '2026-05-17';
       <strong>hello@wyreup.com</strong>.
     </p>
 
-    <h2>2. What Wyreup is</h2>
+    <h2>2. What Wyreup is — and what it isn't</h2>
     <p>
-      Wyreup is a collection of file and text utilities. There are two tiers:
+      Wyreup is a collection of independent file and text utilities,
+      organized into a workflow you assemble. Most of the underlying
+      capabilities (image compression, PDF extraction, regex generation,
+      etc.) are commonly available on their own; we package them with a
+      consistent interface, a chain runner, and an optional hosted-AI
+      tier. The convenience of composition does not make us the author
+      of the compositions you build.
+    </p>
+    <p>There are two tiers:</p>
+    <ul>
+      <li>
+        <strong>Free tools</strong> run entirely in your browser (or
+        locally via the CLI / MCP). We never receive your input files,
+        parameters, or outputs. Free tools require no account.
+      </li>
+      <li>
+        <strong>PRO tools</strong> route your input to hosted-AI models
+        on Cloudflare Workers AI and an external image-model provider.
+        PRO usage requires an account and consumes credits.
+      </li>
+    </ul>
+    <p>
+      <strong>Wyreup is not</strong>:
     </p>
     <ul>
       <li>
-        <strong>Free tools</strong> run entirely in your browser (or locally
-        via the CLI). We never receive your input files, parameters, or
-        outputs. Free tools have no account requirement.
+        a storage service — we don't retain your files, your outputs, or
+        the contents of anything you process;
       </li>
       <li>
-        <strong>PRO tools</strong> route your input to hosted-AI models on
-        Cloudflare Workers AI and an external image-model provider. PRO usage requires an account
-        and consumes credits.
+        a professional-advice service — outputs from AI tools are not
+        legal, medical, financial, accounting, engineering, or other
+        professional advice, regardless of how authoritative they read;
+      </li>
+      <li>
+        a notarization, signing, certification, or chain-of-custody
+        service — outputs we produce have no legal weight unless you
+        separately certify them;
+      </li>
+      <li>
+        a guarantee of correctness — every tool may be wrong, incomplete,
+        or unsuitable for your specific use case, and you are responsible
+        for verifying outputs before relying on them.
       </li>
     </ul>
 
     <h2>3. Accounts and API keys</h2>
     <p>
       An account is identified by an email and one or more API keys. We
-      store the SHA-256 hash of each key — never the raw value. Treat your
-      keys like passwords. You can revoke or rotate them at any time from
-      your account page.
+      store the SHA-256 hash of each key — never the raw value. Treat
+      your keys like passwords. You can revoke or rotate them at any
+      time from your account page.
     </p>
     <p>
-      You are responsible for activity originating from your keys. If you
-      believe a key has been compromised, revoke it immediately at
+      You are responsible for activity originating from your keys. If
+      you believe a key has been compromised, revoke it immediately at
       <a href="/account">wyreup.com/account</a>.
     </p>
 
     <h2>4. Credits</h2>
     <p>
-      Credits are a prepaid unit that fund PRO tool runs. Pricing and the
-      credit cost per tool are listed on
-      <a href="/pro">our pricing page</a>. Credits do not expire,
-      do not transfer between accounts, and have no cash value outside
-      Wyreup. See <a href="/legal/refund">our refund policy</a> for refunds.
+      Credits are a prepaid unit that fund PRO tool runs. Pricing and
+      the credit cost per tool are listed on
+      <a href="/pro">our pricing page</a>. Credits do not expire, do not
+      transfer between accounts, and have no cash value outside Wyreup.
+      See <a href="/legal/refund">our refund policy</a> for refunds.
     </p>
 
-    <h2>5. Acceptable use</h2>
+    <h2>5. Your inputs, your chains, your outputs</h2>
+    <p>
+      Wyreup executes the tools and chains <strong>you choose</strong>
+      against the inputs <strong>you provide</strong>, producing outputs
+      that we deliver to you and do not retain. You are solely
+      responsible for:
+    </p>
+    <ul>
+      <li>
+        <strong>Inputs.</strong> Every file, text, URL, or parameter you
+        submit. You confirm you have the right to process it under
+        applicable copyright, privacy, contractual, and other laws.
+      </li>
+      <li>
+        <strong>Chains and trigger rules.</strong> Compositions you build
+        from individual tools — including any combination that, by virtue
+        of being composed, produces a result with greater impact than
+        any single step. Composing legal individual operations into an
+        illegal aggregate operation is your responsibility, not ours.
+      </li>
+      <li>
+        <strong>Outputs.</strong> Anything you generate using Wyreup —
+        text, images, transcripts, summaries, redactions, extracted data,
+        derivative files. We do not review outputs. We make no claim
+        that an output is suitable for any purpose, including the
+        specific purpose you generated it for.
+      </li>
+      <li>
+        <strong>Downstream use.</strong> What you do with outputs —
+        publishing, sharing, sending, signing, relying on, building on
+        top of — is entirely yours. Outputs are not Wyreup statements,
+        positions, or endorsements.
+      </li>
+    </ul>
+
+    <h2>6. Acceptable use</h2>
     <p>You agree not to use Wyreup to:</p>
     <ul>
-      <li>process content you don't have the right to process,</li>
-      <li>attempt to extract model weights, reverse-engineer hosted endpoints, or otherwise abuse the PRO infrastructure,</li>
-      <li>circumvent the rate limits, credit checks, or webhook signatures of our API,</li>
-      <li>produce material that is illegal under the laws of the United States or the State of Indiana (including but not limited to CSAM, content that incites violence, or content that violates intellectual property law).</li>
+      <li>
+        process content you don't have the right to process, including
+        copyrighted material without license, personal data of third
+        parties without their consent, or trade secrets you don't have
+        authority over;
+      </li>
+      <li>
+        attempt to extract model weights, reverse-engineer hosted
+        endpoints, or otherwise abuse the PRO infrastructure;
+      </li>
+      <li>
+        circumvent the rate limits, credit checks, API authentication,
+        webhook signatures, or any other technical control of our
+        service;
+      </li>
+      <li>
+        produce material that is illegal under the laws of the United
+        States or the State of Indiana — including but not limited to
+        child sexual abuse material (CSAM), content that incites
+        imminent violence, malware, or material that violates
+        intellectual-property law;
+      </li>
+      <li>
+        impersonate any person or entity, including Wyreup or its
+        employees, in outputs or in communications about Wyreup;
+      </li>
+      <li>
+        use Wyreup to build a competing service that resells our PRO
+        infrastructure under a different brand.
+      </li>
     </ul>
     <p>
-      We may suspend or revoke access for violation of these rules without
-      a refund of unused credits associated with the violating activity.
+      We may suspend or revoke access for violation of these rules
+      without refund of unused credits associated with the violating
+      activity. We may also report unlawful activity to the appropriate
+      authorities, and you waive any objection to that disclosure for
+      activity that violates this section.
     </p>
 
-    <h2>6. No warranty</h2>
+    <h2>7. Disclaimer of warranties</h2>
     <p>
-      Wyreup is provided <strong>"as is"</strong> and <strong>"as available"</strong>
-      without warranties of any kind, express or implied. We do not warrant
-      that the service will be uninterrupted, accurate, or fit for any
-      particular purpose. PRO tool outputs are produced by third-party AI
-      models and may be incorrect — verify before relying on them for
-      important decisions.
+      Wyreup is provided <strong>"as is" and "as available."</strong> To
+      the maximum extent permitted by law, we disclaim all warranties,
+      whether express, implied, statutory, or otherwise — including
+      warranties of merchantability, fitness for a particular purpose,
+      non-infringement, title, accuracy, and any warranty arising from
+      course of dealing, course of performance, or usage of trade.
+    </p>
+    <p>
+      We do not warrant that Wyreup will be uninterrupted, error-free,
+      secure, or free of harmful components, or that defects will be
+      corrected. We do not warrant that any tool — free or PRO — will
+      produce output that is accurate, complete, current, lawful, or
+      suitable for your purpose. AI-generated output in particular may
+      be wrong, misleading, biased, or fabricated; verify everything
+      before relying on it.
+    </p>
+    <p>
+      You are responsible for keeping your own backups of any data you
+      process through Wyreup. We retain nothing.
+    </p>
+    <p>
+      Some jurisdictions do not allow the exclusion of certain
+      warranties. In those jurisdictions, the disclaimers above apply
+      only to the extent permitted by law, and you may have additional
+      rights as a consumer.
     </p>
 
-    <h2>7. Limitation of liability</h2>
+    <h2>8. Limitation of liability</h2>
     <p>
-      To the maximum extent permitted by law, our aggregate liability for any
-      claim arising out of your use of Wyreup is limited to the greater of
-      (a) the total amount you have paid us in the 12 months preceding the
-      claim, or (b) US $50.
+      To the maximum extent permitted by law, our aggregate liability
+      for any and all claims arising out of or related to your use of
+      Wyreup — whether in contract, tort (including negligence), strict
+      liability, statute, or any other theory — is limited to the
+      greater of (a) the total amount you have paid us in the
+      <strong>twelve months</strong> preceding the event giving rise to
+      the claim, or (b) <strong>US $50</strong>.
     </p>
     <p>
-      We are not liable for indirect, consequential, special, or punitive
-      damages, including lost profits or lost data, even if advised of the
-      possibility.
+      We are not liable for any <strong>indirect, incidental,
+      consequential, special, exemplary, or punitive damages</strong> —
+      including but not limited to lost profits, lost revenue, lost data,
+      lost goodwill, business interruption, regulatory fines, or the
+      cost of substitute services — even if we have been advised of the
+      possibility of such damages and even if any remedy in these terms
+      fails of its essential purpose.
+    </p>
+    <p>
+      You acknowledge that the pricing of Wyreup, including the free
+      tier and the small per-credit cost of the PRO tier, reflects this
+      allocation of risk between us, and that the limits above are an
+      essential basis of our agreement. They survive any termination of
+      these terms or your use of Wyreup.
+    </p>
+    <p>
+      <strong>Carve-outs.</strong> Nothing in this section limits
+      liability that cannot be limited by applicable law — including
+      liability for fraud, fraudulent misrepresentation, gross
+      negligence, willful misconduct, or death or personal injury caused
+      by negligence. Nothing in this section affects your statutory
+      rights as a consumer where those rights cannot be waived under the
+      law of your jurisdiction. If any part of this section is held
+      unenforceable, the rest remains in effect, and the unenforceable
+      part will be limited to the maximum extent permitted by law.
     </p>
 
-    <h2>8. Subprocessors</h2>
+    <h2>9. Indemnification</h2>
+    <p>
+      You agree to defend, indemnify, and hold harmless Wyreup, its
+      operators, employees, agents, and contractors from any claim,
+      demand, loss, liability, damage, cost, or expense (including
+      reasonable attorneys' fees) arising out of or related to:
+    </p>
+    <ul>
+      <li>your use of Wyreup in violation of these terms or applicable law;</li>
+      <li>
+        content you submit, process, or produce through Wyreup — including
+        claims that you didn't have the right to process the input or that
+        the output infringes a third party's rights;
+      </li>
+      <li>
+        chains or trigger rules you configure — including compositions
+        that produce results with effects you did not anticipate;
+      </li>
+      <li>
+        downstream use of any output, including publication, distribution,
+        or reliance by you or anyone you share an output with.
+      </li>
+    </ul>
+    <p>
+      We may, at our option and at your expense, assume exclusive
+      defense and control of any matter you would otherwise indemnify.
+      You will cooperate with our defense and will not settle any matter
+      without our prior written consent.
+    </p>
+
+    <h2>10. Force majeure</h2>
+    <p>
+      We are not liable for any failure or delay in performance caused
+      by events beyond our reasonable control — including infrastructure
+      outages (such as Cloudflare, npm, payment processors, or upstream
+      AI providers), labor disputes, acts of government, network
+      disruptions, cyberattacks targeting third parties, natural
+      disasters, pandemics, or war. The affected obligation is suspended
+      until the event ends; if the event continues for more than 30
+      days, either party may terminate the affected service without
+      further liability.
+    </p>
+
+    <h2>11. Subprocessors</h2>
     <p>For PRO usage we route your inputs through:</p>
     <ul>
       <li><strong>Cloudflare</strong> — hosting, edge compute (Pages Functions), database (D1), and AI inference (Workers AI).</li>
@@ -110,34 +301,76 @@ const lastUpdated = '2026-05-17';
       subprocessor receives.
     </p>
 
-    <h2>9. Changes</h2>
+    <h2>12. Changes</h2>
     <p>
       We may update these terms. Material changes will be noted by
-      updating the "Last updated" date and, where appropriate, by sending
-      an email to your account address. Continued use of Wyreup after a
-      change constitutes acceptance.
+      updating the "Last updated" date and, where appropriate, by
+      sending an email to your account address. Continued use of
+      Wyreup after a change constitutes acceptance. If you do not
+      accept a change, your remedy is to stop using Wyreup and request a
+      refund per the refund policy.
     </p>
 
-    <h2>10. Termination</h2>
+    <h2>13. Termination</h2>
     <p>
       You may close your account at any time by emailing
       <strong>hello@wyreup.com</strong>. Unused credits at the time of
       closure are refundable per the
-      <a href="/legal/refund">refund policy</a>.
+      <a href="/legal/refund">refund policy</a>. We may suspend or
+      terminate your access immediately if you violate section 6, with
+      no refund for credits associated with the violating activity.
+    </p>
+    <p>
+      Sections 5 (your inputs), 7 (warranty disclaimer), 8 (limitation
+      of liability), 9 (indemnification), 14 (governing law), and any
+      payment obligations you owe us survive termination.
     </p>
 
-    <h2>11. Governing law</h2>
+    <h2>14. Governing law and disputes</h2>
     <p>
       These terms are governed by the laws of the State of Indiana and
       the United States, without regard to conflict-of-law provisions.
       Disputes are subject to the exclusive jurisdiction of the state
-      and federal courts located in Indiana.
+      and federal courts located in Indiana. You consent to personal
+      jurisdiction there and waive any objection to venue.
+    </p>
+    <p>
+      Any claim arising out of or relating to these terms or your use
+      of Wyreup must be brought within <strong>one (1) year</strong>
+      after the cause of action arose, or it is permanently barred,
+      except to the extent applicable law prohibits a shorter
+      limitations period.
+    </p>
+    <p>
+      If you are a consumer in the EU, UK, or another jurisdiction whose
+      law grants you a non-waivable right to bring a dispute in your
+      home courts, this section does not override that right.
     </p>
 
-    <h2>12. Contact</h2>
+    <h2>15. Entire agreement; assignment; no waiver</h2>
+    <p>
+      These terms, together with the
+      <a href="/legal/privacy">privacy policy</a> and the
+      <a href="/legal/refund">refund policy</a>, are the entire
+      agreement between you and Wyreup regarding your use of the
+      service. We may assign these terms to a successor in connection
+      with a merger, acquisition, or sale of substantially all assets;
+      you may not assign without our prior written consent. Our failure
+      to enforce any provision is not a waiver of that or any other
+      provision.
+    </p>
+
+    <h2>16. Contact</h2>
     <p>
       Questions about these terms: <strong>hello@wyreup.com</strong>.<br />
       Security disclosures: <strong>security@wyreup.com</strong>.
+    </p>
+
+    <p class="footnote">
+      These terms are a working framework drafted in plain language for
+      transparency. They are not a substitute for advice from a lawyer
+      qualified in your jurisdiction. If you need a binding
+      interpretation, consult counsel.
     </p>
   </article>
 </BaseLayout>
@@ -184,5 +417,20 @@ const lastUpdated = '2026-05-17';
     font-size: var(--text-xs);
     color: var(--text-subtle);
     margin-bottom: var(--space-4);
+  }
+  .lede {
+    font-style: italic;
+    border-left: 3px solid var(--border-strong, currentColor);
+    padding-left: var(--space-3);
+    margin: var(--space-4) 0 var(--space-6);
+    color: var(--text-primary);
+  }
+  .footnote {
+    margin-top: var(--space-8);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-soft, rgba(0, 0, 0, 0.08));
+    font-style: italic;
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
   }
 </style>

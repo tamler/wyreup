@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-05-17';
+const lastUpdated = '2026-05-25';
 ---
 
 <BaseLayout
@@ -17,7 +17,10 @@ const lastUpdated = '2026-05-17';
     <p>
       Unused credits are refundable within 30 days of purchase. Used
       credits are not, except in cases of clear product malfunction on
-      our end.
+      our end. A refund under this policy is your sole financial remedy
+      for the credits in question — see section 8 of the
+      <a href="/legal/terms">Terms of Service</a> for the overall
+      limitation of liability.
     </p>
 
     <h2>Unused credits — 30-day refund</h2>
@@ -40,10 +43,19 @@ const lastUpdated = '2026-05-17';
     <h2>Used credits</h2>
     <p>
       Credits already consumed by a successful PRO tool run are not
-      refundable. Exception: if a tool returned a clearly broken result
-      due to our infrastructure failure (not a model accuracy issue or
-      bad input), email <strong>hello@wyreup.com</strong> with the run ID
-      from your account history and we will refund the credits used.
+      refundable. A successful run means the tool ran end-to-end and
+      returned a result, regardless of whether the result was what you
+      hoped for. AI model accuracy, output suitability for your
+      specific purpose, and second-guessing the result after the fact
+      are not grounds for a refund — see the warranty disclaimer in the
+      <a href="/legal/terms">Terms of Service</a>.
+    </p>
+    <p>
+      <strong>Exception:</strong> if a tool returned a clearly broken
+      result due to our infrastructure failure (an internal error, a
+      truncated response, a stack-trace where output should be), email
+      <strong>hello@wyreup.com</strong> with the run ID from your
+      account history and we will refund the credits used.
     </p>
 
     <h2>Failed runs are auto-refunded</h2>
@@ -61,6 +73,16 @@ const lastUpdated = '2026-05-17';
       issued anyway, results in your account being suspended pending
       resolution because chargebacks carry fees that we cannot absorb at
       our pricing.
+    </p>
+    <p>
+      A chargeback does not entitle you to retroactive refund of
+      credits already consumed. Successful PRO tool runs that ran
+      against the original purchase have been paid for by you to the
+      hosted-AI provider via our infrastructure; those costs are not
+      recoverable on our side. If a chargeback reverses a purchase
+      whose credits were consumed, your account balance will reflect
+      the resulting deficit and further PRO usage will be blocked until
+      the deficit is settled or the chargeback is reversed.
     </p>
 
     <h2>Account closure</h2>
