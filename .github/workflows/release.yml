@@ -50,16 +50,25 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Auto-merge the changesets release PR as soon as CI is green. The
-      # PR's diff is purely (1) version bumps + (2) CHANGELOG entries
+      # Auto-merge the changesets release PR as soon as it's mergeable.
+      # The PR's diff is purely (1) version bumps + (2) CHANGELOG entries
       # auto-generated from the .changeset/*.md files — the actual code
       # was already reviewed when each source commit landed on main, so
-      # there is no second-look value in gating publish behind a manual
+      # there's no second-look value in gating publish behind a manual
       # merge step. Without this, "release notes accumulate for two
       # weeks while npm stays on an old version" is the failure mode
       # (which is exactly how we got here — see CLAUDE.md > Release gate).
+      #
+      # Try --auto first (queues the merge behind required checks). If the
+      # PR is already in CLEAN state (no required checks to wait on),
+      # --auto errors with "Pull request is in clean status" — fall back
+      # to an immediate squash merge in that case.
       - name: Enable auto-merge on the changesets release PR
         if: steps.changesets.outputs.pullRequestNumber != '' && steps.changesets.outputs.hasChangesets == 'true'
-        run: gh pr merge --auto --squash "${{ steps.changesets.outputs.pullRequestNumber }}"
+        run: |
+          set -e
+          PR="${{ steps.changesets.outputs.pullRequestNumber }}"
+          gh pr merge --auto --squash "$PR" \
+            || gh pr merge --squash "$PR"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
