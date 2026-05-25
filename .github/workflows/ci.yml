@@ -147,13 +147,51 @@ jobs:
       - run: pnpm build
       - run: node tools/check-bundle-size.mjs
 
+  web-security-invariants:
+    # Enforces the non-exploitability claim for GHSA-wrwg-2hg8-v723
+    # (Astro reflected XSS via server islands). The advisory affects
+    # the `server:defer` directive; wyreup.com is output: 'static'
+    # and does not use server islands. This job fails the PR if
+    # anyone introduces `server:defer` (or `server:` directives more
+    # broadly) so the non-exploitability claim stays true.
+    #
+    # Flip to a full Astro 4 → 5 + Svelte 4 → 5 migration only when
+    # a real driver lands (feature need or advisory affecting a
+    # surface we actually use). See SECURITY.md for the rationale.
+    name: Web security invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbid Astro server: directives in web/src
+        run: |
+          set -e
+          # grep returns exit 1 when there are zero matches — which is what we want.
+          # Invert: fail (exit 1 from the job) when ANY match is found.
+          if grep -rn 'server:defer\|server-islands\|serverIslands' packages/web/src 2>/dev/null; then
+            echo "::error::Astro server: directive found in packages/web/src." \
+                 "This re-introduces exposure to GHSA-wrwg-2hg8-v723 (server-island reflected XSS)." \
+                 "Either remove the directive OR complete the Astro 5 + Svelte 5 migration first."
+            exit 1
+          fi
+          echo "OK — no Astro server-island directives in packages/web/src."
+
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    # `continue-on-error: true` while we work through the existing
-    # backlog of advisories (notably Astro 4.x → 5.x, GHSA-wrwg-2hg8-v723).
-    # Flip to required once the backlog is clear. New high/critical
-    # advisories still surface in PR checks — they just don't block.
+    # `continue-on-error: true` because the lone HIGH advisory at the
+    # time of this commit (GHSA-wrwg-2hg8-v723 — Astro server-island
+    # reflected XSS) is non-exploitable for wyreup.com:
+    #   - output: 'static' (no SSR runtime)
+    #   - no `server:defer` directives anywhere in packages/web/src
+    #     (enforced by the web-security-invariants job above)
+    # The Astro 5 upgrade would force a Svelte 4 → 5 migration across
+    # ~15 client:load components for zero defense-in-depth gain on this
+    # specific CVE. See SECURITY.md → "Astro CVE non-exploitability".
+    #
+    # Future HIGH/CRITICAL advisories still surface in PR checks here
+    # for review — they just don't fail the gate. Flip to required
+    # once the Astro advisory is patched (i.e. when an Astro 4.x
+    # release ships a backport) or once Astro 5 migration is done.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4

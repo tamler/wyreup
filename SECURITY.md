@@ -73,17 +73,29 @@ No raw user input reaches HTML sinks without sanitization. New HTML rendering MU
 
 `zip-create` is the producer side and is not subject to these defenses (the threat model is the opposite direction).
 
+## Astro CVE non-exploitability
+
+`pnpm audit` reports **GHSA-wrwg-2hg8-v723** (HIGH) — *Astro reflected XSS via the server islands feature* — against `astro@4.16.19` in `packages/web`. The fix is `astro@>=5.15.8`, a major-version upgrade.
+
+**This advisory is non-exploitable for wyreup.com.** Evidence:
+
+- `packages/web` is configured with `output: 'static'` (SSG only — no SSR runtime, no Pages Functions).
+- The vulnerable surface is the `server:defer` directive. `grep -rn 'server:defer\|server-islands\|serverIslands' packages/web/src` returns **zero matches**. Every island in the codebase uses `client:load` (browser-side Svelte hydration), which the advisory does not affect.
+
+**The non-exploitability is enforced by CI.** The `web-security-invariants` job in `.github/workflows/ci.yml` fails any PR that introduces an Astro `server:` directive into `packages/web/src`. Re-introducing the vulnerable surface would require either removing that CI step or completing an Astro 4 → 5 + Svelte 4 → 5 migration first (~15 `client:load` components plus PWA reconfig).
+
+The audit job runs with `continue-on-error: true` only because of this one advisory. New high/critical advisories still surface in PR checks. The audit gate will be flipped to required when either Astro ships a 4.x backport, or when a real driver (feature need / advisory affecting a surface we actually use) justifies the Astro 5 migration.
+
 ## What this does NOT defend against
 
-The hardening focus has been the highest-risk surfaces. Open work, in priority order:
+Open work, in priority order:
 
-1. **Astro reflected XSS via server islands** (GHSA-wrwg-2hg8-v723) — fix requires major-version upgrade `astro@4 → astro@5` in `packages/web`. CI's `pnpm audit` job currently runs with `continue-on-error: true` until this lands.
-2. **Raw socket egress** — the fetch egress lock does not intercept `node:http`, `node:https`, `node:net`, `node:dgram`, or native-extension sockets. A compromised dependency that uses raw sockets can still exfiltrate.
-3. **Subprocesses spawned by tools** — not sandboxed.
-4. **DNS-channel exfiltration** — allowed origin still resolves DNS; a compromised dependency could encode data in DNS queries.
-5. **MCP clients that ignore capability annotations** — `openWorldHint` / `idempotentHint` are advisory.
-6. **Per-tool input limits beyond the global `WYREUP_MAX_INPUT_BYTES`** — PDF/image/audio/video tools rely on their underlying libraries' built-in limits today. Per-tool metadata (max dimensions, max duration, max page count) is a future hardening pass.
-7. **Model artifact integrity verification** — `worker-models` proxies HuggingFace and pinned-prefix CDN assets but does not verify hashes. Manifest-based pinning is a future hardening pass.
+1. **Raw socket egress** — the fetch egress lock does not intercept `node:http`, `node:https`, `node:net`, `node:dgram`, or native-extension sockets. A compromised dependency that uses raw sockets can still exfiltrate.
+2. **Subprocesses spawned by tools** — not sandboxed.
+3. **DNS-channel exfiltration** — allowed origin still resolves DNS; a compromised dependency could encode data in DNS queries.
+4. **MCP clients that ignore capability annotations** — `openWorldHint` / `idempotentHint` are advisory.
+5. **Image-dimension budgets** — PDF page-count and audio/video duration budgets ship in `@wyreup/core`. Image-dimension budgets are not declared per-tool yet; sharp/jsquash enforce internal limits, and `WYREUP_MAX_INPUT_BYTES` caps total bytes.
+6. **Model artifact integrity for large weights** — `worker-models` ships a SHA-256 manifest (loose mode by default) but the buffered hash check skips assets over ~100 MB to fit within the worker's 128 MB memory budget. m2m100 (~1 GB) is the main affected model. Streaming SHA via `crypto.DigestStream` is the right follow-up.
 
 ## Dependency hygiene
 
