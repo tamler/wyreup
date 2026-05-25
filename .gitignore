@@ -17,6 +17,10 @@ coverage/
 # Superpowers brainstorm session artifacts
 .superpowers/
 
+# Per-tool local caches (Claude Code, Serena)
+.claude/
+.serena/
+
 # Tesseract language data (downloaded at runtime)
 *.traineddata
 
