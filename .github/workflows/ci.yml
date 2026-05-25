@@ -40,6 +40,10 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # MCP worker tests fork dist/worker.js — build first so that artifact
+      # exists. Without this, `runInWorker` fails to spawn and every worker-
+      # dispatched test reports "Tool worker crashed (exit=1, signal=null)".
+      - run: pnpm build
       - run: pnpm test
 
   gdal-node-integration:

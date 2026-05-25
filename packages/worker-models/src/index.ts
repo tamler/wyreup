@@ -93,7 +93,7 @@ function routeRequest(key: string): RouteMatch | null {
   // multiply R2 storage by requesting every historical commit of an
   // allowed model. transformers.js requests `main` by default.
   const hf = key.match(/^([^/]+\/[^/]+)\/resolve\/main\/.+$/);
-  if (hf && ALLOWED_HF_MODELS.has(hf[1]!)) {
+  if (hf && hf[1] !== undefined && ALLOWED_HF_MODELS.has(hf[1])) {
     return { upstreamUrl: `https://huggingface.co/${key}` };
   }
   for (const entry of ALLOWED_PREFIXES) {

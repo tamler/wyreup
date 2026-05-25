@@ -5,7 +5,7 @@ import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
 import { json } from '../../_lib/auth';
 
-export const onRequestPost: PagesFunction<Env> = async () => {
+export const onRequestPost: PagesFunction<Env> = () => {
   return json(
     { ok: true },
     200,

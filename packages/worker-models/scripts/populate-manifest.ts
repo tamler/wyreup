@@ -103,7 +103,7 @@ async function main(): Promise<void> {
   process.stdout.write('// MANIFEST entries:\n');
 
   for (const model of ALLOWED_HF_MODELS) {
-    const files = HF_FILES_PER_MODEL[model] ?? HF_FILES_PER_MODEL['default']!;
+    const files = HF_FILES_PER_MODEL[model] ?? HF_FILES_PER_MODEL['default'] ?? [];
     process.stdout.write(`\n  // ${model}\n`);
     for (const file of files) {
       const key = `${model}/resolve/main/${file}`;

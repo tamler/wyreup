@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { __readImageBytes, runPro } from './runners';
+import type { Env } from './env';
 
 // A 1x1 PNG, base64.
 const TINY_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 function aiEnv(result: unknown) {
-  return { AI: { run: vi.fn().mockResolvedValue(result) } } as unknown as import('./env').Env;
+  return { AI: { run: vi.fn().mockResolvedValue(result) } } as unknown as Env;
 }
 
 describe('ocr-hq runner', () => {
@@ -94,7 +95,7 @@ describe('translate-image runner', () => {
       .fn()
       .mockResolvedValueOnce({ response: 'Hola mundo' })
       .mockResolvedValueOnce({ response: 'Hello world' });
-    const env = { AI: { run } } as unknown as import('./env').Env;
+    const env = { AI: { run } } as unknown as Env;
     const out = (await runPro(
       'translate-image',
       { imageBase64: TINY_PNG, target: 'English' },
@@ -113,7 +114,7 @@ describe('transcribe-and-translate runner', () => {
       .fn()
       .mockResolvedValueOnce({ text: 'Bonjour le monde' }) // whisper
       .mockResolvedValueOnce({ response: 'Hello world' }); // translate
-    const env = { AI: { run } } as unknown as import('./env').Env;
+    const env = { AI: { run } } as unknown as Env;
     // 'QUJD' = base64 of "ABC" — any non-empty payload works; AI.run is mocked.
     const out = (await runPro(
       'transcribe-and-translate',

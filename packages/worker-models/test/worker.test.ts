@@ -9,21 +9,24 @@ function makeBucket(opts: {
 } = {}): R2Bucket {
   const hits = opts.hits ?? new Map();
   const puts = opts.puts ?? [];
+  // R2Bucket methods return Promises; the eslint require-await rule wants
+  // either `async` + `await` OR a non-async function returning Promise.resolve().
+  // These mocks don't actually await anything, so use the latter form.
   return {
-    async get(key: string) { return hits.get(key) ?? null; },
-    async put(key: string, _value: unknown) { puts.push(key); return undefined; },
-    async head() { return null; },
-    async list() { return { objects: [], delimitedPrefixes: [], truncated: false }; },
-    async delete() { return undefined; },
-    async createMultipartUpload() { throw new Error('unused'); },
-    async resumeMultipartUpload() { throw new Error('unused'); },
+    get: (key: string) => Promise.resolve(hits.get(key) ?? null),
+    put: (key: string, _value: unknown) => { puts.push(key); return Promise.resolve(undefined); },
+    head: () => Promise.resolve(null),
+    list: () => Promise.resolve({ objects: [], delimitedPrefixes: [], truncated: false }),
+    delete: () => Promise.resolve(undefined),
+    createMultipartUpload: () => Promise.reject(new Error('unused')),
+    resumeMultipartUpload: () => Promise.reject(new Error('unused')),
   } as unknown as R2Bucket;
 }
 
 function makeCtx(): ExecutionContext {
   return {
-    waitUntil: (_p: Promise<unknown>) => {},
-    passThroughOnException: () => {},
+    waitUntil: (_p: Promise<unknown>): void => {},
+    passThroughOnException: (): void => {},
   } as ExecutionContext;
 }
 
@@ -67,7 +70,7 @@ describe('worker-models security', () => {
 
   it('rejects an upstream Content-Length above MAX_OBJECT_SIZE with 413', async () => {
     // Stub global fetch to return a giant declared content-length.
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('x', { headers: { 'Content-Length': String(10 * 1024 * 1024 * 1024), 'Content-Type': 'application/octet-stream' } })));
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('x', { headers: { 'Content-Length': String(10 * 1024 * 1024 * 1024), 'Content-Type': 'application/octet-stream' } }))));
     const res = await worker.fetch(new Request('https://x/Xenova/whisper-tiny/resolve/main/model.bin'), { MODELS: makeBucket() } as never, makeCtx());
     expect(res.status).toBe(413);
   });
@@ -99,23 +102,23 @@ describe('manifest verification integration', () => {
     const puts: string[] = [];
     let putsValue: unknown;
     const bucket: R2Bucket = {
-      async get() { return null; },
-      async put(key: string, value: unknown) { puts.push(key); putsValue = value; return undefined; },
-      async head() { return null; },
-      async list() { return { objects: [], delimitedPrefixes: [], truncated: false }; },
-      async delete() { return undefined; },
-      async createMultipartUpload() { throw new Error('unused'); },
-      async resumeMultipartUpload() { throw new Error('unused'); },
+      get: () => Promise.resolve(null),
+      put: (key: string, value: unknown) => { puts.push(key); putsValue = value; return Promise.resolve(undefined); },
+      head: () => Promise.resolve(null),
+      list: () => Promise.resolve({ objects: [], delimitedPrefixes: [], truncated: false }),
+      delete: () => Promise.resolve(undefined),
+      createMultipartUpload: () => Promise.reject(new Error('unused')),
+      resumeMultipartUpload: () => Promise.reject(new Error('unused')),
     } as unknown as R2Bucket;
 
     const waitUntilPromises: Promise<unknown>[] = [];
     const ctx: ExecutionContext = {
-      waitUntil: (p: Promise<unknown>) => { waitUntilPromises.push(p); },
-      passThroughOnException: () => {},
+      waitUntil: (p: Promise<unknown>): void => { waitUntilPromises.push(p); },
+      passThroughOnException: (): void => {},
     } as ExecutionContext;
 
-    vi.stubGlobal('fetch', vi.fn(async () =>
-      new Response(body, { headers: { 'Content-Type': 'text/plain' } }),
+    vi.stubGlobal('fetch', vi.fn(() =>
+      Promise.resolve(new Response(body, { headers: { 'Content-Type': 'text/plain' } })),
     ));
 
     const res = await worker.fetch(
