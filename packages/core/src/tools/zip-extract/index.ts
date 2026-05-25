@@ -1,5 +1,42 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { sanitizeZipEntryName, assertEntryBudget, MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
+import { sanitizeZipEntryName, assertEntryBudget, assertDeclaredSizeBudget, MAX_ZIP_ENTRIES, MAX_ZIP_UNCOMPRESSED_BYTES, ZipSafetyError } from '../../lib/zip-safety.js';
+
+// JSZip's internalStream is a runtime method not exposed in the public TypeScript
+// types. We cast through unknown to access it; the JSZipStreamHelper shape is
+// public and documented in JSZip's type definitions.
+type JSZipStreamHelper = JSZip.JSZipStreamHelper<Uint8Array>;
+import type JSZip from 'jszip';
+
+/** Decompress a JSZip entry via the streaming API so we can enforce a
+ *  per-entry byte budget mid-flight rather than loading the entire
+ *  decompressed content into memory first (belt-and-suspenders vs the
+ *  pre-flight declared-size check). */
+async function streamingExtract(
+  entry: { internalStream: (type: string) => JSZipStreamHelper },
+  maxBytes: number,
+): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    const stream = entry.internalStream('uint8array');
+    stream.on('data', (chunk: Uint8Array) => {
+      total += chunk.byteLength;
+      if (total > maxBytes) {
+        reject(new ZipSafetyError('uncompressed-too-large', `ZIP entry exceeds ${maxBytes} bytes during decompression (zip-bomb defense).`));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    stream.on('error', (err: Error) => reject(err));
+    stream.on('end', () => {
+      const merged = new Uint8Array(total);
+      let off = 0;
+      for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+      resolve(merged);
+    });
+    stream.resume();
+  });
+}
 
 export interface ZipExtractParams {
   filter?: string;
@@ -73,6 +110,13 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
       throw new Error('No files found in the archive matching the filter.');
     }
 
+    // Pre-flight: sum declared uncompressed sizes from the ZIP directory before
+    // decompressing anything. JSZip stores this on the private _data property
+    // (documented in the type definitions' commented-out CompressedObject).
+    assertDeclaredSizeBudget(entries.map((e) => ({
+      uncompressedSize: (e as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
+    })));
+
     let accumulated = 0;
     const blobs: Blob[] = [];
     for (let i = 0; i < entries.length; i++) {
@@ -84,7 +128,13 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
         percent: 20 + Math.floor((i / entries.length) * 70),
         message: `Extracting ${safeName}`,
       });
-      const content = await entry.async('uint8array');
+      // Use streaming extraction so the per-entry budget check fires mid-stream
+      // (belt-and-suspenders against archives that lie about declared sizes).
+      const remainingBudget = MAX_ZIP_UNCOMPRESSED_BYTES - accumulated;
+      const content = await streamingExtract(
+        entry as unknown as { internalStream: (type: string) => JSZipStreamHelper },
+        remainingBudget,
+      );
       accumulated += content.byteLength;
       assertEntryBudget(i + 1, accumulated);
       blobs.push(new File([content.buffer as ArrayBuffer], safeName, { type: 'application/octet-stream' }));

@@ -45,6 +45,27 @@ export function sanitizeZipEntryName(rawName: string): string {
   return safe.join('/');
 }
 
+/** Pre-decompress check: walks the zip's directory and sums declared
+ *  uncompressed sizes. Fails the entire archive BEFORE any decompression
+ *  if the declared total exceeds MAX_ZIP_UNCOMPRESSED_BYTES.
+ *
+ *  Note: declared sizes are attacker-controlled — a malicious archive
+ *  could declare 1 MB and actually emit 5 GB on decompress. So this is
+ *  the FAST path. Per-entry streaming budget check (streamingExtract)
+ *  is the BELT-AND-SUSPENDERS verification. */
+export function assertDeclaredSizeBudget(entries: Array<{ uncompressedSize?: number }>): void {
+  let declaredTotal = 0;
+  for (const e of entries) {
+    declaredTotal += e.uncompressedSize ?? 0;
+    if (declaredTotal > MAX_ZIP_UNCOMPRESSED_BYTES) {
+      throw new ZipSafetyError(
+        'uncompressed-too-large',
+        `ZIP declares > ${MAX_ZIP_UNCOMPRESSED_BYTES} bytes total uncompressed (zip-bomb defense).`,
+      );
+    }
+  }
+}
+
 /** Enforce zip-level limits before/while extracting. Use as the gate
  *  that drives the extract loop. */
 export function assertEntryBudget(processedCount: number, accumulatedBytes: number): void {

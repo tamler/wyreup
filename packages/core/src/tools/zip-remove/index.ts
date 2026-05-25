@@ -1,6 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { shouldInclude } from '../zip-extract/index.js';
-import { MAX_ZIP_ENTRIES, ZipSafetyError } from '../../lib/zip-safety.js';
+import { MAX_ZIP_ENTRIES, ZipSafetyError, assertDeclaredSizeBudget } from '../../lib/zip-safety.js';
 
 export interface ZipRemoveParams {
   /**
@@ -79,6 +79,13 @@ export const zipRemove: ToolModule<ZipRemoveParams> = {
     if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
       throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
     }
+
+    // Pre-flight declared-size check: zip-remove doesn't decompress payloads,
+    // but run the check so any unintended JSZip decompress during directory
+    // parsing can't blow the heap.
+    assertDeclaredSizeBudget(Object.values(zip.files).filter((f) => !f.dir).map((f) => ({
+      uncompressedSize: (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
+    })));
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
