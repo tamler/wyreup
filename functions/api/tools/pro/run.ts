@@ -10,6 +10,7 @@ import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
 import { getBalance, json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
 import { nanoid } from '../../../_lib/crypto';
+import { enforceLimits } from '../../../_lib/limits';
 import { priceFor } from '../../../_lib/pricing';
 import { runPro } from '../../../_lib/runners';
 
@@ -43,6 +44,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const creditCost = priceFor(toolId);
   if (creditCost == null) return json({ error: 'Not a PRO tool' }, 400);
+
+  // 0. Cost-control guards: emergency kill switch + account-wide daily
+  //    spend cap (see functions/_lib/limits.ts). Runs before the orphan
+  //    sweep and rate limit so a tripped switch / blown cap costs us at
+  //    most one or two D1 reads, no model dispatch.
+  const limitResp = await enforceLimits(env, user, creditCost);
+  if (limitResp) return limitResp;
 
   // 0a. Sweep orphan spend rows from prior mid-handler crashes. A `spend`
   // row with no matching run_history (success) and no matching refund

@@ -39,9 +39,26 @@
     email: string;
   }
 
+  interface LimitsResponse {
+    settings: {
+      daily_spend_cap_credits: number;
+      system_disabled: number;
+    };
+    defaults: {
+      daily_spend_cap_credits: number;
+      system_disabled: number;
+    };
+    todaySpend: number;
+  }
+
   let stats: Stats | null = null;
   let accounts: AccountRow[] = [];
   let runs: RunRow[] = [];
+  let limits: LimitsResponse | null = null;
+  let capDraft = 0;
+  let capBusy = false;
+  let killBusy = false;
+  let limitsError = '';
   let loading = true;
   let forbidden = false;
   let error = '';
@@ -60,13 +77,14 @@
     loading = true;
     error = '';
     try {
-      const [s, u, r] = await Promise.all([
+      const [s, u, r, l] = await Promise.all([
         fetch('/api/admin/stats', { credentials: 'same-origin' }),
         fetch(
           `/api/admin/users?limit=50${searchQ ? `&q=${encodeURIComponent(searchQ)}` : ''}`,
           { credentials: 'same-origin' },
         ),
         fetch('/api/admin/runs?limit=30', { credentials: 'same-origin' }),
+        fetch('/api/admin/limits', { credentials: 'same-origin' }),
       ]);
       if (s.status === 403) {
         forbidden = true;
@@ -79,11 +97,94 @@
       stats = (await s.json()) as Stats;
       accounts = ((await u.json()) as { users: AccountRow[] }).users;
       runs = ((await r.json()) as { runs: RunRow[] }).runs;
+      if (l.ok) {
+        limits = (await l.json()) as LimitsResponse;
+        capDraft = limits.settings.daily_spend_cap_credits;
+      }
     } catch (e) {
       error = String(e);
     } finally {
       loading = false;
     }
+  }
+
+  async function toggleKillSwitch() {
+    if (!limits) return;
+    const next = limits.settings.system_disabled === 1 ? 0 : 1;
+    const verb = next === 1 ? 'DISABLE' : 'ENABLE';
+    if (
+      !confirm(
+        `${verb} the Pro API for all users?\n\nDisabling refuses every Pro run with a 503 until you re-enable. Existing balances are unaffected.`,
+      )
+    ) {
+      return;
+    }
+    killBusy = true;
+    limitsError = '';
+    try {
+      const res = await fetch('/api/admin/limits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ system_disabled: next }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        limitsError = data.error || `Toggle failed (${res.status})`;
+        return;
+      }
+      await fetchAll();
+    } finally {
+      killBusy = false;
+    }
+  }
+
+  async function submitCap() {
+    if (!limits) return;
+    limitsError = '';
+    const next = Math.trunc(capDraft);
+    if (!Number.isFinite(next) || next < 0) {
+      limitsError = 'Cap must be a non-negative integer (0 disables the layer).';
+      return;
+    }
+    const current = limits.settings.daily_spend_cap_credits;
+    if (next === current) return;
+    // Raising by more than 2× is rare enough that a typo is more likely than intent.
+    if (current > 0 && next > current * 2) {
+      const ok = confirm(
+        `Raising the daily account cap from ${current} to ${next} credits (more than 2×).\n\nThis loosens the platform's main spend defense. Continue?`,
+      );
+      if (!ok) return;
+    }
+    // Lowering to 0 disables the cap entirely.
+    if (next === 0 && current > 0) {
+      const ok = confirm(
+        `Setting the daily cap to 0 DISABLES the layer.\n\nOnly the kill switch and per-call timeouts remain. Continue?`,
+      );
+      if (!ok) return;
+    }
+    capBusy = true;
+    try {
+      const res = await fetch('/api/admin/limits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ daily_spend_cap_credits: next }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        limitsError = data.error || `Save failed (${res.status})`;
+        return;
+      }
+      await fetchAll();
+    } finally {
+      capBusy = false;
+    }
+  }
+
+  function capPct(spend: number, cap: number): string {
+    if (cap <= 0) return '—';
+    return `${Math.min(100, (spend / cap) * 100).toFixed(1)}%`;
   }
 
   function onSearch() {
@@ -187,6 +288,84 @@
 {:else if error}
   <p class="error">{error}</p>
 {:else if stats}
+  {#if limits}
+    <section class="card kill" class:kill--off={limits.settings.system_disabled === 1}>
+      <div class="kill__head">
+        <div>
+          <h3>Cost controls</h3>
+          <p class="muted">
+            {#if limits.settings.system_disabled === 1}
+              <strong>Pro API is DISABLED.</strong> Every run returns 503.
+            {:else}
+              Pro API is enabled. Daily cap and per-call timeouts active.
+            {/if}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="kill__btn"
+          class:kill__btn--enable={limits.settings.system_disabled === 1}
+          on:click={toggleKillSwitch}
+          disabled={killBusy}
+        >
+          {#if killBusy}
+            Working…
+          {:else if limits.settings.system_disabled === 1}
+            Re-enable Pro API
+          {:else}
+            Emergency disable
+          {/if}
+        </button>
+      </div>
+
+      <div class="kill__grid">
+        <div class="kill__metric">
+          <div class="kill__label">Today's account-wide spend</div>
+          <div class="kill__num">{limits.todaySpend}</div>
+          <div class="kill__sub">
+            of {limits.settings.daily_spend_cap_credits || '∞'} credits
+            ({capPct(limits.todaySpend, limits.settings.daily_spend_cap_credits)})
+          </div>
+        </div>
+
+        <form class="kill__edit" on:submit|preventDefault={submitCap}>
+          <label>
+            Daily account cap (credits — 0 disables)
+            <input
+              type="number"
+              bind:value={capDraft}
+              step="100"
+              min="0"
+              max="10000000"
+              disabled={capBusy}
+            />
+          </label>
+          <button
+            type="submit"
+            class="ghost"
+            disabled={capBusy || capDraft === limits.settings.daily_spend_cap_credits}
+          >
+            {capBusy ? 'Saving…' : 'Save'}
+          </button>
+        </form>
+      </div>
+
+      {#if limits.todaySpend > 0 && limits.settings.daily_spend_cap_credits > 0}
+        <div class="kill__bar">
+          <div
+            class="kill__bar-fill"
+            class:kill__bar-fill--warn={limits.todaySpend / limits.settings.daily_spend_cap_credits >= 0.8}
+            style="width: {Math.min(100, (limits.todaySpend / limits.settings.daily_spend_cap_credits) * 100)}%"
+          ></div>
+        </div>
+      {/if}
+
+      {#if limitsError}
+        <p class="error">{limitsError}</p>
+      {/if}
+    </section>
+  {/if}
+
   <section class="metrics">
     <div class="metric">
       <div class="metric__label">Users</div>
@@ -545,6 +724,131 @@
   .primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .kill {
+    border-left: 3px solid var(--accent);
+  }
+  .kill--off {
+    border-left-color: #c33;
+    background: color-mix(in srgb, var(--bg-elevated) 92%, #c33 8%);
+  }
+  .kill__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+  }
+  .kill__head h3 {
+    margin: 0 0 var(--space-1);
+  }
+  .kill__head p {
+    margin: 0;
+  }
+  .kill__btn {
+    background: #c33;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .kill__btn:hover:not(:disabled) {
+    background: #d44;
+  }
+  .kill__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .kill__btn--enable {
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+  }
+  .kill__btn--enable:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .kill__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    align-items: end;
+  }
+  @media (max-width: 700px) {
+    .kill__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .kill__metric {
+    padding: var(--space-3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .kill__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--space-2);
+  }
+  .kill__num {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .kill__sub {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    margin-top: var(--space-2);
+  }
+  .kill__edit {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+  .kill__edit label {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .kill__edit input {
+    width: 100%;
+    height: 34px;
+    margin-top: 4px;
+    padding: 0 var(--space-3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .kill__bar {
+    margin-top: var(--space-3);
+    height: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .kill__bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+  .kill__bar-fill--warn {
+    background: #c33;
   }
 
   .modal {
