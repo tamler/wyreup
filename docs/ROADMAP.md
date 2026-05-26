@@ -626,6 +626,34 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
 ## Later (one-liners, no priority order)
 
 - Multi-user / team surface (Pro tier add-on)
+- **Hosted HTTP API (Pro-only doorway, added 2026-05-26).** Additional
+  surface alongside web/CLI/MCP. Caller hits
+  `api.wyreup.com/v1/tools/:id` with a bearer token (existing Pro API
+  key, same account, same balance — no separate plan or metering) and
+  gets a JSON response. No local install, no MCP subprocess; sells the
+  convenience axis: *skip running anything locally.*
+
+  Free MCP stays free — gating is on the doorway, not the tool. Even
+  a "free" tool consumes Cloudflare Worker CPU when wyreup hosts the
+  call, so via API it carries a small per-call cost. Margin floor is
+  unchanged: `price = 2 × (request + CPU-ms + upstream + storage ops)`,
+  no subsidies.
+
+  **Open before scoping:** flat-per-tool vs input-tiered pricing. Heavy
+  inputs (10k-feature geo, 4096px images) shift p95 CPU 10×+; tiered
+  keeps margin tight, flat is simpler. Decide after the measurement
+  pass.
+
+  **Measurement plan (drafted in conversation 2026-05-26):** enable
+  `[observability]` on a staging Worker route, load-script 200 warm +
+  300 cold calls per (tool, input-class) cell, pull p50/p95 CPU-ms
+  from the Workers dashboard, compute `price = 2 × cost_p95`. Top 5
+  free + top 3 Pro tools first; rest after.
+
+  **Resume signal:** unprompted user pull from a dev or agent-framework
+  operator wanting wyreup tools without an MCP client — at least one
+  concrete "I would pay for this" message. "Could be useful" doesn't
+  count.
 - Translated CLI/MCP `skill.md` (Spanish, Japanese, etc.)
 - Richer `wyreup init-tool` (param schema generation, component stubs,
   test templates)
