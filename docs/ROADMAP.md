@@ -587,6 +587,37 @@ Ordered by priority.
    540×720 narrow + 1280×720 wide, both PNG. Capture during the next
    designer pass, drop into `packages/web/public/screenshots/` and add
    the entries to `astro.config.mjs` manifest.
+8. **LemonSqueezy webhook: handle the events we left as no-ops.** Wave M
+   wired the seven events the credit ledger actually needs (`order_created`,
+   `order_refunded`, `subscription_created`, `subscription_payment_success`,
+   `subscription_cancelled`, `subscription_expired`, `subscription_paused`).
+   The LS dashboard is enabled for several more; the handler returns 200
+   OK on each, which is safe but leaves one real gap and a couple of
+   cosmetic ones.
+
+   - **`subscription_payment_refunded` (revenue leak — priority).** If a
+     user refunds a monthly renewal, the 440 credits granted on the prior
+     `subscription_payment_success` stay on the account. Bounded today by
+     the account-wide daily spend cap (migration 0004) and reversible via
+     `/admin` grant with a negative amount, but should be automatic.
+     Fix: mirror `order_refunded`, but find the original by
+     `kind='subscription_grant'` and the composite key
+     `sub_{subscription_id}:inv_{invoice_id}`. Insert a `refund` row with
+     `-MONTHLY_CREDITS_PER_CYCLE` and the same idempotency guard.
+   - **`subscription_resumed` / `subscription_unpaused` (cosmetic).**
+     After resume, `users.subscription_status` stays `'paused'` until the
+     next `subscription_payment_success` flips it via the existing CASE
+     guard. Could flip eagerly on resume so `/admin` reflects reality
+     between cycles.
+   - **`subscription_payment_failed` (admin visibility).** No record kept
+     today. A `'past_due'` status flag would surface failing renewals in
+     `/admin` before they roll to `_expired`.
+   - **`dispute_created` / `dispute_resolved` / `customer_updated` /
+     `subscription_plan_changed` / `subscription_payment_recovered`** —
+     no-op stays correct unless `/admin` gains dedicated views.
+
+   Estimated effort: ~1 hour including idempotency tests against
+   `credit_events.refund_of`. Standalone follow-up; not blocking.
 6. **`convert-geo` Node bridge — drop the chdir hack.** `gdal3.js`'s
    Node loader hardcodes `./node_modules/gdal3.js/dist/package/` and
    *concatenates* user-supplied `paths:` onto it, so absolute paths
