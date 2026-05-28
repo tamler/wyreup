@@ -634,8 +634,8 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   convenience axis: *skip running anything locally.*
 
   Free MCP stays free — gating is on the doorway, not the tool. Even
-  a "free" tool consumes Cloudflare Worker CPU when wyreup hosts the
-  call, so via API it carries a small per-call cost. Margin floor is
+  a "free" tool consumes Cloudflare Worker CPU when served from our
+  edge, so via API it carries a small per-call cost. Margin floor is
   unchanged: `price = 2 × (request + CPU-ms + upstream + storage ops)`,
   no subsidies.
 
@@ -651,7 +651,7 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   free + top 3 Pro tools first; rest after.
 
   **Resume signal:** unprompted user pull from a dev or agent-framework
-  operator wanting wyreup tools without an MCP client — at least one
+  operator wanting access without an MCP client — at least one
   concrete "I would pay for this" message. "Could be useful" doesn't
   count.
 - Translated CLI/MCP `skill.md` (Spanish, Japanese, etc.)

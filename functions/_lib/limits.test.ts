@@ -27,33 +27,35 @@ function mockEnv(state: Partial<MockState> = {}): { env: Env; state: MockState }
 
   const prepare = vi.fn((sql: string) => ({
     bind: vi.fn((...args: unknown[]) => ({
-      first: vi.fn(async () => {
+      first: vi.fn(() => {
         if (sql.includes('FROM system_settings') && sql.includes('WHERE key = ?')) {
           const key = String(args[0]);
-          return s.settings[key] != null ? { value: s.settings[key] } : null;
+          return Promise.resolve(
+            s.settings[key] != null ? { value: s.settings[key] } : null,
+          );
         }
         if (sql.includes('total_spend')) {
-          return { total_spend: s.totalSpend };
+          return Promise.resolve({ total_spend: s.totalSpend });
         }
-        return null;
+        return Promise.resolve(null);
       }),
-      all: vi.fn(async () => {
+      all: vi.fn(() => {
         if (sql.includes('FROM system_settings') && sql.includes('WHERE key IN')) {
           const keys = args.map(String);
-          return {
+          return Promise.resolve({
             results: keys
               .filter((k) => s.settings[k] != null)
               .map((k) => ({ key: k, value: s.settings[k] })),
-          };
+          });
         }
-        return { results: [] };
+        return Promise.resolve({ results: [] });
       }),
-      run: vi.fn(async () => {
+      run: vi.fn(() => {
         if (sql.includes('INSERT INTO system_settings')) {
           const [key, value] = args as [string, string];
           s.settings[key] = value;
         }
-        return { meta: { changes: 1 } };
+        return Promise.resolve({ meta: { changes: 1 } });
       }),
     })),
   }));
@@ -152,6 +154,8 @@ describe('enforceLimits', () => {
       settings: { daily_spend_cap_credits: '0' },
     });
     await enforceLimits(env, USER, 3);
+    // env.DB is a mock object; .prepare is a vi.fn() with no `this` to lose.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const prepare = env.DB.prepare as unknown as ReturnType<typeof vi.fn>;
     const calls = prepare.mock.calls.map((c: unknown[]) => String(c[0]));
     expect(calls.every((sql) => sql.includes('system_settings'))).toBe(true);
