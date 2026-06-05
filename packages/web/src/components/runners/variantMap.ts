@@ -252,6 +252,13 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'video-color-correct': 'PreviewRunner',
   'video-speed': 'PreviewRunner',
   'video-to-gif': 'PreviewRunner',
+  'resize-video': 'PreviewRunner',
+  'mute-video': 'PreviewRunner',
+  'rotate-video': 'PreviewRunner',
+  'extract-frame': 'PreviewRunner',
+  'normalize-loudness': 'PreviewRunner',
+  // analyze-loudness — audio/video in → loudness JSON report
+  'analyze-loudness': 'JsonResultRunner',
   'html-to-pdf': 'PreviewRunner',
   'pgp-decrypt': 'PreviewRunner',
   'json-to-excel': 'PreviewRunner',
@@ -261,6 +268,22 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'video-concat': 'VideoConcatRunner',
   'video-crossfade': 'MultiInputRunner',
   'video-overlay-image': 'MultiInputRunner',
+  // replace-audio (video + audio) and video-quality-metrics (reference +
+  // distorted) both take two inputs.
+  'replace-audio': 'MultiInputRunner',
+  'video-quality-metrics': 'MultiInputRunner',
+  'mix-audio': 'MultiInputRunner',
+  'video-side-by-side': 'MultiInputRunner',
+
+  // ffmpeg single-input editors (mime-aware preview)
+  'crop-video': 'PreviewRunner',
+  'reverse-video': 'PreviewRunner',
+  'video-volume': 'PreviewRunner',
+  'loop-video': 'PreviewRunner',
+  'strip-video-metadata': 'PreviewRunner',
+  'fade-video': 'PreviewRunner',
+  'vignette-video': 'PreviewRunner',
+  'letterbox-video': 'PreviewRunner',
 
   // ZIP / archive
   'zip-create': 'MultiInputRunner',

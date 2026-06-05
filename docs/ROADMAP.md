@@ -689,6 +689,37 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
 - Richer `wyreup init-tool` (param schema generation, component stubs,
   test templates)
 - Animated GIF ↔ WebP conversion (ImageDecoder/ImageEncoder API)
+- **VMAF video quality metric (Pro candidate, added 2026-06-04).** The
+  `video-quality-metrics` tool shipped with PSNR + SSIM (built-in
+  libavfilter filters). VMAF is the notable gap: it needs ffmpeg built
+  `--enable-libvmaf` plus Netflix model files, and our CDN
+  `@ffmpeg/core-mt@0.12.6` does not include libvmaf (same class of
+  constraint as a missing external lib — cf. why we hardsub but can't
+  bundle every codec). Two paths:
+  (a) **Client-side** — host a custom `@ffmpeg/core-vmaf` wasm with
+  libvmaf + the `.json` model as a second `installGroup`; bigger binary,
+  stays free-tier.
+  (b) **Pro/server** — VMAF is CPU-heavy; a paid backend makes it a Pro
+  metric per [[feedback_pro_vs_free_pricing]]. Recommended default.
+  Either way, bundle easyVmaf-style preprocessing (deinterlace, scale,
+  framerate adaptation, frame-to-frame sync) ahead of scoring —
+  ungated VMAF on mismatched clips returns garbage. References:
+  github.com/gdavila/easyVmaf, github.com/slhck/ffmpeg-quality-metrics.
+  **Resume signal:** an unprompted user pull for VMAF specifically.
+  Declined alongside: github.com/psy-ex/metrics (SSIMULACRA2 /
+  Butteraugli / CVVDP / XPSNR via GPU FFVship) — research-grade,
+  GPU-bound, off-model for consumer chaining; revisit only with
+  own-GPU-infra ([[project_pro_gpu_catalog]]).
+- **PWA / offline / wake-lock for the ffmpeg tools (added 2026-06-04).**
+  Inspired by github.com/tejaswigowda/ffmpeg-webCLI (GPL-3.0; ideas only,
+  no code reuse). We already fetch ffmpeg-core from CDN via `@ffmpeg/util`,
+  so the natural hook is a service worker that caches the ffmpeg-core
+  wasm (~31 MB) + static assets for offline reuse after first load; add
+  an installable PWA manifest and a Screen Wake Lock during long encodes
+  so mobile devices don't sleep mid-render. This is a `packages/web`
+  platform decision, decoupled from the tools themselves. Note: a Wave-T
+  PWA drop entry already shipped 2026-05-14 (see Now §1) — this extends
+  it to cover the heavy ffmpeg asset specifically.
 - Compose / Scratchpad tool — evaluate after a chainable text-output tool ships
 - **CommonForms — auto-detect form fields in PDFs.** Joe Barrow's
   FFDNet-S/L models (paper arXiv:2509.16506, ~1k stars on

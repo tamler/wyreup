@@ -43,6 +43,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
   name: 'Extract Audio',
   description: 'Strip the audio track from a video file. Outputs MP3, WAV, OGG, or M4A.',
   category: 'media',
+  categories: ['audio'],
   keywords: ['audio', 'extract', 'video', 'strip', 'mp3', 'wav', 'sound', 'rip'],
 
   input: {

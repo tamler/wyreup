@@ -1,16 +1,9 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 
-export interface TrimMediaParams {
-  start: number;
-  end: number;
-  stream_copy?: boolean;
-}
+// Mute has no configurable parameters — it strips the audio stream wholesale.
+export type MuteVideoParams = Record<string, never>;
 
-export const defaultTrimMediaParams: TrimMediaParams = {
-  start: 0,
-  end: 30,
-  stream_copy: false,
-};
+export const defaultMuteVideoParams: MuteVideoParams = {};
 
 function getMimeFromFile(file: File): string {
   return file.type || 'application/octet-stream';
@@ -21,17 +14,31 @@ function getExtFromFile(file: File): string {
   return parts.length > 1 ? (parts[parts.length - 1] ?? 'bin') : 'bin';
 }
 
-export const trimMedia: ToolModule<TrimMediaParams> = {
-  id: 'trim-media',
-  slug: 'trim-media',
-  name: 'Trim Media',
-  description: 'Trim an audio or video file to a specific start and end time (in seconds).',
+/**
+ * Strip the audio stream while stream-copying the video — no re-encode,
+ * so it is near-instant and lossless. `-an` drops audio; `-c copy`
+ * passes the video through untouched.
+ */
+export function buildMuteArgs(inputName: string, outputName: string): string[] {
+  return [
+    '-i', inputName,
+    '-c', 'copy',
+    '-an',
+    outputName,
+  ];
+}
+
+export const muteVideo: ToolModule<MuteVideoParams> = {
+  id: 'mute-video',
+  slug: 'mute-video',
+  name: 'Mute Video',
+  description: 'Remove the audio track from a video. Keeps the original video stream untouched (no re-encode).',
   category: 'media',
   categories: ['audio'],
-  keywords: ['trim', 'cut', 'clip', 'audio', 'video', 'mp3', 'start', 'end', 'duration', 'shorten'],
+  keywords: ['video', 'mute', 'silence', 'remove audio', 'strip audio', 'no sound'],
 
   input: {
-    accept: ['audio/*', 'video/*'],
+    accept: ['video/*'],
     min: 1,
     max: 1,
     sizeLimit: 500 * 1024 * 1024,
@@ -45,17 +52,14 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
 
-  defaults: defaultTrimMediaParams,
+  defaults: defaultMuteVideoParams,
 
   async run(
     inputs: File[],
-    params: TrimMediaParams,
+    _params: MuteVideoParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
-
-    if (params.start < 0) throw new Error('start must be >= 0');
-    if (params.end <= params.start) throw new Error('end must be greater than start');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
     const ff = await getFFmpeg(ctx);
@@ -67,21 +71,9 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
     const inputName = `input.${ext}`;
     const outputName = `output.${ext}`;
 
-    ctx.onProgress({ stage: 'processing', percent: 30, message: 'Trimming' });
+    ctx.onProgress({ stage: 'processing', percent: 30, message: 'Removing audio' });
 
-    const duration = params.end - params.start;
-    const args = [
-      '-ss', String(params.start),
-      '-i', inputName,
-      '-t', String(duration),
-    ];
-
-    if (params.stream_copy) {
-      args.push('-c', 'copy');
-    }
-
-    args.push(outputName);
-
+    const args = buildMuteArgs(inputName, outputName);
     const outputBytes = await runFFmpeg(ff, inputName, inputBytes, outputName, args);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
@@ -91,6 +83,6 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
   __testFixtures: {
     valid: [],
     weird: [],
-    expectedOutputMime: ['audio/mpeg'],
+    expectedOutputMime: ['video/mp4'],
   },
 };
