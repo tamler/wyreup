@@ -27,7 +27,8 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
   name: 'Trim Media',
   description: 'Trim an audio or video file to a specific start and end time (in seconds).',
   category: 'media',
-  keywords: ['trim', 'cut', 'clip', 'audio', 'video', 'start', 'end', 'duration'],
+  categories: ['audio'],
+  keywords: ['trim', 'cut', 'clip', 'audio', 'video', 'mp3', 'start', 'end', 'duration', 'shorten'],
 
   input: {
     accept: ['audio/*', 'video/*'],

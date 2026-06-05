@@ -63,6 +63,7 @@ export const normalizeLoudness: ToolModule<NormalizeLoudnessParams> = {
   name: 'Normalize Loudness',
   description: 'Level audio or video to a broadcast/streaming loudness target (EBU R128, Spotify, Apple Music, and more).',
   category: 'media',
+  categories: ['audio'],
   keywords: ['loudness', 'normalize', 'lufs', 'ebu', 'r128', 'audio', 'video', 'volume', 'loudnorm'],
 
   input: {

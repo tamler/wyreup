@@ -30,7 +30,12 @@ export function createRegistry(tools: ToolModule[]): ToolRegistry {
   const toolsById = new Map(tools.map((t) => [t.id, t]));
 
   function toolsByCategory(category: ToolCategory): ToolModule[] {
-    return tools.filter((t) => t.category === category);
+    // A tool surfaces under its primary `category` plus any secondary
+    // `categories[]` membership (e.g. trim-media is 'media' + 'audio'), so
+    // CLI/MCP category listings match the web catalog's chip filter.
+    return tools.filter(
+      (t) => t.category === category || (t.categories ?? []).includes(category),
+    );
   }
 
   function toolsForFiles(files: File[]): ToolModule[] {

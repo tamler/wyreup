@@ -34,6 +34,7 @@ export const muteVideo: ToolModule<MuteVideoParams> = {
   name: 'Mute Video',
   description: 'Remove the audio track from a video. Keeps the original video stream untouched (no re-encode).',
   category: 'media',
+  categories: ['audio'],
   keywords: ['video', 'mute', 'silence', 'remove audio', 'strip audio', 'no sound'],
 
   input: {

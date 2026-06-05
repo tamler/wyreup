@@ -74,6 +74,7 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
   description: 'Compare two videos and report PSNR and SSIM. Drop the reference (original) first, then the distorted (encoded) version. Returns a JSON report.',
   llmDescription: 'Video Quality Metrics: compute PSNR and SSIM between two videos. inputs[0] = reference/original, inputs[1] = distorted/encoded. The distorted clip is auto-scaled to the reference resolution. Returns JSON. Does not compute VMAF.',
   category: 'media',
+  categories: ['inspect'],
   keywords: ['video', 'quality', 'psnr', 'ssim', 'compare', 'metrics', 'reference', 'encode', 'measure'],
 
   input: {

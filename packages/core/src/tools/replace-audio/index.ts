@@ -51,6 +51,7 @@ export const replaceAudio: ToolModule<ReplaceAudioParams> = {
   name: 'Replace Audio Track',
   description: 'Swap a video\'s audio for a new audio file. Drop in a video and an audio file (any order).',
   category: 'media',
+  categories: ['audio'],
   keywords: ['video', 'audio', 'replace', 'dub', 'soundtrack', 'mux', 'music', 'voiceover'],
 
   input: {

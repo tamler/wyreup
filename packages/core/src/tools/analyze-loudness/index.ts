@@ -46,6 +46,7 @@ export const analyzeLoudness: ToolModule<AnalyzeLoudnessParams> = {
   name: 'Analyze Loudness',
   description: 'Measure a clip\'s integrated loudness (LUFS), loudness range, and true peak (EBU R128). Returns a JSON report.',
   category: 'media',
+  categories: ['audio', 'inspect'],
   keywords: ['loudness', 'analyze', 'measure', 'lufs', 'true peak', 'ebu', 'r128', 'audio', 'meter'],
 
   input: {

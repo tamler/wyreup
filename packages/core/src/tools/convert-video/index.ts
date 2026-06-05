@@ -36,7 +36,8 @@ export const convertVideo: ToolModule<ConvertVideoParams> = {
   name: 'Convert Video',
   description: 'Convert video files between MP4, WebM, MKV, MOV, and AVI formats.',
   category: 'media',
-  keywords: ['video', 'convert', 'mp4', 'webm', 'mkv', 'mov', 'avi', 'format'],
+  categories: ['convert'],
+  keywords: ['video', 'convert', 'mp4', 'webm', 'mkv', 'mov', 'avi', 'format', 'transcode'],
 
   input: {
     accept: ['video/*'],

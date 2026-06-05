@@ -49,7 +49,8 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
   name: 'Convert Audio',
   description: 'Convert audio files between MP3, WAV, OGG, FLAC, AAC, M4A, and Opus formats.',
   category: 'media',
-  keywords: ['audio', 'convert', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'opus', 'format'],
+  categories: ['audio', 'convert'],
+  keywords: ['audio', 'convert', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'opus', 'format', 'mp3 to wav', 'transcode'],
 
   input: {
     accept: ['audio/*'],
