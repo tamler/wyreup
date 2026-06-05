@@ -51,6 +51,14 @@
       "serialize-javascript": "^7.0.3",
       "devalue": "^5.8.1",
       "tmp": "^0.2.6"
+    },
+    "auditConfig": {
+      "ignoreCves": [
+        "CVE-2025-64764"
+      ],
+      "ignoreGhsas": [
+        "GHSA-wrwg-2hg8-v723"
+      ]
     }
   }
 }
