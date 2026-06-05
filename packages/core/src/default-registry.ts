@@ -148,6 +148,14 @@ import { videoSpeed } from './tools/video-speed/index.js';
 import { videoOverlayImage } from './tools/video-overlay-image/index.js';
 import { videoCrossfade } from './tools/video-crossfade/index.js';
 import { videoColorCorrect } from './tools/video-color-correct/index.js';
+import { resizeVideo } from './tools/resize-video/index.js';
+import { muteVideo } from './tools/mute-video/index.js';
+import { rotateVideo } from './tools/rotate-video/index.js';
+import { extractFrame } from './tools/extract-frame/index.js';
+import { replaceAudio } from './tools/replace-audio/index.js';
+import { normalizeLoudness } from './tools/normalize-loudness/index.js';
+import { analyzeLoudness } from './tools/analyze-loudness/index.js';
+import { videoQualityMetrics } from './tools/video-quality-metrics/index.js';
 import { excelToCsv } from './tools/excel-to-csv/index.js';
 import { excelToJson } from './tools/excel-to-json/index.js';
 import { csvToExcel } from './tools/csv-to-excel/index.js';
@@ -402,6 +410,14 @@ export const defaultTools: ToolModule<any>[] = [
   videoOverlayImage,
   videoCrossfade,
   videoColorCorrect,
+  resizeVideo,
+  muteVideo,
+  rotateVideo,
+  extractFrame,
+  replaceAudio,
+  normalizeLoudness,
+  analyzeLoudness,
+  videoQualityMetrics,
   excelToCsv,
   excelToJson,
   csvToExcel,

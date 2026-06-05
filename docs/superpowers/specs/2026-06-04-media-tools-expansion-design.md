@@ -38,7 +38,7 @@ Evaluation of external projects for fit with wyreup's ffmpeg.wasm tool platform:
 
 | # | Tool | Input → Output | Params | Recipe + pure functions |
 |---|---|---|---|---|
-| 6 | `normalize-loudness` | audio or video → `*/*` (preserve container) | `preset`: `ebu-r128\|atsc-a85\|spotify\|apple-music\|youtube\|amazon` (def `spotify`) | Two-pass `loudnorm` (EBU R128). Targets from preset table below. Video: `-c:v copy -af loudnorm=...`; audio: `-af loudnorm=...`. `buildLoudnormArgs(preset)` is pure. |
+| 6 | `normalize-loudness` | audio or video → `*/*` (preserve container) | `preset`: `ebu-r128\|atsc-a85\|spotify\|apple-music\|youtube\|amazon` (def `spotify`) | Single-pass `loudnorm` (EBU R128) for v1 — deterministic, no log round-trip. Targets from preset table below. Video: `-c:v copy -af loudnorm=...`; audio: `-af loudnorm=...`. `buildLoudnormArgs(preset, hasVideo)` is pure. |
 | 7 | `analyze-loudness` | audio or video → `application/json` | none | `-af ebur128 -f null -`; capture ffmpeg log via `ff.on('log', …)`; `parseEbur128Summary(log)` (pure) → `{ integratedLufs, loudnessRange, truePeakDbtp, threshold }`. |
 | 8 | `video-quality-metrics` | **2 inputs** (reference, distorted) → `application/json` | `metrics`: subset of `psnr`, `ssim` (def both) | `inputs[0]`=reference, `inputs[1]`=distorted. `-lavfi "[0:v][1:v]scale2ref...;psnr;ssim"` (distorted auto-scaled to reference). Capture log; `parseQualityMetrics(log)` (pure) → `{ psnr: {...}, ssim: {...} }`. |
 
@@ -53,7 +53,7 @@ Evaluation of external projects for fit with wyreup's ffmpeg.wasm tool platform:
 | `youtube` | −14 | −1.0 |
 | `amazon` | −14 | −2.0 |
 
-`loudnorm` LRA target fixed at 11 (broadcast default); two-pass = measure then apply for accuracy.
+`loudnorm` LRA target fixed at 11 (broadcast default). v1 is single-pass; two-pass (measure then apply) is a future accuracy improvement noted in the tool's code comment.
 
 ## TDD seams (pure functions tested in Node)
 

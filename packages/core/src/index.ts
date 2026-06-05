@@ -214,6 +214,14 @@ export { videoSpeed, type VideoSpeedParams, defaultVideoSpeedParams, buildAtempo
 export { videoOverlayImage, type VideoOverlayImageParams, defaultVideoOverlayImageParams, type OverlayPosition, overlayPositionToXY, buildOverlayFilter } from './tools/video-overlay-image/index.js';
 export { videoCrossfade, type VideoCrossfadeParams, defaultVideoCrossfadeParams, type CrossfadeTransition, parseDurationFromStderr, buildCrossfadeArgs } from './tools/video-crossfade/index.js';
 export { videoColorCorrect, type VideoColorCorrectParams, defaultVideoColorCorrectParams, buildColorCorrectFilter } from './tools/video-color-correct/index.js';
+export { resizeVideo, type ResizeVideoParams, defaultResizeVideoParams, buildScaleFilter, buildResizeArgs } from './tools/resize-video/index.js';
+export { muteVideo, type MuteVideoParams, defaultMuteVideoParams, buildMuteArgs } from './tools/mute-video/index.js';
+export { rotateVideo, type RotateVideoParams, type RotateMode, defaultRotateVideoParams, getRotateFilter, buildRotateArgs } from './tools/rotate-video/index.js';
+export { extractFrame, type ExtractFrameParams, type FrameFormat, defaultExtractFrameParams, getFrameMime, getFrameExt, buildExtractFrameArgs } from './tools/extract-frame/index.js';
+export { replaceAudio, type ReplaceAudioParams, defaultReplaceAudioParams, pickVideoAudio, buildReplaceAudioArgs } from './tools/replace-audio/index.js';
+export { normalizeLoudness, type NormalizeLoudnessParams, type LoudnessPreset, defaultNormalizeLoudnessParams, LOUDNESS_TARGETS, buildLoudnormArgs } from './tools/normalize-loudness/index.js';
+export { analyzeLoudness, type AnalyzeLoudnessParams, type LoudnessReport, defaultAnalyzeLoudnessParams, buildAnalyzeArgs, parseEbur128Summary } from './tools/analyze-loudness/index.js';
+export { videoQualityMetrics, type VideoQualityMetricsParams, type QualityMetric, type QualityReport, defaultVideoQualityMetricsParams, buildQualityArgs, parseQualityMetrics } from './tools/video-quality-metrics/index.js';
 export { excelToCsv, type ExcelToCsvParams } from './tools/excel-to-csv/index.js';
 export { excelToJson, type ExcelToJsonParams } from './tools/excel-to-json/index.js';
 export { csvToExcel, type CsvToExcelParams } from './tools/csv-to-excel/index.js';

@@ -252,6 +252,13 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'video-color-correct': 'PreviewRunner',
   'video-speed': 'PreviewRunner',
   'video-to-gif': 'PreviewRunner',
+  'resize-video': 'PreviewRunner',
+  'mute-video': 'PreviewRunner',
+  'rotate-video': 'PreviewRunner',
+  'extract-frame': 'PreviewRunner',
+  'normalize-loudness': 'PreviewRunner',
+  // analyze-loudness — audio/video in → loudness JSON report
+  'analyze-loudness': 'JsonResultRunner',
   'html-to-pdf': 'PreviewRunner',
   'pgp-decrypt': 'PreviewRunner',
   'json-to-excel': 'PreviewRunner',
@@ -261,6 +268,10 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'video-concat': 'VideoConcatRunner',
   'video-crossfade': 'MultiInputRunner',
   'video-overlay-image': 'MultiInputRunner',
+  // replace-audio (video + audio) and video-quality-metrics (reference +
+  // distorted) both take two inputs.
+  'replace-audio': 'MultiInputRunner',
+  'video-quality-metrics': 'MultiInputRunner',
 
   // ZIP / archive
   'zip-create': 'MultiInputRunner',
