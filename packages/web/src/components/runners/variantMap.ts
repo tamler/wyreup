@@ -272,6 +272,18 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // distorted) both take two inputs.
   'replace-audio': 'MultiInputRunner',
   'video-quality-metrics': 'MultiInputRunner',
+  'mix-audio': 'MultiInputRunner',
+  'video-side-by-side': 'MultiInputRunner',
+
+  // ffmpeg single-input editors (mime-aware preview)
+  'crop-video': 'PreviewRunner',
+  'reverse-video': 'PreviewRunner',
+  'video-volume': 'PreviewRunner',
+  'loop-video': 'PreviewRunner',
+  'strip-video-metadata': 'PreviewRunner',
+  'fade-video': 'PreviewRunner',
+  'vignette-video': 'PreviewRunner',
+  'letterbox-video': 'PreviewRunner',
 
   // ZIP / archive
   'zip-create': 'MultiInputRunner',

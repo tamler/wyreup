@@ -156,6 +156,16 @@ import { replaceAudio } from './tools/replace-audio/index.js';
 import { normalizeLoudness } from './tools/normalize-loudness/index.js';
 import { analyzeLoudness } from './tools/analyze-loudness/index.js';
 import { videoQualityMetrics } from './tools/video-quality-metrics/index.js';
+import { cropVideo } from './tools/crop-video/index.js';
+import { reverseVideo } from './tools/reverse-video/index.js';
+import { videoVolume } from './tools/video-volume/index.js';
+import { loopVideo } from './tools/loop-video/index.js';
+import { stripVideoMetadata } from './tools/strip-video-metadata/index.js';
+import { fadeVideo } from './tools/fade-video/index.js';
+import { vignetteVideo } from './tools/vignette-video/index.js';
+import { letterboxVideo } from './tools/letterbox-video/index.js';
+import { mixAudio } from './tools/mix-audio/index.js';
+import { videoSideBySide } from './tools/video-side-by-side/index.js';
 import { excelToCsv } from './tools/excel-to-csv/index.js';
 import { excelToJson } from './tools/excel-to-json/index.js';
 import { csvToExcel } from './tools/csv-to-excel/index.js';
@@ -418,6 +428,16 @@ export const defaultTools: ToolModule<any>[] = [
   normalizeLoudness,
   analyzeLoudness,
   videoQualityMetrics,
+  cropVideo,
+  reverseVideo,
+  videoVolume,
+  loopVideo,
+  stripVideoMetadata,
+  fadeVideo,
+  vignetteVideo,
+  letterboxVideo,
+  mixAudio,
+  videoSideBySide,
   excelToCsv,
   excelToJson,
   csvToExcel,

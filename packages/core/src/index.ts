@@ -222,6 +222,16 @@ export { replaceAudio, type ReplaceAudioParams, defaultReplaceAudioParams, pickV
 export { normalizeLoudness, type NormalizeLoudnessParams, type LoudnessPreset, defaultNormalizeLoudnessParams, LOUDNESS_TARGETS, buildLoudnormArgs } from './tools/normalize-loudness/index.js';
 export { analyzeLoudness, type AnalyzeLoudnessParams, type LoudnessReport, defaultAnalyzeLoudnessParams, buildAnalyzeArgs, parseEbur128Summary } from './tools/analyze-loudness/index.js';
 export { videoQualityMetrics, type VideoQualityMetricsParams, type QualityMetric, type QualityReport, defaultVideoQualityMetricsParams, buildQualityArgs, parseQualityMetrics } from './tools/video-quality-metrics/index.js';
+export { cropVideo, type CropVideoParams, defaultCropVideoParams, buildCropArgs } from './tools/crop-video/index.js';
+export { reverseVideo, type ReverseVideoParams, defaultReverseVideoParams, buildReverseArgs } from './tools/reverse-video/index.js';
+export { videoVolume, type VideoVolumeParams, defaultVideoVolumeParams, buildVolumeArgs } from './tools/video-volume/index.js';
+export { loopVideo, type LoopVideoParams, defaultLoopVideoParams, buildLoopArgs } from './tools/loop-video/index.js';
+export { stripVideoMetadata, type StripVideoMetadataParams, defaultStripVideoMetadataParams, buildStripMetadataArgs } from './tools/strip-video-metadata/index.js';
+export { fadeVideo, type FadeVideoParams, defaultFadeVideoParams, buildFadeFilters, buildFadeArgs } from './tools/fade-video/index.js';
+export { vignetteVideo, type VignetteVideoParams, defaultVignetteVideoParams, buildVignetteArgs } from './tools/vignette-video/index.js';
+export { letterboxVideo, type LetterboxVideoParams, type LetterboxAspect, defaultLetterboxVideoParams, LETTERBOX_CANVAS, buildLetterboxArgs } from './tools/letterbox-video/index.js';
+export { mixAudio, type MixAudioParams, defaultMixAudioParams, pickVideoAudio as pickMixVideoAudio, buildMixAudioArgs } from './tools/mix-audio/index.js';
+export { videoSideBySide, type VideoSideBySideParams, type StackOrientation, defaultVideoSideBySideParams, buildSideBySideArgs } from './tools/video-side-by-side/index.js';
 export { excelToCsv, type ExcelToCsvParams } from './tools/excel-to-csv/index.js';
 export { excelToJson, type ExcelToJsonParams } from './tools/excel-to-json/index.js';
 export { csvToExcel, type CsvToExcelParams } from './tools/csv-to-excel/index.js';
