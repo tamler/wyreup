@@ -21,6 +21,9 @@ describe('rotate-video — metadata', () => {
   it('output mime is video/mp4', () => expect(rotateVideo.output.mime).toBe('video/mp4'));
   it('installGroup is "ffmpeg"', () => expect(rotateVideo.installGroup).toBe('ffmpeg'));
   it('default mode is 90cw', () => expect(defaultRotateVideoParams.mode).toBe('90cw'));
+  it('guards long inputs with a duration budget', () => {
+    expect(rotateVideo.budget?.maxDuration).toBe(7_200);
+  });
 });
 
 describe('rotate-video — getRotateFilter()', () => {

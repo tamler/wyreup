@@ -22,6 +22,9 @@ describe('resize-video — metadata', () => {
   it('installGroup is "ffmpeg"', () => expect(resizeVideo.installGroup).toBe('ffmpeg'));
   it('cost is "free"', () => expect(resizeVideo.cost).toBe('free'));
   it('defaults crf is 23', () => expect(defaultResizeVideoParams.crf).toBe(23));
+  it('guards long inputs with a duration budget', () => {
+    expect(resizeVideo.budget?.maxDuration).toBe(7_200);
+  });
 });
 
 describe('resize-video — buildScaleFilter()', () => {

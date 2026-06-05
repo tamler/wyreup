@@ -1,4 +1,7 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
+import { assertDurationBudget } from '../../lib/budget.js';
+
+const RESIZE_VIDEO_BUDGET: ToolBudget = { maxDuration: 7_200 };
 
 export interface ResizeVideoParams {
   width?: number;
@@ -66,6 +69,7 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
   memoryEstimate: 'high',
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
+  budget: RESIZE_VIDEO_BUDGET,
 
   defaults: defaultResizeVideoParams,
 
@@ -95,7 +99,7 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
     params: ResizeVideoParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
-    const { getFFmpeg } = await import('../../lib/ffmpeg.js');
+    const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
     const ff = await getFFmpeg(ctx);
@@ -108,6 +112,9 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
 
     const inputBytes = new Uint8Array(await input.arrayBuffer());
     await ff.writeFile(inputName, inputBytes);
+
+    const durationSec = await probeDuration(ff, inputName);
+    if (!isNaN(durationSec)) assertDurationBudget(durationSec, RESIZE_VIDEO_BUDGET);
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Resizing' });
 

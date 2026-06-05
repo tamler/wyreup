@@ -1,4 +1,7 @@
-import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
+import { assertDurationBudget } from '../../lib/budget.js';
+
+const VIDEO_QUALITY_BUDGET: ToolBudget = { maxDuration: 7_200 };
 
 // Compares two videos; no configurable parameters. inputs[0] is the reference
 // (original), inputs[1] the distorted (encoded). Both PSNR and SSIM are computed.
@@ -87,6 +90,7 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
   memoryEstimate: 'high',
   installSize: 30_000_000,
   installGroup: 'ffmpeg',
+  budget: VIDEO_QUALITY_BUDGET,
 
   defaults: defaultVideoQualityMetricsParams,
 
@@ -95,7 +99,7 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
     _params: VideoQualityMetricsParams,
     ctx: ToolRunContext,
   ): Promise<Blob[]> {
-    const { getFFmpeg } = await import('../../lib/ffmpeg.js');
+    const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
     const ff = await getFFmpeg(ctx);
@@ -110,6 +114,9 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
 
     await ff.writeFile(refName, new Uint8Array(await reference.arrayBuffer()));
     await ff.writeFile(distName, new Uint8Array(await distorted.arrayBuffer()));
+
+    const refDuration = await probeDuration(ff, refName);
+    if (!isNaN(refDuration)) assertDurationBudget(refDuration, VIDEO_QUALITY_BUDGET);
 
     let log = '';
     const onLog = (e: { message: string }) => { log += e.message + '\n'; };

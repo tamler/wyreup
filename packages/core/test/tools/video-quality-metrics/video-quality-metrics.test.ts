@@ -24,6 +24,9 @@ describe('video-quality-metrics — metadata', () => {
     expect(videoQualityMetrics.input.accept).toContain('video/*');
   });
   it('output mime is application/json', () => expect(videoQualityMetrics.output.mime).toBe('application/json'));
+  it('guards long inputs with a duration budget', () => {
+    expect(videoQualityMetrics.budget?.maxDuration).toBe(7_200);
+  });
 });
 
 describe('video-quality-metrics — buildQualityArgs()', () => {
