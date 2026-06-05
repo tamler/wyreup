@@ -5,12 +5,16 @@ import ShareToolButton from '../../components/ShareToolButton.svelte';
 import ToolCapabilityBanner from '../../components/ToolCapabilityBanner.svelte';
 import ToolDownloadNotice from '../../components/ToolDownloadNotice.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
+import { SEO_CONTENT } from '../../lib/seo-content';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
   const allTools = Array.from(registry.toolsById.values());
 
   return allTools.map((tool) => {
+    // Inline ToolModule.seoContent wins; otherwise fall back to the
+    // generated catalog backfill keyed by id.
+    const seoContent = tool.seoContent ?? SEO_CONTENT[tool.id];
     // Related tools: same category (exclude self), limit 6
     const sameCategory = allTools
       .filter((t) => t.category === tool.category && t.id !== tool.id)
@@ -32,7 +36,7 @@ export async function getStaticPaths() {
     ].slice(0, 8);
 
     // Resolve any `alsoTry` ids to real tool data so the link panel can render.
-    const alsoTry = (tool.seoContent?.alsoTry ?? [])
+    const alsoTry = (seoContent?.alsoTry ?? [])
       .map((entry) => {
         const t = allTools.find((x) => x.id === entry.id);
         return t ? { id: t.id, name: t.name, category: t.category, description: t.description, why: entry.why } : null;
@@ -72,7 +76,7 @@ export async function getStaticPaths() {
           outputDisplay: (tool as { outputDisplay?: 'mono' | 'prose' }).outputDisplay,
           cost: tool.cost,
           creditCost: tool.creditCost,
-          seoContent: tool.seoContent,
+          seoContent,
         },
         relatedTools,
         alsoTry,
