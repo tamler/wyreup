@@ -6,7 +6,7 @@
   Service-Worker-Allowed: /
   X-Frame-Options: DENY
   Permissions-Policy: interest-cohort=(), browsing-topics=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://assets.lemonsqueezy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://models.wyreup.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://app.lemonsqueezy.com; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://assets.lemonsqueezy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://models.wyreup.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://app.lemonsqueezy.com; form-action 'self'
 
 # The two Cross-Origin-* headers above enable SharedArrayBuffer, which is
 # required by ffmpeg.wasm (multi-threaded WASM) and Transformers.js (some
@@ -40,6 +40,14 @@
 #     ffmpeg.wasm, ONNX Runtime, transformers.js. The non-eval
 #     alternative would require shipping pre-compiled module bytes,
 #     which is incompatible with our model CDN.
+#   - blob: in script-src is REQUIRED by transformers.js v4 / onnxruntime-web,
+#     which bootstrap the ORT wasm backend by creating a Blob of the runtime
+#     .mjs and dynamically import()-ing it (createObjectURL → import(blob:)).
+#     Module imports are governed by script-src, so without blob: the import
+#     is refused with "Failed to fetch dynamically imported module: blob:…"
+#     and ORT reports "no available backend found". (worker-src already has
+#     blob:; the v3→v4 bump moved this load onto the main thread.) Do not
+#     remove without confirming transcribe/ML tools still load in a browser.
 #   - connect-src is intentionally tight: 'self' for /api/* + same-origin
 #     fetches, models.wyreup.com for model/WASM downloads. No third-party
 #     hosts. Model providers (Workers AI, Replicate, ZeptoMail) are all
