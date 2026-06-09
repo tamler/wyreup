@@ -641,6 +641,44 @@ Ordered by priority.
      The VFS still grows unboundedly across a long-lived MCP session;
      no clear-VFS helper exists short of re-init. Live with it until
      it OOMs someone.
+9. **CSP: drop `blob:` + `'unsafe-inline'` from `script-src`.** From the
+   2026-06-09 security review. The web CSP (`packages/web/public/_headers`)
+   keeps both `blob:` and `'unsafe-inline'` in `script-src`; together they
+   let an inline-script foothold escalate to a full module via
+   `new Blob([js]) → createObjectURL → import(blobUrl)`. Severity dropped
+   sharply once the review closed the two critical XSS sinks that made it
+   reachable (html-to-pdf iframe sandbox, markdown-to-html sanitization,
+   both shipped), so this is now defense-in-depth with no live entry point.
+   It is a two-part fix and `blob:`-removal alone is only half of it:
+   - **Remove `blob:`** requires moving ONNX Runtime off the main thread.
+     Today `@wyreup/core` loads transformers.js/ORT on the main thread
+     (`lib/transformers.ts`, `tools/audio-enhance/index.ts`), and ORT
+     bootstraps its wasm backend via `import(blob:)`, which `script-src`
+     governs. Set `ort.env.wasm.proxy = true` (or run inference in a
+     dedicated worker) so the blob import moves to `worker-src` (already
+     allows `blob:`). Independently valuable as a perf win — keeps heavy
+     inference off the UI thread. Verify by loading a transformers.js tool
+     (e.g. `/tools/audio-enhance`, an OCR/embedding tool) in a real browser
+     and confirming no `script-src` / "no available backend found" errors.
+   - **Remove `'unsafe-inline'`** is the bigger win but needs a Cloudflare
+     Pages Function doing per-response nonce injection — a static cached
+     build can't carry per-visitor nonces, and hashing is intractable (~1049
+     distinct inline-script hashes, 782 of them per-page JSON-LD that change
+     on any content edit). Treat the two together as one deliberate "CSP
+     hardening" project; not urgent.
+10. **Release publish doesn't auto-fire after the changesets version PR.**
+    Hit on 2026-06-09. `.github/workflows/release.yml` triggers only on
+    `push: branches: [main]`. The version PR is auto-merged by the Actions
+    bot's `GITHUB_TOKEN`, and GitHub deliberately suppresses workflow runs
+    on bot-token pushes — so the merge commit fires *no* Release run, the
+    `changeset publish` step never executes, and `main` sits ahead of npm
+    until something else pushes. Worked around by pushing an empty commit to
+    re-fire Release (it then publishes since no changesets remain). To make
+    releases hands-off, decouple publish from the bot merge: add a
+    `workflow_dispatch` trigger to Release (so `gh workflow run Release` can
+    publish on demand), or split publishing into its own job/workflow that
+    runs on the version-packages merge via a PAT/app token rather than
+    `GITHUB_TOKEN`. ~30 min; removes a recurring manual step every release.
 
 ### Recurring: Truth-in-advertising audit
 
