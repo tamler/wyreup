@@ -47,6 +47,30 @@ function resolveMaxBytes(): number {
   return Math.floor(n);
 }
 
+// ──── Chain intermediate size cap [spec §#5] ──────────────────────────────────
+//
+// Chains run in-process (no per-step fork), so an intermediate Blob that
+// balloons between steps lives entirely in this process's heap and can OOM the
+// MCP server. Cap each step's output, and the running total across steps, so an
+// unbounded intermediate aborts the chain rather than feeding the next step.
+// Defaults match the 500 MB input ceiling (resolveMaxBytes) so chain limits are
+// not looser than the single-tool limit; the cumulative cap is 2x that. Both
+// derive from the per-step value so a single WYREUP_MAX_INPUT_BYTES override
+// scales them together.
+const DEFAULT_CHAIN_STEP_OUTPUT_BYTES = 500 * 1024 * 1024;
+
+function resolveChainStepCap(): number {
+  const raw = process.env['WYREUP_MAX_INPUT_BYTES'];
+  if (!raw) return DEFAULT_CHAIN_STEP_OUTPUT_BYTES;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_CHAIN_STEP_OUTPUT_BYTES;
+  return Math.floor(n);
+}
+
+export function totalBlobBytes(blobs: Blob[]): number {
+  return blobs.reduce((sum, b) => sum + b.size, 0);
+}
+
 // ──── MIME helpers ────────────────────────────────────────────────────────────
 
 const EXT_TO_MIME: Record<string, string> = {
@@ -433,8 +457,9 @@ export async function createWyreupMcpServer(): Promise<Server> {
     if (name === 'wyreup_chain') {
       // CHAIN STAYS IN-PROCESS: chains orchestrate Blob handoffs between steps
       // (intermediates never touch disk). Round-tripping each intermediate through
-      // child_process.fork would double the cost of every chain. The intermediate
-      // size-cap defense for chains is deferred to a future task — see plan.md.
+      // child_process.fork would double the cost of every chain. Because the
+      // intermediates live in this process's heap, each step's output (and the
+      // cumulative total) is size-capped below to prevent a memory DoS.
       const rawArgs = args ?? {};
       const stepsStr = rawArgs['steps'] as string | undefined;
       const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
@@ -494,21 +519,51 @@ export async function createWyreupMcpServer(): Promise<Server> {
           );
         }
 
-        let chainResult: Blob[] | Blob;
+        // Run the chain a step at a time so we can cap each intermediate
+        // Blob (and the cumulative size) before it feeds the next step. Each
+        // single-step runChain() call reuses core's per-step type-compat and
+        // tool.run logic; we only add the size gate between steps.
+        const ctx = {
+          onProgress: () => {},
+          signal: makeTimeoutSignal(effectiveTimeout),
+          cache: new Map<string, unknown>(),
+          executionId: randomUUID(),
+          apiKey: proApiKey,
+          proOrigin,
+        };
+        const stepCap = resolveChainStepCap();
+        const totalCap = stepCap * 2; // cumulative ceiling across all steps
+        let stepInputs: File[] = inputFiles;
+        let stepOutputs: Blob[] = inputFiles;
+        let cumulativeBytes = 0;
         try {
-          chainResult = await runChain(
-            chain,
-            inputFiles,
-            {
-              onProgress: () => {},
-              signal: makeTimeoutSignal(effectiveTimeout),
-              cache: new Map(),
-              executionId: randomUUID(),
-              apiKey: proApiKey,
-              proOrigin,
-            },
-            registry,
-          );
+          for (let i = 0; i < chain.length; i++) {
+            stepOutputs = await runChain([chain[i]!], stepInputs, ctx, registry);
+
+            const stepBytes = totalBlobBytes(stepOutputs);
+            if (stepBytes > stepCap) {
+              return errorResult(
+                `wyreup_chain: step ${i + 1} (${chain[i]!.toolId}) produced ` +
+                  `${(stepBytes / 1024 / 1024).toFixed(1)} MB, exceeding the ` +
+                  `${(stepCap / 1024 / 1024).toFixed(0)} MB per-step ` +
+                  `intermediate cap. Aborting before the next step.`,
+              );
+            }
+            cumulativeBytes += stepBytes;
+            if (cumulativeBytes > totalCap) {
+              return errorResult(
+                `wyreup_chain: cumulative intermediate size ` +
+                  `${(cumulativeBytes / 1024 / 1024).toFixed(1)} MB exceeds the ` +
+                  `${(totalCap / 1024 / 1024).toFixed(0)} MB chain cap. Aborting.`,
+              );
+            }
+
+            // Wrap outputs as Files for the next step, preserving input names.
+            stepInputs = stepOutputs.map((b, j) => {
+              const name = stepInputs[j]?.name ?? `step-${i}-${j}`;
+              return new File([b], name, { type: b.type });
+            });
+          }
         } catch (err) {
           const isTimeout = err instanceof Error && err.name === 'TimeoutError';
           const msg = err instanceof Error ? err.message : String(err);
@@ -520,7 +575,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           return errorResult(`wyreup_chain failed: ${msg}`);
         }
 
-        const outputs = Array.isArray(chainResult) ? chainResult : [chainResult];
+        const outputs = stepOutputs;
         const writtenPaths: string[] = [];
 
         if (outputs.length === 1 && outputPath) {
@@ -683,6 +738,15 @@ export async function createWyreupMcpServer(): Promise<Server> {
         }],
       };
     });
+  });
+
+  // Test-only, non-enumerable handle to the registry the handlers close over,
+  // so tests can inject a synthetic tool. Non-enumerable keeps it out of the
+  // server's public/serialized shape; it is harmless in production.
+  Object.defineProperty(server, '__wyreupRegistry', {
+    value: registry,
+    enumerable: false,
+    configurable: true,
   });
 
   return server;

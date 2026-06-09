@@ -21,17 +21,29 @@ const KILL_GRACE_MS = 5_000;   // SIGTERM → SIGKILL grace
 
 const ALLOWED_EXEC_ARGV = new Set(['--enable-source-maps']);
 
-function scrubbedEnv(): NodeJS.ProcessEnv {
+export function scrubbedEnv(): NodeJS.ProcessEnv {
   // Strict allowlist of environment variables passed to the worker. Anything
   // not in this list — including dynamic loader controls (LD_PRELOAD,
   // LD_LIBRARY_PATH, DYLD_INSERT_LIBRARIES, DYLD_LIBRARY_PATH), Node controls
   // (NODE_OPTIONS, NODE_EXTRA_CA_CERTS), TLS overrides (SSL_CERT_FILE,
   // SSL_CERT_DIR), and the Pro bearer (WYREUP_API_KEY) — is dropped.
   // The Pro key reaches Pro tools via the WorkerJob IPC payload, never env.
+  // WYREUP_DISABLE_EGRESS_LOCK is deliberately NOT carried: the worker holds
+  // the Pro key and must ALWAYS install the egress lock, regardless of the
+  // parent's env. Forwarding it would hand an attacker a ready-made
+  // "no egress restriction" path inside the very process that handles the key.
+  // A dev who wants to disable egress can do so in the PARENT only.
+  //
+  // WYREUP_ORIGIN is also NOT carried: the worker's egress allowlist must not
+  // be settable from the worker's own env, or an attacker who controls env
+  // could re-point it to broaden egress. The worker installs the lock from the
+  // hardcoded default (https://wyreup.com) at import time, then narrows it to
+  // the trusted WorkerJob.proOrigin (delivered via IPC, validated parent-side)
+  // in runJob() — see worker.ts / egress.setEgressAllowedOrigin.
   const CARRY: readonly string[] = [
     'PATH', 'HOME', 'TMPDIR', 'LANG',
-    'WYREUP_DISABLE_EGRESS_LOCK', 'WYREUP_ALLOW_PATHS',
-    'WYREUP_MAX_INPUT_BYTES', 'WYREUP_ORIGIN',
+    'WYREUP_ALLOW_PATHS',
+    'WYREUP_MAX_INPUT_BYTES',
     // Explicit LC_* allowlist — previously a prefix wildcard. Locale vars
     // are needed for libraries that format numbers/dates/text by user locale
     // (sharp, ffmpeg, etc.). Tighten to the standard POSIX set so an

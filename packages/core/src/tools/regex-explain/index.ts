@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { checkPatternSafety } from '../../lib/regex-safety.js';
 import { PATTERNS } from '../regex-from-text/patterns.js';
 
 export interface RegexExplainParams {
@@ -205,6 +206,11 @@ function recognise(body: string): string | undefined {
 export function explainRegex(rawPattern: string): RegexExplainResult {
   const input = (rawPattern ?? '').trim();
   if (!input) throw new Error('regex-explain requires a non-empty "pattern" parameter.');
+  // Best-effort ReDoS mitigation: cap pattern length and reject catastrophic
+  // nested-quantifier shapes before parsing. Full interruption deferred —
+  // see lib/regex-safety.ts and the security review.
+  const unsafe = checkPatternSafety(input);
+  if (unsafe) throw new Error(unsafe);
   const { body, flags } = parsePatternAndFlags(input);
 
   let ast: AstNode;

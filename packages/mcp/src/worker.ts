@@ -1,4 +1,5 @@
 import './install-egress.js';
+import { setEgressAllowedOrigin } from './egress.js';
 import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
 import { readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
@@ -21,6 +22,12 @@ function inferMimeFromPath(p: string): string {
 }
 
 async function runJob(job: WorkerJob): Promise<WorkerResult> {
+  // The egress lock installed at import time defaults to the hardcoded Pro
+  // origin (https://wyreup.com). Narrow it to the trusted job.proOrigin so Pro
+  // tools reach the origin the parent validated. proOrigin arrives via IPC and
+  // is NOT settable through the worker's scrubbed env — an attacker who only
+  // controls env cannot use this to broaden egress.
+  if (job.proOrigin) setEgressAllowedOrigin(job.proOrigin);
   const registry = createDefaultRegistry();
   const tool = registry.toolsById.get(job.toolId);
   if (!tool || !toolRunsOnSurface(tool, 'mcp')) {

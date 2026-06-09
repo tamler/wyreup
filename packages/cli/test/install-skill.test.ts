@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 
 // ── mocks must be hoisted before importing the module under test ──────────────
 
@@ -25,12 +26,15 @@ import { resolveSkillsDir, fetchSkill, SKILL_DEFS } from '../src/commands/instal
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
-function makeFetchOk(body: string) {
+function makeFetchOk(body: string, contentType = 'text/plain') {
+  const bytes = new TextEncoder().encode(body);
   return Promise.resolve({
     ok: true,
     status: 200,
     statusText: 'OK',
+    headers: new Headers({ 'content-type': contentType }),
     text: () => Promise.resolve(body),
+    arrayBuffer: () => Promise.resolve(bytes.buffer.slice(0)),
   } as Response);
 }
 
@@ -39,7 +43,9 @@ function makeFetchFail(status: number) {
     ok: false,
     status,
     statusText: 'Not Found',
+    headers: new Headers(),
     text: () => Promise.resolve(''),
+    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
   } as Response);
 }
 
@@ -143,5 +149,34 @@ describe('fetchSkill', () => {
   it('throws a clear error when fetch throws (network error)', async () => {
     mockFetch.mockRejectedValue(new Error('ENOTFOUND raw.githubusercontent.com'));
     await expect(fetchSkill(SKILL_DEFS.combined.url)).rejects.toThrow('Network error');
+  });
+
+  it('rejects oversized content over the size cap', async () => {
+    // 600 KB exceeds the 512 KB MAX_SKILL_BYTES limit.
+    const huge = 'x'.repeat(600 * 1024);
+    mockFetch.mockReturnValue(makeFetchOk(huge));
+    await expect(fetchSkill(SKILL_DEFS.combined.url)).rejects.toThrow(/over the .* limit/);
+  });
+
+  it('rejects a non-text content-type', async () => {
+    mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT, 'application/octet-stream'));
+    await expect(fetchSkill(SKILL_DEFS.combined.url)).rejects.toThrow(/unexpected content-type/);
+  });
+
+  it('accepts content when the pinned SHA-256 matches', async () => {
+    mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
+    const expected = createHash('sha256')
+      .update(new TextEncoder().encode(FAKE_SKILL_CONTENT))
+      .digest('hex');
+    const result = await fetchSkill(SKILL_DEFS.combined.url, expected);
+    expect(result).toBe(FAKE_SKILL_CONTENT);
+  });
+
+  it('rejects content when the pinned SHA-256 does not match', async () => {
+    mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
+    const wrongHash = 'f'.repeat(64);
+    await expect(
+      fetchSkill(SKILL_DEFS.combined.url, wrongHash),
+    ).rejects.toThrow(/SHA-256 mismatch/);
   });
 });

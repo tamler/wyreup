@@ -594,14 +594,67 @@ function readText(raw: RunnerInput, field: string): string {
   return v;
 }
 
-function readImageRef(raw: RunnerInput): string {
-  // Accept either a public URL or a data: URL — the image provider
-  // wrapper passes the value straight through.
+// Block hostnames that resolve to private/loopback/link-local/reserved
+// ranges, defeating SSRF against internal services and the cloud metadata
+// endpoint. The image provider fetches this URL server-side, so a bare
+// startsWith('http') check would let a caller reach http://169.254.169.254
+// etc. Exported as __isDisallowedHost for unit testing only.
+export function __isDisallowedHost(hostname: string): boolean {
+  let h = hostname.toLowerCase();
+  // Strip IPv6 brackets if present.
+  if (h.startsWith('[') && h.endsWith(']')) h = h.slice(1, -1);
+
+  if (h === 'localhost' || h.endsWith('.local')) return true;
+
+  // IPv4-mapped IPv6 (::ffff:127.0.0.1) — unwrap to the embedded IPv4.
+  const mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i.exec(h);
+  if (mapped) h = mapped[1];
+
+  // IPv6 loopback / link-local / unique-local.
+  if (h === '::1') return true;
+  if (h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb'))
+    return true; // fe80::/10
+  if (h.startsWith('fc') || h.startsWith('fd')) return true; // fc00::/7
+
+  // IPv4 literal ranges.
+  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
+  if (m) {
+    const o = m.slice(1).map(Number);
+    if (o.some((n) => n > 255)) return true;
+    const [a, b] = o;
+    if (a === 127) return true; // 127.0.0.0/8 loopback
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 169 && b === 254) return true; // 169.254.0.0/16 link-local + metadata
+    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT
+    if (a === 0) return true; // 0.0.0.0/8
+  }
+  return false;
+}
+
+// Exported as __readImageRef for unit testing only.
+export function readImageRef(raw: RunnerInput): string {
+  // Accept either a public https URL or a data:image/ URL. data: URLs keep
+  // the bytes client-side; URLs are fetched server-side by the image
+  // provider, so they must be https to a public host (see __isDisallowedHost).
   const v = (raw as Record<string, unknown>).image;
-  if (typeof v === 'string' && (v.startsWith('http') || v.startsWith('data:image/'))) {
+  if (typeof v === 'string' && v.startsWith('data:image/')) {
     return v;
   }
-  throw new Error("'image' must be an https URL or data: URL");
+  if (typeof v === 'string' && v.startsWith('https://')) {
+    let url: URL;
+    try {
+      url = new URL(v);
+    } catch {
+      throw new Error("'image' must be an https URL to a public host or a data: URL");
+    }
+    if (url.protocol !== 'https:' || __isDisallowedHost(url.hostname)) {
+      throw new Error("'image' must be an https URL to a public host or a data: URL");
+    }
+    return v;
+  }
+  throw new Error("'image' must be an https URL to a public host or a data: URL");
 }
 
 function tryParseJson(s: string): unknown {

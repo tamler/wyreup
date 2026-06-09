@@ -71,3 +71,41 @@ describe('markdown-to-html — run()', () => {
     expect(html).toContain('const x = 1;');
   });
 });
+
+describe('markdown-to-html — XSS sanitization', () => {
+  it('escapes raw block <script> instead of passing it through', async () => {
+    const md = '<script>alert(1)</script>\n';
+    const input = new File([md], 'test.md', { type: 'text/markdown' });
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
+    const html = await out!.text();
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+
+  it('escapes raw inline HTML with event handlers', async () => {
+    const md = 'See <img src=x onerror=alert(1)> here\n';
+    const input = new File([md], 'test.md', { type: 'text/markdown' });
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
+    const html = await out!.text();
+    expect(html).not.toContain('<img src=x onerror');
+    expect(html).toContain('&lt;img');
+    expect(html).toContain('onerror');
+  });
+
+  it('still renders normal markdown after sanitizing', async () => {
+    const md = '**bold** and <b>raw</b>\n';
+    const input = new File([md], 'test.md', { type: 'text/markdown' });
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
+    const html = await out!.text();
+    expect(html).toContain('<strong>bold</strong>');
+    expect(html).toContain('&lt;b&gt;raw&lt;/b&gt;');
+  });
+
+  it('does not produce a live javascript: link href', async () => {
+    const md = '[click](javascript:alert(1))\n';
+    const input = new File([md], 'test.md', { type: 'text/markdown' });
+    const [out] = await markdownToHtml.run([input], { gfm: true }, makeCtx()) as Blob[];
+    const html = await out!.text();
+    expect(html).not.toContain('href="javascript:');
+  });
+});

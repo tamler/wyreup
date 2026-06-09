@@ -97,3 +97,30 @@ describe('regex-tester — run()', () => {
     expect(regexTester.input.sizeLimit).toBe(1 * 1024 * 1024);
   });
 });
+
+describe('regex-tester — ReDoS mitigation', () => {
+  it('rejects a catastrophic nested-quantifier pattern quickly instead of hanging', async () => {
+    // (a+)+$ against a long non-matching input is the classic ReDoS shape.
+    // Without the static guard this would backtrack exponentially and hang
+    // the event loop; with it, run() returns an error verdict in ms.
+    const start = Date.now();
+    const result = await test('a'.repeat(40) + '!', '(a+)+$', 'g');
+    const elapsed = Date.now() - start;
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/ReDoS|catastrophic|nested/i);
+    expect(result.matchCount).toBe(0);
+    expect(elapsed).toBeLessThan(1000);
+  });
+
+  it('rejects an over-long pattern', async () => {
+    const result = await test('hello', 'a'.repeat(1001), 'g');
+    expect(result.valid).toBe(false);
+    expect(result.error).toMatch(/too long/i);
+  });
+
+  it('still accepts a benign single-quantifier pattern', async () => {
+    const result = await test('aaa bbb', 'a+', 'g');
+    expect(result.valid).toBe(true);
+    expect(result.matchCount).toBe(1);
+  });
+});

@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { checkPatternSafety } from '../../lib/regex-safety.js';
 
 export interface RegexVisualizeParams {
   /** The regex pattern. Required. Accepts /literal/flags or bare pattern. */
@@ -290,6 +291,11 @@ export function visualizeRegex(pattern: string): VisualizeResult {
   // Accept either /pattern/flags form or bare pattern.
   let toParse = pattern.trim();
   if (!toParse) throw new Error('regex-visualize requires a non-empty pattern.');
+  // Best-effort ReDoS mitigation: cap pattern length and reject catastrophic
+  // nested-quantifier shapes before parsing. Full interruption deferred —
+  // see lib/regex-safety.ts and the security review.
+  const unsafe = checkPatternSafety(toParse);
+  if (unsafe) throw new Error(unsafe);
   if (!toParse.startsWith('/')) toParse = `/${toParse}/`;
 
   let parsed: AstNode;

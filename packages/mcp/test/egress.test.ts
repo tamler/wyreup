@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { installEgressLock, EgressBlockedError, _resetEgressLockForTests } from '../src/egress.js';
+import { installEgressLock, EgressBlockedError, _resetEgressLockForTests, setEgressAllowedOrigin } from '../src/egress.js';
+import { scrubbedEnv } from '../src/supervisor.js';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -71,5 +72,42 @@ describe('egress lock [spec §#9]', () => {
     installEgressLock(`http://127.0.0.1:${port}`);
     installEgressLock('http://other.example');  // ignored
     await expect(fetch('http://other.example/')).rejects.toBeInstanceOf(EgressBlockedError);
+  });
+
+  it('setEgressAllowedOrigin repoints the installed lock to a trusted origin', async () => {
+    installEgressLock('http://first.example');
+    // The worker narrows the allowlist to job.proOrigin (IPC-delivered, trusted).
+    setEgressAllowedOrigin(`http://127.0.0.1:${port}`);
+    const r = await fetch(`http://127.0.0.1:${port}/ok`);
+    expect(await r.text()).toBe('ok');
+    await expect(fetch('http://first.example/')).rejects.toBeInstanceOf(EgressBlockedError);
+  });
+});
+
+describe('egress lock — worker env hardening [security]', () => {
+  // FIX 1a: the forked worker holds the Pro key and must ALWAYS install the
+  // egress lock. scrubbedEnv() must therefore NOT propagate the parent's
+  // disable flag or origin override into the worker, or an attacker could hand
+  // the worker a "no egress restriction" path or re-point its allowlist.
+  it('does not forward WYREUP_DISABLE_EGRESS_LOCK into the worker env', () => {
+    const ORIG = process.env['WYREUP_DISABLE_EGRESS_LOCK'];
+    process.env['WYREUP_DISABLE_EGRESS_LOCK'] = '1';
+    try {
+      expect(scrubbedEnv()['WYREUP_DISABLE_EGRESS_LOCK']).toBeUndefined();
+    } finally {
+      if (ORIG === undefined) delete process.env['WYREUP_DISABLE_EGRESS_LOCK'];
+      else process.env['WYREUP_DISABLE_EGRESS_LOCK'] = ORIG;
+    }
+  });
+
+  it('does not forward WYREUP_ORIGIN into the worker env', () => {
+    const ORIG = process.env['WYREUP_ORIGIN'];
+    process.env['WYREUP_ORIGIN'] = 'http://attacker.example';
+    try {
+      expect(scrubbedEnv()['WYREUP_ORIGIN']).toBeUndefined();
+    } finally {
+      if (ORIG === undefined) delete process.env['WYREUP_ORIGIN'];
+      else process.env['WYREUP_ORIGIN'] = ORIG;
+    }
   });
 });

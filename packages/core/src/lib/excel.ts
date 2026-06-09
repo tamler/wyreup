@@ -132,7 +132,7 @@ export function sheetToCsv(ws: Worksheet, delimiter: string = ','): string {
  */
 export function addAOAToSheet(ws: Worksheet, rows: unknown[][]): void {
   for (const row of rows) {
-    ws.addRow(row);
+    ws.addRow(row.map(defangFormula));
   }
 }
 
@@ -144,9 +144,9 @@ export function addAOAToSheet(ws: Worksheet, rows: unknown[][]): void {
 export function addObjectsToSheet(ws: Worksheet, rows: Record<string, unknown>[]): void {
   if (rows.length === 0) return;
   const headers = [...new Set(rows.flatMap((r) => Object.keys(r)))];
-  ws.addRow(headers as CellValue[]);
+  ws.addRow(headers.map(defangFormula) as CellValue[]);
   for (const row of rows) {
-    ws.addRow(headers.map((h) => (row[h] ?? null) as CellValue));
+    ws.addRow(headers.map((h) => defangFormula(row[h] ?? null) as CellValue));
   }
 }
 
@@ -161,6 +161,20 @@ export function addWorksheet(wb: Workbook, name: string): Worksheet {
 
 // ────────────────────────────────────────────────────────────────────
 // internals
+
+/**
+ * Defuse CSV/spreadsheet formula injection. A string cell that begins with
+ * `= + - @` or a leading TAB/CR is interpreted as a formula by Excel and
+ * LibreOffice and can execute (e.g. `=cmd|'/c calc'!A0`) when a victim opens
+ * the file. Prefix such strings with a single apostrophe so the app treats
+ * the value as literal text. Non-string values (numbers, booleans, null,
+ * objects) pass through untouched.
+ */
+function defangFormula(v: unknown): unknown {
+  if (typeof v !== 'string' || v.length === 0) return v;
+  if (/^[=+\-@\t\r]/.test(v)) return `'${v}`;
+  return v;
+}
 
 /**
  * ExcelJS exposes cells as primitives most of the time, but formulas,
@@ -194,9 +208,12 @@ function escapeCsvField(value: unknown, delimiter: string): string {
   if (value == null) return '';
   // After coerceCellValue() upstream, value is a primitive — but
   // TypeScript doesn't track that, so narrow defensively here.
+  // Defang formula injection in the CSV path too: a field beginning with
+  // `= + - @` (or a leading TAB/CR) executes when the CSV is opened in a
+  // spreadsheet app, so prefix string fields with an apostrophe.
   const s =
     typeof value === 'string'
-      ? value
+      ? defangFormula(value) as string
       : typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint'
         ? String(value)
         : JSON.stringify(value);

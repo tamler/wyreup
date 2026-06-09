@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import { EventEmitter } from 'node:events';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile, stat, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -145,6 +145,35 @@ describe('watch --max-files', () => {
 
     expect(exitCode).toBeNull();
     expect(currentWatcher.closed).toBe(false);
+
+    writeSpy.mockRestore();
+    await rm(tmp, { recursive: true, force: true });
+  });
+
+  it('writes outputs atomically with mode 0600', async () => {
+    const tmp = await setupTmpDir();
+    const paths = await fireFiles(tmp, 1);
+
+    const writeSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    void executeWatch(tmp, {
+      steps: 'strip-exif',
+      maxFiles: 1,
+      concurrency: 1,
+    }).catch(() => {});
+
+    await waitFor(() => currentWatcher.listenerCount('add') > 0);
+    for (const p of paths) currentWatcher.emit('add', p);
+
+    await waitFor(() => exitCode === 0, 2000);
+
+    const outDir = join(tmp, '_wyreup-out');
+    const entries = await readdir(outDir);
+    expect(entries.length).toBe(1);
+    const st = await stat(join(outDir, entries[0]!));
+    // atomicPublish writes the tmp file with mode 0600; assert the owner-only
+    // permission survives the rename.
+    expect(st.mode & 0o777).toBe(0o600);
 
     writeSpy.mockRestore();
     await rm(tmp, { recursive: true, force: true });

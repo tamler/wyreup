@@ -9,8 +9,13 @@
 
 import { analyzeSuspicious, type TextSuspiciousResult } from '../tools/text-suspicious/index.js';
 
-/** Severity tiers exposed to the UI. */
-export type PreflightVerdict = 'clean' | 'low' | 'medium' | 'high';
+/**
+ * Severity tiers exposed to the UI. 'unanalysed' is distinct from 'clean':
+ * it means no checker ran (file too large, or no analyser for this MIME),
+ * so the UI must NOT show it as a green/clean state — it should read
+ * "not analysed".
+ */
+export type PreflightVerdict = 'clean' | 'low' | 'medium' | 'high' | 'unanalysed';
 
 export interface PreflightFinding {
   kind: string;
@@ -37,8 +42,8 @@ const PREFLIGHT_SIZE_LIMIT = 5 * 1024 * 1024;
  * file, picks the right analyzer, returns the verdict. No side effects.
  *
  * For MIMEs we don't have a checker for (image/*, audio/*, video/*),
- * returns { verdict: 'clean', toolUsed: null } so the UI can label it
- * "not analysed".
+ * returns { verdict: 'unanalysed', toolUsed: null } so the UI can label
+ * it "not analysed" rather than a clean (green) state.
  */
 export async function runPreflight(file: File): Promise<PreflightResult> {
   const mime = file.type;
@@ -47,7 +52,7 @@ export async function runPreflight(file: File): Promise<PreflightResult> {
   // multi-MB string reads. The user still sees the file metadata.
   if (file.size > PREFLIGHT_SIZE_LIMIT) {
     return {
-      verdict: 'clean',
+      verdict: 'unanalysed',
       findings: [],
       toolUsed: null,
     };
@@ -68,7 +73,7 @@ export async function runPreflight(file: File): Promise<PreflightResult> {
   }
 
   // Image / audio / video / binary — no useful pre-flight today.
-  return { verdict: 'clean', findings: [], toolUsed: null };
+  return { verdict: 'unanalysed', findings: [], toolUsed: null };
 }
 
 async function analyzeText(file: File): Promise<PreflightResult> {

@@ -105,12 +105,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   // order_refunded -------------------------------------------------------
   if (event === 'order_refunded') {
+    // Source both the amount AND the purchaser's user_id from the original
+    // purchase row. The webhook's custom_data.userId is attacker-influenced
+    // and must not decide which account the refund debit lands on.
     const original = await env.DB.prepare(
-      `SELECT amount FROM credit_events
+      `SELECT amount, user_id FROM credit_events
         WHERE ls_order_id = ? AND kind = 'purchase'`,
     )
       .bind(orderId)
-      .first<{ amount: number }>();
+      .first<{ amount: number; user_id: string }>();
     if (!original) return new Response('OK');
 
     await env.DB.prepare(
@@ -120,7 +123,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     )
       .bind(
         `evt_${nanoid(16)}`,
-        userId,
+        original.user_id,
         -original.amount,
         `${orderId}:refund`,
         `Refund for order ${orderId}`,

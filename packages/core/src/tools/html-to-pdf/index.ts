@@ -127,6 +127,12 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
     const iframe = document.createElement('iframe');
     iframe.style.cssText =
       'position:fixed;top:-9999px;left:-9999px;width:794px;height:1123px;border:none;visibility:hidden';
+    // Sandbox the iframe BEFORE it's attached or written to. We grant
+    // `allow-same-origin` (so html2canvas can read contentDocument/body to
+    // screenshot the rendered HTML) but deliberately withhold `allow-scripts`,
+    // so any inline <script> or event-handler attributes in the untrusted
+    // user HTML cannot execute in the wyreup.com origin.
+    iframe.setAttribute('sandbox', 'allow-same-origin');
     document.body.appendChild(iframe);
 
     try {

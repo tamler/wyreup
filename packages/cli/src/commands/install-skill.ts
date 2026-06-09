@@ -2,6 +2,7 @@ import * as p from '@clack/prompts';
 import { mkdir, writeFile, access, readFile, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { Command } from 'commander';
 import { EXIT_CODES } from '../lib/exit-codes.js';
 
@@ -11,7 +12,27 @@ type SkillVariant = (typeof SKILL_VARIANTS)[number];
 const LOCATION_CHOICES = ['project', 'user', 'custom'] as const;
 type LocationChoice = (typeof LOCATION_CHOICES)[number];
 
-export const SKILL_DEFS: Record<SkillVariant, { name: string; url: string; description: string }> = {
+// Skill markdown is fetched from a remote and then consumed by Claude Code as
+// instructions, so a compromised repo or MITM could inject prompt-injection
+// directives. We guard the fetched bytes before trusting them: cap the size,
+// require a text/markdown content-type, and — when an expected hash is pinned
+// in SKILL_DEFS below — verify the SHA-256 and reject on mismatch.
+//
+// RECOMMENDATION: pin a `sha256` on each SKILL_DEFS entry once the upstream
+// skill.md content is stable. While the files still change upstream we leave
+// `sha256` unset so installs keep working, but an unpinned skill trades the
+// hash guard for the size + content-type checks only.
+const MAX_SKILL_BYTES = 512 * 1024; // 512 KB — skill.md files are a few KB
+
+interface SkillDef {
+  name: string;
+  url: string;
+  description: string;
+  /** Optional pinned SHA-256 (hex) of the expected skill.md bytes. */
+  sha256?: string;
+}
+
+export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
   cli: {
     name: 'wyreup-cli',
     url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/cli-skill/skill.md',
@@ -67,7 +88,7 @@ export async function readLocalSkill(sourcePath: string): Promise<string> {
   }
 }
 
-export async function fetchSkill(url: string): Promise<string> {
+export async function fetchSkill(url: string, expectedSha256?: string): Promise<string> {
   let res: Response;
   try {
     res = await fetch(url);
@@ -97,7 +118,37 @@ export async function fetchSkill(url: string): Promise<string> {
         'Use --path to install from a local skill.md file instead.',
     );
   }
-  return res.text();
+
+  // Integrity guards — the fetched content becomes agent instructions, so we
+  // refuse anything that isn't a plausibly-small text/markdown payload.
+  const contentType = (res.headers.get('content-type') ?? '').toLowerCase();
+  if (contentType && !/text\/(plain|markdown)|text\/x-markdown/.test(contentType)) {
+    throw new Error(
+      `Refusing skill from ${url}: unexpected content-type "${contentType}" ` +
+        '(expected text/plain or markdown). Install from a local file with --path instead.',
+    );
+  }
+
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (bytes.byteLength > MAX_SKILL_BYTES) {
+    throw new Error(
+      `Refusing skill from ${url}: content is ${bytes.byteLength} bytes, ` +
+        `over the ${MAX_SKILL_BYTES}-byte limit. Install from a local file with --path instead.`,
+    );
+  }
+
+  if (expectedSha256) {
+    const actual = createHash('sha256').update(bytes).digest('hex');
+    if (actual !== expectedSha256.toLowerCase()) {
+      throw new Error(
+        `Refusing skill from ${url}: SHA-256 mismatch ` +
+          `(expected ${expectedSha256.toLowerCase()}, got ${actual}). ` +
+          'The remote content may have been tampered with or the pinned hash is stale.',
+      );
+    }
+  }
+
+  return new TextDecoder().decode(bytes);
 }
 
 async function fileExists(path: string): Promise<boolean> {
@@ -234,7 +285,7 @@ async function runInteractive(opts: {
   try {
     content = opts.source
       ? await readLocalSkill(opts.source)
-      : await fetchSkill(def.url);
+      : await fetchSkill(def.url, def.sha256);
   } catch (err) {
     // Network / filesystem failure: SYSTEM error (out of CLI-args control).
     const msg = err instanceof Error ? err.message : String(err);

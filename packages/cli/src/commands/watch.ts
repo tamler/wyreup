@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readFile, mkdir, stat } from 'node:fs/promises';
 import { basename, join, resolve, sep, extname } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -7,6 +7,7 @@ import type { FSWatcher } from 'chokidar';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { atomicPublish } from '../lib/safety/atomic-publish.js';
 
 // ──── options ─────────────────────────────────────────────────────────────────
 
@@ -344,7 +345,8 @@ export async function executeWatch(
         const baseStem = name.replace(/\.[^.]+$/, '') || name;
         const outPath = join(absOut, `${baseStem}${ext}`);
 
-        await writeFile(outPath, Buffer.from(await blob.arrayBuffer()));
+        const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), true);
+        if (writeErr) throw new Error(writeErr);
         markWritten(outPath);
 
         const dur = Date.now() - start;

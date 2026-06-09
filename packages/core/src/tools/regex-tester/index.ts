@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import { checkPatternSafety } from '../../lib/regex-safety.js';
 import type { RegexTesterParams, RegexTesterResult, RegexTesterMatch } from './types.js';
 
 export type { RegexTesterParams, RegexTesterResult, RegexTesterMatch } from './types.js';
@@ -58,6 +59,21 @@ export const regexTester: ToolModule<RegexTesterParams> = {
 
     const text = await inputs[0]!.text();
     const flags = params.flags ?? 'g';
+
+    // Best-effort ReDoS mitigation: reject catastrophic patterns before we
+    // ever compile or run them. Full interruption deferred — see
+    // lib/regex-safety.ts and the security review.
+    const unsafe = checkPatternSafety(params.pattern);
+    if (unsafe) {
+      const result: RegexTesterResult = {
+        valid: false,
+        error: unsafe,
+        matchCount: 0,
+        matches: [],
+      };
+      ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
+      return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
+    }
 
     let regex: RegExp;
     try {

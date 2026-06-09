@@ -13,6 +13,12 @@ export async function loginCommand(positional: string | undefined): Promise<void
   const explicit = positional?.trim();
 
   if (explicit) {
+    // Never log the key itself — only warn that the positional path is unsafe.
+    console.error(
+      'Warning: passing your API key as a command-line argument exposes it in ' +
+        'process listings, shell history, and CI logs. Prefer the WYREUP_API_KEY ' +
+        'environment variable or the interactive prompt (run `wyreup login` with no argument).',
+    );
     const saved = await validateAndSaveKey(explicit);
     if (!saved) process.exit(1);
     return;

@@ -37,12 +37,12 @@ describe('runPreflight — text inputs', () => {
 });
 
 describe('runPreflight — non-analysable MIMEs', () => {
-  it('returns clean+null for image/png (no analyser today)', async () => {
+  it('returns unanalysed+null for image/png (no analyser today)', async () => {
     const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'x.png', {
       type: 'image/png',
     });
     const r = await runPreflight(file);
-    expect(r.verdict).toBe('clean');
+    expect(r.verdict).toBe('unanalysed');
     expect(r.toolUsed).toBe(null);
   });
 
@@ -56,13 +56,15 @@ describe('runPreflight — non-analysable MIMEs', () => {
 });
 
 describe('runPreflight — size cap', () => {
-  it('skips analysis when file is over the pre-flight size limit', async () => {
+  it('returns unanalysed (not clean) when file is over the pre-flight size limit', async () => {
     // 6 MB > 5 MB cap
     const buf = new Uint8Array(6 * 1024 * 1024);
     const file = new File([buf], 'big.txt', { type: 'text/plain' });
     const r = await runPreflight(file);
     expect(r.toolUsed).toBe(null);
-    expect(r.verdict).toBe('clean');
+    // Distinct from a genuinely-scanned-clean verdict.
+    expect(r.verdict).toBe('unanalysed');
+    expect(r.verdict).not.toBe('clean');
   });
 });
 
