@@ -34,10 +34,18 @@ updates:
       - dependency-name: "protobufjs"
       - dependency-name: "serialize-javascript"
       - dependency-name: "devalue"
-      # Held at ^4.12.23 via overrides (transitive through @modelcontextprotocol/sdk).
+      - dependency-name: "undici"
+      # Held at ^4.12.25 via overrides (transitive through @modelcontextprotocol/sdk).
       # Pinning to the non-vulnerable 4.x line; a 5.x major would break the SDK,
       # so ignore major bumps Dependabot can't resolve.
       - dependency-name: "hono"
+        update-types: ["version-update:semver-major"]
+      # Astro 5+/Svelte 5 is a deferred double-major upgrade cascade
+      # (see docs/ROADMAP.md). The site is a static build, so the
+      # server-side advisories don't apply; revisit when the upgrade lands.
+      - dependency-name: "astro"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "svelte"
         update-types: ["version-update:semver-major"]
 
   # GitHub Actions versions — keep workflow actions current.
