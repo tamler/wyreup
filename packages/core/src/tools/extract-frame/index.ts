@@ -116,7 +116,7 @@ export const extractFrame: ToolModule<ExtractFrameParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output as Uint8Array);
+      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

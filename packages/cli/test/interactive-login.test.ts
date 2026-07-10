@@ -63,9 +63,7 @@ describe('validateApiKey', () => {
   });
 
   it('returns the balance payload on 200', async () => {
-    spyFetch(() =>
-      makeRes(200, { email: 'a@b.co', balance: 42, subscriptionStatus: null }),
-    );
+    spyFetch(() => makeRes(200, { email: 'a@b.co', balance: 42, subscriptionStatus: null }));
     const r = await validateApiKey('wk_live_ok');
     expect(r?.email).toBe('a@b.co');
     expect(r?.balance).toBe(42);
@@ -79,7 +77,7 @@ describe('validateApiKey', () => {
   it('returns null on transport failure', async () => {
     globalThis.fetch = vi.fn(() => {
       throw new Error('ECONNREFUSED');
-    }) as unknown as typeof fetch;
+    });
     expect(await validateApiKey('wk_live_unreachable')).toBeNull();
   });
 });

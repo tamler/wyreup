@@ -16,7 +16,10 @@ function getHandler(server: McpServer, method: string) {
   // The MCP SDK Protocol base class stores handlers in _requestHandlers (Map<string, fn>).
   // Accessing a private SDK internal for testing purposes — no public API available.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-  const handlers = (server as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
+  const handlers = (server as any)._requestHandlers as Map<
+    string,
+    (req: unknown, extra: unknown) => unknown
+  >;
   const handler = handlers.get(method);
   if (!handler) throw new Error(`No handler for method: ${method}`);
   return handler;
@@ -29,16 +32,9 @@ async function listTools(server: McpServer) {
   }>;
 }
 
-async function callTool(
-  server: McpServer,
-  name: string,
-  args: Record<string, unknown>,
-) {
+async function callTool(server: McpServer, name: string, args: Record<string, unknown>) {
   const handler = getHandler(server, 'tools/call');
-  return handler(
-    { method: 'tools/call', params: { name, arguments: args } },
-    {},
-  ) as Promise<{
+  return handler({ method: 'tools/call', params: { name, arguments: args } }, {}) as Promise<{
     content: Array<{ type: string; text: string }>;
     isError?: boolean;
   }>;
@@ -141,8 +137,16 @@ describe('createWyreupMcpServer', () => {
     const result = await listTools(server);
     const ids = new Set(result.tools.map((t) => t.name));
     const sentinels = [
-      'compress', 'convert', 'merge-pdf', 'split-pdf', 'qr',
-      'hash', 'ocr', 'pdf-to-text', 'face-blur', 'transcribe',
+      'compress',
+      'convert',
+      'merge-pdf',
+      'split-pdf',
+      'qr',
+      'hash',
+      'ocr',
+      'pdf-to-text',
+      'face-blur',
+      'transcribe',
     ];
     for (const id of sentinels) {
       expect(ids.has(id), `missing core tool: ${id}`).toBe(true);
@@ -156,10 +160,7 @@ describe('createWyreupMcpServer', () => {
     // error and short-circuits the agent. Now invalid tool names return a
     // structured tool result with isError:true, which the LLM can read and
     // self-correct from.
-    const result = (await callTool(server, 'does-not-exist', {})) as {
-      content: Array<{ type: string; text: string }>;
-      isError?: boolean;
-    };
+    const result = await callTool(server, 'does-not-exist', {});
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('Unknown tool');
     expect(result.content[0]?.text).toContain('does-not-exist');
@@ -440,7 +441,10 @@ describe('worker dispatch [spec §#8]', () => {
 
   it('compresses an image via the worker dispatch path', async () => {
     const out = join(tmpDir, 'out-worker.jpg');
-    const r = await callTool(server, 'compress', { input_paths: [join(FIXTURES, 'photo.jpg')], output_path: out });
+    const r = await callTool(server, 'compress', {
+      input_paths: [join(FIXTURES, 'photo.jpg')],
+      output_path: out,
+    });
     expect(r.isError).toBeFalsy();
   });
 
@@ -450,7 +454,10 @@ describe('worker dispatch [spec §#8]', () => {
     try {
       const srv = await createWyreupMcpServer();
       const out = join(tmpDir, 'out-inprocess.jpg');
-      const r = await callTool(srv, 'compress', { input_paths: [join(FIXTURES, 'photo.jpg')], output_path: out });
+      const r = await callTool(srv, 'compress', {
+        input_paths: [join(FIXTURES, 'photo.jpg')],
+        output_path: out,
+      });
       expect(r.isError).toBeFalsy();
     } finally {
       if (ORIG === undefined) delete process.env['WYREUP_DISABLE_WORKER_ISOLATION'];

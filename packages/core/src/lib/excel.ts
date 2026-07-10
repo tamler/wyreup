@@ -100,7 +100,12 @@ export function sheetToObjects(ws: Worksheet): Record<string, unknown>[] {
   const aoa = sheetToAOA(ws);
   if (aoa.length === 0) return [];
   const headers = (aoa[0] ?? []).map((h, i) => {
-    const s = typeof h === 'string' ? h : h == null ? '' : String(h as number | boolean);
+    const s =
+      typeof h === 'string'
+        ? h
+        : typeof h === 'number' || typeof h === 'boolean' || typeof h === 'bigint'
+          ? String(h)
+          : '';
     return s || `Column${i + 1}`;
   });
   return aoa.slice(1).map((row) => {
@@ -144,7 +149,7 @@ export function addAOAToSheet(ws: Worksheet, rows: unknown[][]): void {
 export function addObjectsToSheet(ws: Worksheet, rows: Record<string, unknown>[]): void {
   if (rows.length === 0) return;
   const headers = [...new Set(rows.flatMap((r) => Object.keys(r)))];
-  ws.addRow(headers.map(defangFormula) as CellValue[]);
+  ws.addRow(headers.map(defangFormula));
   for (const row of rows) {
     ws.addRow(headers.map((h) => defangFormula(row[h] ?? null) as CellValue));
   }

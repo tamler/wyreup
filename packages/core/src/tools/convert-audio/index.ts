@@ -140,7 +140,7 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
     await ff.deleteFile(outputName);
     const outputBytes = typeof output === 'string'
       ? new TextEncoder().encode(output)
-      : (output as Uint8Array);
+      : (output);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getAudioMime(params.format) })];

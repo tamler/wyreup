@@ -94,13 +94,13 @@ describe('barcode — run() SVG', () => {
   });
 
   it('output blob has image/svg+xml MIME type', async () => {
-    const blob = (await barcode.run([], { data: 'hi', outputFormat: 'svg' } as Parameters<typeof barcode.run>[1], makeCtx())) as Blob;
+    const blob = (await barcode.run([], { data: 'hi', outputFormat: 'svg' }, makeCtx())) as Blob;
     expect(blob.type).toBe('image/svg+xml');
   });
 
   it('throws if data is empty', async () => {
     await expect(
-      barcode.run([], { data: '' } as Parameters<typeof barcode.run>[1], makeCtx()),
+      barcode.run([], { data: '' }, makeCtx()),
     ).rejects.toThrow(/data is required/);
   });
 
@@ -127,7 +127,7 @@ describe('barcode — run() SVG', () => {
 describe('barcode — PNG output in Node', () => {
   it('throws a clear error when requesting PNG in Node', async () => {
     await expect(
-      barcode.run([], { data: 'PNGTEST', outputFormat: 'png' } as Parameters<typeof barcode.run>[1], makeCtx()),
+      barcode.run([], { data: 'PNGTEST', outputFormat: 'png' }, makeCtx()),
     ).rejects.toThrow(/browser/i);
   });
 });

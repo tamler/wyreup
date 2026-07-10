@@ -114,14 +114,14 @@ export const colorBlindSimulator: ToolModule<ColorBlindSimulatorParams> = {
     if (!FORMAT_MIME[format]) throw new Error(`Unknown format "${format}".`);
 
     ctx.onProgress({ stage: 'processing', percent: 15, message: 'Loading image' });
-    const img = await loadImage(inputs[0]!) as { width: number; height: number };
+    const img = await loadImage(inputs[0]!);
     const canvas = await createCanvas(img.width, img.height);
     const drawCtx = canvas.getContext('2d') as unknown as {
       drawImage: (img: unknown, x: number, y: number) => void;
       getImageData: (x: number, y: number, w: number, h: number) => { data: Uint8ClampedArray };
       putImageData: (data: { data: Uint8ClampedArray }, x: number, y: number) => void;
     };
-    drawCtx.drawImage(img as unknown, 0, 0);
+    drawCtx.drawImage(img, 0, 0);
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

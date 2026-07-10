@@ -92,7 +92,7 @@ export function blurRegion(
   // Step 1: render blurred version of the whole image onto blurCanvas
   const blurCtx = blurCanvas.getContext('2d');
   blurCtx.filter = `blur(${blurRadius}px)`;
-  blurCtx.drawImage(sourceCanvas as unknown, 0, 0);
+  blurCtx.drawImage(sourceCanvas, 0, 0);
 
   // Step 2: clip to the face region, copy blurred pixels back
   sourceCtx.save();
@@ -117,7 +117,7 @@ export function blurRegion(
     }
   }
 
-  sourceCtx.drawImage(blurCanvas as unknown, 0, 0);
+  sourceCtx.drawImage(blurCanvas, 0, 0);
   sourceCtx.restore();
 }
 
@@ -173,7 +173,7 @@ async function getDetector(ctx: ToolRunContext): Promise<FaceDetectorInstance> {
   });
 
   ctx.cache.set('face-blur:detector', detector);
-  return detector as unknown as FaceDetectorInstance;
+  return detector;
 }
 
 // ──── Tool module ────
@@ -246,7 +246,7 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
         filter?: string;
       };
 
-      context.drawImage(img as unknown, 0, 0);
+      context.drawImage(img, 0, 0);
 
       // Run face detection on the loaded image element
       const result = detector.detect(img);
@@ -266,7 +266,7 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
           if (!face.boundingBox) continue;
           const box = expandBox(face.boundingBox, padding, img.width, img.height);
           blurRegion(
-            canvas as unknown as { width: number; height: number },
+            canvas,
             context,
             blurCanvas,
             box,

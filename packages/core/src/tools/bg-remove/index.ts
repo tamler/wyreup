@@ -86,7 +86,7 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
       putImageData(data: { data: Uint8ClampedArray; width: number; height: number }, x: number, y: number): void;
     };
 
-    context.drawImage(img as unknown, 0, 0);
+    context.drawImage(img, 0, 0);
 
     // Extract RGBA pixel data and apply mask as alpha channel
     const imageData = context.getImageData(0, 0, img.width, img.height);

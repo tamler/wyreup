@@ -56,7 +56,7 @@ function unionTypes(a: Schema, b: Schema): Schema {
   } else if (a.type === 'array' && b.type === 'array') {
     merged.type = 'array';
     if (a.items && b.items) merged.items = unionTypes(a.items as Schema, b.items as Schema);
-    else merged.items = (a.items ?? b.items) as Schema;
+    else merged.items = (a.items ?? b.items);
   }
   return merged;
 }

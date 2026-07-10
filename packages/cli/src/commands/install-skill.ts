@@ -50,10 +50,7 @@ export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
   },
 };
 
-export function resolveSkillsDir(
-  location: LocationChoice,
-  customPath?: string,
-): string {
+export function resolveSkillsDir(location: LocationChoice, customPath?: string): string {
   if (location === 'custom') {
     if (!customPath) throw new Error('--path is required when --location is custom');
     return customPath;
@@ -204,13 +201,13 @@ async function runInteractive(opts: {
   // Resolve variant
   let variant = opts.variant;
   if (!variant) {
-    const picked = await p.select({
+    const picked = await p.select<SkillVariant>({
       message: 'Which Wyreup skill do you want to install?',
       options: SKILL_VARIANTS.map((v) => ({
         value: v,
         label: SKILL_DEFS[v].description,
       })),
-      initialValue: 'combined' as SkillVariant,
+      initialValue: 'combined',
     });
     if (p.isCancel(picked)) {
       p.cancel('Cancelled.');
@@ -224,14 +221,17 @@ async function runInteractive(opts: {
   let customPath = opts.path;
 
   if (!location && !customPath) {
-    const picked = await p.select({
+    const picked = await p.select<LocationChoice>({
       message: 'Where should the skill be installed?',
       options: [
-        { value: 'project', label: 'Claude Code (project)  —  .claude/skills/ in current directory' },
+        {
+          value: 'project',
+          label: 'Claude Code (project)  —  .claude/skills/ in current directory',
+        },
         { value: 'user', label: 'Claude Code (user)  —  ~/.claude/skills/' },
         { value: 'custom', label: 'Custom path  —  prompt for a path' },
       ],
-      initialValue: 'project' as LocationChoice,
+      initialValue: 'project',
     });
     if (p.isCancel(picked)) {
       p.cancel('Cancelled.');
@@ -315,64 +315,69 @@ async function runInteractive(opts: {
 export function makeInstallSkillCommand(): Command {
   const cmd = new Command('install-skill');
   cmd
-    .description('Fetch and install a Wyreup skill.md into your agent\'s skills directory')
+    .description("Fetch and install a Wyreup skill.md into your agent's skills directory")
     .option('--variant <cli|mcp|combined>', 'Skill variant to install (default: combined)')
     .option('--location <project|user|custom>', 'Install location (default: project)')
     .option('--path <dir>', 'Custom directory path (used with --location custom, or as override)')
-    .option('--source <path>', 'Read skill.md from a local file or directory instead of GitHub. Use for local development of skill content, or in CI tests where you don\'t want a network fetch.')
+    .option(
+      '--source <path>',
+      "Read skill.md from a local file or directory instead of GitHub. Use for local development of skill content, or in CI tests where you don't want a network fetch.",
+    )
     .option('--update', 'Overwrite the skill if already installed', false)
     .option('--list', 'List currently installed Wyreup skills and exit', false)
     .option('-y, --yes', 'Skip confirmation prompt', false)
-    .action(async (rawOpts: {
-      list?: boolean;
-      variant?: string;
-      location?: string;
-      path?: string;
-      source?: string;
-      update?: boolean;
-      yes?: boolean;
-    }) => {
-      if (rawOpts.list) {
-        await listInstalledSkills();
-        return;
-      }
+    .action(
+      async (rawOpts: {
+        list?: boolean;
+        variant?: string;
+        location?: string;
+        path?: string;
+        source?: string;
+        update?: boolean;
+        yes?: boolean;
+      }) => {
+        if (rawOpts.list) {
+          await listInstalledSkills();
+          return;
+        }
 
-      if (rawOpts.variant && !SKILL_VARIANTS.includes(rawOpts.variant as SkillVariant)) {
-        console.error(
-          `Invalid --variant "${rawOpts.variant}". Must be one of: ${SKILL_VARIANTS.join(', ')}.`,
-        );
-        process.exit(1);
-      }
+        if (rawOpts.variant && !SKILL_VARIANTS.includes(rawOpts.variant as SkillVariant)) {
+          console.error(
+            `Invalid --variant "${rawOpts.variant}". Must be one of: ${SKILL_VARIANTS.join(', ')}.`,
+          );
+          process.exit(1);
+        }
 
-      if (rawOpts.location && !LOCATION_CHOICES.includes(rawOpts.location as LocationChoice)) {
-        console.error(
-          `Invalid --location "${rawOpts.location}". Must be one of: ${LOCATION_CHOICES.join(', ')}.`,
-        );
-        process.exit(1);
-      }
+        if (rawOpts.location && !LOCATION_CHOICES.includes(rawOpts.location as LocationChoice)) {
+          console.error(
+            `Invalid --location "${rawOpts.location}". Must be one of: ${LOCATION_CHOICES.join(', ')}.`,
+          );
+          process.exit(1);
+        }
 
-      const isNonInteractive =
-        rawOpts.variant !== undefined ||
-        rawOpts.location !== undefined ||
-        rawOpts.path !== undefined ||
-        rawOpts.source !== undefined;
+        const isNonInteractive =
+          rawOpts.variant !== undefined ||
+          rawOpts.location !== undefined ||
+          rawOpts.path !== undefined ||
+          rawOpts.source !== undefined;
 
-      let yes = rawOpts.yes ?? false;
-      if (isNonInteractive && !yes) {
-        // For non-interactive flag usage, default yes to true unless they have a TTY.
-        // In CI / piped contexts skip the prompt.
-        yes = !process.stdin.isTTY;
-      }
+        let yes = rawOpts.yes ?? false;
+        if (isNonInteractive && !yes) {
+          // For non-interactive flag usage, default yes to true unless they have a TTY.
+          // In CI / piped contexts skip the prompt.
+          yes = !process.stdin.isTTY;
+        }
 
-      await runInteractive({
-        variant: rawOpts.variant as SkillVariant | undefined,
-        location: rawOpts.location as LocationChoice | undefined,
-        path: rawOpts.path,
-        source: rawOpts.source,
-        update: rawOpts.update ?? false,
-        yes,
-      });
-    });
+        await runInteractive({
+          variant: rawOpts.variant as SkillVariant | undefined,
+          location: rawOpts.location as LocationChoice | undefined,
+          path: rawOpts.path,
+          source: rawOpts.source,
+          update: rawOpts.update ?? false,
+          yes,
+        });
+      },
+    );
 
   return cmd;
 }

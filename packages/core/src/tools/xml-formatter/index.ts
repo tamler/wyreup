@@ -71,8 +71,8 @@ export const xmlFormatter: ToolModule<XmlFormatterParams> = {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           plugins: [plugin as any],
           tabWidth: params.indent ?? 2,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          xmlWhitespaceSensitivity: 'ignore' as any,
+           
+          xmlWhitespaceSensitivity: 'ignore',
         });
       } catch (e) {
         throw new Error(`XML formatting failed: ${(e as Error).message}`);

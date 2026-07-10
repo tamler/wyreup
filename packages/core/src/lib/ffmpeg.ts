@@ -20,7 +20,7 @@ export async function probeDuration(ff: FFmpeg, inputName: string): Promise<numb
     ]);
     const raw = await ff.readFile(probeOut);
     await ff.deleteFile(probeOut);
-    const text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw as Uint8Array);
+    const text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
     return parseFloat(text.trim());
   } catch {
     // If probe fails (e.g. unknown format), return NaN — callers treat NaN
@@ -65,5 +65,5 @@ export async function runFFmpeg(
   const output = await ff.readFile(outputName);
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
-  return typeof output === 'string' ? new TextEncoder().encode(output) : (output as Uint8Array);
+  return typeof output === 'string' ? new TextEncoder().encode(output) : (output);
 }

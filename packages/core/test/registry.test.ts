@@ -25,7 +25,7 @@ function makeTool(overrides: Partial<ToolModule> = {}): ToolModule {
     run: async () => new Blob(),
     __testFixtures: { valid: [], weird: [], expectedOutputMime: [] },
     ...overrides,
-  } as ToolModule;
+  };
 }
 
 describe('registry', () => {

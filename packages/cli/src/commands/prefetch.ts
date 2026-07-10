@@ -25,10 +25,7 @@ interface PrefetchOpts {
   verbose?: boolean;
 }
 
-export async function prefetchCommand(
-  toolIds: string[],
-  opts: PrefetchOpts,
-): Promise<void> {
+export async function prefetchCommand(toolIds: string[], opts: PrefetchOpts): Promise<void> {
   const registry = createDefaultRegistry();
   const all = Array.from(registry.toolsById.values());
 
@@ -60,9 +57,7 @@ export async function prefetchCommand(
   } else if (opts.all) {
     targets = all.filter((t) => (t.installSize ?? 0) > 0);
   } else if (opts.group) {
-    targets = all.filter(
-      (t) => (t as { installGroup?: string }).installGroup === opts.group,
-    );
+    targets = all.filter((t) => (t as { installGroup?: string }).installGroup === opts.group);
     if (targets.length === 0) {
       const groups = new Set(
         all
@@ -109,10 +104,7 @@ export async function prefetchCommand(
     return;
   }
 
-  const totalBytes = prefetchable.reduce(
-    (acc, t) => acc + (t.installSize ?? 0),
-    0,
-  );
+  const totalBytes = prefetchable.reduce((acc, t) => acc + (t.installSize ?? 0), 0);
   const totalMb = Math.round(totalBytes / (1024 * 1024));
   console.error(
     `Prefetching ${prefetchable.length} tool${prefetchable.length === 1 ? '' : 's'} ` +
@@ -178,7 +170,7 @@ async function runPrefetch(
   let loaded = false;
 
   try {
-    await tool.run([stub], (tool.defaults ?? {}) as never, {
+    await tool.run([stub], tool.defaults ?? {}, {
       onProgress: (p) => {
         if (p.stage === 'loading-deps') {
           loaded = true;
@@ -195,9 +187,7 @@ async function runPrefetch(
     // disk. Surface a hard failure only when the loading-deps stage
     // never fired (model didn't reach the network).
     if (!loaded) {
-      throw new Error(
-        'Model load did not start — tool may not use the standard pipeline cache.',
-      );
+      throw new Error('Model load did not start — tool may not use the standard pipeline cache.');
     }
   }
 }

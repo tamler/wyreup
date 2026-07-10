@@ -67,14 +67,14 @@ export const gpxToKml: ToolModule<GpxToKmlParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 65, message: 'Converting via GeoJSON' });
-    const fc = gpx(doc as unknown as Document) as { features?: unknown[] } | null;
+    const fc = gpx(doc) as { features?: unknown[] } | null;
 
     if (!fc || !Array.isArray(fc.features) || fc.features.length === 0) {
       throw new Error('No tracks, routes, or waypoints found in GPX.');
     }
 
     ctx.onProgress({ stage: 'processing', percent: 85, message: 'Building KML' });
-    const kmlText = toKML(fc as never);
+    const kmlText = toKML(fc);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([kmlText], { type: 'application/vnd.google-earth.kml+xml' })];

@@ -103,7 +103,7 @@ export const regexTester: ToolModule<RegexTesterParams> = {
         if (m.groups && Object.keys(m.groups).length > 0) {
           entry.groups = Object.fromEntries(
             Object.entries(m.groups).filter(([, v]) => v !== undefined),
-          ) as Record<string, string>;
+          );
         }
         matches.push(entry);
       }
@@ -118,7 +118,7 @@ export const regexTester: ToolModule<RegexTesterParams> = {
         if (m.groups && Object.keys(m.groups).length > 0) {
           entry.groups = Object.fromEntries(
             Object.entries(m.groups).filter(([, v]) => v !== undefined),
-          ) as Record<string, string>;
+          );
         }
         matches.push(entry);
       }

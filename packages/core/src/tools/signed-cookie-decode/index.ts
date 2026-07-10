@@ -65,7 +65,7 @@ async function hmacBytes(secret: string, message: string, algorithm: CookieAlgor
     false,
     ['sign'],
   );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message) as BufferSource);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
   return new Uint8Array(sig);
 }
 

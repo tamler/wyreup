@@ -3,7 +3,10 @@ const ORIGINAL = Symbol.for('@wyreup/cli/egress-original-fetch');
 const MAX_REDIRECTS = 5;
 
 export class EgressBlockedError extends Error {
-  constructor(public readonly attempted: string, public readonly allowed: readonly string[]) {
+  constructor(
+    public readonly attempted: string,
+    public readonly allowed: readonly string[],
+  ) {
     super(`Egress blocked: ${attempted} (only ${allowed.join(', ')} allowed)`);
     this.name = 'EgressBlockedError';
   }
@@ -24,7 +27,11 @@ export function installEgressLock(allowedOrigins: string[]): void {
   const allowedSet = new Set(allowed);
   const original = globalThis.fetch.bind(globalThis);
 
-  const locked = async (input: string | Request | URL, init: RequestInit = {}, hops = 0): Promise<Response> => {
+  const locked = async (
+    input: string | Request | URL,
+    init: RequestInit = {},
+    hops = 0,
+  ): Promise<Response> => {
     const url = toUrl(input);
     if (!allowedSet.has(url.origin)) throw new EgressBlockedError(url.origin, allowed);
 
@@ -44,7 +51,7 @@ export function installEgressLock(allowedOrigins: string[]): void {
     return response;
   };
 
-  globalThis.fetch = locked as typeof fetch;
+  globalThis.fetch = locked;
 }
 
 export function _resetEgressLockForTests(): void {

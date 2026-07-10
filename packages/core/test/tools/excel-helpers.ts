@@ -19,7 +19,7 @@ async function writeWorkbookToBuffer(wb: ExcelJS.Workbook): Promise<Uint8Array> 
   const out = await wb.xlsx.writeBuffer();
   if (out instanceof Uint8Array) return out;
   if (out instanceof ArrayBuffer) return new Uint8Array(out);
-  return new Uint8Array(out as ArrayBufferLike);
+  return new Uint8Array(out);
 }
 
 /** Build an XLSX File with one sheet containing the given rows (array of arrays). */
@@ -30,7 +30,7 @@ export async function makeXlsxFile(
 ): Promise<File> {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet(sheetName);
-  for (const row of rows) ws.addRow(row as ExcelJS.CellValue[]);
+  for (const row of rows) ws.addRow(row);
   const buf = await writeWorkbookToBuffer(wb);
   return new File([buf as BlobPart], fileName, {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -45,7 +45,7 @@ export async function makeMultiSheetXlsxFile(
   const wb = new ExcelJS.Workbook();
   for (const { name, rows } of sheets) {
     const ws = wb.addWorksheet(name);
-    for (const row of rows) ws.addRow(row as ExcelJS.CellValue[]);
+    for (const row of rows) ws.addRow(row);
   }
   const buf = await writeWorkbookToBuffer(wb);
   return new File([buf as BlobPart], fileName, {

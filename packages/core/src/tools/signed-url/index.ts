@@ -55,7 +55,7 @@ async function hmacHex(secret: string, message: string, algorithm: SignedUrlAlgo
     ['sign'],
   );
   const sig = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message) as BufferSource),
+    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message)),
   );
   return toHex(sig);
 }

@@ -93,7 +93,7 @@ export async function signJwt(
     ['sign'],
   );
   const sig = new Uint8Array(
-    await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(signingInput) as BufferSource),
+    await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(signingInput)),
   );
   const signature = base64UrlEncode(sig);
   const token = `${signingInput}.${signature}`;

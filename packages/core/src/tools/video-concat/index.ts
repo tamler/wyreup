@@ -130,7 +130,7 @@ export const videoConcat: ToolModule<VideoConcatParams> = {
 
     const output = await ff.readFile('output.mp4');
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output as Uint8Array);
+      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
 
     for (const n of inputNames) await ff.deleteFile(n).catch(() => {});
     await ff.deleteFile('list.txt').catch(() => {});

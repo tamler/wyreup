@@ -26,7 +26,6 @@ const RAMPS = {
 // Chars are ~2x taller than wide; halve y to keep aspect.
 const CHAR_ASPECT = 0.5;
 
-interface ImageLike { width: number; height: number }
 interface CanvasContext {
   drawImage: (img: unknown, x: number, y: number, w: number, h: number) => void;
   getImageData: (x: number, y: number, w: number, h: number) => { data: Uint8ClampedArray };
@@ -42,12 +41,12 @@ export async function imageToAscii(
   let ramp = RAMPS[rampName] ?? RAMPS.standard;
   if (invert) ramp = ramp.split('').reverse().join('');
 
-  const img = await loadImage(blob) as ImageLike;
+  const img = await loadImage(blob);
   const height = Math.max(1, Math.round(width * (img.height / img.width) * CHAR_ASPECT));
 
   const canvas = await createCanvas(width, height);
   const ctx = canvas.getContext('2d') as unknown as CanvasContext;
-  ctx.drawImage(img as unknown, 0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
   const { data } = ctx.getImageData(0, 0, width, height);
 
   const rampLen = ramp.length;

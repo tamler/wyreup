@@ -74,10 +74,10 @@ export async function loadImage(blob: Blob): Promise<ImageLike> {
   if (isNode()) {
     const nc = await getNodeCanvas();
     const buffer = Buffer.from(await blob.arrayBuffer());
-    return (await nc.loadImage(buffer)) as unknown as ImageLike;
+    return await nc.loadImage(buffer);
   }
   // Browser: createImageBitmap is natively available.
-  return (await createImageBitmap(blob)) as unknown as ImageLike;
+  return await createImageBitmap(blob);
 }
 
 /**

@@ -58,12 +58,12 @@ beforeEach(() => {
   exitCode = null;
   currentWatcher = new FakeWatcher();
   mockRunChain.mockClear();
-  process.exit = ((code?: number) => {
+  process.exit = (code?: number) => {
     exitCode = code ?? 0;
     // No throw: continue execution but trap exit. The shutdown path's
     // remaining work is harmless after exit was "called".
     return undefined as never;
-  }) as typeof process.exit;
+  };
 });
 
 afterAll(() => {

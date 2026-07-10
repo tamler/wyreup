@@ -107,7 +107,7 @@ export const mixAudio: ToolModule<MixAudioParams> = {
     await ff.exec(buildMixAudioArgs(videoName, musicName, outputName, params.musicVolume));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output as Uint8Array);
+      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
 
     await ff.deleteFile(videoName).catch(() => {});
     await ff.deleteFile(musicName).catch(() => {});

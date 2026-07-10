@@ -7,7 +7,10 @@ const ALLOWED = Symbol.for('@wyreup/mcp/egress-allowed-origin');
 const MAX_REDIRECTS = 5;
 
 export class EgressBlockedError extends Error {
-  constructor(public readonly attempted: string, public readonly allowed: string) {
+  constructor(
+    public readonly attempted: string,
+    public readonly allowed: string,
+  ) {
     super(`Egress blocked: ${attempted} (only ${allowed} allowed)`);
     this.name = 'EgressBlockedError';
   }
@@ -28,7 +31,11 @@ export function installEgressLock(allowedOrigin: string): void {
   g[ALLOWED] = allowedAtInstall;
   const original = globalThis.fetch.bind(globalThis);
 
-  const locked = async (input: string | Request | URL, init: RequestInit = {}, hops = 0): Promise<Response> => {
+  const locked = async (
+    input: string | Request | URL,
+    init: RequestInit = {},
+    hops = 0,
+  ): Promise<Response> => {
     const allowed = g[ALLOWED] as string;
     const url = toUrl(input);
     if (url.origin !== allowed) throw new EgressBlockedError(url.origin, allowed);
@@ -49,7 +56,7 @@ export function installEgressLock(allowedOrigin: string): void {
     return response;
   };
 
-  globalThis.fetch = locked as typeof fetch;
+  globalThis.fetch = locked;
 }
 
 /**
@@ -71,10 +78,7 @@ export function setEgressAllowedOrigin(allowedOrigin: string): void {
 // Guarded so a third party importing the built bundle cannot disable the lock
 // in production — it is inert unless a real test runner is active.
 function isTestEnv(): boolean {
-  return (
-    process.env['VITEST'] !== undefined ||
-    process.env['NODE_ENV'] === 'test'
-  );
+  return process.env['VITEST'] !== undefined || process.env['NODE_ENV'] === 'test';
 }
 
 export function _resetEgressLockForTests(): void {

@@ -96,7 +96,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
     pdfDoc.encrypt({
       userPassword,
       ownerPassword: ownerPassword ?? userPassword,
-      permissions: cantooPermissions as Parameters<typeof pdfDoc.encrypt>[0]['permissions'],
+      permissions: cantooPermissions,
     });
 
     ctx.onProgress({ stage: 'encoding', percent: 90, message: 'Saving encrypted PDF' });

@@ -183,7 +183,7 @@ export const colorPalette: ToolModule<ColorPaletteParams> = {
       drawImage(src: unknown, x: number, y: number): void;
       getImageData(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray };
     };
-    context.drawImage(img as unknown, 0, 0);
+    context.drawImage(img, 0, 0);
 
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Analyzing colors' });
 

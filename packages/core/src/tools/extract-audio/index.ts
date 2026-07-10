@@ -105,7 +105,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
     await ff.deleteFile(outputName);
     const outputBytes = typeof output === 'string'
       ? new TextEncoder().encode(output)
-      : (output as Uint8Array);
+      : (output);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getExtractMime(params.format) })];

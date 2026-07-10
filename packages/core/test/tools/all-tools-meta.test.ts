@@ -150,7 +150,7 @@ describe('tool smoke runs (cheap subset)', () => {
       const input = makeSyntheticInput(tool);
       const inputs = input ? [input] : [];
       try {
-        const result = await tool.run(inputs, tool.defaults as never, makeCtx());
+        const result = await tool.run(inputs, tool.defaults, makeCtx());
         const blobs = Array.isArray(result) ? result : [result];
         expect(blobs.length).toBeGreaterThan(0);
         for (const b of blobs) {

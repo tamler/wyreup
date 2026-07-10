@@ -194,7 +194,7 @@ export const videoOverlayImage: ToolModule<VideoOverlayImageParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output as Uint8Array);
+      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
 
     await ff.deleteFile(videoName).catch(() => {});
     await ff.deleteFile(imageName).catch(() => {});

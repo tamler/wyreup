@@ -13,11 +13,6 @@ interface FeatureCollection {
   features: unknown[];
 }
 
-interface Feature {
-  type: 'Feature';
-  geometry: unknown;
-  properties?: unknown;
-}
 
 function asFeatureCollection(value: unknown): FeatureCollection {
   if (!value || typeof value !== 'object') {
@@ -31,7 +26,7 @@ function asFeatureCollection(value: unknown): FeatureCollection {
     return value as FeatureCollection;
   }
   if (obj.type === 'Feature') {
-    return { type: 'FeatureCollection', features: [value as Feature] };
+    return { type: 'FeatureCollection', features: [value] };
   }
   // Bare geometry — wrap into a single Feature
   if (typeof obj.type === 'string' && [
@@ -118,7 +113,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 70, message: 'Building KML' });
-    let kmlText = toKML(fc as never);
+    let kmlText = toKML(fc);
 
     const docName = (params.documentName ?? '').trim();
     if (docName) {
