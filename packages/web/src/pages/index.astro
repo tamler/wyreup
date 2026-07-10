@@ -257,11 +257,17 @@ const popularTools = popularToolIds.map((id) => {
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  /* Keep the first section compact enough to reveal the next section at the
-     fold while retaining breathing room around the hero content. */
+  /* The hero owns most of the first viewport (~85svh incl. the 48px nav),
+     centered vertically, leaving a sliver of the next section cresting the
+     fold as the scroll hint — a hint, not half the card grid, and never a
+     full-viewport false floor. */
   .hero {
-    padding-block-start: clamp(56px, 5vw, 80px);
-    padding-block-end: clamp(64px, 5vw, 80px);
+    min-height: clamp(520px, 85svh, 940px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block-start: clamp(48px, 4vw, 72px);
+    padding-block-end: clamp(48px, 4vw, 72px);
   }
 
   /* ── Hero ── */
