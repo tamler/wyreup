@@ -1,5 +1,11 @@
 # @wyreup/core
 
+## 0.6.5
+
+### Patch Changes
+
+- d1191e4: Update cron-parser to v5 (CronExpressionParser.parse API); cron tool behavior unchanged, 'L' day markers are filtered out of the numeric field lists as before.
+
 ## 0.6.4
 
 ### Patch Changes
