@@ -204,10 +204,10 @@
     return {
       compatibleGroups,
       otherGroups,
-      ordered: [
-        ...compatibleGroups.flatMap((group) => group.tools),
-        ...otherGroups.flatMap((group) => group.tools),
-      ],
+      // Only compatible tools are selectable: a chain edge the engine will
+      // reject must not be buildable from the picker (a failing step after
+      // credit-metered steps have already run is the worst outcome).
+      ordered: compatibleGroups.flatMap((group) => group.tools),
       hasCompatibilityContext: true,
     };
   }
@@ -605,22 +605,20 @@
                   {/each}
 
                   {#if pickerResults.otherGroups.length > 0}
-                    <div class="tool-picker__divider" role="separator"><span>Other tools</span></div>
+                    <div class="tool-picker__divider" role="separator"><span>Won't accept this step's input</span></div>
                     {#each pickerResults.otherGroups as group}
                       <div class="tool-picker__group" role="group" aria-label={group.category}>
                         <div class="tool-picker__category">{group.category}</div>
                         {#each group.tools as tool}
                           <button
-                            class="tool-picker__option"
-                            class:tool-picker__option--active={pickerResults.ordered[activeOptionIdx]?.id === tool.id}
+                            class="tool-picker__option tool-picker__option--incompatible"
                             id={pickerOptionId(idx, tool.id)}
                             type="button"
                             role="option"
-                            aria-selected={step.toolId === tool.id}
+                            aria-selected="false"
+                            aria-disabled="true"
+                            disabled
                             tabindex="-1"
-                            on:mouseenter={() => { activeOptionIdx = pickerResults.ordered.findIndex((item) => item.id === tool.id); }}
-                            on:mousedown|preventDefault
-                            on:click={() => choosePickerTool(idx, tool)}
                           >
                             <span class="tool-picker__option-name">{tool.name}</span>
                             <span class="tool-picker__option-category">{getToolCategory(tool)}</span>
@@ -991,9 +989,14 @@
     text-align: left;
   }
 
-  .tool-picker__option:hover,
+  .tool-picker__option:hover:not(:disabled),
   .tool-picker__option--active {
     background: var(--accent-dim);
+  }
+
+  .tool-picker__option--incompatible {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   .tool-picker__option:focus-visible {

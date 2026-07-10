@@ -23,6 +23,10 @@
 
       const entries = Object.entries(parsed as Record<string, unknown>);
       if (entries.length === 0) return null;
+      // Large flat objects (json-flatten output, big lookup tables) would
+      // render one row per key; keep the readable view for small stat-like
+      // results and fall back to the single-text-node raw view otherwise.
+      if (entries.length > 40) return null;
       if (entries.some(([, entry]) => entry !== null && typeof entry === 'object')) return null;
       return entries as FlatEntry[];
     } catch {

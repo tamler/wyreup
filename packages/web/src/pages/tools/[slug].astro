@@ -90,7 +90,12 @@ const { name, description, category, keywords, seoContent } = serializedTool;
 
 const seoTitle = `${name} — Wyreup`;
 const seoDescription = description;
-const ogDescription = `${description} Runs entirely in your browser — no uploads.`;
+// Social metadata must match execution location like the privacy callout:
+// hosted PRO tools do send the input to Wyreup's backend.
+const ogDescription =
+  serializedTool.cost === 'credit'
+    ? `${description} Hosted PRO tool — pay per run, credits never expire.`
+    : `${description} Runs entirely in your browser — no uploads.`;
 
 // Auto-generated content. Used for every tool page (whether or not
 // seoContent is present) — adds depth that one-line descriptions miss

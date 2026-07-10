@@ -210,6 +210,8 @@
           </div>
           {#if resultSize > originalSize}
             <p class="result-size-warning" role="status">Result is larger than the original — the input may already be optimized.</p>
+          {:else if resultSize === originalSize && originalSize > 0}
+            <p class="result-size-note" role="status">No savings possible — the file was already optimized, so the original is kept unchanged.</p>
           {/if}
         {/if}
         {#if resultDimensions}
@@ -474,6 +476,12 @@
 
   .solder-pad--warning {
     background: var(--warning);
+  }
+
+  .result-size-note {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 
   .result-size-warning {
