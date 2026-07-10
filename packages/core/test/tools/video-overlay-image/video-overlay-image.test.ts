@@ -15,7 +15,8 @@ import {
 } from '../../../src/tools/video-overlay-image/index.js';
 
 describe('video-overlay-image — metadata', () => {
-  it('has id "video-overlay-image"', () => expect(videoOverlayImage.id).toBe('video-overlay-image'));
+  it('has id "video-overlay-image"', () =>
+    expect(videoOverlayImage.id).toBe('video-overlay-image'));
   it('category is "media"', () => expect(videoOverlayImage.category).toBe('media'));
   it('accepts video/*', () => expect(videoOverlayImage.input.accept).toContain('video/*'));
   it('accepts image/*', () => expect(videoOverlayImage.input.accept).toContain('image/*'));
@@ -29,11 +30,13 @@ describe('video-overlay-image — metadata', () => {
     expect(videoOverlayImage.input.min).toBe(2);
     expect(videoOverlayImage.input.max).toBe(2);
   });
-  it('defaults position is bottom-right', () => expect(defaultVideoOverlayImageParams.position).toBe('bottom-right'));
+  it('defaults position is bottom-right', () =>
+    expect(defaultVideoOverlayImageParams.position).toBe('bottom-right'));
   it('defaults margin is 20', () => expect(defaultVideoOverlayImageParams.margin).toBe(20));
   it('defaults scale is 0.15', () => expect(defaultVideoOverlayImageParams.scale).toBe(0.15));
   it('defaults opacity is 1.0', () => expect(defaultVideoOverlayImageParams.opacity).toBe(1.0));
-  it('defaults startSeconds is 0', () => expect(defaultVideoOverlayImageParams.startSeconds).toBe(0));
+  it('defaults startSeconds is 0', () =>
+    expect(defaultVideoOverlayImageParams.startSeconds).toBe(0));
 });
 
 describe('video-overlay-image — overlayPositionToXY()', () => {

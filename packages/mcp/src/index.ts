@@ -12,9 +12,7 @@ import { createWyreupMcpServer } from './server.js';
   if (cdnOverride === 'disabled') {
     setModelCdn(null);
   } else {
-    setModelCdn(
-      cdnOverride && cdnOverride.length > 0 ? cdnOverride : 'https://models.wyreup.com',
-    );
+    setModelCdn(cdnOverride && cdnOverride.length > 0 ? cdnOverride : 'https://models.wyreup.com');
   }
 }
 
@@ -27,9 +25,7 @@ async function main(): Promise<void> {
   const heavyCount = Array.from(registry.toolsById.values()).filter(
     (t) => (t.installSize ?? 0) > 0,
   ).length;
-  console.error(
-    `[wyreup-mcp] ready — ${toolCount} tools exposed, plus the wyreup_chain meta-tool`,
-  );
+  console.error(`[wyreup-mcp] ready — ${toolCount} tools exposed, plus the wyreup_chain meta-tool`);
   if (heavyCount > 0) {
     // Heads-up so an agent operator knows the first invocation of an
     // ML tool will hit the network. The Transformers.js cache lives at

@@ -1,5 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { sanitizeZipEntryName, MAX_ZIP_ENTRIES, ZipSafetyError, assertDeclaredSizeBudget } from '../../lib/zip-safety.js';
+import {
+  sanitizeZipEntryName,
+  MAX_ZIP_ENTRIES,
+  ZipSafetyError,
+  assertDeclaredSizeBudget,
+} from '../../lib/zip-safety.js';
 
 export interface ZipEntryInfo {
   path: string;
@@ -45,11 +50,7 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
 
   defaults: defaultZipInfoParams,
 
-  async run(
-    inputs: File[],
-    _params: ZipInfoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: ZipInfoParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading JSZip' });
     const JSZip = (await import('jszip')).default;
 
@@ -61,15 +62,24 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
     const zip = await JSZip.loadAsync(bytes);
 
     if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
-      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+      throw new ZipSafetyError(
+        'too-many-entries',
+        `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`,
+      );
     }
 
     // Pre-flight declared-size check: zip-info reads metadata only and never
     // decompresses payloads, but run the check so any unintended JSZip
     // decompress during directory parsing can't blow the heap.
-    assertDeclaredSizeBudget(Object.values(zip.files).filter((f) => !f.dir).map((f) => ({
-      uncompressedSize: (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
-    })));
+    assertDeclaredSizeBudget(
+      Object.values(zip.files)
+        .filter((f) => !f.dir)
+        .map((f) => ({
+          uncompressedSize:
+            (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ??
+            0,
+        })),
+    );
 
     let totalUncompressed = 0;
     let totalCompressed = 0;
@@ -78,7 +88,9 @@ export const zipInfo: ToolModule<ZipInfoParams> = {
     for (const [rawPath, entry] of Object.entries(zip.files)) {
       // JSZip doesn't expose raw compressed sizes directly, so we use the
       // internal _data field which is set after loading.
-      const internalData = (entry as unknown as { _data?: { uncompressedSize?: number; compressedSize?: number } })._data;
+      const internalData = (
+        entry as unknown as { _data?: { uncompressedSize?: number; compressedSize?: number } }
+      )._data;
       const uncompressedSize = internalData?.uncompressedSize ?? 0;
       const compressedSize = internalData?.compressedSize ?? uncompressedSize;
 

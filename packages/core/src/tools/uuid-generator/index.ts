@@ -34,9 +34,7 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
       type: 'enum',
       label: 'version',
       help: 'UUID format. v4 is random and the most common.',
-      options: [
-        { value: 4, label: 'v4 (random)' },
-      ],
+      options: [{ value: 4, label: 'v4 (random)' }],
     },
     count: {
       type: 'range',
@@ -49,12 +47,8 @@ export const uuidGenerator: ToolModule<UuidGeneratorParams> = {
   },
 
   // Tool contract requires Promise return; no internal await needed.
-   
-  async run(
-    _inputs: File[],
-    params: UuidGeneratorParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+
+  async run(_inputs: File[], params: UuidGeneratorParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating UUID' });
 
     const version = params.version;

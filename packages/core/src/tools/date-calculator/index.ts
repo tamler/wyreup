@@ -21,15 +21,20 @@ function diffDays(a: Date, b: Date): number {
 function addToDate(d: Date, amount: number, unit: DateUnit): Date {
   // Work on a plain object to avoid timezone drift
   const y = d.getUTCFullYear();
-  const m = d.getUTCMonth();   // 0-indexed
+  const m = d.getUTCMonth(); // 0-indexed
   const day = d.getUTCDate();
 
   switch (unit) {
-    case 'days': return new Date(Date.UTC(y, m, day + amount));
-    case 'weeks': return new Date(Date.UTC(y, m, day + amount * 7));
-    case 'months': return new Date(Date.UTC(y, m + amount, day));
-    case 'years': return new Date(Date.UTC(y + amount, m, day));
-    default: throw new Error(`Unknown unit: ${String(unit)}`);
+    case 'days':
+      return new Date(Date.UTC(y, m, day + amount));
+    case 'weeks':
+      return new Date(Date.UTC(y, m, day + amount * 7));
+    case 'months':
+      return new Date(Date.UTC(y, m + amount, day));
+    case 'years':
+      return new Date(Date.UTC(y + amount, m, day));
+    default:
+      throw new Error(`Unknown unit: ${String(unit)}`);
   }
 }
 
@@ -50,7 +55,8 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
   id: 'date-calculator',
   slug: 'date-calculator',
   name: 'Date Calculator',
-  description: 'Calculate the difference between two dates, add/subtract time from a date, or find the day of the week.',
+  description:
+    'Calculate the difference between two dates, add/subtract time from a date, or find the day of the week.',
   category: 'create',
   keywords: ['date', 'calculator', 'difference', 'days', 'weeks', 'months', 'years', 'calendar'],
 
@@ -105,12 +111,7 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
     },
   },
 
-   
-  async run(
-    _inputs: File[],
-    params: DateCalculatorParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(_inputs: File[], params: DateCalculatorParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Calculating date' });
 
     let result: Record<string, unknown>;

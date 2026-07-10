@@ -50,11 +50,7 @@ export const rewriteTonePro: ToolModule<RewriteToneProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RewriteToneProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: RewriteToneProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('rewrite-tone-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

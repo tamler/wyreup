@@ -94,11 +94,7 @@ export const jwtDecoder: ToolModule<JwtDecoderParams> = {
 
   defaults: defaultJwtDecoderParams,
 
-  async run(
-    inputs: File[],
-    _params: JwtDecoderParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: JwtDecoderParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Decoding JWT' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

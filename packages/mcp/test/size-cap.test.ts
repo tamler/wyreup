@@ -6,8 +6,14 @@ import { createWyreupMcpServer } from '../src/server.js';
 
 async function callTool(srv: unknown, name: string, args: Record<string, unknown>) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-  const handlers = (srv as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
-  return handlers.get('tools/call')!({ method: 'tools/call', params: { name, arguments: args } }, {}) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
+  const handlers = (srv as any)._requestHandlers as Map<
+    string,
+    (req: unknown, extra: unknown) => unknown
+  >;
+  return handlers.get('tools/call')!(
+    { method: 'tools/call', params: { name, arguments: args } },
+    {},
+  ) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
 }
 
 describe('input size cap [spec §#5]', () => {
@@ -36,7 +42,10 @@ describe('input size cap [spec §#5]', () => {
       const fh = await open(big, 'w');
       await fh.truncate(2048);
       await fh.close();
-      const r = await callTool(srv, 'compress', { input_paths: [big], output_path: join(tmp, 'out.jpg') });
+      const r = await callTool(srv, 'compress', {
+        input_paths: [big],
+        output_path: join(tmp, 'out.jpg'),
+      });
       expect(r.isError).toBe(true);
       expect(r.content[0]?.text).toMatch(/exceeds limit/);
     } finally {
@@ -52,7 +61,10 @@ describe('input size cap [spec §#5]', () => {
     // Minimal valid JPEG bytes
     const { writeFile } = await import('node:fs/promises');
     await writeFile(ok, Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
-    const r = await callTool(srv, 'compress', { input_paths: [ok], output_path: join(tmp, 'out.jpg') });
+    const r = await callTool(srv, 'compress', {
+      input_paths: [ok],
+      output_path: join(tmp, 'out.jpg'),
+    });
     // The tool may fail for other reasons (4-byte stub isn't a real image),
     // but the failure must NOT be "exceeds limit".
     if (r.isError) {

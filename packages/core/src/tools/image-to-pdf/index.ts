@@ -51,11 +51,7 @@ export const imageToPdf: ToolModule<ImageToPdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ImageToPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ImageToPdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     // Dynamic import so pdf-lib only loads when this tool runs.

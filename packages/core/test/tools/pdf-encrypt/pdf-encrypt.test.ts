@@ -26,11 +26,7 @@ describe('pdf-encrypt — metadata', () => {
 describe('pdf-encrypt — run()', () => {
   it('encrypts a PDF (output starts with %PDF and contains /Encrypt)', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const result = await pdfEncrypt.run(
-      [input],
-      { userPassword: 'secret123' },
-      makeCtx(),
-    );
+    const result = await pdfEncrypt.run([input], { userPassword: 'secret123' }, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/pdf');
 
@@ -42,16 +38,16 @@ describe('pdf-encrypt — run()', () => {
 
   it('throws if userPassword is empty', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfEncrypt.run([input], { userPassword: '' }, makeCtx()),
-    ).rejects.toThrow('userPassword');
+    await expect(pdfEncrypt.run([input], { userPassword: '' }, makeCtx())).rejects.toThrow(
+      'userPassword',
+    );
   });
 
   it('throws if userPassword is whitespace only', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfEncrypt.run([input], { userPassword: '   ' }, makeCtx()),
-    ).rejects.toThrow('userPassword');
+    await expect(pdfEncrypt.run([input], { userPassword: '   ' }, makeCtx())).rejects.toThrow(
+      'userPassword',
+    );
   });
 
   it('accepts permissions flags', async () => {

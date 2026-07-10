@@ -24,12 +24,18 @@ export function buildVignetteArgs(
   const s = Math.max(0.05, Math.min(1, strength));
   const angle = (s * Math.PI) / 2;
   return [
-    '-i', inputName,
-    '-vf', `vignette=angle=${angle.toFixed(4)}`,
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'fast',
-    '-c:a', 'copy',
+    '-i',
+    inputName,
+    '-vf',
+    `vignette=angle=${angle.toFixed(4)}`,
+    '-c:v',
+    'libx264',
+    '-crf',
+    '23',
+    '-preset',
+    'fast',
+    '-c:a',
+    'copy',
     outputName,
   ];
 }
@@ -88,7 +94,7 @@ export const vignetteVideo: ToolModule<VignetteVideoParams> = {
     await ff.exec(buildVignetteArgs(inputName, outputName, params.strength));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

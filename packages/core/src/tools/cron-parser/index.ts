@@ -67,11 +67,7 @@ export const cronParser: ToolModule<CronParserParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CronParserParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CronParserParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading cron parser' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

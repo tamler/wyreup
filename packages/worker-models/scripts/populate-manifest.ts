@@ -41,12 +41,7 @@ const ALLOWED_HF_MODELS: string[] = [
  * fall back to the "default" list.
  */
 const HF_FILES_PER_MODEL: Record<string, string[]> = {
-  default: [
-    'config.json',
-    'tokenizer.json',
-    'tokenizer_config.json',
-    'onnx/model_quantized.onnx',
-  ],
+  default: ['config.json', 'tokenizer.json', 'tokenizer_config.json', 'onnx/model_quantized.onnx'],
   // Per-model overrides. Add as needed after observing real traffic.
   // Example:
   // 'Xenova/whisper-tiny': ['config.json', 'tokenizer.json', 'tokenizer_config.json', 'onnx/encoder_model_fp16.onnx', 'onnx/decoder_model_fp16.onnx'],
@@ -69,9 +64,7 @@ const PINNED_PREFIX_PATHS: Array<{ key: string; upstreamBase: string }> = [
 /** Must match MAX_HASHABLE_BYTES in src/index.ts. */
 const MAX_HASHABLE_BYTES = 100 * 1024 * 1024; // 100 MB
 
-async function hashUrl(
-  url: string,
-): Promise<{ sha256: string; bytes: number } | null> {
+async function hashUrl(url: string): Promise<{ sha256: string; bytes: number } | null> {
   const res = await fetch(url);
   if (!res.ok) {
     process.stderr.write(`  ! ${url} — HTTP ${res.status}\n`);

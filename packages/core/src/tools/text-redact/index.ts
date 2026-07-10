@@ -47,13 +47,19 @@ const PATTERNS: ReadonlyArray<{ key: RedactPreset; re: RegExp }> = [
   // International phone — +CC then 6-14 digits with optional spaces.
   { key: 'phone-intl', re: /\+\d{1,3}[ .-]?\d{1,4}[ .-]?\d{4,}/g },
   // IPv4
-  { key: 'ipv4', re: /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\b/g },
+  {
+    key: 'ipv4',
+    re: /\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d)\b/g,
+  },
   // IPv6 — common compressed and full forms. Not exhaustive.
   { key: 'ipv6', re: /\b(?:[A-Fa-f0-9]{1,4}:){2,7}[A-Fa-f0-9]{1,4}\b/g },
   // URL
   { key: 'url', re: /\bhttps?:\/\/[^\s<>"'`]+/g },
   // UUID
-  { key: 'uuid', re: /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g },
+  {
+    key: 'uuid',
+    re: /\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g,
+  },
   // AWS access key (AKIA prefix + 16 uppercase alphanumeric)
   { key: 'aws-access-key', re: /\bAKIA[0-9A-Z]{16}\b/g },
 ];
@@ -104,7 +110,10 @@ export function redactText(input: string, params: TextRedactParams): TextRedactR
 
   const customRaw = (params.customPatterns ?? '').trim();
   if (customRaw) {
-    const patterns = customRaw.split(',').map((s) => s.trim()).filter(Boolean);
+    const patterns = customRaw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
     for (const pat of patterns) {
       let re: RegExp;
       try {
@@ -131,7 +140,18 @@ export const textRedact: ToolModule<TextRedactParams> = {
   description:
     'Replace PII patterns in text — emails, phones, SSNs, credit cards (Luhn-validated), IPs, URLs, UUIDs, AWS access keys. Optional custom regex patterns. Text-only sibling of pdf-redact.',
   category: 'privacy',
-  keywords: ['redact', 'pii', 'privacy', 'sanitize', 'mask', 'email', 'phone', 'ssn', 'credit-card', 'security'],
+  keywords: [
+    'redact',
+    'pii',
+    'privacy',
+    'sanitize',
+    'mask',
+    'email',
+    'phone',
+    'ssn',
+    'credit-card',
+    'security',
+  ],
 
   input: {
     accept: ['text/plain'],
@@ -193,7 +213,16 @@ export const textRedact: ToolModule<TextRedactParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [
       new Blob([result.redactedText], { type: 'text/plain' }),
-      new Blob([JSON.stringify({ counts: result.counts, totalRedactions: result.totalRedactions }, null, 2)], { type: 'application/json' }),
+      new Blob(
+        [
+          JSON.stringify(
+            { counts: result.counts, totalRedactions: result.totalRedactions },
+            null,
+            2,
+          ),
+        ],
+        { type: 'application/json' },
+      ),
     ];
   },
 

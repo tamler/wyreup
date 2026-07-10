@@ -63,11 +63,16 @@ export function buildSpeedArgs(
     : `asetrate=44100*${speed},aresample=44100`;
 
   return [
-    '-i', inputName,
-    '-filter:v', videoFilter,
-    '-filter:a', audioFilter,
-    '-crf', String(crf),
-    '-preset', 'fast',
+    '-i',
+    inputName,
+    '-filter:v',
+    videoFilter,
+    '-filter:a',
+    audioFilter,
+    '-crf',
+    String(crf),
+    '-preset',
+    'fast',
     outputName,
   ];
 }
@@ -120,11 +125,7 @@ export const videoSpeed: ToolModule<VideoSpeedParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoSpeedParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoSpeedParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -153,7 +154,7 @@ export const videoSpeed: ToolModule<VideoSpeedParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

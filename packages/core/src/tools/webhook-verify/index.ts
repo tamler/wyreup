@@ -67,7 +67,7 @@ export const webhookVerify: ToolModule<WebhookVerifyParams> = {
   slug: 'webhook-verify',
   name: 'Webhook Verify',
   description:
-    'Verify a webhook signature against its payload using HMAC. Matches the Stripe / GitHub / Slack convention (HMAC-SHA256 with hex digest). Constant-time compare so timing attacks can\'t lift the signature.',
+    "Verify a webhook signature against its payload using HMAC. Matches the Stripe / GitHub / Slack convention (HMAC-SHA256 with hex digest). Constant-time compare so timing attacks can't lift the signature.",
   category: 'inspect',
   keywords: ['webhook', 'verify', 'hmac', 'signature', 'stripe', 'github', 'slack', 'security'],
 
@@ -151,7 +151,8 @@ export const webhookVerify: ToolModule<WebhookVerifyParams> = {
     const sig = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, payload));
     const expected = encoding === 'base64' ? toBase64(sig) : toHex(sig);
 
-    const stripped = prefix && provided.startsWith(prefix) ? provided.slice(prefix.length) : provided;
+    const stripped =
+      prefix && provided.startsWith(prefix) ? provided.slice(prefix.length) : provided;
     // Hex compare is case-insensitive; normalize before constant-time check.
     const a = encoding === 'hex' ? expected.toLowerCase() : expected;
     const b = encoding === 'hex' ? stripped.toLowerCase() : stripped;

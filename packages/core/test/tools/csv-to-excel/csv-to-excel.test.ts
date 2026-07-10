@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { csvToExcel } from '../../../src/tools/csv-to-excel/index.js';
-import {
-  readWorkbook,
-  sheetNames,
-  getSheet,
-  sheetToAOA,
-} from '../../../src/lib/excel.js';
+import { readWorkbook, sheetNames, getSheet, sheetToAOA } from '../../../src/lib/excel.js';
 import { makeCtx, makeCsvFile } from '../excel-helpers.js';
 
 const SAMPLE_CSV = 'name,age,city\nAlice,30,NY\nBob,25,LA';
@@ -87,7 +82,11 @@ describe('csv-to-excel — run()', () => {
   it('uses generic sheet names when sheetNameFromFilename=false', async () => {
     const f1 = makeCsvFile('a,b\n1,2', 'data.csv');
     const f2 = makeCsvFile('c,d\n3,4', 'other.csv');
-    const blob = (await csvToExcel.run([f1, f2], { sheetNameFromFilename: false }, makeCtx())) as Blob;
+    const blob = (await csvToExcel.run(
+      [f1, f2],
+      { sheetNameFromFilename: false },
+      makeCtx(),
+    )) as Blob;
     const wb = await loadXlsx(blob);
     const names = sheetNames(wb);
     expect(names[0]).toBe('Sheet1');

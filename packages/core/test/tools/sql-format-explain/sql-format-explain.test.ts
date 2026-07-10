@@ -102,7 +102,9 @@ describe('explainSql — write statements', () => {
     expect(r.statementType).toBe('DELETE');
   });
   it('detects WITH (CTE)', async () => {
-    const r = await explainSql('with active as (select * from users where active) select * from active');
+    const r = await explainSql(
+      'with active as (select * from users where active) select * from active',
+    );
     expect(r.statementType).toBe('WITH');
   });
 });

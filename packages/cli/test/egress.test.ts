@@ -1,5 +1,9 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { installEgressLock, EgressBlockedError, _resetEgressLockForTests } from '../src/lib/safety/egress.js';
+import {
+  installEgressLock,
+  EgressBlockedError,
+  _resetEgressLockForTests,
+} from '../src/lib/safety/egress.js';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -10,9 +14,18 @@ beforeEach(async () => {
   _resetEgressLockForTests();
   await new Promise<void>((resolve) => {
     server = createServer((req, res) => {
-      if (req.url === '/ok') { res.writeHead(200); res.end('ok'); return; }
-      if (req.url === '/redirect-external') { res.writeHead(302, { location: 'http://evil.example/' }); res.end(); return; }
-      res.writeHead(404); res.end();
+      if (req.url === '/ok') {
+        res.writeHead(200);
+        res.end('ok');
+        return;
+      }
+      if (req.url === '/redirect-external') {
+        res.writeHead(302, { location: 'http://evil.example/' });
+        res.end();
+        return;
+      }
+      res.writeHead(404);
+      res.end();
     });
     server.listen(0, '127.0.0.1', () => {
       port = (server.address() as AddressInfo).port;
@@ -40,12 +53,14 @@ describe('CLI egress lock — multi-origin', () => {
 
   it('blocks a cross-origin redirect even when the initial origin is allowed', async () => {
     installEgressLock([`http://127.0.0.1:${port}`]);
-    await expect(fetch(`http://127.0.0.1:${port}/redirect-external`)).rejects.toBeInstanceOf(EgressBlockedError);
+    await expect(fetch(`http://127.0.0.1:${port}/redirect-external`)).rejects.toBeInstanceOf(
+      EgressBlockedError,
+    );
   });
 
   it('idempotent: second install is a no-op', async () => {
     installEgressLock([`http://127.0.0.1:${port}`]);
-    installEgressLock(['http://other.example']);  // ignored
+    installEgressLock(['http://other.example']); // ignored
     await expect(fetch('http://other.example/')).rejects.toBeInstanceOf(EgressBlockedError);
   });
 });

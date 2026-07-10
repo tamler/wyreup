@@ -27,7 +27,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   if (!userId) return json({ error: 'userId required' }, 400);
   if (!Number.isFinite(amount) || amount === 0) {
-    return json({ error: 'amount must be a non-zero integer (negative debits, positive credits)' }, 400);
+    return json(
+      { error: 'amount must be a non-zero integer (negative debits, positive credits)' },
+      400,
+    );
   }
   if (Math.abs(amount) > 10_000) {
     return json({ error: 'amount cap is 10,000 per grant' }, 400);
@@ -44,13 +47,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
        (id, user_id, kind, amount, note, created_at)
      VALUES (?, ?, 'bonus', ?, ?, ?)`,
   )
-    .bind(
-      `evt_${nanoid(16)}`,
-      userId,
-      amount,
-      note || `Admin grant by ${admin.email}`,
-      Date.now(),
-    )
+    .bind(`evt_${nanoid(16)}`, userId, amount, note || `Admin grant by ${admin.email}`, Date.now())
     .run();
 
   return json({ ok: true });

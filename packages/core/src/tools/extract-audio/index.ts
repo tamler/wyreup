@@ -64,11 +64,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
 
   defaults: defaultExtractAudioParams,
 
-  async run(
-    inputs: File[],
-    params: ExtractAudioParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ExtractAudioParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -103,9 +99,7 @@ export const extractAudio: ToolModule<ExtractAudioParams> = {
     const output = await ff.readFile(outputName);
     await ff.deleteFile(inputName);
     await ff.deleteFile(outputName);
-    const outputBytes = typeof output === 'string'
-      ? new TextEncoder().encode(output)
-      : (output);
+    const outputBytes = typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getExtractMime(params.format) })];

@@ -95,7 +95,17 @@ export const otpauthUri: ToolModule<OtpauthUriParams> = {
   description:
     'Build an otpauth:// enrollment URI for Google Authenticator / 1Password / Authy / Bitwarden. Optionally renders a scannable QR alongside the URI — drop in secret + issuer + account, get the QR to point your phone at.',
   category: 'create',
-  keywords: ['otpauth', 'totp', 'hotp', '2fa', 'mfa', 'qr', 'enrollment', 'authenticator', 'google'],
+  keywords: [
+    'otpauth',
+    'totp',
+    'hotp',
+    '2fa',
+    'mfa',
+    'qr',
+    'enrollment',
+    'authenticator',
+    'google',
+  ],
 
   input: {
     accept: ['*/*'],
@@ -126,7 +136,7 @@ export const otpauthUri: ToolModule<OtpauthUriParams> = {
     secret: {
       type: 'string',
       label: 'base32 secret',
-      help: 'The same shared secret you\'ll use for totp-code / hotp-code.',
+      help: "The same shared secret you'll use for totp-code / hotp-code.",
       placeholder: 'JBSWY3DPEHPK3PXP',
     },
     account: {
@@ -209,7 +219,10 @@ export const otpauthUri: ToolModule<OtpauthUriParams> = {
         errorCorrectionLevel: 'M',
         width: params.qrSize ?? 300,
       });
-      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+      const arrayBuffer = buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength,
+      ) as ArrayBuffer;
       outputs.push(new Blob([arrayBuffer], { type: 'image/png' }));
     }
 

@@ -48,7 +48,7 @@ describe('image-diff — run()', () => {
   it('returns 0 different pixels when diffing identical images', async () => {
     const img = loadFixture('photo.jpg', 'image/jpeg');
 
-    const outputs = await imageDiff.run([img, img], {}, makeCtx()) as Blob[];
+    const outputs = (await imageDiff.run([img, img], {}, makeCtx())) as Blob[];
 
     expect(Array.isArray(outputs)).toBe(true);
     expect(outputs.length).toBe(2);
@@ -66,7 +66,7 @@ describe('image-diff — run()', () => {
   it('diff image is a valid PNG', async () => {
     const img = loadFixture('photo.jpg', 'image/jpeg');
 
-    const outputs = await imageDiff.run([img, img], {}, makeCtx()) as Blob[];
+    const outputs = (await imageDiff.run([img, img], {}, makeCtx())) as Blob[];
     const diffImage = outputs[0] as Blob;
 
     const buf = await diffImage.arrayBuffer();
@@ -84,7 +84,7 @@ describe('image-diff — run()', () => {
     const imgA = loadFixture('photo.jpg', 'image/jpeg');
     const imgB = loadFixture('photo.webp', 'image/webp');
 
-    const outputs = await imageDiff.run([imgA, imgB], { threshold: 0.05 }, makeCtx()) as Blob[];
+    const outputs = (await imageDiff.run([imgA, imgB], { threshold: 0.05 }, makeCtx())) as Blob[];
     const metadataBlob = outputs[1] as Blob;
     const result = JSON.parse(await metadataBlob.text()) as ImageDiffResult;
 
@@ -98,9 +98,9 @@ describe('image-diff — run()', () => {
     const imgA = loadFixture('photo.jpg', 'image/jpeg');
     const imgB = loadFixture('graphic.png', 'image/png');
 
-    await expect(
-      imageDiff.run([imgA, imgB], {}, makeCtx()),
-    ).rejects.toThrow(/dimensions must match/i);
+    await expect(imageDiff.run([imgA, imgB], {}, makeCtx())).rejects.toThrow(
+      /dimensions must match/i,
+    );
   });
 
   it('respects a pre-aborted signal', async () => {
@@ -108,8 +108,6 @@ describe('image-diff — run()', () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      imageDiff.run([img, img], {}, makeCtx(controller.signal)),
-    ).rejects.toThrow();
+    await expect(imageDiff.run([img, img], {}, makeCtx(controller.signal))).rejects.toThrow();
   });
 });

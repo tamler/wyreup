@@ -34,7 +34,8 @@ const VALID_NAME_RE = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
 // Lenient semver: M.m.p with optional prerelease/build. Range/version refs handled separately.
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 // Dependency version specifier — accepts semver ranges, git URLs, file:, npm:, workspace:, *, latest, etc.
-const DEP_SPEC_RE = /^(?:\*|latest|next|workspace:.*|file:.*|link:.*|npm:.*|git\+.*|git:.*|https?:.*|github:.*|[~^>=<* ]*\d|\d|[a-zA-Z]+\/[a-zA-Z].+)/;
+const DEP_SPEC_RE =
+  /^(?:\*|latest|next|workspace:.*|file:.*|link:.*|npm:.*|git\+.*|git:.*|https?:.*|github:.*|[~^>=<* ]*\d|\d|[a-zA-Z]+\/[a-zA-Z].+)/;
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v);
@@ -77,7 +78,11 @@ export function validatePackageJson(doc: unknown, strict: boolean): PackageJsonV
       push('error', '$.name', `Name is ${name.length} chars — npm limit is 214.`);
     }
     if (!VALID_NAME_RE.test(name)) {
-      push('error', '$.name', `"${name}" is not a valid npm package name (lowercase, URL-safe, no leading . or _).`);
+      push(
+        'error',
+        '$.name',
+        `"${name}" is not a valid npm package name (lowercase, URL-safe, no leading . or _).`,
+      );
     }
     if (name !== name.toLowerCase()) {
       push('error', '$.name', 'Package name must be lowercase.');
@@ -117,7 +122,12 @@ export function validatePackageJson(doc: unknown, strict: boolean): PackageJsonV
 
   // Dependencies, devDependencies, peerDependencies, optionalDependencies.
   const depCounts = { dependencyCount: 0, devDependencyCount: 0, peerDependencyCount: 0 };
-  const depKeys: Array<['dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies', keyof typeof depCounts | null]> = [
+  const depKeys: Array<
+    [
+      'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies',
+      keyof typeof depCounts | null,
+    ]
+  > = [
     ['dependencies', 'dependencyCount'],
     ['devDependencies', 'devDependencyCount'],
     ['peerDependencies', 'peerDependencyCount'],
@@ -133,10 +143,18 @@ export function validatePackageJson(doc: unknown, strict: boolean): PackageJsonV
     if (counter) depCounts[counter] = Object.keys(block).length;
     for (const [depName, spec] of Object.entries(block)) {
       if (!VALID_NAME_RE.test(depName)) {
-        push('warning', `$.${key}["${depName}"]`, `Dependency name "${depName}" does not look like a valid npm name.`);
+        push(
+          'warning',
+          `$.${key}["${depName}"]`,
+          `Dependency name "${depName}" does not look like a valid npm name.`,
+        );
       }
       if (!DEP_SPEC_RE.test(spec) && spec !== '') {
-        push('warning', `$.${key}["${depName}"]`, `Version spec "${spec}" doesn't match a recognized range / URL / workspace pattern.`);
+        push(
+          'warning',
+          `$.${key}["${depName}"]`,
+          `Version spec "${spec}" doesn't match a recognized range / URL / workspace pattern.`,
+        );
       }
     }
   }
@@ -156,11 +174,15 @@ export function validatePackageJson(doc: unknown, strict: boolean): PackageJsonV
 
   // Strict-only practice checks.
   if (strict) {
-    if (typeof doc.description !== 'string' || (doc.description).trim() === '') {
+    if (typeof doc.description !== 'string' || doc.description.trim() === '') {
       push('warning', '$.description', 'No description — strongly recommended for npm search.');
     }
     if (doc.repository === undefined) {
-      push('warning', '$.repository', 'No repository field — strongly recommended for discoverability.');
+      push(
+        'warning',
+        '$.repository',
+        'No repository field — strongly recommended for discoverability.',
+      );
     }
     if (!Array.isArray(doc.keywords) || doc.keywords.length === 0) {
       push('warning', '$.keywords', 'No keywords — strongly recommended for npm search.');
@@ -212,7 +234,11 @@ export const packageJsonValidate: ToolModule<PackageJsonValidateParams> = {
     },
   },
 
-  async run(inputs: File[], params: PackageJsonValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
+  async run(
+    inputs: File[],
+    params: PackageJsonValidateParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('package-json-validate accepts exactly one file.');
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing' });
     const text = await inputs[0]!.text();

@@ -48,7 +48,9 @@ export async function validateApiKey(key: string): Promise<BalanceResponse | nul
   }
 
   if (res.status === 401) {
-    process.stderr.write('Key not accepted. Check that it isn’t revoked at https://wyreup.com/account.\n');
+    process.stderr.write(
+      'Key not accepted. Check that it isn’t revoked at https://wyreup.com/account.\n',
+    );
     return null;
   }
   if (!res.ok) {
@@ -89,9 +91,11 @@ export async function validateAndSaveKey(key: string): Promise<string | null> {
  * `intro` is printed to stderr before the prompt — typically a
  * one-liner explaining why we're asking and where to get a key.
  */
-export async function interactiveLogin(opts: {
-  intro?: string;
-} = {}): Promise<string | null> {
+export async function interactiveLogin(
+  opts: {
+    intro?: string;
+  } = {},
+): Promise<string | null> {
   if (!process.stdin.isTTY) return null;
 
   if (opts.intro) {
@@ -106,13 +110,10 @@ export async function interactiveLogin(opts: {
   });
 
   const raw = await new Promise<string>((resolve) => {
-    rl.question(
-      'Paste your Wyreup API key (or press Enter to skip): ',
-      (answer) => {
-        rl.close();
-        resolve(answer);
-      },
-    );
+    rl.question('Paste your Wyreup API key (or press Enter to skip): ', (answer) => {
+      rl.close();
+      resolve(answer);
+    });
   });
 
   const key = raw.trim();

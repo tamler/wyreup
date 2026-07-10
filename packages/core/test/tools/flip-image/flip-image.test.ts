@@ -38,7 +38,11 @@ describe('flip-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await flipImage.run([input], { direction: 'horizontal' }, makeCtx()) as Blob[];
+    const outputs = (await flipImage.run(
+      [input],
+      { direction: 'horizontal' },
+      makeCtx(),
+    )) as Blob[];
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
 
@@ -54,7 +58,7 @@ describe('flip-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const { width: origW, height: origH } = await codec.decode(origBuf);
 
-    const outputs = await flipImage.run([input], { direction: 'vertical' }, makeCtx()) as Blob[];
+    const outputs = (await flipImage.run([input], { direction: 'vertical' }, makeCtx())) as Blob[];
     expect(outputs[0]!.type).toBe('image/png');
 
     const flipBuf = await outputs[0]!.arrayBuffer();
@@ -69,7 +73,11 @@ describe('flip-image — run()', () => {
     const origBuf = await input.arrayBuffer();
     const orig = await codec.decode(origBuf);
 
-    const outputs = await flipImage.run([input], { direction: 'horizontal' }, makeCtx()) as Blob[];
+    const outputs = (await flipImage.run(
+      [input],
+      { direction: 'horizontal' },
+      makeCtx(),
+    )) as Blob[];
     const flipBuf = await outputs[0]!.arrayBuffer();
     const flipped = await codec.decode(flipBuf);
 
@@ -84,8 +92,8 @@ describe('flip-image — run()', () => {
 
   it('throws for unsupported format', async () => {
     const fakePdf = new File(['%PDF'], 'x.pdf', { type: 'application/pdf' });
-    await expect(
-      flipImage.run([fakePdf], { direction: 'horizontal' }, makeCtx()),
-    ).rejects.toThrow(/unsupported/i);
+    await expect(flipImage.run([fakePdf], { direction: 'horizontal' }, makeCtx())).rejects.toThrow(
+      /unsupported/i,
+    );
   });
 });

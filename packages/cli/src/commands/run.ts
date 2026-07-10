@@ -39,10 +39,7 @@ function makeCtx(opts: CtxOptions): ToolRunContext {
 
 // ──── file I/O ────────────────────────────────────────────────────────────────
 
-async function readInputFiles(
-  paths: string[],
-  overrideMime?: string,
-): Promise<File[]> {
+async function readInputFiles(paths: string[], overrideMime?: string): Promise<File[]> {
   const files: File[] = [];
   for (const p of paths) {
     const bytes = await readFile(p);
@@ -74,11 +71,7 @@ async function writeOutputs(
   if (!outputPath && !outputDir) {
     const blob = outputs[0];
     if (!blob) return;
-    if (
-      json ||
-      blob.type.startsWith('text/') ||
-      blob.type === 'application/json'
-    ) {
+    if (json || blob.type.startsWith('text/') || blob.type === 'application/json') {
       const text = await blob.text();
       process.stdout.write(text);
       if (!text.endsWith('\n')) process.stdout.write('\n');
@@ -110,7 +103,11 @@ async function writeOutputs(
       const blob = outputs[i]!;
       const ext = extFromMime(blob.type);
       const outPath = join(outputDir, `${toolId}-${i}${ext}`);
-      const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), overwrite);
+      const writeErr = await atomicPublish(
+        outPath,
+        new Uint8Array(await blob.arrayBuffer()),
+        overwrite,
+      );
       if (writeErr) throw new Error(writeErr);
       process.stderr.write(`Written: ${outPath}\n`);
     }
@@ -120,7 +117,11 @@ async function writeOutputs(
   // Single output
   const blob = outputs[0]!;
   const outPath = outputPath!;
-  const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), overwrite);
+  const writeErr = await atomicPublish(
+    outPath,
+    new Uint8Array(await blob.arrayBuffer()),
+    overwrite,
+  );
   if (writeErr) throw new Error(writeErr);
 }
 
@@ -172,22 +173,14 @@ export async function executeTool(
     process.exit(1);
   }
 
-  const useStdin =
-    inputPaths.length === 0 ||
-    (inputPaths.length === 1 && inputPaths[0] === '-');
+  const useStdin = inputPaths.length === 0 || (inputPaths.length === 1 && inputPaths[0] === '-');
 
-  const isStdinMode =
-    useStdin && (inputPaths[0] === '-' || !process.stdin.isTTY);
+  const isStdinMode = useStdin && (inputPaths[0] === '-' || !process.stdin.isTTY);
 
   // Friendly guard: an interactive shell (stdin is a TTY) running a tool
   // that needs input but with no file args and no piped stdin would
   // otherwise hang reading empty stdin. Exit early with actionable copy.
-  if (
-    useStdin &&
-    !isStdinMode &&
-    tool.input.min > 0 &&
-    process.stdin.isTTY
-  ) {
+  if (useStdin && !isStdinMode && tool.input.min > 0 && process.stdin.isTTY) {
     process.stderr.write(
       `Tool "${tool.id}" needs at least ${tool.input.min} input file${tool.input.min === 1 ? '' : 's'}.\n` +
         `Pass a file path as an argument, or pipe data via stdin:\n` +
@@ -272,7 +265,10 @@ export async function executeTool(
   process.on('SIGINT', () => ac.abort());
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   if (timeoutMs > 0) {
-    timeoutHandle = setTimeout(() => ac.abort(new Error(`Tool timed out after ${timeoutMs}ms`)), timeoutMs);
+    timeoutHandle = setTimeout(
+      () => ac.abort(new Error(`Tool timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
   }
 
   const ctx = makeCtx({
@@ -295,12 +291,7 @@ export async function executeTool(
   const outputs = Array.isArray(result) ? result : [result];
 
   // Stdout piping for single-output binary: if no -o and stdout is a pipe
-  if (
-    !opts.output &&
-    !opts.outputDir &&
-    !process.stdout.isTTY &&
-    outputs.length === 1
-  ) {
+  if (!opts.output && !opts.outputDir && !process.stdout.isTTY && outputs.length === 1) {
     const blob = outputs[0]!;
     if (blob.type.startsWith('text/') || blob.type === 'application/json') {
       process.stdout.write(await blob.text());
@@ -346,10 +337,7 @@ export function addToolOptions(cmd: Command, tool: ToolModule): void {
  * Given Commander parsed options, merge per-tool named options into the
  * --param list. Called after parse so Commander has populated the named flags.
  */
-export function mergeToolOptions(
-  rawOpts: Record<string, unknown>,
-  tool: ToolModule,
-): string[] {
+export function mergeToolOptions(rawOpts: Record<string, unknown>, tool: ToolModule): string[] {
   const extra: string[] = [];
   if (!tool.paramSchema) return extra;
   for (const key of Object.keys(tool.paramSchema)) {

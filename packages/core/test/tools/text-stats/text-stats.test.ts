@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { textStats, computeTextStats, countSyllables } from '../../../src/tools/text-stats/index.js';
+import {
+  textStats,
+  computeTextStats,
+  countSyllables,
+} from '../../../src/tools/text-stats/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
 
 function makeCtx(): ToolRunContext {
@@ -113,7 +117,7 @@ describe('computeTextStats', () => {
 describe('text-stats — run()', () => {
   it('returns application/json blob', async () => {
     const input = new File(['Hello world. How are you?'], 'test.txt', { type: 'text/plain' });
-    const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textStats.run([input], {}, makeCtx())) as Blob[];
     expect(out!.type).toBe('application/json');
     const data = await parseStats(out);
     expect(data.words).toBeGreaterThan(0);
@@ -129,14 +133,14 @@ describe('text-stats — run()', () => {
   it('handles multi-paragraph text', async () => {
     const text = 'First paragraph.\n\nSecond paragraph.\n\nThird paragraph.';
     const input = new File([text], 'para.txt', { type: 'text/plain' });
-    const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textStats.run([input], {}, makeCtx())) as Blob[];
     const data = await parseStats(out);
     expect(data.paragraphs).toBe(3);
   });
 
   it('counts syllables in result', async () => {
     const input = new File(['beautiful butterfly'], 'syl.txt', { type: 'text/plain' });
-    const [out] = await textStats.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textStats.run([input], {}, makeCtx())) as Blob[];
     const data = await parseStats(out);
     expect(data.syllables).toBeGreaterThan(2);
   });

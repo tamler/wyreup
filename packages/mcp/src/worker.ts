@@ -14,9 +14,19 @@ const TEXT_OUTPUT_CAP = 10 * 1024 * 1024; // 10 MB per [spec §#8]
 function inferMimeFromPath(p: string): string {
   const ext = p.split('.').pop()?.toLowerCase() ?? '';
   const map: Record<string, string> = {
-    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
-    pdf: 'application/pdf', txt: 'text/plain', html: 'text/html', md: 'text/markdown',
-    json: 'application/json', csv: 'text/csv', wav: 'audio/wav', mp3: 'audio/mpeg', mp4: 'video/mp4',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    pdf: 'application/pdf',
+    txt: 'text/plain',
+    html: 'text/html',
+    md: 'text/markdown',
+    json: 'application/json',
+    csv: 'text/csv',
+    wav: 'audio/wav',
+    mp3: 'audio/mpeg',
+    mp4: 'video/mp4',
   };
   return map[ext] ?? 'application/octet-stream';
 }
@@ -109,11 +119,21 @@ async function runJob(job: WorkerJob): Promise<WorkerResult> {
     writtenPaths.push(job.outputPath);
   } else if (job.outputDir) {
     const mimeToExt: Record<string, string> = {
-      'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp',
-      'image/gif': '.gif', 'image/bmp': '.bmp', 'image/svg+xml': '.svg',
-      'application/pdf': '.pdf', 'text/plain': '.txt', 'text/html': '.html',
-      'text/markdown': '.md', 'application/json': '.json', 'text/csv': '.csv',
-      'audio/wav': '.wav', 'audio/mpeg': '.mp3', 'video/mp4': '.mp4',
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+      'image/bmp': '.bmp',
+      'image/svg+xml': '.svg',
+      'application/pdf': '.pdf',
+      'text/plain': '.txt',
+      'text/html': '.html',
+      'text/markdown': '.md',
+      'application/json': '.json',
+      'text/csv': '.csv',
+      'audio/wav': '.wav',
+      'audio/mpeg': '.mp3',
+      'video/mp4': '.mp4',
     };
     for (let i = 0; i < outputs.length; i++) {
       const ext = mimeToExt[outputs[i]!.type] ?? '.bin';
@@ -151,13 +171,21 @@ process.once('message', (msg) => {
       process.exit(result.ok ? 0 : 1);
     } catch (err) {
       const m2 = err instanceof Error ? err.message : String(err);
-      process.send!({ ok: false, error: `worker uncaught: ${m2}`, stage: 'run' } satisfies WorkerResult);
+      process.send!({
+        ok: false,
+        error: `worker uncaught: ${m2}`,
+        stage: 'run',
+      } satisfies WorkerResult);
       process.exit(1);
     }
   })();
 });
 
 process.on('uncaughtException', (err) => {
-  process.send?.({ ok: false, error: `uncaught: ${err.message}`, stage: 'run' } satisfies WorkerResult);
+  process.send?.({
+    ok: false,
+    error: `uncaught: ${err.message}`,
+    stage: 'run',
+  } satisfies WorkerResult);
   process.exit(1);
 });

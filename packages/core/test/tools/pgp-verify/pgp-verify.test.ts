@@ -51,16 +51,16 @@ describe('pgp-verify — input validation', () => {
   it('throws when publicKey is empty', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
     const sig = new File(['sig'], 'sig.asc', { type: 'text/plain' });
-    await expect(
-      pgpVerify.run([file, sig], { publicKey: '' }, makeCtx()),
-    ).rejects.toThrow(/publicKey is required/i);
+    await expect(pgpVerify.run([file, sig], { publicKey: '' }, makeCtx())).rejects.toThrow(
+      /publicKey is required/i,
+    );
   });
 
   it('throws when fewer than 2 inputs', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    await expect(
-      pgpVerify.run([file], { publicKey: publicKeyArmored }, makeCtx()),
-    ).rejects.toThrow(/two files/i);
+    await expect(pgpVerify.run([file], { publicKey: publicKeyArmored }, makeCtx())).rejects.toThrow(
+      /two files/i,
+    );
   });
 });
 
@@ -70,13 +70,24 @@ describe('pgp-verify — sign/verify round-trip', () => {
     const dataFile = new File([data], 'data.txt', { type: 'text/plain' });
 
     // Sign
-    const sigResult = await pgpSign.run([dataFile], { privateKey: privateKeyArmored }, makeCtx()) as Blob[];
+    const sigResult = (await pgpSign.run(
+      [dataFile],
+      { privateKey: privateKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     const sigText = await sigResult[0]!.text();
     const sigFile = new File([sigText], 'data.txt.asc', { type: 'text/plain' });
 
     // Verify
-    const verifyResult = await pgpVerify.run([dataFile, sigFile], { publicKey: publicKeyArmored }, makeCtx()) as Blob[];
-    const json = JSON.parse(await verifyResult[0]!.text()) as { verified: boolean; signerKeyId: string };
+    const verifyResult = (await pgpVerify.run(
+      [dataFile, sigFile],
+      { publicKey: publicKeyArmored },
+      makeCtx(),
+    )) as Blob[];
+    const json = JSON.parse(await verifyResult[0]!.text()) as {
+      verified: boolean;
+      signerKeyId: string;
+    };
     expect(json.verified).toBe(true);
     expect(json.signerKeyId).toBeTruthy();
   });
@@ -85,13 +96,21 @@ describe('pgp-verify — sign/verify round-trip', () => {
     const data = 'original data';
     const dataFile = new File([data], 'data.txt', { type: 'text/plain' });
 
-    const sigResult = await pgpSign.run([dataFile], { privateKey: privateKeyArmored }, makeCtx()) as Blob[];
+    const sigResult = (await pgpSign.run(
+      [dataFile],
+      { privateKey: privateKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     const sigText = await sigResult[0]!.text();
     const sigFile = new File([sigText], 'data.txt.asc', { type: 'text/plain' });
 
     // Verify against tampered data
     const tamperedFile = new File(['tampered data'], 'data.txt', { type: 'text/plain' });
-    const verifyResult = await pgpVerify.run([tamperedFile, sigFile], { publicKey: publicKeyArmored }, makeCtx()) as Blob[];
+    const verifyResult = (await pgpVerify.run(
+      [tamperedFile, sigFile],
+      { publicKey: publicKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     const json = JSON.parse(await verifyResult[0]!.text()) as { verified: boolean };
     expect(json.verified).toBe(false);
   });

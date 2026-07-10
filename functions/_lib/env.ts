@@ -41,9 +41,9 @@ export interface Env {
   LS_WEBHOOK_SECRET: string;
 
   // ZeptoMail (Zoho transactional email — HTTP API, works from Workers)
-  ZEPTOMAIL_TOKEN: string;          // "Zoho-enczapikey ..." value
-  ZEPTOMAIL_SENDER: string;         // verified from address, e.g. noreply@wyreup.com
-  ZEPTOMAIL_SENDER_NAME?: string;   // display name, defaults to "Wyreup"
+  ZEPTOMAIL_TOKEN: string; // "Zoho-enczapikey ..." value
+  ZEPTOMAIL_SENDER: string; // verified from address, e.g. noreply@wyreup.com
+  ZEPTOMAIL_SENDER_NAME?: string; // display name, defaults to "Wyreup"
 
   // External image-model provider (current backend swappable per project
   // need — see functions/_lib/providers/image-models.ts for the wrapper
@@ -54,11 +54,11 @@ export interface Env {
 
   // Plain env (non-secret) — set in CF Pages env, or `wrangler pages dev` will
   // inherit from .dev.vars during local development.
-  APP_ORIGIN?: string;              // defaults to https://wyreup.com
-  LS_VARIANT_STARTER?: string;      // LS variant IDs for the 3 packs
+  APP_ORIGIN?: string; // defaults to https://wyreup.com
+  LS_VARIANT_STARTER?: string; // LS variant IDs for the 3 packs
   LS_VARIANT_STANDARD?: string;
   LS_VARIANT_POWER?: string;
-  LS_VARIANT_MONTHLY?: string;      // LS variant ID for the $8/mo subscription
+  LS_VARIANT_MONTHLY?: string; // LS variant ID for the $8/mo subscription
 
   // Comma-separated list of emails allowed to access /api/admin/*.
   // Treat as a secret — its disclosure alone doesn't grant access (the

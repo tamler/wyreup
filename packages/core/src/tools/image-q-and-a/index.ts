@@ -43,11 +43,7 @@ export const imageQandA: ToolModule<ImageQandAParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ImageQandAParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ImageQandAParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('image-q-and-a accepts exactly one image.');
     const question = params.question?.trim();
     if (!question) throw new Error('A question is required.');

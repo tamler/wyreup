@@ -41,11 +41,7 @@ export const jsonYaml: ToolModule<JsonYamlParams> = {
 
   defaults: defaultJsonYamlParams,
 
-  async run(
-    inputs: File[],
-    params: JsonYamlParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: JsonYamlParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading YAML library' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

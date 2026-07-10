@@ -71,9 +71,10 @@ export function extractFavicons(html: string, baseUrl: string): FaviconFromUrlRe
     const relAttr = getAttr(tag, 'rel');
     if (!relAttr) continue;
     const relTokens = relAttr.toLowerCase().split(/\s+/).filter(Boolean);
-    const recognized = relTokens.length === 2 && relTokens.join(' ') === 'shortcut icon'
-      ? 'shortcut icon'
-      : relTokens.find((t) => t in REL_TO_KIND);
+    const recognized =
+      relTokens.length === 2 && relTokens.join(' ') === 'shortcut icon'
+        ? 'shortcut icon'
+        : relTokens.find((t) => t in REL_TO_KIND);
     if (!recognized) continue;
     const href = getAttr(tag, 'href');
     if (!href) continue;
@@ -109,7 +110,8 @@ export function extractFavicons(html: string, baseUrl: string): FaviconFromUrlRe
   // Always append the /favicon.ico convention as a final fallback.
   if (baseUrl) {
     const conv = tryResolve('/favicon.ico', baseUrl);
-    if (conv) candidates.push({ rel: 'icon', href: '/favicon.ico', resolved: conv, source: 'convention' });
+    if (conv)
+      candidates.push({ rel: 'icon', href: '/favicon.ico', resolved: conv, source: 'convention' });
   }
 
   // Pick "best" — prefer link/meta over convention; among link/meta, prefer

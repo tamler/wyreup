@@ -24,8 +24,11 @@ function makeRes(status: number, body: unknown = { result: { ok: true } }): Resp
 // runner's `await fetch(...)` resolves the same way a real fetch would.
 function spyFetch(impl: (url: string, init?: RequestInit) => Response) {
   const calls: Array<{ url: string; init?: RequestInit }> = [];
-  const fn = vi.fn((url: string, init?: RequestInit) =>
-    (calls.push({ url, init }), Promise.resolve(impl(url, init))),
+  const fn = vi.fn(
+    (url: string, init?: RequestInit) => (
+      calls.push({ url, init }),
+      Promise.resolve(impl(url, init))
+    ),
   );
   globalThis.fetch = fn as unknown as typeof fetch;
   return { calls, fn };
@@ -73,9 +76,9 @@ describe('runPro — auth path selection', () => {
 
   it('throws a recovery hint when outside the browser and no apiKey', async () => {
     spyFetch(() => makeRes(200));
-    await expect(
-      runPro('text-sentiment-pro', { text: 'hi' }, makeCtx()),
-    ).rejects.toThrow(/wyreup login|WYREUP_API_KEY/);
+    await expect(runPro('text-sentiment-pro', { text: 'hi' }, makeCtx())).rejects.toThrow(
+      /wyreup login|WYREUP_API_KEY/,
+    );
   });
 
   it('honors ctx.proOrigin for the request URL', async () => {

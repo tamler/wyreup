@@ -73,9 +73,9 @@ export function modelUrl(path: string, upstreamFallback: string): string {
 async function tryUpdateTransformersHost(): Promise<void> {
   if (CONFIGURED_BASE === null) return;
   try {
-    const mod = (await import('@huggingface/transformers').catch(() => null)) as
-      | { env?: { remoteHost?: string; remotePathTemplate?: string } }
-      | null;
+    const mod = (await import('@huggingface/transformers').catch(() => null)) as {
+      env?: { remoteHost?: string; remotePathTemplate?: string };
+    } | null;
     if (mod?.env) {
       mod.env.remoteHost = CONFIGURED_BASE;
     }

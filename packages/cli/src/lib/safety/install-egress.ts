@@ -18,7 +18,9 @@ const modelCdnRaw = process.env['WYREUP_MODEL_CDN'];
 const modelCdnDisabled = modelCdnRaw === 'disabled';
 const MODEL_ORIGIN = modelCdnDisabled
   ? undefined
-  : (modelCdnRaw && modelCdnRaw.length > 0 ? modelCdnRaw.replace(/\/+$/, '') : 'https://models.wyreup.com');
+  : modelCdnRaw && modelCdnRaw.length > 0
+    ? modelCdnRaw.replace(/\/+$/, '')
+    : 'https://models.wyreup.com';
 
 if (process.env['WYREUP_DISABLE_EGRESS_LOCK'] !== '1' && !modelCdnDisabled && MODEL_ORIGIN) {
   installEgressLock([PRO_ORIGIN, MODEL_ORIGIN]);

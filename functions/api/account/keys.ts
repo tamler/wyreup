@@ -59,7 +59,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     .first<{ n: number }>();
   if ((activeCount?.n ?? 0) >= MAX_ACTIVE_KEYS_PER_USER) {
     return json(
-      { error: `Maximum ${MAX_ACTIVE_KEYS_PER_USER} active keys per account. Revoke an unused key first.` },
+      {
+        error: `Maximum ${MAX_ACTIVE_KEYS_PER_USER} active keys per account. Revoke an unused key first.`,
+      },
       409,
     );
   }

@@ -18,11 +18,7 @@ const validToolIds = new Set(
 
 // Packages retired 2026-05-01. Anyone still pointing at these is leading
 // users to npm tarballs that exist but should not be installed.
-const RETIRED_PACKAGES = new Set([
-  '@wyreup/skill',
-  '@wyreup/cli-skill',
-  '@wyreup/mcp-skill',
-]);
+const RETIRED_PACKAGES = new Set(['@wyreup/skill', '@wyreup/cli-skill', '@wyreup/mcp-skill']);
 
 // Words that look like tool IDs but aren't — build/utility scripts,
 // directory names in code-block file trees, etc. Add here only when

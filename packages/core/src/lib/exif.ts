@@ -100,10 +100,7 @@ export interface ImageDataLike {
  *   7  flip horizontal + rotate 90 CCW
  *   8  rotate 90 CCW
  */
-export function applyOrientation(
-  img: ImageDataLike,
-  orientation: ExifOrientation,
-): ImageDataLike {
+export function applyOrientation(img: ImageDataLike, orientation: ExifOrientation): ImageDataLike {
   if (orientation === 1) return img;
 
   const { width: w, height: h, data: src } = img;
@@ -183,13 +180,34 @@ export function composeOrientation(
   rotationDegrees: 90 | 180 | 270,
 ): ExifOrientation {
   const ROT_RIGHT: Record<ExifOrientation, ExifOrientation> = {
-    1: 6, 2: 7, 3: 8, 4: 5, 5: 2, 6: 3, 7: 4, 8: 1,
+    1: 6,
+    2: 7,
+    3: 8,
+    4: 5,
+    5: 2,
+    6: 3,
+    7: 4,
+    8: 1,
   };
   const ROT_180: Record<ExifOrientation, ExifOrientation> = {
-    1: 3, 2: 4, 3: 1, 4: 2, 5: 7, 6: 8, 7: 5, 8: 6,
+    1: 3,
+    2: 4,
+    3: 1,
+    4: 2,
+    5: 7,
+    6: 8,
+    7: 5,
+    8: 6,
   };
   const ROT_LEFT: Record<ExifOrientation, ExifOrientation> = {
-    1: 8, 2: 5, 3: 6, 4: 7, 5: 4, 6: 1, 7: 2, 8: 3,
+    1: 8,
+    2: 5,
+    3: 6,
+    4: 7,
+    5: 4,
+    6: 1,
+    7: 2,
+    8: 3,
   };
   if (rotationDegrees === 90) return ROT_RIGHT[existing];
   if (rotationDegrees === 180) return ROT_180[existing];
@@ -222,10 +240,7 @@ export function setJpegOrientation(
     if (marker === 0xffe1) {
       offset += 2;
       if (offset + 6 > view.byteLength) return null;
-      if (
-        view.getUint32(offset) !== 0x45786966 ||
-        view.getUint16(offset + 4) !== 0x0000
-      ) {
+      if (view.getUint32(offset) !== 0x45786966 || view.getUint16(offset + 4) !== 0x0000) {
         return null;
       }
       const tiffOffset = offset + 6;

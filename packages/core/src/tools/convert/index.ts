@@ -51,11 +51,7 @@ export const convert: ToolModule<ConvertParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ConvertParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ConvertParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { targetFormat, quality = 90 } = params;
     const outputs: Blob[] = [];
 
@@ -110,8 +106,11 @@ export const convert: ToolModule<ConvertParams> = {
 
 function mimeFor(format: ImageFormat): string {
   switch (format) {
-    case 'jpeg': return 'image/jpeg';
-    case 'png': return 'image/png';
-    case 'webp': return 'image/webp';
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
   }
 }

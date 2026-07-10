@@ -35,11 +35,7 @@ export const pdfDeletePages: ToolModule<PdfDeletePagesParams> = {
     pages: [],
   },
 
-  async run(
-    inputs: File[],
-    params: PdfDeletePagesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfDeletePagesParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const pages = params.pages;
@@ -74,7 +70,10 @@ export const pdfDeletePages: ToolModule<PdfDeletePagesParams> = {
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Rebuilding PDF' });
 
     const dest = await PDFDocument.create();
-    const copied = await dest.copyPages(src, toKeep.map((n) => n - 1));
+    const copied = await dest.copyPages(
+      src,
+      toKeep.map((n) => n - 1),
+    );
     for (const page of copied) {
       dest.addPage(page);
     }

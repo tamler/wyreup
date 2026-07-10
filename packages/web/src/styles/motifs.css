@@ -115,10 +115,22 @@
   border-color: var(--accent-hover);
 }
 
-.brackets-active::before { top: -1px; left: -1px; }
-.brackets-active::after  { bottom: -1px; right: -1px; }
-.brackets-active .brackets-inner::before { top: -1px; right: -1px; }
-.brackets-active .brackets-inner::after  { bottom: -1px; left: -1px; }
+.brackets-active::before {
+  top: -1px;
+  left: -1px;
+}
+.brackets-active::after {
+  bottom: -1px;
+  right: -1px;
+}
+.brackets-active .brackets-inner::before {
+  top: -1px;
+  right: -1px;
+}
+.brackets-active .brackets-inner::after {
+  bottom: -1px;
+  left: -1px;
+}
 
 /* ─────────────────────────────────────────────── */
 
@@ -183,8 +195,9 @@
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
-  transition: background var(--duration-instant) var(--ease-sharp),
-              border-color var(--duration-instant) var(--ease-sharp);
+  transition:
+    background var(--duration-instant) var(--ease-sharp),
+    border-color var(--duration-instant) var(--ease-sharp);
 }
 
 .node-connector.active {

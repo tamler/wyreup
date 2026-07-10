@@ -83,9 +83,9 @@ describe('rotate-image — run()', () => {
 
   it('throws for unsupported format', async () => {
     const fakePdf = new File(['%PDF'], 'x.pdf', { type: 'application/pdf' });
-    await expect(
-      rotateImage.run([fakePdf], { degrees: 90 }, makeCtx()),
-    ).rejects.toThrow(/unsupported/i);
+    await expect(rotateImage.run([fakePdf], { degrees: 90 }, makeCtx())).rejects.toThrow(
+      /unsupported/i,
+    );
   });
 
   it('detects format correctly via detectFormat', () => {

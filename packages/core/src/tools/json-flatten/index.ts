@@ -15,10 +15,7 @@ export const defaultJsonFlattenParams: JsonFlattenParams = {
   preserveArrays: false,
 };
 
-export function flattenJson(
-  value: unknown,
-  params: JsonFlattenParams,
-): Record<string, unknown> {
+export function flattenJson(value: unknown, params: JsonFlattenParams): Record<string, unknown> {
   const separator = params.separator ?? '.';
   const arrayStyle = params.arrayStyle ?? 'dot';
   const preserveArrays = params.preserveArrays ?? false;
@@ -37,9 +34,14 @@ export function flattenJson(
       }
       for (let i = 0; i < node.length; i++) {
         const segment = arrayStyle === 'bracket' ? `[${i}]` : String(i);
-        const next = arrayStyle === 'bracket'
-          ? (path ? `${path}${segment}` : segment)
-          : (path ? `${path}${separator}${segment}` : segment);
+        const next =
+          arrayStyle === 'bracket'
+            ? path
+              ? `${path}${segment}`
+              : segment
+            : path
+              ? `${path}${separator}${segment}`
+              : segment;
         walk(node[i], next);
       }
       return;

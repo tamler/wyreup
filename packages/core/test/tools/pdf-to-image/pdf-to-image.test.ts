@@ -68,8 +68,8 @@ describe('pdf-to-image — run()', () => {
 
   it('respects abort between pages', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    await expect(
-      pdfToImage.run([input], { format: 'png' }, makeCtx(true)),
-    ).rejects.toThrow('Aborted');
+    await expect(pdfToImage.run([input], { format: 'png' }, makeCtx(true))).rejects.toThrow(
+      'Aborted',
+    );
   });
 });

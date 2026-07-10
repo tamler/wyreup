@@ -65,7 +65,10 @@ program
   .command('prefetch')
   .description('Pre-download model weights for AI/ML tools so first-use is offline-ready')
   .argument('[tool-ids...]', 'Tool IDs to prefetch (e.g. transcribe image-caption)')
-  .option('--group <name>', 'Prefetch every tool in an install group (e.g. speech, vision-llm, image-ai)')
+  .option(
+    '--group <name>',
+    'Prefetch every tool in an install group (e.g. speech, vision-llm, image-ai)',
+  )
   .option('--chain <chain>', 'Prefetch every tool in a chain string ("tool1|tool2[k=v]|tool3")')
   .option('--all', 'Prefetch every tool with a downloadable model')
   .option('--verbose', 'Print download progress')
@@ -123,12 +126,21 @@ const runCmd = program
   .argument('[inputs...]', 'Input file paths (use - for stdin)')
   .option('-o, --output <path>', 'Output file path (single-output tools)')
   .option('-O, --output-dir <dir>', 'Output directory (multi-output tools)')
-  .option('--param <key=value>', 'Tool parameter override (repeatable)', (v: string, prev: string[]) => [...prev, v], [] as string[])
+  .option(
+    '--param <key=value>',
+    'Tool parameter override (repeatable)',
+    (v: string, prev: string[]) => [...prev, v],
+    [] as string[],
+  )
   .option('--input-format <mime>', 'Override input MIME type (useful when piping)')
   .option('--json', 'Force JSON output to stdout')
   .option('--verbose', 'Print progress to stderr')
   .option('--overwrite', 'Overwrite existing output files (default: refuse)')
-  .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10))
+  .option(
+    '--timeout <ms>',
+    'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)',
+    (v: string) => parseInt(v, 10),
+  )
   .action(async (toolId: string, inputs: string[], opts: Record<string, unknown>) => {
     await executeTool(toolId, inputs, {
       output: opts['output'] as string | undefined,
@@ -160,12 +172,19 @@ program
   .option('--name <name>', 'Chain name or id to load from --from-kit')
   .option('-o, --output <path>', 'Output file path')
   .option('-O, --output-dir <dir>', 'Output directory for multi-output chains')
-  .option('--save-intermediates <dir>', 'Save each step\'s output to this directory')
+  .option('--save-intermediates <dir>', "Save each step's output to this directory")
   .option('--input-format <mime>', 'Override input MIME type')
-  .option('--dry-run', 'Print the parsed plan, MIME flow, and install-group totals without running anything')
+  .option(
+    '--dry-run',
+    'Print the parsed plan, MIME flow, and install-group totals without running anything',
+  )
   .option('--verbose', 'Print progress to stderr')
   .option('--overwrite', 'Overwrite existing output files (default: refuse)')
-  .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10))
+  .option(
+    '--timeout <ms>',
+    'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)',
+    (v: string) => parseInt(v, 10),
+  )
   .addHelpText(
     'after',
     `
@@ -213,11 +232,26 @@ program
   .option('--from-url <url>', 'Parse chain from a Wyreup chain URL (?steps=...)')
   .option('--from-kit <path>', 'Read a chain from a Toolbelt JSON export (use with --name)')
   .option('--name <name>', 'Chain name or id to load from --from-kit')
-  .option('--out-dir <name>', 'Output subfolder name inside the watched directory (default _wyreup-out)')
-  .option('--concurrency <n>', 'Max concurrent runs (1-8, default 2)', (v: string) => parseInt(v, 10))
-  .option('--max-files <n>', 'Stop after this many runs finish (succeeded or failed). Useful for piloting a chain.', (v: string) => parseInt(v, 10))
-  .option('--follow-symlinks', 'Follow symbolic links into the watched tree (off by default for safety)')
-  .option('--allow-system', 'Override the safety guard against watching system / home dirs (you almost never want this)')
+  .option(
+    '--out-dir <name>',
+    'Output subfolder name inside the watched directory (default _wyreup-out)',
+  )
+  .option('--concurrency <n>', 'Max concurrent runs (1-8, default 2)', (v: string) =>
+    parseInt(v, 10),
+  )
+  .option(
+    '--max-files <n>',
+    'Stop after this many runs finish (succeeded or failed). Useful for piloting a chain.',
+    (v: string) => parseInt(v, 10),
+  )
+  .option(
+    '--follow-symlinks',
+    'Follow symbolic links into the watched tree (off by default for safety)',
+  )
+  .option(
+    '--allow-system',
+    'Override the safety guard against watching system / home dirs (you almost never want this)',
+  )
   .option('--verbose', 'Print per-file progress to stderr')
   .addHelpText(
     'after',
@@ -300,11 +334,7 @@ const BUILTIN_COMMANDS = new Set([
 
 // Check if argv[2] is a known tool ID before Commander gets its hands on it.
 const firstArg = process.argv[2];
-if (
-  firstArg &&
-  !firstArg.startsWith('-') &&
-  !BUILTIN_COMMANDS.has(firstArg)
-) {
+if (firstArg && !firstArg.startsWith('-') && !BUILTIN_COMMANDS.has(firstArg)) {
   // Peek at the registry; if the tool exists AND runs on this
   // surface, handle it directly. Tools gated to web-only (e.g.
   // record-audio) fall through and Commander emits "unknown command".
@@ -328,13 +358,17 @@ if (
       .option('--json', 'Force JSON output to stdout')
       .option('--verbose', 'Print progress to stderr')
       .option('--overwrite', 'Overwrite existing output files (default: refuse)')
-      .option('--timeout <ms>', 'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)', (v: string) => parseInt(v, 10));
+      .option(
+        '--timeout <ms>',
+        'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)',
+        (v: string) => parseInt(v, 10),
+      );
 
     addToolOptions(toolCmd, tool);
 
     toolCmd.action(async (inputs: string[], opts: Record<string, unknown>) => {
       const extraParams = mergeToolOptions(opts, tool);
-      const paramList = [...(opts['param'] as string[] ?? []), ...extraParams];
+      const paramList = [...((opts['param'] as string[]) ?? []), ...extraParams];
       await executeTool(tool.id, inputs, {
         output: opts['output'] as string | undefined,
         outputDir: opts['outputDir'] as string | undefined,

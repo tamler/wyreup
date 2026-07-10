@@ -6,13 +6,7 @@ export type { OcrParams } from './types.js';
 export { defaultOcrParams } from './types.js';
 export { TESSERACT_LANGUAGES } from './languages.js';
 
-const ACCEPTED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/tiff',
-  'image/bmp',
-];
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff', 'image/bmp'];
 
 export const ocr: ToolModule<OcrParams> = {
   id: 'ocr',
@@ -51,15 +45,13 @@ export const ocr: ToolModule<OcrParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: OcrParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: OcrParams, ctx: ToolRunContext): Promise<Blob[]> {
     // Validate input MIME types
     for (const input of inputs) {
       if (!ACCEPTED_MIME_TYPES.includes(input.type)) {
-        throw new Error(`Unsupported input type: ${input.type}. Accepted: ${ACCEPTED_MIME_TYPES.join(', ')}`);
+        throw new Error(
+          `Unsupported input type: ${input.type}. Accepted: ${ACCEPTED_MIME_TYPES.join(', ')}`,
+        );
       }
     }
 
@@ -82,7 +74,9 @@ export const ocr: ToolModule<OcrParams> = {
         });
 
         const ab = await inputs[i]!.arrayBuffer();
-        const { data: { text } } = await worker.recognize(new Uint8Array(ab) as unknown as Buffer);
+        const {
+          data: { text },
+        } = await worker.recognize(new Uint8Array(ab) as unknown as Buffer);
         results.push(text.trim());
       }
     } finally {

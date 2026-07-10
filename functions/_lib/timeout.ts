@@ -32,11 +32,7 @@ export class InferenceTimeoutError extends Error {
  * timer wins. The timer is always cleared so we don't leak a pending
  * setTimeout in the Workers runtime.
  */
-export async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string,
-): Promise<T> {
+export async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timer = new Promise<never>((_resolve, reject) => {
     timeoutId = setTimeout(() => reject(new InferenceTimeoutError(label, ms)), ms);

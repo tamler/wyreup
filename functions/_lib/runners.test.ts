@@ -56,9 +56,9 @@ describe('image-q-and-a runner', () => {
 
   it('rejects a missing question', async () => {
     const env = aiEnv({ response: 'x' });
-    await expect(
-      runPro('image-q-and-a', { imageBase64: TINY_PNG }, env),
-    ).rejects.toThrow("'question'");
+    await expect(runPro('image-q-and-a', { imageBase64: TINY_PNG }, env)).rejects.toThrow(
+      "'question'",
+    );
   });
 });
 
@@ -128,9 +128,9 @@ describe('transcribe-and-translate runner', () => {
 
   it('rejects missing audio', async () => {
     const env = aiEnv({ text: 'x' });
-    await expect(
-      runPro('transcribe-and-translate', { target: 'English' }, env),
-    ).rejects.toThrow('audioBase64 required');
+    await expect(runPro('transcribe-and-translate', { target: 'English' }, env)).rejects.toThrow(
+      'audioBase64 required',
+    );
   });
 });
 
@@ -155,11 +155,11 @@ describe('regex-from-text-pro runner', () => {
     const env = aiEnv({
       response: '{"pattern":"\\\\d+","flags":"g","explanation":"one or more digits"}',
     });
-    const out = (await runPro(
-      'regex-from-text-pro',
-      { description: 'match numbers' },
-      env,
-    )) as { pattern: string; flags: string; fullRegex: string };
+    const out = (await runPro('regex-from-text-pro', { description: 'match numbers' }, env)) as {
+      pattern: string;
+      flags: string;
+      fullRegex: string;
+    };
     expect(out.pattern).toBe('\\d+');
     expect(out.flags).toBe('g');
     expect(out.fullRegex).toBe('/\\d+/g');
@@ -172,9 +172,9 @@ describe('regex-from-text-pro runner', () => {
 
   it('throws on unparseable model output', async () => {
     const env = aiEnv({ response: 'not json at all' });
-    await expect(
-      runPro('regex-from-text-pro', { description: 'x' }, env),
-    ).rejects.toThrow('unparseable');
+    await expect(runPro('regex-from-text-pro', { description: 'x' }, env)).rejects.toThrow(
+      'unparseable',
+    );
   });
 });
 
@@ -196,11 +196,9 @@ describe('cron-from-text-pro runner', () => {
 describe('pdf-summarize runner', () => {
   it('returns a summary of the document text', async () => {
     const env = aiEnv({ response: 'The document covers quarterly results.' });
-    const out = (await runPro(
-      'pdf-summarize',
-      { text: 'Long document text here.' },
-      env,
-    )) as { summary: string };
+    const out = (await runPro('pdf-summarize', { text: 'Long document text here.' }, env)) as {
+      summary: string;
+    };
     expect(out.summary).toBe('The document covers quarterly results.');
   });
 
@@ -223,9 +221,9 @@ describe('pdf-q-and-a runner', () => {
 
   it('rejects a missing question', async () => {
     const env = aiEnv({ response: 'x' });
-    await expect(
-      runPro('pdf-q-and-a', { text: 'some document' }, env),
-    ).rejects.toThrow("'question'");
+    await expect(runPro('pdf-q-and-a', { text: 'some document' }, env)).rejects.toThrow(
+      "'question'",
+    );
   });
 });
 
@@ -242,9 +240,7 @@ describe('readImageRef SSRF validation', () => {
   });
 
   it('rejects an http:// URL', () => {
-    expect(() => readImageRef({ image: 'http://example.com/cat.png' })).toThrow(
-      'public host',
-    );
+    expect(() => readImageRef({ image: 'http://example.com/cat.png' })).toThrow('public host');
   });
 
   it('rejects the cloud metadata IP', () => {

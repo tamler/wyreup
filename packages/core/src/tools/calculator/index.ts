@@ -17,9 +17,13 @@ const FUNCTIONS = new Set(['sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'abs']);
 const CONSTANTS: Record<string, number> = { pi: Math.PI, e: Math.E };
 
 const PRECEDENCE: Record<string, number> = {
-  '+': 1, '-': 1,
-  '*': 2, '/': 2, '%': 2,
-  '^': 3, '**': 3,
+  '+': 1,
+  '-': 1,
+  '*': 2,
+  '/': 2,
+  '%': 2,
+  '^': 3,
+  '**': 3,
 };
 
 function tokenize(expr: string): Token[] {
@@ -31,12 +35,18 @@ function tokenize(expr: string): Token[] {
     const ch = s[i]!;
 
     // whitespace
-    if (/\s/.test(ch)) { i++; continue; }
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
 
     // number (including decimals)
     if (/\d/.test(ch) || (ch === '.' && /\d/.test(s[i + 1] ?? ''))) {
       let num = '';
-      while (i < s.length && (/[\d.]/.test(s[i]!))) { num += s[i]!; i++; }
+      while (i < s.length && /[\d.]/.test(s[i]!)) {
+        num += s[i]!;
+        i++;
+      }
       tokens.push({ type: 'number', value: num });
       continue;
     }
@@ -44,7 +54,10 @@ function tokenize(expr: string): Token[] {
     // function names and constants (alpha sequences)
     if (/[a-z]/i.test(ch)) {
       let word = '';
-      while (i < s.length && /[a-z]/i.test(s[i]!)) { word += s[i]!; i++; }
+      while (i < s.length && /[a-z]/i.test(s[i]!)) {
+        word += s[i]!;
+        i++;
+      }
       const lower = word.toLowerCase();
       if (FUNCTIONS.has(lower)) {
         tokens.push({ type: 'fn', value: lower });
@@ -69,8 +82,16 @@ function tokenize(expr: string): Token[] {
       i++;
       continue;
     }
-    if (ch === '(') { tokens.push({ type: 'lparen', value: '(' }); i++; continue; }
-    if (ch === ')') { tokens.push({ type: 'rparen', value: ')' }); i++; continue; }
+    if (ch === '(') {
+      tokens.push({ type: 'lparen', value: '(' });
+      i++;
+      continue;
+    }
+    if (ch === ')') {
+      tokens.push({ type: 'rparen', value: ')' });
+      i++;
+      continue;
+    }
 
     throw new Error(`Unexpected character: ${ch}`);
   }
@@ -110,10 +131,9 @@ function toRPN(tokens: Token[]): Token[] {
         const top = stack[stack.length - 1]!;
         if (
           top.type === 'fn' ||
-          (top.type === 'op' && (
-            (PRECEDENCE[top.value] ?? 0) > prec ||
-            (!rightAssoc && (PRECEDENCE[top.value] ?? 0) === prec)
-          ))
+          (top.type === 'op' &&
+            ((PRECEDENCE[top.value] ?? 0) > prec ||
+              (!rightAssoc && (PRECEDENCE[top.value] ?? 0) === prec)))
         ) {
           output.push(stack.pop()!);
         } else {
@@ -175,14 +195,31 @@ function evalRPN(rpn: Token[], angleMode: AngleMode): number {
       const a = stack.pop();
       if (a === undefined) throw new Error('Not enough operands');
       switch (tok.value) {
-        case 'sqrt': stack.push(Math.sqrt(a)); break;
-        case 'sin':  stack.push(Math.sin(toRad(a))); break;
-        case 'cos':  stack.push(Math.cos(toRad(a))); break;
-        case 'tan':  stack.push(Math.tan(toRad(a))); break;
-        case 'log':  if (a <= 0) throw new Error('log undefined for non-positive values'); stack.push(Math.log10(a)); break;
-        case 'ln':   if (a <= 0) throw new Error('ln undefined for non-positive values'); stack.push(Math.log(a)); break;
-        case 'abs':  stack.push(Math.abs(a)); break;
-        default: throw new Error(`Unknown function: ${tok.value}`);
+        case 'sqrt':
+          stack.push(Math.sqrt(a));
+          break;
+        case 'sin':
+          stack.push(Math.sin(toRad(a)));
+          break;
+        case 'cos':
+          stack.push(Math.cos(toRad(a)));
+          break;
+        case 'tan':
+          stack.push(Math.tan(toRad(a)));
+          break;
+        case 'log':
+          if (a <= 0) throw new Error('log undefined for non-positive values');
+          stack.push(Math.log10(a));
+          break;
+        case 'ln':
+          if (a <= 0) throw new Error('ln undefined for non-positive values');
+          stack.push(Math.log(a));
+          break;
+        case 'abs':
+          stack.push(Math.abs(a));
+          break;
+        default:
+          throw new Error(`Unknown function: ${tok.value}`);
       }
       continue;
     }
@@ -192,17 +229,28 @@ function evalRPN(rpn: Token[], angleMode: AngleMode): number {
       const a = stack.pop();
       if (a === undefined || b === undefined) throw new Error('Not enough operands');
       switch (tok.value) {
-        case '+': stack.push(a + b); break;
-        case '-': stack.push(a - b); break;
-        case '*': stack.push(a * b); break;
+        case '+':
+          stack.push(a + b);
+          break;
+        case '-':
+          stack.push(a - b);
+          break;
+        case '*':
+          stack.push(a * b);
+          break;
         case '/':
           if (b === 0) throw new Error('Division by zero');
           stack.push(a / b);
           break;
-        case '%': stack.push(a % b); break;
+        case '%':
+          stack.push(a % b);
+          break;
         case '^':
-        case '**': stack.push(Math.pow(a, b)); break;
-        default: throw new Error(`Unknown operator: ${tok.value}`);
+        case '**':
+          stack.push(Math.pow(a, b));
+          break;
+        default:
+          throw new Error(`Unknown operator: ${tok.value}`);
       }
     }
   }
@@ -211,7 +259,10 @@ function evalRPN(rpn: Token[], angleMode: AngleMode): number {
   return stack[0]!;
 }
 
-export function evaluate(expression: string, angleMode: AngleMode = 'deg'): { valid: boolean; result?: number; error?: string } {
+export function evaluate(
+  expression: string,
+  angleMode: AngleMode = 'deg',
+): { valid: boolean; result?: number; error?: string } {
   const expr = expression.trim();
   if (!expr) return { valid: false, error: 'Expression is empty' };
   try {
@@ -263,12 +314,7 @@ export const calculator: ToolModule<CalculatorParams> = {
     },
   },
 
-   
-  async run(
-    _inputs: File[],
-    params: CalculatorParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(_inputs: File[], params: CalculatorParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Evaluating expression' });
 
     const angleMode = params.angleMode ?? 'deg';

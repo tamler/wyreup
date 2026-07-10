@@ -19,37 +19,77 @@ mkdirSync(TMP, { recursive: true });
 
 const DIRECT_FILES = [
   // MediaPipe tasks-vision WASM (face-blur). Six files in the wasm/ dir.
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.js',          key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.js' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.wasm',        key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.wasm' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.js',   key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.js' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.wasm', key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.wasm' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.js',   key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.js' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.wasm', key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.wasm' },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.js',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.js',
+  },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.wasm',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_internal.wasm',
+  },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.js',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.js',
+  },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.wasm',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_module_internal.wasm',
+  },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.js',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.js',
+  },
+  {
+    upstream:
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.wasm',
+    key: '@mediapipe/tasks-vision@0.10.34/wasm/vision_wasm_nosimd_internal.wasm',
+  },
   // MediaPipe face-detector model (face-blur).
-  { upstream: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite', key: 'mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite' },
+  {
+    upstream:
+      'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
+    key: 'mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
+  },
   // FlashSR ONNX (audio-enhance).
-  { upstream: 'https://huggingface.co/YatharthS/FlashSR/resolve/main/onnx/model.onnx', key: 'YatharthS/FlashSR/resolve/main/onnx/model.onnx' },
+  {
+    upstream: 'https://huggingface.co/YatharthS/FlashSR/resolve/main/onnx/model.onnx',
+    key: 'YatharthS/FlashSR/resolve/main/onnx/model.onnx',
+  },
   // gdal3.js bundle (convert-geo).
-  { upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3WebAssembly.wasm', key: 'gdal3.js@2.8.1/dist/package/gdal3WebAssembly.wasm' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3WebAssembly.data', key: 'gdal3.js@2.8.1/dist/package/gdal3WebAssembly.data' },
-  { upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3.js',              key: 'gdal3.js@2.8.1/dist/package/gdal3.js' },
+  {
+    upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3WebAssembly.wasm',
+    key: 'gdal3.js@2.8.1/dist/package/gdal3WebAssembly.wasm',
+  },
+  {
+    upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3WebAssembly.data',
+    key: 'gdal3.js@2.8.1/dist/package/gdal3WebAssembly.data',
+  },
+  {
+    upstream: 'https://cdn.jsdelivr.net/npm/gdal3.js@2.8.1/dist/package/gdal3.js',
+    key: 'gdal3.js@2.8.1/dist/package/gdal3.js',
+  },
 ];
 
 const TRANSFORMERS_MODELS = [
   { id: 'onnx-community/BiRefNet_lite-ONNX', revision: 'main' },
-  { id: 'Xenova/vit-gpt2-image-captioning',   revision: 'main' },
-  { id: 'Xenova/blip-image-captioning-base',  revision: 'main' },
-  { id: 'Xenova/clip-vit-base-patch16',       revision: 'main' },
-  { id: 'Xenova/trocr-small-handwritten',     revision: 'main' },
-  { id: 'Xenova/bert-base-NER',               revision: 'main' },
+  { id: 'Xenova/vit-gpt2-image-captioning', revision: 'main' },
+  { id: 'Xenova/blip-image-captioning-base', revision: 'main' },
+  { id: 'Xenova/clip-vit-base-patch16', revision: 'main' },
+  { id: 'Xenova/trocr-small-handwritten', revision: 'main' },
+  { id: 'Xenova/bert-base-NER', revision: 'main' },
   { id: 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', revision: 'main' },
-  { id: 'Xenova/all-MiniLM-L6-v2',            revision: 'main' },
-  { id: 'Xenova/distilbart-cnn-6-6',          revision: 'main' },
-  { id: 'Xenova/m2m100_418M',                 revision: 'main' },
-  { id: 'Xenova/swin2SR-classical-sr-x2-64',  revision: 'main' },
-  { id: 'Xenova/whisper-tiny',                revision: 'main' },
-  { id: 'Xenova/whisper-base',                revision: 'main' },
-  { id: 'Xenova/whisper-small',               revision: 'main' },
+  { id: 'Xenova/all-MiniLM-L6-v2', revision: 'main' },
+  { id: 'Xenova/distilbart-cnn-6-6', revision: 'main' },
+  { id: 'Xenova/m2m100_418M', revision: 'main' },
+  { id: 'Xenova/swin2SR-classical-sr-x2-64', revision: 'main' },
+  { id: 'Xenova/whisper-tiny', revision: 'main' },
+  { id: 'Xenova/whisper-base', revision: 'main' },
+  { id: 'Xenova/whisper-small', revision: 'main' },
 ];
 
 async function objectExists(key) {
@@ -84,7 +124,9 @@ async function uploadFile(key, file) {
     let out = '';
     p.stdout.on('data', (d) => (out += d.toString()));
     p.stderr.on('data', (d) => (out += d.toString()));
-    p.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`upload failed: ${key}\n${out}`))));
+    p.on('exit', (code) =>
+      code === 0 ? resolve() : reject(new Error(`upload failed: ${key}\n${out}`)),
+    );
   });
 }
 

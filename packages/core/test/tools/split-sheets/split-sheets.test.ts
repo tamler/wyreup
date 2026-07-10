@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import JSZip from 'jszip';
 import { splitSheets } from '../../../src/tools/split-sheets/index.js';
-import {
-  readWorkbook,
-  sheetNames,
-  getSheet,
-  sheetToAOA,
-} from '../../../src/lib/excel.js';
+import { readWorkbook, sheetNames, getSheet, sheetToAOA } from '../../../src/lib/excel.js';
 import { makeCtx, makeXlsxFile, makeMultiSheetXlsxFile } from '../excel-helpers.js';
 
 async function runAndUnzip(
@@ -63,7 +58,13 @@ describe('split-sheets — run()', () => {
 
   it('preserves sheet data', async () => {
     const file = await makeMultiSheetXlsxFile([
-      { name: 'People', rows: [['name', 'age'], ['Alice', 30]] },
+      {
+        name: 'People',
+        rows: [
+          ['name', 'age'],
+          ['Alice', 30],
+        ],
+      },
     ]);
     const blob = (await splitSheets.run([file], {}, makeCtx())) as Blob;
     const zip = await JSZip.loadAsync(await blob.arrayBuffer());
@@ -84,9 +85,7 @@ describe('split-sheets — run()', () => {
   });
 
   it('sanitizes sheet names with special chars in zip filenames', async () => {
-    const file = await makeMultiSheetXlsxFile([
-      { name: 'Sheet One', rows: [['x']] },
-    ]);
+    const file = await makeMultiSheetXlsxFile([{ name: 'Sheet One', rows: [['x']] }]);
     const { names } = await runAndUnzip(file);
     expect(names[0]).toMatch(/\.xlsx$/);
   });

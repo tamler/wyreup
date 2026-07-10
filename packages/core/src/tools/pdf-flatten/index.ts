@@ -15,7 +15,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
   slug: 'pdf-flatten',
   name: 'Flatten PDF Form',
   description:
-    'Lock interactive form fields into the page content so values can\'t be edited or cleared. Useful before sending a filled form back to a counterparty. Runs entirely in your browser.',
+    "Lock interactive form fields into the page content so values can't be edited or cleared. Useful before sending a filled form back to a counterparty. Runs entirely in your browser.",
   category: 'pdf',
   keywords: ['pdf', 'flatten', 'form', 'lock', 'fields', 'finalize', 'static'],
 
@@ -44,11 +44,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfFlattenParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfFlattenParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('pdf-flatten accepts exactly one file.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 

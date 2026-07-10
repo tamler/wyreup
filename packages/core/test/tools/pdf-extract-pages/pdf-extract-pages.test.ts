@@ -50,22 +50,18 @@ describe('pdf-extract-pages — run()', () => {
 
   it('throws for out-of-bounds page number', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    await expect(
-      pdfExtractPages.run([input], { pages: [99] }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(pdfExtractPages.run([input], { pages: [99] }, makeCtx())).rejects.toThrow();
   });
 
   it('throws for empty pages array', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfExtractPages.run([input], { pages: [] }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(pdfExtractPages.run([input], { pages: [] }, makeCtx())).rejects.toThrow();
   });
 
   it('respects abort signal', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfExtractPages.run([input], { pages: [1] }, makeCtx(true)),
-    ).rejects.toThrow('Aborted');
+    await expect(pdfExtractPages.run([input], { pages: [1] }, makeCtx(true))).rejects.toThrow(
+      'Aborted',
+    );
   });
 });

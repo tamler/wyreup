@@ -110,7 +110,8 @@ export const htmlMinify: ToolModule<HtmlMinifyParams> = {
     const result: HtmlMinifyResult = {
       bytesIn,
       bytesOut,
-      reductionPercent: bytesIn > 0 ? Math.round(((bytesIn - bytesOut) / bytesIn) * 10000) / 100 : 0,
+      reductionPercent:
+        bytesIn > 0 ? Math.round(((bytesIn - bytesOut) / bytesIn) * 10000) / 100 : 0,
     };
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

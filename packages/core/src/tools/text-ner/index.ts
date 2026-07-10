@@ -57,16 +57,18 @@ export const textNer: ToolModule<TextNerParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading NER model' });
 
-    const pipe = await getPipeline(ctx, 'token-classification', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'token-classification', MODEL_ID, {
       aggregation_strategy: 'simple',
-    }) as (input: string) => Promise<Array<{
-      word?: string;
-      entity_group?: string;
-      entity?: string;
-      start?: number;
-      end?: number;
-      score?: number;
-    }>>;
+    })) as (input: string) => Promise<
+      Array<{
+        word?: string;
+        entity_group?: string;
+        entity?: string;
+        start?: number;
+        end?: number;
+        score?: number;
+      }>
+    >;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

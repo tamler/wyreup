@@ -30,7 +30,10 @@ function buildCharset(params: PasswordGeneratorParams): { charset: string; requi
 
   function filter(str: string): string {
     if (!excludeAmbiguous) return str;
-    return str.split('').filter((c) => !AMBIGUOUS.has(c)).join('');
+    return str
+      .split('')
+      .filter((c) => !AMBIGUOUS.has(c))
+      .join('');
   }
 
   const parts: Array<{ chars: string; enabled: boolean }> = [
@@ -56,7 +59,9 @@ function generatePassword(params: PasswordGeneratorParams): string {
   const { charset, required } = buildCharset(params);
 
   if (length < required.length) {
-    throw new Error(`Password length ${length} is too short to satisfy all enabled character categories`);
+    throw new Error(
+      `Password length ${length} is too short to satisfy all enabled character categories`,
+    );
   }
 
   const remaining = length - required.length;
@@ -136,7 +141,7 @@ export const passwordGenerator: ToolModule<PasswordGeneratorParams> = {
   },
 
   // Tool contract requires Promise return; no internal await needed.
-   
+
   async run(
     _inputs: File[],
     params: PasswordGeneratorParams,

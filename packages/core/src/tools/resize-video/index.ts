@@ -37,12 +37,18 @@ export function buildResizeArgs(
 ): string[] {
   const crf = params.crf ?? 23;
   return [
-    '-i', inputName,
-    '-vf', buildScaleFilter(params.width, params.height),
-    '-c:v', 'libx264',
-    '-crf', String(crf),
-    '-preset', 'fast',
-    '-c:a', 'copy',
+    '-i',
+    inputName,
+    '-vf',
+    buildScaleFilter(params.width, params.height),
+    '-c:v',
+    'libx264',
+    '-crf',
+    String(crf),
+    '-preset',
+    'fast',
+    '-c:a',
+    'copy',
     outputName,
   ];
 }
@@ -51,7 +57,8 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
   id: 'resize-video',
   slug: 'resize-video',
   name: 'Resize Video',
-  description: 'Scale a video to new dimensions. Leave width or height blank to preserve the aspect ratio.',
+  description:
+    'Scale a video to new dimensions. Leave width or height blank to preserve the aspect ratio.',
   category: 'media',
   keywords: ['video', 'resize', 'scale', 'dimensions', 'width', 'height', 'shrink', 'downscale'],
 
@@ -94,11 +101,7 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ResizeVideoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ResizeVideoParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -123,7 +126,7 @@ export const resizeVideo: ToolModule<ResizeVideoParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

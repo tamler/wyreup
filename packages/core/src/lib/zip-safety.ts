@@ -13,7 +13,10 @@ export const MAX_ZIP_ENTRIES = 50_000;
 export const MAX_ZIP_UNCOMPRESSED_BYTES = 4 * 1024 * 1024 * 1024;
 
 export class ZipSafetyError extends Error {
-  constructor(public readonly reason: 'too-many-entries' | 'uncompressed-too-large' | 'unsafe-filename', message: string) {
+  constructor(
+    public readonly reason: 'too-many-entries' | 'uncompressed-too-large' | 'unsafe-filename',
+    message: string,
+  ) {
     super(message);
     this.name = 'ZipSafetyError';
   }
@@ -33,14 +36,17 @@ export function sanitizeZipEntryName(rawName: string): string {
   const safe: string[] = [];
   for (const part of parts) {
     if (part === '..') {
-      safe.pop();                           // resolve traversal against accumulated path
+      safe.pop(); // resolve traversal against accumulated path
       continue;
     }
-    if (part.includes('\0')) continue;      // drop null-byte tricks
+    if (part.includes('\0')) continue; // drop null-byte tricks
     safe.push(part);
   }
   if (safe.length === 0) {
-    throw new ZipSafetyError('unsafe-filename', `ZIP entry name is unsafe and has no usable component: "${rawName}"`);
+    throw new ZipSafetyError(
+      'unsafe-filename',
+      `ZIP entry name is unsafe and has no usable component: "${rawName}"`,
+    );
   }
   return safe.join('/');
 }
@@ -70,9 +76,15 @@ export function assertDeclaredSizeBudget(entries: Array<{ uncompressedSize?: num
  *  that drives the extract loop. */
 export function assertEntryBudget(processedCount: number, accumulatedBytes: number): void {
   if (processedCount > MAX_ZIP_ENTRIES) {
-    throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: more than ${MAX_ZIP_ENTRIES} (zip-bomb defense).`);
+    throw new ZipSafetyError(
+      'too-many-entries',
+      `ZIP has too-many-entries: more than ${MAX_ZIP_ENTRIES} (zip-bomb defense).`,
+    );
   }
   if (accumulatedBytes > MAX_ZIP_UNCOMPRESSED_BYTES) {
-    throw new ZipSafetyError('uncompressed-too-large', `ZIP uncompressed-too-large: exceeds ${MAX_ZIP_UNCOMPRESSED_BYTES} bytes (zip-bomb defense).`);
+    throw new ZipSafetyError(
+      'uncompressed-too-large',
+      `ZIP uncompressed-too-large: exceeds ${MAX_ZIP_UNCOMPRESSED_BYTES} bytes (zip-bomb defense).`,
+    );
   }
 }

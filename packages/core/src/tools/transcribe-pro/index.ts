@@ -24,15 +24,7 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
     'Hosted Whisper-large-v3 transcription — higher accuracy and better with' +
     ' noisy or accented speech than the free in-browser version. Uses 3 credits per run.',
   category: 'export',
-  keywords: [
-    'transcribe',
-    'whisper',
-    'speech',
-    'pro',
-    'hosted',
-    'large',
-    'audio',
-  ],
+  keywords: ['transcribe', 'whisper', 'speech', 'pro', 'hosted', 'large', 'audio'],
 
   input: {
     accept: [
@@ -91,11 +83,7 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TranscribeProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TranscribeProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) {
       throw new Error('transcribe-pro accepts exactly one audio file.');
     }

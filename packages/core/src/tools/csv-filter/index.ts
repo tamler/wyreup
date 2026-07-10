@@ -175,7 +175,8 @@ export const csvFilter: ToolModule<CsvFilterParams> = {
 
     const text = await inputs[0]!.text();
     const hasHeader = params.hasHeader ?? true;
-    const delimiter = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
 
     ctx.onProgress({ stage: 'processing', percent: 35, message: 'Parsing CSV' });
     const parsed = Papa.parse<string[]>(text, { header: false, delimiter, skipEmptyLines: true });

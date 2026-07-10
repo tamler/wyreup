@@ -59,11 +59,7 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfMetadataParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfMetadataParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { mode, metadata } = params;
@@ -87,7 +83,12 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
         title: pdfDoc.getTitle() ?? null,
         author: pdfDoc.getAuthor() ?? null,
         subject: pdfDoc.getSubject() ?? null,
-        keywords: keywords ? keywords.split(',').map((k) => k.trim()).filter(Boolean) : [],
+        keywords: keywords
+          ? keywords
+              .split(',')
+              .map((k) => k.trim())
+              .filter(Boolean)
+          : [],
         creator: pdfDoc.getCreator() ?? null,
         producer: pdfDoc.getProducer() ?? null,
       };

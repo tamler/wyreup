@@ -20,22 +20,29 @@ function getExtFromFile(file: File): string {
  * the global metadata, `-c copy` keeps the media bit-for-bit.
  */
 export function buildStripMetadataArgs(inputName: string, outputName: string): string[] {
-  return [
-    '-i', inputName,
-    '-map_metadata', '-1',
-    '-c', 'copy',
-    outputName,
-  ];
+  return ['-i', inputName, '-map_metadata', '-1', '-c', 'copy', outputName];
 }
 
 export const stripVideoMetadata: ToolModule<StripVideoMetadataParams> = {
   id: 'strip-video-metadata',
   slug: 'strip-video-metadata',
   name: 'Strip Video Metadata',
-  description: 'Remove all metadata (location, device, creation date, tags) from a video or audio file. No re-encode.',
+  description:
+    'Remove all metadata (location, device, creation date, tags) from a video or audio file. No re-encode.',
   category: 'media',
   categories: ['privacy', 'audio'],
-  keywords: ['video', 'audio', 'metadata', 'strip', 'remove', 'privacy', 'gps', 'location', 'exif', 'tags'],
+  keywords: [
+    'video',
+    'audio',
+    'metadata',
+    'strip',
+    'remove',
+    'privacy',
+    'gps',
+    'location',
+    'exif',
+    'tags',
+  ],
 
   input: { accept: ['audio/*', 'video/*'], min: 1, max: 1, sizeLimit: 500 * 1024 * 1024 },
   output: { mime: '*/*' },
@@ -49,7 +56,11 @@ export const stripVideoMetadata: ToolModule<StripVideoMetadataParams> = {
 
   defaults: defaultStripVideoMetadataParams,
 
-  async run(inputs: File[], _params: StripVideoMetadataParams, ctx: ToolRunContext): Promise<Blob[]> {
+  async run(
+    inputs: File[],
+    _params: StripVideoMetadataParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });

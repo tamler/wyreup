@@ -41,9 +41,11 @@ export async function hydrateUser(): Promise<void> {
 
 // POST /api/account/verify with the typed key. On success the server sets
 // the __Host-wyreup_session cookie and we mirror { email, balance } into $user.
-export async function activate(rawKey: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function activate(
+  rawKey: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!rawKey.startsWith('wk_live_') && !rawKey.startsWith('wk_test_')) {
-    return { ok: false, error: 'That doesn\'t look like a Wyreup key.' };
+    return { ok: false, error: "That doesn't look like a Wyreup key." };
   }
   const res = await fetch('/api/account/verify', {
     method: 'POST',

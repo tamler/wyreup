@@ -48,7 +48,7 @@ describe('color-palette — run()', () => {
   it('returns a JSON blob with palette fields from a JPEG', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
-    const output = await colorPalette.run([input], { count: 5 }, makeCtx()) as Blob;
+    const output = (await colorPalette.run([input], { count: 5 }, makeCtx())) as Blob;
 
     expect(output).toBeInstanceOf(Blob);
     expect(output.type).toBe('application/json');
@@ -68,7 +68,7 @@ describe('color-palette — run()', () => {
   it('topColors is an array of hex color strings', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
-    const output = await colorPalette.run([input], { count: 3 }, makeCtx()) as Blob;
+    const output = (await colorPalette.run([input], { count: 3 }, makeCtx())) as Blob;
     const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     expect(result.topColors.length).toBeGreaterThan(0);
@@ -81,11 +81,18 @@ describe('color-palette — run()', () => {
   it('returns a non-null vibrant color for a colorful photo', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
-    const output = await colorPalette.run([input], {}, makeCtx()) as Blob;
+    const output = (await colorPalette.run([input], {}, makeCtx())) as Blob;
     const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     // At least one named swatch should be non-null for a real photo
-    const named = [result.vibrant, result.muted, result.darkVibrant, result.darkMuted, result.lightVibrant, result.lightMuted];
+    const named = [
+      result.vibrant,
+      result.muted,
+      result.darkVibrant,
+      result.darkMuted,
+      result.lightVibrant,
+      result.lightMuted,
+    ];
     const nonNull = named.filter(Boolean);
     expect(nonNull.length).toBeGreaterThan(0);
   });
@@ -93,7 +100,7 @@ describe('color-palette — run()', () => {
   it('works on a PNG image', async () => {
     const input = loadFixture('graphic.png', 'image/png');
 
-    const output = await colorPalette.run([input], { count: 5 }, makeCtx()) as Blob;
+    const output = (await colorPalette.run([input], { count: 5 }, makeCtx())) as Blob;
     const result = JSON.parse(await output.text()) as ColorPaletteResult;
 
     expect(Array.isArray(result.topColors)).toBe(true);
@@ -104,8 +111,6 @@ describe('color-palette — run()', () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      colorPalette.run([input], {}, makeCtx(controller.signal)),
-    ).rejects.toThrow();
+    await expect(colorPalette.run([input], {}, makeCtx(controller.signal))).rejects.toThrow();
   });
 });

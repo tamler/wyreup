@@ -65,11 +65,7 @@ export const translateIndicPro: ToolModule<TranslateIndicProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TranslateIndicProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TranslateIndicProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('translate-indic-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

@@ -28,7 +28,16 @@ export interface OpenapiValidateResult {
   };
 }
 
-const VALID_HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
+const VALID_HTTP_METHODS = new Set([
+  'get',
+  'put',
+  'post',
+  'delete',
+  'options',
+  'head',
+  'patch',
+  'trace',
+]);
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object' && !Array.isArray(v);
@@ -42,22 +51,37 @@ export function validateOpenapi(doc: unknown, strict: boolean): OpenapiValidateR
 
   if (!isObject(doc)) {
     push('error', '$', 'Document must be a JSON object.');
-    return { valid: false, version: null, issues, stats: { pathCount: 0, operationCount: 0, componentSchemaCount: 0 } };
+    return {
+      valid: false,
+      version: null,
+      issues,
+      stats: { pathCount: 0, operationCount: 0, componentSchemaCount: 0 },
+    };
   }
 
   const version = typeof doc.openapi === 'string' ? doc.openapi : null;
   if (!version) push('error', '$.openapi', 'Missing required "openapi" version string.');
   else if (!/^3\.[0-1]\./.test(version)) {
-    push('error', '$.openapi', `Unsupported OpenAPI version "${version}". This validator targets 3.0.x and 3.1.x.`);
+    push(
+      'error',
+      '$.openapi',
+      `Unsupported OpenAPI version "${version}". This validator targets 3.0.x and 3.1.x.`,
+    );
   }
 
   if (!isObject(doc.info)) {
     push('error', '$.info', 'Missing required "info" object.');
   } else {
-    if (typeof doc.info.title !== 'string') push('error', '$.info.title', 'info.title must be a string.');
-    if (typeof doc.info.version !== 'string') push('error', '$.info.version', 'info.version must be a string.');
+    if (typeof doc.info.title !== 'string')
+      push('error', '$.info.title', 'info.title must be a string.');
+    if (typeof doc.info.version !== 'string')
+      push('error', '$.info.version', 'info.version must be a string.');
     if (strict && typeof doc.info.description !== 'string') {
-      push('warning', '$.info.description', 'No description on the API — recommended for discoverability.');
+      push(
+        'warning',
+        '$.info.description',
+        'No description on the API — recommended for discoverability.',
+      );
     }
   }
 
@@ -86,17 +110,29 @@ export function validateOpenapi(doc: unknown, strict: boolean): OpenapiValidateR
           continue;
         }
         if (!isObject(operation.responses)) {
-          push('error', `$.paths['${pathKey}'].${methodKey}.responses`, 'Operation is missing required "responses" object.');
+          push(
+            'error',
+            `$.paths['${pathKey}'].${methodKey}.responses`,
+            'Operation is missing required "responses" object.',
+          );
         } else {
           // Each response key should be a status code or "default"
           for (const respKey of Object.keys(operation.responses)) {
             if (respKey !== 'default' && !/^[1-5](?:XX|\d{2})$/.test(respKey)) {
-              push('warning', `$.paths['${pathKey}'].${methodKey}.responses.${respKey}`, 'Response keys should be HTTP status codes ("200", "4XX") or "default".');
+              push(
+                'warning',
+                `$.paths['${pathKey}'].${methodKey}.responses.${respKey}`,
+                'Response keys should be HTTP status codes ("200", "4XX") or "default".',
+              );
             }
           }
         }
         if (strict && typeof operation.operationId !== 'string') {
-          push('warning', `$.paths['${pathKey}'].${methodKey}.operationId`, 'No operationId — strongly recommended for client codegen.');
+          push(
+            'warning',
+            `$.paths['${pathKey}'].${methodKey}.operationId`,
+            'No operationId — strongly recommended for client codegen.',
+          );
         }
       }
     }

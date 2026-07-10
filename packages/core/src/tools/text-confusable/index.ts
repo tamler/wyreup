@@ -48,16 +48,46 @@ export interface TextConfusableResult {
 // (Cyrillic / Greek / fullwidth / mathematical alphanumeric).
 const CONFUSABLES: Record<number, string> = {
   // Cyrillic
-  0x0430: 'a', 0x0435: 'e', 0x043e: 'o', 0x0440: 'p', 0x0441: 'c',
-  0x0445: 'x', 0x0443: 'y', 0x0456: 'i', 0x0458: 'j',
-  0x0410: 'A', 0x0412: 'B', 0x0415: 'E', 0x041a: 'K', 0x041c: 'M',
-  0x041d: 'H', 0x041e: 'O', 0x0420: 'P', 0x0421: 'C', 0x0422: 'T',
+  0x0430: 'a',
+  0x0435: 'e',
+  0x043e: 'o',
+  0x0440: 'p',
+  0x0441: 'c',
+  0x0445: 'x',
+  0x0443: 'y',
+  0x0456: 'i',
+  0x0458: 'j',
+  0x0410: 'A',
+  0x0412: 'B',
+  0x0415: 'E',
+  0x041a: 'K',
+  0x041c: 'M',
+  0x041d: 'H',
+  0x041e: 'O',
+  0x0420: 'P',
+  0x0421: 'C',
+  0x0422: 'T',
   0x0425: 'X',
   // Greek
-  0x03b1: 'a', 0x03bf: 'o', 0x03c1: 'p', 0x03bd: 'v', 0x03c5: 'u',
-  0x0391: 'A', 0x0392: 'B', 0x0395: 'E', 0x0396: 'Z', 0x0397: 'H',
-  0x0399: 'I', 0x039a: 'K', 0x039c: 'M', 0x039d: 'N', 0x039f: 'O',
-  0x03a1: 'P', 0x03a4: 'T', 0x03a5: 'Y', 0x03a7: 'X',
+  0x03b1: 'a',
+  0x03bf: 'o',
+  0x03c1: 'p',
+  0x03bd: 'v',
+  0x03c5: 'u',
+  0x0391: 'A',
+  0x0392: 'B',
+  0x0395: 'E',
+  0x0396: 'Z',
+  0x0397: 'H',
+  0x0399: 'I',
+  0x039a: 'K',
+  0x039c: 'M',
+  0x039d: 'N',
+  0x039f: 'O',
+  0x03a1: 'P',
+  0x03a4: 'T',
+  0x03a5: 'Y',
+  0x03a7: 'X',
   // Latin extensions / lookalike digits
   0x0131: 'i', // dotless i
   0x217c: 'l', // small roman numeral fifty
@@ -83,8 +113,8 @@ addMathRange(0x1d5a0, 0x41); // mathematical sans-serif A-Z
 addMathRange(0x1d5ba, 0x61); // mathematical sans-serif a-z
 
 const INVISIBLES = new Set<number>([
-  0x00ad, 0x180e, 0x200b, 0x200c, 0x200d, 0x2028, 0x2029, 0x202a,
-  0x202b, 0x202c, 0x202d, 0x202e, 0x202f, 0x2060, 0xfeff,
+  0x00ad, 0x180e, 0x200b, 0x200c, 0x200d, 0x2028, 0x2029, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e,
+  0x202f, 0x2060, 0xfeff,
 ]);
 
 function scriptOf(cp: number): string {
@@ -110,7 +140,10 @@ function isWordChar(ch: string): boolean {
   return /\p{Letter}|\p{Number}/u.test(ch);
 }
 
-export function analyzeConfusable(text: string, params: TextConfusableParams): TextConfusableResult {
+export function analyzeConfusable(
+  text: string,
+  params: TextConfusableParams,
+): TextConfusableResult {
   const baseScript = params.baseScript ?? 'latin';
   const flagMixedScript = params.flagMixedScript ?? true;
 
@@ -213,7 +246,16 @@ export const textConfusable: ToolModule<TextConfusableParams> = {
   description:
     'Detect Unicode homoglyph attacks. Flags non-Latin lookalikes (Cyrillic а, Greek ο, fullwidth Latin, mathematical alphanumeric) and tokens that mix scripts — exactly the patterns used in domain spoofing, fake usernames, and prompt-injection text.',
   category: 'inspect',
-  keywords: ['confusable', 'homoglyph', 'unicode', 'security', 'phishing', 'spoofing', 'idn', 'mixed-script'],
+  keywords: [
+    'confusable',
+    'homoglyph',
+    'unicode',
+    'security',
+    'phishing',
+    'spoofing',
+    'idn',
+    'mixed-script',
+  ],
 
   input: {
     accept: ['text/plain'],

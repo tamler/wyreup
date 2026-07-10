@@ -49,7 +49,7 @@ export const textSentiment: ToolModule<TextSentimentParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading sentiment model' });
 
-    const pipe = await getPipeline(ctx, 'sentiment-analysis', MODEL_ID) as (
+    const pipe = (await getPipeline(ctx, 'sentiment-analysis', MODEL_ID)) as (
       input: string,
     ) => Promise<Array<{ label: string; score: number }> | { label: string; score: number }>;
 
@@ -66,7 +66,7 @@ export const textSentiment: ToolModule<TextSentimentParams> = {
     const item = Array.isArray(rawResult) ? rawResult[0]! : rawResult;
 
     const result: TextSentimentResult = {
-      label: (item.label === 'POSITIVE' ? 'POSITIVE' : 'NEGATIVE'),
+      label: item.label === 'POSITIVE' ? 'POSITIVE' : 'NEGATIVE',
       score: Math.round(item.score * 10000) / 10000,
     };
 

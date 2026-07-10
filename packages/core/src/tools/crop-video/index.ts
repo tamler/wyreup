@@ -35,12 +35,18 @@ export function buildCropArgs(
   const x = Math.max(0, Math.round(params.x ?? 0));
   const y = Math.max(0, Math.round(params.y ?? 0));
   return [
-    '-i', inputName,
-    '-vf', `crop=${w}:${h}:${x}:${y}`,
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'fast',
-    '-c:a', 'copy',
+    '-i',
+    inputName,
+    '-vf',
+    `crop=${w}:${h}:${x}:${y}`,
+    '-c:v',
+    'libx264',
+    '-crf',
+    '23',
+    '-preset',
+    'fast',
+    '-c:a',
+    'copy',
     outputName,
   ];
 }
@@ -49,7 +55,8 @@ export const cropVideo: ToolModule<CropVideoParams> = {
   id: 'crop-video',
   slug: 'crop-video',
   name: 'Crop Video',
-  description: 'Cut a rectangular region out of a video. Set the crop width, height, and top-left position.',
+  description:
+    'Cut a rectangular region out of a video. Set the crop width, height, and top-left position.',
   category: 'media',
   categories: ['edit'],
   keywords: ['video', 'crop', 'trim edges', 'cut', 'region', 'frame', 'reframe'],
@@ -100,7 +107,7 @@ export const cropVideo: ToolModule<CropVideoParams> = {
     await ff.exec(buildCropArgs(inputName, outputName, params));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

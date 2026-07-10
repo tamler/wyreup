@@ -57,7 +57,12 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-async function sign(payload: ArrayBuffer, secret: string, algorithm: WebhookReplayAlgorithm, encoding: WebhookReplayEncoding): Promise<string> {
+async function sign(
+  payload: ArrayBuffer,
+  secret: string,
+  algorithm: WebhookReplayAlgorithm,
+  encoding: WebhookReplayEncoding,
+): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -83,7 +88,17 @@ export const webhookReplay: ToolModule<WebhookReplayParams> = {
   description:
     'Verify an inbound webhook then re-sign the same payload under a different secret for replay against your local dev or staging server. The classic "tunnel a Stripe / GitHub webhook through to localhost" pattern, without a server roundtrip.',
   category: 'inspect',
-  keywords: ['webhook', 'replay', 'forward', 'tunnel', 'hmac', 'stripe', 'github', 'staging', 'dev'],
+  keywords: [
+    'webhook',
+    'replay',
+    'forward',
+    'tunnel',
+    'hmac',
+    'stripe',
+    'github',
+    'staging',
+    'dev',
+  ],
 
   input: {
     accept: ['*/*'],
@@ -158,7 +173,10 @@ export const webhookReplay: ToolModule<WebhookReplayParams> = {
     const incomingSecret = params.incomingSecret ?? '';
     if (!incomingSecret) throw new Error('webhook-replay requires the inbound secret.');
     const replaySecret = params.replaySecret ?? '';
-    if (!replaySecret) throw new Error('webhook-replay requires a replay secret (otherwise just use webhook-verify).');
+    if (!replaySecret)
+      throw new Error(
+        'webhook-replay requires a replay secret (otherwise just use webhook-verify).',
+      );
 
     const algorithm = params.algorithm ?? 'SHA-256';
     const encoding = params.encoding ?? 'hex';
@@ -171,9 +189,10 @@ export const webhookReplay: ToolModule<WebhookReplayParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 60, message: 'Verifying inbound' });
     const incomingComputed = await sign(payload, incomingSecret, algorithm, encoding);
-    const stripped = inPrefix && incomingSignature.startsWith(inPrefix)
-      ? incomingSignature.slice(inPrefix.length)
-      : incomingSignature;
+    const stripped =
+      inPrefix && incomingSignature.startsWith(inPrefix)
+        ? incomingSignature.slice(inPrefix.length)
+        : incomingSignature;
     const a = encoding === 'hex' ? incomingComputed.toLowerCase() : incomingComputed;
     const b = encoding === 'hex' ? stripped.toLowerCase() : stripped;
     const incomingValid = constantTimeEqual(a, b);

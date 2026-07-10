@@ -81,9 +81,18 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
   id: 'image-similarity',
   slug: 'image-similarity',
   name: 'Image Similarity',
-  description: 'Compare images and find near-duplicates using CLIP embeddings — runs on your device.',
+  description:
+    'Compare images and find near-duplicates using CLIP embeddings — runs on your device.',
   category: 'inspect',
-  keywords: ['similarity', 'duplicate', 'compare', 'clip', 'perceptual', 'near-duplicate', 'embedding'],
+  keywords: [
+    'similarity',
+    'duplicate',
+    'compare',
+    'clip',
+    'perceptual',
+    'near-duplicate',
+    'embedding',
+  ],
 
   input: {
     accept: ACCEPTED_MIME_TYPES,
@@ -102,11 +111,7 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
 
   defaults: defaultImageSimilarityParams,
 
-  async run(
-    inputs: File[],
-    params: ImageSimilarityParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ImageSimilarityParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length < 2) {
       throw new Error('image-similarity requires at least 2 images to compare.');
     }
@@ -115,9 +120,12 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading CLIP model' });
 
-    const pipe = await getPipeline(ctx, 'feature-extraction', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'feature-extraction', MODEL_ID, {
       dtype: 'q8',
-    }) as (input: unknown, options?: Record<string, unknown>) => Promise<{ data: Float32Array | number[] }>;
+    })) as (
+      input: unknown,
+      options?: Record<string, unknown>,
+    ) => Promise<{ data: Float32Array | number[] }>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -140,7 +148,11 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
       embeddings.push(Array.from(result.data));
     }
 
-    ctx.onProgress({ stage: 'processing', percent: 85, message: 'Computing pairwise similarities' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 85,
+      message: 'Computing pairwise similarities',
+    });
 
     const pairwise: Array<{ a: number; b: number; cosine: number }> = [];
     for (let a = 0; a < embeddings.length; a++) {

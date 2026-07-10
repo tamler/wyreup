@@ -14,11 +14,11 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, inputBase?: number | 'auto'): Promise<NumberBaseResult> {
   const file = new File([text], 'input.txt', { type: 'text/plain' });
-  const [out] = await numberBaseConverter.run(
+  const [out] = (await numberBaseConverter.run(
     [file],
     { inputBase: inputBase as never },
     makeCtx(),
-  ) as Blob[];
+  )) as Blob[];
   return JSON.parse(await out!.text()) as NumberBaseResult;
 }
 
@@ -77,8 +77,6 @@ describe('number-base-converter — run()', () => {
 
   it('throws on empty input', async () => {
     const file = new File([''], 'input.txt', { type: 'text/plain' });
-    await expect(
-      numberBaseConverter.run([file], {}, makeCtx()),
-    ).rejects.toThrow('empty');
+    await expect(numberBaseConverter.run([file], {}, makeCtx())).rejects.toThrow('empty');
   });
 });

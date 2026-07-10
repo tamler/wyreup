@@ -13,9 +13,10 @@ export const defaultMixAudioParams: MixAudioParams = {
  * MIME. Order-independent. Throws unless there is exactly one video and one
  * audio file.
  */
-export function pickVideoAudio(
-  files: ReadonlyArray<{ type: string }>,
-): { videoIndex: number; audioIndex: number } {
+export function pickVideoAudio(files: ReadonlyArray<{ type: string }>): {
+  videoIndex: number;
+  audioIndex: number;
+} {
   const videoIndex = files.findIndex((f) => f.type.startsWith('video/'));
   const audioIndex = files.findIndex((f) => f.type.startsWith('audio/'));
   if (videoIndex === -1) throw new Error('Expected one video file');
@@ -37,16 +38,22 @@ export function buildMixAudioArgs(
   musicVolume: number,
 ): string[] {
   const vol = Math.max(0, Math.min(2, musicVolume));
-  const filter =
-    `[1:a]volume=${vol}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=0[aout]`;
+  const filter = `[1:a]volume=${vol}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=0[aout]`;
   return [
-    '-i', videoName,
-    '-i', musicName,
-    '-filter_complex', filter,
-    '-map', '0:v',
-    '-map', '[aout]',
-    '-c:v', 'copy',
-    '-c:a', 'aac',
+    '-i',
+    videoName,
+    '-i',
+    musicName,
+    '-filter_complex',
+    filter,
+    '-map',
+    '0:v',
+    '-map',
+    '[aout]',
+    '-c:v',
+    'copy',
+    '-c:a',
+    'aac',
     '-shortest',
     outputName,
   ];
@@ -56,10 +63,21 @@ export const mixAudio: ToolModule<MixAudioParams> = {
   id: 'mix-audio',
   slug: 'mix-audio',
   name: 'Mix Background Music',
-  description: 'Lay a background music track under a video\'s existing audio. Drop a video and an audio file (any order).',
+  description:
+    "Lay a background music track under a video's existing audio. Drop a video and an audio file (any order).",
   category: 'media',
   categories: ['audio'],
-  keywords: ['video', 'audio', 'mix', 'background', 'music', 'overlay', 'soundtrack', 'duck', 'blend'],
+  keywords: [
+    'video',
+    'audio',
+    'mix',
+    'background',
+    'music',
+    'overlay',
+    'soundtrack',
+    'duck',
+    'blend',
+  ],
 
   input: { accept: ['video/*', 'audio/*'], min: 2, max: 2, sizeLimit: 500 * 1024 * 1024 },
   output: { mime: 'video/mp4' },
@@ -107,7 +125,7 @@ export const mixAudio: ToolModule<MixAudioParams> = {
     await ff.exec(buildMixAudioArgs(videoName, musicName, outputName, params.musicVolume));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(videoName).catch(() => {});
     await ff.deleteFile(musicName).catch(() => {});

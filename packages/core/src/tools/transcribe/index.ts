@@ -199,11 +199,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TranscribeParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: TranscribeParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {
       throw new Error('transcribe accepts exactly one audio file.');
     }
@@ -230,20 +226,18 @@ export const transcribe: ToolModule<TranscribeParams> = {
     // merged variant doesn't include. Encoder is fine at q8; decoder
     // merge needs fp32 to avoid the bad path. Same setting works for
     // tiny / base / small variants.
-    const pipe = await getPipeline(
-      ctx,
-      'automatic-speech-recognition',
-      modelId,
-      {
-        dtype: {
-          encoder_model: 'q8',
-          decoder_model_merged: 'fp32',
-        },
+    const pipe = (await getPipeline(ctx, 'automatic-speech-recognition', modelId, {
+      dtype: {
+        encoder_model: 'q8',
+        decoder_model_merged: 'fp32',
       },
-    ) as (
+    })) as (
       audio: Float32Array,
       options?: Record<string, unknown>,
-    ) => Promise<{ text: string; chunks?: Array<{ text: string; timestamp: [number, number | null] }> }>;
+    ) => Promise<{
+      text: string;
+      chunks?: Array<{ text: string; timestamp: [number, number | null] }>;
+    }>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -291,11 +285,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
 
     if (wantTimestamps && result.chunks) {
-      const json = JSON.stringify(
-        { text: result.text, chunks: result.chunks },
-        null,
-        2,
-      );
+      const json = JSON.stringify({ text: result.text, chunks: result.chunks }, null, 2);
       return [new Blob([json], { type: 'application/json' })];
     }
 

@@ -1,5 +1,9 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { analyzeConfusable, type ConfusableHit, type MixedScriptToken } from '../text-confusable/index.js';
+import {
+  analyzeConfusable,
+  type ConfusableHit,
+  type MixedScriptToken,
+} from '../text-confusable/index.js';
 
 export interface PromptInjectionDemoParams {
   /** When true, include the HTML render with <mark> highlights in the result. Default true. */
@@ -32,23 +36,88 @@ export interface PromptInjectionDemoResult {
  * where appropriate. Not exhaustive — catches the textbook attacks seen in
  * the wild (jailbreak / instruction-override / context-fence injection).
  */
-const INJECTION_PATTERNS: { re: RegExp; kind: InjectionHighlight['kind']; severity: InjectionHighlight['severity']; detail: string }[] = [
+const INJECTION_PATTERNS: {
+  re: RegExp;
+  kind: InjectionHighlight['kind'];
+  severity: InjectionHighlight['severity'];
+  detail: string;
+}[] = [
   // Instruction-override phrases.
-  { re: /\bignore\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi, kind: 'injection-phrase', severity: 'high', detail: 'Instruction-override phrase' },
-  { re: /\bdisregard\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi, kind: 'injection-phrase', severity: 'high', detail: 'Instruction-override phrase' },
-  { re: /\bforget\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi, kind: 'injection-phrase', severity: 'high', detail: 'Instruction-override phrase' },
-  { re: /\boverride\s+(all\s+)?(the\s+)?(instructions?|rules?|safety)\b/gi, kind: 'injection-phrase', severity: 'high', detail: 'Override phrase' },
+  {
+    re: /\bignore\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi,
+    kind: 'injection-phrase',
+    severity: 'high',
+    detail: 'Instruction-override phrase',
+  },
+  {
+    re: /\bdisregard\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi,
+    kind: 'injection-phrase',
+    severity: 'high',
+    detail: 'Instruction-override phrase',
+  },
+  {
+    re: /\bforget\s+(all\s+)?(the\s+)?previous\s+(instructions?|prompts?|context)\b/gi,
+    kind: 'injection-phrase',
+    severity: 'high',
+    detail: 'Instruction-override phrase',
+  },
+  {
+    re: /\boverride\s+(all\s+)?(the\s+)?(instructions?|rules?|safety)\b/gi,
+    kind: 'injection-phrase',
+    severity: 'high',
+    detail: 'Override phrase',
+  },
   // Role-takeover phrases.
-  { re: /\byou\s+are\s+now\b/gi, kind: 'injection-phrase', severity: 'medium', detail: 'Role-takeover phrase' },
-  { re: /\bact\s+as\s+(if\s+)?(a|an|the)?\s*\w+/gi, kind: 'injection-phrase', severity: 'low', detail: 'Role-assignment phrase' },
-  { re: /\bpretend\s+(you\s+are|to\s+be)\b/gi, kind: 'injection-phrase', severity: 'medium', detail: 'Persona-takeover phrase' },
+  {
+    re: /\byou\s+are\s+now\b/gi,
+    kind: 'injection-phrase',
+    severity: 'medium',
+    detail: 'Role-takeover phrase',
+  },
+  {
+    re: /\bact\s+as\s+(if\s+)?(a|an|the)?\s*\w+/gi,
+    kind: 'injection-phrase',
+    severity: 'low',
+    detail: 'Role-assignment phrase',
+  },
+  {
+    re: /\bpretend\s+(you\s+are|to\s+be)\b/gi,
+    kind: 'injection-phrase',
+    severity: 'medium',
+    detail: 'Persona-takeover phrase',
+  },
   // System / context-fence markers commonly used to splice in fake system messages.
-  { re: /\bsystem\s*:/gi, kind: 'fence', severity: 'medium', detail: 'System role fence — could splice a fake system message' },
-  { re: /\[\s*INST\s*\]|\[\s*\/\s*INST\s*\]/gi, kind: 'fence', severity: 'high', detail: 'Llama-style instruction fence' },
-  { re: /<\|im_start\|>|<\|im_end\|>/gi, kind: 'fence', severity: 'high', detail: 'ChatML-style turn fence' },
-  { re: /<\|endoftext\|>|<\|startoftext\|>/gi, kind: 'fence', severity: 'high', detail: 'OpenAI-style turn fence' },
+  {
+    re: /\bsystem\s*:/gi,
+    kind: 'fence',
+    severity: 'medium',
+    detail: 'System role fence — could splice a fake system message',
+  },
+  {
+    re: /\[\s*INST\s*\]|\[\s*\/\s*INST\s*\]/gi,
+    kind: 'fence',
+    severity: 'high',
+    detail: 'Llama-style instruction fence',
+  },
+  {
+    re: /<\|im_start\|>|<\|im_end\|>/gi,
+    kind: 'fence',
+    severity: 'high',
+    detail: 'ChatML-style turn fence',
+  },
+  {
+    re: /<\|endoftext\|>|<\|startoftext\|>/gi,
+    kind: 'fence',
+    severity: 'high',
+    detail: 'OpenAI-style turn fence',
+  },
   // Jailbreak names — DAN, STAN, evil-twin patterns.
-  { re: /\b(do\s+anything\s+now|DAN)\b/g, kind: 'injection-phrase', severity: 'high', detail: 'Named jailbreak (DAN)' },
+  {
+    re: /\b(do\s+anything\s+now|DAN)\b/g,
+    kind: 'injection-phrase',
+    severity: 'high',
+    detail: 'Named jailbreak (DAN)',
+  },
 ];
 
 function severityRank(s: InjectionHighlight['severity']): number {
@@ -87,11 +156,17 @@ function renderHtml(text: string, highlights: InjectionHighlight[]): string {
  * one-codepoint span, so end = start + char.length.
  */
 function highlightFromHit(hit: ConfusableHit): InjectionHighlight {
-  const kind: InjectionHighlight['kind'] = hit.reason === 'invisible' ? 'invisible' : hit.reason === 'mixed-script' ? 'mixed-script' : 'confusable';
+  const kind: InjectionHighlight['kind'] =
+    hit.reason === 'invisible'
+      ? 'invisible'
+      : hit.reason === 'mixed-script'
+        ? 'mixed-script'
+        : 'confusable';
   const severity: InjectionHighlight['severity'] = hit.reason === 'invisible' ? 'high' : 'medium';
-  const detail = hit.reason === 'invisible'
-    ? `Invisible character U+${hit.hex} — would be hidden from a human reader`
-    : `Looks like "${hit.lookalike}" but is actually ${hit.script} (U+${hit.hex})`;
+  const detail =
+    hit.reason === 'invisible'
+      ? `Invisible character U+${hit.hex} — would be hidden from a human reader`
+      : `Looks like "${hit.lookalike}" but is actually ${hit.script} (U+${hit.hex})`;
   return {
     start: hit.index,
     end: hit.index + hit.char.length,
@@ -169,9 +244,10 @@ export function analyzePromptInjection(
   const verdict: PromptInjectionDemoResult['verdict'] =
     maxRank === 0 ? 'clean' : maxRank === 1 ? 'low' : maxRank === 2 ? 'medium' : 'high';
 
-  const summary = deduped.length === 0
-    ? 'No suspicious content detected.'
-    : `${deduped.length} finding${deduped.length === 1 ? '' : 's'}: ${[...new Set(deduped.map((h) => h.kind))].join(', ')}. Verdict: ${verdict}.`;
+  const summary =
+    deduped.length === 0
+      ? 'No suspicious content detected.'
+      : `${deduped.length} finding${deduped.length === 1 ? '' : 's'}: ${[...new Set(deduped.map((h) => h.kind))].join(', ')}. Verdict: ${verdict}.`;
 
   const result: PromptInjectionDemoResult = {
     verdict,
@@ -194,7 +270,16 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
   llmDescription:
     'Take untrusted text (a PDF body, a scraped page, a copy-paste from the web), return structured findings: each highlight has a start/end offset, the matched fragment, a kind (invisible / confusable / mixed-script / injection-phrase / fence / control), a severity, and a human-readable detail. Output JSON also includes a pre-rendered HTML view with <mark> spans the UI can show directly.',
   category: 'privacy',
-  keywords: ['prompt injection', 'security', 'llm', 'safety', 'suspicious', 'homoglyph', 'jailbreak', 'visualize'],
+  keywords: [
+    'prompt injection',
+    'security',
+    'llm',
+    'safety',
+    'suspicious',
+    'homoglyph',
+    'jailbreak',
+    'visualize',
+  ],
 
   input: {
     accept: ['text/plain'],
@@ -219,8 +304,13 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
     },
   },
 
-  async run(inputs: File[], params: PromptInjectionDemoParams, ctx: ToolRunContext): Promise<Blob[]> {
-    if (inputs.length !== 1) throw new Error('prompt-injection-demo accepts exactly one text input.');
+  async run(
+    inputs: File[],
+    params: PromptInjectionDemoParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
+    if (inputs.length !== 1)
+      throw new Error('prompt-injection-demo accepts exactly one text input.');
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Scanning for injection content' });
     const text = await inputs[0]!.text();
     const result = analyzePromptInjection(text, params);
@@ -234,9 +324,9 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
     useCases: [
       'Audit text before pasting it into an LLM prompt or fine-tune dataset.',
       'Defensive scan of scraped pages, PDFs, or user-submitted content fed to an agent.',
-      'Demo prompt-injection risk to a team that hasn\'t internalised the threat model.',
+      "Demo prompt-injection risk to a team that hasn't internalised the threat model.",
       'Catch homoglyph attacks in URLs, account names, or imported user data.',
-      'Spot zero-width characters in payment-form values or address fields where they\'re used to bypass filters.',
+      "Spot zero-width characters in payment-form values or address fields where they're used to bypass filters.",
     ],
     faq: [
       {
@@ -257,9 +347,15 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
       },
     ],
     alsoTry: [
-      { id: 'text-suspicious', why: 'Get the verdict layer (clean / low / medium / high) without the per-character highlights.' },
+      {
+        id: 'text-suspicious',
+        why: 'Get the verdict layer (clean / low / medium / high) without the per-character highlights.',
+      },
       { id: 'pdf-suspicious', why: 'Same idea, but extracts text from a PDF first.' },
-      { id: 'text-confusable', why: 'Just the homoglyph / mixed-script analyser without the prompt-injection patterns.' },
+      {
+        id: 'text-confusable',
+        why: 'Just the homoglyph / mixed-script analyser without the prompt-injection patterns.',
+      },
     ],
   },
 

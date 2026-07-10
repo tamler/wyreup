@@ -20,7 +20,10 @@ export const defaultVideoOverlayImageParams: VideoOverlayImageParams = {
 };
 
 /** Map position + margin to overlay x/y expressions. */
-export function overlayPositionToXY(position: OverlayPosition, margin: number): { x: string; y: string } {
+export function overlayPositionToXY(
+  position: OverlayPosition,
+  margin: number,
+): { x: string; y: string } {
   switch (position) {
     case 'top-left':
       return { x: String(margin), y: String(margin) };
@@ -138,11 +141,7 @@ export const videoOverlayImage: ToolModule<VideoOverlayImageParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoOverlayImageParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoOverlayImageParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     if (inputs.length < 2) {
@@ -184,17 +183,22 @@ export const videoOverlayImage: ToolModule<VideoOverlayImageParams> = {
     const filterComplex = buildOverlayFilter(params);
 
     await ff.exec([
-      '-i', videoName,
-      '-i', imageName,
-      '-filter_complex', filterComplex,
-      '-c:a', 'copy',
-      '-preset', 'fast',
+      '-i',
+      videoName,
+      '-i',
+      imageName,
+      '-filter_complex',
+      filterComplex,
+      '-c:a',
+      'copy',
+      '-preset',
+      'fast',
       outputName,
     ]);
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(videoName).catch(() => {});
     await ff.deleteFile(imageName).catch(() => {});

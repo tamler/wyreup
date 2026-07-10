@@ -47,18 +47,26 @@ export const qrReader: ToolModule<QrReaderParams> = {
 
   defaults: defaultQrReaderParams,
 
-  async run(
-    inputs: File[],
-    _params: QrReaderParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: QrReaderParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading QR decoder' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const jsQRModule = await import('jsqr');
     // jsqr CJS interop: the function is at .default in some bundlers
-    type JsQRFn = (data: Uint8ClampedArray, width: number, height: number) => { data: string; location: { topLeftCorner: QrPoint; topRightCorner: QrPoint; bottomLeftCorner: QrPoint; bottomRightCorner: QrPoint } } | null;
+    type JsQRFn = (
+      data: Uint8ClampedArray,
+      width: number,
+      height: number,
+    ) => {
+      data: string;
+      location: {
+        topLeftCorner: QrPoint;
+        topRightCorner: QrPoint;
+        bottomLeftCorner: QrPoint;
+        bottomRightCorner: QrPoint;
+      };
+    } | null;
     const jsQRDefault = (jsQRModule as unknown as { default?: unknown }).default;
     const jsQR = (typeof jsQRDefault === 'function' ? jsQRDefault : jsQRModule) as JsQRFn;
 
@@ -73,13 +81,20 @@ export const qrReader: ToolModule<QrReaderParams> = {
     ctx2d.drawImage(img, 0, 0);
 
     // Get pixel data — need to extend interface for getImageData
-    const imageData = (ctx2d as unknown as {
-      getImageData(x: number, y: number, w: number, h: number): {
-        data: Uint8ClampedArray;
-        width: number;
-        height: number;
-      };
-    }).getImageData(0, 0, canvas.width, canvas.height);
+    const imageData = (
+      ctx2d as unknown as {
+        getImageData(
+          x: number,
+          y: number,
+          w: number,
+          h: number,
+        ): {
+          data: Uint8ClampedArray;
+          width: number;
+          height: number;
+        };
+      }
+    ).getImageData(0, 0, canvas.width, canvas.height);
 
     const code = jsQR(imageData.data, imageData.width, imageData.height);
 

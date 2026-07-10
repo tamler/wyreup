@@ -41,11 +41,7 @@ export const jsonFormatter: ToolModule<JsonFormatterParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: JsonFormatterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: JsonFormatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Parsing JSON' });
 
     const text = await inputs[0]!.text();

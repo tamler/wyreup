@@ -35,7 +35,10 @@ export function computeTextStats(text: string): TextStatsResult {
   const charsNoSpaces = text.replace(/\s/g, '').length;
 
   // Words: split on whitespace, filter empty
-  const wordList = text.trim().split(/\s+/).filter((w) => w.length > 0);
+  const wordList = text
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
   const words = wordList.length;
 
   // Sentences: split on . ! ? followed by space or end
@@ -48,11 +51,12 @@ export function computeTextStats(text: string): TextStatsResult {
 
   const avgWordLength =
     words > 0
-      ? Math.round((wordList.reduce((sum, w) => sum + w.replace(/[^a-zA-Z]/g, '').length, 0) / words) * 10) / 10
+      ? Math.round(
+          (wordList.reduce((sum, w) => sum + w.replace(/[^a-zA-Z]/g, '').length, 0) / words) * 10,
+        ) / 10
       : 0;
 
-  const avgSentenceLength =
-    sentences > 0 ? Math.round((words / sentences) * 10) / 10 : 0;
+  const avgSentenceLength = sentences > 0 ? Math.round((words / sentences) * 10) / 10 : 0;
 
   const syllables = wordList.reduce((sum, w) => sum + countSyllables(w), 0);
 
@@ -80,7 +84,15 @@ export const textStats: ToolModule<TextStatsParams> = {
   name: 'Text Statistics',
   description: 'Count words, sentences, paragraphs, syllables, and estimate reading time.',
   category: 'text',
-  keywords: ['stats', 'word count', 'sentences', 'paragraphs', 'syllables', 'reading time', 'character count'],
+  keywords: [
+    'stats',
+    'word count',
+    'sentences',
+    'paragraphs',
+    'syllables',
+    'reading time',
+    'character count',
+  ],
 
   input: {
     accept: ['text/plain'],

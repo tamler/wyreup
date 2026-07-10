@@ -31,7 +31,8 @@ function toCsvValue(v: unknown): string {
   if (v === null || v === undefined) return '';
   if (typeof v === 'string') return v;
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-  if (Array.isArray(v)) return v.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(';');
+  if (Array.isArray(v))
+    return v.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(';');
   return JSON.stringify(v);
 }
 
@@ -42,7 +43,18 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
   description:
     'Bulk-harvest frontmatter from a folder of markdown files into a single CSV. The header row is the union of every key seen; each row is one source file. Hugo / Astro / Jekyll content inventories in one drop.',
   category: 'convert',
-  keywords: ['frontmatter', 'csv', 'markdown', 'hugo', 'astro', 'jekyll', 'gatsby', 'inventory', 'bulk', 'metadata'],
+  keywords: [
+    'frontmatter',
+    'csv',
+    'markdown',
+    'hugo',
+    'astro',
+    'jekyll',
+    'gatsby',
+    'inventory',
+    'bulk',
+    'metadata',
+  ],
 
   input: {
     accept: ['text/markdown', 'text/plain'],
@@ -93,7 +105,8 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
   },
 
   async run(inputs: File[], params: FrontmatterToCsvParams, ctx: ToolRunContext): Promise<Blob[]> {
-    if (inputs.length === 0) throw new Error('frontmatter-to-csv requires at least one markdown file.');
+    if (inputs.length === 0)
+      throw new Error('frontmatter-to-csv requires at least one markdown file.');
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading CSV writer' });
     const Papa = (await import('papaparse')).default;
     if (ctx.signal.aborted) throw new Error('Aborted');
@@ -133,7 +146,7 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
       }
       const data = flatten
         ? flattenJson(fm.frontmatter, { separator: '.', arrayStyle: 'dot', preserveArrays: true })
-        : (fm.frontmatter);
+        : fm.frontmatter;
       for (const k of Object.keys(data)) seenKeys.add(k);
       rows.push({ name: file.name, data });
     }

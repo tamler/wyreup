@@ -31,10 +31,7 @@ interface CanvasContext {
   getImageData: (x: number, y: number, w: number, h: number) => { data: Uint8ClampedArray };
 }
 
-export async function imageToAscii(
-  blob: Blob,
-  params: ImageToAsciiParams = {},
-): Promise<string> {
+export async function imageToAscii(blob: Blob, params: ImageToAsciiParams = {}): Promise<string> {
   const width = Math.max(10, Math.min(400, params.width ?? 80));
   const invert = params.invert ?? false;
   const rampName = params.ramp ?? 'standard';
@@ -131,11 +128,11 @@ export const imageToAsciiArt: ToolModule<ImageToAsciiParams> = {
     intro:
       'Convert any image into ASCII art or Unicode-block art. Pick a width (10–400 characters), a character ramp (the classic 70-char Paul Bourke ramp, a simple 10-char ramp, or 5 Unicode blocks), and invert for dark-mode terminals. The result is plain text — paste it into a README, a chat, a terminal banner, anywhere monospace renders. Runs entirely in your browser; the image never leaves your device.',
     useCases: [
-      'Generate an ASCII banner for a CLI tool\'s `--help` output.',
+      "Generate an ASCII banner for a CLI tool's `--help` output.",
       'Make a README header from a logo without bundling an image.',
       'Convert a photo into terminal-friendly art for a server MOTD or login screen.',
       'Build retro-style social posts where ASCII matters.',
-      'Quick-preview an image inside a terminal that doesn\'t support sixel or kitty graphics.',
+      "Quick-preview an image inside a terminal that doesn't support sixel or kitty graphics.",
     ],
     faq: [
       {
@@ -151,13 +148,13 @@ export const imageToAsciiArt: ToolModule<ImageToAsciiParams> = {
         a: 'Invert if you plan to display the ASCII on a dark background. The default ramp goes from light characters (sparse) to dark (dense), so dark areas get more ink — perfect on white. Invert flips that so dark areas read as light, which works on black.',
       },
       {
-        q: 'What\'s the difference between the three ramps?',
+        q: "What's the difference between the three ramps?",
         a: 'Standard (70 chars) gives the most gradient detail and the best photo reproduction. Simple (10 chars) is more legible at narrow widths and copies cleanly across fonts. Blocks (Unicode ░▒▓█) renders almost like a low-res image — best for logos and simple shapes.',
       },
     ],
     alsoTry: [
       { id: 'image-info', why: 'See dimensions, format, and metadata before converting.' },
-      { id: 'compress', why: 'Shrink the image before ASCII conversion if it\'s very large.' },
+      { id: 'compress', why: "Shrink the image before ASCII conversion if it's very large." },
     ],
   },
 

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { assertPdfPageBudget, assertDurationBudget, assertDimensionsBudget, BudgetExceededError } from '../src/lib/budget.js';
+import {
+  assertPdfPageBudget,
+  assertDurationBudget,
+  assertDimensionsBudget,
+  BudgetExceededError,
+} from '../src/lib/budget.js';
 
 describe('assertPdfPageBudget', () => {
   it('passes within limit', () => {
@@ -30,9 +35,13 @@ describe('assertDurationBudget', () => {
 
 describe('assertDimensionsBudget', () => {
   it('passes within both dims', () => {
-    expect(() => assertDimensionsBudget(1920, 1080, { maxDimensions: { width: 4096, height: 4096 } })).not.toThrow();
+    expect(() =>
+      assertDimensionsBudget(1920, 1080, { maxDimensions: { width: 4096, height: 4096 } }),
+    ).not.toThrow();
   });
   it('rejects when width over', () => {
-    expect(() => assertDimensionsBudget(5000, 1080, { maxDimensions: { width: 4096, height: 4096 } })).toThrow(BudgetExceededError);
+    expect(() =>
+      assertDimensionsBudget(5000, 1080, { maxDimensions: { width: 4096, height: 4096 } }),
+    ).toThrow(BudgetExceededError);
   });
 });

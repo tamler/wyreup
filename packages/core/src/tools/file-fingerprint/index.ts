@@ -47,7 +47,11 @@ async function digest(buffer: ArrayBuffer, algorithm: FingerprintHashAlgo): Prom
   return toHex(sig);
 }
 
-async function hmacHex(buffer: ArrayBuffer, secret: string, algorithm: FingerprintHmacAlgo): Promise<string> {
+async function hmacHex(
+  buffer: ArrayBuffer,
+  secret: string,
+  algorithm: FingerprintHmacAlgo,
+): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),

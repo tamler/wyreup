@@ -48,11 +48,7 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PgpDecryptParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: PgpDecryptParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (!params.privateKey || params.privateKey.trim() === '') {
       throw new Error('privateKey is required.');
     }

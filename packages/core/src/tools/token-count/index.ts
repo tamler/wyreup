@@ -22,7 +22,8 @@ export const tokenCount: ToolModule<TokenCountParams> = {
   id: 'token-count',
   slug: 'token-count',
   name: 'Token Count',
-  description: 'Count tokens for GPT-4, GPT-3.5, and GPT-4o — useful for prompt design and cost estimation.',
+  description:
+    'Count tokens for GPT-4, GPT-3.5, and GPT-4o — useful for prompt design and cost estimation.',
   category: 'dev',
   keywords: ['tokens', 'gpt', 'openai', 'tokenize', 'prompt', 'cost', 'count', 'llm'],
 

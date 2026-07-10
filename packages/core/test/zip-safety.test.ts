@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeZipEntryName, assertEntryBudget, assertDeclaredSizeBudget, MAX_ZIP_ENTRIES, MAX_ZIP_UNCOMPRESSED_BYTES, ZipSafetyError } from '../src/lib/zip-safety.js';
+import {
+  sanitizeZipEntryName,
+  assertEntryBudget,
+  assertDeclaredSizeBudget,
+  MAX_ZIP_ENTRIES,
+  MAX_ZIP_UNCOMPRESSED_BYTES,
+  ZipSafetyError,
+} from '../src/lib/zip-safety.js';
 
 describe('sanitizeZipEntryName', () => {
   it('strips leading slashes', () => {
@@ -39,17 +46,26 @@ describe('assertEntryBudget', () => {
   });
 
   it('rejects uncompressed size over cap', () => {
-    expect(() => assertEntryBudget(1, MAX_ZIP_UNCOMPRESSED_BYTES + 1)).toThrow(/uncompressed-too-large|exceeds/);
+    expect(() => assertEntryBudget(1, MAX_ZIP_UNCOMPRESSED_BYTES + 1)).toThrow(
+      /uncompressed-too-large|exceeds/,
+    );
   });
 });
 
 describe('assertDeclaredSizeBudget', () => {
   it('passes when declared total is under cap', () => {
-    expect(() => assertDeclaredSizeBudget([{ uncompressedSize: 1024 }, { uncompressedSize: 2048 }])).not.toThrow();
+    expect(() =>
+      assertDeclaredSizeBudget([{ uncompressedSize: 1024 }, { uncompressedSize: 2048 }]),
+    ).not.toThrow();
   });
 
   it('rejects when declared total exceeds cap', () => {
-    expect(() => assertDeclaredSizeBudget([{ uncompressedSize: MAX_ZIP_UNCOMPRESSED_BYTES }, { uncompressedSize: 1 }])).toThrow(ZipSafetyError);
+    expect(() =>
+      assertDeclaredSizeBudget([
+        { uncompressedSize: MAX_ZIP_UNCOMPRESSED_BYTES },
+        { uncompressedSize: 1 },
+      ]),
+    ).toThrow(ZipSafetyError);
   });
 
   it('handles missing uncompressedSize gracefully', () => {
@@ -71,7 +87,9 @@ describe('zip-extract bomb defense', () => {
       cache: new Map(),
       executionId: 'test',
     } as never;
-    await expect(zipExtract.run([file], {}, ctx)).rejects.toThrow(/zip-bomb|too-many-entries|more than/);
+    await expect(zipExtract.run([file], {}, ctx)).rejects.toThrow(
+      /zip-bomb|too-many-entries|more than/,
+    );
   }, 30_000);
 
   it('rejects pre-decompress when declared uncompressed total exceeds cap', async () => {
@@ -100,7 +118,9 @@ describe('zip-extract bomb defense', () => {
         Object.values(loaded.files)
           .filter((f) => !f.dir)
           .map((f) => ({
-            uncompressedSize: (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
+            uncompressedSize:
+              (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ??
+              0,
           })),
       ),
     ).toThrow(ZipSafetyError);

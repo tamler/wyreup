@@ -67,11 +67,7 @@ export const qr: ToolModule<QrParams> = {
     },
   },
 
-  async run(
-    _inputs: File[],
-    params: QrParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(_inputs: File[], params: QrParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const {

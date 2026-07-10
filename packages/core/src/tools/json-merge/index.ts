@@ -168,7 +168,8 @@ export const jsonMerge: ToolModule<JsonMergeParams> = {
   },
 
   async run(inputs: File[], params: JsonMergeParams, ctx: ToolRunContext): Promise<Blob[]> {
-    if (inputs.length !== 2) throw new Error('json-merge needs exactly two JSON files (base, override).');
+    if (inputs.length !== 2)
+      throw new Error('json-merge needs exactly two JSON files (base, override).');
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing inputs' });
     const [baseText, overrideText] = await Promise.all(inputs.map((f) => f.text()));
     let base: unknown;
@@ -176,12 +177,16 @@ export const jsonMerge: ToolModule<JsonMergeParams> = {
     try {
       base = JSON.parse(baseText!);
     } catch (err) {
-      throw new Error(`base (${inputs[0]!.name}) is not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
+      throw new Error(
+        `base (${inputs[0]!.name}) is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
     try {
       override = JSON.parse(overrideText!);
     } catch (err) {
-      throw new Error(`override (${inputs[1]!.name}) is not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
+      throw new Error(
+        `override (${inputs[1]!.name}) is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
     if (ctx.signal.aborted) throw new Error('Aborted');
 

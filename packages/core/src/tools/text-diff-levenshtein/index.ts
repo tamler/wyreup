@@ -54,8 +54,7 @@ export const textDiffLevenshtein: ToolModule<TextDiffLevenshteinParams> = {
     const { default: leven } = await import('leven');
     const distance = leven(a, b);
     const maxLength = Math.max(a.length, b.length);
-    const similarity =
-      maxLength === 0 ? 1 : Math.round((1 - distance / maxLength) * 10000) / 10000;
+    const similarity = maxLength === 0 ? 1 : Math.round((1 - distance / maxLength) * 10000) / 10000;
 
     const result: TextDiffLevenshteinResult = { distance, similarity, maxLength };
 

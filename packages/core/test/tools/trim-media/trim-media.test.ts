@@ -39,23 +39,23 @@ describe('trim-media — metadata', () => {
 describe('trim-media — run() param validation', () => {
   it('throws when start < 0', async () => {
     const file = new File(['data'], 'test.mp3', { type: 'audio/mpeg' });
-    await expect(
-      trimMedia.run([file], { start: -1, end: 10 }, makeCtx()),
-    ).rejects.toThrow(/start must be >= 0/);
+    await expect(trimMedia.run([file], { start: -1, end: 10 }, makeCtx())).rejects.toThrow(
+      /start must be >= 0/,
+    );
   });
 
   it('throws when end <= start', async () => {
     const file = new File(['data'], 'test.mp3', { type: 'audio/mpeg' });
-    await expect(
-      trimMedia.run([file], { start: 10, end: 5 }, makeCtx()),
-    ).rejects.toThrow(/end must be greater than start/);
+    await expect(trimMedia.run([file], { start: 10, end: 5 }, makeCtx())).rejects.toThrow(
+      /end must be greater than start/,
+    );
   });
 
   it('throws when start === end', async () => {
     const file = new File(['data'], 'test.mp3', { type: 'audio/mpeg' });
-    await expect(
-      trimMedia.run([file], { start: 5, end: 5 }, makeCtx()),
-    ).rejects.toThrow(/end must be greater than start/);
+    await expect(trimMedia.run([file], { start: 5, end: 5 }, makeCtx())).rejects.toThrow(
+      /end must be greater than start/,
+    );
   });
 });
 

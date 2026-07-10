@@ -99,11 +99,7 @@ describe('compress — run()', () => {
   it('re-encodes a JPEG as WebP when targetFormat is webp', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
 
-    const outputs = await compress.run(
-      [input],
-      { quality: 80, targetFormat: 'webp' },
-      makeCtx(),
-    );
+    const outputs = await compress.run([input], { quality: 80, targetFormat: 'webp' }, makeCtx());
     const blobs = Array.isArray(outputs) ? outputs : [outputs];
 
     expect(blobs[0]!.type).toBe('image/webp');
@@ -124,17 +120,15 @@ describe('compress — run()', () => {
   it('throws a readable error for an unsupported input type', async () => {
     const fakePdf = new File(['%PDF-1.4 fake'], 'x.pdf', { type: 'application/pdf' });
 
-    await expect(
-      compress.run([fakePdf], { quality: 80 }, makeCtx()),
-    ).rejects.toThrow(/unsupported|format|pdf/i);
+    await expect(compress.run([fakePdf], { quality: 80 }, makeCtx())).rejects.toThrow(
+      /unsupported|format|pdf/i,
+    );
   });
 
   it('throws for corrupted input', async () => {
     const input = loadFixture('corrupted.jpg', 'image/jpeg');
 
-    await expect(
-      compress.run([input], { quality: 80 }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(compress.run([input], { quality: 80 }, makeCtx())).rejects.toThrow();
   });
 
   it('respects a pre-aborted signal', async () => {

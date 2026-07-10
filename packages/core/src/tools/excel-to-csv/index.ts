@@ -21,7 +21,8 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
   id: 'excel-to-csv',
   slug: 'excel-to-csv',
   name: 'Excel to CSV',
-  description: 'Convert Excel workbooks (XLSX/XLS) to CSV. Export one sheet or all sheets as a ZIP.',
+  description:
+    'Convert Excel workbooks (XLSX/XLS) to CSV. Export one sheet or all sheets as a ZIP.',
   category: 'convert',
   keywords: ['excel', 'xlsx', 'xls', 'csv', 'convert', 'spreadsheet', 'table'],
 
@@ -70,11 +71,7 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ExcelToCsvParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob | Blob[]> {
+  async run(inputs: File[], params: ExcelToCsvParams, ctx: ToolRunContext): Promise<Blob | Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });
@@ -91,9 +88,7 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
     const allNames = listSheetNames(wb);
     if (allNames.length === 0) throw new Error('Workbook has no sheets');
 
-    const sheetNamesToExport: string[] = exportAll
-      ? allNames
-      : [sheetParam || allNames[0]!];
+    const sheetNamesToExport: string[] = exportAll ? allNames : [sheetParam || allNames[0]!];
 
     const csvOf = (name: string): string => {
       const ws = getSheet(wb, name);

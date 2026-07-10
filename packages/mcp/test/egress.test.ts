@@ -1,5 +1,10 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { installEgressLock, EgressBlockedError, _resetEgressLockForTests, setEgressAllowedOrigin } from '../src/egress.js';
+import {
+  installEgressLock,
+  EgressBlockedError,
+  _resetEgressLockForTests,
+  setEgressAllowedOrigin,
+} from '../src/egress.js';
 import { scrubbedEnv } from '../src/supervisor.js';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -11,11 +16,28 @@ beforeEach(async () => {
   _resetEgressLockForTests();
   await new Promise<void>((resolve) => {
     server = createServer((req, res) => {
-      if (req.url === '/ok') { res.writeHead(200); res.end('ok'); return; }
-      if (req.url === '/redirect-internal') { res.writeHead(302, { location: `http://127.0.0.1:${port}/ok` }); res.end(); return; }
-      if (req.url === '/redirect-external') { res.writeHead(302, { location: 'http://evil.example/' }); res.end(); return; }
-      if (req.url === '/loop') { res.writeHead(302, { location: `http://127.0.0.1:${port}/loop` }); res.end(); return; }
-      res.writeHead(404); res.end();
+      if (req.url === '/ok') {
+        res.writeHead(200);
+        res.end('ok');
+        return;
+      }
+      if (req.url === '/redirect-internal') {
+        res.writeHead(302, { location: `http://127.0.0.1:${port}/ok` });
+        res.end();
+        return;
+      }
+      if (req.url === '/redirect-external') {
+        res.writeHead(302, { location: 'http://evil.example/' });
+        res.end();
+        return;
+      }
+      if (req.url === '/loop') {
+        res.writeHead(302, { location: `http://127.0.0.1:${port}/loop` });
+        res.end();
+        return;
+      }
+      res.writeHead(404);
+      res.end();
     });
     server.listen(0, '127.0.0.1', () => {
       port = (server.address() as AddressInfo).port;
@@ -43,7 +65,9 @@ describe('egress lock [spec §#9]', () => {
 
   it('blocks Request(URL) to a disallowed origin', async () => {
     installEgressLock(`http://127.0.0.1:${port}`);
-    await expect(fetch(new Request('http://evil.example/'))).rejects.toBeInstanceOf(EgressBlockedError);
+    await expect(fetch(new Request('http://evil.example/'))).rejects.toBeInstanceOf(
+      EgressBlockedError,
+    );
   });
 
   it('follows internal redirects', async () => {
@@ -54,7 +78,9 @@ describe('egress lock [spec §#9]', () => {
 
   it('blocks a cross-origin redirect', async () => {
     installEgressLock(`http://127.0.0.1:${port}`);
-    await expect(fetch(`http://127.0.0.1:${port}/redirect-external`)).rejects.toBeInstanceOf(EgressBlockedError);
+    await expect(fetch(`http://127.0.0.1:${port}/redirect-external`)).rejects.toBeInstanceOf(
+      EgressBlockedError,
+    );
   });
 
   it('rejects redirect loop after 5 hops', async () => {
@@ -70,7 +96,7 @@ describe('egress lock [spec §#9]', () => {
 
   it('idempotent: second install is a no-op', async () => {
     installEgressLock(`http://127.0.0.1:${port}`);
-    installEgressLock('http://other.example');  // ignored
+    installEgressLock('http://other.example'); // ignored
     await expect(fetch('http://other.example/')).rejects.toBeInstanceOf(EgressBlockedError);
   });
 

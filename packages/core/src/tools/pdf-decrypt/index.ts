@@ -34,11 +34,7 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
     password: '',
   },
 
-  async run(
-    inputs: File[],
-    params: PdfDecryptParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfDecryptParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { password } = params;

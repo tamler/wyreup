@@ -39,10 +39,21 @@ export const videoVolume: ToolModule<VideoVolumeParams> = {
   id: 'video-volume',
   slug: 'video-volume',
   name: 'Adjust Volume',
-  description: 'Make a video or audio file louder or quieter by a gain factor (1 = unchanged, 2 = double).',
+  description:
+    'Make a video or audio file louder or quieter by a gain factor (1 = unchanged, 2 = double).',
   category: 'media',
   categories: ['audio'],
-  keywords: ['volume', 'gain', 'louder', 'quieter', 'audio', 'video', 'boost', 'amplify', 'attenuate'],
+  keywords: [
+    'volume',
+    'gain',
+    'louder',
+    'quieter',
+    'audio',
+    'video',
+    'boost',
+    'amplify',
+    'attenuate',
+  ],
 
   input: { accept: ['audio/*', 'video/*'], min: 1, max: 1, sizeLimit: 500 * 1024 * 1024 },
   output: { mime: '*/*' },

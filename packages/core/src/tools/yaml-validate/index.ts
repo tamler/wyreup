@@ -86,17 +86,19 @@ export const yamlValidate: ToolModule<YamlValidateParams> = {
   async run(inputs: File[], params: YamlValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('yaml-validate accepts exactly one file.');
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading YAML parser' });
-    const { load, JSON_SCHEMA, CORE_SCHEMA, FAILSAFE_SCHEMA, YAMLException } = await import('js-yaml');
+    const { load, JSON_SCHEMA, CORE_SCHEMA, FAILSAFE_SCHEMA, YAMLException } =
+      await import('js-yaml');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Parsing' });
     const text = await inputs[0]!.text();
 
-    const schemaOption = params.schema === 'json'
-      ? JSON_SCHEMA
-      : params.schema === 'failsafe'
-        ? FAILSAFE_SCHEMA
-        : CORE_SCHEMA;
+    const schemaOption =
+      params.schema === 'json'
+        ? JSON_SCHEMA
+        : params.schema === 'failsafe'
+          ? FAILSAFE_SCHEMA
+          : CORE_SCHEMA;
 
     try {
       const parsed = load(text, {

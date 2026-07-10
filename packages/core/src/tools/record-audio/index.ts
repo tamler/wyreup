@@ -29,9 +29,7 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   // Also a capture/creation primitive — surfaces under "create" so users
   // who think "I want to make a new audio file" find it from there too.
   categories: ['create'],
-  keywords: [
-    'record', 'audio', 'microphone', 'mic', 'voice', 'capture', 'push-to-talk', 'memo',
-  ],
+  keywords: ['record', 'audio', 'microphone', 'mic', 'voice', 'capture', 'push-to-talk', 'memo'],
 
   input: {
     accept: [],
@@ -55,13 +53,7 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
 
   // Sensible chains for a fresh recording. Most common: transcribe it.
   // Then audio post-processing tools.
-  chainSuggestions: [
-    'transcribe',
-    'audio-enhance',
-    'convert-audio',
-    'extract-audio',
-    'trim-media',
-  ],
+  chainSuggestions: ['transcribe', 'audio-enhance', 'convert-audio', 'extract-audio', 'trim-media'],
 
   defaults: defaultRecordAudioParams,
 
@@ -70,11 +62,9 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
   // from the web path. Because surfaces:['web'] gates this tool out
   // of CLI / MCP, run() is also never called from those surfaces.
   // The body throws as a safety net only — this should be unreachable.
-   
+
   async run(_inputs: File[], _params: RecordAudioParams, _ctx: ToolRunContext): Promise<Blob[]> {
-    throw new Error(
-      'record-audio is a web-only capture primitive; run() should never be reached.',
-    );
+    throw new Error('record-audio is a web-only capture primitive; run() should never be reached.');
   },
 
   __testFixtures: {

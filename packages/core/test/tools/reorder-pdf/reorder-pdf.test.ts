@@ -64,16 +64,12 @@ describe('reorder-pdf — run()', () => {
 
   it('throws when order references a page out of range', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    await expect(
-      reorderPdf.run([input], { order: '1,99' }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(reorderPdf.run([input], { order: '1,99' }, makeCtx())).rejects.toThrow();
   });
 
   it('throws for empty order', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    await expect(
-      reorderPdf.run([input], { order: '' }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(reorderPdf.run([input], { order: '' }, makeCtx())).rejects.toThrow();
   });
 
   it('output is a valid PDF', async () => {

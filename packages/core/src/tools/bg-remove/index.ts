@@ -54,12 +54,16 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
       );
     }
 
-    ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading background removal model' });
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 0,
+      message: 'Loading background removal model',
+    });
 
     // BiRefNet_lite uses image-segmentation pipeline
-    const pipe = await getPipeline(ctx, 'image-segmentation', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'image-segmentation', MODEL_ID, {
       dtype: 'fp16',
-    }) as (input: unknown) => Promise<Array<{ label: string; mask: unknown }>>;
+    })) as (input: unknown) => Promise<Array<{ label: string; mask: unknown }>>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -83,7 +87,11 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
     const context = canvas.getContext('2d') as unknown as {
       drawImage(src: unknown, x: number, y: number): void;
       getImageData(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray };
-      putImageData(data: { data: Uint8ClampedArray; width: number; height: number }, x: number, y: number): void;
+      putImageData(
+        data: { data: Uint8ClampedArray; width: number; height: number },
+        x: number,
+        y: number,
+      ): void;
     };
 
     context.drawImage(img, 0, 0);
@@ -95,7 +103,9 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
     // The mask from BiRefNet is a grayscale image. We decode it from the result.
     // Transformers.js image-segmentation returns masks as RawImage objects.
     if (result && result.length > 0) {
-      const segResult = result[0] as { mask?: { data?: Uint8ClampedArray | number[]; width?: number; height?: number } };
+      const segResult = result[0] as {
+        mask?: { data?: Uint8ClampedArray | number[]; width?: number; height?: number };
+      };
       const mask = segResult.mask;
       if (mask && mask.data) {
         const maskData = mask.data;
@@ -103,14 +113,24 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
         const maskStride = maskData.length / (img.width * img.height);
         for (let i = 0; i < img.width * img.height; i++) {
           // Use first channel value as alpha
-          const maskVal = maskStride >= 4 ? (maskData[i * maskStride]! + maskData[i * maskStride + 1]! + maskData[i * maskStride + 2]!) / 3 : maskData[i * maskStride] ?? 0;
+          const maskVal =
+            maskStride >= 4
+              ? (maskData[i * maskStride]! +
+                  maskData[i * maskStride + 1]! +
+                  maskData[i * maskStride + 2]!) /
+                3
+              : (maskData[i * maskStride] ?? 0);
           pixels[i * 4 + 3] = Math.round(maskVal);
         }
       }
     }
 
     const ctx2d = canvas.getContext('2d') as unknown as {
-      putImageData(data: ImageData | { data: Uint8ClampedArray; width: number; height: number }, x: number, y: number): void;
+      putImageData(
+        data: ImageData | { data: Uint8ClampedArray; width: number; height: number },
+        x: number,
+        y: number,
+      ): void;
     };
     ctx2d.putImageData(imageData as ImageData, 0, 0);
 

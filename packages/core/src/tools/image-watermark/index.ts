@@ -81,11 +81,7 @@ export const imageWatermark: ToolModule<ImageWatermarkParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ImageWatermarkParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ImageWatermarkParams, ctx: ToolRunContext): Promise<Blob[]> {
     const {
       text,
       position = 'bottom-right',

@@ -46,20 +46,18 @@ function groupIntoRows(
     }
   }
 
-  return rows.map((row) =>
-    row.cells
-      .sort((a, b) => a.x - b.x)
-      .map((c) => c.str.trim()),
-  );
+  return rows.map((row) => row.cells.sort((a, b) => a.x - b.x).map((c) => c.str.trim()));
 }
 
 function rowsToCsv(rows: string[][]): string {
   return rows
     .map((row) =>
-      row.map((cell) => {
-        const escaped = cell.replace(/"/g, '""');
-        return /[",\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
-      }).join(','),
+      row
+        .map((cell) => {
+          const escaped = cell.replace(/"/g, '""');
+          return /[",\n\r]/.test(escaped) ? `"${escaped}"` : escaped;
+        })
+        .join(','),
     )
     .join('\n');
 }
@@ -95,11 +93,7 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
 
   defaults,
 
-  async run(
-    inputs: File[],
-    params: PdfExtractTablesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfExtractTablesParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const format = params.format ?? defaults.format;
@@ -112,17 +106,13 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 5, message: 'Loading PDF' });
 
-    const { getDocument, GlobalWorkerOptions } = await import(
-      'pdfjs-dist/legacy/build/pdf.mjs'
-    );
+    const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     if (typeof window === 'undefined') {
       const { createRequire } = await import('node:module');
       const require = createRequire(import.meta.url);
       try {
-        const workerPath: string = require.resolve(
-          'pdfjs-dist/legacy/build/pdf.worker.mjs',
-        );
+        const workerPath: string = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
         GlobalWorkerOptions.workerSrc = workerPath;
       } catch {
         GlobalWorkerOptions.workerSrc = 'pdf.worker.mjs';

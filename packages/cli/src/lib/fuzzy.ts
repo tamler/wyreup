@@ -61,8 +61,7 @@ export function suggestSimilar(
 export function formatSuggestion(query: string, candidates: string[]): string {
   const suggestions = suggestSimilar(query, candidates);
   if (suggestions.length === 0) {
-    return `Unknown tool: "${query}".\n` +
-      `Run "wyreup list" to see all available tools.\n`;
+    return `Unknown tool: "${query}".\n` + `Run "wyreup list" to see all available tools.\n`;
   }
   return (
     `Unknown tool: "${query}".\n` +

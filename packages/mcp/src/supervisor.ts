@@ -11,13 +11,23 @@ const WORKER_PATH = (() => {
   const here = dirname(fileURLToPath(import.meta.url));
   const sibling = join(here, 'worker.js');
   const distPath = join(here, '..', 'dist', 'worker.js');
-  try { statSync(sibling); return sibling; } catch { /* ignore */ }
-  try { statSync(distPath); return distPath; } catch { /* ignore */ }
+  try {
+    statSync(sibling);
+    return sibling;
+  } catch {
+    /* ignore */
+  }
+  try {
+    statSync(distPath);
+    return distPath;
+  } catch {
+    /* ignore */
+  }
   return sibling; // last resort — let fork fail with a clear error
 })();
 
-const STDERR_CAP = 8 * 1024;   // [spec §#8] — 8 KB ring buffer
-const KILL_GRACE_MS = 5_000;   // SIGTERM → SIGKILL grace
+const STDERR_CAP = 8 * 1024; // [spec §#8] — 8 KB ring buffer
+const KILL_GRACE_MS = 5_000; // SIGTERM → SIGKILL grace
 
 const ALLOWED_EXEC_ARGV = new Set(['--enable-source-maps']);
 
@@ -41,16 +51,29 @@ export function scrubbedEnv(): NodeJS.ProcessEnv {
   // the trusted WorkerJob.proOrigin (delivered via IPC, validated parent-side)
   // in runJob() — see worker.ts / egress.setEgressAllowedOrigin.
   const CARRY: readonly string[] = [
-    'PATH', 'HOME', 'TMPDIR', 'LANG',
+    'PATH',
+    'HOME',
+    'TMPDIR',
+    'LANG',
     'WYREUP_ALLOW_PATHS',
     'WYREUP_MAX_INPUT_BYTES',
     // Explicit LC_* allowlist — previously a prefix wildcard. Locale vars
     // are needed for libraries that format numbers/dates/text by user locale
     // (sharp, ffmpeg, etc.). Tighten to the standard POSIX set so an
     // attacker can't sneak a custom LC_<garbage> variable through.
-    'LC_ALL', 'LC_CTYPE', 'LC_COLLATE', 'LC_MESSAGES', 'LC_MONETARY',
-    'LC_NUMERIC', 'LC_TIME', 'LC_PAPER', 'LC_NAME', 'LC_ADDRESS',
-    'LC_TELEPHONE', 'LC_MEASUREMENT', 'LC_IDENTIFICATION',
+    'LC_ALL',
+    'LC_CTYPE',
+    'LC_COLLATE',
+    'LC_MESSAGES',
+    'LC_MONETARY',
+    'LC_NUMERIC',
+    'LC_TIME',
+    'LC_PAPER',
+    'LC_NAME',
+    'LC_ADDRESS',
+    'LC_TELEPHONE',
+    'LC_MEASUREMENT',
+    'LC_IDENTIFICATION',
   ];
   const env: NodeJS.ProcessEnv = {};
   for (const k of CARRY) {
@@ -81,7 +104,12 @@ export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
     });
 
     let settled = false;
-    const finalize = (r: SupervisorResult) => { if (!settled) { settled = true; resolve(r); } };
+    const finalize = (r: SupervisorResult) => {
+      if (!settled) {
+        settled = true;
+        resolve(r);
+      }
+    };
 
     let killTimer: NodeJS.Timeout | undefined;
     let sigkillTimer: NodeJS.Timeout | undefined;
@@ -106,9 +134,10 @@ export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
         const tt = signal === 'SIGKILL' || signal === 'SIGTERM' ? 'timeout' : 'crash';
         finalize({
           ok: false,
-          error: tt === 'timeout'
-            ? `Tool worker timed out (signal ${signal}). Raise timeout_ms.`
-            : `Tool worker crashed (exit=${code}, signal=${signal}).`,
+          error:
+            tt === 'timeout'
+              ? `Tool worker timed out (signal ${signal}). Raise timeout_ms.`
+              : `Tool worker crashed (exit=${code}, signal=${signal}).`,
           stage: 'run',
           stderr: stderrBuf,
         });
@@ -118,7 +147,12 @@ export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
     child.once('error', (err) => {
       if (killTimer) clearTimeout(killTimer);
       if (sigkillTimer) clearTimeout(sigkillTimer);
-      finalize({ ok: false, error: `Worker spawn failed: ${err.message}`, stage: 'run', stderr: stderrBuf });
+      finalize({
+        ok: false,
+        error: `Worker spawn failed: ${err.message}`,
+        stage: 'run',
+        stderr: stderrBuf,
+      });
     });
 
     child.send(job);

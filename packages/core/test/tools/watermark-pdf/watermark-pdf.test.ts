@@ -48,11 +48,11 @@ describe('watermark-pdf — run()', () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
     const originalSize = input.size;
 
-    const output = await watermarkPdf.run(
+    const output = (await watermarkPdf.run(
       [input],
       { mode: 'text', text: 'DRAFT', opacity: 0.3 },
       makeCtx(),
-    ) as Blob;
+    )) as Blob;
 
     expect(output).toBeInstanceOf(Blob);
     expect(output.type).toBe('application/pdf');
@@ -63,11 +63,11 @@ describe('watermark-pdf — run()', () => {
   it('watermarks a multipage PDF on every page', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
 
-    const output = await watermarkPdf.run(
+    const output = (await watermarkPdf.run(
       [input],
       { mode: 'text', text: 'CONFIDENTIAL', opacity: 0.5, fontSize: 60 },
       makeCtx(),
-    ) as Blob;
+    )) as Blob;
 
     expect(output.size).toBeGreaterThan(input.size);
 
@@ -81,11 +81,11 @@ describe('watermark-pdf — run()', () => {
   it('applies custom rotation and color', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
 
-    const output = await watermarkPdf.run(
+    const output = (await watermarkPdf.run(
       [input],
       { mode: 'text', text: 'SAMPLE', rotation: 0, color: '#ff0000', opacity: 0.5 },
       makeCtx(),
-    ) as Blob;
+    )) as Blob;
 
     expect(output.size).toBeGreaterThan(0);
     expect(output.type).toBe('application/pdf');
@@ -94,9 +94,9 @@ describe('watermark-pdf — run()', () => {
   it('throws if image mode is used without imageBuffer', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
 
-    await expect(
-      watermarkPdf.run([input], { mode: 'image' }, makeCtx()),
-    ).rejects.toThrow(/imageBuffer/i);
+    await expect(watermarkPdf.run([input], { mode: 'image' }, makeCtx())).rejects.toThrow(
+      /imageBuffer/i,
+    );
   });
 
   it('respects a pre-aborted signal', async () => {

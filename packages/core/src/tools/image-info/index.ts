@@ -32,11 +32,7 @@ export const imageInfo: ToolModule<ImageInfoParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: ImageInfoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: ImageInfoParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const input = inputs[0]!;
@@ -52,16 +48,15 @@ export const imageInfo: ToolModule<ImageInfoParams> = {
     const decoded = await codec.decode(buffer);
     // Swap width/height when EXIF orientation indicates a 90° rotation so
     // image-info reports dimensions as the image would actually display.
-    const orientation = input.type.includes('jpeg') || input.type.includes('jpg')
-      ? decodeJpegOrientation(buffer)
-      : 1;
+    const orientation =
+      input.type.includes('jpeg') || input.type.includes('jpg') ? decodeJpegOrientation(buffer) : 1;
     const swapDims = orientation >= 5;
     const width = swapDims ? decoded.height : decoded.width;
     const height = swapDims ? decoded.width : decoded.height;
 
     const bytes = buffer.byteLength;
     const ratio = aspectRatio(width, height);
-    const megapixels = Math.round((width * height) / 1_000_000 * 100) / 100;
+    const megapixels = Math.round(((width * height) / 1_000_000) * 100) / 100;
 
     const result: ImageInfoResult = {
       format: sourceFormat,

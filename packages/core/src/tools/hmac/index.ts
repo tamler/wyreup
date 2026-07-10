@@ -66,7 +66,17 @@ export const hmac: ToolModule<HmacParams> = {
   description:
     'Compute an HMAC signature of a file with your own secret key. Pairs with the hash tool — use HMAC when you also need authentication, not just integrity.',
   category: 'inspect',
-  keywords: ['hmac', 'signature', 'mac', 'sha256', 'sha512', 'sha1', 'authentication', 'integrity', 'sign'],
+  keywords: [
+    'hmac',
+    'signature',
+    'mac',
+    'sha256',
+    'sha512',
+    'sha1',
+    'authentication',
+    'integrity',
+    'sign',
+  ],
 
   input: {
     accept: ['*/*'],

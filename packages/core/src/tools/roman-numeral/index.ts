@@ -26,17 +26,29 @@ export interface RomanNumeralResult {
 // medieval shorthand). 3999 is the largest representable value without
 // vinculum overlines.
 const TABLE: ReadonlyArray<[number, string]> = [
-  [1000, 'M'], [900, 'CM'],
-  [500, 'D'], [400, 'CD'],
-  [100, 'C'], [90, 'XC'],
-  [50, 'L'], [40, 'XL'],
-  [10, 'X'], [9, 'IX'],
-  [5, 'V'], [4, 'IV'],
+  [1000, 'M'],
+  [900, 'CM'],
+  [500, 'D'],
+  [400, 'CD'],
+  [100, 'C'],
+  [90, 'XC'],
+  [50, 'L'],
+  [40, 'XL'],
+  [10, 'X'],
+  [9, 'IX'],
+  [5, 'V'],
+  [4, 'IV'],
   [1, 'I'],
 ];
 
 const CHAR_VALUES: Record<string, number> = {
-  I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000,
+  I: 1,
+  V: 5,
+  X: 10,
+  L: 50,
+  C: 100,
+  D: 500,
+  M: 1000,
 };
 
 export function encodeRoman(n: number): string {
@@ -56,7 +68,8 @@ export function encodeRoman(n: number): string {
 export function decodeRoman(s: string): number {
   const text = s.trim().toUpperCase();
   if (text === '') throw new Error('Empty roman numeral.');
-  if (!/^[IVXLCDM]+$/.test(text)) throw new Error(`Roman numeral "${s}" contains invalid characters.`);
+  if (!/^[IVXLCDM]+$/.test(text))
+    throw new Error(`Roman numeral "${s}" contains invalid characters.`);
   let total = 0;
   for (let i = 0; i < text.length; i++) {
     const cur = CHAR_VALUES[text[i]!]!;
@@ -66,7 +79,9 @@ export function decodeRoman(s: string): number {
   }
   // Round-trip check — catches malformed numerals like "IIII" or "VV".
   if (encodeRoman(total) !== text) {
-    throw new Error(`"${s}" is not a canonical roman numeral (canonical form: ${encodeRoman(total)}).`);
+    throw new Error(
+      `"${s}" is not a canonical roman numeral (canonical form: ${encodeRoman(total)}).`,
+    );
   }
   return total;
 }
@@ -121,7 +136,11 @@ export const romanNumeral: ToolModule<RomanNumeralParams> = {
     const results: RomanNumeralEntry[] = [];
     const errors: string[] = [];
 
-    ctx.onProgress({ stage: 'processing', percent: 50, message: mode === 'encode' ? 'Encoding' : 'Decoding' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 50,
+      message: mode === 'encode' ? 'Encoding' : 'Decoding',
+    });
 
     for (const tok of tokens) {
       try {

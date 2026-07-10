@@ -59,7 +59,7 @@ describe('canvas helper', () => {
     expect(result.size).toBeGreaterThan(0);
     // Verify JPEG magic bytes
     const bytes = new Uint8Array(await result.arrayBuffer());
-    expect(bytes[0]).toBe(0xFF);
-    expect(bytes[1]).toBe(0xD8);
+    expect(bytes[0]).toBe(0xff);
+    expect(bytes[1]).toBe(0xd8);
   });
 });

@@ -36,10 +36,7 @@ export interface SessionPayload {
   exp: number;
 }
 
-export async function signSessionCookie(
-  payload: SessionPayload,
-  secret: string,
-): Promise<string> {
+export async function signSessionCookie(payload: SessionPayload, secret: string): Promise<string> {
   const body = `${payload.uid}.${payload.kid}.${payload.exp}`;
   const mac = await hmacSha256Hex(secret, body);
   return `${body}.${mac}`;

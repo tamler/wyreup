@@ -26,7 +26,8 @@ describe('video-to-gif — metadata', () => {
   it('defaults fps is 15', () => expect(defaultVideoToGifParams.fps).toBe(15));
   it('defaults width is 480', () => expect(defaultVideoToGifParams.width).toBe(480));
   it('defaults startSeconds is 0', () => expect(defaultVideoToGifParams.startSeconds).toBe(0));
-  it('defaults durationSeconds is 5', () => expect(defaultVideoToGifParams.durationSeconds).toBe(5));
+  it('defaults durationSeconds is 5', () =>
+    expect(defaultVideoToGifParams.durationSeconds).toBe(5));
 });
 
 describe('video-to-gif — buildGifArgs()', () => {

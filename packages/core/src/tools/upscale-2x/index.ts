@@ -18,7 +18,8 @@ export const upscale2x: ToolModule<Upscale2xParams> = {
   id: 'upscale-2x',
   slug: 'upscale-2x',
   name: 'Upscale 2x',
-  description: 'Double the resolution of any image using AI super-resolution — runs on your device.',
+  description:
+    'Double the resolution of any image using AI super-resolution — runs on your device.',
   category: 'optimize',
   keywords: ['upscale', 'super-resolution', 'enlarge', 'resolution', 'sharpen', 'enhance', 'ai'],
 
@@ -51,21 +52,34 @@ export const upscale2x: ToolModule<Upscale2xParams> = {
       );
     }
 
-    ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading super-resolution model' });
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 0,
+      message: 'Loading super-resolution model',
+    });
 
-    const pipe = await getPipeline(ctx, 'image-to-image', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'image-to-image', MODEL_ID, {
       dtype: 'q4',
-    }) as (input: unknown) => Promise<unknown>;
+    })) as (input: unknown) => Promise<unknown>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    ctx.onProgress({ stage: 'processing', percent: 50, message: 'Upscaling image (this may take a few seconds)' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 50,
+      message: 'Upscaling image (this may take a few seconds)',
+    });
 
     const arrayBuffer = await input.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: input.type });
     const dataUrl = await blobToDataUrl(blob);
 
-    const result = await pipe(dataUrl) as { toBlob?: () => Promise<Blob>; data?: Uint8ClampedArray; width?: number; height?: number };
+    const result = (await pipe(dataUrl)) as {
+      toBlob?: () => Promise<Blob>;
+      data?: Uint8ClampedArray;
+      width?: number;
+      height?: number;
+    };
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -106,11 +120,19 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
   return `data:${blob.type};base64,${b64}`;
 }
 
-async function rawImageToBlob(data: Uint8ClampedArray, width: number, height: number): Promise<Blob> {
+async function rawImageToBlob(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+): Promise<Blob> {
   if (typeof OffscreenCanvas !== 'undefined') {
     const oc = new OffscreenCanvas(width, height);
     const ctx = oc.getContext('2d')!;
-    const imageData = new ImageData(new Uint8ClampedArray(data.buffer as ArrayBuffer), width, height);
+    const imageData = new ImageData(
+      new Uint8ClampedArray(data.buffer as ArrayBuffer),
+      width,
+      height,
+    );
     ctx.putImageData(imageData, 0, 0);
     return oc.convertToBlob({ type: 'image/png' });
   }

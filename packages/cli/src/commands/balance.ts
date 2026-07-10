@@ -16,9 +16,7 @@ interface BalanceResponse {
 export async function balanceCommand(opts: { json?: boolean }): Promise<void> {
   const key = await readApiKey();
   if (!key) {
-    process.stderr.write(
-      'No Wyreup API key found. Run `wyreup login` or set WYREUP_API_KEY.\n',
-    );
+    process.stderr.write('No Wyreup API key found. Run `wyreup login` or set WYREUP_API_KEY.\n');
     process.exit(1);
   }
 

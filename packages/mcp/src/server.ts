@@ -1,9 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
 import { readFile, stat } from 'node:fs/promises';
 import { basename, join } from 'node:path';
@@ -131,9 +128,12 @@ function inferParamType(value: unknown): Record<string, unknown> {
     return { type: 'array', items: inferParamType(value[0]) };
   }
   switch (typeof value) {
-    case 'boolean': return { type: 'boolean' };
-    case 'number': return { type: 'number' };
-    case 'string': return { type: 'string' };
+    case 'boolean':
+      return { type: 'boolean' };
+    case 'number':
+      return { type: 'number' };
+    case 'string':
+      return { type: 'string' };
     case 'object': {
       const properties: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
@@ -141,7 +141,8 @@ function inferParamType(value: unknown): Record<string, unknown> {
       }
       return { type: 'object', properties };
     }
-    default: return {};
+    default:
+      return {};
   }
 }
 
@@ -156,7 +157,10 @@ function buildParamsSchema(defaults: unknown): Record<string, unknown> {
   return { type: 'object', properties, additionalProperties: true };
 }
 
-function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boolean } }): Record<string, unknown> {
+function buildMcpInputSchema(tool: {
+  defaults: unknown;
+  output: { multiple?: boolean };
+}): Record<string, unknown> {
   const isMultiOutput = tool.output.multiple === true;
   const properties: Record<string, unknown> = {
     input_paths: {
@@ -170,7 +174,8 @@ function buildMcpInputSchema(tool: { defaults: unknown; output: { multiple?: boo
     },
     timeout_ms: {
       type: 'number',
-      description: 'Max runtime in ms. Default 300000 (5 min). Range [1, 3600000]. 0 disables (requires WYREUP_ALLOW_DISABLE_TIMEOUT=1).',
+      description:
+        'Max runtime in ms. Default 300000 (5 min). Range [1, 3600000]. 0 disables (requires WYREUP_ALLOW_DISABLE_TIMEOUT=1).',
     },
     allow_overwrite: {
       type: 'boolean',
@@ -216,9 +221,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
   if (allowedRoots === '*') {
     process.stderr.write('wyreup MCP: WYREUP_ALLOW_PATHS=* — path allowlist DISABLED\n');
   } else {
-    process.stderr.write(
-      `wyreup MCP: allowed paths: ${allowedRoots.join(', ')}\n`,
-    );
+    process.stderr.write(`wyreup MCP: allowed paths: ${allowedRoots.join(', ')}\n`);
   }
 
   const auditor = new Auditor({
@@ -243,10 +246,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
     .filter((t) => toolRunsOnSurface(t, 'mcp'))
     .filter((t) => proApiKey || t.cost !== 'credit');
 
-  const server = new Server(
-    { name: 'wyreup', version: '0.1.0' },
-    { capabilities: { tools: {} } },
-  );
+  const server = new Server({ name: 'wyreup', version: '0.1.0' }, { capabilities: { tools: {} } });
 
   // The `wyreup_chain` meta-tool lets agents run a multi-step chain
   // in a single call instead of orchestrating each tool individually.
@@ -255,7 +255,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
   const CHAIN_TOOL = {
     name: 'wyreup_chain',
     description:
-      'Run a chain of Wyreup tools in sequence. Each step\'s output becomes the next step\'s input. ' +
+      "Run a chain of Wyreup tools in sequence. Each step's output becomes the next step's input. " +
       'Chain syntax: "tool1|tool2[key=val,key2=val2]|tool3". ' +
       'Use this when the agent task naturally pipelines (e.g. transcribe an audio file then summarize the text).',
     inputSchema: {
@@ -278,7 +278,8 @@ export async function createWyreupMcpServer(): Promise<Server> {
         },
         output_dir: {
           type: 'string',
-          description: 'Directory for multi-output chains (each output written with a tool-derived name).',
+          description:
+            'Directory for multi-output chains (each output written with a tool-derived name).',
         },
         timeout_ms: {
           type: 'number',
@@ -333,11 +334,18 @@ export async function createWyreupMcpServer(): Promise<Server> {
   function resolveTimeout(raw: unknown): { ok: true; ms: number } | { ok: false; error: string } {
     if (raw === undefined) return { ok: true, ms: 300_000 };
     if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0 || !Number.isInteger(raw)) {
-      return { ok: false, error: `timeout_ms must be a non-negative integer (got ${JSON.stringify(raw)})` };
+      return {
+        ok: false,
+        error: `timeout_ms must be a non-negative integer (got ${JSON.stringify(raw)})`,
+      };
     }
     if (raw === 0) {
       if (process.env['WYREUP_ALLOW_DISABLE_TIMEOUT'] !== '1') {
-        return { ok: false, error: 'timeout_ms: 0 (disable) requires WYREUP_ALLOW_DISABLE_TIMEOUT=1 on the MCP server process.' };
+        return {
+          ok: false,
+          error:
+            'timeout_ms: 0 (disable) requires WYREUP_ALLOW_DISABLE_TIMEOUT=1 on the MCP server process.',
+        };
       }
       return { ok: true, ms: 0 };
     }
@@ -370,7 +378,9 @@ export async function createWyreupMcpServer(): Promise<Server> {
       try {
         const s = await stat(p);
         total += s.size;
-      } catch { /* missing file is caught later in read */ }
+      } catch {
+        /* missing file is caught later in read */
+      }
     }
     if (total > maxBytes) {
       return `Input size ${(total / 1024 / 1024).toFixed(1)} MB exceeds limit ${(maxBytes / 1024 / 1024).toFixed(0)} MB. Raise WYREUP_MAX_INPUT_BYTES if intentional.`;
@@ -397,7 +407,8 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const msg = err instanceof Error ? err.message : String(err);
       if (code === 'ENOENT') return { ok: false, error: `File not found: ${filePath}` };
       if (code === 'EACCES') return { ok: false, error: `Permission denied reading ${filePath}` };
-      if (code === 'EISDIR') return { ok: false, error: `Expected a file, got a directory: ${filePath}` };
+      if (code === 'EISDIR')
+        return { ok: false, error: `Expected a file, got a directory: ${filePath}` };
       return { ok: false, error: `Could not read ${filePath}: ${msg}` };
     }
   }
@@ -432,8 +443,8 @@ export async function createWyreupMcpServer(): Promise<Server> {
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
-          idempotentHint: false,    // defensive worst case across the chain
-          openWorldHint: true,       // chain may include Pro steps
+          idempotentHint: false, // defensive worst case across the chain
+          openWorldHint: true, // chain may include Pro steps
         },
       },
       ...tools.map((tool) => ({
@@ -509,9 +520,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         // the API key. Fail fast with a clear message instead of letting
         // runPro throw mid-pipeline (which would have already done
         // billable steps).
-        const chainHasPro = chain.some(
-          (s) => registry.toolsById.get(s.toolId)?.cost === 'credit',
-        );
+        const chainHasPro = chain.some((s) => registry.toolsById.get(s.toolId)?.cost === 'credit');
         if (chainHasPro && !proApiKey) {
           return errorResult(
             'wyreup_chain includes a Pro tool but WYREUP_API_KEY is not set. ' +
@@ -579,7 +588,11 @@ export async function createWyreupMcpServer(): Promise<Server> {
         const writtenPaths: string[] = [];
 
         if (outputs.length === 1 && outputPath) {
-          const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
+          const writeErr = await atomicPublish(
+            outputPath,
+            new Uint8Array(await outputs[0]!.arrayBuffer()),
+            allowOverwrite,
+          );
           if (writeErr) return errorResult(writeErr);
           writtenPaths.push(outputPath);
         } else if (outputDir) {
@@ -590,7 +603,11 @@ export async function createWyreupMcpServer(): Promise<Server> {
           for (let i = 0; i < outputs.length; i++) {
             const ext = extFromMime(outputs[i]!.type);
             const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
-            const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
+            const writeErr = await atomicPublish(
+              outPath,
+              new Uint8Array(await outputs[i]!.arrayBuffer()),
+              allowOverwrite,
+            );
             if (writeErr) return errorResult(writeErr);
             writtenPaths.push(outPath);
           }
@@ -676,14 +693,22 @@ export async function createWyreupMcpServer(): Promise<Server> {
         const writtenPaths: string[] = [];
 
         if (outputs.length === 1 && outputPath) {
-          const writeErr = await atomicPublish(outputPath, new Uint8Array(await outputs[0]!.arrayBuffer()), allowOverwrite);
+          const writeErr = await atomicPublish(
+            outputPath,
+            new Uint8Array(await outputs[0]!.arrayBuffer()),
+            allowOverwrite,
+          );
           if (writeErr) return errorResult(writeErr);
           writtenPaths.push(outputPath);
         } else if (outputDir) {
           for (let i = 0; i < outputs.length; i++) {
             const ext = extFromMime(outputs[i]!.type);
             const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
-            const writeErr = await atomicPublish(outPath, new Uint8Array(await outputs[i]!.arrayBuffer()), allowOverwrite);
+            const writeErr = await atomicPublish(
+              outPath,
+              new Uint8Array(await outputs[i]!.arrayBuffer()),
+              allowOverwrite,
+            );
             if (writeErr) return errorResult(writeErr);
             writtenPaths.push(outPath);
           }
@@ -732,10 +757,12 @@ export async function createWyreupMcpServer(): Promise<Server> {
       }
 
       return {
-        content: [{
-          type: 'text',
-          text: `Successfully processed. Output${workerResult.writtenPaths.length > 1 ? 's' : ''}:\n${workerResult.writtenPaths.join('\n')}`,
-        }],
+        content: [
+          {
+            type: 'text',
+            text: `Successfully processed. Output${workerResult.writtenPaths.length > 1 ? 's' : ''}:\n${workerResult.writtenPaths.join('\n')}`,
+          },
+        ],
       };
     });
   });

@@ -54,11 +54,7 @@ export const textSentences: ToolModule<TextSentencesParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TextSentencesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TextSentencesParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-sentences accepts exactly one input.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -77,13 +73,9 @@ export const textSentences: ToolModule<TextSentencesParams> = {
 
     let out: string;
     if (oneLine) {
-      out = sentences
-        .map((s, i) => (numbered ? `${i + 1}. ${s}` : s))
-        .join('\n');
+      out = sentences.map((s, i) => (numbered ? `${i + 1}. ${s}` : s)).join('\n');
     } else {
-      out = sentences
-        .map((s, i) => (numbered ? `${i + 1}. ${s}` : s))
-        .join(', ');
+      out = sentences.map((s, i) => (numbered ? `${i + 1}. ${s}` : s)).join(', ');
     }
 
     ctx.onProgress({ stage: 'done', percent: 100 });

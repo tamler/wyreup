@@ -113,7 +113,8 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
 
     const hasHeader = params.hasHeader ?? true;
     const join = params.join ?? 'inner';
-    const delimiterOverride = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiterOverride =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
     const rightSuffix = params.rightSuffix ?? '_r';
     const keyToken = (params.keyColumn ?? '').trim();
     if (!keyToken) throw new Error('csv-merge requires a key column.');
@@ -121,8 +122,16 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing CSVs' });
     const leftText = await inputs[0]!.text();
     const rightText = await inputs[1]!.text();
-    const leftParsed = Papa.parse<string[]>(leftText, { header: false, delimiter: delimiterOverride, skipEmptyLines: true });
-    const rightParsed = Papa.parse<string[]>(rightText, { header: false, delimiter: delimiterOverride ?? leftParsed.meta.delimiter, skipEmptyLines: true });
+    const leftParsed = Papa.parse<string[]>(leftText, {
+      header: false,
+      delimiter: delimiterOverride,
+      skipEmptyLines: true,
+    });
+    const rightParsed = Papa.parse<string[]>(rightText, {
+      header: false,
+      delimiter: delimiterOverride ?? leftParsed.meta.delimiter,
+      skipEmptyLines: true,
+    });
     const leftRows = leftParsed.data;
     const rightRows = rightParsed.data;
     if (leftRows.length === 0 || rightRows.length === 0) {

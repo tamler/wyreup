@@ -41,11 +41,7 @@ describe('qr — metadata', () => {
 
 describe('qr — run()', () => {
   it('generates a valid PNG for a URL', async () => {
-    const output = await qr.run(
-      [],
-      { text: 'https://example.com' },
-      makeCtx(),
-    ) as Blob;
+    const output = (await qr.run([], { text: 'https://example.com' }, makeCtx())) as Blob;
 
     expect(output).toBeInstanceOf(Blob);
     expect(output.type).toBe('image/png');
@@ -61,35 +57,31 @@ describe('qr — run()', () => {
   });
 
   it('generates a larger PNG for a larger size', async () => {
-    const small = await qr.run([], { text: 'hello', size: 100 }, makeCtx()) as Blob;
-    const large = await qr.run([], { text: 'hello', size: 400 }, makeCtx()) as Blob;
+    const small = (await qr.run([], { text: 'hello', size: 100 }, makeCtx())) as Blob;
+    const large = (await qr.run([], { text: 'hello', size: 400 }, makeCtx())) as Blob;
 
     expect(large.size).toBeGreaterThan(small.size);
   });
 
   it('accepts custom foreground and background colors', async () => {
-    const output = await qr.run(
+    const output = (await qr.run(
       [],
       { text: 'test', foregroundColor: '#003366', backgroundColor: '#ffffcc' },
       makeCtx(),
-    ) as Blob;
+    )) as Blob;
 
     expect(output.size).toBeGreaterThan(100);
     expect(output.type).toBe('image/png');
   });
 
   it('throws when text is empty', async () => {
-    await expect(
-      qr.run([], { text: '' }, makeCtx()),
-    ).rejects.toThrow(/text/i);
+    await expect(qr.run([], { text: '' }, makeCtx())).rejects.toThrow(/text/i);
   });
 
   it('respects a pre-aborted signal', async () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      qr.run([], { text: 'hello' }, makeCtx(controller.signal)),
-    ).rejects.toThrow();
+    await expect(qr.run([], { text: 'hello' }, makeCtx(controller.signal))).rejects.toThrow();
   });
 });

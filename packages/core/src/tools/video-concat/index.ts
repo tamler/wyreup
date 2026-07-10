@@ -82,11 +82,7 @@ export const videoConcat: ToolModule<VideoConcatParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoConcatParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoConcatParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     if (inputs.length < 2) {
@@ -130,7 +126,7 @@ export const videoConcat: ToolModule<VideoConcatParams> = {
 
     const output = await ff.readFile('output.mp4');
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     for (const n of inputNames) await ff.deleteFile(n).catch(() => {});
     await ff.deleteFile('list.txt').catch(() => {});

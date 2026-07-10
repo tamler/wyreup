@@ -7,10 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  muteVideo,
-  buildMuteArgs,
-} from '../../../src/tools/mute-video/index.js';
+import { muteVideo, buildMuteArgs } from '../../../src/tools/mute-video/index.js';
 
 describe('mute-video — metadata', () => {
   it('has id "mute-video"', () => expect(muteVideo.id).toBe('mute-video'));

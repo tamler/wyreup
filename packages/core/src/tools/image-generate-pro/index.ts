@@ -50,11 +50,7 @@ export const imageGeneratePro: ToolModule<ImageGenerateProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ImageGenerateProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ImageGenerateProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('image-generate-pro accepts exactly one prompt.');
     const prompt = (await inputs[0]!.text()).trim();
     if (!prompt) throw new Error('Prompt is empty.');

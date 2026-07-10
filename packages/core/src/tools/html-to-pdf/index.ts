@@ -85,11 +85,7 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: HtmlToPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: HtmlToPdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     // html2canvas requires a browser DOM — this tool is browser-only.
@@ -118,8 +114,7 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
     const scale = params.scale ?? 1.0;
 
     const [pw, ph] = PAGE_SIZES[pageSize] ?? PAGE_SIZES['A4']!;
-    const [pageW, pageH] =
-      orientation === 'landscape' ? [ph, pw] : [pw, ph];
+    const [pageW, pageH] = orientation === 'landscape' ? [ph, pw] : [pw, ph];
 
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Rendering HTML' });
 

@@ -16,6 +16,8 @@ describe('crop-video', () => {
     expect(args[args.indexOf('-vf') + 1]).toBe('crop=100:100:0:0');
   });
   it('throws on non-positive dimensions', () => {
-    expect(() => buildCropArgs('in.mp4', 'out.mp4', { width: 0, height: 100, x: 0, y: 0 })).toThrow(/positive/i);
+    expect(() => buildCropArgs('in.mp4', 'out.mp4', { width: 0, height: 100, x: 0, y: 0 })).toThrow(
+      /positive/i,
+    );
   });
 });

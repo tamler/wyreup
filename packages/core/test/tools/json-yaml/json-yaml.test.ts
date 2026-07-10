@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, params: JsonYamlParams = {}): Promise<string> {
   const file = new File([text], 'input.txt', { type: 'text/plain' });
-  const [out] = await jsonYaml.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await jsonYaml.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
@@ -61,7 +61,9 @@ describe('json-yaml — run()', () => {
   });
 
   it('throws on invalid YAML', async () => {
-    await expect(run(': bad: yaml: [\n', { direction: 'yaml-to-json' })).rejects.toThrow('Invalid YAML');
+    await expect(run(': bad: yaml: [\n', { direction: 'yaml-to-json' })).rejects.toThrow(
+      'Invalid YAML',
+    );
   });
 
   it('handles nested objects', async () => {

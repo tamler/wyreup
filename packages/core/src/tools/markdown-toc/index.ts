@@ -45,13 +45,19 @@ function extractHeadings(tokens: ReadonlyArray<unknown>): Heading[] {
   return headings;
 }
 
-export function buildToc(markdown: string, params: MarkdownTocParams, tokens: ReadonlyArray<unknown>): string {
+export function buildToc(
+  markdown: string,
+  params: MarkdownTocParams,
+  tokens: ReadonlyArray<unknown>,
+): string {
   const minLevel = Math.max(1, Math.min(6, params.minLevel ?? 1));
   const maxLevel = Math.max(minLevel, Math.min(6, params.maxLevel ?? 6));
   const indent = params.indent ?? '  ';
   const skipFirstH1 = params.skipFirstH1 ?? false;
 
-  const headings = extractHeadings(tokens).filter((h) => h.level >= minLevel && h.level <= maxLevel);
+  const headings = extractHeadings(tokens).filter(
+    (h) => h.level >= minLevel && h.level <= maxLevel,
+  );
   if (skipFirstH1) {
     const idx = headings.findIndex((h) => h.level === 1);
     if (idx >= 0) headings.splice(idx, 1);
@@ -128,7 +134,7 @@ export const markdownToc: ToolModule<MarkdownTocParams> = {
     skipFirstH1: {
       type: 'boolean',
       label: 'skip first H1',
-      help: 'Useful when the first H1 is the title and you don\'t want it in the TOC.',
+      help: "Useful when the first H1 is the title and you don't want it in the TOC.",
     },
   },
 

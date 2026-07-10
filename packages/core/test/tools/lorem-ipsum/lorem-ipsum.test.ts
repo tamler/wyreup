@@ -12,7 +12,7 @@ function makeCtx(): ToolRunContext {
 }
 
 async function generate(params: Parameters<typeof loremIpsum.run>[1]): Promise<string> {
-  const [out] = await loremIpsum.run([], params, makeCtx()) as Blob[];
+  const [out] = (await loremIpsum.run([], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
@@ -52,12 +52,14 @@ describe('lorem-ipsum — run()', () => {
     // Run several times to account for randomness
     for (let i = 0; i < 3; i++) {
       const text = await generate({ startWithLorem: false });
-      expect(text.startsWith('Lorem ipsum dolor sit amet, consectetur adipiscing elit.')).toBe(false);
+      expect(text.startsWith('Lorem ipsum dolor sit amet, consectetur adipiscing elit.')).toBe(
+        false,
+      );
     }
   });
 
   it('output MIME type is text/plain', async () => {
-    const [out] = await loremIpsum.run([], {}, makeCtx()) as Blob[];
+    const [out] = (await loremIpsum.run([], {}, makeCtx())) as Blob[];
     expect(out!.type).toBe('text/plain');
   });
 
@@ -73,14 +75,20 @@ describe('lorem-ipsum — run()', () => {
   });
 
   it('throws when paragraphs > 1000', async () => {
-    await expect(loremIpsum.run([], { paragraphs: 1001 }, makeCtx())).rejects.toThrow('paragraphs must be between');
+    await expect(loremIpsum.run([], { paragraphs: 1001 }, makeCtx())).rejects.toThrow(
+      'paragraphs must be between',
+    );
   });
 
   it('throws when sentencesPerParagraph > 100', async () => {
-    await expect(loremIpsum.run([], { sentencesPerParagraph: 101 }, makeCtx())).rejects.toThrow('sentencesPerParagraph must be between');
+    await expect(loremIpsum.run([], { sentencesPerParagraph: 101 }, makeCtx())).rejects.toThrow(
+      'sentencesPerParagraph must be between',
+    );
   });
 
   it('throws when wordsPerSentence max > 100', async () => {
-    await expect(loremIpsum.run([], { wordsPerSentence: [5, 101] }, makeCtx())).rejects.toThrow('wordsPerSentence max must be <= 100');
+    await expect(loremIpsum.run([], { wordsPerSentence: [5, 101] }, makeCtx())).rejects.toThrow(
+      'wordsPerSentence max must be <= 100',
+    );
   });
 });

@@ -73,9 +73,9 @@ describe('pdf-redact — run()', () => {
 
   it('throws when rectangles is empty', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfRedact.run([input], { rectangles: [] }, makeCtx()),
-    ).rejects.toThrow('rectangles must not be empty');
+    await expect(pdfRedact.run([input], { rectangles: [] }, makeCtx())).rejects.toThrow(
+      'rectangles must not be empty',
+    );
   });
 
   it('throws for out-of-bounds page reference', async () => {

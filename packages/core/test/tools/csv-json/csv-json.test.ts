@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, params: CsvJsonParams = {}): Promise<string> {
   const file = new File([text], 'input.txt', { type: 'text/plain' });
-  const [out] = await csvJson.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await csvJson.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 

@@ -32,11 +32,7 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
     scale: 1,
   },
 
-  async run(
-    inputs: File[],
-    params: SvgToPngParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: SvgToPngParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading SVG renderer' });
 
     const { Resvg } = await import('@resvg/resvg-js');

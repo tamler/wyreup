@@ -17,9 +17,7 @@ async function buildIco(pngBlobs: { size: number; blob: Blob }[]): Promise<Blob>
   const count = pngBlobs.length;
 
   // Load raw bytes for each PNG
-  const rawBuffers = await Promise.all(
-    pngBlobs.map(({ blob }) => blob.arrayBuffer()),
-  );
+  const rawBuffers = await Promise.all(pngBlobs.map(({ blob }) => blob.arrayBuffer()));
 
   // ICO header: reserved(2) + type(2) = 1 for ICO + count(2)
   const headerSize = 6;
@@ -32,9 +30,9 @@ async function buildIco(pngBlobs: { size: number; blob: Blob }[]): Promise<Blob>
   const view = new DataView(buf);
 
   // Header
-  view.setUint16(0, 0, true);       // reserved
-  view.setUint16(2, 1, true);       // type: 1 = ICO
-  view.setUint16(4, count, true);   // image count
+  view.setUint16(0, 0, true); // reserved
+  view.setUint16(2, 1, true); // type: 1 = ICO
+  view.setUint16(4, count, true); // image count
 
   // Directory entries + track running offset into data section
   let dataPos = dataOffset;
@@ -46,12 +44,12 @@ async function buildIco(pngBlobs: { size: number; blob: Blob }[]): Promise<Blob>
     // Width/height: 0 means 256 in the ICO spec; for <=255 use actual value
     view.setUint8(offset, size >= 256 ? 0 : size);
     view.setUint8(offset + 1, size >= 256 ? 0 : size);
-    view.setUint8(offset + 2, 0);       // color count
-    view.setUint8(offset + 3, 0);       // reserved
-    view.setUint16(offset + 4, 0, true);  // planes (0 for ICO)
-    view.setUint16(offset + 6, 0, true);  // bit count (0 = auto)
-    view.setUint32(offset + 8, raw.byteLength, true);  // data size
-    view.setUint32(offset + 12, dataPos, true);         // data offset
+    view.setUint8(offset + 2, 0); // color count
+    view.setUint8(offset + 3, 0); // reserved
+    view.setUint16(offset + 4, 0, true); // planes (0 for ICO)
+    view.setUint16(offset + 6, 0, true); // bit count (0 = auto)
+    view.setUint32(offset + 8, raw.byteLength, true); // data size
+    view.setUint32(offset + 12, dataPos, true); // data offset
 
     dataPos += raw.byteLength;
   }
@@ -95,11 +93,7 @@ export const favicon: ToolModule<FaviconParams> = {
     includeIco: true,
   },
 
-  async run(
-    inputs: File[],
-    params: FaviconParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: FaviconParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const sizes = params.sizes ?? DEFAULT_SIZES;

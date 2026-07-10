@@ -101,16 +101,21 @@ export function evaluatePassword(password: string): PasswordStrengthResult {
   else tier = 'very-strong';
 
   const suggestions: string[] = [];
-  if (isCommon) suggestions.push('This password is on a public common-passwords list. Pick something else.');
+  if (isCommon)
+    suggestions.push('This password is on a public common-passwords list. Pick something else.');
   if (length < 12) suggestions.push('Aim for at least 12 characters. 16+ is much better.');
   if (!classes.uppercase && !classes.symbol && !classes.extended) {
     suggestions.push('Mix character classes (uppercase, symbols, or non-ASCII characters).');
   }
   if (uniqueChars < Math.min(length, 8)) {
-    suggestions.push('Use a wider set of distinct characters — long passwords made of repeats are not strong.');
+    suggestions.push(
+      'Use a wider set of distinct characters — long passwords made of repeats are not strong.',
+    );
   }
   if (suggestions.length === 0 && tier !== 'very-strong') {
-    suggestions.push('Add length. Each extra character doubles the search space when classes are fixed.');
+    suggestions.push(
+      'Add length. Each extra character doubles the search space when classes are fixed.',
+    );
   }
 
   return {

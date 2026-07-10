@@ -109,9 +109,7 @@ export async function peekChainFile(): Promise<{
   try {
     const db = await openDb();
     const tx = db.transaction(STORE, 'readonly');
-    const record = (await reqResult(tx.objectStore(STORE).get(KEY))) as
-      | ChainRecord
-      | undefined;
+    const record = (await reqResult(tx.objectStore(STORE).get(KEY))) as ChainRecord | undefined;
     db.close();
     if (!record) return null;
     return { name: record.name, type: record.type, autoAccept: record.autoAccept };

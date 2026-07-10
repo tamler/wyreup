@@ -62,10 +62,7 @@ export interface IndicTranslateArgs {
   target: IndicLang;
 }
 
-export async function translateIndic(
-  env: Env,
-  args: IndicTranslateArgs,
-): Promise<TranslateResult> {
+export async function translateIndic(env: Env, args: IndicTranslateArgs): Promise<TranslateResult> {
   const res = (await withTimeout(
     env.AI.run(INDICTRANS2_MODEL, {
       source_language: 'eng_Latn',

@@ -48,11 +48,7 @@ export const pdfQandA: ToolModule<PdfQandAParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfQandAParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfQandAParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('pdf-q-and-a accepts exactly one PDF.');
     const question = params.question?.trim();
     if (!question) throw new Error('Enter a question to ask the PDF.');
@@ -68,7 +64,12 @@ export const pdfQandA: ToolModule<PdfQandAParams> = {
       }
     }
     const probeBuffer = await inputs[0]!.arrayBuffer();
-    const probeDoc = await getDocument({ data: new Uint8Array(probeBuffer), disableFontFace: true, disableRange: true, disableStream: true }).promise;
+    const probeDoc = await getDocument({
+      data: new Uint8Array(probeBuffer),
+      disableFontFace: true,
+      disableRange: true,
+      disableStream: true,
+    }).promise;
     assertPdfPageBudget(probeDoc.numPages, { maxPages: 500 });
     await probeDoc.destroy();
 

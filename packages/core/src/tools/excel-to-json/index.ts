@@ -22,7 +22,8 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
   id: 'excel-to-json',
   slug: 'excel-to-json',
   name: 'Excel to JSON',
-  description: 'Convert Excel workbooks (XLSX/XLS) to JSON. Supports single-sheet or all-sheets output.',
+  description:
+    'Convert Excel workbooks (XLSX/XLS) to JSON. Supports single-sheet or all-sheets output.',
   category: 'convert',
   keywords: ['excel', 'xlsx', 'xls', 'json', 'convert', 'spreadsheet', 'data'],
 
@@ -70,11 +71,7 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ExcelToJsonParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ExcelToJsonParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });

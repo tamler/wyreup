@@ -21,13 +21,44 @@ export const defaultTextKeywordsParams: TextKeywordsParams = {
 // as a topic. Keeps "compromise"'s default tagging without us shipping a
 // language model.
 const STOPWORDS = new Set<string>([
-  'thing', 'things', 'way', 'ways', 'time', 'times', 'day', 'days', 'year', 'years',
-  'people', 'person', 'man', 'woman', 'guy', 'girl',
-  'kind', 'sort', 'type', 'lot', 'bit', 'fact',
-  'one', 'two', 'three', 'four', 'five',
-  'something', 'anything', 'everything', 'nothing',
-  'someone', 'anyone', 'everyone', 'no one',
-  'today', 'tomorrow', 'yesterday',
+  'thing',
+  'things',
+  'way',
+  'ways',
+  'time',
+  'times',
+  'day',
+  'days',
+  'year',
+  'years',
+  'people',
+  'person',
+  'man',
+  'woman',
+  'guy',
+  'girl',
+  'kind',
+  'sort',
+  'type',
+  'lot',
+  'bit',
+  'fact',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'something',
+  'anything',
+  'everything',
+  'nothing',
+  'someone',
+  'anyone',
+  'everyone',
+  'no one',
+  'today',
+  'tomorrow',
+  'yesterday',
 ]);
 
 interface KeywordEntry {
@@ -88,11 +119,7 @@ export const textKeywords: ToolModule<TextKeywordsParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TextKeywordsParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TextKeywordsParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-keywords accepts exactly one input.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -110,18 +137,19 @@ export const textKeywords: ToolModule<TextKeywordsParams> = {
 
     // Singular nouns, lowercased — collapses "Cats" / "cats" / "cat".
     const nounRaw = doc.nouns().toSingular().out('array') as string[];
-    const nouns = rank(nounRaw, filterStopwords).slice(0, topN).map(
-      ([term, count]): KeywordEntry => ({ term, count, kind: 'noun' }),
-    );
+    const nouns = rank(nounRaw, filterStopwords)
+      .slice(0, topN)
+      .map(([term, count]): KeywordEntry => ({ term, count, kind: 'noun' }));
 
     let phrases: KeywordEntry[] = [];
     if (includePhrases) {
       // Multi-word noun groups only; single tokens already covered by `nouns`.
-      const phraseRaw = (doc.match('#Noun+ #Noun+').out('array') as string[])
-        .filter((p) => p.split(/\s+/).length >= 2);
-      phrases = rank(phraseRaw, filterStopwords).slice(0, topN).map(
-        ([term, count]): KeywordEntry => ({ term, count, kind: 'phrase' }),
+      const phraseRaw = (doc.match('#Noun+ #Noun+').out('array') as string[]).filter(
+        (p) => p.split(/\s+/).length >= 2,
       );
+      phrases = rank(phraseRaw, filterStopwords)
+        .slice(0, topN)
+        .map(([term, count]): KeywordEntry => ({ term, count, kind: 'phrase' }));
     }
 
     const out: TextKeywordsResult = {

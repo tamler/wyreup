@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { compressVideo, defaultCompressVideoParams } from '../../../src/tools/compress-video/index.js';
+import {
+  compressVideo,
+  defaultCompressVideoParams,
+} from '../../../src/tools/compress-video/index.js';
 
 describe('compress-video — metadata', () => {
   it('has id "compress-video"', () => expect(compressVideo.id).toBe('compress-video'));

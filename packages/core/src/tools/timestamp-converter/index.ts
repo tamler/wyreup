@@ -51,7 +51,8 @@ export const timestampConverter: ToolModule<TimestampConverterParams> = {
   id: 'timestamp-converter',
   slug: 'timestamp-converter',
   name: 'Timestamp Converter',
-  description: 'Convert epoch seconds, epoch milliseconds, or ISO 8601 timestamps to all common representations.',
+  description:
+    'Convert epoch seconds, epoch milliseconds, or ISO 8601 timestamps to all common representations.',
   category: 'inspect',
   keywords: ['timestamp', 'epoch', 'unix', 'date', 'time', 'convert', 'iso8601'],
 

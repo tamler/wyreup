@@ -2,7 +2,9 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { _resetEgressLockForTests, EgressBlockedError } from '../src/egress.js';
 
 describe('egress install order', () => {
-  afterEach(() => { _resetEgressLockForTests(); });
+  afterEach(() => {
+    _resetEgressLockForTests();
+  });
 
   it('install-egress module installs the lock when WYREUP_DISABLE_EGRESS_LOCK is not 1', async () => {
     _resetEgressLockForTests();

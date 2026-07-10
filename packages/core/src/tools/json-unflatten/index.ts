@@ -106,7 +106,7 @@ export const jsonUnflatten: ToolModule<JsonUnflattenParams> = {
     bracketArrays: {
       type: 'boolean',
       label: 'parse bracket arrays',
-      help: 'Treat keys like a[0].b as a → 0 → b, matching json-flatten\'s bracket array style.',
+      help: "Treat keys like a[0].b as a → 0 → b, matching json-flatten's bracket array style.",
     },
   },
 

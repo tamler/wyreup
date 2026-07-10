@@ -31,14 +31,16 @@ describe('zip-create — metadata', () => {
   it('cost is "free"', () => expect(zipCreate.cost).toBe('free'));
   it('batchable is false', () => expect(zipCreate.batchable).toBe(false));
   it('no installSize', () => expect(zipCreate.installSize).toBeUndefined());
-  it('defaults compression is DEFLATE', () => expect(defaultZipCreateParams.compression).toBe('DEFLATE'));
-  it('defaults compressionLevel is 6', () => expect(defaultZipCreateParams.compressionLevel).toBe(6));
+  it('defaults compression is DEFLATE', () =>
+    expect(defaultZipCreateParams.compression).toBe('DEFLATE'));
+  it('defaults compressionLevel is 6', () =>
+    expect(defaultZipCreateParams.compressionLevel).toBe(6));
 });
 
 describe('zip-create — run()', () => {
   it('creates a valid ZIP archive from one file', async () => {
     const file = new File(['hello world'], 'hello.txt', { type: 'text/plain' });
-    const result = await zipCreate.run([file], defaultZipCreateParams, makeCtx()) as Blob[];
+    const result = (await zipCreate.run([file], defaultZipCreateParams, makeCtx())) as Blob[];
     expect(result).toHaveLength(1);
     const buf = new Uint8Array(await result[0]!.arrayBuffer());
     expect(isZip(buf)).toBe(true);
@@ -46,7 +48,7 @@ describe('zip-create — run()', () => {
 
   it('output blob type is application/zip', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    const result = await zipCreate.run([file], defaultZipCreateParams, makeCtx()) as Blob[];
+    const result = (await zipCreate.run([file], defaultZipCreateParams, makeCtx())) as Blob[];
     expect(result[0]!.type).toBe('application/zip');
   });
 
@@ -56,14 +58,18 @@ describe('zip-create — run()', () => {
       new File(['file two'], 'b.txt', { type: 'text/plain' }),
       new File(['file three'], 'c.txt', { type: 'text/plain' }),
     ];
-    const result = await zipCreate.run(files, defaultZipCreateParams, makeCtx()) as Blob[];
+    const result = (await zipCreate.run(files, defaultZipCreateParams, makeCtx())) as Blob[];
     const buf = new Uint8Array(await result[0]!.arrayBuffer());
     expect(isZip(buf)).toBe(true);
   });
 
   it('respects custom filename', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    const result = await zipCreate.run([file], { ...defaultZipCreateParams, filename: 'custom.zip' }, makeCtx()) as Blob[];
+    const result = (await zipCreate.run(
+      [file],
+      { ...defaultZipCreateParams, filename: 'custom.zip' },
+      makeCtx(),
+    )) as Blob[];
     // File name is set on the File object
     const outFile = result[0] as File;
     expect(outFile.name).toBe('custom.zip');
@@ -71,7 +77,7 @@ describe('zip-create — run()', () => {
 
   it('STORE compression produces valid ZIP', async () => {
     const file = new File(['uncompressed'], 'u.txt', { type: 'text/plain' });
-    const result = await zipCreate.run([file], { compression: 'STORE' }, makeCtx()) as Blob[];
+    const result = (await zipCreate.run([file], { compression: 'STORE' }, makeCtx())) as Blob[];
     const buf = new Uint8Array(await result[0]!.arrayBuffer());
     expect(isZip(buf)).toBe(true);
   });

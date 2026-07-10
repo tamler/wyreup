@@ -44,11 +44,7 @@ const codecCache = new Map<ImageFormat, Codec>();
 
 /** True when running in Node (vs browser / service worker). */
 function isNode(): boolean {
-  return (
-    typeof process === 'object' &&
-    process.release != null &&
-    process.release.name === 'node'
-  );
+  return typeof process === 'object' && process.release != null && process.release.name === 'node';
 }
 
 /**
@@ -60,9 +56,7 @@ function isNode(): boolean {
  * node_modules — this works in both raw Node and Vitest's SSR transform,
  * unlike import.meta.resolve which Vite does not implement.
  */
-async function compileWasm(
-  packageSpecifier: string,
-): Promise<WebAssembly.Module | undefined> {
+async function compileWasm(packageSpecifier: string): Promise<WebAssembly.Module | undefined> {
   if (!isNode()) return undefined;
   const { readFileSync } = await import('node:fs');
   const { createRequire } = await import('node:module');
@@ -106,10 +100,7 @@ export async function getCodec(format: ImageFormat): Promise<Codec> {
       // PNG dec and enc share the same wasm module.
       const pngWasm = await compileWasm('@jsquash/png/codec/pkg/squoosh_png_bg.wasm');
       // PNG init takes a wasm module or path; pass the compiled module in Node.
-      await Promise.all([
-        decMod.init(pngWasm),
-        encMod.init(pngWasm),
-      ]);
+      await Promise.all([decMod.init(pngWasm), encMod.init(pngWasm)]);
       codec = { decode: decMod.default, encode: encMod.default };
       break;
     }

@@ -1,7 +1,7 @@
 name: Tool suggestion
 description: Suggest a new tool for Wyreup
-title: "Tool suggestion: "
-labels: ["tool-suggestion"]
+title: 'Tool suggestion: '
+labels: ['tool-suggestion']
 body:
   - type: markdown
     attributes:
@@ -14,7 +14,7 @@ body:
     attributes:
       label: What would you call this tool?
       description: A short name or verb, e.g. "reverse-geocode" or "merge-csv".
-      placeholder: "e.g. pdf-to-audio"
+      placeholder: 'e.g. pdf-to-audio'
     validations:
       required: true
 
@@ -23,7 +23,7 @@ body:
     attributes:
       label: What's the task / problem?
       description: What would the user drop on the page, and what would they expect out?
-      placeholder: "Drop a PDF, get an MP3 of the text read aloud with a local TTS model."
+      placeholder: 'Drop a PDF, get an MP3 of the text read aloud with a local TTS model.'
     validations:
       required: true
 

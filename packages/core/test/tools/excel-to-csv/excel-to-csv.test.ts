@@ -64,8 +64,20 @@ describe('excel-to-csv — run()', () => {
 
   it('exports specific sheet by name', async () => {
     const file = await makeMultiSheetXlsxFile([
-      { name: 'Sales', rows: [['product', 'qty'], ['Widget', 10]] },
-      { name: 'Costs', rows: [['item', 'cost'], ['Rent', 500]] },
+      {
+        name: 'Sales',
+        rows: [
+          ['product', 'qty'],
+          ['Widget', 10],
+        ],
+      },
+      {
+        name: 'Costs',
+        rows: [
+          ['item', 'cost'],
+          ['Rent', 500],
+        ],
+      },
     ]);
     const csv = await run(file, { sheet: 'Costs' });
     expect(csv).toContain('item,cost');

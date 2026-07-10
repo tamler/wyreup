@@ -18,7 +18,15 @@ export const investmentDca: ToolModule<InvestmentDcaParams> = {
   name: 'DCA Calculator',
   description: 'Compare dollar-cost averaging vs. lump-sum investing using historical price data.',
   category: 'finance',
-  keywords: ['dca', 'dollar cost averaging', 'investment', 'shares', 'finance', 'lump sum', 'portfolio'],
+  keywords: [
+    'dca',
+    'dollar cost averaging',
+    'investment',
+    'shares',
+    'finance',
+    'lump sum',
+    'portfolio',
+  ],
 
   input: { accept: [], min: 0, max: 0 },
   output: { mime: 'application/json', multiple: false },
@@ -33,12 +41,7 @@ export const investmentDca: ToolModule<InvestmentDcaParams> = {
     priceHistory: [100, 95, 110, 105, 120, 115, 130, 125, 140, 135, 150, 145],
   },
 
-   
-  async run(
-    _inputs: File[],
-    params: InvestmentDcaParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(_inputs: File[], params: InvestmentDcaParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Computing DCA vs lump-sum' });
 
     let result: Record<string, unknown>;

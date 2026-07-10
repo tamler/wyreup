@@ -56,11 +56,7 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
     box: { x: 0, y: 0, width: 595, height: 842 },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfCropParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfCropParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { box } = params;

@@ -20,10 +20,10 @@ function makeCtx(): ToolRunContext {
 }
 
 async function makeZip(files: { name: string; content: string }[]): Promise<File> {
-  const fileObjs = files.map(({ name, content }) =>
-    new File([content], name, { type: 'text/plain' }),
+  const fileObjs = files.map(
+    ({ name, content }) => new File([content], name, { type: 'text/plain' }),
   );
-  const result = await zipCreate.run(fileObjs, { compression: 'DEFLATE' }, makeCtx()) as Blob[];
+  const result = (await zipCreate.run(fileObjs, { compression: 'DEFLATE' }, makeCtx())) as Blob[];
   return new File([await result[0]!.arrayBuffer()], 'archive.zip', { type: 'application/zip' });
 }
 
@@ -41,7 +41,7 @@ describe('zip-info — metadata', () => {
 describe('zip-info — run()', () => {
   it('returns JSON output', async () => {
     const zip = await makeZip([{ name: 'hello.txt', content: 'hello' }]);
-    const result = await zipInfo.run([zip], defaultZipInfoParams, makeCtx()) as Blob[];
+    const result = (await zipInfo.run([zip], defaultZipInfoParams, makeCtx())) as Blob[];
     expect(result).toHaveLength(1);
     expect(result[0]!.type).toBe('application/json');
   });
@@ -51,14 +51,14 @@ describe('zip-info — run()', () => {
       { name: 'a.txt', content: 'aaa' },
       { name: 'b.txt', content: 'bbb' },
     ]);
-    const result = await zipInfo.run([zip], defaultZipInfoParams, makeCtx()) as Blob[];
+    const result = (await zipInfo.run([zip], defaultZipInfoParams, makeCtx())) as Blob[];
     const json = JSON.parse(await result[0]!.text()) as { entries: number };
     expect(json.entries).toBe(2);
   });
 
   it('lists file paths', async () => {
     const zip = await makeZip([{ name: 'readme.txt', content: 'content' }]);
-    const result = await zipInfo.run([zip], defaultZipInfoParams, makeCtx()) as Blob[];
+    const result = (await zipInfo.run([zip], defaultZipInfoParams, makeCtx())) as Blob[];
     const json = JSON.parse(await result[0]!.text()) as { files: Array<{ path: string }> };
     const paths = json.files.map((f) => f.path);
     expect(paths).toContain('readme.txt');
@@ -66,14 +66,14 @@ describe('zip-info — run()', () => {
 
   it('compressionRatio is a number', async () => {
     const zip = await makeZip([{ name: 'data.txt', content: 'x'.repeat(1000) }]);
-    const result = await zipInfo.run([zip], defaultZipInfoParams, makeCtx()) as Blob[];
+    const result = (await zipInfo.run([zip], defaultZipInfoParams, makeCtx())) as Blob[];
     const json = JSON.parse(await result[0]!.text()) as { compressionRatio: number };
     expect(typeof json.compressionRatio).toBe('number');
   });
 
   it('isDirectory is false for files', async () => {
     const zip = await makeZip([{ name: 'file.txt', content: 'data' }]);
-    const result = await zipInfo.run([zip], defaultZipInfoParams, makeCtx()) as Blob[];
+    const result = (await zipInfo.run([zip], defaultZipInfoParams, makeCtx())) as Blob[];
     const json = JSON.parse(await result[0]!.text()) as { files: Array<{ isDirectory: boolean }> };
     const files = json.files.filter((f) => !f.isDirectory);
     expect(files.length).toBeGreaterThan(0);

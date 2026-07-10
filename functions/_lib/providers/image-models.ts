@@ -85,18 +85,15 @@ async function runPrediction(
     throw new Error('IMAGE_MODEL_TOKEN not configured');
   }
 
-  const createRes = await fetch(
-    `https://api.replicate.com/v1/models/${modelRef}/predictions`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}`,
-        'Content-Type': 'application/json',
-        Prefer: 'wait',
-      },
-      body: JSON.stringify({ input }),
+  const createRes = await fetch(`https://api.replicate.com/v1/models/${modelRef}/predictions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}`,
+      'Content-Type': 'application/json',
+      Prefer: 'wait',
     },
-  );
+    body: JSON.stringify({ input }),
+  });
 
   if (!createRes.ok) {
     throw new Error(`Image-model create failed: ${createRes.status}`);
@@ -126,7 +123,9 @@ async function runPrediction(
   }
 
   if (prediction.status !== 'succeeded') {
-    throw new Error(`Image-model prediction ${prediction.status}: ${prediction.error ?? 'unknown'}`);
+    throw new Error(
+      `Image-model prediction ${prediction.status}: ${prediction.error ?? 'unknown'}`,
+    );
   }
 
   const output = prediction.output;

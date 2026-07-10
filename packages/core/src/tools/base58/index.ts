@@ -118,7 +118,11 @@ export const base58: ToolModule<Base58Params> = {
     const mode = params.mode ?? 'encode';
     const file = inputs[0]!;
 
-    ctx.onProgress({ stage: 'processing', percent: 40, message: mode === 'encode' ? 'Encoding' : 'Decoding' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 40,
+      message: mode === 'encode' ? 'Encoding' : 'Decoding',
+    });
 
     if (mode === 'encode') {
       const buffer = await file.arrayBuffer();

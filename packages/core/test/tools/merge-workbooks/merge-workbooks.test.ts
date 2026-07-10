@@ -32,7 +32,11 @@ describe('merge-workbooks — run()', () => {
   it('prefixes sheet names with source filename by default', async () => {
     const f1 = await makeXlsxFile([['a']], 'Sheet1', 'alpha.xlsx');
     const f2 = await makeXlsxFile([['b']], 'Sheet1', 'beta.xlsx');
-    const blob = (await mergeWorkbooks.run([f1, f2], { prefixSheetNames: true }, makeCtx())) as Blob;
+    const blob = (await mergeWorkbooks.run(
+      [f1, f2],
+      { prefixSheetNames: true },
+      makeCtx(),
+    )) as Blob;
     const names = await readNames(blob);
     expect(names.some((n) => n.startsWith('alpha'))).toBe(true);
     expect(names.some((n) => n.startsWith('beta'))).toBe(true);
@@ -41,19 +45,30 @@ describe('merge-workbooks — run()', () => {
   it('does not prefix when prefixSheetNames=false', async () => {
     const f1 = await makeXlsxFile([['a']], 'MySheet', 'alpha.xlsx');
     const f2 = await makeXlsxFile([['b']], 'OtherSheet', 'beta.xlsx');
-    const blob = (await mergeWorkbooks.run([f1, f2], { prefixSheetNames: false }, makeCtx())) as Blob;
+    const blob = (await mergeWorkbooks.run(
+      [f1, f2],
+      { prefixSheetNames: false },
+      makeCtx(),
+    )) as Blob;
     const names = await readNames(blob);
     expect(names).toContain('MySheet');
     expect(names).toContain('OtherSheet');
   });
 
   it('merges multi-sheet workbooks', async () => {
-    const f1 = await makeMultiSheetXlsxFile([
-      { name: 'A', rows: [['x']] },
-      { name: 'B', rows: [['y']] },
-    ], 'wb1.xlsx');
+    const f1 = await makeMultiSheetXlsxFile(
+      [
+        { name: 'A', rows: [['x']] },
+        { name: 'B', rows: [['y']] },
+      ],
+      'wb1.xlsx',
+    );
     const f2 = await makeXlsxFile([['z']], 'C', 'wb2.xlsx');
-    const blob = (await mergeWorkbooks.run([f1, f2], { prefixSheetNames: false }, makeCtx())) as Blob;
+    const blob = (await mergeWorkbooks.run(
+      [f1, f2],
+      { prefixSheetNames: false },
+      makeCtx(),
+    )) as Blob;
     const names = await readNames(blob);
     expect(names).toHaveLength(3);
   });
@@ -61,7 +76,11 @@ describe('merge-workbooks — run()', () => {
   it('deduplicates colliding sheet names', async () => {
     const f1 = await makeXlsxFile([['a']], 'Sheet1', 'wb1.xlsx');
     const f2 = await makeXlsxFile([['b']], 'Sheet1', 'wb2.xlsx');
-    const blob = (await mergeWorkbooks.run([f1, f2], { prefixSheetNames: false }, makeCtx())) as Blob;
+    const blob = (await mergeWorkbooks.run(
+      [f1, f2],
+      { prefixSheetNames: false },
+      makeCtx(),
+    )) as Blob;
     const names = await readNames(blob);
     expect(names).toHaveLength(2);
     expect(new Set(names).size).toBe(2);

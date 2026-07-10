@@ -53,7 +53,16 @@ const CLAUSE_KEYWORDS = [
   'RETURNING',
 ];
 
-const AGGREGATE_FNS = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'GROUP_CONCAT', 'STRING_AGG', 'ARRAY_AGG'];
+const AGGREGATE_FNS = [
+  'COUNT',
+  'SUM',
+  'AVG',
+  'MIN',
+  'MAX',
+  'GROUP_CONCAT',
+  'STRING_AGG',
+  'ARRAY_AGG',
+];
 
 function detectStatementType(sql: string): SqlFormatExplainResult['statementType'] {
   const head = sql.trimStart().toUpperCase();
@@ -188,7 +197,10 @@ function explainClause(keyword: string, body: string): string {
   }
 }
 
-function buildSummary(type: SqlFormatExplainResult['statementType'], annotations: SqlAnnotation[]): string {
+function buildSummary(
+  type: SqlFormatExplainResult['statementType'],
+  annotations: SqlAnnotation[],
+): string {
   const has = (kw: string) => annotations.some((a) => a.clause === kw);
   if (type === 'SELECT') {
     const parts: string[] = ['Read query'];
@@ -202,7 +214,8 @@ function buildSummary(type: SqlFormatExplainResult['statementType'], annotations
   if (type === 'INSERT') return 'Insert statement — adds new rows.';
   if (type === 'UPDATE') return 'Update statement — modifies existing rows.';
   if (type === 'DELETE') return 'Delete statement — removes rows.';
-  if (type === 'WITH') return 'CTE-led query — defines named intermediate results before the main statement.';
+  if (type === 'WITH')
+    return 'CTE-led query — defines named intermediate results before the main statement.';
   return 'SQL statement.';
 }
 
@@ -287,7 +300,7 @@ export const sqlFormatExplain: ToolModule<SqlFormatExplainParams> = {
       'Paste a SQL query and get back a pretty-printed version along with a clause-by-clause plain-English breakdown. Each clause — SELECT, FROM, JOIN, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, and the rest — is identified with its body and a one-line explanation of what it does. Useful for code review, onboarding new engineers, explaining queries to non-DBAs, or auditing a query you inherited. Runs entirely in your browser; no upload, no LLM.',
     useCases: [
       'Document a complex query in a PR description without writing the prose yourself.',
-      'Explain a join-heavy report to a stakeholder who doesn\'t speak SQL.',
+      "Explain a join-heavy report to a stakeholder who doesn't speak SQL.",
       'Audit unfamiliar SQL — see at a glance what every clause is doing.',
       'Detect features (aggregates, joins, grouping, sorting, limiting) in a single pass.',
       'Format SQL pasted from a screenshot or chat that lost its whitespace.',

@@ -17,7 +17,7 @@ export const extractArticleText: ToolModule<ExtractArticleTextParams> = {
   slug: 'extract-article-text',
   name: 'Extract Article Text',
   description:
-    'Strip ads, sidebars, and navigation from a web page and keep only the article body. Paste the page\'s HTML (View Source → Copy → paste here). Powered by Mozilla\'s Reader View algorithm. Runs entirely in your browser.',
+    "Strip ads, sidebars, and navigation from a web page and keep only the article body. Paste the page's HTML (View Source → Copy → paste here). Powered by Mozilla's Reader View algorithm. Runs entirely in your browser.",
   category: 'text',
   keywords: ['readability', 'reader', 'article', 'extract', 'clean', 'declutter', 'web'],
 
@@ -65,11 +65,7 @@ export const extractArticleText: ToolModule<ExtractArticleTextParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ExtractArticleTextParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ExtractArticleTextParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('extract-article-text accepts exactly one input.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 

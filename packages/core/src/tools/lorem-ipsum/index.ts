@@ -7,14 +7,67 @@ export { defaultLoremIpsumParams } from './types.js';
 const LOREM_OPENING = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
 
 const WORD_POOL = [
-  'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit',
-  'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore',
-  'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud',
-  'exercitation', 'ullamco', 'laboris', 'nisi', 'aliquip', 'ex', 'ea', 'commodo',
-  'consequat', 'duis', 'aute', 'irure', 'in', 'reprehenderit', 'voluptate', 'velit',
-  'esse', 'cillum', 'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat',
-  'cupidatat', 'non', 'proident', 'sunt', 'culpa', 'qui', 'officia', 'deserunt',
-  'mollit', 'anim', 'id', 'est',
+  'lorem',
+  'ipsum',
+  'dolor',
+  'sit',
+  'amet',
+  'consectetur',
+  'adipiscing',
+  'elit',
+  'sed',
+  'do',
+  'eiusmod',
+  'tempor',
+  'incididunt',
+  'ut',
+  'labore',
+  'et',
+  'dolore',
+  'magna',
+  'aliqua',
+  'enim',
+  'ad',
+  'minim',
+  'veniam',
+  'quis',
+  'nostrud',
+  'exercitation',
+  'ullamco',
+  'laboris',
+  'nisi',
+  'aliquip',
+  'ex',
+  'ea',
+  'commodo',
+  'consequat',
+  'duis',
+  'aute',
+  'irure',
+  'in',
+  'reprehenderit',
+  'voluptate',
+  'velit',
+  'esse',
+  'cillum',
+  'fugiat',
+  'nulla',
+  'pariatur',
+  'excepteur',
+  'sint',
+  'occaecat',
+  'cupidatat',
+  'non',
+  'proident',
+  'sunt',
+  'culpa',
+  'qui',
+  'officia',
+  'deserunt',
+  'mollit',
+  'anim',
+  'id',
+  'est',
 ];
 
 function randomInt(min: number, max: number): number {
@@ -62,7 +115,8 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
   id: 'lorem-ipsum',
   slug: 'lorem-ipsum',
   name: 'Lorem Ipsum',
-  description: 'Generate placeholder Latin text (lorem ipsum) with configurable paragraphs and sentence length.',
+  description:
+    'Generate placeholder Latin text (lorem ipsum) with configurable paragraphs and sentence length.',
   category: 'create',
   keywords: ['lorem', 'ipsum', 'placeholder', 'text', 'dummy', 'generate', 'latin'],
 
@@ -110,18 +164,16 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
   },
 
   // Tool contract requires Promise return; no internal await needed.
-   
-  async run(
-    _inputs: File[],
-    params: LoremIpsumParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+
+  async run(_inputs: File[], params: LoremIpsumParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating text' });
 
     const paragraphCount = params.paragraphs ?? 3;
-    if (paragraphCount < 1 || paragraphCount > 1000) throw new Error('paragraphs must be between 1 and 1000');
+    if (paragraphCount < 1 || paragraphCount > 1000)
+      throw new Error('paragraphs must be between 1 and 1000');
     const sentenceCount = params.sentencesPerParagraph ?? 5;
-    if (sentenceCount < 1 || sentenceCount > 100) throw new Error('sentencesPerParagraph must be between 1 and 100');
+    if (sentenceCount < 1 || sentenceCount > 100)
+      throw new Error('sentencesPerParagraph must be between 1 and 100');
     const wordsPerSentence: [number, number] = params.wordsPerSentence ?? [8, 15];
     if (wordsPerSentence[1] > 100) throw new Error('wordsPerSentence max must be <= 100');
     const startWithLorem = params.startWithLorem ?? true;
@@ -129,7 +181,7 @@ export const loremIpsum: ToolModule<LoremIpsumParams> = {
     const paragraphs: string[] = [];
 
     for (let i = 0; i < paragraphCount; i++) {
-      const firstSentence = (i === 0 && startWithLorem) ? LOREM_OPENING : undefined;
+      const firstSentence = i === 0 && startWithLorem ? LOREM_OPENING : undefined;
       paragraphs.push(generateParagraph(sentenceCount, wordsPerSentence, firstSentence));
     }
 

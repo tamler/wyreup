@@ -138,7 +138,10 @@ export const urlShortenLocal: ToolModule<UrlShortenLocalParams> = {
         errorCorrectionLevel: 'M',
         width: params.qrSize ?? 256,
       });
-      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+      const arrayBuffer = buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength,
+      ) as ArrayBuffer;
       outputs.push(new Blob([arrayBuffer], { type: 'image/png' }));
     }
 

@@ -115,28 +115,30 @@ describe('encodeUnicode / decodeUnicode', () => {
 describe('text-escape — run()', () => {
   it('encode-html mode produces correct output', async () => {
     const input = new File(['<b>Hello & World</b>'], 'html.txt', { type: 'text/plain' });
-    const [out] = await textEscape.run([input], { mode: 'encode-html' }, makeCtx()) as Blob[];
+    const [out] = (await textEscape.run([input], { mode: 'encode-html' }, makeCtx())) as Blob[];
     const text = await out!.text();
     expect(text).toBe('&lt;b&gt;Hello &amp; World&lt;/b&gt;');
   });
 
   it('decode-html mode decodes entities', async () => {
     const input = new File(['&lt;b&gt;Hello&lt;/b&gt;'], 'html.txt', { type: 'text/plain' });
-    const [out] = await textEscape.run([input], { mode: 'decode-html' }, makeCtx()) as Blob[];
+    const [out] = (await textEscape.run([input], { mode: 'decode-html' }, makeCtx())) as Blob[];
     const text = await out!.text();
     expect(text).toBe('<b>Hello</b>');
   });
 
   it('encode-unicode mode encodes non-ASCII', async () => {
     const input = new File(['\u00E9'], 'unicode.txt', { type: 'text/plain' });
-    const [out] = await textEscape.run([input], { mode: 'encode-unicode' }, makeCtx()) as Blob[];
+    const [out] = (await textEscape.run([input], { mode: 'encode-unicode' }, makeCtx())) as Blob[];
     const text = await out!.text();
     expect(text).toContain('\\u');
   });
 
   it('decode-unicode mode decodes escape sequences', async () => {
-    const input = new File(['\\u0048\\u0065\\u006C\\u006C\\u006F'], 'uni.txt', { type: 'text/plain' });
-    const [out] = await textEscape.run([input], { mode: 'decode-unicode' }, makeCtx()) as Blob[];
+    const input = new File(['\\u0048\\u0065\\u006C\\u006C\\u006F'], 'uni.txt', {
+      type: 'text/plain',
+    });
+    const [out] = (await textEscape.run([input], { mode: 'decode-unicode' }, makeCtx())) as Blob[];
     const text = await out!.text();
     expect(text).toBe('Hello');
   });

@@ -32,10 +32,7 @@ export async function runChain(
   depth = 0,
 ): Promise<Blob[]> {
   if (depth >= MAX_CHAIN_DEPTH) {
-    throw new ChainError(
-      `Maximum chain depth ${MAX_CHAIN_DEPTH} exceeded`,
-      depth,
-    );
+    throw new ChainError(`Maximum chain depth ${MAX_CHAIN_DEPTH} exceeded`, depth);
   }
 
   if (chain.length === 0) {

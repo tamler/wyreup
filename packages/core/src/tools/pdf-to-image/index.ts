@@ -82,11 +82,7 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfToImageParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: PdfToImageParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const format = params.format ?? 'png';
@@ -101,17 +97,13 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 5, message: 'Loading PDF' });
 
-    const { getDocument, GlobalWorkerOptions } = await import(
-      'pdfjs-dist/legacy/build/pdf.mjs'
-    );
+    const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     if (typeof window === 'undefined') {
       const { createRequire } = await import('node:module');
       const require = createRequire(import.meta.url);
       try {
-        const workerPath: string = require.resolve(
-          'pdfjs-dist/legacy/build/pdf.worker.mjs',
-        );
+        const workerPath: string = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
         GlobalWorkerOptions.workerSrc = workerPath;
       } catch {
         GlobalWorkerOptions.workerSrc = 'pdf.worker.mjs';
@@ -145,10 +137,7 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
       const page = await pdf.getPage(pageNum);
       const viewport = page.getViewport({ scale });
 
-      const canvas = await createCanvas(
-        Math.ceil(viewport.width),
-        Math.ceil(viewport.height),
-      );
+      const canvas = await createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
 
       const canvasContext = canvas.getContext('2d');
 

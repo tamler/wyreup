@@ -46,23 +46,27 @@ describe('pgp-encrypt — metadata', () => {
 describe('pgp-encrypt — input validation', () => {
   it('throws when publicKey is empty', async () => {
     const file = new File(['hello'], 'test.txt', { type: 'text/plain' });
-    await expect(
-      pgpEncrypt.run([file], { publicKey: '' }, makeCtx()),
-    ).rejects.toThrow(/publicKey is required/i);
+    await expect(pgpEncrypt.run([file], { publicKey: '' }, makeCtx())).rejects.toThrow(
+      /publicKey is required/i,
+    );
   });
 
   it('throws when publicKey is whitespace', async () => {
     const file = new File(['hello'], 'test.txt', { type: 'text/plain' });
-    await expect(
-      pgpEncrypt.run([file], { publicKey: '   ' }, makeCtx()),
-    ).rejects.toThrow(/publicKey is required/i);
+    await expect(pgpEncrypt.run([file], { publicKey: '   ' }, makeCtx())).rejects.toThrow(
+      /publicKey is required/i,
+    );
   });
 });
 
 describe('pgp-encrypt — run() with real key', () => {
   it('produces ASCII-armored output by default', async () => {
     const file = new File(['secret data'], 'secret.txt', { type: 'text/plain' });
-    const result = await pgpEncrypt.run([file], { publicKey: publicKeyArmored }, makeCtx()) as Blob[];
+    const result = (await pgpEncrypt.run(
+      [file],
+      { publicKey: publicKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     expect(result).toHaveLength(1);
     const text = await result[0]!.text();
     expect(text).toContain('BEGIN PGP MESSAGE');
@@ -70,7 +74,11 @@ describe('pgp-encrypt — run() with real key', () => {
 
   it('output blob has text/plain mime for armored output', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    const result = await pgpEncrypt.run([file], { publicKey: publicKeyArmored }, makeCtx()) as Blob[];
+    const result = (await pgpEncrypt.run(
+      [file],
+      { publicKey: publicKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     expect(result[0]!.type).toContain('text/plain');
   });
 });

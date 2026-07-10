@@ -103,9 +103,7 @@ export async function enforceLimits(
   costCredits: number,
 ): Promise<Response | null> {
   // Read all settings in one round-trip. Missing rows → defaults.
-  const rows = await env.DB.prepare(
-    `SELECT key, value FROM system_settings WHERE key IN (?, ?)`,
-  )
+  const rows = await env.DB.prepare(`SELECT key, value FROM system_settings WHERE key IN (?, ?)`)
     .bind(...SETTING_KEYS)
     .all<{ key: string; value: string }>();
 
@@ -119,10 +117,7 @@ export async function enforceLimits(
 
   // Layer 2 — kill switch wins, no further queries.
   if (settings.system_disabled !== 0) {
-    return json(
-      { error: 'Pro API temporarily disabled. Please try again later.' },
-      503,
-    );
+    return json({ error: 'Pro API temporarily disabled. Please try again later.' }, 503);
   }
 
   // Layer 1 — account-wide daily cap. Cap of 0 disables the layer.
@@ -133,8 +128,7 @@ export async function enforceLimits(
   if (spent + costCredits > cap) {
     return json(
       {
-        error:
-          'Daily platform spend cap reached. The Pro API will resume at 00:00 UTC.',
+        error: 'Daily platform spend cap reached. The Pro API will resume at 00:00 UTC.',
       },
       503,
     );

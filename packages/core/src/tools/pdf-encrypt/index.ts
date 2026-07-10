@@ -48,11 +48,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
     userPassword: '',
   },
 
-  async run(
-    inputs: File[],
-    params: PdfEncryptParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfEncryptParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { userPassword, ownerPassword, permissions } = params;
@@ -87,10 +83,14 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
       }
       if (permissions.modifying !== undefined) cantooPermissions.modifying = permissions.modifying;
       if (permissions.copying !== undefined) cantooPermissions.copying = permissions.copying;
-      if (permissions.annotating !== undefined) cantooPermissions.annotating = permissions.annotating;
-      if (permissions.fillingForms !== undefined) cantooPermissions.fillingForms = permissions.fillingForms;
-      if (permissions.contentAccessibility !== undefined) cantooPermissions.contentAccessibility = permissions.contentAccessibility;
-      if (permissions.documentAssembly !== undefined) cantooPermissions.documentAssembly = permissions.documentAssembly;
+      if (permissions.annotating !== undefined)
+        cantooPermissions.annotating = permissions.annotating;
+      if (permissions.fillingForms !== undefined)
+        cantooPermissions.fillingForms = permissions.fillingForms;
+      if (permissions.contentAccessibility !== undefined)
+        cantooPermissions.contentAccessibility = permissions.contentAccessibility;
+      if (permissions.documentAssembly !== undefined)
+        cantooPermissions.documentAssembly = permissions.documentAssembly;
     }
 
     pdfDoc.encrypt({

@@ -74,8 +74,10 @@ async function tryBrowserTranslator(
   // Translator is a class — `typeof class === 'function'`. The previous
   // `typeof === 'object'` check wrongly filtered it out, so this branch
   // never executed and users fell through to the 400 MB M2M100 path.
-  const globalScope =
-    (typeof self !== 'undefined' ? self : (window as unknown)) as Record<string, unknown>;
+  const globalScope = (typeof self !== 'undefined' ? self : (window as unknown)) as Record<
+    string,
+    unknown
+  >;
   const TranslatorApi = globalScope['Translator'];
   if (TranslatorApi) {
     const T = TranslatorApi as Record<string, unknown>;
@@ -146,7 +148,8 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
   id: 'text-translate',
   slug: 'text-translate',
   name: 'Translate Text',
-  description: 'Translate between 100+ languages. Uses your browser\'s built-in translator when available (Chrome 131+), falling back to the M2M100 model.',
+  description:
+    "Translate between 100+ languages. Uses your browser's built-in translator when available (Chrome 131+), falling back to the M2M100 model.",
   category: 'text',
   keywords: ['translate', 'translation', 'language', 'multilingual', 'm2m', 'localize'],
 
@@ -214,7 +217,11 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
     const browserResult = await tryBrowserTranslator(text, sourceLang, targetLang);
 
     if (browserResult !== null) {
-      ctx.onProgress({ stage: 'done', percent: 100, message: 'Done (translated by your browser, no download)' });
+      ctx.onProgress({
+        stage: 'done',
+        percent: 100,
+        message: 'Done (translated by your browser, no download)',
+      });
       return [new Blob([browserResult], { type: 'text/plain' })];
     }
 
@@ -226,22 +233,24 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
       message: 'Browser translator unavailable — loading M2M100 (~400 MB on first use)',
     });
 
-    const pipe = await getPipeline(ctx, 'translation', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'translation', MODEL_ID, {
       src_lang: sourceLang,
       tgt_lang: targetLang,
-    }) as (
+    })) as (
       input: string,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ translation_text: string }>>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    ctx.onProgress({ stage: 'processing', percent: 50, message: `Translating ${sourceLang} -> ${targetLang}` });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 50,
+      message: `Translating ${sourceLang} -> ${targetLang}`,
+    });
 
     const result = await pipe(text, { src_lang: sourceLang, tgt_lang: targetLang });
-    const translated = Array.isArray(result)
-      ? result[0]?.translation_text ?? ''
-      : String(result);
+    const translated = Array.isArray(result) ? (result[0]?.translation_text ?? '') : String(result);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done (M2M100)' });
     return [new Blob([translated], { type: 'text/plain' })];

@@ -24,14 +24,25 @@ export interface ColorHarmonyResult {
 
 // ── Color math ──────────────────────────────────────────────────────────────
 
-interface Rgb { r: number; g: number; b: number }
-interface Hsl { h: number; s: number; l: number }
+interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
+interface Hsl {
+  h: number;
+  s: number;
+  l: number;
+}
 
 function parseHex(input: string): Rgb {
   const s = input.trim().replace(/^#/, '');
   let hex: string;
   if (s.length === 3) {
-    hex = s.split('').map((c) => c + c).join('');
+    hex = s
+      .split('')
+      .map((c) => c + c)
+      .join('');
   } else if (s.length === 6) {
     hex = s;
   } else {
@@ -49,26 +60,29 @@ function parseHex(input: string): Rgb {
 
 function rgbToHex({ r, g, b }: Rgb): string {
   const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
-  return (
-    '#' +
-    [clamp(r), clamp(g), clamp(b)]
-      .map((v) => v.toString(16).padStart(2, '0'))
-      .join('')
-  );
+  return '#' + [clamp(r), clamp(g), clamp(b)].map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
 function rgbToHsl({ r, g, b }: Rgb): Hsl {
-  const rn = r / 255, gn = g / 255, bn = b / 255;
-  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  const rn = r / 255,
+    gn = g / 255,
+    bn = b / 255;
+  const max = Math.max(rn, gn, bn),
+    min = Math.min(rn, gn, bn);
   const l = (max + min) / 2;
   if (max === min) return { h: 0, s: 0, l };
   const d = max - min;
   const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
   let h: number;
   switch (max) {
-    case rn: h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6; break;
-    case gn: h = ((bn - rn) / d + 2) / 6; break;
-    default: h = ((rn - gn) / d + 4) / 6;
+    case rn:
+      h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
+      break;
+    case gn:
+      h = ((bn - rn) / d + 2) / 6;
+      break;
+    default:
+      h = ((rn - gn) / d + 4) / 6;
   }
   return { h, s, l };
 }
@@ -130,8 +144,17 @@ export const colorHarmony: ToolModule<ColorHarmonyParams> = {
   category: 'create',
   categories: ['inspect'],
   keywords: [
-    'color', 'harmony', 'scheme', 'complementary', 'triadic', 'analogous',
-    'tetradic', 'monochromatic', 'theory', 'palette', 'design',
+    'color',
+    'harmony',
+    'scheme',
+    'complementary',
+    'triadic',
+    'analogous',
+    'tetradic',
+    'monochromatic',
+    'theory',
+    'palette',
+    'design',
   ],
 
   input: {
@@ -157,7 +180,6 @@ export const colorHarmony: ToolModule<ColorHarmonyParams> = {
     },
   },
 
-   
   async run(_inputs: File[], params: ColorHarmonyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 

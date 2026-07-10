@@ -12,9 +12,7 @@ describe('excel formula injection — addAOAToSheet', () => {
   it('prefixes formula-leading string cells with an apostrophe', async () => {
     const wb = await newWorkbook();
     const ws = addWorksheet(wb, 'Sheet1');
-    addAOAToSheet(ws, [
-      ['=1+1', '+1', '-1', '@SUM(A1)', "=cmd|'/c calc'!A0"],
-    ]);
+    addAOAToSheet(ws, [['=1+1', '+1', '-1', '@SUM(A1)', "=cmd|'/c calc'!A0"]]);
     const rows = sheetToAOA(ws);
     expect(rows[0]![0]).toBe("'=1+1");
     expect(rows[0]![1]).toBe("'+1");

@@ -88,8 +88,13 @@ export const jsonSchemaValidate: ToolModule<JsonSchemaValidateParams> = {
     },
   },
 
-  async run(inputs: File[], params: JsonSchemaValidateParams, ctx: ToolRunContext): Promise<Blob[]> {
-    if (inputs.length !== 2) throw new Error('json-schema-validate needs two files: schema then data.');
+  async run(
+    inputs: File[],
+    params: JsonSchemaValidateParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
+    if (inputs.length !== 2)
+      throw new Error('json-schema-validate needs two files: schema then data.');
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading ajv' });
     const { default: Ajv } = await import('ajv');
     if (ctx.signal.aborted) throw new Error('Aborted');

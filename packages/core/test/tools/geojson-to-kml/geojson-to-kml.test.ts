@@ -12,7 +12,9 @@ function makeCtx(): ToolRunContext {
 }
 
 async function run(geojson: unknown, params = {}): Promise<string> {
-  const file = new File([JSON.stringify(geojson)], 'input.geojson', { type: 'application/geo+json' });
+  const file = new File([JSON.stringify(geojson)], 'input.geojson', {
+    type: 'application/geo+json',
+  });
   const [out] = (await geojsonToKml.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }

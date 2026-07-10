@@ -25,10 +25,7 @@ export interface TranscribeResult {
   vtt?: string | null;
 }
 
-export async function transcribe(
-  env: Env,
-  args: TranscribeArgs,
-): Promise<TranscribeResult> {
+export async function transcribe(env: Env, args: TranscribeArgs): Promise<TranscribeResult> {
   // Workers AI expects audio as an integer array of byte values.
   const audioArr = Array.from(args.bytes);
 

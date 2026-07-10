@@ -505,7 +505,14 @@ describe('default registry', () => {
 
   it('pure-JS text tools have no installSize', () => {
     const registry = createDefaultRegistry();
-    const pureTools = ['text-readability', 'text-stats', 'token-count', 'text-diff-levenshtein', 'unicode-normalize', 'text-escape'];
+    const pureTools = [
+      'text-readability',
+      'text-stats',
+      'token-count',
+      'text-diff-levenshtein',
+      'unicode-normalize',
+      'text-escape',
+    ];
     for (const id of pureTools) {
       const tool = registry.toolsById.get(id);
       expect(tool?.installSize).toBeUndefined();
@@ -551,7 +558,14 @@ describe('default registry', () => {
 
   it('wave-m tools share the ffmpeg installGroup', () => {
     const registry = createDefaultRegistry();
-    const waveM = ['video-concat', 'video-add-text', 'video-speed', 'video-overlay-image', 'video-crossfade', 'video-color-correct'];
+    const waveM = [
+      'video-concat',
+      'video-add-text',
+      'video-speed',
+      'video-overlay-image',
+      'video-crossfade',
+      'video-color-correct',
+    ];
     for (const id of waveM) {
       const tool = registry.toolsById.get(id) as { installGroup?: string } | undefined;
       expect(tool?.installGroup).toBe('ffmpeg');

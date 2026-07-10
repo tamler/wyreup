@@ -246,9 +246,9 @@ describe('executeChain — error cases', () => {
     mockParseChainString.mockReturnValue(chain);
     mockReadFile.mockResolvedValue(Buffer.from('fake'));
 
-    await expect(
-      executeChain(['/tmp/photo.jpg'], { steps: 'not-a-tool' }),
-    ).rejects.toThrow('process.exit(1)');
+    await expect(executeChain(['/tmp/photo.jpg'], { steps: 'not-a-tool' })).rejects.toThrow(
+      'process.exit(1)',
+    );
 
     expect(exitCode).toBe(1);
     expect(stderrOutput.join('')).toMatch(/Unknown tool/);
@@ -258,9 +258,9 @@ describe('executeChain — error cases', () => {
     mockParseChainString.mockReturnValue([]);
     mockReadFile.mockResolvedValue(Buffer.from('fake'));
 
-    await expect(
-      executeChain(['/tmp/photo.jpg'], { steps: '' }),
-    ).rejects.toThrow('process.exit(1)');
+    await expect(executeChain(['/tmp/photo.jpg'], { steps: '' })).rejects.toThrow(
+      'process.exit(1)',
+    );
 
     expect(exitCode).toBe(1);
     // Empty steps string triggers "Provide --steps" message before parse

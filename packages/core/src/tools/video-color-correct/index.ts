@@ -40,7 +40,17 @@ export const videoColorCorrect: ToolModule<VideoColorCorrectParams> = {
   name: 'Color Correct Video',
   description: 'Adjust brightness, contrast, saturation, gamma, and hue of a video.',
   category: 'media',
-  keywords: ['video', 'color', 'correction', 'brightness', 'contrast', 'saturation', 'hue', 'gamma', 'grade'],
+  keywords: [
+    'video',
+    'color',
+    'correction',
+    'brightness',
+    'contrast',
+    'saturation',
+    'hue',
+    'gamma',
+    'grade',
+  ],
 
   input: {
     accept: ['video/*'],
@@ -109,11 +119,7 @@ export const videoColorCorrect: ToolModule<VideoColorCorrectParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoColorCorrectParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoColorCorrectParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -141,17 +147,22 @@ export const videoColorCorrect: ToolModule<VideoColorCorrectParams> = {
     const crf = params.crf ?? 23;
 
     await ff.exec([
-      '-i', inputName,
-      '-vf', vfFilter,
-      '-crf', String(crf),
-      '-preset', 'fast',
-      '-c:a', 'copy',
+      '-i',
+      inputName,
+      '-vf',
+      vfFilter,
+      '-crf',
+      String(crf),
+      '-preset',
+      'fast',
+      '-c:a',
+      'copy',
       outputName,
     ]);
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

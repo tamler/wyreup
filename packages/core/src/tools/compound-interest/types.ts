@@ -1,8 +1,8 @@
 export interface CompoundInterestParams {
   principal: number;
-  annualRate: number;   // percent, e.g. 7 for 7%
+  annualRate: number; // percent, e.g. 7 for 7%
   years: number;
-  compoundingPerYear?: number;  // default 12
+  compoundingPerYear?: number; // default 12
   monthlyContribution?: number; // default 0
 }
 

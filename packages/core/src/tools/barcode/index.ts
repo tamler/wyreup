@@ -40,12 +40,17 @@ function buildSvg(
   const rects: string[] = [];
   let i = 0;
   while (i < bars.length) {
-    if (!bars[i]) { i++; continue; }
+    if (!bars[i]) {
+      i++;
+      continue;
+    }
     let len = 0;
     while (i + len < bars.length && bars[i + len]) len++;
     const x = margin + i * barWidth;
     const y = margin;
-    rects.push(`<rect x="${x}" y="${y}" width="${len * barWidth}" height="${height}" fill="${foreground}"/>`);
+    rects.push(
+      `<rect x="${x}" y="${y}" width="${len * barWidth}" height="${height}" fill="${foreground}"/>`,
+    );
     i += len;
   }
 
@@ -187,11 +192,7 @@ export const barcode: ToolModule<BarcodeParams> = {
     },
   },
 
-  async run(
-    _inputs: File[],
-    params: BarcodeParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(_inputs: File[], params: BarcodeParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const data = (params.data ?? '').trim();
@@ -210,10 +211,15 @@ export const barcode: ToolModule<BarcodeParams> = {
     const jsbModule = await import('jsbarcode');
     // jsbarcode exports vary by bundler — normalise to the callable function
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    const jsbFn = (((jsbModule as any).default as unknown) ?? jsbModule) as (target: object, data: string, opts: object) => void;
+    const jsbFn = (((jsbModule as any).default as unknown) ?? jsbModule) as (
+      target: object,
+      data: string,
+      opts: object,
+    ) => void;
 
     // Use the object renderer to get raw encoding data
-    const obj: { encodings?: { data: string; text: string; options: Record<string, unknown> }[] } = {};
+    const obj: { encodings?: { data: string; text: string; options: Record<string, unknown> }[] } =
+      {};
     jsbFn(obj, data, {
       format: toJsbFormat(format),
       width: 2,
@@ -256,9 +262,7 @@ export const barcode: ToolModule<BarcodeParams> = {
 
     // PNG output — requires browser Canvas API
     if (typeof document === 'undefined') {
-      throw new Error(
-        'PNG output requires a browser environment. Use SVG format in Node/CLI.',
-      );
+      throw new Error('PNG output requires a browser environment. Use SVG format in Node/CLI.');
     }
 
     ctx.onProgress({ stage: 'encoding', percent: 70, message: 'Rendering PNG' });
@@ -273,7 +277,10 @@ export const barcode: ToolModule<BarcodeParams> = {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         const canvasCtx = canvas.getContext('2d');
-        if (!canvasCtx) { reject(new Error('Canvas 2D not available')); return; }
+        if (!canvasCtx) {
+          reject(new Error('Canvas 2D not available'));
+          return;
+        }
         canvasCtx.drawImage(img, 0, 0);
         canvas.toBlob((b) => {
           if (b) resolve(b);
@@ -281,7 +288,10 @@ export const barcode: ToolModule<BarcodeParams> = {
         }, 'image/png');
         URL.revokeObjectURL(url);
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('SVG render failed'));
+      };
       img.src = url;
     });
 

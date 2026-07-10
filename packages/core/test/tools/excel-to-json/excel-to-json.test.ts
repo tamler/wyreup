@@ -52,8 +52,20 @@ describe('excel-to-json — run()', () => {
 
   it('exports single sheet by name', async () => {
     const file = await makeMultiSheetXlsxFile([
-      { name: 'Sales', rows: [['product', 'qty'], ['Widget', 5]] },
-      { name: 'Returns', rows: [['product', 'qty'], ['Widget', 1]] },
+      {
+        name: 'Sales',
+        rows: [
+          ['product', 'qty'],
+          ['Widget', 5],
+        ],
+      },
+      {
+        name: 'Returns',
+        rows: [
+          ['product', 'qty'],
+          ['Widget', 1],
+        ],
+      },
     ]);
     const result = await run(file, { sheet: 'Sales' });
     expect('Sales' in result.sheets).toBe(true);
@@ -87,6 +99,8 @@ describe('excel-to-json — run()', () => {
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/json');
     const text = await blob.text();
-    expect(() => { JSON.parse(text); }).not.toThrow();
+    expect(() => {
+      JSON.parse(text);
+    }).not.toThrow();
   });
 });

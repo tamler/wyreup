@@ -13,10 +13,7 @@ export interface AuthedUser {
   kid: string; // api_keys.id the caller is authenticated as
 }
 
-export async function resolveUser(
-  request: Request,
-  env: Env,
-): Promise<AuthedUser | null> {
+export async function resolveUser(request: Request, env: Env): Promise<AuthedUser | null> {
   // 1. Cookie path (browser)
   const cookies = parseCookies(request.headers.get('Cookie'));
   const sessionCookie = cookies['__Host-wyreup_session'];
@@ -72,10 +69,7 @@ export function forbidden(): Response {
 // Resolve the caller and verify they're in the ADMIN_EMAILS allowlist.
 // Returns the user when admin, or a Response (401/403) the handler should
 // return as-is.
-export async function requireAdmin(
-  request: Request,
-  env: Env,
-): Promise<AuthedUser | Response> {
+export async function requireAdmin(request: Request, env: Env): Promise<AuthedUser | Response> {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
   if (!isAdminEmail(user.email, env)) return forbidden();

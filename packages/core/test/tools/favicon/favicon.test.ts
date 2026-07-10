@@ -40,14 +40,14 @@ describe('favicon — metadata', () => {
 describe('favicon — run()', () => {
   it('generates a zip from a PNG image', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], {}, makeCtx()) as Blob;
+    const output = (await favicon.run([input], {}, makeCtx())) as Blob;
     expect(output.type).toBe('application/zip');
     expect(output.size).toBeGreaterThan(0);
   });
 
   it('zip contains expected favicon PNG files', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], { sizes: [16, 32, 48] }, makeCtx()) as Blob;
+    const output = (await favicon.run([input], { sizes: [16, 32, 48] }, makeCtx())) as Blob;
 
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(await output.arrayBuffer());
@@ -60,7 +60,7 @@ describe('favicon — run()', () => {
 
   it('zip contains site.webmanifest', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], { sizes: [192, 512] }, makeCtx()) as Blob;
+    const output = (await favicon.run([input], { sizes: [192, 512] }, makeCtx())) as Blob;
 
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(await output.arrayBuffer());
@@ -69,7 +69,11 @@ describe('favicon — run()', () => {
 
   it('zip contains favicon.ico when includeIco is true', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], { sizes: [16, 32, 48], includeIco: true }, makeCtx()) as Blob;
+    const output = (await favicon.run(
+      [input],
+      { sizes: [16, 32, 48], includeIco: true },
+      makeCtx(),
+    )) as Blob;
 
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(await output.arrayBuffer());
@@ -78,7 +82,11 @@ describe('favicon — run()', () => {
 
   it('ICO starts with 0x00 0x00 0x01 0x00', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], { sizes: [16, 32, 48], includeIco: true }, makeCtx()) as Blob;
+    const output = (await favicon.run(
+      [input],
+      { sizes: [16, 32, 48], includeIco: true },
+      makeCtx(),
+    )) as Blob;
 
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(await output.arrayBuffer());
@@ -93,7 +101,11 @@ describe('favicon — run()', () => {
 
   it('omits ICO when includeIco is false', async () => {
     const input = loadFixture('graphic.png', 'image/png');
-    const output = await favicon.run([input], { sizes: [16, 32], includeIco: false }, makeCtx()) as Blob;
+    const output = (await favicon.run(
+      [input],
+      { sizes: [16, 32], includeIco: false },
+      makeCtx(),
+    )) as Blob;
 
     const JSZip = (await import('jszip')).default;
     const zip = await JSZip.loadAsync(await output.arrayBuffer());

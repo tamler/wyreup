@@ -33,11 +33,7 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
     separator: '\n\n=== Page {n} ===\n\n',
   },
 
-  async run(
-    inputs: File[],
-    params: PdfToTextParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfToTextParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const separator = params.separator ?? '\n\n=== Page {n} ===\n\n';
@@ -45,9 +41,7 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Loading PDF' });
 
-    const { getDocument, GlobalWorkerOptions } = await import(
-      'pdfjs-dist/legacy/build/pdf.mjs'
-    );
+    const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     // In Node, resolve the worker path from disk so pdfjs can set up its
     // fake-worker fallback (it needs a non-empty string to pass its guard).
@@ -56,9 +50,7 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
       const { createRequire } = await import('node:module');
       const require = createRequire(import.meta.url);
       try {
-        const workerPath: string = require.resolve(
-          'pdfjs-dist/legacy/build/pdf.worker.mjs',
-        );
+        const workerPath: string = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
         GlobalWorkerOptions.workerSrc = workerPath;
       } catch {
         GlobalWorkerOptions.workerSrc = 'pdf.worker.mjs';

@@ -20,19 +20,15 @@ function getExtFromFile(file: File): string {
  * passes the video through untouched.
  */
 export function buildMuteArgs(inputName: string, outputName: string): string[] {
-  return [
-    '-i', inputName,
-    '-c', 'copy',
-    '-an',
-    outputName,
-  ];
+  return ['-i', inputName, '-c', 'copy', '-an', outputName];
 }
 
 export const muteVideo: ToolModule<MuteVideoParams> = {
   id: 'mute-video',
   slug: 'mute-video',
   name: 'Mute Video',
-  description: 'Remove the audio track from a video. Keeps the original video stream untouched (no re-encode).',
+  description:
+    'Remove the audio track from a video. Keeps the original video stream untouched (no re-encode).',
   category: 'media',
   categories: ['audio'],
   keywords: ['video', 'mute', 'silence', 'remove audio', 'strip audio', 'no sound'],
@@ -54,11 +50,7 @@ export const muteVideo: ToolModule<MuteVideoParams> = {
 
   defaults: defaultMuteVideoParams,
 
-  async run(
-    inputs: File[],
-    _params: MuteVideoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: MuteVideoParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });

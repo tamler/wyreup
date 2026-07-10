@@ -38,7 +38,7 @@ describe('crop — run()', () => {
   it('crops a region from photo.jpg and returns correct dimensions', async () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
     const params = { x: 10, y: 10, width: 100, height: 80 };
-    const output = await crop.run([input], params, makeCtx()) as Blob;
+    const output = (await crop.run([input], params, makeCtx())) as Blob;
     expect(output.type).toBe('image/jpeg');
     expect(output.size).toBeGreaterThan(0);
 
@@ -52,7 +52,7 @@ describe('crop — run()', () => {
   it('crops a region from graphic.png and returns correct dimensions', async () => {
     const input = loadFixture('graphic.png', 'image/png');
     const params = { x: 0, y: 0, width: 50, height: 50 };
-    const output = await crop.run([input], params, makeCtx()) as Blob;
+    const output = (await crop.run([input], params, makeCtx())) as Blob;
     expect(output.type).toBe('image/png');
 
     const codec = await getCodec('png');
@@ -66,7 +66,9 @@ describe('crop — run()', () => {
     const input = loadFixture('photo.jpg', 'image/jpeg');
     // photo.jpg is unlikely to be 99999x99999
     const params = { x: 0, y: 0, width: 99999, height: 99999 };
-    await expect(crop.run([input], params, makeCtx())).rejects.toThrow(/exceeds source dimensions/i);
+    await expect(crop.run([input], params, makeCtx())).rejects.toThrow(
+      /exceeds source dimensions/i,
+    );
   });
 
   it('throws for negative offset', async () => {

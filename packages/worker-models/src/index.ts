@@ -43,20 +43,20 @@ const ALLOWED_HF_MODELS: ReadonlySet<string> = new Set([
   // Direct ONNX fetch (audio-enhance).
   'YatharthS/FlashSR',
   // transformers.js models.
-  'Xenova/distilbart-cnn-6-6',                              // text-summarize
+  'Xenova/distilbart-cnn-6-6', // text-summarize
   'Xenova/distilbert-base-uncased-finetuned-sst-2-english', // text-sentiment
-  'Xenova/bert-base-NER',                                   // text-ner
-  'Xenova/m2m100_418M',                                     // text-translate
-  'Xenova/all-MiniLM-L6-v2',                                // text-embed
-  'Xenova/vit-gpt2-image-captioning',                       // image-caption
-  'Xenova/blip-image-captioning-base',                      // image-caption-detailed
-  'Xenova/clip-vit-base-patch16',                           // image-similarity
-  'Xenova/trocr-small-handwritten',                         // ocr-pro
-  'Xenova/swin2SR-classical-sr-x2-64',                      // upscale-2x
-  'Xenova/whisper-tiny',                                    // transcribe (tiny)
-  'Xenova/whisper-base',                                    // transcribe (base)
-  'Xenova/whisper-small',                                   // transcribe (small)
-  'onnx-community/BiRefNet_lite-ONNX',                      // bg-remove
+  'Xenova/bert-base-NER', // text-ner
+  'Xenova/m2m100_418M', // text-translate
+  'Xenova/all-MiniLM-L6-v2', // text-embed
+  'Xenova/vit-gpt2-image-captioning', // image-caption
+  'Xenova/blip-image-captioning-base', // image-caption-detailed
+  'Xenova/clip-vit-base-patch16', // image-similarity
+  'Xenova/trocr-small-handwritten', // ocr-pro
+  'Xenova/swin2SR-classical-sr-x2-64', // upscale-2x
+  'Xenova/whisper-tiny', // transcribe (tiny)
+  'Xenova/whisper-base', // transcribe (base)
+  'Xenova/whisper-small', // transcribe (small)
+  'onnx-community/BiRefNet_lite-ONNX', // bg-remove
 ]);
 
 /** Exact path prefixes for the non-HuggingFace upstreams (version-pinned). */
@@ -117,10 +117,7 @@ const UPSTREAM_TIMEOUT_MS = 30_000;
  * Wraps a ReadableStream and errors the stream if more than `max` bytes are
  * read. Used as a defense-in-depth check when Content-Length is absent.
  */
-function enforceSize(
-  stream: ReadableStream<Uint8Array>,
-  max: number,
-): ReadableStream<Uint8Array> {
+function enforceSize(stream: ReadableStream<Uint8Array>, max: number): ReadableStream<Uint8Array> {
   let total = 0;
   return new ReadableStream({
     async start(controller) {
@@ -131,9 +128,7 @@ function enforceSize(
           if (done) break;
           total += value.byteLength;
           if (total > max) {
-            controller.error(
-              new Error(`Upstream object exceeded size cap (>${max} bytes)`),
-            );
+            controller.error(new Error(`Upstream object exceeded size cap (>${max} bytes)`));
             return;
           }
           controller.enqueue(value);
@@ -159,9 +154,10 @@ function enforceSize(
  * buffering, so there is no memory cap — models of any size (including the
  * m2m100_418M decoder at ~1 GB) are fully verified.
  */
-function hashAndForwardStreaming(
-  stream: ReadableStream<Uint8Array>,
-): { stream: ReadableStream<Uint8Array>; digest: Promise<string> } {
+function hashAndForwardStreaming(stream: ReadableStream<Uint8Array>): {
+  stream: ReadableStream<Uint8Array>;
+  digest: Promise<string>;
+} {
   // Cast to the Cloudflare Workers Crypto type which exposes DigestStream.
   // TypeScript's default DOM lib declares a narrower Crypto interface that
   // lacks this property; the runtime always has it on Workers.
@@ -170,7 +166,9 @@ function hashAndForwardStreaming(
 
   // Tee: forCaller goes to the response, forDigest feeds DigestStream.
   const [forCaller, forDigest] = stream.tee();
-  void forDigest.pipeTo(ds).catch(() => { /* digest promise will reject */ });
+  void forDigest.pipeTo(ds).catch(() => {
+    /* digest promise will reject */
+  });
 
   const digest = ds.digest.then((buf: ArrayBuffer) => {
     const bytes = new Uint8Array(buf);
@@ -236,20 +234,14 @@ export default {
     // refuse any path that has no manifest entry at all.
     const manifestEntry = MANIFEST[key];
     if (STRICT_VERIFICATION && !manifestEntry) {
-      return new Response(
-        `Path ${key} is not in the verification manifest`,
-        { status: 502 },
-      );
+      return new Response(`Path ${key} is not in the verification manifest`, { status: 502 });
     }
 
     // 1) R2 hit — serve directly.
     const obj = await env.MODELS.get(key);
     if (obj) {
       const headers = new Headers(CACHE_HEADERS);
-      headers.set(
-        'Content-Type',
-        obj.httpMetadata?.contentType ?? contentTypeFor(key),
-      );
+      headers.set('Content-Type', obj.httpMetadata?.contentType ?? contentTypeFor(key));
       headers.set('Content-Length', String(obj.size));
       headers.set('ETag', obj.httpEtag);
       headers.set('X-Wyreup-Cache', 'hit');
@@ -269,10 +261,9 @@ export default {
     } catch (err) {
       const isTimeout = err instanceof Error && err.name === 'TimeoutError';
       if (isTimeout) {
-        return new Response(
-          `Upstream fetch timed out after ${UPSTREAM_TIMEOUT_MS} ms`,
-          { status: 504 },
-        );
+        return new Response(`Upstream fetch timed out after ${UPSTREAM_TIMEOUT_MS} ms`, {
+          status: 504,
+        });
       }
       return new Response(
         `Upstream fetch failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -280,10 +271,9 @@ export default {
       );
     }
     if (!upstreamRes.ok) {
-      return new Response(
-        `Upstream ${upstreamRes.status}: ${upstreamRes.statusText}`,
-        { status: upstreamRes.status },
-      );
+      return new Response(`Upstream ${upstreamRes.status}: ${upstreamRes.statusText}`, {
+        status: upstreamRes.status,
+      });
     }
 
     // Size cap. If Content-Length is missing or above the limit, reject
@@ -298,8 +288,7 @@ export default {
       }
     }
 
-    const contentType =
-      upstreamRes.headers.get('Content-Type') ?? contentTypeFor(key);
+    const contentType = upstreamRes.headers.get('Content-Type') ?? contentTypeFor(key);
 
     if (!upstreamRes.body) {
       return new Response('Upstream had no body', { status: 502 });
@@ -311,8 +300,9 @@ export default {
     const [returnStream, hashInputBranch] = upstreamRes.body.tee();
     const returnStreamCapped = enforceSize(returnStream, MAX_OBJECT_SIZE);
 
-    const { stream: hashForwardStream, digest: digestPromise } =
-      hashAndForwardStreaming(enforceSize(hashInputBranch, MAX_OBJECT_SIZE));
+    const { stream: hashForwardStream, digest: digestPromise } = hashAndForwardStreaming(
+      enforceSize(hashInputBranch, MAX_OBJECT_SIZE),
+    );
 
     ctx.waitUntil(
       (async () => {

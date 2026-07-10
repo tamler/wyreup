@@ -81,11 +81,7 @@ export const pageNumbersPdf: ToolModule<PageNumbersPdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PageNumbersPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PageNumbersPdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const position = params.position ?? 'bottom-center';

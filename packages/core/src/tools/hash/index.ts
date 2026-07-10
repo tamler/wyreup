@@ -42,11 +42,7 @@ export const hash: ToolModule<HashParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: HashParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: HashParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { algorithms } = params;
     const results: HashFileResult[] = [];
 

@@ -66,28 +66,28 @@ describe('normalizeUnicode helper', () => {
 describe('unicode-normalize — run()', () => {
   it('returns text/plain blob', async () => {
     const input = new File(['hello'], 'test.txt', { type: 'text/plain' });
-    const [out] = await unicodeNormalize.run([input], { form: 'NFC' }, makeCtx()) as Blob[];
+    const [out] = (await unicodeNormalize.run([input], { form: 'NFC' }, makeCtx())) as Blob[];
     expect(out!.type).toBe('text/plain');
   });
 
   it('NFC round-trips plain ASCII', async () => {
     const text = 'The quick brown fox';
     const input = new File([text], 'ascii.txt', { type: 'text/plain' });
-    const [out] = await unicodeNormalize.run([input], { form: 'NFC' }, makeCtx()) as Blob[];
+    const [out] = (await unicodeNormalize.run([input], { form: 'NFC' }, makeCtx())) as Blob[];
     expect(await out!.text()).toBe(text);
   });
 
   it('NFD decomposes precomposed characters', async () => {
     const text = '\u00E9'; // é precomposed
     const input = new File([text], 'e.txt', { type: 'text/plain' });
-    const [out] = await unicodeNormalize.run([input], { form: 'NFD' }, makeCtx()) as Blob[];
+    const [out] = (await unicodeNormalize.run([input], { form: 'NFD' }, makeCtx())) as Blob[];
     const result = await out!.text();
     expect(result.length).toBe(2);
   });
 
   it('NFKC normalizes fi ligature', async () => {
     const input = new File(['\uFB01'], 'fi.txt', { type: 'text/plain' });
-    const [out] = await unicodeNormalize.run([input], { form: 'NFKC' }, makeCtx()) as Blob[];
+    const [out] = (await unicodeNormalize.run([input], { form: 'NFKC' }, makeCtx())) as Blob[];
     expect(await out!.text()).toBe('fi');
   });
 

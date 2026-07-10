@@ -31,11 +31,7 @@ export const sepia: ToolModule<SepiaParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: SepiaParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: SepiaParams, ctx: ToolRunContext): Promise<Blob[]> {
     const outputs: Blob[] = [];
 
     for (let i = 0; i < inputs.length; i++) {

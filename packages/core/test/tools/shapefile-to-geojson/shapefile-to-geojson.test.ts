@@ -36,9 +36,7 @@ describe('shapefile-to-geojson — error cases', () => {
   it('rejects an empty zip', async () => {
     // Minimal empty zip: end-of-central-directory record only.
     const eocd = new Uint8Array([
-      0x50, 0x4b, 0x05, 0x06,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0x50, 0x4b, 0x05, 0x06, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     ]);
     const file = new File([eocd], 'empty.zip', { type: 'application/zip' });
     await expect(shapefileToGeojson.run([file], {}, makeCtx())).rejects.toThrow();

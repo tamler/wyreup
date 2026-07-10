@@ -41,15 +41,13 @@ describe('pdf-compress — run()', () => {
 
   it('throws for invalid imageQuality', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfCompress.run([input], { imageQuality: 0 }, makeCtx()),
-    ).rejects.toThrow('imageQuality');
+    await expect(pdfCompress.run([input], { imageQuality: 0 }, makeCtx())).rejects.toThrow(
+      'imageQuality',
+    );
   });
 
   it('respects abort signal', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfCompress.run([input], {}, makeCtx(true)),
-    ).rejects.toThrow('Aborted');
+    await expect(pdfCompress.run([input], {}, makeCtx(true))).rejects.toThrow('Aborted');
   });
 });

@@ -9,8 +9,15 @@ import {
 } from '../../../src/lib/excel.js';
 import { makeCtx, makeJsonFile } from '../excel-helpers.js';
 
-const OBJECTS = [{ name: 'Alice', age: 30 }, { name: 'Bob', age: 25 }];
-const ARRAYS = [['name', 'age'], ['Alice', 30], ['Bob', 25]];
+const OBJECTS = [
+  { name: 'Alice', age: 30 },
+  { name: 'Bob', age: 25 },
+];
+const ARRAYS = [
+  ['name', 'age'],
+  ['Alice', 30],
+  ['Bob', 25],
+];
 const MULTI = {
   sheets: {
     Sales: [{ product: 'Widget', qty: 10 }],
@@ -27,7 +34,8 @@ async function loadXlsx(blob: Blob) {
 describe('json-to-excel — metadata', () => {
   it('has id json-to-excel', () => expect(jsonToExcel.id).toBe('json-to-excel'));
   it('is in convert category', () => expect(jsonToExcel.category).toBe('convert'));
-  it('accepts application/json', () => expect(jsonToExcel.input.accept).toContain('application/json'));
+  it('accepts application/json', () =>
+    expect(jsonToExcel.input.accept).toContain('application/json'));
   it('has paramSchema', () => expect(jsonToExcel.paramSchema).toBeDefined());
 });
 

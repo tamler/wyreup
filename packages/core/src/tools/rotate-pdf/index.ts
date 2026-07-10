@@ -24,9 +24,14 @@ function resolvePageIndices(pages: string, pageCount: number): Set<number> {
   }
 
   // Comma-separated 1-indexed page numbers
-  const parts = pages.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = pages
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (parts.length === 0) {
-    throw new Error('pages must not be empty. Use "all", "odd", "even", or a comma-separated list.');
+    throw new Error(
+      'pages must not be empty. Use "all", "odd", "even", or a comma-separated list.',
+    );
   }
   const indices = new Set<number>();
   for (const part of parts) {
@@ -93,11 +98,7 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RotatePdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: RotatePdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const deg = params.degrees;

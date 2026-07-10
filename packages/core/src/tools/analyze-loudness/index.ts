@@ -32,22 +32,28 @@ export function parseEbur128Summary(log: string): LoudnessReport {
 
 /** Measure loudness without producing any media: `-f null -` discards output. */
 export function buildAnalyzeArgs(inputName: string): string[] {
-  return [
-    '-i', inputName,
-    '-af', 'ebur128=peak=true',
-    '-f', 'null',
-    '-',
-  ];
+  return ['-i', inputName, '-af', 'ebur128=peak=true', '-f', 'null', '-'];
 }
 
 export const analyzeLoudness: ToolModule<AnalyzeLoudnessParams> = {
   id: 'analyze-loudness',
   slug: 'analyze-loudness',
   name: 'Analyze Loudness',
-  description: 'Measure a clip\'s integrated loudness (LUFS), loudness range, and true peak (EBU R128). Returns a JSON report.',
+  description:
+    "Measure a clip's integrated loudness (LUFS), loudness range, and true peak (EBU R128). Returns a JSON report.",
   category: 'media',
   categories: ['audio', 'inspect'],
-  keywords: ['loudness', 'analyze', 'measure', 'lufs', 'true peak', 'ebu', 'r128', 'audio', 'meter'],
+  keywords: [
+    'loudness',
+    'analyze',
+    'measure',
+    'lufs',
+    'true peak',
+    'ebu',
+    'r128',
+    'audio',
+    'meter',
+  ],
 
   input: {
     accept: ['audio/*', 'video/*'],
@@ -66,11 +72,7 @@ export const analyzeLoudness: ToolModule<AnalyzeLoudnessParams> = {
 
   defaults: defaultAnalyzeLoudnessParams,
 
-  async run(
-    inputs: File[],
-    _params: AnalyzeLoudnessParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: AnalyzeLoudnessParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -85,7 +87,9 @@ export const analyzeLoudness: ToolModule<AnalyzeLoudnessParams> = {
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Measuring loudness' });
 
     let log = '';
-    const onLog = (e: { message: string }) => { log += e.message + '\n'; };
+    const onLog = (e: { message: string }) => {
+      log += e.message + '\n';
+    };
     ff.on('log', onLog);
     try {
       await ff.exec(buildAnalyzeArgs(inputName));

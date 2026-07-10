@@ -1,5 +1,12 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import { sanitizeZipEntryName, assertEntryBudget, assertDeclaredSizeBudget, MAX_ZIP_ENTRIES, MAX_ZIP_UNCOMPRESSED_BYTES, ZipSafetyError } from '../../lib/zip-safety.js';
+import {
+  sanitizeZipEntryName,
+  assertEntryBudget,
+  assertDeclaredSizeBudget,
+  MAX_ZIP_ENTRIES,
+  MAX_ZIP_UNCOMPRESSED_BYTES,
+  ZipSafetyError,
+} from '../../lib/zip-safety.js';
 
 // JSZip's internalStream is a runtime method not exposed in the public TypeScript
 // types. We cast through unknown to access it; the JSZipStreamHelper shape is
@@ -22,7 +29,12 @@ async function streamingExtract(
     stream.on('data', (chunk: Uint8Array) => {
       total += chunk.byteLength;
       if (total > maxBytes) {
-        reject(new ZipSafetyError('uncompressed-too-large', `ZIP entry exceeds ${maxBytes} bytes during decompression (zip-bomb defense).`));
+        reject(
+          new ZipSafetyError(
+            'uncompressed-too-large',
+            `ZIP entry exceeds ${maxBytes} bytes during decompression (zip-bomb defense).`,
+          ),
+        );
         return;
       }
       chunks.push(chunk);
@@ -31,7 +43,10 @@ async function streamingExtract(
     stream.on('end', () => {
       const merged = new Uint8Array(total);
       let off = 0;
-      for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+      for (const c of chunks) {
+        merged.set(c, off);
+        off += c.byteLength;
+      }
       resolve(merged);
     });
     stream.resume();
@@ -64,7 +79,8 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
   id: 'zip-extract',
   slug: 'zip-extract',
   name: 'Extract ZIP',
-  description: 'Extract files from a ZIP archive. Optional glob filter to extract only matching files.',
+  description:
+    'Extract files from a ZIP archive. Optional glob filter to extract only matching files.',
   category: 'archive',
   keywords: ['zip', 'extract', 'unzip', 'decompress', 'archive', 'files'],
 
@@ -83,11 +99,7 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
 
   defaults: defaultZipExtractParams,
 
-  async run(
-    inputs: File[],
-    params: ZipExtractParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ZipExtractParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading JSZip' });
     const JSZip = (await import('jszip')).default;
 
@@ -99,7 +111,10 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
     const zip = await JSZip.loadAsync(bytes);
 
     if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
-      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+      throw new ZipSafetyError(
+        'too-many-entries',
+        `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`,
+      );
     }
 
     const entries = Object.values(zip.files).filter(
@@ -113,9 +128,12 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
     // Pre-flight: sum declared uncompressed sizes from the ZIP directory before
     // decompressing anything. JSZip stores this on the private _data property
     // (documented in the type definitions' commented-out CompressedObject).
-    assertDeclaredSizeBudget(entries.map((e) => ({
-      uncompressedSize: (e as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
-    })));
+    assertDeclaredSizeBudget(
+      entries.map((e) => ({
+        uncompressedSize:
+          (e as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
+      })),
+    );
 
     let accumulated = 0;
     const blobs: Blob[] = [];
@@ -137,7 +155,9 @@ export const zipExtract: ToolModule<ZipExtractParams> = {
       );
       accumulated += content.byteLength;
       assertEntryBudget(i + 1, accumulated);
-      blobs.push(new File([content.buffer as ArrayBuffer], safeName, { type: 'application/octet-stream' }));
+      blobs.push(
+        new File([content.buffer as ArrayBuffer], safeName, { type: 'application/octet-stream' }),
+      );
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

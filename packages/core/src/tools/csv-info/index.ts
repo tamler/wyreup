@@ -51,7 +51,18 @@ const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2
 // Intentionally excludes '1' / '0' — those should type as integer. CSVs
 // that use 1/0 for boolean flags end up typed as integer-with-range-[0..1],
 // which is more useful for downstream schemas anyway.
-const BOOL_VALUES = new Set(['true', 'false', 'TRUE', 'FALSE', 'True', 'False', 'yes', 'no', 'Yes', 'No']);
+const BOOL_VALUES = new Set([
+  'true',
+  'false',
+  'TRUE',
+  'FALSE',
+  'True',
+  'False',
+  'yes',
+  'no',
+  'Yes',
+  'No',
+]);
 
 function detectType(value: string): CsvType {
   if (value === '') return 'empty';
@@ -141,7 +152,8 @@ export const csvInfo: ToolModule<CsvInfoParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const hasHeader = params.hasHeader ?? true;
-    const delimiter = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
     const sampleRows = params.sampleRows ?? 0;
     const maxDistinct = params.maxDistinct ?? 100;
 

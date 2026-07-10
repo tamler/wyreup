@@ -64,9 +64,9 @@ describe('convert — run()', () => {
 
   it('throws for unsupported input type', async () => {
     const fakePdf = new File(['%PDF-1.4'], 'x.pdf', { type: 'application/pdf' });
-    await expect(
-      convert.run([fakePdf], { targetFormat: 'jpeg' }, makeCtx()),
-    ).rejects.toThrow(/unsupported|format/i);
+    await expect(convert.run([fakePdf], { targetFormat: 'jpeg' }, makeCtx())).rejects.toThrow(
+      /unsupported|format/i,
+    );
   });
 
   it('respects abort signal', async () => {

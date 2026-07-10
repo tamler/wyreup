@@ -9,7 +9,8 @@ export const regexTester: ToolModule<RegexTesterParams> = {
   id: 'regex-tester',
   slug: 'regex-tester',
   name: 'Regex Tester',
-  description: 'Test a regular expression against text and see all matches with positions and named groups.',
+  description:
+    'Test a regular expression against text and see all matches with positions and named groups.',
   category: 'inspect',
   keywords: ['regex', 'regexp', 'regular', 'expression', 'pattern', 'match', 'test'],
 
@@ -50,11 +51,7 @@ export const regexTester: ToolModule<RegexTesterParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RegexTesterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: RegexTesterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Testing regex' });
 
     const text = await inputs[0]!.text();
@@ -95,7 +92,10 @@ export const regexTester: ToolModule<RegexTesterParams> = {
 
     if (flags.includes('g') || flags.includes('y')) {
       for (const m of text.matchAll(regex)) {
-        if (matches.length >= MAX_MATCHES) { truncated = true; break; }
+        if (matches.length >= MAX_MATCHES) {
+          truncated = true;
+          break;
+        }
         const entry: RegexTesterMatch = {
           match: m[0],
           index: m.index ?? 0,

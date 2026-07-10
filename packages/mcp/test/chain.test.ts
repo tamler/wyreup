@@ -8,8 +8,14 @@ const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
 
 async function callTool(srv: unknown, name: string, args: Record<string, unknown>) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-  const handlers = (srv as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
-  return handlers.get('tools/call')!({ method: 'tools/call', params: { name, arguments: args } }, {}) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
+  const handlers = (srv as any)._requestHandlers as Map<
+    string,
+    (req: unknown, extra: unknown) => unknown
+  >;
+  return handlers.get('tools/call')!(
+    { method: 'tools/call', params: { name, arguments: args } },
+    {},
+  ) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
 }
 
 describe('wyreup_chain audit [spec §#6]', () => {

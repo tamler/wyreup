@@ -19,7 +19,9 @@ export async function atomicPublish(
     if (!allowOverwrite && (s.isFile() || s.isDirectory())) {
       return `Target exists and allow_overwrite is false: ${target}`;
     }
-  } catch { /* ENOENT — fine */ }
+  } catch {
+    /* ENOENT — fine */
+  }
 
   await mkdir(dirname(target), { recursive: true });
   const tmp = `${target}.tmp.${process.pid}-${randomUUID().slice(0, 8)}`;

@@ -9,15 +9,7 @@ export const ocrSuspicious: ToolModule<Record<string, never>> = {
   description:
     'Reads the text in an image, then scans it for prompt-injection phrases, invisible characters, confusable glyphs, and mixed scripts. Run it before feeding a screenshot or photo to an AI.',
   category: 'inspect',
-  keywords: [
-    'ocr',
-    'suspicious',
-    'prompt injection',
-    'security',
-    'image',
-    'screenshot',
-    'scan',
-  ],
+  keywords: ['ocr', 'suspicious', 'prompt injection', 'security', 'image', 'screenshot', 'scan'],
 
   input: {
     accept: ['image/png', 'image/jpeg', 'image/webp'],
@@ -38,11 +30,7 @@ export const ocrSuspicious: ToolModule<Record<string, never>> = {
   defaults: {},
   paramSchema: {},
 
-  async run(
-    inputs: File[],
-    _params: Record<string, never>,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: Record<string, never>, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('ocr-suspicious accepts exactly one image.');
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Reading text from image' });
@@ -50,7 +38,11 @@ export const ocrSuspicious: ToolModule<Record<string, never>> = {
     const text = (await (Array.isArray(ocrOut) ? ocrOut[0]! : ocrOut).text()).trim();
     if (!text) throw new Error('No text found in the image to scan.');
 
-    ctx.onProgress({ stage: 'processing', percent: 85, message: 'Scanning for suspicious content' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 85,
+      message: 'Scanning for suspicious content',
+    });
     const result = analyzeSuspicious(text, { ...defaultTextSuspiciousParams });
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

@@ -1,6 +1,10 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { assertPdfPageBudget } from '../../lib/budget.js';
-import { analyzeSuspicious, type TextSuspiciousParams, type TextSuspiciousResult } from '../text-suspicious/index.js';
+import {
+  analyzeSuspicious,
+  type TextSuspiciousParams,
+  type TextSuspiciousResult,
+} from '../text-suspicious/index.js';
 
 export interface PdfSuspiciousParams extends TextSuspiciousParams {
   /** When true, return a per-page breakdown alongside the document-level verdict. */
@@ -105,9 +109,7 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
       });
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      const text = content.items
-        .map((item) => ('str' in item ? item.str ?? '' : ''))
-        .join(' ');
+      const text = content.items.map((item) => ('str' in item ? (item.str ?? '') : '')).join(' ');
       pageTexts.push(text);
     }
 
@@ -121,7 +123,10 @@ export const pdfSuspicious: ToolModule<PdfSuspiciousParams> = {
       document,
     };
     if (params.perPage) {
-      result.pages = pageTexts.map((t, i) => ({ page: i + 1, result: analyzeSuspicious(t, params) }));
+      result.pages = pageTexts.map((t, i) => ({
+        page: i + 1,
+        result: analyzeSuspicious(t, params),
+      }));
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

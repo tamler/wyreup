@@ -35,20 +35,10 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: ColorConverterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: ColorConverterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading color library' });
 
-    const {
-      parse,
-      formatHex,
-      formatRgb,
-      formatHsl,
-      converter,
-    } = await import('culori');
+    const { parse, formatHex, formatRgb, formatHsl, converter } = await import('culori');
 
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Converting color' });
 

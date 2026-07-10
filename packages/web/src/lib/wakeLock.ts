@@ -59,7 +59,9 @@ export async function acquireWakeLock(): Promise<void> {
 export function releaseWakeLock(): void {
   refCount = Math.max(0, refCount - 1);
   if (refCount === 0 && lock) {
-    void lock.release().catch(() => { /* ignore */ });
+    void lock.release().catch(() => {
+      /* ignore */
+    });
     lock = null;
   }
 }

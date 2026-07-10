@@ -14,7 +14,10 @@ function getRegistry() {
   return cachedRegistry;
 }
 
-export function validateToolbeltChain(chain: ToolbeltChain): { ok: boolean; unknownTools: string[] } {
+export function validateToolbeltChain(chain: ToolbeltChain): {
+  ok: boolean;
+  unknownTools: string[];
+} {
   const asChain: Chain = chain.steps.map((s) => ({ toolId: s.toolId, params: s.params }));
   const r = validateChain(asChain, getRegistry());
   return { ok: r.ok, unknownTools: r.unknownTools };
@@ -126,7 +129,11 @@ export function exportChainsJson(): string {
  * - Dedupes by id
  * - Newer updatedAt wins on conflict
  */
-export function importChainsJson(json: string): { added: number; updated: number; errors: string[] } {
+export function importChainsJson(json: string): {
+  added: number;
+  updated: number;
+  errors: string[];
+} {
   const errors: string[] = [];
   let imported: unknown;
   try {
@@ -149,7 +156,11 @@ export function importChainsJson(json: string): { added: number; updated: number
       continue;
     }
     const entry = item as Record<string, unknown>;
-    if (typeof entry.id !== 'string' || typeof entry.name !== 'string' || !Array.isArray(entry.steps)) {
+    if (
+      typeof entry.id !== 'string' ||
+      typeof entry.name !== 'string' ||
+      !Array.isArray(entry.steps)
+    ) {
       errors.push(`Skipped entry missing required fields (id, name, steps).`);
       continue;
     }

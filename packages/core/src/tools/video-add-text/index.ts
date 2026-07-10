@@ -58,10 +58,7 @@ export function positionToXY(position: TextPosition): { x: string; y: string } {
  * Backslashes must be escaped first, then single quotes, then colons.
  */
 export function escapeDrawtext(text: string): string {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/:/g, '\\:');
+  return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/:/g, '\\:');
 }
 
 /** Convert CSS hex color (#RRGGBB or #RGB) to ffmpeg color notation (0xRRGGBB). */
@@ -201,11 +198,7 @@ export const videoAddText: ToolModule<VideoAddTextParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoAddTextParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoAddTextParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     if (!params.text || params.text.trim() === '') {
@@ -235,17 +228,22 @@ export const videoAddText: ToolModule<VideoAddTextParams> = {
     const crf = params.crf ?? 23;
 
     await ff.exec([
-      '-i', inputName,
-      '-vf', vfFilter,
-      '-crf', String(crf),
-      '-preset', 'fast',
-      '-c:a', 'copy',
+      '-i',
+      inputName,
+      '-vf',
+      vfFilter,
+      '-crf',
+      String(crf),
+      '-preset',
+      'fast',
+      '-c:a',
+      'copy',
       outputName,
     ]);
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

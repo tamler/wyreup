@@ -22,10 +22,7 @@ export const docxToText: ToolModule<DocxToTextParams> = {
   keywords: ['docx', 'word', 'extract', 'text', 'office', 'mammoth'],
 
   input: {
-    accept: [
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      '.docx',
-    ],
+    accept: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', '.docx'],
     min: 1,
     max: 1,
     sizeLimit: 50 * 1024 * 1024,
@@ -61,11 +58,7 @@ export const docxToText: ToolModule<DocxToTextParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: DocxToTextParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: DocxToTextParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('docx-to-text accepts exactly one file.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -128,7 +121,5 @@ function htmlToTextWithHeadings(html: string, preserveParagraphs: boolean): stri
       parts.push(text);
     }
   }
-  return preserveParagraphs
-    ? parts.join('\n\n')
-    : parts.join(' ').replace(/\s+/g, ' ').trim();
+  return preserveParagraphs ? parts.join('\n\n') : parts.join(' ').replace(/\s+/g, ' ').trim();
 }

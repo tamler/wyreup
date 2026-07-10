@@ -10,14 +10,23 @@ export { defaultColorPaletteParams } from './types.js';
 // Works in both Node (@napi-rs/canvas) and browser (OffscreenCanvas / Canvas)
 // with no Buffer dependency. Returns up to `maxColors` dominant hex colors.
 
-interface Rgb { r: number; g: number; b: number }
+interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
 
 function toHex(c: Rgb): string {
   return '#' + [c.r, c.g, c.b].map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
 function componentRange(pixels: Rgb[]): 'r' | 'g' | 'b' {
-  let minR = 255, maxR = 0, minG = 255, maxG = 0, minB = 255, maxB = 0;
+  let minR = 255,
+    maxR = 0,
+    minG = 255,
+    maxG = 0,
+    minB = 255,
+    maxB = 0;
   for (const p of pixels) {
     if (p.r < minR) minR = p.r;
     if (p.r > maxR) maxR = p.r;
@@ -35,8 +44,14 @@ function componentRange(pixels: Rgb[]): 'r' | 'g' | 'b' {
 }
 
 function averageColor(pixels: Rgb[]): Rgb {
-  let r = 0, g = 0, b = 0;
-  for (const p of pixels) { r += p.r; g += p.g; b += p.b; }
+  let r = 0,
+    g = 0,
+    b = 0;
+  for (const p of pixels) {
+    r += p.r;
+    g += p.g;
+    b += p.b;
+  }
   const n = pixels.length;
   return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
 }
@@ -83,17 +98,25 @@ function extractPalette(data: Uint8ClampedArray, maxColors: number): string[] {
 // palette color by its HSL lightness and saturation into one of the six buckets.
 
 function rgbToHsl(c: Rgb): { h: number; s: number; l: number } {
-  const r = c.r / 255, g = c.g / 255, b = c.b / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const r = c.r / 255,
+    g = c.g / 255,
+    b = c.b / 255;
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
   const l = (max + min) / 2;
   if (max === min) return { h: 0, s: 0, l };
   const d = max - min;
   const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
   let h: number;
   switch (max) {
-    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-    case g: h = ((b - r) / d + 2) / 6; break;
-    default: h = ((r - g) / d + 4) / 6;
+    case r:
+      h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      break;
+    case g:
+      h = ((b - r) / d + 2) / 6;
+      break;
+    default:
+      h = ((r - g) / d + 4) / 6;
   }
   return { h, s, l };
 }
@@ -109,9 +132,12 @@ interface SwatchMap {
 
 function classifySwatches(hexColors: string[]): SwatchMap {
   const swatches: SwatchMap = {
-    vibrant: null, muted: null,
-    darkVibrant: null, darkMuted: null,
-    lightVibrant: null, lightMuted: null,
+    vibrant: null,
+    muted: null,
+    darkVibrant: null,
+    darkMuted: null,
+    lightVibrant: null,
+    lightMuted: null,
   };
 
   // Parse each hex color and pick a representative for each bucket.
@@ -164,11 +190,7 @@ export const colorPalette: ToolModule<ColorPaletteParams> = {
 
   defaults: { count: 5 },
 
-  async run(
-    inputs: File[],
-    params: ColorPaletteParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ColorPaletteParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const count = params.count ?? 5;

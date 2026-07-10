@@ -50,11 +50,7 @@ export const urlEncoder: ToolModule<UrlEncoderParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: UrlEncoderParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: UrlEncoderParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Processing URL' });
 
     const text = await inputs[0]!.text();

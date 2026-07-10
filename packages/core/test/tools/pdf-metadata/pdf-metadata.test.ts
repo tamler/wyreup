@@ -26,7 +26,11 @@ describe('pdf-metadata — run() mode: read', () => {
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/json');
 
-    const json = JSON.parse(await blob.text()) as { title: unknown; author: unknown; keywords: unknown[] };
+    const json = JSON.parse(await blob.text()) as {
+      title: unknown;
+      author: unknown;
+      keywords: unknown[];
+    };
     expect(json).toHaveProperty('title');
     expect(json).toHaveProperty('author');
     expect(json).toHaveProperty('keywords');
@@ -59,9 +63,9 @@ describe('pdf-metadata — run() mode: write', () => {
 
   it('throws if metadata is missing in write mode', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfMetadata.run([input], { mode: 'write' }, makeCtx()),
-    ).rejects.toThrow('metadata is required');
+    await expect(pdfMetadata.run([input], { mode: 'write' }, makeCtx())).rejects.toThrow(
+      'metadata is required',
+    );
   });
 });
 

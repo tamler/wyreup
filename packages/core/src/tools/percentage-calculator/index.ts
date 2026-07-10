@@ -23,7 +23,8 @@ function compute(params: PercentageCalculatorParams): PercentResult {
   switch (mode) {
     case 'percent-of': {
       // "value% of base"
-      if (base === undefined) return { valid: false, error: '"base" is required for percent-of mode' };
+      if (base === undefined)
+        return { valid: false, error: '"base" is required for percent-of mode' };
       const result = (value / 100) * base;
       return {
         valid: true,
@@ -36,7 +37,8 @@ function compute(params: PercentageCalculatorParams): PercentResult {
 
     case 'what-percent': {
       // "value is what % of base"
-      if (base === undefined) return { valid: false, error: '"base" is required for what-percent mode' };
+      if (base === undefined)
+        return { valid: false, error: '"base" is required for what-percent mode' };
       if (base === 0) return { valid: false, error: 'Base cannot be zero' };
       const result = (value / base) * 100;
       return {
@@ -50,7 +52,8 @@ function compute(params: PercentageCalculatorParams): PercentResult {
 
     case 'percent-change': {
       // percent change from value to base: (base - value) / value * 100
-      if (base === undefined) return { valid: false, error: '"base" is required for percent-change mode' };
+      if (base === undefined)
+        return { valid: false, error: '"base" is required for percent-change mode' };
       if (value === 0) return { valid: false, error: 'Original value cannot be zero' };
       const result = ((base - value) / value) * 100;
       const direction = result >= 0 ? 'increase' : 'decrease';
@@ -65,7 +68,8 @@ function compute(params: PercentageCalculatorParams): PercentResult {
 
     case 'increase-decrease': {
       // "value increased/decreased by percent%"
-      if (percent === undefined) return { valid: false, error: '"percent" is required for increase-decrease mode' };
+      if (percent === undefined)
+        return { valid: false, error: '"percent" is required for increase-decrease mode' };
       const result = value * (1 + percent / 100);
       const direction = percent >= 0 ? 'increased' : 'decreased';
       return {
@@ -86,7 +90,8 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
   id: 'percentage-calculator',
   slug: 'percentage-calculator',
   name: 'Percentage Calculator',
-  description: 'Calculate percentages: percent of a value, percent change, or apply a percentage increase/decrease.',
+  description:
+    'Calculate percentages: percent of a value, percent change, or apply a percentage increase/decrease.',
   category: 'create',
   keywords: ['percentage', 'percent', 'calculator', 'math', 'ratio', 'discount', 'change'],
 
@@ -113,7 +118,6 @@ export const percentageCalculator: ToolModule<PercentageCalculatorParams> = {
     },
   },
 
-   
   async run(
     _inputs: File[],
     params: PercentageCalculatorParams,

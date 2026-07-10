@@ -36,7 +36,8 @@ export const textEmbed: ToolModule<TextEmbedParams> = {
   id: 'text-embed',
   slug: 'text-embed',
   name: 'Text Embeddings',
-  description: 'Compute semantic embeddings and pairwise similarity for text files — runs on your device.',
+  description:
+    'Compute semantic embeddings and pairwise similarity for text files — runs on your device.',
   category: 'text',
   keywords: ['embed', 'embedding', 'semantic', 'similarity', 'sentence', 'vector', 'nlp', 'search'],
 
@@ -64,9 +65,12 @@ export const textEmbed: ToolModule<TextEmbedParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading embedding model' });
 
-    const pipe = await getPipeline(ctx, 'feature-extraction', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, 'feature-extraction', MODEL_ID, {
       dtype: 'q8',
-    }) as (input: string, options?: Record<string, unknown>) => Promise<{ data: Float32Array | number[] }>;
+    })) as (
+      input: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ data: Float32Array | number[] }>;
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -86,7 +90,11 @@ export const textEmbed: ToolModule<TextEmbedParams> = {
       embeddings.push(Array.from(result.data));
     }
 
-    ctx.onProgress({ stage: 'processing', percent: 85, message: 'Computing pairwise similarities' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 85,
+      message: 'Computing pairwise similarities',
+    });
 
     // Only compute pairwise if N <= 50 to avoid O(N²) explosion
     const pairwise: Array<{ a: number; b: number; cosine: number }> = [];

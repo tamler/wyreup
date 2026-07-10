@@ -18,9 +18,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const userTotal = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users`).first<{
     n: number;
   }>();
-  const signups7d = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM users WHERE created_at >= ?`,
-  )
+  const signups7d = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users WHERE created_at >= ?`)
     .bind(last7d)
     .first<{ n: number }>();
   const active7d = await env.DB.prepare(

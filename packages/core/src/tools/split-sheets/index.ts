@@ -10,9 +10,7 @@ import {
 
 export type SplitSheetsParams = Record<string, never>;
 
-const XLSX_ACCEPT = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
+const XLSX_ACCEPT = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
 
 export const splitSheets: ToolModule<SplitSheetsParams> = {
   id: 'split-sheets',
@@ -40,11 +38,7 @@ export const splitSheets: ToolModule<SplitSheetsParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: SplitSheetsParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: SplitSheetsParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { default: JSZip } = await import('jszip');

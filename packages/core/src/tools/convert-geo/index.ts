@@ -56,7 +56,10 @@ interface OgrFilePath {
 }
 
 interface GdalLike {
-  open(file: File | string): Promise<{ datasets: Array<{ pointer: number; path: string; type: string; info: object }>; errors: string[] }>;
+  open(file: File | string): Promise<{
+    datasets: Array<{ pointer: number; path: string; type: string; info: object }>;
+    errors: string[];
+  }>;
   ogr2ogr(dataset: unknown, options: string[], outName: string): Promise<OgrFilePath>;
   getFileBytes(p: string): Promise<Uint8Array>;
   close(dataset: unknown): Promise<void>;
@@ -119,7 +122,7 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
   description:
     'Convert between Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, and CSV. Powered by GDAL/OGR.',
   llmDescription:
-    'Convert between any pair of vector geospatial formats: Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, CSV. Powered by GDAL/OGR via WebAssembly (~40 MB lazy download on first use). Use when the lighter-weight format-specific tools (kml-to-geojson, gpx-to-kml, etc.) don\'t cover the user\'s pair, or when the user needs to round-trip through GDAL for projection / dataset metadata fidelity. Set the `to` param to the target format name.',
+    "Convert between any pair of vector geospatial formats: Shapefile, GeoJSON, KML, GPX, GML, GeoPackage, FlatGeobuf, TopoJSON, CSV. Powered by GDAL/OGR via WebAssembly (~40 MB lazy download on first use). Use when the lighter-weight format-specific tools (kml-to-geojson, gpx-to-kml, etc.) don't cover the user's pair, or when the user needs to round-trip through GDAL for projection / dataset metadata fidelity. Set the `to` param to the target format name.",
   category: 'convert',
   categories: ['geo'],
   keywords: [
@@ -195,17 +198,17 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ConvertGeoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ConvertGeoParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const target = FORMATS[params.to];
     if (!target) throw new Error(`Unsupported target format: ${String(params.to)}`);
 
-    ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading GDAL (~40 MB on first run)' });
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 10,
+      message: 'Loading GDAL (~40 MB on first run)',
+    });
     const cached = ctx.cache.get('gdal3') as GdalLike | undefined;
     const gdal = cached ?? (await loadGdal());
     if (!cached) ctx.cache.set('gdal3', gdal);

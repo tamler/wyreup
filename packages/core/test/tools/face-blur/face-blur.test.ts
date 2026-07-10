@@ -14,7 +14,12 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { faceBlur, expandBox, blurRegion, defaultFaceBlurParams } from '../../../src/tools/face-blur/index.js';
+import {
+  faceBlur,
+  expandBox,
+  blurRegion,
+  defaultFaceBlurParams,
+} from '../../../src/tools/face-blur/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
 import { createCanvas } from '../../../src/lib/canvas.js';
 
@@ -88,10 +93,10 @@ describe('face-blur — expandBox()', () => {
     const box = { originX: 50, originY: 50, width: 100, height: 100 };
     const result = expandBox(box, 0.2, 500, 500);
     // padX = 100 * 0.2 = 20, padY = 100 * 0.2 = 20
-    expect(result.x).toBe(30);   // 50 - 20
-    expect(result.y).toBe(30);   // 50 - 20
-    expect(result.w).toBe(140);  // 100 + 2*20
-    expect(result.h).toBe(140);  // 100 + 2*20
+    expect(result.x).toBe(30); // 50 - 20
+    expect(result.y).toBe(30); // 50 - 20
+    expect(result.w).toBe(140); // 100 + 2*20
+    expect(result.h).toBe(140); // 100 + 2*20
   });
 
   it('clamps x to 0 when box is near left edge', () => {
@@ -130,7 +135,7 @@ describe('face-blur — expandBox()', () => {
 
 describe('face-blur — blurRegion()', () => {
   it('runs without throwing for ellipse shape', async () => {
-    const canvas = await createCanvas(200, 200) as unknown as {
+    const canvas = (await createCanvas(200, 200)) as unknown as {
       width: number;
       height: number;
       getContext(t: '2d'): {
@@ -138,7 +143,15 @@ describe('face-blur — blurRegion()', () => {
         save(): void;
         restore(): void;
         beginPath(): void;
-        ellipse(cx: number, cy: number, rx: number, ry: number, r: number, s: number, e: number): void;
+        ellipse(
+          cx: number,
+          cy: number,
+          rx: number,
+          ry: number,
+          r: number,
+          s: number,
+          e: number,
+        ): void;
         rect(x: number, y: number, w: number, h: number): void;
         clip(): void;
         filter?: string;
@@ -146,10 +159,20 @@ describe('face-blur — blurRegion()', () => {
     };
     const ctx = canvas.getContext('2d');
     // Fill with a solid color so we have something to blur
-    (ctx as unknown as { fillStyle: string; fillRect(x: number, y: number, w: number, h: number): void }).fillStyle = '#ff0000';
-    (ctx as unknown as { fillRect(x: number, y: number, w: number, h: number): void }).fillRect(0, 0, 200, 200);
+    (
+      ctx as unknown as {
+        fillStyle: string;
+        fillRect(x: number, y: number, w: number, h: number): void;
+      }
+    ).fillStyle = '#ff0000';
+    (ctx as unknown as { fillRect(x: number, y: number, w: number, h: number): void }).fillRect(
+      0,
+      0,
+      200,
+      200,
+    );
 
-    const blurCanvas = await createCanvas(200, 200) as unknown as {
+    const blurCanvas = (await createCanvas(200, 200)) as unknown as {
       width: number;
       height: number;
       getContext(t: '2d'): { filter?: string; drawImage(src: unknown, x: number, y: number): void };
@@ -170,7 +193,7 @@ describe('face-blur — blurRegion()', () => {
   });
 
   it('runs without throwing for rectangle shape', async () => {
-    const canvas = await createCanvas(200, 200) as unknown as {
+    const canvas = (await createCanvas(200, 200)) as unknown as {
       width: number;
       height: number;
       getContext(t: '2d'): {
@@ -178,14 +201,22 @@ describe('face-blur — blurRegion()', () => {
         save(): void;
         restore(): void;
         beginPath(): void;
-        ellipse(cx: number, cy: number, rx: number, ry: number, r: number, s: number, e: number): void;
+        ellipse(
+          cx: number,
+          cy: number,
+          rx: number,
+          ry: number,
+          r: number,
+          s: number,
+          e: number,
+        ): void;
         rect(x: number, y: number, w: number, h: number): void;
         clip(): void;
         filter?: string;
       };
     };
     const ctx = canvas.getContext('2d');
-    const blurCanvas = await createCanvas(200, 200) as unknown as {
+    const blurCanvas = (await createCanvas(200, 200)) as unknown as {
       width: number;
       height: number;
       getContext(t: '2d'): { filter?: string; drawImage(src: unknown, x: number, y: number): void };

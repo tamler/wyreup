@@ -20,12 +20,7 @@ export const defaultImageCaptionParams: ImageCaptionParams = {
 // validated the install-group + first-load UX with this model.
 const MODEL_ID = 'Xenova/vit-gpt2-image-captioning';
 
-const ACCEPTED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/bmp',
-];
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
 
 export const imageCaption: ToolModule<ImageCaptionParams> = {
   id: 'image-caption',
@@ -35,9 +30,7 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
     'Generate a plain-English description of any image. ' +
     '~100 MB model downloads on first use, then works offline.',
   category: 'export',
-  keywords: [
-    'caption', 'describe', 'image', 'alt-text', 'accessibility', 'vlm', 'vision',
-  ],
+  keywords: ['caption', 'describe', 'image', 'alt-text', 'accessibility', 'vlm', 'vision'],
 
   input: {
     accept: ACCEPTED_MIME_TYPES,
@@ -80,20 +73,14 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ImageCaptionParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ImageCaptionParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {
       throw new Error('image-caption accepts exactly one image file.');
     }
     const input = inputs[0]!;
 
     if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
-      throw new Error(
-        'image-caption requires a browser environment (URL.createObjectURL).',
-      );
+      throw new Error('image-caption requires a browser environment (URL.createObjectURL).');
     }
 
     if (ctx.signal.aborted) throw new Error('Aborted');
@@ -104,11 +91,7 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
       message: 'Loading captioning model (~100 MB on first use)',
     });
 
-    const pipe = await getPipeline(
-      ctx,
-      'image-to-text',
-      MODEL_ID,
-    ) as (
+    const pipe = (await getPipeline(ctx, 'image-to-text', MODEL_ID)) as (
       image: string,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ generated_text: string }>>;
@@ -131,9 +114,7 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const caption = Array.isArray(result)
-      ? result[0]?.generated_text?.trim() ?? ''
-      : '';
+    const caption = Array.isArray(result) ? (result[0]?.generated_text?.trim() ?? '') : '';
     if (!caption) {
       throw new Error('No caption generated.');
     }

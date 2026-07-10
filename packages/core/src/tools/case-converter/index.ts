@@ -29,22 +29,26 @@ function convertCase(text: string, targetCase: CaseConverterParams['case']): str
       const words = toWords(text);
       return words
         .map((w, i) =>
-          i === 0
-            ? w.toLowerCase()
-            : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+          i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
         )
         .join('');
     }
     case 'snake':
-      return toWords(text).map((w) => w.toLowerCase()).join('_');
+      return toWords(text)
+        .map((w) => w.toLowerCase())
+        .join('_');
     case 'kebab':
-      return toWords(text).map((w) => w.toLowerCase()).join('-');
+      return toWords(text)
+        .map((w) => w.toLowerCase())
+        .join('-');
     case 'pascal':
       return toWords(text)
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
         .join('');
     case 'constant':
-      return toWords(text).map((w) => w.toUpperCase()).join('_');
+      return toWords(text)
+        .map((w) => w.toUpperCase())
+        .join('_');
     default:
       throw new Error(`Unknown case: ${String(targetCase)}`);
   }
@@ -94,11 +98,7 @@ export const caseConverter: ToolModule<CaseConverterParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CaseConverterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CaseConverterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Converting case' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

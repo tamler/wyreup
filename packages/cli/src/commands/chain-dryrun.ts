@@ -157,7 +157,7 @@ export function buildDryRun(chain: Chain, registry: ToolRegistry): DryRunResult 
 
   if (!mimeFlowOk) {
     lines.push('');
-    lines.push('⚠ At least one step rejects the previous step\'s output MIME.');
+    lines.push("⚠ At least one step rejects the previous step's output MIME.");
     lines.push('  The chain may still run if the data shape matches; the warning is advisory.');
   }
 

@@ -31,7 +31,12 @@ export interface LicenseKeyResult {
 const ALPHABET_FULL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const ALPHABET_UNAMBIGUOUS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
-function randomKey(groupSize: number, groupCount: number, separator: string, alphabet: string): string {
+function randomKey(
+  groupSize: number,
+  groupCount: number,
+  separator: string,
+  alphabet: string,
+): string {
   const totalChars = groupSize * groupCount;
   const len = alphabet.length;
   const maxValid = 256 - (256 % len);
@@ -129,7 +134,8 @@ export const licenseKey: ToolModule<LicenseKeyParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Generating keys' });
     const keys: string[] = [];
-    for (let i = 0; i < count; i++) keys.push(randomKey(groupSize, groupCount, separator, alphabet));
+    for (let i = 0; i < count; i++)
+      keys.push(randomKey(groupSize, groupCount, separator, alphabet));
 
     const result: LicenseKeyResult = {
       groupSize,

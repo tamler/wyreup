@@ -35,11 +35,7 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
     pages: [1],
   },
 
-  async run(
-    inputs: File[],
-    params: PdfExtractPagesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfExtractPagesParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const pages = params.pages;
@@ -63,7 +59,10 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
 
     const dest = await PDFDocument.create();
     // copyPages expects 0-indexed
-    const copied = await dest.copyPages(src, pageNumbers.map((n) => n - 1));
+    const copied = await dest.copyPages(
+      src,
+      pageNumbers.map((n) => n - 1),
+    );
     for (const page of copied) {
       dest.addPage(page);
     }

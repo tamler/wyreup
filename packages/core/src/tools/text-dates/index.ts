@@ -55,11 +55,7 @@ export const textDates: ToolModule<TextDatesParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TextDatesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TextDatesParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-dates accepts exactly one input.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -73,9 +69,7 @@ export const textDates: ToolModule<TextDatesParams> = {
     // Base compromise tags dates with #Date; the full dates plugin would give
     // us .json({ dates: true }), but it's a separate dep. The Date-tagged
     // matches catch the common forms ("March 5", "2024-05-17", "next Friday").
-    const raw = (doc.match('#Date+').out('array') as string[])
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const raw = (doc.match('#Date+').out('array') as string[]).map((s) => s.trim()).filter(Boolean);
 
     const normalize = params.normalize !== false;
     const seen = new Set<string>();

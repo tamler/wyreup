@@ -17,7 +17,8 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
   id: 'compress-video',
   slug: 'compress-video',
   name: 'Compress Video',
-  description: 'Reduce video file size using H.264 encoding. Higher CRF = smaller file, lower quality.',
+  description:
+    'Reduce video file size using H.264 encoding. Higher CRF = smaller file, lower quality.',
   category: 'media',
   keywords: ['video', 'compress', 'reduce', 'size', 'h264', 'mp4', 'crf'],
 
@@ -61,11 +62,7 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CompressVideoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CompressVideoParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -91,11 +88,16 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     const preset = params.preset ?? 'fast';
 
     const args = [
-      '-i', inputName,
-      '-vcodec', 'libx264',
-      '-crf', String(crf),
-      '-preset', preset,
-      '-acodec', 'copy',
+      '-i',
+      inputName,
+      '-vcodec',
+      'libx264',
+      '-crf',
+      String(crf),
+      '-preset',
+      preset,
+      '-acodec',
+      'copy',
       outputName,
     ];
 
@@ -103,9 +105,7 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     const output = await ff.readFile(outputName);
     await ff.deleteFile(inputName);
     await ff.deleteFile(outputName);
-    const outputBytes = typeof output === 'string'
-      ? new TextEncoder().encode(output)
-      : (output);
+    const outputBytes = typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: 'video/mp4' })];

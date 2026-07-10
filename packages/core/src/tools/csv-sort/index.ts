@@ -112,7 +112,8 @@ export const csvSort: ToolModule<CsvSortParams> = {
 
     const text = await inputs[0]!.text();
     const hasHeader = params.hasHeader ?? true;
-    const delimiter = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
 
     ctx.onProgress({ stage: 'processing', percent: 35, message: 'Parsing CSV' });
     const parsed = Papa.parse<string[]>(text, { header: false, delimiter, skipEmptyLines: true });
@@ -127,9 +128,7 @@ export const csvSort: ToolModule<CsvSortParams> = {
       .map((s) => s.trim())
       .filter(Boolean);
     const keyIndices =
-      keyNames.length > 0
-        ? keyNames.map((n) => resolveColumn(n, headerRow, hasHeader))
-        : [0];
+      keyNames.length > 0 ? keyNames.map((n) => resolveColumn(n, headerRow, hasHeader)) : [0];
 
     const order = params.order ?? 'asc';
     const numeric = params.numeric ?? false;

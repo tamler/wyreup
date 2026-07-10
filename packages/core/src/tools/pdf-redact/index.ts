@@ -54,11 +54,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     color: [0, 0, 0],
   },
 
-  async run(
-    inputs: File[],
-    params: PdfRedactParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfRedactParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { rectangles, color = [0, 0, 0] } = params;

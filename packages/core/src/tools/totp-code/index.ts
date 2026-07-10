@@ -102,7 +102,17 @@ export const totpCode: ToolModule<TotpCodeParams> = {
   description:
     'Generate the current RFC 6238 TOTP code from a base32 secret. Compatible with Google Authenticator, Authy, 1Password, and the rest. Nothing leaves your device.',
   category: 'inspect',
-  keywords: ['totp', 'otp', '2fa', 'auth', 'mfa', 'authenticator', 'rfc6238', 'rfc4226', 'one-time'],
+  keywords: [
+    'totp',
+    'otp',
+    '2fa',
+    'auth',
+    'mfa',
+    'authenticator',
+    'rfc6238',
+    'rfc4226',
+    'one-time',
+  ],
 
   input: {
     accept: ['*/*'],

@@ -55,11 +55,7 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TextToSpeechProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TextToSpeechProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-to-speech-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

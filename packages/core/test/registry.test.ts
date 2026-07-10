@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  createRegistry,
-  couldFlowTo,
-  type ToolRegistry,
-} from '../src/registry.js';
+import { createRegistry, couldFlowTo, type ToolRegistry } from '../src/registry.js';
 import type { ToolModule } from '../src/types.js';
 
 function makeTool(overrides: Partial<ToolModule> = {}): ToolModule {

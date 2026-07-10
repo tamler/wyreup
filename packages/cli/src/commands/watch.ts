@@ -65,7 +65,8 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   if (exactId) return serializeChain(exactId.steps);
   const exactName = chains.filter((c) => c.name.toLowerCase() === needle);
   if (exactName.length === 1) return serializeChain(exactName[0]!.steps);
-  if (exactName.length > 1) throw new Error(`Multiple chains named "${nameOrId}" in toolbelt file.`);
+  if (exactName.length > 1)
+    throw new Error(`Multiple chains named "${nameOrId}" in toolbelt file.`);
   const partial = chains.filter((c) => c.name.toLowerCase().includes(needle));
   if (partial.length === 1) return serializeChain(partial[0]!.steps);
   throw new Error(`No unique chain matching "${nameOrId}" in ${path}.`);
@@ -83,9 +84,18 @@ function isSystemPath(absPath: string): boolean {
   const blocked = [
     '/',
     home,
-    '/etc', '/usr', '/var', '/bin', '/sbin',
-    '/System', '/Library', '/private', '/Applications',
-    'C:\\Windows', 'C:\\Program Files', 'C:\\Program Files (x86)',
+    '/etc',
+    '/usr',
+    '/var',
+    '/bin',
+    '/sbin',
+    '/System',
+    '/Library',
+    '/private',
+    '/Applications',
+    'C:\\Windows',
+    'C:\\Program Files',
+    'C:\\Program Files (x86)',
   ];
   for (const b of blocked) {
     // Exact match OR `b` followed by a path separator (don't block /etcd because of /etc)
@@ -151,10 +161,7 @@ class WorkQueue {
 
 // ──── runner ──────────────────────────────────────────────────────────────────
 
-export async function executeWatch(
-  watchPath: string,
-  opts: WatchOptions,
-): Promise<void> {
+export async function executeWatch(watchPath: string, opts: WatchOptions): Promise<void> {
   // Resolve chain
   let rawSteps = '';
   if (opts.fromKit) {
@@ -170,7 +177,9 @@ export async function executeWatch(
   }
 
   if (!rawSteps.trim()) {
-    process.stderr.write('Provide --steps "tool1|tool2", --from-url <url>, or --from-kit <kit.json> --name <chain-name>.\n');
+    process.stderr.write(
+      'Provide --steps "tool1|tool2", --from-url <url>, or --from-kit <kit.json> --name <chain-name>.\n',
+    );
     process.exit(1);
   }
 
@@ -207,7 +216,7 @@ export async function executeWatch(
   if (isSystemPath(absWatch) && !opts.allowSystem) {
     process.stderr.write(
       `Refusing to watch ${absWatch} — looks like a system or home directory.\n` +
-      `Pass --allow-system to override (you almost certainly don't want to).\n`,
+        `Pass --allow-system to override (you almost certainly don't want to).\n`,
     );
     process.exit(1);
   }
@@ -255,9 +264,7 @@ export async function executeWatch(
   // Validate --max-files. parseInt of garbage returns NaN; treat any
   // non-positive number as "no limit" so we don't immediately exit.
   const maxFiles =
-    opts.maxFiles !== undefined &&
-    Number.isFinite(opts.maxFiles) &&
-    opts.maxFiles > 0
+    opts.maxFiles !== undefined && Number.isFinite(opts.maxFiles) && opts.maxFiles > 0
       ? Math.floor(opts.maxFiles)
       : undefined;
 
@@ -287,7 +294,9 @@ export async function executeWatch(
     process.exit(0);
   };
 
-  const triggerShutdown = (): void => { void shutdown(); };
+  const triggerShutdown = (): void => {
+    void shutdown();
+  };
 
   // ──── handle one file event ────────────────────────────────────────────────
 
@@ -305,7 +314,10 @@ export async function executeWatch(
     const name = basename(absPath);
 
     // Dotfiles (incl. .DS_Store, .git/*, .lock) are skipped.
-    if (name.startsWith('.')) { skipped++; return; }
+    if (name.startsWith('.')) {
+      skipped++;
+      return;
+    }
 
     const mime = inferMimeFromPath(absPath);
     if (!mimeMatches(mime, firstStepAccept)) {
@@ -329,7 +341,9 @@ export async function executeWatch(
           onProgress: opts.verbose
             ? (p) => {
                 const pct = p.percent !== undefined ? ` ${p.percent}%` : '';
-                process.stderr.write(`[watch] ${name} [${p.stage}]${pct}${p.message ? ' ' + p.message : ''}\n`);
+                process.stderr.write(
+                  `[watch] ${name} [${p.stage}]${pct}${p.message ? ' ' + p.message : ''}\n`,
+                );
               }
             : () => {},
           signal: ac.signal,
@@ -345,7 +359,11 @@ export async function executeWatch(
         const baseStem = name.replace(/\.[^.]+$/, '') || name;
         const outPath = join(absOut, `${baseStem}${ext}`);
 
-        const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), true);
+        const writeErr = await atomicPublish(
+          outPath,
+          new Uint8Array(await blob.arrayBuffer()),
+          true,
+        );
         if (writeErr) throw new Error(writeErr);
         markWritten(outPath);
 
@@ -373,7 +391,8 @@ export async function executeWatch(
   log(`outputs: ${absOut}/`);
   log(`concurrency: ${concurrency}`);
   log(`accepts: ${firstStepAccept.join(', ') || '*/*'}`);
-  if (maxFiles !== undefined) log(`max files: ${String(maxFiles)} (will exit after that many runs)`);
+  if (maxFiles !== undefined)
+    log(`max files: ${String(maxFiles)} (will exit after that many runs)`);
   log(`Ctrl-C to stop.`);
 
   const watcher = chokidar.watch(absWatch, {
@@ -391,7 +410,9 @@ export async function executeWatch(
   });
   watcherRef.current = watcher;
 
-  watcher.on('add', (path) => { handleFile(path); });
+  watcher.on('add', (path) => {
+    handleFile(path);
+  });
 
   watcher.on('error', (err) => {
     log(`watcher error: ${err instanceof Error ? err.message : String(err)}`);
@@ -404,6 +425,10 @@ export async function executeWatch(
     await shutdown();
   };
 
-  process.on('SIGINT', () => { void sigShutdown(); });
-  process.on('SIGTERM', () => { void sigShutdown(); });
+  process.on('SIGINT', () => {
+    void sigShutdown();
+  });
+  process.on('SIGTERM', () => {
+    void sigShutdown();
+  });
 }

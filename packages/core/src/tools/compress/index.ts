@@ -45,11 +45,7 @@ export const compress: ToolModule<CompressParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CompressParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CompressParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { quality, targetFormat } = params;
     const outputs: Blob[] = [];
 

@@ -21,10 +21,15 @@ describe('MCP capability annotations [spec §#2]', () => {
     const srv = await createWyreupMcpServer();
     // The MCP SDK Protocol stores handlers in _requestHandlers (private).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    const handlers = (srv as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
+    const handlers = (srv as any)._requestHandlers as Map<
+      string,
+      (req: unknown, extra: unknown) => unknown
+    >;
     const handler = handlers.get('tools/list');
     if (!handler) throw new Error('No tools/list handler');
-    return handler({ method: 'tools/list', params: {} }, {}) as Promise<{ tools: Array<{ name: string; annotations?: Record<string, unknown> }> }>;
+    return handler({ method: 'tools/list', params: {} }, {}) as Promise<{
+      tools: Array<{ name: string; annotations?: Record<string, unknown> }>;
+    }>;
   }
 
   it('every tool exposes all four annotations', async () => {

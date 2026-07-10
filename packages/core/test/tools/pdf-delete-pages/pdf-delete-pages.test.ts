@@ -44,22 +44,20 @@ describe('pdf-delete-pages — run()', () => {
 
   it('throws if deleting all pages', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
-    await expect(
-      pdfDeletePages.run([input], { pages: ['1-3'] }, makeCtx()),
-    ).rejects.toThrow('Cannot delete all pages');
+    await expect(pdfDeletePages.run([input], { pages: ['1-3'] }, makeCtx())).rejects.toThrow(
+      'Cannot delete all pages',
+    );
   });
 
   it('throws for empty pages array', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfDeletePages.run([input], { pages: [] }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(pdfDeletePages.run([input], { pages: [] }, makeCtx())).rejects.toThrow();
   });
 
   it('respects abort signal', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfDeletePages.run([input], { pages: [] }, makeCtx(true)),
-    ).rejects.toThrow('Aborted');
+    await expect(pdfDeletePages.run([input], { pages: [] }, makeCtx(true))).rejects.toThrow(
+      'Aborted',
+    );
   });
 });

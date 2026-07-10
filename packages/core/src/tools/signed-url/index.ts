@@ -46,7 +46,11 @@ function toHex(bytes: Uint8Array): string {
   return s;
 }
 
-async function hmacHex(secret: string, message: string, algorithm: SignedUrlAlgorithm): Promise<string> {
+async function hmacHex(
+  secret: string,
+  message: string,
+  algorithm: SignedUrlAlgorithm,
+): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -100,7 +104,7 @@ export const signedUrl: ToolModule<SignedUrlParams> = {
   slug: 'signed-url',
   name: 'Signed URL',
   description:
-    'Generate or verify an HMAC-signed URL (S3-presign style). Combines url-parse + hmac — append a signature and optional expiry, verify by recomputing. Canonicalized so query-param order doesn\'t change the signature.',
+    "Generate or verify an HMAC-signed URL (S3-presign style). Combines url-parse + hmac — append a signature and optional expiry, verify by recomputing. Canonicalized so query-param order doesn't change the signature.",
   category: 'inspect',
   keywords: ['signed', 'url', 'presigned', 'hmac', 's3', 'token', 'expiry', 'auth'],
 
@@ -191,7 +195,11 @@ export const signedUrl: ToolModule<SignedUrlParams> = {
       }
       url.searchParams.delete(signatureParam);
       ctx.onProgress({ stage: 'processing', percent: 60, message: 'Signing' });
-      const signature = await hmacHex(secret, canonicalSigningInput(url, signatureParam), algorithm);
+      const signature = await hmacHex(
+        secret,
+        canonicalSigningInput(url, signatureParam),
+        algorithm,
+      );
       url.searchParams.set(signatureParam, signature);
       const result: SignedUrlResult = { mode, url: url.href, signature };
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

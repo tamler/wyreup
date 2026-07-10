@@ -63,11 +63,7 @@ describe('pdf-crop — run()', () => {
   it('throws for out-of-bounds page reference in per-page mode', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
     await expect(
-      pdfCrop.run(
-        [input],
-        { box: [{ page: 99, x: 0, y: 0, width: 100, height: 100 }] },
-        makeCtx(),
-      ),
+      pdfCrop.run([input], { box: [{ page: 99, x: 0, y: 0, width: 100, height: 100 }] }, makeCtx()),
     ).rejects.toThrow();
   });
 });

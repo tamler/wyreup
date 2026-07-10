@@ -36,7 +36,9 @@ function tryDispose(pipe: unknown): void {
       const result = (maybe as { dispose: () => unknown }).dispose();
       if (result && typeof (result as Promise<unknown>).then === 'function') {
         // Fire-and-forget; don't block the caller.
-        void (result as Promise<unknown>).catch(() => { /* ignore */ });
+        void (result as Promise<unknown>).catch(() => {
+          /* ignore */
+        });
       }
     } catch {
       /* ignore */
@@ -143,8 +145,7 @@ export async function getPipeline(
     progress_callback: (p: any) => {
       /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
       const file: string = typeof p.file === 'string' ? p.file : '';
-      const loaded: number =
-        typeof p.loaded === 'number' ? p.loaded : 0;
+      const loaded: number = typeof p.loaded === 'number' ? p.loaded : 0;
       const total: number = typeof p.total === 'number' ? p.total : 0;
 
       // 'progress' / 'downloading' events carry byte counts. Update our

@@ -32,10 +32,17 @@ export function assertPdfPageBudget(numPages: number, budget: ToolBudget | undef
 
 /** Same shape for the audio/video duration check.
  *  Caller passes the duration in seconds (after probing the file). */
-export function assertDurationBudget(durationSeconds: number, budget: ToolBudget | undefined): void {
+export function assertDurationBudget(
+  durationSeconds: number,
+  budget: ToolBudget | undefined,
+): void {
   if (!budget?.maxDuration) return;
   if (durationSeconds > budget.maxDuration) {
-    throw new BudgetExceededError('duration', `${durationSeconds.toFixed(1)}s`, `${budget.maxDuration}s`);
+    throw new BudgetExceededError(
+      'duration',
+      `${durationSeconds.toFixed(1)}s`,
+      `${budget.maxDuration}s`,
+    );
   }
 }
 

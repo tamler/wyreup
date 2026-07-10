@@ -14,12 +14,13 @@ function makeCtx(): ToolRunContext {
 
 async function run(token: string): Promise<JwtDecoderResult> {
   const file = new File([token], 'token.txt', { type: 'text/plain' });
-  const [out] = await jwtDecoder.run([file], {}, makeCtx()) as Blob[];
+  const [out] = (await jwtDecoder.run([file], {}, makeCtx())) as Blob[];
   return JSON.parse(await out!.text()) as JwtDecoderResult;
 }
 
 // A real HS256 JWT: header={"alg":"HS256","typ":"JWT"} payload={"sub":"1234567890","name":"John Doe","iat":1516239022}
-const VALID_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+const VALID_JWT =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
 describe('jwt-decoder — metadata', () => {
   it('has id jwt-decoder', () => {

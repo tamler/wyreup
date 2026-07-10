@@ -23,7 +23,9 @@ describe('text-translate — metadata', () => {
   });
 
   it('has its own installGroup nlp-translate', () => {
-    expect((textTranslate as unknown as { installGroup: string }).installGroup).toBe('nlp-translate');
+    expect((textTranslate as unknown as { installGroup: string }).installGroup).toBe(
+      'nlp-translate',
+    );
   });
 
   it('defaults sourceLang to en', () => {

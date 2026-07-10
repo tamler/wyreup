@@ -30,11 +30,7 @@ describe('diff-apply — run()', () => {
     const src = 'line one\nline two\nline three\n';
     const diff = '@@ -1,3 +1,3 @@\n line one\n-line two\n+LINE TWO\n line three\n';
     const file = new File([src], 'f.txt', { type: 'text/plain' });
-    const [patched, statsBlob] = (await diffApply.run(
-      [file],
-      { diff },
-      makeCtx(),
-    )) as Blob[];
+    const [patched, statsBlob] = (await diffApply.run([file], { diff }, makeCtx())) as Blob[];
     expect(await patched!.text()).toBe('line one\nLINE TWO\nline three\n');
     const stats = JSON.parse(await statsBlob!.text()) as {
       hunksApplied: number;
@@ -58,22 +54,18 @@ describe('diff-apply — run()', () => {
     const src = 'alpha\nbeta\ngamma\n';
     const diff = '@@ -1,3 +1,3 @@\n alpha\n-WRONG\n+new\n gamma\n';
     const file = new File([src], 'f.txt', { type: 'text/plain' });
-    await expect(diffApply.run([file], { diff }, makeCtx())).rejects.toThrow(
-      /doesn't apply/,
-    );
+    await expect(diffApply.run([file], { diff }, makeCtx())).rejects.toThrow(/doesn't apply/);
   });
 
   it('rejects an empty diff', async () => {
     const file = new File(['x\n'], 'f.txt', { type: 'text/plain' });
-    await expect(diffApply.run([file], { diff: '' }, makeCtx())).rejects.toThrow(
-      'unified diff',
-    );
+    await expect(diffApply.run([file], { diff: '' }, makeCtx())).rejects.toThrow('unified diff');
   });
 
   it('rejects a diff with no hunks', async () => {
     const file = new File(['x\n'], 'f.txt', { type: 'text/plain' });
-    await expect(
-      diffApply.run([file], { diff: '--- a\n+++ b\n' }, makeCtx()),
-    ).rejects.toThrow('No @@ hunks');
+    await expect(diffApply.run([file], { diff: '--- a\n+++ b\n' }, makeCtx())).rejects.toThrow(
+      'No @@ hunks',
+    );
   });
 });

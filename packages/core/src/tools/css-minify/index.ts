@@ -89,7 +89,8 @@ export const cssMinify: ToolModule<CssMinifyParams> = {
     const result: CssMinifyResult = {
       bytesIn,
       bytesOut,
-      reductionPercent: bytesIn > 0 ? Math.round(((bytesIn - bytesOut) / bytesIn) * 10000) / 100 : 0,
+      reductionPercent:
+        bytesIn > 0 ? Math.round(((bytesIn - bytesOut) / bytesIn) * 10000) / 100 : 0,
       warnings: output.warnings ?? [],
       errors: output.errors ?? [],
     };

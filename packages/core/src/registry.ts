@@ -33,9 +33,7 @@ export function createRegistry(tools: ToolModule[]): ToolRegistry {
     // A tool surfaces under its primary `category` plus any secondary
     // `categories[]` membership (e.g. trim-media is 'media' + 'audio'), so
     // CLI/MCP category listings match the web catalog's chip filter.
-    return tools.filter(
-      (t) => t.category === category || (t.categories ?? []).includes(category),
-    );
+    return tools.filter((t) => t.category === category || (t.categories ?? []).includes(category));
   }
 
   function toolsForFiles(files: File[]): ToolModule[] {
@@ -72,10 +70,7 @@ export function createRegistry(tools: ToolModule[]): ToolRegistry {
  * - File count must be between min and max (inclusive).
  * - Every file's MIME type must match one of the accept patterns.
  */
-function filesMatchInput(
-  files: File[],
-  input: ToolModule['input'],
-): boolean {
+function filesMatchInput(files: File[], input: ToolModule['input']): boolean {
   if (files.length < input.min) return false;
   if (input.max !== undefined && files.length > input.max) return false;
   return files.every((f) => input.accept.some((p) => mimeMatches(f.type, p)));

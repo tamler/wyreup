@@ -11,9 +11,10 @@ export const defaultReplaceAudioParams: ReplaceAudioParams = {};
  * Order-independent: the user may drop them in either order. Throws unless
  * there is exactly one video and one audio file.
  */
-export function pickVideoAudio(
-  files: ReadonlyArray<{ type: string }>,
-): { videoIndex: number; audioIndex: number } {
+export function pickVideoAudio(files: ReadonlyArray<{ type: string }>): {
+  videoIndex: number;
+  audioIndex: number;
+} {
   const videoIdx = files.findIndex((f) => f.type.startsWith('video/'));
   const audioIdx = files.findIndex((f) => f.type.startsWith('audio/'));
   if (videoIdx === -1) throw new Error('Expected one video file');
@@ -34,12 +35,18 @@ export function buildReplaceAudioArgs(
   outputName: string,
 ): string[] {
   return [
-    '-i', videoName,
-    '-i', audioName,
-    '-map', '0:v:0',
-    '-map', '1:a:0',
-    '-c:v', 'copy',
-    '-c:a', 'aac',
+    '-i',
+    videoName,
+    '-i',
+    audioName,
+    '-map',
+    '0:v:0',
+    '-map',
+    '1:a:0',
+    '-c:v',
+    'copy',
+    '-c:a',
+    'aac',
     '-shortest',
     outputName,
   ];
@@ -49,7 +56,8 @@ export const replaceAudio: ToolModule<ReplaceAudioParams> = {
   id: 'replace-audio',
   slug: 'replace-audio',
   name: 'Replace Audio Track',
-  description: 'Swap a video\'s audio for a new audio file. Drop in a video and an audio file (any order).',
+  description:
+    "Swap a video's audio for a new audio file. Drop in a video and an audio file (any order).",
   category: 'media',
   categories: ['audio'],
   keywords: ['video', 'audio', 'replace', 'dub', 'soundtrack', 'mux', 'music', 'voiceover'],
@@ -71,11 +79,7 @@ export const replaceAudio: ToolModule<ReplaceAudioParams> = {
 
   defaults: defaultReplaceAudioParams,
 
-  async run(
-    inputs: File[],
-    _params: ReplaceAudioParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: ReplaceAudioParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     const { videoIndex, audioIndex } = pickVideoAudio(inputs);
@@ -102,7 +106,7 @@ export const replaceAudio: ToolModule<ReplaceAudioParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(videoName).catch(() => {});
     await ff.deleteFile(audioName).catch(() => {});

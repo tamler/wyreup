@@ -105,7 +105,7 @@ async function analyzePdf(file: File): Promise<PreflightResult> {
   for (let i = 1; i <= pageLimit; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    parts.push(content.items.map((it) => ('str' in it ? it.str ?? '' : '')).join(' '));
+    parts.push(content.items.map((it) => ('str' in it ? (it.str ?? '') : '')).join(' '));
   }
   const result = analyzeSuspicious(parts.join('\n\n'), {});
   return projectResult(result, 'pdf-suspicious');
@@ -150,7 +150,8 @@ function classifyMagic(u8: Uint8Array): string | null {
   // GIF: GIF87a / GIF89a
   if (u8[0] === 0x47 && u8[1] === 0x49 && u8[2] === 0x46) return 'GIF';
   // ZIP / docx / xlsx / pptx / odt — PK
-  if (u8[0] === 0x50 && u8[1] === 0x4b && (u8[2] === 0x03 || u8[2] === 0x05 || u8[2] === 0x07)) return 'ZIP-shaped';
+  if (u8[0] === 0x50 && u8[1] === 0x4b && (u8[2] === 0x03 || u8[2] === 0x05 || u8[2] === 0x07))
+    return 'ZIP-shaped';
   // GZIP: 1F 8B
   if (u8[0] === 0x1f && u8[1] === 0x8b) return 'GZIP';
   // WebP: RIFF .... WEBP

@@ -13,11 +13,11 @@ function makeCtx(): ToolRunContext {
 
 async function convert(text: string, targetCase: string): Promise<string> {
   const file = new File([text], 'input.txt', { type: 'text/plain' });
-  const [out] = await caseConverter.run(
+  const [out] = (await caseConverter.run(
     [file],
     { case: targetCase as never },
     makeCtx(),
-  ) as Blob[];
+  )) as Blob[];
   return out!.text();
 }
 

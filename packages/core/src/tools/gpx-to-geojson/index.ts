@@ -45,18 +45,11 @@ export const gpxToGeojson: ToolModule<GpxToGeojsonParams> = {
 
   defaults: defaultGpxToGeojsonParams,
 
-  async run(
-    inputs: File[],
-    _params: GpxToGeojsonParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: GpxToGeojsonParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading parser' });
-    const [{ gpx }, parser] = await Promise.all([
-      import('@tmcw/togeojson'),
-      getDomParser(),
-    ]);
+    const [{ gpx }, parser] = await Promise.all([import('@tmcw/togeojson'), getDomParser()]);
 
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Parsing GPX' });
     const text = await inputs[0]!.text();

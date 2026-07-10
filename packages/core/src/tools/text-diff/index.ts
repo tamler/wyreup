@@ -30,11 +30,7 @@ export const textDiff: ToolModule<TextDiffParams> = {
 
   defaults: { context: 3 },
 
-  async run(
-    inputs: File[],
-    params: TextDiffParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: TextDiffParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading diff library' });
 
     const { createTwoFilesPatch } = await import('diff');

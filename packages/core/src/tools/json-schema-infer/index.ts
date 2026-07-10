@@ -27,11 +27,21 @@ function unionTypes(a: Schema, b: Schema): Schema {
   // Merge two schemas inferred from sibling values (array element union).
   // Cheapest correct merge: collect `type` into an array, intersect `required`,
   // union `properties`, union `items`. For value types only, just collect.
-  if (typeof a.type === 'string' && typeof b.type === 'string' && a.type === b.type && a.type !== 'object' && a.type !== 'array') {
+  if (
+    typeof a.type === 'string' &&
+    typeof b.type === 'string' &&
+    a.type === b.type &&
+    a.type !== 'object' &&
+    a.type !== 'array'
+  ) {
     return a;
   }
-  const aTypes = new Set<string>(Array.isArray(a.type) ? (a.type as string[]) : a.type ? [a.type as string] : []);
-  const bTypes = new Set<string>(Array.isArray(b.type) ? (b.type as string[]) : b.type ? [b.type as string] : []);
+  const aTypes = new Set<string>(
+    Array.isArray(a.type) ? (a.type as string[]) : a.type ? [a.type as string] : [],
+  );
+  const bTypes = new Set<string>(
+    Array.isArray(b.type) ? (b.type as string[]) : b.type ? [b.type as string] : [],
+  );
   for (const t of bTypes) aTypes.add(t);
   const types = [...aTypes];
   const merged: Schema = { type: types.length === 1 ? types[0]! : types };
@@ -56,7 +66,7 @@ function unionTypes(a: Schema, b: Schema): Schema {
   } else if (a.type === 'array' && b.type === 'array') {
     merged.type = 'array';
     if (a.items && b.items) merged.items = unionTypes(a.items as Schema, b.items as Schema);
-    else merged.items = (a.items ?? b.items);
+    else merged.items = a.items ?? b.items;
   }
   return merged;
 }
@@ -69,7 +79,8 @@ export function inferSchema(value: unknown, params: JsonSchemaInferParams): Sche
 
   function walk(node: unknown): Schema {
     if (node === null) return { type: 'null' };
-    if (typeof node === 'boolean') return includeExamples ? { type: 'boolean', examples: [node] } : { type: 'boolean' };
+    if (typeof node === 'boolean')
+      return includeExamples ? { type: 'boolean', examples: [node] } : { type: 'boolean' };
     if (typeof node === 'number') {
       const type = Number.isInteger(node) ? 'integer' : 'number';
       return includeExamples ? { type, examples: [node] } : { type };
@@ -82,10 +93,12 @@ export function inferSchema(value: unknown, params: JsonSchemaInferParams): Sche
       // downstream validators.
       const s: Schema = { type: 'string' };
       if (/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(node)) s.format = 'email';
-      else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/.test(node)) s.format = 'date-time';
+      else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/.test(node))
+        s.format = 'date-time';
       else if (/^\d{4}-\d{2}-\d{2}$/.test(node)) s.format = 'date';
       else if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(node)) s.format = 'uri';
-      else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(node)) s.format = 'uuid';
+      else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(node))
+        s.format = 'uuid';
       if (includeExamples) s.examples = [node];
       return s;
     }
@@ -108,9 +121,10 @@ export function inferSchema(value: unknown, params: JsonSchemaInferParams): Sche
     return {};
   }
 
-  const draftUri = params.draft === 'draft-2020-12'
-    ? 'https://json-schema.org/draft/2020-12/schema'
-    : 'http://json-schema.org/draft-07/schema#';
+  const draftUri =
+    params.draft === 'draft-2020-12'
+      ? 'https://json-schema.org/draft/2020-12/schema'
+      : 'http://json-schema.org/draft-07/schema#';
 
   const schema = walk(value);
   return { $schema: draftUri, ...schema };

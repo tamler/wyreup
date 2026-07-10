@@ -40,10 +40,7 @@ export async function visionPrompt(
   return res.response.trim();
 }
 
-export async function detectObjects(
-  env: Env,
-  imageBytes: Uint8Array,
-): Promise<DetectedObject[]> {
+export async function detectObjects(env: Env, imageBytes: Uint8Array): Promise<DetectedObject[]> {
   const res = await withTimeout(
     env.AI.run(DETECTION_MODEL, {
       image: Array.from(imageBytes),

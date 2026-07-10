@@ -23,7 +23,8 @@ export const unicodeNormalize: ToolModule<UnicodeNormalizeParams> = {
   id: 'unicode-normalize',
   slug: 'unicode-normalize',
   name: 'Unicode Normalize',
-  description: 'Normalize Unicode text to NFC, NFD, NFKC, or NFKD — removes invisible differences between identical-looking strings.',
+  description:
+    'Normalize Unicode text to NFC, NFD, NFKC, or NFKD — removes invisible differences between identical-looking strings.',
   category: 'text',
   keywords: ['unicode', 'normalize', 'nfc', 'nfd', 'nfkc', 'nfkd', 'encoding', 'text'],
 

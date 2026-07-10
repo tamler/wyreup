@@ -1,10 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import {
-  newWorkbook,
-  addWorksheet,
-  addAOAToSheet,
-  writeWorkbookBuffer,
-} from '../../lib/excel.js';
+import { newWorkbook, addWorksheet, addAOAToSheet, writeWorkbookBuffer } from '../../lib/excel.js';
 
 export interface CsvToExcelParams {
   delimiter?: ',' | ';' | '\t' | 'auto';
@@ -77,11 +72,7 @@ export const csvToExcel: ToolModule<CsvToExcelParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CsvToExcelParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: CsvToExcelParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const Papa = (await import('papaparse')).default;

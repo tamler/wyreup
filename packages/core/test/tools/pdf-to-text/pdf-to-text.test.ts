@@ -45,7 +45,7 @@ describe('pdf-to-text — run()', () => {
   it('extracts text from doc-a.pdf and returns text/plain', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
 
-    const output = await pdfToText.run([input], {}, makeCtx()) as Blob;
+    const output = (await pdfToText.run([input], {}, makeCtx())) as Blob;
 
     expect(output).toBeInstanceOf(Blob);
     expect(output.type).toBe('text/plain');
@@ -55,7 +55,7 @@ describe('pdf-to-text — run()', () => {
   it('contains expected text from the fixture PDF', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
 
-    const output = await pdfToText.run([input], {}, makeCtx()) as Blob;
+    const output = (await pdfToText.run([input], {}, makeCtx())) as Blob;
     const text = await output.text();
 
     expect(text.toLowerCase()).toMatch(/document a/i);
@@ -64,11 +64,11 @@ describe('pdf-to-text — run()', () => {
   it('uses custom separator between pages for multipage PDF', async () => {
     const input = loadFixture('doc-multipage.pdf', 'application/pdf');
 
-    const output = await pdfToText.run(
+    const output = (await pdfToText.run(
       [input],
       { separator: '\n---PAGE {n}---\n' },
       makeCtx(),
-    ) as Blob;
+    )) as Blob;
 
     const text = await output.text();
     // Multipage PDF should have at least some content
@@ -80,8 +80,6 @@ describe('pdf-to-text — run()', () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      pdfToText.run([input], {}, makeCtx(controller.signal)),
-    ).rejects.toThrow();
+    await expect(pdfToText.run([input], {}, makeCtx(controller.signal))).rejects.toThrow();
   });
 });

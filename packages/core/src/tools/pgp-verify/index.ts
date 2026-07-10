@@ -49,16 +49,14 @@ export const pgpVerify: ToolModule<PgpVerifyParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PgpVerifyParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: PgpVerifyParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (!params.publicKey || params.publicKey.trim() === '') {
       throw new Error('publicKey is required.');
     }
     if (inputs.length < 2) {
-      throw new Error('pgp-verify requires two files: the original file and its detached signature.');
+      throw new Error(
+        'pgp-verify requires two files: the original file and its detached signature.',
+      );
     }
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading OpenPGP.js' });
@@ -113,7 +111,8 @@ export const pgpVerify: ToolModule<PgpVerifyParams> = {
         }
         // Best-effort: extract signing timestamp (sig.signature may be lazily parsed)
         try {
-          const created = (sig.signature as unknown as { packets?: Array<{ created?: Date }> }).packets?.[0]?.created;
+          const created = (sig.signature as unknown as { packets?: Array<{ created?: Date }> })
+            .packets?.[0]?.created;
           result.signedAt = created?.toISOString() ?? null;
         } catch {
           result.signedAt = null;

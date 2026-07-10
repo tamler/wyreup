@@ -38,14 +38,18 @@ export async function initToolCommand(): Promise<void> {
         p.text({
           message: 'Display name',
           placeholder: 'My Tool',
-          validate: (v) => { if (!v) return 'Display name is required.'; },
+          validate: (v) => {
+            if (!v) return 'Display name is required.';
+          },
         }),
 
       description: () =>
         p.text({
           message: 'Description (one sentence)',
           placeholder: 'Does something useful with your files.',
-          validate: (v) => { if (!v) return 'Description is required.'; },
+          validate: (v) => {
+            if (!v) return 'Description is required.';
+          },
         }),
 
       category: () =>
@@ -58,14 +62,18 @@ export async function initToolCommand(): Promise<void> {
         p.text({
           message: 'Input MIMEs (comma-separated)',
           placeholder: 'image/jpeg,image/png',
-          validate: (v) => { if (!v) return 'At least one MIME type is required.'; },
+          validate: (v) => {
+            if (!v) return 'At least one MIME type is required.';
+          },
         }),
 
       outputMime: () =>
         p.text({
           message: 'Output MIME',
           placeholder: 'image/jpeg',
-          validate: (v) => { if (!v) return 'Output MIME is required.'; },
+          validate: (v) => {
+            if (!v) return 'Output MIME is required.';
+          },
         }),
 
       inputMin: () =>
@@ -87,7 +95,12 @@ export async function initToolCommand(): Promise<void> {
           message: 'Memory estimate',
           options: MEMORY_OPTIONS.map((m) => ({
             value: m,
-            label: m === 'low' ? 'low  (<50 MB)' : m === 'medium' ? 'medium  (50–200 MB)' : 'high  (200–500 MB)',
+            label:
+              m === 'low'
+                ? 'low  (<50 MB)'
+                : m === 'medium'
+                  ? 'medium  (50–200 MB)'
+                  : 'high  (200–500 MB)',
           })),
         }),
     },
@@ -105,7 +118,10 @@ export async function initToolCommand(): Promise<void> {
   const description = String(answers.description);
   const category = String(answers.category);
   const outputMime = String(answers.outputMime);
-  const inputMimes = String(answers.inputMimesRaw).split(',').map((m) => m.trim()).filter(Boolean);
+  const inputMimes = String(answers.inputMimesRaw)
+    .split(',')
+    .map((m) => m.trim())
+    .filter(Boolean);
   const inputMin = parseInt(String(answers.inputMin), 10) || 1;
   const inputMax = parseInt(String(answers.inputMax), 10) || 1;
   const memoryEstimate = String(answers.memoryEstimate) as 'low' | 'medium' | 'high';

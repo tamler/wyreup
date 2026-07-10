@@ -51,7 +51,11 @@ const TOOL_HASH = {
   Component: {} as never,
   defaults: { algorithm: 'sha256' },
   paramSchema: {
-    algorithm: { type: 'enum' as const, label: 'Algorithm', options: [{ value: 'sha256', label: 'SHA-256' }] },
+    algorithm: {
+      type: 'enum' as const,
+      label: 'Algorithm',
+      options: [{ value: 'sha256', label: 'SHA-256' }],
+    },
   },
   __testFixtures: { valid: [], weird: [], expectedOutputMime: ['application/json'] },
 };
@@ -188,11 +192,7 @@ describe('executeTool — hash (JSON output)', () => {
 
     await executeTool('hash', ['/tmp/file.bin'], { output: '/tmp/out.json' });
 
-    expect(mockAtomicPublish).toHaveBeenCalledWith(
-      '/tmp/out.json',
-      expect.any(Uint8Array),
-      false,
-    );
+    expect(mockAtomicPublish).toHaveBeenCalledWith('/tmp/out.json', expect.any(Uint8Array), false);
   });
 
   it('passes defaults merged with --param overrides', async () => {
@@ -242,9 +242,9 @@ describe('executeTool — compress (binary output)', () => {
     mockReadFile.mockResolvedValue(Buffer.from('fake-jpeg'));
     mockCompressRun.mockResolvedValue(makeImageBlob());
 
-    await expect(
-      executeTool('compress', ['/tmp/photo.jpg'], {}),
-    ).rejects.toThrow('process.exit(1)');
+    await expect(executeTool('compress', ['/tmp/photo.jpg'], {})).rejects.toThrow(
+      'process.exit(1)',
+    );
 
     expect(exitCode).toBe(1);
     const errText = stderrOutput.join('');
@@ -299,9 +299,7 @@ describe('executeTool — split-pdf (multi-output)', () => {
 
 describe('executeTool — unknown tool', () => {
   it('exits with error when tool ID not found', async () => {
-    await expect(
-      executeTool('not-a-real-tool', [], {}),
-    ).rejects.toThrow('process.exit(1)');
+    await expect(executeTool('not-a-real-tool', [], {})).rejects.toThrow('process.exit(1)');
 
     expect(exitCode).toBe(1);
     expect(stderrOutput.join('')).toMatch(/Unknown tool/);
@@ -319,7 +317,9 @@ describe('executeTool — stdin input', () => {
     const chunk = Buffer.from('hello');
     const mockStdin = {
       // eslint-disable-next-line @typescript-eslint/require-await
-      [Symbol.asyncIterator]: async function* () { yield chunk; },
+      [Symbol.asyncIterator]: async function* () {
+        yield chunk;
+      },
     };
     vi.spyOn(process, 'stdin', 'get').mockReturnValue(mockStdin as unknown as typeof process.stdin);
 

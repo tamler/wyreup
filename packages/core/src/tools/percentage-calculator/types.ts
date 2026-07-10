@@ -1,8 +1,4 @@
-export type PercentageMode =
-  | 'percent-of'
-  | 'what-percent'
-  | 'percent-change'
-  | 'increase-decrease';
+export type PercentageMode = 'percent-of' | 'what-percent' | 'percent-change' | 'increase-decrease';
 
 export interface PercentageCalculatorParams {
   mode: PercentageMode;

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { letterboxVideo, LETTERBOX_CANVAS, buildLetterboxArgs } from '../../../src/tools/letterbox-video/index.js';
+import {
+  letterboxVideo,
+  LETTERBOX_CANVAS,
+  buildLetterboxArgs,
+} from '../../../src/tools/letterbox-video/index.js';
 
 describe('letterbox-video', () => {
   it('id + budget', () => {

@@ -55,19 +55,13 @@ describe('validateChain', () => {
     // Confirm the toolsById Map does not have a magical __proto__ entry
     // that would let a chain reference Object.prototype keys as if they
     // were tools.
-    const result = validateChain(
-      [{ toolId: '__proto__', params: {} }],
-      registry,
-    );
+    const result = validateChain([{ toolId: '__proto__', params: {} }], registry);
     expect(result.ok).toBe(false);
     expect(result.unknownTools).toEqual(['__proto__']);
   });
 
   it('catches constructor as a tool ID', () => {
-    const result = validateChain(
-      [{ toolId: 'constructor', params: {} }],
-      registry,
-    );
+    const result = validateChain([{ toolId: 'constructor', params: {} }], registry);
     expect(result.ok).toBe(false);
   });
 });

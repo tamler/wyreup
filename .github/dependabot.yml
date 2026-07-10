@@ -1,72 +1,72 @@
 version: 2
 updates:
   # npm dependencies — group ecosystem updates by package to reduce PR noise.
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/Los_Angeles"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/Los_Angeles'
     open-pull-requests-limit: 5
     groups:
       # Security/parser libs — these are the highest review priority.
       security-and-parsers:
         patterns:
-          - "dompurify"
-          - "jszip"
-          - "pdfjs-dist"
-          - "@anthropic-ai/sdk"
-          - "@modelcontextprotocol/sdk"
+          - 'dompurify'
+          - 'jszip'
+          - 'pdfjs-dist'
+          - '@anthropic-ai/sdk'
+          - '@modelcontextprotocol/sdk'
       # Build/test tooling — bundle to reduce PR churn.
       build-tooling:
         patterns:
-          - "tsup"
-          - "typescript"
-          - "vitest"
-          - "@vitest/*"
-          - "eslint*"
-          - "@typescript-eslint/*"
+          - 'tsup'
+          - 'typescript'
+          - 'vitest'
+          - '@vitest/*'
+          - 'eslint*'
+          - '@typescript-eslint/*'
     ignore:
       # Pinned by overrides in root package.json — Dependabot would
       # otherwise keep proposing updates that the overrides reject.
-      - dependency-name: "fast-uri"
-      - dependency-name: "protobufjs"
-      - dependency-name: "serialize-javascript"
-      - dependency-name: "devalue"
-      - dependency-name: "undici"
+      - dependency-name: 'fast-uri'
+      - dependency-name: 'protobufjs'
+      - dependency-name: 'serialize-javascript'
+      - dependency-name: 'devalue'
+      - dependency-name: 'undici'
       # Held at ^4.12.25 via overrides (transitive through @modelcontextprotocol/sdk).
       # Pinning to the non-vulnerable 4.x line; a 5.x major would break the SDK,
       # so ignore major bumps Dependabot can't resolve.
-      - dependency-name: "hono"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'hono'
+        update-types: ['version-update:semver-major']
       # Astro 5+/Svelte 5 is a deferred double-major upgrade cascade
       # (see docs/ROADMAP.md). The site is a static build, so the
       # server-side advisories don't apply; revisit when the upgrade lands.
-      - dependency-name: "astro"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "svelte"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'astro'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'svelte'
+        update-types: ['version-update:semver-major']
       # pdfjs-dist 6 drops the legacy build entry points the PDF runners
       # import — real migration, tracked as ROADMAP tech-debt item 11.
-      - dependency-name: "pdfjs-dist"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'pdfjs-dist'
+        update-types: ['version-update:semver-major']
       # TypeScript majors break tsup's DTS build (TS 6 did on 2026-05-25;
       # TS 7 is the tsgo compiler). Vitest 4 is deferred until tsup/TS
       # tooling settles. Revisit deliberately, not via auto-bump.
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "vitest"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@vitest/*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitest/*'
+        update-types: ['version-update:semver-major']
 
   # GitHub Actions versions — keep workflow actions current.
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "America/Los_Angeles"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'America/Los_Angeles'
     open-pull-requests-limit: 3

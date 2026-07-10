@@ -47,11 +47,7 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
 
   defaults: defaultTrimMediaParams,
 
-  async run(
-    inputs: File[],
-    params: TrimMediaParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: TrimMediaParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
 
     if (params.start < 0) throw new Error('start must be >= 0');
@@ -70,11 +66,7 @@ export const trimMedia: ToolModule<TrimMediaParams> = {
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Trimming' });
 
     const duration = params.end - params.start;
-    const args = [
-      '-ss', String(params.start),
-      '-i', inputName,
-      '-t', String(duration),
-    ];
+    const args = ['-ss', String(params.start), '-i', inputName, '-t', String(duration)];
 
     if (params.stream_copy) {
       args.push('-c', 'copy');

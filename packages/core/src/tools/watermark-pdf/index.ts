@@ -8,9 +8,13 @@ export { defaultWatermarkPdfParams } from './types.js';
 /** Parse a CSS hex color string like '#888888' into [r, g, b] 0-1 range for pdf-lib. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const cleaned = hex.replace('#', '');
-  const full = cleaned.length === 3
-    ? cleaned.split('').map((c) => c + c).join('')
-    : cleaned;
+  const full =
+    cleaned.length === 3
+      ? cleaned
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : cleaned;
   const r = parseInt(full.slice(0, 2), 16) / 255;
   const g = parseInt(full.slice(2, 4), 16) / 255;
   const b = parseInt(full.slice(4, 6), 16) / 255;
@@ -99,11 +103,7 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: WatermarkPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: WatermarkPdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const {
@@ -138,7 +138,7 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
         const centerY = height / 2;
 
         page.drawText(text, {
-          x: centerX - (font.widthOfTextAtSize(text, fontSize) / 2),
+          x: centerX - font.widthOfTextAtSize(text, fontSize) / 2,
           y: centerY - fontSize / 2,
           size: fontSize,
           font,

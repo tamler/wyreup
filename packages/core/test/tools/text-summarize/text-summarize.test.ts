@@ -23,7 +23,9 @@ describe('text-summarize — metadata', () => {
   });
 
   it('has installGroup nlp-standard', () => {
-    expect((textSummarize as unknown as { installGroup: string }).installGroup).toBe('nlp-standard');
+    expect((textSummarize as unknown as { installGroup: string }).installGroup).toBe(
+      'nlp-standard',
+    );
   });
 
   it('defaults maxLength to 100', () => {

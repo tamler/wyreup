@@ -30,11 +30,7 @@ export const mergePdf: ToolModule<MergePdfParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: MergePdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: MergePdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { PDFDocument } = await import('pdf-lib');

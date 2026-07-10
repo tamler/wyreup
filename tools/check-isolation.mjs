@@ -17,7 +17,9 @@ export async function checkIsolation({ coreDir, forbiddenPackages }) {
   for (const file of files) {
     if (!file.endsWith('.ts') && !file.endsWith('.tsx')) continue;
     const content = await readFile(file, 'utf8');
-    const importMatches = content.matchAll(/(?:import|export)\s+(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)?\s*(?:,\s*\{[^}]*\})?\s*from\s+['"]([^'"]+)['"]/g);
+    const importMatches = content.matchAll(
+      /(?:import|export)\s+(?:type\s+)?(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)?\s*(?:,\s*\{[^}]*\})?\s*from\s+['"]([^'"]+)['"]/g,
+    );
 
     for (const match of importMatches) {
       const importPath = match[1];

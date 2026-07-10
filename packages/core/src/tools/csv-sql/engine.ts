@@ -70,8 +70,7 @@ async function parseFile(file: FileToLoad): Promise<{ headers: string[]; rows: u
   const isXlsx =
     lowerName.endsWith('.xlsx') ||
     lowerName.endsWith('.xls') ||
-    file.mime ===
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    file.mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
     file.mime === 'application/vnd.ms-excel';
 
   if (isJson) {
@@ -146,10 +145,7 @@ function quoteIdent(name: string): string {
  * filename. If two files would collapse to the same table name, the
  * second one gets a numeric suffix.
  */
-export async function runQuery(
-  files: FileToLoad[],
-  sql: string,
-): Promise<QueryResult> {
+export async function runQuery(files: FileToLoad[], sql: string): Promise<QueryResult> {
   if (files.length === 0) throw new Error('Provide at least one input file.');
   if (!sql.trim()) throw new Error('Provide a SQL query.');
 

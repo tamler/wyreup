@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type {
-  ToolModule,
-  ToolCategory,
-  ToolRunContext,
-  MemoryEstimate,
-} from '../src/types.js';
+import type { ToolModule, ToolCategory, ToolRunContext, MemoryEstimate } from '../src/types.js';
 
 describe('types', () => {
   it('ToolCategory includes expected values', () => {

@@ -141,19 +141,18 @@ export const csvToGeojson: ToolModule<CsvToGeoJsonParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CsvToGeoJsonParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CsvToGeoJsonParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Reading CSV' });
 
     const text = await inputs[0]!.text();
-    const delimiter = (params.delimiter && params.delimiter.length > 0)
-      ? (params.delimiter === '\\t' ? '\t' : params.delimiter)
-      : ',';
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0
+        ? params.delimiter === '\\t'
+          ? '\t'
+          : params.delimiter
+        : ',';
 
     const rows = parseCsv(text, delimiter);
     if (rows.length < 2) {

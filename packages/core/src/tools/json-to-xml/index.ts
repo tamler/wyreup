@@ -97,7 +97,11 @@ export const jsonToXml: ToolModule<JsonToXmlParams> = {
     // of elements (which produces invalid XML). Wrap if needed.
     let toBuild: unknown = parsed;
     const isObject = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed);
-    const topKeys = isObject ? Object.keys(parsed as Record<string, unknown>).filter((k) => !k.startsWith((params.attrPrefix ?? '@_'))) : [];
+    const topKeys = isObject
+      ? Object.keys(parsed as Record<string, unknown>).filter(
+          (k) => !k.startsWith(params.attrPrefix ?? '@_'),
+        )
+      : [];
     if (!isObject || topKeys.length !== 1) {
       toBuild = { [rootName]: parsed };
     }

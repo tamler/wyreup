@@ -12,7 +12,11 @@ function makeCtx(): ToolRunContext {
 }
 
 async function runSvg(params: object): Promise<string> {
-  const blob = (await barcode.run([], { outputFormat: 'svg', ...params } as Parameters<typeof barcode.run>[1], makeCtx())) as Blob;
+  const blob = (await barcode.run(
+    [],
+    { outputFormat: 'svg', ...params } as Parameters<typeof barcode.run>[1],
+    makeCtx(),
+  )) as Blob;
   return blob.text();
 }
 
@@ -99,9 +103,7 @@ describe('barcode — run() SVG', () => {
   });
 
   it('throws if data is empty', async () => {
-    await expect(
-      barcode.run([], { data: '' }, makeCtx()),
-    ).rejects.toThrow(/data is required/);
+    await expect(barcode.run([], { data: '' }, makeCtx())).rejects.toThrow(/data is required/);
   });
 
   it('throws if data is missing', async () => {

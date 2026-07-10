@@ -81,7 +81,10 @@ function tokenize(expr: string): Step[] {
         steps.push({ kind: 'wildcard' });
       } else if (/^-?\d+$/.test(body)) {
         steps.push({ kind: 'index', index: Number(body) });
-      } else if ((body.startsWith('"') && body.endsWith('"')) || (body.startsWith("'") && body.endsWith("'"))) {
+      } else if (
+        (body.startsWith('"') && body.endsWith('"')) ||
+        (body.startsWith("'") && body.endsWith("'"))
+      ) {
         steps.push({ kind: 'name', name: body.slice(1, -1) });
       } else {
         throw new Error(`Unsupported bracket selector: [${body}]`);
@@ -146,7 +149,8 @@ export function queryJsonPath(value: unknown, expr: string, limit = 0): JsonPath
       for (const m of current) {
         if (m.value && typeof m.value === 'object' && !Array.isArray(m.value)) {
           const obj = m.value as Record<string, unknown>;
-          if (step.name! in obj) next.push({ path: joinPath(m.path, step.name!), value: obj[step.name!] });
+          if (step.name! in obj)
+            next.push({ path: joinPath(m.path, step.name!), value: obj[step.name!] });
         }
       }
     }

@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function run(expression: string, nextCount?: number): Promise<CronParserResult> {
   const file = new File([expression], 'cron.txt', { type: 'text/plain' });
-  const [out] = await cronParser.run([file], { nextCount }, makeCtx()) as Blob[];
+  const [out] = (await cronParser.run([file], { nextCount }, makeCtx())) as Blob[];
   return JSON.parse(await out!.text()) as CronParserResult;
 }
 

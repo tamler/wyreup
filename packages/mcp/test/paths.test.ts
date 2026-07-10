@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { assertPathAllowed, resolveAllowedRoots } from '../src/paths.js';
 
-let root: string;             // realpath'd ephemeral allowed root
-let outside: string;          // realpath'd ephemeral disallowed root
+let root: string; // realpath'd ephemeral allowed root
+let outside: string; // realpath'd ephemeral disallowed root
 
 beforeAll(async () => {
   root = await realpathFs(await mkdtemp(join(tmpdir(), 'wymcp-root-')));
@@ -77,7 +77,9 @@ describe('assertPathAllowed', () => {
 describe('resolveAllowedRoots', () => {
   it('returns realpath-resolved roots and drops missing entries with a warning', async () => {
     const messages: string[] = [];
-    const roots = await resolveAllowedRoots([root, '/nonexistent-xyz-9999'], { logger: (m) => messages.push(String(m)) });
+    const roots = await resolveAllowedRoots([root, '/nonexistent-xyz-9999'], {
+      logger: (m) => messages.push(String(m)),
+    });
     expect(roots).toContain(root);
     expect(Array.isArray(roots) ? roots.includes('/nonexistent-xyz-9999') : true).toBe(false);
     expect(messages.join('\n')).toMatch(/nonexistent-xyz-9999/);

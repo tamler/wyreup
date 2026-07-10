@@ -50,7 +50,19 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
   description: 'Convert audio files between MP3, WAV, OGG, FLAC, AAC, M4A, and Opus formats.',
   category: 'media',
   categories: ['audio', 'convert'],
-  keywords: ['audio', 'convert', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'opus', 'format', 'mp3 to wav', 'transcode'],
+  keywords: [
+    'audio',
+    'convert',
+    'mp3',
+    'wav',
+    'ogg',
+    'flac',
+    'aac',
+    'opus',
+    'format',
+    'mp3 to wav',
+    'transcode',
+  ],
 
   input: {
     accept: ['audio/*'],
@@ -98,11 +110,7 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ConvertAudioParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ConvertAudioParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -138,9 +146,7 @@ export const convertAudio: ToolModule<ConvertAudioParams> = {
     const output = await ff.readFile(outputName);
     await ff.deleteFile(inputName);
     await ff.deleteFile(outputName);
-    const outputBytes = typeof output === 'string'
-      ? new TextEncoder().encode(output)
-      : (output);
+    const outputBytes = typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getAudioMime(params.format) })];

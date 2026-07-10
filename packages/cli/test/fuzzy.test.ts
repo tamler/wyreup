@@ -26,7 +26,14 @@ describe('levenshtein', () => {
 });
 
 describe('suggestSimilar', () => {
-  const REGISTRY = ['compress', 'convert', 'merge-pdf', 'split-pdf', 'kml-to-geojson', 'csv-to-geojson'];
+  const REGISTRY = [
+    'compress',
+    'convert',
+    'merge-pdf',
+    'split-pdf',
+    'kml-to-geojson',
+    'csv-to-geojson',
+  ];
 
   it('returns the closest matches sorted by distance', () => {
     expect(suggestSimilar('comprese', REGISTRY)).toContain('compress');

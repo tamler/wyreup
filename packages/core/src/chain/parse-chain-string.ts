@@ -42,10 +42,7 @@ function parseStep(raw: string): ChainStep {
   }
   const bracketClose = raw.lastIndexOf(']');
   const toolId = raw.slice(0, bracketOpen).trim();
-  const paramStr =
-    bracketClose > bracketOpen
-      ? raw.slice(bracketOpen + 1, bracketClose)
-      : '';
+  const paramStr = bracketClose > bracketOpen ? raw.slice(bracketOpen + 1, bracketClose) : '';
   return { toolId, params: parseParams(paramStr) };
 }
 

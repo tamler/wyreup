@@ -72,7 +72,15 @@ export function blurRegion(
     save(): void;
     restore(): void;
     beginPath?(): void;
-    ellipse?(cx: number, cy: number, rx: number, ry: number, rot: number, start: number, end: number): void;
+    ellipse?(
+      cx: number,
+      cy: number,
+      rx: number,
+      ry: number,
+      rot: number,
+      start: number,
+      end: number,
+    ): void;
     rect?(x: number, y: number, w: number, h: number): void;
     clip?(): void;
     filter?: string;
@@ -211,12 +219,7 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
       }
     }
 
-    const {
-      blurRadius = 20,
-      minConfidence = 0.5,
-      padding = 0.2,
-      shape = 'ellipse',
-    } = params;
+    const { blurRadius = 20, minConfidence = 0.5, padding = 0.2, shape = 'ellipse' } = params;
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading face detector' });
 
@@ -240,7 +243,15 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
         save(): void;
         restore(): void;
         beginPath(): void;
-        ellipse(cx: number, cy: number, rx: number, ry: number, rot: number, start: number, end: number): void;
+        ellipse(
+          cx: number,
+          cy: number,
+          rx: number,
+          ry: number,
+          rot: number,
+          start: number,
+          end: number,
+        ): void;
         rect(x: number, y: number, w: number, h: number): void;
         clip(): void;
         filter?: string;
@@ -256,23 +267,19 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
 
       if (faces.length > 0) {
         // Create a single scratch canvas for blurring, reused across all faces
-        const blurCanvas = await createCanvas(img.width, img.height) as unknown as {
+        const blurCanvas = (await createCanvas(img.width, img.height)) as unknown as {
           width: number;
           height: number;
-          getContext(type: '2d'): { filter?: string; drawImage(src: unknown, x: number, y: number): void };
+          getContext(type: '2d'): {
+            filter?: string;
+            drawImage(src: unknown, x: number, y: number): void;
+          };
         };
 
         for (const face of faces) {
           if (!face.boundingBox) continue;
           const box = expandBox(face.boundingBox, padding, img.width, img.height);
-          blurRegion(
-            canvas,
-            context,
-            blurCanvas,
-            box,
-            blurRadius,
-            shape,
-          );
+          blurRegion(canvas, context, blurCanvas, box, blurRadius, shape);
         }
       }
 

@@ -90,11 +90,7 @@ export const convertVideo: ToolModule<ConvertVideoParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ConvertVideoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ConvertVideoParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -119,20 +115,13 @@ export const convertVideo: ToolModule<ConvertVideoParams> = {
     const crf = params.crf ?? 23;
     const preset = params.preset ?? 'medium';
 
-    const args = [
-      '-i', inputName,
-      '-crf', String(crf),
-      '-preset', preset,
-      outputName,
-    ];
+    const args = ['-i', inputName, '-crf', String(crf), '-preset', preset, outputName];
 
     await ff.exec(args);
     const output = await ff.readFile(outputName);
     await ff.deleteFile(inputName);
     await ff.deleteFile(outputName);
-    const outputBytes = typeof output === 'string'
-      ? new TextEncoder().encode(output)
-      : (output);
+    const outputBytes = typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([outputBytes.buffer as ArrayBuffer], { type: getVideoMime(params.format) })];

@@ -34,9 +34,7 @@ describe('pdf-decrypt — metadata', () => {
 describe('pdf-decrypt — run()', () => {
   it('throws if password is empty', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfDecrypt.run([input], { password: '' }, makeCtx()),
-    ).rejects.toThrow('password');
+    await expect(pdfDecrypt.run([input], { password: '' }, makeCtx())).rejects.toThrow('password');
   });
 
   it('decrypts an encrypted PDF with correct password', async () => {

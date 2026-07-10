@@ -37,11 +37,7 @@ export const bgRemovePro: ToolModule<BgRemoveProParams> = {
 
   defaults: defaultBgRemoveProParams,
 
-  async run(
-    inputs: File[],
-    _params: BgRemoveProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: BgRemoveProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('bg-remove-pro accepts exactly one image.');
     const file = inputs[0]!;
     if (ctx.signal.aborted) throw new Error('Aborted');

@@ -92,7 +92,7 @@ async function sweepStaleShareIntake(): Promise<void> {
       }
       return;
     }
-    const meta = await metaResponse.json() as { ts?: number; count?: number };
+    const meta = (await metaResponse.json()) as { ts?: number; count?: number };
     const age = Date.now() - (meta.ts ?? 0);
     if (age > SHARE_INTAKE_MAX_AGE_MS) {
       await cache.delete('/wyreup-share-meta');
@@ -128,7 +128,9 @@ async function handleShareTarget(request: Request): Promise<Response> {
         if (file.size > MAX_SHARED_FILE_BYTES) {
           // Don't cache; the user will land on /share-receive which already
           // has a "no shared file found" path. Logging here is best-effort.
-          console.warn(`[sw] shared file ${file.name} exceeds ${MAX_SHARED_FILE_BYTES} bytes — skipping`);
+          console.warn(
+            `[sw] shared file ${file.name} exceeds ${MAX_SHARED_FILE_BYTES} bytes — skipping`,
+          );
           continue;
         }
         const response = new Response(file, {

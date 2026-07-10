@@ -29,25 +29,52 @@ function makeCtx(): ToolRunContext {
 // for a meta-sweep. Their per-tool test files (where present) cover them.
 const RUN_SKIP = new Set<string>([
   // AI / model-download tools
-  'audio-enhance', 'bg-remove', 'upscale-2x', 'ocr-pro', 'image-similarity',
-  'text-sentiment', 'text-ner', 'text-summarize', 'text-translate', 'text-embed',
-  'image-caption', 'image-caption-detailed', 'transcribe', 'ocr', 'face-blur',
+  'audio-enhance',
+  'bg-remove',
+  'upscale-2x',
+  'ocr-pro',
+  'image-similarity',
+  'text-sentiment',
+  'text-ner',
+  'text-summarize',
+  'text-translate',
+  'text-embed',
+  'image-caption',
+  'image-caption-detailed',
+  'transcribe',
+  'ocr',
+  'face-blur',
   // Web-only (need DOM / media APIs)
   'record-audio',
   // Heavy media (ffmpeg / pdfjs / sharp)
-  'convert-audio', 'convert-video', 'extract-audio', 'trim-media',
-  'compress-video', 'video-to-gif', 'convert-subtitles', 'burn-subtitles',
-  'video-concat', 'video-add-text', 'video-speed', 'video-overlay-image',
-  'video-crossfade', 'video-color-correct',
-  'pdf-extract-images', 'pdf-suspicious',
+  'convert-audio',
+  'convert-video',
+  'extract-audio',
+  'trim-media',
+  'compress-video',
+  'video-to-gif',
+  'convert-subtitles',
+  'burn-subtitles',
+  'video-concat',
+  'video-add-text',
+  'video-speed',
+  'video-overlay-image',
+  'video-crossfade',
+  'video-color-correct',
+  'pdf-extract-images',
+  'pdf-suspicious',
   // Geo conversion that needs a real GDAL roundtrip with valid fixtures
   'convert-geo',
   // Tools that need genuinely structured input we can't fake in two lines
-  'pgp-encrypt', 'pgp-decrypt', 'pgp-sign', 'pgp-verify',
+  'pgp-encrypt',
+  'pgp-decrypt',
+  'pgp-sign',
+  'pgp-verify',
   'zip-extract',
   'shapefile-to-geojson',
   // Tools with required text-shaped params that fail without real data
-  'qr-reader', 'mime-detect',
+  'qr-reader',
+  'mime-detect',
 ]);
 
 const registry = createDefaultRegistry();
@@ -69,8 +96,21 @@ describe('ToolModule structural invariants', () => {
       });
       it('has a valid category', () => {
         const valid = new Set([
-          'optimize','convert','edit','privacy','pdf','create','inspect',
-          'export','audio','dev','finance','media','archive','text','geo',
+          'optimize',
+          'convert',
+          'edit',
+          'privacy',
+          'pdf',
+          'create',
+          'inspect',
+          'export',
+          'audio',
+          'dev',
+          'finance',
+          'media',
+          'archive',
+          'text',
+          'geo',
         ]);
         expect(valid.has(tool.category)).toBe(true);
       });
@@ -92,7 +132,7 @@ describe('ToolModule structural invariants', () => {
         expect(tool.defaults).toBeDefined();
       });
       it('declares a memoryEstimate', () => {
-        expect(['low','medium','high','extreme']).toContain(tool.memoryEstimate);
+        expect(['low', 'medium', 'high', 'extreme']).toContain(tool.memoryEstimate);
       });
     });
   }

@@ -53,11 +53,7 @@ export const translateManyPro: ToolModule<TranslateManyProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TranslateManyProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TranslateManyProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('translate-many-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

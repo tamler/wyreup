@@ -34,12 +34,18 @@ export function buildRotateArgs(
   params: RotateVideoParams,
 ): string[] {
   return [
-    '-i', inputName,
-    '-vf', getRotateFilter(params.mode),
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'fast',
-    '-c:a', 'copy',
+    '-i',
+    inputName,
+    '-vf',
+    getRotateFilter(params.mode),
+    '-c:v',
+    'libx264',
+    '-crf',
+    '23',
+    '-preset',
+    'fast',
+    '-c:a',
+    'copy',
     outputName,
   ];
 }
@@ -85,11 +91,7 @@ export const rotateVideo: ToolModule<RotateVideoParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RotateVideoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: RotateVideoParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -114,7 +116,7 @@ export const rotateVideo: ToolModule<RotateVideoParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

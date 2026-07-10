@@ -57,11 +57,7 @@ export const resize: ToolModule<ResizeParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ResizeParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ResizeParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { mode, quality = 90 } = params;
 
     if (mode === 'percent') {
@@ -105,8 +101,8 @@ export const resize: ToolModule<ResizeParams> = {
         targetW = params.width!;
         targetH = params.height!;
       } else if (mode === 'percent') {
-        targetW = Math.round(srcW * params.percent! / 100);
-        targetH = Math.round(srcH * params.percent! / 100);
+        targetW = Math.round((srcW * params.percent!) / 100);
+        targetH = Math.round((srcH * params.percent!) / 100);
       } else {
         // fit: scale to fit within width x height preserving aspect ratio
         const scaleW = params.width! / srcW;

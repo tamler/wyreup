@@ -102,10 +102,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     .bind(user.id, Date.now() - 60_000)
     .first<{ n: number }>();
   if ((recent?.n ?? 0) >= 30) {
-    return json(
-      { error: 'Rate limit: too many PRO runs in the last minute' },
-      429,
-    );
+    return json({ error: 'Rate limit: too many PRO runs in the last minute' }, 429);
   }
 
   // 1. Reserve credits atomically. The INSERT only runs if the current
@@ -122,16 +119,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         WHERE user_id = ?
      ) >= ?`,
   )
-    .bind(
-      spendId,
-      user.id,
-      -creditCost,
-      toolId,
-      `Ran ${toolId}`,
-      now,
-      user.id,
-      creditCost,
-    )
+    .bind(spendId, user.id, -creditCost, toolId, `Ran ${toolId}`, now, user.id, creditCost)
     .run();
 
   if ((reserved.meta.changes ?? 0) !== 1) {
@@ -183,8 +171,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // 3. Log run history (no file content, only filename for the user's own
   //    UI). The spend_event_id links the success record to its spend row
   //    so the orphan sweep can recognise this as a settled run.
-  const fileName =
-    typeof input.fileName === 'string' ? input.fileName.slice(0, 256) : null;
+  const fileName = typeof input.fileName === 'string' ? input.fileName.slice(0, 256) : null;
   await env.DB.prepare(
     `INSERT INTO run_history
        (id, user_id, tool_id, tier, credits_used, file_name, ran_at, spend_event_id)

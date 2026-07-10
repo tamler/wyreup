@@ -83,9 +83,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const keyPreview = `${rawKey.slice(0, 12)}…${rawKey.slice(-4)}`;
 
   await env.DB.batch([
-    env.DB.prepare(
-      `INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)`,
-    ).bind(userId, email, now),
+    env.DB.prepare(`INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)`).bind(
+      userId,
+      email,
+      now,
+    ),
     env.DB.prepare(
       `INSERT INTO api_keys (id, user_id, key_hash, name, created_at)
        VALUES (?, ?, ?, 'Default', ?)`,
@@ -109,24 +111,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // durable credential for CLI/MCP and for sessions beyond 24h.
   if (surface === 'browser') {
     const exp = now + SESSION_MAX_AGE_SECONDS * 1000;
-    const cookie = await signSessionCookie(
-      { uid: userId, kid: keyId, exp },
-      env.SESSION_SECRET,
-    );
-    return json(
-      { status: 'created', keyPreview, rawKey, emailDelivered: sent.ok },
-      200,
-      {
-        'Set-Cookie': [
-          `__Host-wyreup_session=${cookie}`,
-          `Path=/`,
-          `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
-          `HttpOnly`,
-          `Secure`,
-          `SameSite=Lax`,
-        ].join('; '),
-      },
-    );
+    const cookie = await signSessionCookie({ uid: userId, kid: keyId, exp }, env.SESSION_SECRET);
+    return json({ status: 'created', keyPreview, rawKey, emailDelivered: sent.ok }, 200, {
+      'Set-Cookie': [
+        `__Host-wyreup_session=${cookie}`,
+        `Path=/`,
+        `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
+        `HttpOnly`,
+        `Secure`,
+        `SameSite=Lax`,
+      ].join('; '),
+    });
   }
 
   // CLI/MCP: key is delivered by email only.

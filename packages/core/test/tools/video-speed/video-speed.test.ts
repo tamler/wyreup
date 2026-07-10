@@ -25,7 +25,8 @@ describe('video-speed — metadata', () => {
   it('cost is "free"', () => expect(videoSpeed.cost).toBe('free'));
   it('batchable is false', () => expect(videoSpeed.batchable).toBe(false));
   it('defaults speed is 1.0', () => expect(defaultVideoSpeedParams.speed).toBe(1.0));
-  it('defaults preserveAudioPitch is true', () => expect(defaultVideoSpeedParams.preserveAudioPitch).toBe(true));
+  it('defaults preserveAudioPitch is true', () =>
+    expect(defaultVideoSpeedParams.preserveAudioPitch).toBe(true));
   it('defaults crf is 23', () => expect(defaultVideoSpeedParams.crf).toBe(23));
 });
 

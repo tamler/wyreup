@@ -34,9 +34,7 @@ const ALGO_HASH: Record<JwtSignAlgorithm, 'SHA-256' | 'SHA-384' | 'SHA-512'> = {
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = '';
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
-  const b64 = typeof Buffer !== 'undefined'
-    ? Buffer.from(bytes).toString('base64')
-    : btoa(binary);
+  const b64 = typeof Buffer !== 'undefined' ? Buffer.from(bytes).toString('base64') : btoa(binary);
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 

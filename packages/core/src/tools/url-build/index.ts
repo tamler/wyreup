@@ -40,11 +40,12 @@ export function buildUrl(spec: UrlBuildSpec): string {
     ? `${encodeURIComponent(spec.username)}${spec.password ? ':' + encodeURIComponent(spec.password) : ''}@`
     : '';
   const port = spec.port !== undefined && spec.port !== '' ? `:${spec.port}` : '';
-  const path = spec.pathname && spec.pathname.startsWith('/')
-    ? spec.pathname
-    : spec.pathname
-      ? '/' + spec.pathname
-      : '/';
+  const path =
+    spec.pathname && spec.pathname.startsWith('/')
+      ? spec.pathname
+      : spec.pathname
+        ? '/' + spec.pathname
+        : '/';
   const base = `${protocol}//${auth}${spec.hostname}${port}${path}`;
 
   // Build searchParams. Accept either an array of {key,value} entries (the
@@ -101,7 +102,8 @@ export const urlBuild: ToolModule<UrlBuildParams> = {
       type: 'string',
       label: 'URL spec (JSON)',
       help: 'JSON with hostname (required) and any of: protocol, username, password, port, pathname, searchParams, hash. Accepts the output shape of url-parse.',
-      placeholder: '{"protocol":"https","hostname":"example.com","pathname":"/a","searchParams":[{"key":"q","value":"hi"}]}',
+      placeholder:
+        '{"protocol":"https","hostname":"example.com","pathname":"/a","searchParams":[{"key":"q","value":"hi"}]}',
       multiline: true,
     },
   },

@@ -47,16 +47,20 @@ describe('pgp-sign — metadata', () => {
 describe('pgp-sign — input validation', () => {
   it('throws when privateKey is empty', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    await expect(
-      pgpSign.run([file], { privateKey: '' }, makeCtx()),
-    ).rejects.toThrow(/privateKey is required/i);
+    await expect(pgpSign.run([file], { privateKey: '' }, makeCtx())).rejects.toThrow(
+      /privateKey is required/i,
+    );
   });
 });
 
 describe('pgp-sign — run() with real key', () => {
   it('produces an ASCII-armored signature', async () => {
     const file = new File(['data to sign'], 'data.txt', { type: 'text/plain' });
-    const result = await pgpSign.run([file], { privateKey: privateKeyArmored }, makeCtx()) as Blob[];
+    const result = (await pgpSign.run(
+      [file],
+      { privateKey: privateKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     expect(result).toHaveLength(1);
     const sigText = await result[0]!.text();
     expect(sigText).toContain('BEGIN PGP SIGNATURE');
@@ -64,7 +68,11 @@ describe('pgp-sign — run() with real key', () => {
 
   it('signature blob has text/plain mime', async () => {
     const file = new File(['data'], 'data.txt', { type: 'text/plain' });
-    const result = await pgpSign.run([file], { privateKey: privateKeyArmored }, makeCtx()) as Blob[];
+    const result = (await pgpSign.run(
+      [file],
+      { privateKey: privateKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     expect(result[0]!.type).toContain('text/plain');
   });
 });

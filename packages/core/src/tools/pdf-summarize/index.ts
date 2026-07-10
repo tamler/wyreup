@@ -34,11 +34,7 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
   defaults: {},
   paramSchema: {},
 
-  async run(
-    inputs: File[],
-    _params: Record<string, never>,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: Record<string, never>, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('pdf-summarize accepts exactly one PDF.');
 
     const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -52,7 +48,12 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
       }
     }
     const probeBuffer = await inputs[0]!.arrayBuffer();
-    const probeDoc = await getDocument({ data: new Uint8Array(probeBuffer), disableFontFace: true, disableRange: true, disableStream: true }).promise;
+    const probeDoc = await getDocument({
+      data: new Uint8Array(probeBuffer),
+      disableFontFace: true,
+      disableRange: true,
+      disableStream: true,
+    }).promise;
     assertPdfPageBudget(probeDoc.numPages, { maxPages: 500 });
     await probeDoc.destroy();
 

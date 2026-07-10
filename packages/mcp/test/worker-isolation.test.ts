@@ -11,7 +11,9 @@ const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
 
 describe('worker isolation [spec §#8]', () => {
   let tmp: string;
-  beforeAll(async () => { tmp = await mkdtemp(join(tmpdir(), 'wymcp-w-')); });
+  beforeAll(async () => {
+    tmp = await mkdtemp(join(tmpdir(), 'wymcp-w-'));
+  });
 
   it('runs a real free tool and returns the output path', async () => {
     const r = await runInWorker({

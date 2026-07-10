@@ -23,7 +23,9 @@ describe('text-sentiment — metadata', () => {
   });
 
   it('has installGroup nlp-standard', () => {
-    expect((textSentiment as unknown as { installGroup: string }).installGroup).toBe('nlp-standard');
+    expect((textSentiment as unknown as { installGroup: string }).installGroup).toBe(
+      'nlp-standard',
+    );
   });
 
   it('requires webgpu preferred', () => {

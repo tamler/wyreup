@@ -44,21 +44,13 @@ export const cronFromTextPro: ToolModule<CronFromTextProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CronFromTextProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: CronFromTextProParams, ctx: ToolRunContext): Promise<Blob> {
     let description = params.description?.trim() ?? '';
     if (!description && inputs.length === 1) {
       description = (await inputs[0]!.text()).trim();
     }
     if (!description) throw new Error('Enter a schedule to convert.');
-    const result = await runPro<CronFromTextProResult>(
-      'cron-from-text-pro',
-      { description },
-      ctx,
-    );
+    const result = await runPro<CronFromTextProResult>('cron-from-text-pro', { description }, ctx);
     ctx.onProgress({ stage: 'done', percent: 100 });
     return new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
   },

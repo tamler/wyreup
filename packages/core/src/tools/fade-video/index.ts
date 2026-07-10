@@ -58,7 +58,8 @@ export const fadeVideo: ToolModule<FadeVideoParams> = {
   id: 'fade-video',
   slug: 'fade-video',
   name: 'Fade In / Out',
-  description: 'Add a fade-in from black at the start and/or a fade-out to black at the end (video and audio).',
+  description:
+    'Add a fade-in from black at the start and/or a fade-out to black at the end (video and audio).',
   category: 'media',
   categories: ['edit'],
   keywords: ['video', 'fade', 'fade in', 'fade out', 'intro', 'outro', 'transition', 'dissolve'],
@@ -102,7 +103,7 @@ export const fadeVideo: ToolModule<FadeVideoParams> = {
     await ff.exec(buildFadeArgs(inputName, outputName, params, durationSec));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

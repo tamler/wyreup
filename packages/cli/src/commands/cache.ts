@@ -137,7 +137,9 @@ export async function cacheListCommand(opts: CacheListOpts): Promise<void> {
     console.log('(empty — no models downloaded yet)');
     return;
   }
-  console.log(`Total: ${fmtBytes(totalBytes)} across ${models.length} model${models.length === 1 ? '' : 's'}\n`);
+  console.log(
+    `Total: ${fmtBytes(totalBytes)} across ${models.length} model${models.length === 1 ? '' : 's'}\n`,
+  );
   for (const m of models) {
     console.log(`  ${fmtBytes(m.bytes).padStart(8)}  ${m.id}`);
   }

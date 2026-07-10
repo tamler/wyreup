@@ -22,11 +22,7 @@ describe('matchRule — basic resolution', () => {
   });
 
   it('matches an exact MIME', () => {
-    const r = matchRule(
-      'application/pdf',
-      [rule({ id: '1', mime: 'application/pdf' })],
-      [],
-    );
+    const r = matchRule('application/pdf', [rule({ id: '1', mime: 'application/pdf' })], []);
     expect(r.kind).toBe('match');
     if (r.kind === 'match') expect(r.rule.id).toBe('1');
   });
@@ -73,10 +69,7 @@ describe('matchRule — specificity', () => {
   it('stable tiebreaker by id when order is equal', () => {
     const r = matchRule(
       'image/png',
-      [
-        rule({ id: 'b', mime: 'image/*', order: 1 }),
-        rule({ id: 'a', mime: 'image/*', order: 1 }),
-      ],
+      [rule({ id: 'b', mime: 'image/*', order: 1 }), rule({ id: 'a', mime: 'image/*', order: 1 })],
       [],
     );
     expect(r.kind).toBe('match');

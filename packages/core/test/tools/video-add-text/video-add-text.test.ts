@@ -27,8 +27,10 @@ describe('video-add-text — metadata', () => {
   it('cost is "free"', () => expect(videoAddText.cost).toBe('free'));
   it('batchable is false', () => expect(videoAddText.batchable).toBe(false));
   it('defaults fontSize is 32', () => expect(defaultVideoAddTextParams.fontSize).toBe(32));
-  it('defaults position is bottom', () => expect(defaultVideoAddTextParams.position).toBe('bottom'));
-  it('defaults fontColor is #FFFFFF', () => expect(defaultVideoAddTextParams.fontColor).toBe('#FFFFFF'));
+  it('defaults position is bottom', () =>
+    expect(defaultVideoAddTextParams.position).toBe('bottom'));
+  it('defaults fontColor is #FFFFFF', () =>
+    expect(defaultVideoAddTextParams.fontColor).toBe('#FFFFFF'));
   it('defaults startSeconds is 0', () => expect(defaultVideoAddTextParams.startSeconds).toBe(0));
   it('defaults crf is 23', () => expect(defaultVideoAddTextParams.crf).toBe(23));
 });
@@ -109,7 +111,12 @@ describe('video-add-text — hexToFfmpegColor()', () => {
 
 describe('video-add-text — buildDrawtextFilter()', () => {
   it('includes the text value', () => {
-    const f = buildDrawtextFilter({ text: 'Hello', position: 'bottom', fontSize: 32, fontColor: '#FFFFFF' });
+    const f = buildDrawtextFilter({
+      text: 'Hello',
+      position: 'bottom',
+      fontSize: 32,
+      fontColor: '#FFFFFF',
+    });
     expect(f).toContain("text='Hello'");
   });
 
@@ -119,7 +126,12 @@ describe('video-add-text — buildDrawtextFilter()', () => {
   });
 
   it('includes box when backgroundColor is set', () => {
-    const f = buildDrawtextFilter({ text: 'Hi', fontColor: '#FFFFFF', backgroundColor: '#000000', backgroundOpacity: 0.5 });
+    const f = buildDrawtextFilter({
+      text: 'Hi',
+      fontColor: '#FFFFFF',
+      backgroundColor: '#000000',
+      backgroundOpacity: 0.5,
+    });
     expect(f).toContain('box=1');
     expect(f).toContain('boxcolor=');
   });
@@ -130,7 +142,12 @@ describe('video-add-text — buildDrawtextFilter()', () => {
   });
 
   it('includes enable expression for durationSeconds', () => {
-    const f = buildDrawtextFilter({ text: 'Hi', fontColor: '#FFFFFF', startSeconds: 2, durationSeconds: 3 });
+    const f = buildDrawtextFilter({
+      text: 'Hi',
+      fontColor: '#FFFFFF',
+      startSeconds: 2,
+      durationSeconds: 3,
+    });
     expect(f).toContain('enable=');
     expect(f).toContain('between');
   });

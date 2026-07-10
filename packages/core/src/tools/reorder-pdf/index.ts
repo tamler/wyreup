@@ -11,7 +11,10 @@ function parseOrder(order: string, pageCount: number): number[] {
     throw new Error('order must not be empty.');
   }
 
-  const parts = order.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = order
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (parts.length === 0) {
     throw new Error('order must not be empty.');
   }
@@ -56,11 +59,7 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
 
   defaults: { order: '' },
 
-  async run(
-    inputs: File[],
-    params: ReorderPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ReorderPdfParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const { PDFDocument } = await import('pdf-lib');

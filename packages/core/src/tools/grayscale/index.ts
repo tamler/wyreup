@@ -31,11 +31,7 @@ export const grayscale: ToolModule<GrayscaleParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: GrayscaleParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: GrayscaleParams, ctx: ToolRunContext): Promise<Blob[]> {
     const outputs: Blob[] = [];
 
     for (let i = 0; i < inputs.length; i++) {
@@ -60,9 +56,7 @@ export const grayscale: ToolModule<GrayscaleParams> = {
 
       const out = new Uint8ClampedArray(data.length);
       for (let p = 0; p < data.length; p += 4) {
-        const luma = Math.round(
-          0.299 * data[p]! + 0.587 * data[p + 1]! + 0.114 * data[p + 2]!,
-        );
+        const luma = Math.round(0.299 * data[p]! + 0.587 * data[p + 1]! + 0.114 * data[p + 2]!);
         out[p] = luma;
         out[p + 1] = luma;
         out[p + 2] = luma;

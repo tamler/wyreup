@@ -21,7 +21,8 @@ export const ocrPro: ToolModule<OcrProParams> = {
   id: 'ocr-pro',
   slug: 'ocr-pro',
   name: 'OCR Pro',
-  description: 'Extract text from handwritten notes and printed documents using a neural model — runs on your device.',
+  description:
+    'Extract text from handwritten notes and printed documents using a neural model — runs on your device.',
   category: 'export',
   keywords: ['ocr', 'handwriting', 'text', 'extract', 'recognize', 'neural', 'scan', 'document'],
 
@@ -56,7 +57,7 @@ export const ocrPro: ToolModule<OcrProParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading neural OCR model' });
 
-    const pipe = await getPipeline(ctx, 'image-to-text', MODEL_ID) as (
+    const pipe = (await getPipeline(ctx, 'image-to-text', MODEL_ID)) as (
       input: unknown,
     ) => Promise<Array<{ generated_text?: string }>>;
 

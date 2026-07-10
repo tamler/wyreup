@@ -18,9 +18,7 @@ const headersPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'public'
 const headers = readFileSync(headersPath, 'utf8');
 
 function directive(name: string): string {
-  const cspLine = headers
-    .split('\n')
-    .find((l) => l.includes('Content-Security-Policy:'));
+  const cspLine = headers.split('\n').find((l) => l.includes('Content-Security-Policy:'));
   expect(cspLine, 'CSP header must exist in _headers').toBeTruthy();
   const csp = cspLine!.split('Content-Security-Policy:')[1] ?? '';
   const match = csp

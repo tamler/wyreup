@@ -31,26 +31,25 @@ export function createToolSearch(tools: SearchableTool[]): Fuse<SearchableTool> 
       { name: 'category', weight: 2 },
       { name: 'description', weight: 1 },
     ],
-    threshold: 0.35,         // lenient — tolerates typos
-    ignoreLocation: true,    // match anywhere in a field
-    minMatchCharLength: 2,   // ignore single-char noise
+    threshold: 0.35, // lenient — tolerates typos
+    ignoreLocation: true, // match anywhere in a field
+    minMatchCharLength: 2, // ignore single-char noise
     includeScore: true,
-    shouldSort: true,        // rank by relevance (lower score = better)
+    shouldSort: true, // rank by relevance (lower score = better)
   });
 }
 
 /**
  * Convenience: search and return the top N results, sorted by relevance.
  */
-export function searchTools(
-  fuse: Fuse<SearchableTool>,
-  query: string,
-  limit = 10,
-): SearchResult[] {
+export function searchTools(fuse: Fuse<SearchableTool>, query: string, limit = 10): SearchResult[] {
   const q = query.trim();
   if (!q) return [];
-  return fuse.search(q).slice(0, limit).map((r) => ({
-    tool: r.item,
-    score: r.score ?? 1,
-  }));
+  return fuse
+    .search(q)
+    .slice(0, limit)
+    .map((r) => ({
+      tool: r.item,
+      score: r.score ?? 1,
+    }));
 }

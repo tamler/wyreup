@@ -49,11 +49,7 @@ export const markdownToHtml: ToolModule<MarkdownToHtmlParams> = {
 
   defaults: { gfm: true },
 
-  async run(
-    inputs: File[],
-    params: MarkdownToHtmlParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: MarkdownToHtmlParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading markdown parser' });
 
     const { Marked } = await import('marked');

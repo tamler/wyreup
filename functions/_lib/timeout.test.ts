@@ -12,9 +12,7 @@ describe('withTimeout', () => {
     const hang = new Promise<string>(() => {
       /* intentionally pending forever */
     });
-    await expect(withTimeout(hang, 25, 'hung-call')).rejects.toBeInstanceOf(
-      InferenceTimeoutError,
-    );
+    await expect(withTimeout(hang, 25, 'hung-call')).rejects.toBeInstanceOf(InferenceTimeoutError);
   });
 
   it('includes the label and duration in the error message', async () => {
@@ -32,9 +30,9 @@ describe('withTimeout', () => {
   });
 
   it('clears the timer when the promise rejects', async () => {
-    await expect(
-      withTimeout(Promise.reject(new Error('boom')), 60_000, 'failing'),
-    ).rejects.toThrow('boom');
+    await expect(withTimeout(Promise.reject(new Error('boom')), 60_000, 'failing')).rejects.toThrow(
+      'boom',
+    );
   });
 
   it('propagates non-timeout rejections unchanged', async () => {

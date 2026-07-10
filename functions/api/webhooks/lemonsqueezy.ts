@@ -230,15 +230,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // Returning 500 makes LS retry with backoff; by then _created has
     // typically arrived and the UPDATE will match.
     if ((res.meta?.changes ?? 0) === 0) {
-      console.warn(
-        'LS webhook',
-        event,
-        'no-op for user',
-        userId,
-        'sub',
-        orderId,
-        '— retrying',
-      );
+      console.warn('LS webhook', event, 'no-op for user', userId, 'sub', orderId, '— retrying');
       return new Response('Subscription not yet recorded — retry', { status: 500 });
     }
     return new Response('OK');

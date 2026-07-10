@@ -26,18 +26,30 @@ export interface CronFromTextResult {
 }
 
 const DAY_NAMES: Record<string, number> = {
-  sunday: 0, sun: 0,
-  monday: 1, mon: 1,
-  tuesday: 2, tue: 2, tues: 2,
-  wednesday: 3, wed: 3,
-  thursday: 4, thu: 4, thurs: 4,
-  friday: 5, fri: 5,
-  saturday: 6, sat: 6,
+  sunday: 0,
+  sun: 0,
+  monday: 1,
+  mon: 1,
+  tuesday: 2,
+  tue: 2,
+  tues: 2,
+  wednesday: 3,
+  wed: 3,
+  thursday: 4,
+  thu: 4,
+  thurs: 4,
+  friday: 5,
+  fri: 5,
+  saturday: 6,
+  sat: 6,
 };
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-interface Time { hour: number; minute: number }
+interface Time {
+  hour: number;
+  minute: number;
+}
 
 /** Extract a HH:MM 24h, HH:MM 12h with am/pm, "midnight", "noon", or bare hour with am/pm. */
 function parseTime(lower: string): Time | null {
@@ -93,7 +105,9 @@ function parseDayOfMonth(lower: string): { value: number | 'L'; label: string } 
   if (/\blast day of (the )?month\b|\bend of (the )?month\b/.test(lower)) {
     return { value: 'L', label: 'last day of the month' };
   }
-  const m = lower.match(/\b(first|last|1st|2nd|3rd|\d{1,2}(?:th|st|nd|rd)?)\b(?:\s+of\s+(?:the\s+)?month)?/);
+  const m = lower.match(
+    /\b(first|last|1st|2nd|3rd|\d{1,2}(?:th|st|nd|rd)?)\b(?:\s+of\s+(?:the\s+)?month)?/,
+  );
   if (m && /of\s+(the\s+)?month/.test(lower)) {
     const word = m[1]!;
     if (word === 'first' || word === '1st') return { value: 1, label: '1st of the month' };
@@ -104,7 +118,9 @@ function parseDayOfMonth(lower: string): { value: number | 'L'; label: string } 
   return null;
 }
 
-function parseEvery(lower: string): { unit: 'minute' | 'hour' | 'day' | 'week' | 'month'; n: number } | null {
+function parseEvery(
+  lower: string,
+): { unit: 'minute' | 'hour' | 'day' | 'week' | 'month'; n: number } | null {
   // "every X minutes/hours/days/weeks/months" or "every minute/hour/day"
   const m = lower.match(/\bevery\s+(\d+)\s+(minutes?|hours?|days?|weeks?|months?)\b/);
   if (m) {
@@ -299,8 +315,14 @@ export const cronFromText: ToolModule<CronFromTextParams> = {
       },
     ],
     alsoTry: [
-      { id: 'cron-parser', why: 'Verify the cron expression by parsing it back into a schedule description.' },
-      { id: 'timestamp-converter', why: 'Convert between unix timestamps, ISO dates, and human-readable formats.' },
+      {
+        id: 'cron-parser',
+        why: 'Verify the cron expression by parsing it back into a schedule description.',
+      },
+      {
+        id: 'timestamp-converter',
+        why: 'Convert between unix timestamps, ISO dates, and human-readable formats.',
+      },
     ],
   },
 

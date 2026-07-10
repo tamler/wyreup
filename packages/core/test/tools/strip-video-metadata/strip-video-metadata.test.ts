@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { stripVideoMetadata, buildStripMetadataArgs } from '../../../src/tools/strip-video-metadata/index.js';
+import {
+  stripVideoMetadata,
+  buildStripMetadataArgs,
+} from '../../../src/tools/strip-video-metadata/index.js';
 
 describe('strip-video-metadata', () => {
   it('id + privacy category + preserves container', () => {

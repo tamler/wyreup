@@ -125,7 +125,8 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
 
     const text = await inputs[0]!.text();
     const hasHeader = params.hasHeader ?? true;
-    const delimiter = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing CSV' });
     const parsed = Papa.parse<string[]>(text, {
@@ -164,7 +165,9 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
         } else {
           const asInt = Number.parseInt(name, 10);
           if (!Number.isInteger(asInt) || asInt < 0) {
-            throw new Error(`Without a header, key columns must be 0-based indices (got "${name}").`);
+            throw new Error(
+              `Without a header, key columns must be 0-based indices (got "${name}").`,
+            );
           }
           keyIndices.push(asInt);
         }
@@ -195,9 +198,12 @@ export const csvDeduplicate: ToolModule<CsvDeduplicateParams> = {
       rowsIn: dataRows.length,
       rowsOut: kept.length,
       duplicatesRemoved: dataRows.length - kept.length,
-      keyColumns: keyNames.length > 0
-        ? (hasHeader ? keyIndices.map((i) => headerRow![i]!) : keyIndices.map(String))
-        : ['<full row>'],
+      keyColumns:
+        keyNames.length > 0
+          ? hasHeader
+            ? keyIndices.map((i) => headerRow![i]!)
+            : keyIndices.map(String)
+          : ['<full row>'],
       keep,
       delimiter: parsed.meta.delimiter,
     };

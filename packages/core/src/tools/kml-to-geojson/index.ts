@@ -13,16 +13,7 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
     'Convert a Google Earth KML file to GeoJSON. Preserves placemark names, descriptions, and geometry.',
   category: 'convert',
   categories: ['geo'],
-  keywords: [
-    'kml',
-    'geojson',
-    'geo',
-    'convert',
-    'google earth',
-    'gis',
-    'map',
-    'placemark',
-  ],
+  keywords: ['kml', 'geojson', 'geo', 'convert', 'google earth', 'gis', 'map', 'placemark'],
 
   input: {
     accept: ['application/vnd.google-earth.kml+xml', 'application/xml', 'text/xml', 'text/plain'],
@@ -43,18 +34,11 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
 
   defaults: defaultKmlToGeojsonParams,
 
-  async run(
-    inputs: File[],
-    _params: KmlToGeojsonParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: KmlToGeojsonParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading parser' });
-    const [{ kml }, parser] = await Promise.all([
-      import('@tmcw/togeojson'),
-      getDomParser(),
-    ]);
+    const [{ kml }, parser] = await Promise.all([import('@tmcw/togeojson'), getDomParser()]);
 
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Parsing KML' });
     const text = await inputs[0]!.text();

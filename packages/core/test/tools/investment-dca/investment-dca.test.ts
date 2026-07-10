@@ -8,8 +8,10 @@ const ctx = {
   executionId: 'test',
 };
 
-async function run(params: Parameters<typeof investmentDca.run>[1]): Promise<Record<string, unknown>> {
-  const [blob] = await investmentDca.run([], params, ctx) as Blob[];
+async function run(
+  params: Parameters<typeof investmentDca.run>[1],
+): Promise<Record<string, unknown>> {
+  const [blob] = (await investmentDca.run([], params, ctx)) as Blob[];
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return JSON.parse(await blob!.text());
 }

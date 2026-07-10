@@ -1,6 +1,12 @@
 export type UnitCategory =
-  | 'length' | 'mass' | 'temperature' | 'area' | 'volume'
-  | 'speed' | 'data' | 'time';
+  | 'length'
+  | 'mass'
+  | 'temperature'
+  | 'area'
+  | 'volume'
+  | 'speed'
+  | 'data'
+  | 'time';
 
 export interface UnitConverterParams {
   value: number;

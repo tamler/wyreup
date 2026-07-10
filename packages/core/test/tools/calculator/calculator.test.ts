@@ -125,7 +125,11 @@ describe('calculator — run()', () => {
   };
 
   it('returns JSON blob with valid result', async () => {
-    const [blob] = await calculator.run([], { expression: '6 * 7', angleMode: 'deg' }, ctx) as Blob[];
+    const [blob] = (await calculator.run(
+      [],
+      { expression: '6 * 7', angleMode: 'deg' },
+      ctx,
+    )) as Blob[];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const json = JSON.parse(await blob!.text());
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -135,7 +139,11 @@ describe('calculator — run()', () => {
   });
 
   it('returns valid: false for bad expression in JSON', async () => {
-    const [blob] = await calculator.run([], { expression: 'bad!!', angleMode: 'deg' }, ctx) as Blob[];
+    const [blob] = (await calculator.run(
+      [],
+      { expression: 'bad!!', angleMode: 'deg' },
+      ctx,
+    )) as Blob[];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const json = JSON.parse(await blob!.text());
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

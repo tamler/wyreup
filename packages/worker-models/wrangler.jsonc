@@ -8,8 +8,8 @@
   "r2_buckets": [
     {
       "binding": "MODELS",
-      "bucket_name": "wyreup-models"
-    }
+      "bucket_name": "wyreup-models",
+    },
   ],
   // Rate limiting: relying on Cloudflare's edge cache + allowlist for
   // cost bounds, not an in-Worker rate-limit binding. The Workers Rate
@@ -21,7 +21,7 @@
   "routes": [
     {
       "pattern": "models.wyreup.com",
-      "custom_domain": true
-    }
-  ]
+      "custom_domain": true,
+    },
+  ],
 }

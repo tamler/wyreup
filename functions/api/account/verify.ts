@@ -15,16 +15,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return unauthorized();
 
   const exp = Date.now() + SESSION_MAX_AGE_SECONDS * 1000;
-  const cookie = await signSessionCookie(
-    { uid: user.id, kid: user.kid, exp },
-    env.SESSION_SECRET,
-  );
+  const cookie = await signSessionCookie({ uid: user.id, kid: user.kid, exp }, env.SESSION_SECRET);
 
   const [balance, subRow] = await Promise.all([
     getBalance(user.id, env),
-    env.DB.prepare(
-      `SELECT subscription_status FROM users WHERE id = ?`,
-    )
+    env.DB.prepare(`SELECT subscription_status FROM users WHERE id = ?`)
       .bind(user.id)
       .first<{ subscription_status: string | null }>(),
   ]);

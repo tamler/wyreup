@@ -57,11 +57,7 @@ export const zipRemove: ToolModule<ZipRemoveParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ZipRemoveParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ZipRemoveParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('zip-remove accepts exactly one ZIP file.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -77,15 +73,24 @@ export const zipRemove: ToolModule<ZipRemoveParams> = {
     const zip = await JSZip.loadAsync(bytes);
 
     if (Object.keys(zip.files).length > MAX_ZIP_ENTRIES) {
-      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+      throw new ZipSafetyError(
+        'too-many-entries',
+        `ZIP has too-many-entries: ${Object.keys(zip.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`,
+      );
     }
 
     // Pre-flight declared-size check: zip-remove doesn't decompress payloads,
     // but run the check so any unintended JSZip decompress during directory
     // parsing can't blow the heap.
-    assertDeclaredSizeBudget(Object.values(zip.files).filter((f) => !f.dir).map((f) => ({
-      uncompressedSize: (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
-    })));
+    assertDeclaredSizeBudget(
+      Object.values(zip.files)
+        .filter((f) => !f.dir)
+        .map((f) => ({
+          uncompressedSize:
+            (f as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ??
+            0,
+        })),
+    );
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

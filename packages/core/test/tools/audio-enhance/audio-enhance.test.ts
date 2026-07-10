@@ -39,7 +39,7 @@ function isWav(buf: Uint8Array): boolean {
     buf[0] === 0x52 && // R
     buf[1] === 0x49 && // I
     buf[2] === 0x46 && // F
-    buf[3] === 0x46    // F
+    buf[3] === 0x46 // F
   );
 }
 
@@ -228,12 +228,18 @@ describe('audio-enhance — run() input validation', () => {
     const ac = new AbortController();
     ac.abort();
     const file = loadFixture('tone-16k.wav', 'audio/wav');
-    await expect(audioEnhance.run([file], {}, {
-      onProgress: () => {},
-      signal: ac.signal,
-      cache: new Map(),
-      executionId: 'test',
-    })).rejects.toThrow('Aborted');
+    await expect(
+      audioEnhance.run(
+        [file],
+        {},
+        {
+          onProgress: () => {},
+          signal: ac.signal,
+          cache: new Map(),
+          executionId: 'test',
+        },
+      ),
+    ).rejects.toThrow('Aborted');
   });
 });
 
@@ -256,8 +262,6 @@ describe('audio-enhance — run() integration', () => {
     const file = loadFixture('tone-16k.wav', 'audio/wav');
     // In Node, window is undefined so decodeToMono16k returns null and
     // run() throws with a message about Web Audio API.
-    await expect(audioEnhance.run([file], {}, makeCtx())).rejects.toThrow(
-      /web audio api/i,
-    );
+    await expect(audioEnhance.run([file], {}, makeCtx())).rejects.toThrow(/web audio api/i);
   });
 });

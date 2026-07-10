@@ -10,7 +10,10 @@ export { defaultSplitPdfParams } from './types.js';
  * indices. Each element of the returned array becomes a separate output PDF.
  */
 function parseRanges(rangesStr: string, pageCount: number): number[][] {
-  const parts = rangesStr.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = rangesStr
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   if (parts.length === 0) {
     throw new Error('ranges must not be empty when mode is "ranges".');
   }
@@ -43,9 +46,7 @@ function parseRanges(rangesStr: string, pageCount: number): number[][] {
       return [n - 1];
     }
 
-    throw new Error(
-      `Invalid range "${part}". Expected a number or a range like "2-5".`,
-    );
+    throw new Error(`Invalid range "${part}". Expected a number or a range like "2-5".`);
   });
 }
 
@@ -97,11 +98,7 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: SplitPdfParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: SplitPdfParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const mode = params.mode ?? 'all';

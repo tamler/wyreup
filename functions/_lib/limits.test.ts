@@ -1,11 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  DEFAULT_LIMITS,
-  enforceLimits,
-  getSetting,
-  setSetting,
-  startOfUtcDay,
-} from './limits';
+import { DEFAULT_LIMITS, enforceLimits, getSetting, setSetting, startOfUtcDay } from './limits';
 import type { Env } from './env';
 
 // ── Test doubles ───────────────────────────────────────────────────────────
@@ -30,9 +24,7 @@ function mockEnv(state: Partial<MockState> = {}): { env: Env; state: MockState }
       first: vi.fn(() => {
         if (sql.includes('FROM system_settings') && sql.includes('WHERE key = ?')) {
           const key = String(args[0]);
-          return Promise.resolve(
-            s.settings[key] != null ? { value: s.settings[key] } : null,
-          );
+          return Promise.resolve(s.settings[key] != null ? { value: s.settings[key] } : null);
         }
         if (sql.includes('total_spend')) {
           return Promise.resolve({ total_spend: s.totalSpend });

@@ -46,11 +46,7 @@ export const gpxToKml: ToolModule<GpxToKmlParams> = {
 
   defaults: defaultGpxToKmlParams,
 
-  async run(
-    inputs: File[],
-    _params: GpxToKmlParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: GpxToKmlParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading converters' });

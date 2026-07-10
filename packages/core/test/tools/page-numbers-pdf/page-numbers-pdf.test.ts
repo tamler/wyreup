@@ -70,11 +70,7 @@ describe('page-numbers-pdf — run()', () => {
 
   it('works with top-right position', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    const result = await pageNumbersPdf.run(
-      [input],
-      { position: 'top-right' },
-      makeCtx(),
-    );
+    const result = await pageNumbersPdf.run([input], { position: 'top-right' }, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     expect(blob.type).toBe('application/pdf');
     expect(blob.size).toBeGreaterThan(input.size);

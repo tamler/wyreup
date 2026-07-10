@@ -42,15 +42,16 @@ describe('pgp-decrypt — metadata', () => {
   it('cost is "free"', () => expect(pgpDecrypt.cost).toBe('free'));
   it('batchable is false', () => expect(pgpDecrypt.batchable).toBe(false));
   it('no installSize', () => expect(pgpDecrypt.installSize).toBeUndefined());
-  it('defaults privateKey is empty string', () => expect(defaultPgpDecryptParams.privateKey).toBe(''));
+  it('defaults privateKey is empty string', () =>
+    expect(defaultPgpDecryptParams.privateKey).toBe(''));
 });
 
 describe('pgp-decrypt — input validation', () => {
   it('throws when privateKey is empty', async () => {
     const file = new File(['encrypted'], 'msg.asc', { type: 'text/plain' });
-    await expect(
-      pgpDecrypt.run([file], { privateKey: '' }, makeCtx()),
-    ).rejects.toThrow(/privateKey is required/i);
+    await expect(pgpDecrypt.run([file], { privateKey: '' }, makeCtx())).rejects.toThrow(
+      /privateKey is required/i,
+    );
   });
 });
 
@@ -60,12 +61,20 @@ describe('pgp-decrypt — round-trip', () => {
     const plainFile = new File([original], 'plain.txt', { type: 'text/plain' });
 
     // Encrypt
-    const encrypted = await pgpEncrypt.run([plainFile], { publicKey: publicKeyArmored }, makeCtx()) as Blob[];
+    const encrypted = (await pgpEncrypt.run(
+      [plainFile],
+      { publicKey: publicKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     const encryptedText = await encrypted[0]!.text();
     const encryptedFile = new File([encryptedText], 'msg.asc', { type: 'text/plain' });
 
     // Decrypt
-    const decrypted = await pgpDecrypt.run([encryptedFile], { privateKey: privateKeyArmored }, makeCtx()) as Blob[];
+    const decrypted = (await pgpDecrypt.run(
+      [encryptedFile],
+      { privateKey: privateKeyArmored },
+      makeCtx(),
+    )) as Blob[];
     expect(decrypted).toHaveLength(1);
     const decryptedText = await decrypted[0]!.text();
     expect(decryptedText).toBe(original);

@@ -46,16 +46,23 @@ export function buildCrossfadeArgs(
   crf: number,
 ): string[] {
   return [
-    '-i', input1Name,
-    '-i', input2Name,
+    '-i',
+    input1Name,
+    '-i',
+    input2Name,
     '-filter_complex',
     `[0:v][1:v]xfade=transition=${transition}:duration=${fadeDuration}:offset=${offset}[outv];` +
-    `[0:a][1:a]acrossfade=d=${fadeDuration}[outa]`,
-    '-map', '[outv]',
-    '-map', '[outa]',
-    '-c:v', 'libx264',
-    '-preset', 'fast',
-    '-crf', String(crf),
+      `[0:a][1:a]acrossfade=d=${fadeDuration}[outa]`,
+    '-map',
+    '[outv]',
+    '-map',
+    '[outa]',
+    '-c:v',
+    'libx264',
+    '-preset',
+    'fast',
+    '-crf',
+    String(crf),
     outputName,
   ];
 }
@@ -123,11 +130,7 @@ export const videoCrossfade: ToolModule<VideoCrossfadeParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: VideoCrossfadeParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoCrossfadeParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     if (inputs.length !== 2) {
@@ -170,7 +173,9 @@ export const videoCrossfade: ToolModule<VideoCrossfadeParams> = {
 
       // Capture stderr by temporarily hooking ff.setLogger — store lines in array
       const logLines: string[] = [];
-      ff.on('log', ({ message }: { message: string }) => { logLines.push(message); });
+      ff.on('log', ({ message }: { message: string }) => {
+        logLines.push(message);
+      });
 
       // Intentional: exec with no output to force ffmpeg to print info
       await ff.exec(['-i', input1Name]).catch(() => {});
@@ -200,7 +205,7 @@ export const videoCrossfade: ToolModule<VideoCrossfadeParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(input1Name).catch(() => {});
     await ff.deleteFile(input2Name).catch(() => {});

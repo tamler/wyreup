@@ -14,6 +14,8 @@ export async function printError(prefix: string, err: unknown): Promise<void> {
   try {
     const k = await readApiKey();
     key = k ?? undefined;
-  } catch { /* credentials unreadable — proceed without key for redaction */ }
+  } catch {
+    /* credentials unreadable — proceed without key for redaction */
+  }
   process.stderr.write(`${prefix}: ${sanitize(raw, key)}\n`);
 }

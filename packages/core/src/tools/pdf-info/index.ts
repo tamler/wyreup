@@ -32,11 +32,7 @@ export const pdfInfo: ToolModule<PdfInfoParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: PdfInfoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: PdfInfoParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const input = inputs[0]!;

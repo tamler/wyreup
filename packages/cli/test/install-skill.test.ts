@@ -123,17 +123,13 @@ describe('fetchSkill', () => {
   it('calls the correct GitHub raw URL for cli variant', async () => {
     mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
     await fetchSkill(SKILL_DEFS.cli.url);
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('packages/cli-skill/skill.md'),
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('packages/cli-skill/skill.md'));
   });
 
   it('calls the correct GitHub raw URL for mcp variant', async () => {
     mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
     await fetchSkill(SKILL_DEFS.mcp.url);
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('packages/mcp-skill/skill.md'),
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('packages/mcp-skill/skill.md'));
   });
 
   it('throws a clear error on non-OK HTTP response', async () => {
@@ -175,8 +171,8 @@ describe('fetchSkill', () => {
   it('rejects content when the pinned SHA-256 does not match', async () => {
     mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
     const wrongHash = 'f'.repeat(64);
-    await expect(
-      fetchSkill(SKILL_DEFS.combined.url, wrongHash),
-    ).rejects.toThrow(/SHA-256 mismatch/);
+    await expect(fetchSkill(SKILL_DEFS.combined.url, wrongHash)).rejects.toThrow(
+      /SHA-256 mismatch/,
+    );
   });
 });

@@ -12,7 +12,8 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
   id: 'compound-interest',
   slug: 'compound-interest',
   name: 'Compound Interest',
-  description: 'Calculate compound interest with optional monthly contributions and a year-by-year breakdown.',
+  description:
+    'Calculate compound interest with optional monthly contributions and a year-by-year breakdown.',
   category: 'finance',
   keywords: ['compound', 'interest', 'investment', 'savings', 'finance', 'calculator', 'APR'],
 
@@ -32,12 +33,7 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
     monthlyContribution: 0,
   },
 
-   
-  async run(
-    _inputs: File[],
-    params: CompoundInterestParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(_inputs: File[], params: CompoundInterestParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Computing compound interest' });
 
     let result: Record<string, unknown>;
@@ -49,7 +45,8 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
 
       if (principal < 0) throw new Error('Principal must be non-negative');
       if (annualRate < 0) throw new Error('Annual rate must be non-negative');
-      if (years <= 0 || !Number.isInteger(years)) throw new Error('Years must be a positive integer');
+      if (years <= 0 || !Number.isInteger(years))
+        throw new Error('Years must be a positive integer');
       if (n <= 0) throw new Error('Compounding periods must be positive');
 
       const ratePerPeriod = annualRate / 100 / n;
@@ -87,7 +84,13 @@ export const compoundInterest: ToolModule<CompoundInterestParams> = {
 
       result = {
         valid: true,
-        inputs: { principal, annualRate, years, compoundingPerYear: n, monthlyContribution: monthly },
+        inputs: {
+          principal,
+          annualRate,
+          years,
+          compoundingPerYear: n,
+          monthlyContribution: monthly,
+        },
         finalBalance,
         totalContributions,
         totalInterest,

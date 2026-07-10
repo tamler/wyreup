@@ -39,11 +39,7 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
 
   defaults: defaultBurnSubtitlesParams,
 
-  async run(
-    inputs: File[],
-    params: BurnSubtitlesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: BurnSubtitlesParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, probeDuration } = await import('../../lib/ffmpeg.js');
 
     if (inputs.length < 2) {
@@ -93,15 +89,20 @@ export const burnSubtitles: ToolModule<BurnSubtitlesParams> = {
     const crf = params.crf ?? 23;
 
     await ff.exec([
-      '-i', inputName,
-      '-vf', `subtitles=${subName}:force_style='FontSize=${fontSize}'`,
-      '-crf', String(crf),
-      '-preset', 'fast',
+      '-i',
+      inputName,
+      '-vf',
+      `subtitles=${subName}:force_style='FontSize=${fontSize}'`,
+      '-crf',
+      String(crf),
+      '-preset',
+      'fast',
       outputName,
     ]);
 
     const output = await ff.readFile(outputName);
-    const outputBytes: Uint8Array = typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+    const outputBytes: Uint8Array =
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName);
     await ff.deleteFile(subName);

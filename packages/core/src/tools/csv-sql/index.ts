@@ -18,17 +18,7 @@ export const csvSql: ToolModule<CsvSqlParams> = {
   description:
     'Load one or more CSV, JSON, or Excel files as tables, then run a SQL query across them. Each file becomes a table named after its filename. Join, aggregate, window-function, CTE — anything SQLite supports. Runs entirely in your browser; nothing uploads.',
   category: 'dev',
-  keywords: [
-    'sql',
-    'sqlite',
-    'csv',
-    'query',
-    'join',
-    'aggregate',
-    'group-by',
-    'data',
-    'analytics',
-  ],
+  keywords: ['sql', 'sqlite', 'csv', 'query', 'join', 'aggregate', 'group-by', 'data', 'analytics'],
 
   input: {
     accept: [
@@ -70,11 +60,7 @@ export const csvSql: ToolModule<CsvSqlParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: CsvSqlParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CsvSqlParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length === 0) throw new Error('csv-sql needs at least one input file.');
     const sql = params.query?.trim();
     if (!sql) throw new Error('Enter a SQL query.');
@@ -110,9 +96,7 @@ export const csvSql: ToolModule<CsvSqlParams> = {
         return o;
       });
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-      return [
-        new Blob([JSON.stringify(objs, null, 2)], { type: 'application/json' }),
-      ];
+      return [new Blob([JSON.stringify(objs, null, 2)], { type: 'application/json' })];
     }
 
     // CSV via papaparse

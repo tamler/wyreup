@@ -34,11 +34,7 @@ export const imageDiff: ToolModule<ImageDiffParams> = {
     diffColor: [255, 0, 0],
   },
 
-  async run(
-    inputs: File[],
-    params: ImageDiffParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ImageDiffParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const threshold = params.threshold ?? 0.1;
@@ -81,25 +77,15 @@ export const imageDiff: ToolModule<ImageDiffParams> = {
     const totalPixels = width * height;
     const diffData = new Uint8ClampedArray(totalPixels * 4);
 
-    const pixelsDifferent = pixelmatch(
-      imgA.data,
-      imgB.data,
-      diffData,
-      width,
-      height,
-      {
-        threshold,
-        diffColor,
-      },
-    );
+    const pixelsDifferent = pixelmatch(imgA.data, imgB.data, diffData, width, height, {
+      threshold,
+      diffColor,
+    });
 
     ctx.onProgress({ stage: 'encoding', percent: 80, message: 'Encoding diff image' });
 
     const pngCodec = await getCodec('png');
-    const diffImageBuffer = await pngCodec.encode(
-      { data: diffData, width, height },
-      {},
-    );
+    const diffImageBuffer = await pngCodec.encode({ data: diffData, width, height }, {});
 
     const percentDifferent = totalPixels > 0 ? (pixelsDifferent / totalPixels) * 100 : 0;
 

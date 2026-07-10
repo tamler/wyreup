@@ -49,12 +49,7 @@ async function buildWorkbook(
     }
   };
 
-  if (
-    data !== null &&
-    typeof data === 'object' &&
-    !Array.isArray(data) &&
-    'sheets' in data
-  ) {
+  if (data !== null && typeof data === 'object' && !Array.isArray(data) && 'sheets' in data) {
     const multi = (data as { sheets: Record<string, unknown[]> }).sheets;
     for (const [name, rows] of Object.entries(multi)) {
       if (!Array.isArray(rows)) throw new Error(`sheets.${name} must be an array`);
@@ -75,7 +70,8 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
   id: 'json-to-excel',
   slug: 'json-to-excel',
   name: 'JSON to Excel',
-  description: 'Convert JSON data to an Excel workbook. Supports arrays of objects, arrays of arrays, or multi-sheet format.',
+  description:
+    'Convert JSON data to an Excel workbook. Supports arrays of objects, arrays of arrays, or multi-sheet format.',
   category: 'convert',
   keywords: ['json', 'excel', 'xlsx', 'convert', 'spreadsheet', 'table', 'data'],
 
@@ -115,11 +111,7 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: JsonToExcelParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: JsonToExcelParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Parsing JSON' });

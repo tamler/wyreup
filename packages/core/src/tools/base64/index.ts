@@ -19,8 +19,8 @@ function encodeBase64(bytes: Uint8Array, urlSafe: boolean): string {
 
     result += chars[b0 >> 2];
     result += chars[((b0 & 0x03) << 4) | (b1 >> 4)];
-    result += i + 1 < len ? chars[((b1 & 0x0f) << 2) | (b2 >> 6)] : (urlSafe ? '' : '=');
-    result += i + 2 < len ? chars[b2 & 0x3f] : (urlSafe ? '' : '=');
+    result += i + 1 < len ? chars[((b1 & 0x0f) << 2) | (b2 >> 6)] : urlSafe ? '' : '=';
+    result += i + 2 < len ? chars[b2 & 0x3f] : urlSafe ? '' : '=';
   }
 
   return result;
@@ -47,7 +47,8 @@ function decodeBase64(text: string): Uint8Array {
     lookup[STANDARD_CHARS.charCodeAt(i)] = i;
   }
 
-  const outputLen = Math.floor(cleaned.length * 3 / 4) -
+  const outputLen =
+    Math.floor((cleaned.length * 3) / 4) -
     (cleaned.endsWith('==') ? 2 : cleaned.endsWith('=') ? 1 : 0);
   const output = new Uint8Array(outputLen);
   let outIdx = 0;
@@ -108,12 +109,12 @@ export const base64: ToolModule<Base64Params> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: Base64Params,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
-    ctx.onProgress({ stage: 'processing', percent: 0, message: `${params.mode === 'encode' ? 'Encoding' : 'Decoding'} Base64` });
+  async run(inputs: File[], params: Base64Params, ctx: ToolRunContext): Promise<Blob[]> {
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 0,
+      message: `${params.mode === 'encode' ? 'Encoding' : 'Decoding'} Base64`,
+    });
 
     const file = inputs[0]!;
 
@@ -127,7 +128,11 @@ export const base64: ToolModule<Base64Params> = {
       const text = await file.text();
       const decoded = decodeBase64(text);
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-      return [new Blob([decoded.buffer as ArrayBuffer], { type: file.type || 'application/octet-stream' })];
+      return [
+        new Blob([decoded.buffer as ArrayBuffer], {
+          type: file.type || 'application/octet-stream',
+        }),
+      ];
     }
   },
 

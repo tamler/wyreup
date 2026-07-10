@@ -55,11 +55,7 @@ export const pgpSign: ToolModule<PgpSignParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PgpSignParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: PgpSignParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (!params.privateKey || params.privateKey.trim() === '') {
       throw new Error('privateKey is required.');
     }
@@ -90,12 +86,12 @@ export const pgpSign: ToolModule<PgpSignParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
 
     if (armor) {
-      const sigArmored = await openpgp.sign({
+      const sigArmored = (await openpgp.sign({
         message,
         signingKeys: privateKey,
         detached: true,
         format: 'armored',
-      }) as unknown as string;
+      })) as unknown as string;
       return [new Blob([sigArmored], { type: 'text/plain; charset=utf-8' })];
     }
 

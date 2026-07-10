@@ -121,7 +121,12 @@ export const textEscape: ToolModule<TextEscapeParams> = {
     const input = inputs[0]!;
 
     const mode = params.mode ?? 'encode-html';
-    const validModes: TextEscapeMode[] = ['encode-html', 'decode-html', 'encode-unicode', 'decode-unicode'];
+    const validModes: TextEscapeMode[] = [
+      'encode-html',
+      'decode-html',
+      'encode-unicode',
+      'decode-unicode',
+    ];
     if (!validModes.includes(mode)) {
       throw new Error(`Invalid mode: ${mode}. Valid modes: ${validModes.join(', ')}`);
     }

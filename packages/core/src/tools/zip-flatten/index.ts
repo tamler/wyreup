@@ -1,7 +1,14 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type JSZipType from 'jszip';
 import type { JSZipObject } from 'jszip';
-import { sanitizeZipEntryName, assertEntryBudget, assertDeclaredSizeBudget, MAX_ZIP_ENTRIES, MAX_ZIP_UNCOMPRESSED_BYTES, ZipSafetyError } from '../../lib/zip-safety.js';
+import {
+  sanitizeZipEntryName,
+  assertEntryBudget,
+  assertDeclaredSizeBudget,
+  MAX_ZIP_ENTRIES,
+  MAX_ZIP_UNCOMPRESSED_BYTES,
+  ZipSafetyError,
+} from '../../lib/zip-safety.js';
 
 // JSZip's internalStream is a runtime method not exposed in the public TypeScript
 // types. We cast through unknown to access it; the JSZipStreamHelper shape is
@@ -23,7 +30,12 @@ async function streamingExtractFlatten(
     stream.on('data', (chunk: Uint8Array) => {
       total += chunk.byteLength;
       if (total > maxBytes) {
-        reject(new ZipSafetyError('uncompressed-too-large', `ZIP entry exceeds ${maxBytes} bytes during decompression (zip-bomb defense).`));
+        reject(
+          new ZipSafetyError(
+            'uncompressed-too-large',
+            `ZIP entry exceeds ${maxBytes} bytes during decompression (zip-bomb defense).`,
+          ),
+        );
         return;
       }
       chunks.push(chunk);
@@ -32,7 +44,10 @@ async function streamingExtractFlatten(
     stream.on('end', () => {
       const merged = new Uint8Array(total);
       let off = 0;
-      for (const c of chunks) { merged.set(c, off); off += c.byteLength; }
+      for (const c of chunks) {
+        merged.set(c, off);
+        off += c.byteLength;
+      }
       resolve(merged.buffer);
     });
     stream.resume();
@@ -86,11 +101,7 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ZipFlattenParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: ZipFlattenParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('zip-flatten accepts exactly one ZIP file.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -106,7 +117,10 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
     const dst = new JSZip();
 
     if (Object.keys(src.files).length > MAX_ZIP_ENTRIES) {
-      throw new ZipSafetyError('too-many-entries', `ZIP has too-many-entries: ${Object.keys(src.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`);
+      throw new ZipSafetyError(
+        'too-many-entries',
+        `ZIP has too-many-entries: ${Object.keys(src.files).length} exceeds ${MAX_ZIP_ENTRIES} limit (zip-bomb defense).`,
+      );
     }
 
     if (ctx.signal.aborted) throw new Error('Aborted');
@@ -121,9 +135,13 @@ export const zipFlatten: ToolModule<ZipFlattenParams> = {
     // Pre-flight: sum declared uncompressed sizes from the ZIP directory before
     // decompressing anything. JSZip stores this on the private _data property
     // (documented in the type definitions' commented-out CompressedObject).
-    assertDeclaredSizeBudget(entries.map(({ file }) => ({
-      uncompressedSize: (file as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0,
-    })));
+    assertDeclaredSizeBudget(
+      entries.map(({ file }) => ({
+        uncompressedSize:
+          (file as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ??
+          0,
+      })),
+    );
 
     let accumulated = 0;
     const used = new Set<string>();

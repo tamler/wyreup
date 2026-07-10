@@ -20,8 +20,10 @@ describe('normalize-loudness — metadata', () => {
     expect(normalizeLoudness.input.accept).toContain('audio/*');
     expect(normalizeLoudness.input.accept).toContain('video/*');
   });
-  it('output mime preserves container (*/*)', () => expect(normalizeLoudness.output.mime).toBe('*/*'));
-  it('default preset is spotify', () => expect(defaultNormalizeLoudnessParams.preset).toBe('spotify'));
+  it('output mime preserves container (*/*)', () =>
+    expect(normalizeLoudness.output.mime).toBe('*/*'));
+  it('default preset is spotify', () =>
+    expect(defaultNormalizeLoudnessParams.preset).toBe('spotify'));
 });
 
 describe('normalize-loudness — LOUDNESS_TARGETS', () => {

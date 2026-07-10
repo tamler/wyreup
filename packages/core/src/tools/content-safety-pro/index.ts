@@ -38,11 +38,7 @@ export const contentSafetyPro: ToolModule<ContentSafetyProParams> = {
 
   defaults: defaultContentSafetyProParams,
 
-  async run(
-    inputs: File[],
-    _params: ContentSafetyProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: ContentSafetyProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('content-safety-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

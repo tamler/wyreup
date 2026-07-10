@@ -45,11 +45,7 @@ const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
 
-export async function runPro(
-  toolId: string,
-  input: RunnerInput,
-  env: Env,
-): Promise<RunnerOutput> {
+export async function runPro(toolId: string, input: RunnerInput, env: Env): Promise<RunnerOutput> {
   const runner = RUNNERS[toolId];
   if (!runner) {
     throw new Error(`No hosted runner registered for tool '${toolId}'`);
@@ -272,9 +268,7 @@ async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput>
   const image = __readImageBytes(raw);
   const rawTarget = (raw as Record<string, unknown>).target;
   const target =
-    typeof rawTarget === 'string' && rawTarget.trim().length > 0
-      ? rawTarget.trim()
-      : 'English';
+    typeof rawTarget === 'string' && rawTarget.trim().length > 0 ? rawTarget.trim() : 'English';
 
   const sourceText = await visionPrompt(
     env,
@@ -292,17 +286,12 @@ async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput>
   return { sourceText, translation, target };
 }
 
-async function transcribeAndTranslate(
-  raw: RunnerInput,
-  env: Env,
-): Promise<RunnerOutput> {
+async function transcribeAndTranslate(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
   const input = raw as TranscribeInput;
   const bytes = __readAudioBytes(raw);
   const rawTarget = (raw as Record<string, unknown>).target;
   const target =
-    typeof rawTarget === 'string' && rawTarget.trim().length > 0
-      ? rawTarget.trim()
-      : 'English';
+    typeof rawTarget === 'string' && rawTarget.trim().length > 0 ? rawTarget.trim() : 'English';
 
   const { text: transcript } = await runTranscribe(env, {
     bytes,
@@ -335,9 +324,11 @@ async function regexFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutpu
       '"explanation" is one plain sentence.',
     description,
   );
-  const parsed = tryParseJson(out) as
-    | { pattern?: unknown; flags?: unknown; explanation?: unknown }
-    | null;
+  const parsed = tryParseJson(out) as {
+    pattern?: unknown;
+    flags?: unknown;
+    explanation?: unknown;
+  } | null;
   if (!parsed || typeof parsed.pattern !== 'string') {
     throw new Error('Regex model returned unparseable output');
   }

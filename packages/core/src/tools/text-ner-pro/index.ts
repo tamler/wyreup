@@ -37,11 +37,7 @@ export const textNerPro: ToolModule<TextNerProParams> = {
 
   defaults: defaultTextNerProParams,
 
-  async run(
-    inputs: File[],
-    _params: TextNerProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: TextNerProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-ner-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

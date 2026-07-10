@@ -42,11 +42,7 @@ export const flipImage: ToolModule<FlipImageParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: FlipImageParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: FlipImageParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { direction } = params;
     const outputs: Blob[] = [];
 
@@ -75,10 +71,7 @@ export const flipImage: ToolModule<FlipImageParams> = {
           ? flipHorizontal(data, width, height)
           : flipVertical(data, width, height);
 
-      const encoded = await codec.encode(
-        { data: flipped, width, height },
-        { quality: 90 },
-      );
+      const encoded = await codec.encode({ data: flipped, width, height }, { quality: 90 });
 
       const mime = input.type === 'image/jpg' ? 'image/jpeg' : input.type;
       outputs.push(new Blob([encoded], { type: mime }));
@@ -95,11 +88,7 @@ export const flipImage: ToolModule<FlipImageParams> = {
   },
 };
 
-function flipHorizontal(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-): Uint8ClampedArray {
+function flipHorizontal(data: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(data.length);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -114,11 +103,7 @@ function flipHorizontal(
   return out;
 }
 
-function flipVertical(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-): Uint8ClampedArray {
+function flipVertical(data: Uint8ClampedArray, width: number, height: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(data.length);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {

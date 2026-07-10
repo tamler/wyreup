@@ -53,11 +53,7 @@ export const upscale2xPro: ToolModule<UpscaleProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: UpscaleProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: UpscaleProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('upscale-2x-pro accepts exactly one image.');
     const file = inputs[0]!;
     if (ctx.signal.aborted) throw new Error('Aborted');

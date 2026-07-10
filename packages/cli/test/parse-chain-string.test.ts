@@ -89,9 +89,7 @@ describe('serializeChain', () => {
   });
 
   it('serializes a chain with params', () => {
-    const result = serializeChain([
-      { toolId: 'compress', params: { quality: 75 } },
-    ]);
+    const result = serializeChain([{ toolId: 'compress', params: { quality: 75 } }]);
     expect(result).toBe('compress[quality=75]');
   });
 

@@ -22,18 +22,9 @@ function getExtFromFile(file: File): string {
  * appears N+1 times total); placed before `-i`. Stream-copied, so it is fast
  * and lossless. `loops` is clamped to a sane 1..100 range.
  */
-export function buildLoopArgs(
-  inputName: string,
-  outputName: string,
-  loops: number,
-): string[] {
+export function buildLoopArgs(inputName: string, outputName: string, loops: number): string[] {
   const n = Math.max(1, Math.min(100, Math.round(loops)));
-  return [
-    '-stream_loop', String(n),
-    '-i', inputName,
-    '-c', 'copy',
-    outputName,
-  ];
+  return ['-stream_loop', String(n), '-i', inputName, '-c', 'copy', outputName];
 }
 
 export const loopVideo: ToolModule<LoopVideoParams> = {

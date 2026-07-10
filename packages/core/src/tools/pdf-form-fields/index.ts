@@ -13,7 +13,15 @@ export const defaultPdfFormFieldsParams: PdfFormFieldsParams = {
 
 interface FieldEntry {
   name: string;
-  type: 'text' | 'checkbox' | 'radio-group' | 'dropdown' | 'option-list' | 'button' | 'signature' | 'unknown';
+  type:
+    | 'text'
+    | 'checkbox'
+    | 'radio-group'
+    | 'dropdown'
+    | 'option-list'
+    | 'button'
+    | 'signature'
+    | 'unknown';
   isRequired: boolean;
   isReadOnly: boolean;
   value?: string | boolean | string[];
@@ -59,11 +67,7 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfFormFieldsParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfFormFieldsParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('pdf-form-fields accepts exactly one file.');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -91,8 +95,16 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
       };
 
       // Required / read-only are accessor methods on PDFField in pdf-lib.
-      try { entry.isRequired = f.isRequired(); } catch { /* not all field types expose this */ }
-      try { entry.isReadOnly = f.isReadOnly(); } catch { /* same */ }
+      try {
+        entry.isRequired = f.isRequired();
+      } catch {
+        /* not all field types expose this */
+      }
+      try {
+        entry.isReadOnly = f.isReadOnly();
+      } catch {
+        /* same */
+      }
 
       if (wantValues) {
         try {

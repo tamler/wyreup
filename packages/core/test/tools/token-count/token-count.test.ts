@@ -51,7 +51,7 @@ describe('token-count — metadata', () => {
 describe('token-count — run()', () => {
   it('counts tokens for a simple string (gpt-4o)', async () => {
     const input = new File(['Hello, world!'], 'test.txt', { type: 'text/plain' });
-    const [out] = await tokenCount.run([input], { model: 'gpt-4o' }, makeCtx()) as Blob[];
+    const [out] = (await tokenCount.run([input], { model: 'gpt-4o' }, makeCtx())) as Blob[];
     const data = await parseTokens(out);
     expect(data.tokens).toBeGreaterThan(0);
     expect(data.model).toBe('gpt-4o');
@@ -61,7 +61,7 @@ describe('token-count — run()', () => {
 
   it('counts tokens for gpt-4', async () => {
     const input = new File(['Hello, world!'], 'test.txt', { type: 'text/plain' });
-    const [out] = await tokenCount.run([input], { model: 'gpt-4' }, makeCtx()) as Blob[];
+    const [out] = (await tokenCount.run([input], { model: 'gpt-4' }, makeCtx())) as Blob[];
     const data = await parseTokens(out);
     expect(data.tokens).toBeGreaterThan(0);
     expect(data.model).toBe('gpt-4');
@@ -69,7 +69,7 @@ describe('token-count — run()', () => {
 
   it('counts tokens for gpt-3.5-turbo', async () => {
     const input = new File(['Hello, world!'], 'test.txt', { type: 'text/plain' });
-    const [out] = await tokenCount.run([input], { model: 'gpt-3.5-turbo' }, makeCtx()) as Blob[];
+    const [out] = (await tokenCount.run([input], { model: 'gpt-3.5-turbo' }, makeCtx())) as Blob[];
     const data = await parseTokens(out);
     expect(data.tokens).toBeGreaterThan(0);
     expect(data.model).toBe('gpt-3.5-turbo');
@@ -79,8 +79,8 @@ describe('token-count — run()', () => {
     const text = 'The quick brown fox jumps over the lazy dog.';
     const input1 = new File([text], 'a.txt', { type: 'text/plain' });
     const input2 = new File([text], 'b.txt', { type: 'text/plain' });
-    const [out1] = await tokenCount.run([input1], { model: 'gpt-4' }, makeCtx()) as Blob[];
-    const [out2] = await tokenCount.run([input2], { model: 'gpt-4' }, makeCtx()) as Blob[];
+    const [out1] = (await tokenCount.run([input1], { model: 'gpt-4' }, makeCtx())) as Blob[];
+    const [out2] = (await tokenCount.run([input2], { model: 'gpt-4' }, makeCtx())) as Blob[];
     const d1 = await parseTokens(out1);
     const d2 = await parseTokens(out2);
     expect(d1.tokens).toBe(d2.tokens);
@@ -88,9 +88,13 @@ describe('token-count — run()', () => {
 
   it('longer text has more tokens', async () => {
     const short = new File(['Hi'], 'short.txt', { type: 'text/plain' });
-    const long = new File(['Hello, world! This is a longer sentence with many words.'], 'long.txt', { type: 'text/plain' });
-    const [outShort] = await tokenCount.run([short], { model: 'gpt-4o' }, makeCtx()) as Blob[];
-    const [outLong] = await tokenCount.run([long], { model: 'gpt-4o' }, makeCtx()) as Blob[];
+    const long = new File(
+      ['Hello, world! This is a longer sentence with many words.'],
+      'long.txt',
+      { type: 'text/plain' },
+    );
+    const [outShort] = (await tokenCount.run([short], { model: 'gpt-4o' }, makeCtx())) as Blob[];
+    const [outLong] = (await tokenCount.run([long], { model: 'gpt-4o' }, makeCtx())) as Blob[];
     const dShort = await parseTokens(outShort);
     const dLong = await parseTokens(outLong);
     expect(dLong.tokens).toBeGreaterThan(dShort.tokens);
@@ -99,7 +103,7 @@ describe('token-count — run()', () => {
   it('ratio is tokens/chars', async () => {
     const text = 'Hello world';
     const input = new File([text], 't.txt', { type: 'text/plain' });
-    const [out] = await tokenCount.run([input], { model: 'gpt-4o' }, makeCtx()) as Blob[];
+    const [out] = (await tokenCount.run([input], { model: 'gpt-4o' }, makeCtx())) as Blob[];
     const data = await parseTokens(out);
     expect(data.ratio).toBeCloseTo(data.tokens / data.characters, 2);
   });

@@ -139,10 +139,7 @@ describe('strippedForImport — G2 import-from-share invariant', () => {
   it('clears confirmed on every rule', () => {
     const kit = {
       version: 1 as const,
-      rules: [
-        makeRule({ id: 'a', confirmed: true }),
-        makeRule({ id: 'b', confirmed: true }),
-      ],
+      rules: [makeRule({ id: 'a', confirmed: true }), makeRule({ id: 'b', confirmed: true })],
     };
     const stripped = strippedForImport(kit);
     expect(stripped.rules.every((r) => r.confirmed === false)).toBe(true);

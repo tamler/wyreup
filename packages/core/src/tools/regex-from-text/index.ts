@@ -68,7 +68,10 @@ function fullRegexOf(pattern: string, flags: string): string {
   return `/${pattern}/${flags}`;
 }
 
-export function generateRegexFromText(description: string, paramFlags?: string): RegexFromTextResult {
+export function generateRegexFromText(
+  description: string,
+  paramFlags?: string,
+): RegexFromTextResult {
   const desc = (description ?? '').trim();
   if (!desc) {
     throw new Error('regex-from-text requires a non-empty "description" parameter.');
@@ -94,7 +97,8 @@ export function generateRegexFromText(description: string, paramFlags?: string):
 
   const primary = hits[0]!;
   const baseFlags = primary.entry.defaultFlags ?? 'g';
-  const flags = paramFlags && paramFlags.length > 0 ? paramFlags : applyFlagModifiers(baseFlags, lower);
+  const flags =
+    paramFlags && paramFlags.length > 0 ? paramFlags : applyFlagModifiers(baseFlags, lower);
 
   const alternatives = hits.slice(1, 4).map((h) => ({
     pattern: h.entry.pattern,
@@ -123,7 +127,15 @@ export const regexFromText: ToolModule<RegexFromTextParams> = {
   llmDescription:
     'Convert a plain-English request like "find email addresses" or "match ISO dates" into a JavaScript regex. Returns JSON with pattern, flags, explanation, and confidence. For unknown phrasings, falls back to a low-confidence guess with an explicit no-match signal — call the AI variant or revise the description.',
   category: 'inspect',
-  keywords: ['regex', 'regexp', 'natural language', 'pattern', 'generate', 'ai-assisted', 'from text'],
+  keywords: [
+    'regex',
+    'regexp',
+    'natural language',
+    'pattern',
+    'generate',
+    'ai-assisted',
+    'from text',
+  ],
 
   input: {
     accept: ['text/plain'],

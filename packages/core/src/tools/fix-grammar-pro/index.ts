@@ -33,11 +33,7 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
 
   defaults: defaultFixGrammarProParams,
 
-  async run(
-    inputs: File[],
-    _params: FixGrammarProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: FixGrammarProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('fix-grammar-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

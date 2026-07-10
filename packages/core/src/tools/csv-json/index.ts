@@ -132,11 +132,7 @@ export const csvJson: ToolModule<CsvJsonParams> = {
 
   defaults: defaultCsvJsonParams,
 
-  async run(
-    inputs: File[],
-    params: CsvJsonParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CsvJsonParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Converting' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
@@ -146,8 +142,7 @@ export const csvJson: ToolModule<CsvJsonParams> = {
     const delimiter = params.delimiter ?? ',';
     const arrayStyle = params.arrayStyle ?? 'objects';
 
-    const toJson = direction === 'csv-to-json'
-      || (direction === 'auto' && !looksLikeJson(text));
+    const toJson = direction === 'csv-to-json' || (direction === 'auto' && !looksLikeJson(text));
 
     let result: string;
     if (toJson) {

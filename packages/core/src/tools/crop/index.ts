@@ -36,11 +36,7 @@ export const crop: ToolModule<CropParams> = {
     height: 0,
   },
 
-  async run(
-    inputs: File[],
-    params: CropParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: CropParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const input = inputs[0]!;

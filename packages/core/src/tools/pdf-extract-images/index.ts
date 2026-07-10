@@ -287,11 +287,17 @@ export const pdfExtractImages: ToolModule<PdfExtractImagesParams> = {
           encoded = await encodeImage(raw, format, quality);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          report.imagesSkipped.push({ page: pageNum, reason: `${imgName}: encode failed (${msg})` });
+          report.imagesSkipped.push({
+            page: pageNum,
+            reason: `${imgName}: encode failed (${msg})`,
+          });
           continue;
         }
         if (!encoded) {
-          report.imagesSkipped.push({ page: pageNum, reason: `${imgName}: unsupported image shape` });
+          report.imagesSkipped.push({
+            page: pageNum,
+            reason: `${imgName}: unsupported image shape`,
+          });
           continue;
         }
 

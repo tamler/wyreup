@@ -63,8 +63,8 @@ function labelFor(node: AstNode): string {
       if (kind === '$') return 'end';
       if (kind === '\\b') return 'word boundary';
       if (kind === '\\B') return 'not word boundary';
-      if (kind === 'Lookahead') return (node.negative ? 'not followed by' : 'followed by');
-      if (kind === 'Lookbehind') return (node.negative ? 'not preceded by' : 'preceded by');
+      if (kind === 'Lookahead') return node.negative ? 'not followed by' : 'followed by';
+      if (kind === 'Lookbehind') return node.negative ? 'not preceded by' : 'preceded by';
       return kind;
     }
     case 'Backreference': {
@@ -129,7 +129,11 @@ function layoutOf(node: AstNode): Layout {
           flat.push(a);
         }
       }
-      return measure({ boxes: [{ label: '', kind: 'alt', alternatives: flat }], width: 0, height: 0 });
+      return measure({
+        boxes: [{ label: '', kind: 'alt', alternatives: flat }],
+        width: 0,
+        height: 0,
+      });
     }
     case 'Group': {
       const expr = node.expression as AstNode | null;
@@ -149,11 +153,19 @@ function layoutOf(node: AstNode): Layout {
       });
     }
     case 'CharacterClass':
-      return measure({ boxes: [{ label: characterClassLabel(node), kind: 'class' }], width: 0, height: 0 });
+      return measure({
+        boxes: [{ label: characterClassLabel(node), kind: 'class' }],
+        width: 0,
+        height: 0,
+      });
     case 'Char':
       return measure({ boxes: [{ label: labelFor(node), kind: 'literal' }], width: 0, height: 0 });
     case 'Assertion':
-      return measure({ boxes: [{ label: labelFor(node), kind: 'assertion' }], width: 0, height: 0 });
+      return measure({
+        boxes: [{ label: labelFor(node), kind: 'assertion' }],
+        width: 0,
+        height: 0,
+      });
     case 'Backreference':
       return measure({ boxes: [{ label: labelFor(node), kind: 'special' }], width: 0, height: 0 });
     default:
@@ -245,7 +257,12 @@ function renderLayout(layout: Layout, x: number, y: number, lines: string[]): vo
       lines.push(
         `<rect x="${cursor}" y="${groupY + BOX_H}" width="${blockW}" height="${box.inner.height + PAD}" rx="6" fill="none" stroke="${STYLES.group.stroke}"/>`,
       );
-      renderLayout(box.inner, cursor + (blockW - box.inner.width) / 2, groupY + BOX_H + PAD / 2, lines);
+      renderLayout(
+        box.inner,
+        cursor + (blockW - box.inner.width) / 2,
+        groupY + BOX_H + PAD / 2,
+        lines,
+      );
       cursor += blockW + BOX_GAP;
     } else if (box.kind === 'rep' && box.inner) {
       const qW = textWidth(box.quantifier ?? '');
@@ -321,7 +338,10 @@ export function visualizeRegex(pattern: string): VisualizeResult {
     nodeCount++;
     for (const v of Object.values(n)) {
       if (v && typeof v === 'object') {
-        if (Array.isArray(v)) v.forEach((c) => { if (c && typeof c === 'object') count(c as AstNode); });
+        if (Array.isArray(v))
+          v.forEach((c) => {
+            if (c && typeof c === 'object') count(c as AstNode);
+          });
         else if ('type' in v) count(v as AstNode);
       }
     }

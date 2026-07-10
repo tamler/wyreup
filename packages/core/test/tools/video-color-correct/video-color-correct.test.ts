@@ -14,7 +14,8 @@ import {
 } from '../../../src/tools/video-color-correct/index.js';
 
 describe('video-color-correct — metadata', () => {
-  it('has id "video-color-correct"', () => expect(videoColorCorrect.id).toBe('video-color-correct'));
+  it('has id "video-color-correct"', () =>
+    expect(videoColorCorrect.id).toBe('video-color-correct'));
   it('category is "media"', () => expect(videoColorCorrect.category).toBe('media'));
   it('accepts video/*', () => expect(videoColorCorrect.input.accept).toContain('video/*'));
   it('output mime is video/mp4', () => expect(videoColorCorrect.output.mime).toBe('video/mp4'));
@@ -25,7 +26,8 @@ describe('video-color-correct — metadata', () => {
   it('batchable is false', () => expect(videoColorCorrect.batchable).toBe(false));
   it('defaults brightness is 0', () => expect(defaultVideoColorCorrectParams.brightness).toBe(0));
   it('defaults contrast is 1.0', () => expect(defaultVideoColorCorrectParams.contrast).toBe(1.0));
-  it('defaults saturation is 1.0', () => expect(defaultVideoColorCorrectParams.saturation).toBe(1.0));
+  it('defaults saturation is 1.0', () =>
+    expect(defaultVideoColorCorrectParams.saturation).toBe(1.0));
   it('defaults gamma is 1.0', () => expect(defaultVideoColorCorrectParams.gamma).toBe(1.0));
   it('defaults hueShift is 0', () => expect(defaultVideoColorCorrectParams.hueShift).toBe(0));
   it('defaults crf is 23', () => expect(defaultVideoColorCorrectParams.crf).toBe(23));
@@ -38,7 +40,12 @@ describe('video-color-correct — buildColorCorrectFilter()', () => {
   });
 
   it('includes all eq params', () => {
-    const f = buildColorCorrectFilter({ brightness: 0.1, contrast: 1.2, saturation: 1.5, gamma: 1.1 });
+    const f = buildColorCorrectFilter({
+      brightness: 0.1,
+      contrast: 1.2,
+      saturation: 1.5,
+      gamma: 1.1,
+    });
     expect(f).toContain('brightness=0.1');
     expect(f).toContain('contrast=1.2');
     expect(f).toContain('saturation=1.5');

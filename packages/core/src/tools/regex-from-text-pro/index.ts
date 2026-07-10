@@ -46,11 +46,7 @@ export const regexFromTextPro: ToolModule<RegexFromTextProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RegexFromTextProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: RegexFromTextProParams, ctx: ToolRunContext): Promise<Blob> {
     let description = params.description?.trim() ?? '';
     if (!description && inputs.length === 1) {
       description = (await inputs[0]!.text()).trim();

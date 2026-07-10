@@ -12,11 +12,15 @@ export async function probeDuration(ff: FFmpeg, inputName: string): Promise<numb
   const probeOut = `${inputName}.probe.txt`;
   try {
     await ff.ffprobe([
-      '-v', 'error',
-      '-show_entries', 'format=duration',
-      '-of', 'default=noprint_wrappers=1:nokey=1',
+      '-v',
+      'error',
+      '-show_entries',
+      'format=duration',
+      '-of',
+      'default=noprint_wrappers=1:nokey=1',
       inputName,
-      '-o', probeOut,
+      '-o',
+      probeOut,
     ]);
     const raw = await ff.readFile(probeOut);
     await ff.deleteFile(probeOut);
@@ -65,5 +69,5 @@ export async function runFFmpeg(
   const output = await ff.readFile(outputName);
   await ff.deleteFile(inputName);
   await ff.deleteFile(outputName);
-  return typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+  return typeof output === 'string' ? new TextEncoder().encode(output) : output;
 }

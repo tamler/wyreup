@@ -59,11 +59,7 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PdfCompressParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: PdfCompressParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const imageQuality = params.imageQuality ?? defaults.imageQuality;
@@ -92,7 +88,8 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
     let imagesProcessed = 0;
 
     const context = pdfDoc.context;
-    const indirectObjects = (context as unknown as { indirectObjects: Map<unknown, unknown> }).indirectObjects;
+    const indirectObjects = (context as unknown as { indirectObjects: Map<unknown, unknown> })
+      .indirectObjects;
 
     if (indirectObjects) {
       const entries = Array.from(indirectObjects.entries());
@@ -167,7 +164,11 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
     ctx.onProgress({ stage: 'encoding', percent: 85, message: 'Saving PDF' });
     const bytes = await pdfDoc.save();
 
-    ctx.onProgress({ stage: 'done', percent: 100, message: `Done — ${imagesProcessed} image(s) re-encoded` });
+    ctx.onProgress({
+      stage: 'done',
+      percent: 100,
+      message: `Done — ${imagesProcessed} image(s) re-encoded`,
+    });
     return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   },
 

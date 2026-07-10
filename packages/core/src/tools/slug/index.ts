@@ -43,7 +43,8 @@ export const slug: ToolModule<SlugParams> = {
   id: 'slug',
   slug: 'slug',
   name: 'Slug Generator',
-  description: 'Convert text into URL-friendly slugs. Strips diacritics, collapses whitespace, removes special characters.',
+  description:
+    'Convert text into URL-friendly slugs. Strips diacritics, collapses whitespace, removes special characters.',
   category: 'create',
   keywords: ['slug', 'url', 'permalink', 'sanitize', 'kebab', 'friendly'],
 
@@ -87,11 +88,7 @@ export const slug: ToolModule<SlugParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: SlugParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: SlugParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Generating slug' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

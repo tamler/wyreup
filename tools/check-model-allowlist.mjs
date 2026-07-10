@@ -25,11 +25,7 @@ const WORKER_FILE = 'packages/worker-models/src/index.ts';
 const QUOTED_PREFIX_RE = /['"`]([A-Za-z0-9_-]+\/[A-Za-z0-9._-]+)(?:\/[^'"`]*)?['"`]/g;
 const HF_URL_RE = /huggingface\.co\/([A-Za-z0-9_-]+\/[A-Za-z0-9._-]+)\//g;
 
-const SCAN_PREFIXES = [
-  'Xenova/',
-  'onnx-community/',
-  'YatharthS/',
-];
+const SCAN_PREFIXES = ['Xenova/', 'onnx-community/', 'YatharthS/'];
 
 async function listToolFiles() {
   const entries = await readdir(TOOLS_DIR, { withFileTypes: true });
@@ -114,4 +110,6 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log(`Model allowlist sync OK — ${allowed.size} ids allowed, ${referenced.size} referenced.`);
+console.log(
+  `Model allowlist sync OK — ${allowed.size} ids allowed, ${referenced.size} referenced.`,
+);

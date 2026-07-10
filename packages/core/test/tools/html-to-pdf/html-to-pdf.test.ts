@@ -41,8 +41,6 @@ describe('html-to-pdf — Node environment guard', () => {
   it('throws a clear error about browser requirement in Node', async () => {
     // In Node.js, `document` is undefined — the tool should throw a descriptive error
     const file = makeHtmlFile(SAMPLE_HTML);
-    await expect(
-      htmlToPdf.run([file], {}, makeCtx()),
-    ).rejects.toThrow(/browser/i);
+    await expect(htmlToPdf.run([file], {}, makeCtx())).rejects.toThrow(/browser/i);
   });
 });

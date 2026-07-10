@@ -30,11 +30,7 @@ export const imageDescribe: ToolModule<Record<string, never>> = {
   defaults: {},
   paramSchema: {},
 
-  async run(
-    inputs: File[],
-    _params: Record<string, never>,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: Record<string, never>, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('image-describe accepts exactly one image.');
     const imageBase64 = await fileToBase64(inputs[0]!);
     const result = await runPro<{ description: string }>(

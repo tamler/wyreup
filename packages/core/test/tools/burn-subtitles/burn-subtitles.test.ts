@@ -7,7 +7,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { burnSubtitles, defaultBurnSubtitlesParams } from '../../../src/tools/burn-subtitles/index.js';
+import {
+  burnSubtitles,
+  defaultBurnSubtitlesParams,
+} from '../../../src/tools/burn-subtitles/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
 
 function makeCtx(): ToolRunContext {
@@ -37,9 +40,9 @@ describe('burn-subtitles — metadata', () => {
 describe('burn-subtitles — run() param validation', () => {
   it('throws when fewer than 2 inputs', async () => {
     const file = new File(['data'], 'video.mp4', { type: 'video/mp4' });
-    await expect(
-      burnSubtitles.run([file], { fontSize: 16, crf: 23 }, makeCtx()),
-    ).rejects.toThrow(/two files/i);
+    await expect(burnSubtitles.run([file], { fontSize: 16, crf: 23 }, makeCtx())).rejects.toThrow(
+      /two files/i,
+    );
   });
 
   it('throws when no video file provided', async () => {

@@ -57,13 +57,13 @@ describe('text-readability — metadata', () => {
 describe('text-readability — run()', () => {
   it('returns application/json blob', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
-    const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textReadability.run([input], {}, makeCtx())) as Blob[];
     expect(out!.type).toBe('application/json');
   });
 
   it('includes all expected score fields', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
-    const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textReadability.run([input], {}, makeCtx())) as Blob[];
     const data = await parseRead(out);
     expect(typeof data.flesch).toBe('number');
     expect(typeof data.fleschKincaid).toBe('number');
@@ -77,7 +77,7 @@ describe('text-readability — run()', () => {
 
   it('Flesch score is within expected range (0-100 for normal text)', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
-    const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textReadability.run([input], {}, makeCtx())) as Blob[];
     const data = await parseRead(out);
     // Flesch can go outside 0-100 for very simple or complex text, but typical range
     expect(data.flesch).toBeDefined();
@@ -86,7 +86,7 @@ describe('text-readability — run()', () => {
 
   it('gradeLevel is a non-empty string', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
-    const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textReadability.run([input], {}, makeCtx())) as Blob[];
     const data = await parseRead(out);
     expect(data.gradeLevel.length).toBeGreaterThan(0);
   });
@@ -102,7 +102,7 @@ describe('text-readability — run()', () => {
 
   it('scores are rounded to 1 decimal place', async () => {
     const input = new File([SAMPLE_TEXT], 'test.txt', { type: 'text/plain' });
-    const [out] = await textReadability.run([input], {}, makeCtx()) as Blob[];
+    const [out] = (await textReadability.run([input], {}, makeCtx())) as Blob[];
     const data = await parseRead(out);
     // Check rounding: result * 10 should be close to an integer
     const isRounded = (n: number) => Math.abs(Math.round(n * 10) - n * 10) < 0.001;

@@ -68,11 +68,7 @@ export const sqlFormatter: ToolModule<SqlFormatterParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: SqlFormatterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: SqlFormatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading SQL formatter' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
@@ -89,7 +85,11 @@ export const sqlFormatter: ToolModule<SqlFormatterParams> = {
     let result: string;
     try {
       // sql-formatter's 'language' type is a union we can't easily express; cast via unknown
-      result = format(text, { language: language as unknown as 'sql', keywordCase, tabWidth: indent });
+      result = format(text, {
+        language: language as unknown as 'sql',
+        keywordCase,
+        tabWidth: indent,
+      });
     } catch (e) {
       throw new Error(`SQL formatting failed: ${(e as Error).message}`);
     }

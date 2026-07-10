@@ -25,8 +25,9 @@ describe('runChain', () => {
     const step: ChainStep = { toolId: 'nonexistent-tool', params: {} };
     const chain: Chain = Array<ChainStep>(MAX_CHAIN_DEPTH + 1).fill(step);
 
-    await expect(runChain(chain, [], makeCtx(), emptyRegistry, MAX_CHAIN_DEPTH + 1))
-      .rejects.toBeInstanceOf(ChainError);
+    await expect(
+      runChain(chain, [], makeCtx(), emptyRegistry, MAX_CHAIN_DEPTH + 1),
+    ).rejects.toBeInstanceOf(ChainError);
   });
 
   it('MAX_CHAIN_DEPTH is exactly 10', () => {

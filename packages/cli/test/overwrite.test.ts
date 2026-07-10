@@ -5,8 +5,12 @@ import { join } from 'node:path';
 import { atomicPublish } from '../src/lib/safety/atomic-publish.js';
 
 let dir: string;
-beforeEach(async () => { dir = await mkdtemp(join(tmpdir(), 'wycli-ow-')); });
-afterEach(async () => { await rm(dir, { recursive: true, force: true }); });
+beforeEach(async () => {
+  dir = await mkdtemp(join(tmpdir(), 'wycli-ow-'));
+});
+afterEach(async () => {
+  await rm(dir, { recursive: true, force: true });
+});
 
 describe('CLI atomic publish', () => {
   it('refuses to overwrite an existing file when allowOverwrite=false', async () => {

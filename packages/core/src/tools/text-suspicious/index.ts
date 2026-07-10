@@ -17,7 +17,13 @@ export const defaultTextSuspiciousParams: TextSuspiciousParams = {
 };
 
 export interface SuspiciousFinding {
-  kind: 'invisible-injection' | 'mixed-script' | 'confusable' | 'non-ascii-heavy' | 'control-chars' | 'bom';
+  kind:
+    | 'invisible-injection'
+    | 'mixed-script'
+    | 'confusable'
+    | 'non-ascii-heavy'
+    | 'control-chars'
+    | 'bom';
   severity: 'low' | 'medium' | 'high';
   detail: string;
 }
@@ -37,7 +43,10 @@ export interface TextSuspiciousResult {
 const SEVERITY_RANK: Record<SuspiciousFinding['severity'], number> = { low: 1, medium: 2, high: 3 };
 const VERDICT_BY_RANK: TextSuspiciousResult['verdict'][] = ['clean', 'low', 'medium', 'high'];
 
-export function analyzeSuspicious(text: string, params: TextSuspiciousParams): TextSuspiciousResult {
+export function analyzeSuspicious(
+  text: string,
+  params: TextSuspiciousParams,
+): TextSuspiciousResult {
   const invisibleDensity = params.invisibleDensityThreshold ?? 0.001;
   const nonAsciiThreshold = params.nonAsciiThreshold ?? 0.5;
   const confusableThreshold = params.confusableThreshold ?? 1;
@@ -66,12 +75,14 @@ export function analyzeSuspicious(text: string, params: TextSuspiciousParams): T
     findings.push({
       kind: 'bom',
       severity: 'low',
-      detail: 'Byte-order mark (U+FEFF) at start of text — common in Windows tools, harmless but worth noting.',
+      detail:
+        'Byte-order mark (U+FEFF) at start of text — common in Windows tools, harmless but worth noting.',
     });
   }
   if (conf.invisibleCount > 0) {
     const density = conf.totalChars > 0 ? conf.invisibleCount / conf.totalChars : 0;
-    const severity: SuspiciousFinding['severity'] = density >= invisibleDensity * 10 ? 'high' : density >= invisibleDensity ? 'medium' : 'low';
+    const severity: SuspiciousFinding['severity'] =
+      density >= invisibleDensity * 10 ? 'high' : density >= invisibleDensity ? 'medium' : 'low';
     findings.push({
       kind: 'invisible-injection',
       severity,
@@ -89,7 +100,10 @@ export function analyzeSuspicious(text: string, params: TextSuspiciousParams): T
     findings.push({
       kind: 'mixed-script',
       severity: 'high',
-      detail: `${conf.mixedScriptTokens.length} mixed-script token(s): ${conf.mixedScriptTokens.slice(0, 5).map((t) => `"${t.token}" (${t.scripts.join('+')})`).join(', ')}.`,
+      detail: `${conf.mixedScriptTokens.length} mixed-script token(s): ${conf.mixedScriptTokens
+        .slice(0, 5)
+        .map((t) => `"${t.token}" (${t.scripts.join('+')})`)
+        .join(', ')}.`,
     });
   }
   if (hasControls) {
@@ -100,7 +114,13 @@ export function analyzeSuspicious(text: string, params: TextSuspiciousParams): T
     });
   }
   if (conf.totalChars > 0 && nonAscii / conf.totalChars > nonAsciiThreshold) {
-    const expectedLatin = ['latin', 'Basic Latin', 'Latin-1 Supplement', 'Latin Extended-A', 'Latin Extended-B'];
+    const expectedLatin = [
+      'latin',
+      'Basic Latin',
+      'Latin-1 Supplement',
+      'Latin Extended-A',
+      'Latin Extended-B',
+    ];
     const dominantNonLatin = conf.scripts.filter((s) => !expectedLatin.includes(s));
     if (dominantNonLatin.length > 0) {
       // Pure non-Latin text is legitimate (Cyrillic Russian, Greek Greek, etc.).
@@ -110,7 +130,7 @@ export function analyzeSuspicious(text: string, params: TextSuspiciousParams): T
         findings.push({
           kind: 'non-ascii-heavy',
           severity: 'medium',
-          detail: `${(nonAscii / conf.totalChars * 100).toFixed(1)}% non-ASCII alongside Latin-confusable hits — likely spoofing rather than legitimate non-Latin content.`,
+          detail: `${((nonAscii / conf.totalChars) * 100).toFixed(1)}% non-ASCII alongside Latin-confusable hits — likely spoofing rather than legitimate non-Latin content.`,
         });
       }
     }
@@ -139,7 +159,15 @@ export const textSuspicious: ToolModule<TextSuspiciousParams> = {
   description:
     'Single security verdict on a block of text. Combines text-confusable\'s homoglyph / mixed-script detection with checks for invisible-character density, control characters, BOM markers, and non-ASCII heaviness. Returns a verdict (clean / low / medium / high) with the contributing findings — the "should I trust this prompt-injection-shaped message" tool.',
   category: 'inspect',
-  keywords: ['suspicious', 'security', 'prompt-injection', 'confusable', 'invisible', 'audit', 'safety'],
+  keywords: [
+    'suspicious',
+    'security',
+    'prompt-injection',
+    'confusable',
+    'invisible',
+    'audit',
+    'safety',
+  ],
 
   input: {
     accept: ['text/plain'],

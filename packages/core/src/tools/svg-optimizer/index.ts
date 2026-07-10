@@ -41,11 +41,7 @@ export const svgOptimizer: ToolModule<SvgOptimizerParams> = {
 
   defaults: defaultSvgOptimizerParams,
 
-  async run(
-    inputs: File[],
-    params: SvgOptimizerParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: SvgOptimizerParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading SVGO' });
 
     if (ctx.signal.aborted) throw new Error('Aborted');

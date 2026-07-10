@@ -3,8 +3,12 @@ import { tmpdir } from 'node:os';
 import { createWyreupMcpServer } from '../src/server.js';
 
 const ALLOWED_TOP_LEVEL_FIELDS = new Set([
-  'input_paths', 'output_path', 'output_dir',
-  'params', 'timeout_ms', 'allow_overwrite',
+  'input_paths',
+  'output_path',
+  'output_dir',
+  'params',
+  'timeout_ms',
+  'allow_overwrite',
   'steps',
 ]);
 
@@ -26,9 +30,14 @@ describe('MCP input schema invariant [spec § Schema invariant]', () => {
   async function listTools() {
     const srv = await createWyreupMcpServer();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-    const handlers = (srv as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
+    const handlers = (srv as any)._requestHandlers as Map<
+      string,
+      (req: unknown, extra: unknown) => unknown
+    >;
     const handler = handlers.get('tools/list')!;
-    return handler({ method: 'tools/list', params: {} }, {}) as Promise<{ tools: Array<{ name: string; inputSchema?: { properties?: Record<string, unknown> } }> }>;
+    return handler({ method: 'tools/list', params: {} }, {}) as Promise<{
+      tools: Array<{ name: string; inputSchema?: { properties?: Record<string, unknown> } }>;
+    }>;
   }
 
   it('no tool declares a path field outside the closed set', async () => {

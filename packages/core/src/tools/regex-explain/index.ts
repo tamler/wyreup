@@ -49,19 +49,32 @@ function charMeaning(node: AstNode): string {
   const kind = node.kind as string;
   if (kind === 'meta') {
     switch (value) {
-      case '\\d': return 'any digit (0-9)';
-      case '\\D': return 'any character that is not a digit';
-      case '\\w': return 'any word character (a-z, A-Z, 0-9, _)';
-      case '\\W': return 'any character that is not a word character';
-      case '\\s': return 'any whitespace character';
-      case '\\S': return 'any non-whitespace character';
-      case '\\b': return 'a word boundary';
-      case '\\B': return 'a non-word-boundary position';
-      case '\\n': return 'a newline';
-      case '\\r': return 'a carriage return';
-      case '\\t': return 'a tab character';
-      case '.': return 'any single character except newline';
-      default: return `the meta character ${value}`;
+      case '\\d':
+        return 'any digit (0-9)';
+      case '\\D':
+        return 'any character that is not a digit';
+      case '\\w':
+        return 'any word character (a-z, A-Z, 0-9, _)';
+      case '\\W':
+        return 'any character that is not a word character';
+      case '\\s':
+        return 'any whitespace character';
+      case '\\S':
+        return 'any non-whitespace character';
+      case '\\b':
+        return 'a word boundary';
+      case '\\B':
+        return 'a non-word-boundary position';
+      case '\\n':
+        return 'a newline';
+      case '\\r':
+        return 'a carriage return';
+      case '\\t':
+        return 'a tab character';
+      case '.':
+        return 'any single character except newline';
+      default:
+        return `the meta character ${value}`;
     }
   }
   if (kind === 'control') return `the control character ${value}`;
@@ -78,7 +91,8 @@ function characterClassMeaning(node: AstNode): string {
     if (e.type === 'ClassRange') {
       const fromVal = (e.from as AstNode | undefined)?.value;
       const toVal = (e.to as AstNode | undefined)?.value;
-      const from = typeof fromVal === 'string' || typeof fromVal === 'number' ? String(fromVal) : '';
+      const from =
+        typeof fromVal === 'string' || typeof fromVal === 'number' ? String(fromVal) : '';
       const to = typeof toVal === 'string' || typeof toVal === 'number' ? String(toVal) : '';
       parts.push(`${from}-${to}`);
     } else if (e.type === 'Char') {
@@ -88,9 +102,7 @@ function characterClassMeaning(node: AstNode): string {
     }
   }
   const set = parts.join(', ');
-  return negative
-    ? `any character NOT in: ${set}`
-    : `any character in: ${set}`;
+  return negative ? `any character NOT in: ${set}` : `any character in: ${set}`;
 }
 
 function quantifierMeaning(q: AstNode): string {
@@ -117,8 +129,10 @@ function assertionMeaning(node: AstNode): string {
   if (kind === '$') return 'at the end of the input (or line in multiline mode)';
   if (kind === '\\b') return 'at a word boundary';
   if (kind === '\\B') return 'NOT at a word boundary';
-  if (kind === 'Lookahead') return negative ? 'NOT followed by the inner pattern' : 'followed by the inner pattern';
-  if (kind === 'Lookbehind') return negative ? 'NOT preceded by the inner pattern' : 'preceded by the inner pattern';
+  if (kind === 'Lookahead')
+    return negative ? 'NOT followed by the inner pattern' : 'followed by the inner pattern';
+  if (kind === 'Lookbehind')
+    return negative ? 'NOT preceded by the inner pattern' : 'preceded by the inner pattern';
   return kind;
 }
 
@@ -151,7 +165,11 @@ function explainNode(node: AstNode): RegexExplainNode[] {
         kind: 'group',
       });
     } else {
-      out.push({ pattern: rawOf(node), meaning: 'non-capturing group — groups without capturing', kind: 'group' });
+      out.push({
+        pattern: rawOf(node),
+        meaning: 'non-capturing group — groups without capturing',
+        kind: 'group',
+      });
     }
     const inner = node.expression as AstNode | undefined;
     if (inner) out.push(...explainNode(inner));
@@ -161,7 +179,11 @@ function explainNode(node: AstNode): RegexExplainNode[] {
   } else if (node.type === 'Disjunction') {
     const left = node.left as AstNode | undefined;
     const right = node.right as AstNode | undefined;
-    out.push({ pattern: rawOf(node), meaning: 'either the left alternative OR the right alternative', kind: 'alternation' });
+    out.push({
+      pattern: rawOf(node),
+      meaning: 'either the left alternative OR the right alternative',
+      kind: 'alternation',
+    });
     if (left) out.push(...explainNode(left));
     if (right) out.push(...explainNode(right));
   } else if (node.type === 'Repetition') {
@@ -321,9 +343,15 @@ export const regexExplain: ToolModule<RegexExplainParams> = {
       },
     ],
     alsoTry: [
-      { id: 'regex-tester', why: 'Test the regex against sample text to see actual matches and groups.' },
+      {
+        id: 'regex-tester',
+        why: 'Test the regex against sample text to see actual matches and groups.',
+      },
       { id: 'regex-visualize', why: 'See the regex as a railroad-style SVG diagram.' },
-      { id: 'regex-from-text', why: 'Go the other way — describe what you want in English, get a regex.' },
+      {
+        id: 'regex-from-text',
+        why: 'Go the other way — describe what you want in English, get a regex.',
+      },
     ],
   },
 

@@ -6,10 +6,7 @@
  * deduplicated array of 1-indexed page numbers. Throws with a clear message
  * if any entry is out of bounds or malformed.
  */
-export function parseRangeSpec(
-  pages: (number | string)[],
-  pageCount: number,
-): number[] {
+export function parseRangeSpec(pages: (number | string)[], pageCount: number): number[] {
   if (pages.length === 0) {
     throw new Error('pages must not be empty.');
   }

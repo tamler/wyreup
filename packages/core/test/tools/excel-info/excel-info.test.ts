@@ -30,7 +30,10 @@ describe('excel-info — metadata', () => {
 
 describe('excel-info — run()', () => {
   it('returns sheetCount', async () => {
-    const file = await makeXlsxFile([['a', 'b'], [1, 2]]);
+    const file = await makeXlsxFile([
+      ['a', 'b'],
+      [1, 2],
+    ]);
     const result = await run(file);
     expect(result.sheetCount).toBe(1);
   });
@@ -66,7 +69,10 @@ describe('excel-info — run()', () => {
   });
 
   it('returns totalCells', async () => {
-    const file = await makeXlsxFile([['a', 'b'], [1, 2]]);
+    const file = await makeXlsxFile([
+      ['a', 'b'],
+      [1, 2],
+    ]);
     const result = await run(file);
     expect(result.totalCells).toBe(4); // 2 rows x 2 cols
   });
@@ -76,6 +82,8 @@ describe('excel-info — run()', () => {
     const result = await excelInfo.run([file], {}, makeCtx());
     const blob = Array.isArray(result) ? result[0]! : result;
     const text = await blob.text();
-    expect(() => { JSON.parse(text); }).not.toThrow();
+    expect(() => {
+      JSON.parse(text);
+    }).not.toThrow();
   });
 });

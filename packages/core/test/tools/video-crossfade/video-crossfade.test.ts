@@ -28,8 +28,10 @@ describe('video-crossfade — metadata', () => {
     expect(videoCrossfade.input.min).toBe(2);
     expect(videoCrossfade.input.max).toBe(2);
   });
-  it('defaults fadeDuration is 1.0', () => expect(defaultVideoCrossfadeParams.fadeDuration).toBe(1.0));
-  it('defaults transition is fade', () => expect(defaultVideoCrossfadeParams.transition).toBe('fade'));
+  it('defaults fadeDuration is 1.0', () =>
+    expect(defaultVideoCrossfadeParams.fadeDuration).toBe(1.0));
+  it('defaults transition is fade', () =>
+    expect(defaultVideoCrossfadeParams.transition).toBe('fade'));
   it('defaults crf is 23', () => expect(defaultVideoCrossfadeParams.crf).toBe(23));
 });
 

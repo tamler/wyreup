@@ -40,12 +40,7 @@ export function buildExtractFrameArgs(
   params: ExtractFrameParams,
 ): string[] {
   const ts = Math.max(0, params.timestamp ?? 0);
-  return [
-    '-ss', String(ts),
-    '-i', inputName,
-    '-vframes', '1',
-    outputName,
-  ];
+  return ['-ss', String(ts), '-i', inputName, '-vframes', '1', outputName];
 }
 
 export const extractFrame: ToolModule<ExtractFrameParams> = {
@@ -89,11 +84,7 @@ export const extractFrame: ToolModule<ExtractFrameParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: ExtractFrameParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ExtractFrameParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });
@@ -116,7 +107,7 @@ export const extractFrame: ToolModule<ExtractFrameParams> = {
 
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

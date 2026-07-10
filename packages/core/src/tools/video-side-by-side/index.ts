@@ -22,18 +22,27 @@ export function buildSideBySideArgs(
   outputName: string,
   orientation: StackOrientation,
 ): string[] {
-  const filter = orientation === 'vertical'
-    ? '[0:v]scale=720:-2[t];[1:v]scale=720:-2[b];[t][b]vstack=inputs=2[v]'
-    : '[0:v]scale=-2:720[l];[1:v]scale=-2:720[r];[l][r]hstack=inputs=2[v]';
+  const filter =
+    orientation === 'vertical'
+      ? '[0:v]scale=720:-2[t];[1:v]scale=720:-2[b];[t][b]vstack=inputs=2[v]'
+      : '[0:v]scale=-2:720[l];[1:v]scale=-2:720[r];[l][r]hstack=inputs=2[v]';
   return [
-    '-i', aName,
-    '-i', bName,
-    '-filter_complex', filter,
-    '-map', '[v]',
-    '-map', '0:a?',
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'fast',
+    '-i',
+    aName,
+    '-i',
+    bName,
+    '-filter_complex',
+    filter,
+    '-map',
+    '[v]',
+    '-map',
+    '0:a?',
+    '-c:v',
+    'libx264',
+    '-crf',
+    '23',
+    '-preset',
+    'fast',
     '-shortest',
     outputName,
   ];
@@ -43,10 +52,20 @@ export const videoSideBySide: ToolModule<VideoSideBySideParams> = {
   id: 'video-side-by-side',
   slug: 'video-side-by-side',
   name: 'Side by Side',
-  description: 'Place two videos next to each other — horizontally or stacked vertically — into one clip.',
+  description:
+    'Place two videos next to each other — horizontally or stacked vertically — into one clip.',
   category: 'media',
   categories: ['edit'],
-  keywords: ['video', 'side by side', 'hstack', 'vstack', 'compare', 'split screen', 'stack', 'grid'],
+  keywords: [
+    'video',
+    'side by side',
+    'hstack',
+    'vstack',
+    'compare',
+    'split screen',
+    'stack',
+    'grid',
+  ],
 
   input: { accept: ['video/*'], min: 2, max: 2, sizeLimit: 500 * 1024 * 1024 },
   output: { mime: 'video/mp4' },
@@ -92,7 +111,7 @@ export const videoSideBySide: ToolModule<VideoSideBySideParams> = {
     await ff.exec(buildSideBySideArgs(aName, bName, outputName, params.orientation));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(aName).catch(() => {});
     await ff.deleteFile(bName).catch(() => {});

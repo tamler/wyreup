@@ -119,7 +119,8 @@ export const csvTemplate: ToolModule<CsvTemplateParams> = {
 
     const zip = new JSZip();
     const seen = new Map<string, number>();
-    const report: Array<{ row: number; filename: string; missing: string[]; resolved: number }> = [];
+    const report: Array<{ row: number; filename: string; missing: string[]; resolved: number }> =
+      [];
     let totalMissing = 0;
 
     for (let i = 0; i < rows.length; i++) {

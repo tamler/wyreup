@@ -6,11 +6,7 @@
 // that *would* fire if the user confirms.
 
 export type { TriggerRule, TriggerKit } from './types.js';
-export {
-  TRIGGER_KIT_VERSION,
-  DEFAULT_RATE_LIMIT,
-  MAX_RATE_LIMIT,
-} from './types.js';
+export { TRIGGER_KIT_VERSION, DEFAULT_RATE_LIMIT, MAX_RATE_LIMIT } from './types.js';
 
 export {
   parseTriggerKit,

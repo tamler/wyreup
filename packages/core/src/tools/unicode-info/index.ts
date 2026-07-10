@@ -130,7 +130,12 @@ function utf8Bytes(cp: number): string {
   } else if (cp < 0x10000) {
     bytes.push(0xe0 | (cp >> 12), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
   } else {
-    bytes.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
+    bytes.push(
+      0xf0 | (cp >> 18),
+      0x80 | ((cp >> 12) & 0x3f),
+      0x80 | ((cp >> 6) & 0x3f),
+      0x80 | (cp & 0x3f),
+    );
   }
   return bytes.map((b) => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
 }

@@ -11,7 +11,9 @@ describe('sanitize', () => {
   });
 
   it('replaces Bearer <token> case-insensitively', () => {
-    expect(sanitize('Authorization: Bearer abc.def-123', undefined)).toBe('Authorization: Bearer [REDACTED]');
+    expect(sanitize('Authorization: Bearer abc.def-123', undefined)).toBe(
+      'Authorization: Bearer [REDACTED]',
+    );
     expect(sanitize('header: bearer XYZ==', undefined)).toBe('header: bearer [REDACTED]');
   });
 

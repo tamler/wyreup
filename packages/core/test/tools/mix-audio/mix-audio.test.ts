@@ -8,8 +8,10 @@ describe('mix-audio', () => {
     expect(mixAudio.input.max).toBe(2);
   });
   it('classifies video + audio in any order', () => {
-    expect(pickVideoAudio([{ type: 'audio/mpeg' }, { type: 'video/mp4' }]))
-      .toEqual({ videoIndex: 1, audioIndex: 0 });
+    expect(pickVideoAudio([{ type: 'audio/mpeg' }, { type: 'video/mp4' }])).toEqual({
+      videoIndex: 1,
+      audioIndex: 0,
+    });
   });
   it('throws without an audio file', () => {
     expect(() => pickVideoAudio([{ type: 'video/mp4' }, { type: 'video/webm' }])).toThrow(/audio/i);

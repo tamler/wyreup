@@ -110,17 +110,12 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
   }
 
   const all = chains.map((c) => `  ${c.name}`).join('\n');
-  throw new Error(
-    `No chain "${nameOrId}" in ${path}.\nAvailable:\n${all || '  (kit is empty)'}`,
-  );
+  throw new Error(`No chain "${nameOrId}" in ${path}.\nAvailable:\n${all || '  (kit is empty)'}`);
 }
 
 // ──── runner ──────────────────────────────────────────────────────────────────
 
-export async function executeChain(
-  inputPaths: string[],
-  opts: ChainOptions,
-): Promise<void> {
+export async function executeChain(inputPaths: string[], opts: ChainOptions): Promise<void> {
   // Resolve the chain string from the chosen source.
   let rawSteps = '';
   if (opts.fromKit) {
@@ -175,9 +170,7 @@ export async function executeChain(
 
   // Read input files
   let inputFiles: File[];
-  const useStdin =
-    inputPaths.length === 0 ||
-    (inputPaths.length === 1 && inputPaths[0] === '-');
+  const useStdin = inputPaths.length === 0 || (inputPaths.length === 1 && inputPaths[0] === '-');
 
   if (useStdin && !process.stdin.isTTY) {
     const mime = opts.inputFormat ?? 'application/octet-stream';
@@ -218,7 +211,10 @@ export async function executeChain(
   process.on('SIGINT', () => ac.abort());
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   if (timeoutMs > 0) {
-    timeoutHandle = setTimeout(() => ac.abort(new Error(`Chain timed out after ${timeoutMs}ms`)), timeoutMs);
+    timeoutHandle = setTimeout(
+      () => ac.abort(new Error(`Chain timed out after ${timeoutMs}ms`)),
+      timeoutMs,
+    );
   }
 
   const ctx: ToolRunContext = {
@@ -250,7 +246,11 @@ export async function executeChain(
         const blob = blobs[j]!;
         const ext = extFromMime(blob.type);
         const outPath = join(saveDir, `step-${i + 1}-${step.toolId}-${j}${ext}`);
-        const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+        const writeErr = await atomicPublish(
+          outPath,
+          new Uint8Array(await blob.arrayBuffer()),
+          opts.overwrite ?? false,
+        );
         if (writeErr) throw new Error(writeErr);
         if (opts.verbose) {
           process.stderr.write(`Intermediate: ${outPath}\n`);
@@ -297,7 +297,11 @@ export async function executeChain(
       const blob = outputs[i]!;
       const ext = extFromMime(blob.type);
       const outPath = join(opts.outputDir, `chain-output-${i}${ext}`);
-      const writeErr = await atomicPublish(outPath, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+      const writeErr = await atomicPublish(
+        outPath,
+        new Uint8Array(await blob.arrayBuffer()),
+        opts.overwrite ?? false,
+      );
       if (writeErr) throw new Error(writeErr);
       process.stderr.write(`Written: ${outPath}\n`);
     }
@@ -324,13 +328,15 @@ export async function executeChain(
       if (!text.endsWith('\n')) process.stdout.write('\n');
       return;
     }
-    process.stderr.write(
-      `Chain produced binary output. Use -o <path> to save it.\n`,
-    );
+    process.stderr.write(`Chain produced binary output. Use -o <path> to save it.\n`);
     process.exit(1);
   }
 
   await mkdir(dirname(opts.output), { recursive: true });
-  const writeErr = await atomicPublish(opts.output, new Uint8Array(await blob.arrayBuffer()), opts.overwrite ?? false);
+  const writeErr = await atomicPublish(
+    opts.output,
+    new Uint8Array(await blob.arrayBuffer()),
+    opts.overwrite ?? false,
+  );
   if (writeErr) throw new Error(writeErr);
 }

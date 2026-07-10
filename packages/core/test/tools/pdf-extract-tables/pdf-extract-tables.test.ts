@@ -61,15 +61,11 @@ describe('pdf-extract-tables — run()', () => {
 
   it('throws for invalid page number', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfExtractTables.run([input], { page: 99 }, makeCtx()),
-    ).rejects.toThrow();
+    await expect(pdfExtractTables.run([input], { page: 99 }, makeCtx())).rejects.toThrow();
   });
 
   it('respects abort signal', async () => {
     const input = loadFixture('doc-a.pdf', 'application/pdf');
-    await expect(
-      pdfExtractTables.run([input], {}, makeCtx(true)),
-    ).rejects.toThrow('Aborted');
+    await expect(pdfExtractTables.run([input], {}, makeCtx(true))).rejects.toThrow('Aborted');
   });
 });

@@ -46,11 +46,7 @@ export const textTranslatePro: ToolModule<TextTranslateProParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: TextTranslateProParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: TextTranslateProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('text-translate-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');

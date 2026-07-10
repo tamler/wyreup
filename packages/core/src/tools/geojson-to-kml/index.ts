@@ -13,7 +13,6 @@ interface FeatureCollection {
   features: unknown[];
 }
 
-
 function asFeatureCollection(value: unknown): FeatureCollection {
   if (!value || typeof value !== 'object') {
     throw new Error('Input is not valid GeoJSON.');
@@ -29,11 +28,18 @@ function asFeatureCollection(value: unknown): FeatureCollection {
     return { type: 'FeatureCollection', features: [value] };
   }
   // Bare geometry — wrap into a single Feature
-  if (typeof obj.type === 'string' && [
-    'Point', 'LineString', 'Polygon',
-    'MultiPoint', 'MultiLineString', 'MultiPolygon',
-    'GeometryCollection',
-  ].includes(obj.type)) {
+  if (
+    typeof obj.type === 'string' &&
+    [
+      'Point',
+      'LineString',
+      'Polygon',
+      'MultiPoint',
+      'MultiLineString',
+      'MultiPolygon',
+      'GeometryCollection',
+    ].includes(obj.type)
+  ) {
     return {
       type: 'FeatureCollection',
       features: [{ type: 'Feature', geometry: value, properties: {} }],
@@ -50,16 +56,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
     'Convert a GeoJSON file to KML for Google Earth, Google My Maps, or any KML-compatible viewer.',
   category: 'convert',
   categories: ['geo'],
-  keywords: [
-    'geojson',
-    'kml',
-    'geo',
-    'convert',
-    'google earth',
-    'gis',
-    'map',
-    'placemark',
-  ],
+  keywords: ['geojson', 'kml', 'geo', 'convert', 'google earth', 'gis', 'map', 'placemark'],
 
   input: {
     accept: ['application/geo+json', 'application/json', 'text/plain'],
@@ -89,11 +86,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: GeojsonToKmlParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: GeojsonToKmlParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 10, message: 'Loading converter' });
@@ -118,10 +111,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
     const docName = (params.documentName ?? '').trim();
     if (docName) {
       const safe = docName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      kmlText = kmlText.replace(
-        /<Document>/,
-        `<Document><name>${safe}</name>`,
-      );
+      kmlText = kmlText.replace(/<Document>/, `<Document><name>${safe}</name>`);
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

@@ -16,7 +16,8 @@ export const stripExif: ToolModule<StripExifParams> = {
   id: 'strip-exif',
   slug: 'strip-exif',
   name: 'Strip EXIF Metadata',
-  description: 'Remove EXIF metadata (including GPS, camera model, timestamps) by re-encoding at near-lossless quality.',
+  description:
+    'Remove EXIF metadata (including GPS, camera model, timestamps) by re-encoding at near-lossless quality.',
   category: 'privacy',
   keywords: ['strip', 'exif', 'metadata', 'privacy', 'gps', 'location', 'remove'],
 
@@ -37,11 +38,7 @@ export const stripExif: ToolModule<StripExifParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: StripExifParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: StripExifParams, ctx: ToolRunContext): Promise<Blob[]> {
     const outputs: Blob[] = [];
     const STRIP_QUALITY = 95;
 
@@ -86,8 +83,11 @@ export const stripExif: ToolModule<StripExifParams> = {
 
 function mimeFor(format: ImageFormat): string {
   switch (format) {
-    case 'jpeg': return 'image/jpeg';
-    case 'png': return 'image/png';
-    case 'webp': return 'image/webp';
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
   }
 }

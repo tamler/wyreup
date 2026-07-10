@@ -74,7 +74,11 @@ describe('cosineSimilarity helper', () => {
 
 describe('clusterByThreshold helper', () => {
   it('groups identical-cosine pairs into one cluster', () => {
-    const embeddings = [[1, 0], [1, 0], [0, 1]];
+    const embeddings = [
+      [1, 0],
+      [1, 0],
+      [0, 1],
+    ];
     const pairwise = [
       { a: 0, b: 1, cosine: 1.0 },
       { a: 0, b: 2, cosine: 0.0 },
@@ -88,7 +92,11 @@ describe('clusterByThreshold helper', () => {
   });
 
   it('all separate when threshold is 1.0 and none are identical', () => {
-    const embeddings = [[1, 0], [0, 1], [0.5, 0.5]];
+    const embeddings = [
+      [1, 0],
+      [0, 1],
+      [0.5, 0.5],
+    ];
     const pairwise = [
       { a: 0, b: 1, cosine: 0.0 },
       { a: 0, b: 2, cosine: 0.7 },
@@ -99,7 +107,10 @@ describe('clusterByThreshold helper', () => {
   });
 
   it('all in one cluster when threshold is very low', () => {
-    const embeddings = [[1, 0], [0, 1]];
+    const embeddings = [
+      [1, 0],
+      [0, 1],
+    ];
     const pairwise = [{ a: 0, b: 1, cosine: 0.0 }];
     const clusters = clusterByThreshold(embeddings, pairwise, -1.0);
     expect(clusters.length).toBe(1);

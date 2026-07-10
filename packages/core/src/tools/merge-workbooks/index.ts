@@ -12,9 +12,7 @@ export interface MergeWorkbooksParams {
   prefixSheetNames?: boolean;
 }
 
-const XLSX_ACCEPT = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
+const XLSX_ACCEPT = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
 
 export const mergeWorkbooks: ToolModule<MergeWorkbooksParams> = {
   id: 'merge-workbooks',
@@ -53,11 +51,7 @@ export const mergeWorkbooks: ToolModule<MergeWorkbooksParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: MergeWorkbooksParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], params: MergeWorkbooksParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const prefix = params.prefixSheetNames !== false;
@@ -68,7 +62,10 @@ export const mergeWorkbooks: ToolModule<MergeWorkbooksParams> = {
       if (ctx.signal.aborted) throw new Error('Aborted');
 
       const file = inputs[fi]!;
-      const fileBase = file.name.replace(/\.[^.]+$/, '').slice(0, 15).replace(/[/\\?*[\]:]/g, '_');
+      const fileBase = file.name
+        .replace(/\.[^.]+$/, '')
+        .slice(0, 15)
+        .replace(/[/\\?*[\]:]/g, '_');
 
       ctx.onProgress({
         stage: 'processing',

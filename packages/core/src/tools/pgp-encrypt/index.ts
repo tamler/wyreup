@@ -55,11 +55,7 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: PgpEncryptParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: PgpEncryptParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (!params.publicKey || params.publicKey.trim() === '') {
       throw new Error('publicKey is required.');
     }
@@ -86,11 +82,11 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
 
     if (armor) {
-      const encryptedArmored = await openpgp.encrypt({
+      const encryptedArmored = (await openpgp.encrypt({
         message,
         encryptionKeys: publicKey,
         format: 'armored',
-      }) as unknown as string;
+      })) as unknown as string;
       return [new Blob([encryptedArmored], { type: 'text/plain; charset=utf-8' })];
     }
 

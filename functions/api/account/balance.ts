@@ -11,9 +11,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return unauthorized();
   const [balance, subRow] = await Promise.all([
     getBalance(user.id, env),
-    env.DB.prepare(
-      `SELECT subscription_status FROM users WHERE id = ?`,
-    )
+    env.DB.prepare(`SELECT subscription_status FROM users WHERE id = ?`)
       .bind(user.id)
       .first<{ subscription_status: string | null }>(),
   ]);

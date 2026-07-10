@@ -41,11 +41,7 @@ export const excelInfo: ToolModule<ExcelInfoParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: ExcelInfoParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob> {
+  async run(inputs: File[], _params: ExcelInfoParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading workbook' });

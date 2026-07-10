@@ -75,18 +75,15 @@ describe('csv-sql — engine', () => {
   it('throws on malformed SQL with a useful message', async () => {
     const bytes = ENC.encode('a\n1\n');
     await expect(
-      runQuery(
-        [{ name: 't.csv', bytes, mime: 'text/csv' }],
-        'SELEKT * FROM t',
-      ),
+      runQuery([{ name: 't.csv', bytes, mime: 'text/csv' }], 'SELEKT * FROM t'),
     ).rejects.toThrow(/syntax|near|SELEKT/i);
   });
 
   it('throws on missing query', async () => {
     const bytes = ENC.encode('a\n1\n');
-    await expect(
-      runQuery([{ name: 't.csv', bytes, mime: 'text/csv' }], '   '),
-    ).rejects.toThrow(/sql query/i);
+    await expect(runQuery([{ name: 't.csv', bytes, mime: 'text/csv' }], '   ')).rejects.toThrow(
+      /sql query/i,
+    );
   });
 });
 
@@ -99,7 +96,10 @@ describe('csv-sql — table-name derivation', () => {
   });
 });
 
-async function runToCsvSqlBlobs(file: File, params: { query: string; outputFormat?: 'csv' | 'json' }): Promise<Blob[]> {
+async function runToCsvSqlBlobs(
+  file: File,
+  params: { query: string; outputFormat?: 'csv' | 'json' },
+): Promise<Blob[]> {
   const r = await csvSql.run([file], params, makeCtx());
   return Array.isArray(r) ? r : [r];
 }

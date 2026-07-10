@@ -21,7 +21,8 @@ export const textReadability: ToolModule<TextReadabilityParams> = {
   id: 'text-readability',
   slug: 'text-readability',
   name: 'Readability Scores',
-  description: 'Compute Flesch, Gunning Fog, Coleman-Liau, and other readability scores for any text.',
+  description:
+    'Compute Flesch, Gunning Fog, Coleman-Liau, and other readability scores for any text.',
   category: 'text',
   keywords: ['readability', 'flesch', 'fog', 'grade', 'level', 'score', 'writing', 'complexity'],
 

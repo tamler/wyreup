@@ -35,7 +35,18 @@ const URI_RE = /^[a-z][a-z0-9+\-.]*:\/\//i;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Mirrors csv-info: 1/0 are integers, not booleans, so id columns don't
 // get misclassified.
-const BOOL_VALUES = new Set(['true', 'false', 'TRUE', 'FALSE', 'True', 'False', 'yes', 'no', 'Yes', 'No']);
+const BOOL_VALUES = new Set([
+  'true',
+  'false',
+  'TRUE',
+  'FALSE',
+  'True',
+  'False',
+  'yes',
+  'no',
+  'Yes',
+  'No',
+]);
 
 function observe(col: ColumnObservations, value: string): void {
   if (value === '') {
@@ -64,11 +75,16 @@ function observe(col: ColumnObservations, value: string): void {
     else if (URI_RE.test(value)) col.format = 'uri';
     else if (UUID_RE.test(value)) col.format = 'uuid';
   } else {
-    const expected = col.format === 'date-time' ? DATETIME_RE
-      : col.format === 'date' ? DATE_RE
-      : col.format === 'email' ? EMAIL_RE
-      : col.format === 'uri' ? URI_RE
-      : UUID_RE;
+    const expected =
+      col.format === 'date-time'
+        ? DATETIME_RE
+        : col.format === 'date'
+          ? DATE_RE
+          : col.format === 'email'
+            ? EMAIL_RE
+            : col.format === 'uri'
+              ? URI_RE
+              : UUID_RE;
     if (!expected.test(value)) col.format = undefined;
   }
 }
@@ -140,7 +156,7 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
     requireAllColumns: {
       type: 'boolean',
       label: 'require all columns',
-      help: 'Add every column to the schema\'s required array.',
+      help: "Add every column to the schema's required array.",
     },
     noAdditional: {
       type: 'boolean',
@@ -164,7 +180,8 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const hasHeader = params.hasHeader ?? true;
-    const delimiter = params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
+    const delimiter =
+      params.delimiter && params.delimiter.length > 0 ? params.delimiter : undefined;
 
     ctx.onProgress({ stage: 'processing', percent: 40, message: 'Parsing' });
     const text = await inputs[0]!.text();
@@ -200,9 +217,10 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
       properties[header[i]!] = columnSchema(observations[i]!);
     }
 
-    const draftUri = params.draft === 'draft-2020-12'
-      ? 'https://json-schema.org/draft/2020-12/schema'
-      : 'http://json-schema.org/draft-07/schema#';
+    const draftUri =
+      params.draft === 'draft-2020-12'
+        ? 'https://json-schema.org/draft/2020-12/schema'
+        : 'http://json-schema.org/draft-07/schema#';
 
     const rowSchema: Record<string, unknown> = {
       type: 'object',

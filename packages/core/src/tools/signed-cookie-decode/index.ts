@@ -57,7 +57,11 @@ function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-async function hmacBytes(secret: string, message: string, algorithm: CookieAlgorithm): Promise<Uint8Array> {
+async function hmacBytes(
+  secret: string,
+  message: string,
+  algorithm: CookieAlgorithm,
+): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -102,7 +106,12 @@ function splitCookie(cookie: string, style: CookieStyle): SplitResult {
   return { value: `${parts[0]}.${parts[1]}`, signature: parts[2]!, style: 'flask' };
 }
 
-async function expectedSignatureFor(style: CookieStyle, value: string, secret: string, algorithm: CookieAlgorithm): Promise<string> {
+async function expectedSignatureFor(
+  style: CookieStyle,
+  value: string,
+  secret: string,
+  algorithm: CookieAlgorithm,
+): Promise<string> {
   const sig = await hmacBytes(secret, value, algorithm);
   if (style === 'rails') return toHex(sig);
   // Express + Flask both use base64url. Express truncates `=` padding;
@@ -115,9 +124,19 @@ export const signedCookieDecode: ToolModule<SignedCookieDecodeParams> = {
   slug: 'signed-cookie-decode',
   name: 'Signed Cookie Decode',
   description:
-    'Verify and parse a signed cookie from Express (cookie-signature), Flask (itsdangerous), or Rails. Splits on the framework-specific separator, recomputes the HMAC under your secret, and reports valid + payload. Constant-time compare so timing can\'t lift the signature.',
+    "Verify and parse a signed cookie from Express (cookie-signature), Flask (itsdangerous), or Rails. Splits on the framework-specific separator, recomputes the HMAC under your secret, and reports valid + payload. Constant-time compare so timing can't lift the signature.",
   category: 'inspect',
-  keywords: ['cookie', 'session', 'signed', 'verify', 'express', 'flask', 'rails', 'itsdangerous', 'hmac'],
+  keywords: [
+    'cookie',
+    'session',
+    'signed',
+    'verify',
+    'express',
+    'flask',
+    'rails',
+    'itsdangerous',
+    'hmac',
+  ],
 
   input: {
     accept: ['*/*'],
@@ -144,7 +163,7 @@ export const signedCookieDecode: ToolModule<SignedCookieDecodeParams> = {
     secret: {
       type: 'string',
       label: 'secret',
-      help: 'The framework\'s signing key. Never uploaded.',
+      help: "The framework's signing key. Never uploaded.",
       placeholder: 'cookie-signing-secret',
     },
     style: {
@@ -169,7 +188,11 @@ export const signedCookieDecode: ToolModule<SignedCookieDecodeParams> = {
     },
   },
 
-  async run(_inputs: File[], params: SignedCookieDecodeParams, ctx: ToolRunContext): Promise<Blob[]> {
+  async run(
+    _inputs: File[],
+    params: SignedCookieDecodeParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
     const cookie = (params.cookie ?? '').trim();
     if (!cookie) throw new Error('signed-cookie-decode requires a cookie value.');
     const secret = params.secret ?? '';

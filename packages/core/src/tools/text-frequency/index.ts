@@ -38,12 +38,20 @@ export interface TextFrequencyResult {
   ngramSize: number;
 }
 
-function buildHistogram(counts: Map<string, number>, total: number, topN: number): FrequencyEntry[] {
+function buildHistogram(
+  counts: Map<string, number>,
+  total: number,
+  topN: number,
+): FrequencyEntry[] {
   const entries: FrequencyEntry[] = [];
   for (const [key, count] of counts) {
-    entries.push({ key, count, percent: total > 0 ? Math.round((count / total) * 10000) / 100 : 0 });
+    entries.push({
+      key,
+      count,
+      percent: total > 0 ? Math.round((count / total) * 10000) / 100 : 0,
+    });
   }
-  entries.sort((a, b) => (b.count - a.count) || a.key.localeCompare(b.key));
+  entries.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
   return entries.slice(0, topN);
 }
 
@@ -110,7 +118,18 @@ export const textFrequency: ToolModule<TextFrequencyParams> = {
   description:
     'Top characters, words, and n-grams by frequency. Useful for data inspection, cryptanalysis warm-ups, and quick text profiling.',
   category: 'inspect',
-  keywords: ['frequency', 'histogram', 'count', 'words', 'characters', 'ngram', 'bigram', 'trigram', 'analysis', 'text'],
+  keywords: [
+    'frequency',
+    'histogram',
+    'count',
+    'words',
+    'characters',
+    'ngram',
+    'bigram',
+    'trigram',
+    'analysis',
+    'text',
+  ],
 
   input: {
     accept: ['text/plain'],

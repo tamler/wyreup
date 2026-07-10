@@ -6,8 +6,14 @@ import { join } from 'node:path';
 
 async function callTool(srv: unknown, name: string, args: Record<string, unknown>) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-  const handlers = (srv as any)._requestHandlers as Map<string, (req: unknown, extra: unknown) => unknown>;
-  return handlers.get('tools/call')!({ method: 'tools/call', params: { name, arguments: args } }, {}) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
+  const handlers = (srv as any)._requestHandlers as Map<
+    string,
+    (req: unknown, extra: unknown) => unknown
+  >;
+  return handlers.get('tools/call')!(
+    { method: 'tools/call', params: { name, arguments: args } },
+    {},
+  ) as Promise<{ content: Array<{ type: string; text: string }>; isError?: boolean }>;
 }
 
 describe('timeout validation [spec §#3]', () => {
@@ -36,7 +42,11 @@ describe('timeout validation [spec §#3]', () => {
   it('rejects negative timeout_ms', async () => {
     const srv = await createWyreupMcpServer();
     const { tmp, input } = await setupInput();
-    const r = await callTool(srv, 'compress', { input_paths: [input], output_path: join(tmp, 'b.jpg'), timeout_ms: -1 });
+    const r = await callTool(srv, 'compress', {
+      input_paths: [input],
+      output_path: join(tmp, 'b.jpg'),
+      timeout_ms: -1,
+    });
     expect(r.isError).toBe(true);
     expect(r.content[0]?.text).toMatch(/timeout_ms/);
   });
@@ -45,7 +55,11 @@ describe('timeout validation [spec §#3]', () => {
     const srv = await createWyreupMcpServer();
     const { tmp, input } = await setupInput();
     for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, 1.5]) {
-      const r = await callTool(srv, 'compress', { input_paths: [input], output_path: join(tmp, `b-${String(bad)}.jpg`), timeout_ms: bad });
+      const r = await callTool(srv, 'compress', {
+        input_paths: [input],
+        output_path: join(tmp, `b-${String(bad)}.jpg`),
+        timeout_ms: bad,
+      });
       expect(r.isError, `timeout_ms=${String(bad)}`).toBe(true);
     }
   });
@@ -56,7 +70,11 @@ describe('timeout validation [spec §#3]', () => {
     try {
       const srv = await createWyreupMcpServer();
       const { tmp, input } = await setupInput();
-      const r = await callTool(srv, 'compress', { input_paths: [input], output_path: join(tmp, 'b.jpg'), timeout_ms: 0 });
+      const r = await callTool(srv, 'compress', {
+        input_paths: [input],
+        output_path: join(tmp, 'b.jpg'),
+        timeout_ms: 0,
+      });
       expect(r.isError).toBe(true);
       expect(r.content[0]?.text).toMatch(/WYREUP_ALLOW_DISABLE_TIMEOUT/);
     } finally {

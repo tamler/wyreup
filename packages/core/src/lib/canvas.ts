@@ -23,8 +23,14 @@ export interface CanvasContext2DLike {
   drawImage(image: ImageLike, dx: number, dy: number, dw: number, dh: number): void;
   drawImage(
     image: ImageLike,
-    sx: number, sy: number, sw: number, sh: number,
-    dx: number, dy: number, dw: number, dh: number,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
   ): void;
   fillText(text: string, x: number, y: number): void;
   measureText(text: string): { width: number };
@@ -64,7 +70,9 @@ export async function createCanvas(width: number, height: number): Promise<Canva
     const nc = await getNodeCanvas();
     return nc.createCanvas(width, height) as unknown as CanvasLike;
   }
-  return new (globalThis as unknown as { OffscreenCanvas: new (w: number, h: number) => CanvasLike }).OffscreenCanvas(width, height);
+  return new (
+    globalThis as unknown as { OffscreenCanvas: new (w: number, h: number) => CanvasLike }
+  ).OffscreenCanvas(width, height);
 }
 
 /**
@@ -91,12 +99,16 @@ export async function canvasToBlob(
   quality?: number,
 ): Promise<Blob> {
   if (isNode()) {
-    const buffer = (canvas as unknown as {
-      toBuffer(mime: string, options?: { quality?: number }): Buffer;
-    }).toBuffer(mime, quality !== undefined ? { quality } : undefined);
+    const buffer = (
+      canvas as unknown as {
+        toBuffer(mime: string, options?: { quality?: number }): Buffer;
+      }
+    ).toBuffer(mime, quality !== undefined ? { quality } : undefined);
     return new Blob([new Uint8Array(buffer)], { type: mime });
   }
-  return await (canvas as unknown as {
-    convertToBlob(options: { type: string; quality?: number }): Promise<Blob>;
-  }).convertToBlob({ type: mime, quality });
+  return await (
+    canvas as unknown as {
+      convertToBlob(options: { type: string; quality?: number }): Promise<Blob>;
+    }
+  ).convertToBlob({ type: mime, quality });
 }

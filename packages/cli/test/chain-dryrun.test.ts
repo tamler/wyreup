@@ -100,11 +100,17 @@ describe('buildDryRun', () => {
 
     // Smaller-then-bigger and bigger-then-smaller both report ~100 MB.
     const a = buildDryRun(
-      [{ toolId: 'small-tool', params: {} }, { toolId: 'big-tool', params: {} }],
+      [
+        { toolId: 'small-tool', params: {} },
+        { toolId: 'big-tool', params: {} },
+      ],
       synth,
     );
     const b = buildDryRun(
-      [{ toolId: 'big-tool', params: {} }, { toolId: 'small-tool', params: {} }],
+      [
+        { toolId: 'big-tool', params: {} },
+        { toolId: 'small-tool', params: {} },
+      ],
       synth,
     );
     expect(a.totalInstallBytes).toBe(100_000_000);

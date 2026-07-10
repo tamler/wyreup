@@ -58,7 +58,7 @@ export const textSummarize: ToolModule<TextSummarizeParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading summarization model' });
 
-    const pipe = await getPipeline(ctx, 'summarization', MODEL_ID) as (
+    const pipe = (await getPipeline(ctx, 'summarization', MODEL_ID)) as (
       input: string,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ summary_text: string }>>;
@@ -73,7 +73,7 @@ export const textSummarize: ToolModule<TextSummarizeParams> = {
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Generating summary' });
 
     const result = await pipe(text, { max_new_tokens: maxLength, min_length: minLength });
-    const summary = Array.isArray(result) ? result[0]?.summary_text ?? '' : String(result);
+    const summary = Array.isArray(result) ? (result[0]?.summary_text ?? '') : String(result);
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([summary], { type: 'text/plain' })];

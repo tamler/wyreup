@@ -52,13 +52,13 @@ export function encodeWav(samples: Float32Array, sampleRate: number): Blob {
 
   // fmt sub-chunk
   writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);         // subchunk1 size
-  view.setUint16(20, 1, true);          // PCM = 1
+  view.setUint32(16, 16, true); // subchunk1 size
+  view.setUint16(20, 1, true); // PCM = 1
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, byteRate, true);
   view.setUint16(32, blockAlign, true);
-  view.setUint16(34, 16, true);         // bits per sample
+  view.setUint16(34, 16, true); // bits per sample
 
   // data sub-chunk
   writeString(view, 36, 'data');
@@ -87,11 +87,7 @@ function writeString(view: DataView, offset: number, text: string): void {
  * Resample a Float32Array from sourceSR to targetSR via linear interpolation.
  * Used as a fallback when AudioContext ignores the sampleRate option.
  */
-export function resample(
-  input: Float32Array,
-  sourceSR: number,
-  targetSR: number,
-): Float32Array {
+export function resample(input: Float32Array, sourceSR: number, targetSR: number): Float32Array {
   if (sourceSR === targetSR) return input;
   const ratio = sourceSR / targetSR;
   const outputLength = Math.round(input.length / ratio);
@@ -115,7 +111,8 @@ export function resample(
 async function decodeToMono16k(blob: Blob): Promise<Float32Array | null> {
   const AudioCtx =
     typeof window !== 'undefined'
-      ? (window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)
+      ? (window.AudioContext ??
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)
       : null;
 
   if (!AudioCtx) return null;
@@ -221,11 +218,7 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
 
   defaults: defaultAudioEnhanceParams,
 
-  async run(
-    inputs: File[],
-    _params: AudioEnhanceParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: AudioEnhanceParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (inputs.length !== 1) {
       throw new Error('audio-enhance accepts exactly one audio file.');
     }
@@ -245,7 +238,7 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
     if (!mono16k) {
       throw new Error(
         'Audio decoding requires a browser environment with Web Audio API. ' +
-        'The audio-enhance tool is not supported in the current environment.',
+          'The audio-enhance tool is not supported in the current environment.',
       );
     }
 
@@ -253,7 +246,11 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    ctx.onProgress({ stage: 'loading-deps', percent: 30, message: 'Model ready — running inference' });
+    ctx.onProgress({
+      stage: 'loading-deps',
+      percent: 30,
+      message: 'Model ready — running inference',
+    });
 
     const session = await getSession(ctx);
 
@@ -276,7 +273,7 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
       if (typeof fixedLen === 'number' && fixedLen > 0 && mono16k.length > fixedLen) {
         throw new Error(
           `Audio file too long for single-pass enhancement (input: ${mono16k.length} samples, ` +
-          `model max: ${fixedLen}). Please split into shorter segments.`,
+            `model max: ${fixedLen}). Please split into shorter segments.`,
         );
       }
     }

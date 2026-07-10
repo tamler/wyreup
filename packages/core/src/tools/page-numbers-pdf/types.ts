@@ -1,6 +1,12 @@
 export interface PageNumbersPdfParams {
   /** Corner position. Default 'bottom-center'. */
-  position: 'bottom-left' | 'bottom-center' | 'bottom-right' | 'top-left' | 'top-center' | 'top-right';
+  position:
+    | 'bottom-left'
+    | 'bottom-center'
+    | 'bottom-right'
+    | 'top-left'
+    | 'top-center'
+    | 'top-right';
   /** Font size in points. Default 12. */
   fontSize?: number;
   /** Starting number. Default 1. */

@@ -12,7 +12,7 @@ export function listCommand(): void {
     return;
   }
 
-  const byCategory = new Map<string, typeof registry.tools[number][]>();
+  const byCategory = new Map<string, (typeof registry.tools)[number][]>();
   for (const tool of tools) {
     const cat = tool.category;
     if (!byCategory.has(cat)) byCategory.set(cat, []);
@@ -26,10 +26,6 @@ export function listCommand(): void {
       console.log(`    ${tool.id.padEnd(28)} ${tool.description}`);
     }
   }
-  console.log(
-    '\nRun a tool:   wyreup <tool-id> [inputs...] -o <output>',
-  );
-  console.log(
-    'Chain tools:  wyreup chain <input> --steps "tool1|tool2[key=val]" -o <output>',
-  );
+  console.log('\nRun a tool:   wyreup <tool-id> [inputs...] -o <output>');
+  console.log('Chain tools:  wyreup chain <input> --steps "tool1|tool2[key=val]" -o <output>');
 }

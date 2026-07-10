@@ -31,11 +31,7 @@ export const invert: ToolModule<InvertParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: InvertParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: InvertParams, ctx: ToolRunContext): Promise<Blob[]> {
     const outputs: Blob[] = [];
 
     for (let i = 0; i < inputs.length; i++) {

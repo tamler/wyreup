@@ -20,10 +20,10 @@ export const defaultNormalizeLoudnessParams: NormalizeLoudnessParams = {
 export const LOUDNESS_TARGETS: Record<LoudnessPreset, { I: number; TP: number }> = {
   'ebu-r128': { I: -23, TP: -1.0 },
   'atsc-a85': { I: -24, TP: -2.0 },
-  'spotify': { I: -14, TP: -1.0 },
+  spotify: { I: -14, TP: -1.0 },
   'apple-music': { I: -16, TP: -1.0 },
-  'youtube': { I: -14, TP: -1.0 },
-  'amazon': { I: -14, TP: -2.0 },
+  youtube: { I: -14, TP: -1.0 },
+  amazon: { I: -14, TP: -2.0 },
 };
 
 const LRA_TARGET = 11;
@@ -61,10 +61,21 @@ export const normalizeLoudness: ToolModule<NormalizeLoudnessParams> = {
   id: 'normalize-loudness',
   slug: 'normalize-loudness',
   name: 'Normalize Loudness',
-  description: 'Level audio or video to a broadcast/streaming loudness target (EBU R128, Spotify, Apple Music, and more).',
+  description:
+    'Level audio or video to a broadcast/streaming loudness target (EBU R128, Spotify, Apple Music, and more).',
   category: 'media',
   categories: ['audio'],
-  keywords: ['loudness', 'normalize', 'lufs', 'ebu', 'r128', 'audio', 'video', 'volume', 'loudnorm'],
+  keywords: [
+    'loudness',
+    'normalize',
+    'lufs',
+    'ebu',
+    'r128',
+    'audio',
+    'video',
+    'volume',
+    'loudnorm',
+  ],
 
   input: {
     accept: ['audio/*', 'video/*'],
@@ -99,11 +110,7 @@ export const normalizeLoudness: ToolModule<NormalizeLoudnessParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: NormalizeLoudnessParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: NormalizeLoudnessParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });

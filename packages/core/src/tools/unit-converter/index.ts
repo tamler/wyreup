@@ -11,40 +11,82 @@ export { defaultUnitConverterParams } from './types.js';
 
 const FACTORS: Record<UnitCategory, Record<string, number>> = {
   length: {
-    m: 1, km: 1000, cm: 0.01, mm: 0.001,
-    in: 0.0254, ft: 0.3048, yd: 0.9144,
-    mi: 1609.344, nmi: 1852,
+    m: 1,
+    km: 1000,
+    cm: 0.01,
+    mm: 0.001,
+    in: 0.0254,
+    ft: 0.3048,
+    yd: 0.9144,
+    mi: 1609.344,
+    nmi: 1852,
   },
   mass: {
-    g: 1, kg: 1000, mg: 0.001,
-    lb: 453.59237, oz: 28.349523125,
-    ton: 907184.74, stone: 6350.29318,
+    g: 1,
+    kg: 1000,
+    mg: 0.001,
+    lb: 453.59237,
+    oz: 28.349523125,
+    ton: 907184.74,
+    stone: 6350.29318,
   },
   area: {
-    m2: 1, km2: 1e6, ft2: 0.09290304, yd2: 0.83612736,
-    acre: 4046.8564224, hectare: 10000, mi2: 2589988.110336,
+    m2: 1,
+    km2: 1e6,
+    ft2: 0.09290304,
+    yd2: 0.83612736,
+    acre: 4046.8564224,
+    hectare: 10000,
+    mi2: 2589988.110336,
   },
   volume: {
-    L: 1, mL: 0.001, gal: 3.785411784, qt: 0.946352946,
-    pt: 0.473176473, cup: 0.2365882365, floz: 0.0295735295625,
-    m3: 1000, ft3: 28.316846592,
+    L: 1,
+    mL: 0.001,
+    gal: 3.785411784,
+    qt: 0.946352946,
+    pt: 0.473176473,
+    cup: 0.2365882365,
+    floz: 0.0295735295625,
+    m3: 1000,
+    ft3: 28.316846592,
   },
   speed: {
-    'm/s': 1, 'km/h': 1 / 3.6, mph: 0.44704, kn: 0.514444, 'ft/s': 0.3048,
+    'm/s': 1,
+    'km/h': 1 / 3.6,
+    mph: 0.44704,
+    kn: 0.514444,
+    'ft/s': 0.3048,
   },
   data: {
-    B: 1, KB: 1000, MB: 1e6, GB: 1e9, TB: 1e12, PB: 1e15,
-    KiB: 1024, MiB: 1048576, GiB: 1073741824, TiB: 1099511627776,
+    B: 1,
+    KB: 1000,
+    MB: 1e6,
+    GB: 1e9,
+    TB: 1e12,
+    PB: 1e15,
+    KiB: 1024,
+    MiB: 1048576,
+    GiB: 1073741824,
+    TiB: 1099511627776,
   },
   time: {
-    s: 1, ms: 0.001, min: 60, h: 3600, d: 86400,
-    wk: 604800, mo: 2629746, yr: 31556952,
+    s: 1,
+    ms: 0.001,
+    min: 60,
+    h: 3600,
+    d: 86400,
+    wk: 604800,
+    mo: 2629746,
+    yr: 31556952,
   },
   temperature: {}, // handled separately
 };
 
 function detectCategory(unit: string): UnitCategory | undefined {
-  for (const [cat, factors] of Object.entries(FACTORS) as [UnitCategory, Record<string, number>][]) {
+  for (const [cat, factors] of Object.entries(FACTORS) as [
+    UnitCategory,
+    Record<string, number>,
+  ][]) {
     if (cat === 'temperature') continue;
     if (unit in factors) return cat;
   }
@@ -57,17 +99,28 @@ function convertTemperature(value: number, from: string, to: string): number {
   // Convert from -> Celsius first
   let celsius: number;
   switch (from) {
-    case 'C': celsius = value; break;
-    case 'F': celsius = (value - 32) * 5 / 9; break;
-    case 'K': celsius = value - 273.15; break;
-    default: throw new Error(`Unknown temperature unit: ${from}`);
+    case 'C':
+      celsius = value;
+      break;
+    case 'F':
+      celsius = ((value - 32) * 5) / 9;
+      break;
+    case 'K':
+      celsius = value - 273.15;
+      break;
+    default:
+      throw new Error(`Unknown temperature unit: ${from}`);
   }
   // Celsius -> to
   switch (to) {
-    case 'C': return celsius;
-    case 'F': return celsius * 9 / 5 + 32;
-    case 'K': return celsius + 273.15;
-    default: throw new Error(`Unknown temperature unit: ${to}`);
+    case 'C':
+      return celsius;
+    case 'F':
+      return (celsius * 9) / 5 + 32;
+    case 'K':
+      return celsius + 273.15;
+    default:
+      throw new Error(`Unknown temperature unit: ${to}`);
   }
 }
 
@@ -76,7 +129,8 @@ function convertUnits(value: number, from: string, to: string, category: UnitCat
   const table = FACTORS[category];
   const fromFactor = table[from];
   const toFactor = table[to];
-  if (fromFactor === undefined) throw new Error(`Unknown unit "${from}" for category "${category}"`);
+  if (fromFactor === undefined)
+    throw new Error(`Unknown unit "${from}" for category "${category}"`);
   if (toFactor === undefined) throw new Error(`Unknown unit "${to}" for category "${category}"`);
   return (value * fromFactor) / toFactor;
 }
@@ -94,9 +148,19 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
   id: 'unit-converter',
   slug: 'unit-converter',
   name: 'Unit Converter',
-  description: 'Convert between length, mass, temperature, area, volume, speed, data, and time units.',
+  description:
+    'Convert between length, mass, temperature, area, volume, speed, data, and time units.',
   category: 'create',
-  keywords: ['unit', 'convert', 'measurement', 'length', 'mass', 'temperature', 'metric', 'imperial'],
+  keywords: [
+    'unit',
+    'convert',
+    'measurement',
+    'length',
+    'mass',
+    'temperature',
+    'metric',
+    'imperial',
+  ],
 
   input: { accept: [], min: 0, max: 0 },
   output: { mime: 'application/json', multiple: false },
@@ -109,10 +173,7 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
   defaults: { value: 1, from: 'km', to: 'm', category: 'length' },
 
   paramSchema: (() => {
-    const unitsByCategory: Record<
-      string,
-      Array<{ value: string; label: string }>
-    > = {
+    const unitsByCategory: Record<string, Array<{ value: string; label: string }>> = {
       length: [
         { value: 'm', label: 'm — meters' },
         { value: 'km', label: 'km — kilometers' },
@@ -222,12 +283,7 @@ export const unitConverter: ToolModule<UnitConverterParams> = {
     } as const;
   })(),
 
-   
-  async run(
-    _inputs: File[],
-    params: UnitConverterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(_inputs: File[], params: UnitConverterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Converting units' });
 
     const { value, from, to } = params;

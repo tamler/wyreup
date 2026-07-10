@@ -47,39 +47,27 @@ describe('ocr — run()', () => {
     await expect(ocr.run([file], {}, makeCtx())).rejects.toThrow();
   });
 
-  it(
-    'extracts text from photo.jpg without throwing (returns a string)',
-    async () => {
-      const file = loadFixture('photo.jpg', 'image/jpeg');
-      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
-      const text = await out!.text();
-      expect(typeof text).toBe('string');
-    },
-    60000, // tesseract download + init can take time
-  );
+  it('extracts text from photo.jpg without throwing (returns a string)', async () => {
+    const file = loadFixture('photo.jpg', 'image/jpeg');
+    const [out] = (await ocr.run([file], {}, makeCtx())) as Blob[];
+    const text = await out!.text();
+    expect(typeof text).toBe('string');
+  }, 60000); // tesseract download + init can take time
 
-  it(
-    'returns non-empty result from text-image.png',
-    async () => {
-      const file = loadFixture('text-image.png', 'image/png');
-      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
-      const text = await out!.text();
-      expect(typeof text).toBe('string');
-      // OCR on generated text should find something
-      // Be lenient — just check it's a string (OCR quality varies)
-    },
-    60000,
-  );
+  it('returns non-empty result from text-image.png', async () => {
+    const file = loadFixture('text-image.png', 'image/png');
+    const [out] = (await ocr.run([file], {}, makeCtx())) as Blob[];
+    const text = await out!.text();
+    expect(typeof text).toBe('string');
+    // OCR on generated text should find something
+    // Be lenient — just check it's a string (OCR quality varies)
+  }, 60000);
 
-  it(
-    'output MIME type is text/plain',
-    async () => {
-      const file = loadFixture('photo.jpg', 'image/jpeg');
-      const [out] = await ocr.run([file], {}, makeCtx()) as Blob[];
-      expect(out!.type).toBe('text/plain');
-    },
-    60000,
-  );
+  it('output MIME type is text/plain', async () => {
+    const file = loadFixture('photo.jpg', 'image/jpeg');
+    const [out] = (await ocr.run([file], {}, makeCtx())) as Blob[];
+    expect(out!.type).toBe('text/plain');
+  }, 60000);
 
   it('respects abort signal', () => {
     const ac = new AbortController();

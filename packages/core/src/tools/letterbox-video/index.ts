@@ -35,12 +35,18 @@ export function buildLetterboxArgs(
   if (!canvas) throw new Error(`Unknown aspect: ${aspect}`);
   const { w, h } = canvas;
   return [
-    '-i', inputName,
-    '-vf', `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2`,
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'fast',
-    '-c:a', 'copy',
+    '-i',
+    inputName,
+    '-vf',
+    `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2`,
+    '-c:v',
+    'libx264',
+    '-crf',
+    '23',
+    '-preset',
+    'fast',
+    '-c:a',
+    'copy',
     outputName,
   ];
 }
@@ -49,10 +55,21 @@ export const letterboxVideo: ToolModule<LetterboxVideoParams> = {
   id: 'letterbox-video',
   slug: 'letterbox-video',
   name: 'Letterbox / Pillarbox',
-  description: 'Fit a video to a target aspect ratio (16:9, 9:16, 1:1, 4:3) with black bars — no cropping.',
+  description:
+    'Fit a video to a target aspect ratio (16:9, 9:16, 1:1, 4:3) with black bars — no cropping.',
   category: 'media',
   categories: ['edit'],
-  keywords: ['video', 'letterbox', 'pillarbox', 'aspect ratio', 'bars', 'pad', 'reframe', 'square', 'vertical'],
+  keywords: [
+    'video',
+    'letterbox',
+    'pillarbox',
+    'aspect ratio',
+    'bars',
+    'pad',
+    'reframe',
+    'square',
+    'vertical',
+  ],
 
   input: { accept: ['video/*'], min: 1, max: 1, sizeLimit: 500 * 1024 * 1024 },
   output: { mime: 'video/mp4' },
@@ -101,7 +118,7 @@ export const letterboxVideo: ToolModule<LetterboxVideoParams> = {
     await ff.exec(buildLetterboxArgs(inputName, outputName, params.aspect));
     const output = await ff.readFile(outputName);
     const outputBytes: Uint8Array =
-      typeof output === 'string' ? new TextEncoder().encode(output) : (output);
+      typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
     await ff.deleteFile(inputName).catch(() => {});
     await ff.deleteFile(outputName).catch(() => {});

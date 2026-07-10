@@ -7,7 +7,8 @@ export const browserAdapter: RuntimeAdapter = {
   isAvailable(): boolean {
     return (
       typeof globalThis !== 'undefined' &&
-      typeof (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas !== 'undefined'
+      typeof (globalThis as unknown as { OffscreenCanvas?: unknown }).OffscreenCanvas !==
+        'undefined'
     );
   },
   createCanvas(_width: number, _height: number): unknown {

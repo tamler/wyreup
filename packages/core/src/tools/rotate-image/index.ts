@@ -49,11 +49,7 @@ export const rotateImage: ToolModule<RotateImageParams> = {
     },
   },
 
-  async run(
-    inputs: File[],
-    params: RotateImageParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: RotateImageParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { degrees } = params;
 
     if (degrees !== 90 && degrees !== 180 && degrees !== 270) {
@@ -81,8 +77,7 @@ export const rotateImage: ToolModule<RotateImageParams> = {
         const existing = decodeJpegOrientation(buffer);
         const composed = composeOrientation(existing, degrees);
         const rewritten =
-          setJpegOrientation(buffer, composed) ??
-          injectJpegOrientation(buffer, composed);
+          setJpegOrientation(buffer, composed) ?? injectJpegOrientation(buffer, composed);
         if (rewritten) {
           outputs.push(new Blob([rewritten as BlobPart], { type: 'image/jpeg' }));
           continue;
@@ -109,11 +104,7 @@ export const rotateImage: ToolModule<RotateImageParams> = {
       // reachable here when EXIF rewrite couldn't apply) re-encodes at
       // quality 100 to minimize loss.
       const encodeOptions: Record<string, unknown> =
-        sourceFormat === 'webp'
-          ? { lossless: 1 }
-          : sourceFormat === 'jpeg'
-            ? { quality: 100 }
-            : {};
+        sourceFormat === 'webp' ? { lossless: 1 } : sourceFormat === 'jpeg' ? { quality: 100 } : {};
 
       const encoded = await codec.encode(
         { data: rotated, width: newWidth, height: newHeight },

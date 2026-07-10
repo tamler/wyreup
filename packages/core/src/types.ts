@@ -38,9 +38,9 @@ export type Surface = 'web' | 'cli' | 'mcp';
  * Values are rough estimates, not hard guarantees.
  */
 export type MemoryEstimate =
-  | 'low'      // <50 MB: most pure-WASM tools (compress, convert, strip-exif)
-  | 'medium'   // 50-200 MB: background removal, face detection, PDF rendering
-  | 'high'     // 200-500 MB: video processing (v1.5), OCR (v1.5)
+  | 'low' // <50 MB: most pure-WASM tools (compress, convert, strip-exif)
+  | 'medium' // 50-200 MB: background removal, face detection, PDF rendering
+  | 'high' // 200-500 MB: video processing (v1.5), OCR (v1.5)
   | 'extreme'; // >500 MB: reserved; not used in v1 or v1.5
 
 // ──── Runtime capability requirements ────
@@ -216,10 +216,7 @@ export type ParamFieldSchema =
        */
       optionsFrom?: {
         field: string;
-        map: Record<
-          string,
-          Array<{ value: string | number; label: string; help?: string }>
-        >;
+        map: Record<string, Array<{ value: string | number; label: string; help?: string }>>;
       };
       showWhen?: ShowWhenCondition;
     }

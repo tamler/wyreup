@@ -9,7 +9,9 @@ export const nodeAdapter: RuntimeAdapter = {
     return typeof process !== 'undefined' && typeof process.versions?.node === 'string';
   },
   createCanvas(_width: number, _height: number): unknown {
-    throw new Error('nodeAdapter.createCanvas: Wave 1 implementation pending (will use @napi-rs/canvas)');
+    throw new Error(
+      'nodeAdapter.createCanvas: Wave 1 implementation pending (will use @napi-rs/canvas)',
+    );
   },
   createImageFromBlob(_blob: Blob): Promise<unknown> {
     throw new Error('nodeAdapter.createImageFromBlob: Wave 1 implementation pending');

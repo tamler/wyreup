@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { videoSideBySide, buildSideBySideArgs } from '../../../src/tools/video-side-by-side/index.js';
+import {
+  videoSideBySide,
+  buildSideBySideArgs,
+} from '../../../src/tools/video-side-by-side/index.js';
 
 describe('video-side-by-side', () => {
   it('id + two video inputs', () => {

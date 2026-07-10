@@ -31,7 +31,8 @@ const SAMPLE_LOG = `[Parsed_ebur128_0 @ 0x55] Summary:
 
 describe('analyze-loudness — metadata', () => {
   it('has id "analyze-loudness"', () => expect(analyzeLoudness.id).toBe('analyze-loudness'));
-  it('output mime is application/json', () => expect(analyzeLoudness.output.mime).toBe('application/json'));
+  it('output mime is application/json', () =>
+    expect(analyzeLoudness.output.mime).toBe('application/json'));
   it('accepts audio and video', () => {
     expect(analyzeLoudness.input.accept).toContain('audio/*');
     expect(analyzeLoudness.input.accept).toContain('video/*');

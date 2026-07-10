@@ -26,21 +26,22 @@ describe('checkToolCapabilities', () => {
   });
 
   it('webgpu-required runs normally on WebGPU', () => {
-    expect(
-      checkToolCapabilities({ requires: { webgpu: 'required' } }, webgpuOn),
-    ).toEqual({ runnable: true });
+    expect(checkToolCapabilities({ requires: { webgpu: 'required' } }, webgpuOn)).toEqual({
+      runnable: true,
+    });
   });
 
   it('webgpu-preferred runs on WebGPU without slower flag', () => {
-    expect(
-      checkToolCapabilities({ requires: { webgpu: 'preferred' } }, webgpuOn),
-    ).toEqual({ runnable: true });
+    expect(checkToolCapabilities({ requires: { webgpu: 'preferred' } }, webgpuOn)).toEqual({
+      runnable: true,
+    });
   });
 
   it('webgpu-preferred runs on WASM with slower flag', () => {
-    expect(
-      checkToolCapabilities({ requires: { webgpu: 'preferred' } }, webgpuOff),
-    ).toEqual({ runnable: true, slower: true });
+    expect(checkToolCapabilities({ requires: { webgpu: 'preferred' } }, webgpuOff)).toEqual({
+      runnable: true,
+      slower: true,
+    });
   });
 
   it('blocks when device memory is below minMemoryGB', () => {
@@ -50,8 +51,8 @@ describe('checkToolCapabilities', () => {
   });
 
   it('allows when device memory meets minMemoryGB', () => {
-    expect(
-      checkToolCapabilities({ requires: { minMemoryGB: 4 } }, webgpuOn),
-    ).toEqual({ runnable: true });
+    expect(checkToolCapabilities({ requires: { minMemoryGB: 4 } }, webgpuOn)).toEqual({
+      runnable: true,
+    });
   });
 });

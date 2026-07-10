@@ -25,11 +25,16 @@ export function buildGifArgs(
   const duration = params.durationSeconds ?? 5;
 
   return [
-    '-ss', String(start),
-    '-t', String(duration),
-    '-i', inputName,
-    '-vf', `fps=${fps},scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
-    '-loop', '0',
+    '-ss',
+    String(start),
+    '-t',
+    String(duration),
+    '-i',
+    inputName,
+    '-vf',
+    `fps=${fps},scale=${width}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
+    '-loop',
+    '0',
     outputName,
   ];
 }
@@ -59,11 +64,7 @@ export const videoToGif: ToolModule<VideoToGifParams> = {
 
   defaults: defaultVideoToGifParams,
 
-  async run(
-    inputs: File[],
-    params: VideoToGifParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: VideoToGifParams, ctx: ToolRunContext): Promise<Blob[]> {
     const { getFFmpeg, runFFmpeg } = await import('../../lib/ffmpeg.js');
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading ffmpeg' });

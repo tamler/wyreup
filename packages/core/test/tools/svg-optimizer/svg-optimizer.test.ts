@@ -14,11 +14,12 @@ function makeCtx(): ToolRunContext {
 
 async function run(svg: string, params: SvgOptimizerParams = {}): Promise<string> {
   const file = new File([svg], 'input.svg', { type: 'image/svg+xml' });
-  const [out] = await svgOptimizer.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await svgOptimizer.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
-const SAMPLE_SVG = '<svg xmlns="http://www.w3.org/2000/svg"><!-- comment --><circle cx="50.123456" cy="50.123456" r="50"/></svg>';
+const SAMPLE_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg"><!-- comment --><circle cx="50.123456" cy="50.123456" r="50"/></svg>';
 
 describe('svg-optimizer — metadata', () => {
   it('has id svg-optimizer', () => {
@@ -75,9 +76,10 @@ describe('svg-optimizer — run()', () => {
   });
 
   it('output is smaller than input for comment-heavy SVG', async () => {
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg"><!-- A very long comment that takes up space and should be removed by the optimizer --><circle r="10"/></svg>';
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><!-- A very long comment that takes up space and should be removed by the optimizer --><circle r="10"/></svg>';
     const file = new File([svg], 'input.svg', { type: 'image/svg+xml' });
-    const [out] = await svgOptimizer.run([file], {}, makeCtx()) as Blob[];
+    const [out] = (await svgOptimizer.run([file], {}, makeCtx())) as Blob[];
     expect(out!.size).toBeLessThan(svg.length);
   });
 });

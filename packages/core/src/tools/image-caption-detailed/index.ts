@@ -19,12 +19,7 @@ export const defaultImageCaptionDetailedParams: ImageCaptionDetailedParams = {
 // tool. Same image-to-text pipeline, drop-in API.
 const MODEL_ID = 'Xenova/blip-image-captioning-base';
 
-const ACCEPTED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/bmp',
-];
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
 
 export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
   id: 'image-caption-detailed',
@@ -111,11 +106,7 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
       message: 'Loading BLIP captioning model (~250 MB on first use)',
     });
 
-    const pipe = await getPipeline(
-      ctx,
-      'image-to-text',
-      MODEL_ID,
-    ) as (
+    const pipe = (await getPipeline(ctx, 'image-to-text', MODEL_ID)) as (
       image: string,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ generated_text: string }>>;
@@ -138,9 +129,7 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const caption = Array.isArray(result)
-      ? result[0]?.generated_text?.trim() ?? ''
-      : '';
+    const caption = Array.isArray(result) ? (result[0]?.generated_text?.trim() ?? '') : '';
     if (!caption) {
       throw new Error('No caption generated.');
     }

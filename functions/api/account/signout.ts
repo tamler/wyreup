@@ -12,18 +12,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const csrfErr = requireCsrfHeader(request, user);
   if (csrfErr) return csrfErr;
 
-  return json(
-    { ok: true },
-    200,
-    {
-      'Set-Cookie': [
-        `__Host-wyreup_session=`,
-        `Path=/`,
-        `Max-Age=0`,
-        `HttpOnly`,
-        `Secure`,
-        `SameSite=Lax`,
-      ].join('; '),
-    },
-  );
+  return json({ ok: true }, 200, {
+    'Set-Cookie': [
+      `__Host-wyreup_session=`,
+      `Path=/`,
+      `Max-Age=0`,
+      `HttpOnly`,
+      `Secure`,
+      `SameSite=Lax`,
+    ].join('; '),
+  });
 };
