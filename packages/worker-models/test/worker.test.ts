@@ -82,7 +82,7 @@ describe('worker-models security', () => {
   it('rejects non-GET/HEAD/OPTIONS methods with 405', async () => {
     const res = await worker.fetch(
       new Request('https://x/y', { method: 'POST' }),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(405);
@@ -91,7 +91,7 @@ describe('worker-models security', () => {
   it('rejects a path not on the allowlist with 403', async () => {
     const res = await worker.fetch(
       new Request('https://x/evil/model/resolve/main/file.bin'),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(403);
@@ -100,7 +100,7 @@ describe('worker-models security', () => {
   it('rejects path traversal in pinned prefixes', async () => {
     const res = await worker.fetch(
       new Request('https://x/@mediapipe/tasks-vision@0.10.34/wasm/../etc/passwd'),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(403);
@@ -109,7 +109,7 @@ describe('worker-models security', () => {
   it('rejects double-slash injection in pinned prefixes', async () => {
     const res = await worker.fetch(
       new Request('https://x/@mediapipe/tasks-vision@0.10.34/wasm//other'),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(403);
@@ -119,7 +119,7 @@ describe('worker-models security', () => {
     // Even an allowed model is only proxied on the `main` branch.
     const res = await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/abc123/model.bin'),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(403);
@@ -140,7 +140,7 @@ describe('worker-models security', () => {
     ]);
     const res = await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/main/model.bin'),
-      { MODELS: makeBucket({ hits }) } as never,
+      { MODELS: makeBucket({ hits }) },
       makeCtx(),
     );
     expect(res.status).toBe(200);
@@ -165,7 +165,7 @@ describe('worker-models security', () => {
     );
     const res = await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/main/model.bin'),
-      { MODELS: makeBucket() } as never,
+      { MODELS: makeBucket() },
       makeCtx(),
     );
     expect(res.status).toBe(413);
@@ -231,7 +231,7 @@ describe('manifest verification integration', () => {
 
     const res = await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/main/model.bin'),
-      { MODELS: bucket } as never,
+      { MODELS: bucket },
       ctx,
     );
     expect(res.status).toBe(200);
@@ -280,7 +280,7 @@ describe('manifest verification integration', () => {
 
     const res = await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/main/tokenizer.json'),
-      { MODELS: bucket } as never,
+      { MODELS: bucket },
       ctx,
     );
     expect(res.status).toBe(200);
@@ -326,7 +326,7 @@ describe('manifest verification integration', () => {
 
     await worker.fetch(
       new Request('https://x/Xenova/whisper-tiny/resolve/main/streaming-check.bin'),
-      { MODELS: bucket } as never,
+      { MODELS: bucket },
       ctx,
     );
     await Promise.all(waitUntilPromises);
