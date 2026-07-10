@@ -55,24 +55,23 @@ const popularTools = popularToolIds.map((id) => {
           <a href="/tools" class="btn btn-primary">Browse all tools &rarr;</a>
           <a href="/triggers" class="btn btn-secondary">How triggers work &rarr;</a>
         </div>
+
+        <!-- Trust facts stay with the value proposition so they support the
+             hero instead of reading like a full-width page footer. -->
+        <div class="trust-strip" aria-label="Key facts">
+          <span class="trust-stat">{allTools.length} tools</span>
+          <span class="trust-sep" aria-hidden="true">·</span>
+          <span class="trust-stat">0 uploads</span>
+          <span class="trust-sep" aria-hidden="true">·</span>
+          <span class="trust-stat">0 tracking</span>
+          <span class="trust-sep" aria-hidden="true">·</span>
+          <span class="trust-stat">open source</span>
+        </div>
       </div>
 
       <!-- Right: functional drop zone -->
       <div class="hero__drop-col">
         <HeroDrop client:load />
-      </div>
-    </div>
-
-    <!-- Trust strip -->
-    <div class="trust-strip" aria-label="Key facts">
-      <div class="container trust-strip__inner">
-        <span class="trust-stat">{allTools.length} tools</span>
-        <span class="trust-sep" aria-hidden="true">·</span>
-        <span class="trust-stat">0 uploads</span>
-        <span class="trust-sep" aria-hidden="true">·</span>
-        <span class="trust-stat">0 tracking</span>
-        <span class="trust-sep" aria-hidden="true">·</span>
-        <span class="trust-stat">open source</span>
       </div>
     </div>
 
@@ -95,17 +94,6 @@ const popularTools = popularToolIds.map((id) => {
       <ScenarioGrid client:load />
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span class="scroll-hint__line"></span>
-      <span class="scroll-hint__pad"></span>
-      <span class="scroll-hint__label">scroll</span>
-      <span class="scroll-hint__chevron">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </span>
-    </div>
   </section>
 
   <!-- Section 3: How it works (live walkthrough — drop, pick, run) -->
@@ -116,17 +104,6 @@ const popularTools = popularToolIds.map((id) => {
       <HowItWorks client:load />
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span class="scroll-hint__line"></span>
-      <span class="scroll-hint__pad"></span>
-      <span class="scroll-hint__label">scroll</span>
-      <span class="scroll-hint__chevron">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </span>
-    </div>
   </section>
 
   <!-- Section 4: Use Wyreup anywhere -->
@@ -162,17 +139,6 @@ const popularTools = popularToolIds.map((id) => {
       </div>
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span class="scroll-hint__line"></span>
-      <span class="scroll-hint__pad"></span>
-      <span class="scroll-hint__label">scroll</span>
-      <span class="scroll-hint__chevron">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </span>
-    </div>
   </section>
 
   <!-- Section 5: Chain tools together -->
@@ -216,17 +182,6 @@ const popularTools = popularToolIds.map((id) => {
       </div>
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span class="scroll-hint__line"></span>
-      <span class="scroll-hint__pad"></span>
-      <span class="scroll-hint__label">scroll</span>
-      <span class="scroll-hint__chevron">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </span>
-    </div>
   </section>
 
   <!-- Section 5b: Popular tools (Deliverable 5) -->
@@ -244,17 +199,6 @@ const popularTools = popularToolIds.map((id) => {
       </div>
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span class="scroll-hint__line"></span>
-      <span class="scroll-hint__pad"></span>
-      <span class="scroll-hint__label">scroll</span>
-      <span class="scroll-hint__chevron">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </span>
-    </div>
   </section>
 
   <!-- Section 5c: PRO callout — bridge between the free tools and the
@@ -306,29 +250,18 @@ const popularTools = popularToolIds.map((id) => {
 </BaseLayout>
 
 <style>
-  /* ── Section rhythm (DESIGN.md §4) ──
-     min-height was previously capped at 960px which left dead space
-     below the bottom border + scroll hint on viewports taller than
-     ~1100px (the next section started 100-400px below the visible
-     fold, so the bottom border floated mid-screen). Use 100svh
-     (small viewport height) — fills the viewport cleanly on every
-     screen size, and 100svh accounts for mobile browser chrome
-     (URL bar collapse) better than 100vh would. */
+  /* ── Section rhythm (DESIGN.md §4) ── */
   .section-rhythm {
-    min-height: max(640px, 100svh);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding-block-start: clamp(96px, 14vh, 176px);
-    padding-block-end: 80px;
+    padding-block: clamp(72px, 6vw, 96px);
     position: relative;
     border-bottom: 1px solid var(--border-subtle);
   }
 
-  /* Hero section centers its content vertically within the viewport. */
+  /* Keep the first section compact enough to reveal the next section at the
+     fold while retaining breathing room around the hero content. */
   .hero {
-    justify-content: center;
-    padding-block-start: clamp(48px, 8vh, 96px);
+    padding-block-start: clamp(56px, 5vw, 80px);
+    padding-block-end: clamp(64px, 5vw, 80px);
   }
 
   /* ── Hero ── */
@@ -337,7 +270,6 @@ const popularTools = popularToolIds.map((id) => {
     grid-template-columns: 3fr 2fr;
     gap: var(--space-12);
     align-items: center;
-    flex: 1;
   }
 
   .hero__copy {
@@ -731,7 +663,6 @@ const popularTools = popularToolIds.map((id) => {
   /* ── Privacy ── */
   /* ── PRO callout ── */
   .pro-callout {
-    padding: var(--space-12) 0;
     border-top: 1px solid var(--border-subtle);
   }
 
@@ -852,13 +783,11 @@ const popularTools = popularToolIds.map((id) => {
     margin-top: var(--space-8);
     border-top: 1px solid var(--border-subtle);
     padding-top: var(--space-4);
-  }
-
-  .trust-strip__inner {
     display: flex;
     align-items: center;
     gap: var(--space-4);
     flex-wrap: wrap;
+    max-width: 36rem;
   }
 
   .trust-stat {
@@ -876,7 +805,7 @@ const popularTools = popularToolIds.map((id) => {
   }
 
   @media (max-width: 640px) {
-    .trust-strip__inner {
+    .trust-strip {
       gap: var(--space-3);
     }
 
@@ -985,12 +914,13 @@ const popularTools = popularToolIds.map((id) => {
       grid-template-columns: 1fr;
     }
 
-    /* Tighter section rhythm on short/narrow mobile viewports.
-       Lower floor (480px) for mobile portrait; 100svh tracks the
-       browser-chrome-aware viewport height. */
     .section-rhythm {
-      min-height: max(480px, 100svh);
-      padding-block-start: clamp(48px, 10vh, 176px);
+      padding-block: var(--space-16);
+    }
+
+    .hero {
+      padding-block-start: var(--space-12);
+      padding-block-end: var(--space-16);
     }
 
     .hero__body {
