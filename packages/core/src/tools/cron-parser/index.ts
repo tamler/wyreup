@@ -72,7 +72,7 @@ export const cronParser: ToolModule<CronParserParams> = {
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const { parseExpression } = await import('cron-parser');
+    const { CronExpressionParser } = await import('cron-parser');
 
     ctx.onProgress({ stage: 'processing', percent: 30, message: 'Parsing cron expression' });
 
@@ -84,27 +84,31 @@ export const cronParser: ToolModule<CronParserParams> = {
       const opts: Record<string, unknown> = {};
       if (params.timezone) opts['tz'] = params.timezone;
 
-      const interval = parseExpression(expression, opts);
+      const interval = CronExpressionParser.parse(expression, opts);
       const nextRuns: string[] = [];
       for (let i = 0; i < nextCount; i++) {
-        nextRuns.push(interval.next().toISOString());
+        const next = interval.next();
+        nextRuns.push(next.toISOString() ?? next.toString());
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fields = interval.fields as any as Record<string, readonly number[]>;
+      // v5 wraps each field in a CronField object carrying `.values`,
+      // which can include 'L' markers alongside the numbers.
+      const numericValues = (values: readonly (number | string)[]): number[] =>
+        values.flatMap((v) => (typeof v === 'number' ? [v] : []));
+      const fields = {
+        minute: numericValues(interval.fields.minute.values),
+        hour: numericValues(interval.fields.hour.values),
+        dayOfMonth: numericValues(interval.fields.dayOfMonth.values),
+        month: numericValues(interval.fields.month.values),
+        dayOfWeek: numericValues(interval.fields.dayOfWeek.values),
+      };
 
       result = {
         valid: true,
         expression,
         description: 'Custom cron expression',
         nextRuns,
-        fields: {
-          minute: [...(fields['minute'] ?? [])],
-          hour: [...(fields['hour'] ?? [])],
-          dayOfMonth: [...(fields['dayOfMonth'] ?? [])],
-          month: [...(fields['month'] ?? [])],
-          dayOfWeek: [...(fields['dayOfWeek'] ?? [])],
-        },
+        fields,
       };
     } catch (e) {
       result = {

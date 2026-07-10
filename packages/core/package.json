@@ -85,7 +85,7 @@
     "ajv": "^8.20.0",
     "clean-css": "^5.3.3",
     "compromise": "^14.15.0",
-    "cron-parser": "^4.9.0",
+    "cron-parser": "^5.6.1",
     "culori": "^4.0.0",
     "diff": "^8.0.3",
     "exceljs": "^4.4.0",
