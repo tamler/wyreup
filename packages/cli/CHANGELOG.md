@@ -1,5 +1,13 @@
 # @wyreup/cli
 
+## 0.7.4
+
+### Patch Changes
+
+- 69fa8a4: Follow-up hardening: linear indexOf-based comment stripping in css/xml/html-clean formatters, backslash escaping in openapi-report table cells, bounded money regex in pdf-extract-data, formula-backed Date headers stringify correctly again in Excel-to-JSON, and install-skill's local read is race-free and FreeBSD-correct via open+fstat.
+- Updated dependencies [69fa8a4]
+  - @wyreup/core@0.6.4
+
 ## 0.7.3
 
 ### Patch Changes
