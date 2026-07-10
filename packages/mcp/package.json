@@ -49,12 +49,12 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@wyreup/core": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@wyreup/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.0",
     "typescript": "^5.5.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.7"
   }
 }
