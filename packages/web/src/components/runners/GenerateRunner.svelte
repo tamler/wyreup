@@ -2,6 +2,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import FlatJsonResult from './FlatJsonResult.svelte';
   import { buildDownloadName } from './naming';
   import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
@@ -146,6 +147,8 @@
 
         {#if resultUrl && resultMime.startsWith('image/')}
           <img class="result-img" src={resultUrl} alt="Generated result" />
+        {:else if resultText && resultMime === 'application/json'}
+          <FlatJsonResult json={resultText} />
         {:else if resultText}
           <pre class="text-viewer" role="region" aria-label="Generated result">{resultText}</pre>
         {/if}

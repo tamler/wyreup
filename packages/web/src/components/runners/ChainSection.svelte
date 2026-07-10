@@ -112,8 +112,12 @@
           checked={saveIntermediate}
           on:change={toggleSaveIntermediate}
           aria-label="Save intermediate file before navigating"
+          title="Keep this step's file in the final download when you chain into another tool."
         />
-        <span class="save-intermediate__label">Save intermediate</span>
+        <span class="save-intermediate__copy">
+          <span class="save-intermediate__label">Save intermediate</span>
+          <span class="save-intermediate__helper">Keep this step's file in the final download when you chain into another tool.</span>
+        </span>
       </label>
     </div>
     <div class="chain-nodes">
@@ -165,7 +169,7 @@
 
   .save-intermediate {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     cursor: pointer;
     margin-left: auto;
@@ -177,6 +181,14 @@
     accent-color: var(--accent);
     cursor: pointer;
     flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .save-intermediate__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-width: 360px;
   }
 
   .save-intermediate__label {
@@ -185,6 +197,13 @@
     color: var(--text-subtle);
     white-space: nowrap;
     user-select: none;
+  }
+
+  .save-intermediate__helper {
+    color: var(--text-subtle);
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    line-height: 1.4;
   }
 
   .chain-nodes {

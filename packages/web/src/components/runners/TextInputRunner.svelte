@@ -2,6 +2,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import FlatJsonResult from './FlatJsonResult.svelte';
   import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
@@ -232,8 +233,10 @@
           <div class="html-viewer" role="region" aria-label="HTML result">
             {@html safeHtml}
           </div>
+        {:else if isJson}
+          <FlatJsonResult json={resultText} />
         {:else}
-          <pre class="text-viewer" role="region" aria-label={isJson ? 'JSON result' : 'Text result'}>{resultText}</pre>
+          <pre class="text-viewer" role="region" aria-label="Text result">{resultText}</pre>
         {/if}
 
         {#if resultBlob}

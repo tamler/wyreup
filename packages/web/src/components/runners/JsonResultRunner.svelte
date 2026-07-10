@@ -3,6 +3,7 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import FlatJsonResult from './FlatJsonResult.svelte';
   import { buildDownloadName } from './naming';
   import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
@@ -172,7 +173,7 @@
           </div>
         </div>
         <div class="panel-divider"></div>
-        <pre class="json-viewer" role="region" aria-label="JSON result">{resultJson}</pre>
+        <FlatJsonResult json={resultJson} />
 
         {#if upgradeTool}
           <a class="upgrade-seam" href={`/tools/${upgradeTool}`}>
@@ -245,22 +246,6 @@
   .result-panel__inner { background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: calc(var(--radius-md) - 1px); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 
   .result-actions { display: flex; gap: var(--space-2); }
-
-  .json-viewer {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-primary);
-    background: var(--bg);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-sm);
-    padding: var(--space-3);
-    overflow-x: auto;
-    white-space: pre;
-    max-height: 400px;
-    overflow-y: auto;
-    line-height: 1.5;
-    margin: 0;
-  }
 
   .upgrade-seam {
     display: flex;

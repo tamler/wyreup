@@ -202,12 +202,15 @@
           <span class="solder-val">{formatBytes(resultSize)}</span>
         </div>
         {#if originalSize > 0}
-          <div class="solder-row solder-row--accent">
+          <div class="solder-row solder-row--accent" class:solder-row--warning={resultSize > originalSize}>
             <span class="solder-key">Change</span>
             <span class="solder-rule" aria-hidden="true"></span>
-            <span class="solder-pad solder-pad--accent" aria-hidden="true"></span>
-            <span class="solder-val solder-val--accent">{reductionPct(originalSize, resultSize)}</span>
+            <span class="solder-pad solder-pad--accent" class:solder-pad--warning={resultSize > originalSize} aria-hidden="true"></span>
+            <span class="solder-val solder-val--accent" class:solder-val--warning={resultSize > originalSize}>{reductionPct(originalSize, resultSize)}</span>
           </div>
+          {#if resultSize > originalSize}
+            <p class="result-size-warning" role="status">Result is larger than the original — the input may already be optimized.</p>
+          {/if}
         {/if}
         {#if resultDimensions}
           <div class="solder-row">
@@ -462,6 +465,26 @@
 
   .solder-val--accent {
     color: var(--accent-text);
+  }
+
+  .solder-row--warning .solder-key,
+  .solder-val--warning {
+    color: var(--warning);
+  }
+
+  .solder-pad--warning {
+    background: var(--warning);
+  }
+
+  .result-size-warning {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(234, 179, 8, 0.08);
+    border-left: 2px solid var(--warning);
+    color: var(--warning);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
   }
 
   .result-actions {

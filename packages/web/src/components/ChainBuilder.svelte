@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import DropZone from './runners/DropZone.svelte';
   import ParamsForm from './runners/ParamsForm.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
@@ -14,6 +14,8 @@
     id: string;
     name: string;
     description: string;
+    category?: string;
+    keywords?: string[];
     inputAccept: string[];
     inputMin: number;
     outputMime: string;
@@ -40,6 +42,23 @@
   let steps: BuildStep[] = [];
   let inputFiles: File[] = [];
   let dropError = '';
+
+  interface ToolPickerGroup {
+    category: string;
+    tools: ToolSummary[];
+  }
+
+  interface ToolPickerResults {
+    compatibleGroups: ToolPickerGroup[];
+    otherGroups: ToolPickerGroup[];
+    ordered: ToolSummary[];
+    hasCompatibilityContext: boolean;
+  }
+
+  let pickerOpenIdx: number | null = null;
+  let pickerQuery = '';
+  let activeOptionIdx = 0;
+  let toolMetadata = new Map<string, { category: string; keywords: string[] }>();
 
   $: inputFile = inputFiles[0] ?? null;
 
@@ -104,24 +123,6 @@
     });
   }
 
-  // Build compatible tool list for a given MIME (or all if null).
-  // Uses the device-runnable subset so users don't compose chains that
-  // can't run on their device.
-  //
-  // The `mime` argument can be either a concrete MIME from a dropped
-  // file (e.g. `image/jpeg`) or a declared output mime from a previous
-  // step's tool (e.g. `image/*` for tools that preserve the input
-  // format). `couldFlowTo` handles both cases — a wildcard producer
-  // is treated as compatible with any consumer accepting the same
-  // family. See `@wyreup/core/registry.ts` for the matching rules.
-  function toolsForMime(mime: string | null): ToolSummary[] {
-    if (!mime) return visibleTools;
-    return visibleTools.filter((t) => {
-      if (t.inputMin === 0) return false; // generators, skip
-      return couldFlowTo(mime, t.inputAccept);
-    });
-  }
-
   function getOutputMime(toolId: string): string | null {
     const t = tools.find((x) => x.id === toolId);
     return t?.outputMime ?? null;
@@ -144,9 +145,164 @@
     return getOutputMime(prev.toolId);
   }
 
-  function availableTools(idx: number): ToolSummary[] {
+  function getToolCategory(tool: ToolSummary): string {
+    return tool.category ?? toolMetadata.get(tool.id)?.category ?? 'other';
+  }
+
+  function getToolKeywords(tool: ToolSummary): string[] {
+    return tool.keywords ?? toolMetadata.get(tool.id)?.keywords ?? [];
+  }
+
+  function isCompatible(tool: ToolSummary, mime: string): boolean {
+    if (tool.inputMin === 0) return false;
+    return couldFlowTo(mime, tool.inputAccept);
+  }
+
+  function groupTools(toolsToGroup: ToolSummary[]): ToolPickerGroup[] {
+    const groups = new Map<string, ToolSummary[]>();
+    for (const tool of toolsToGroup) {
+      const category = getToolCategory(tool);
+      const group = groups.get(category) ?? [];
+      group.push(tool);
+      groups.set(category, group);
+    }
+
+    return Array.from(groups.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([category, grouped]) => ({
+        category,
+        tools: grouped.sort((a, b) => a.name.localeCompare(b.name)),
+      }));
+  }
+
+  function buildPickerResults(idx: number): ToolPickerResults {
+    const query = pickerOpenIdx === idx ? pickerQuery.trim().toLowerCase() : '';
+    const filtered = visibleTools.filter((tool) => {
+      if (!query) return true;
+      return [
+        tool.name,
+        tool.id,
+        tool.description,
+        getToolCategory(tool),
+        ...getToolKeywords(tool),
+      ].some((value) => value.toLowerCase().includes(query));
+    });
     const mime = prevOutputMime(idx);
-    return toolsForMime(mime);
+
+    if (!mime) {
+      const compatibleGroups = groupTools(filtered);
+      return {
+        compatibleGroups,
+        otherGroups: [],
+        ordered: compatibleGroups.flatMap((group) => group.tools),
+        hasCompatibilityContext: false,
+      };
+    }
+
+    const compatibleGroups = groupTools(filtered.filter((tool) => isCompatible(tool, mime)));
+    const otherGroups = groupTools(filtered.filter((tool) => !isCompatible(tool, mime)));
+    return {
+      compatibleGroups,
+      otherGroups,
+      ordered: [
+        ...compatibleGroups.flatMap((group) => group.tools),
+        ...otherGroups.flatMap((group) => group.tools),
+      ],
+      hasCompatibilityContext: true,
+    };
+  }
+
+  function selectedToolName(toolId: string): string {
+    return tools.find((tool) => tool.id === toolId)?.name ?? '';
+  }
+
+  function pickerInputValue(idx: number, toolId: string): string {
+    return pickerOpenIdx === idx ? pickerQuery : selectedToolName(toolId);
+  }
+
+  function pickerOptionId(idx: number, toolId: string): string {
+    return `chain-tool-${idx}-${toolId}`;
+  }
+
+  function activePickerOptionId(idx: number, ordered: ToolSummary[]): string | undefined {
+    const active = ordered[activeOptionIdx];
+    return active ? pickerOptionId(idx, active.id) : undefined;
+  }
+
+  async function scrollActiveOption(idx: number, ordered: ToolSummary[]) {
+    const active = ordered[activeOptionIdx];
+    if (!active) return;
+    await tick();
+    document.getElementById(pickerOptionId(idx, active.id))?.scrollIntoView({ block: 'nearest' });
+  }
+
+  async function openPicker(idx: number, input: HTMLInputElement) {
+    pickerOpenIdx = idx;
+    pickerQuery = '';
+    const selectedId = steps[idx]?.toolId;
+    const selectedIdx = buildPickerResults(idx).ordered.findIndex((tool) => tool.id === selectedId);
+    activeOptionIdx = selectedIdx >= 0 ? selectedIdx : 0;
+    await tick();
+    input.select();
+    void scrollActiveOption(idx, buildPickerResults(idx).ordered);
+  }
+
+  function closePicker(idx: number) {
+    if (pickerOpenIdx !== idx) return;
+    pickerOpenIdx = null;
+    pickerQuery = '';
+    activeOptionIdx = 0;
+  }
+
+  function onPickerFocusOut(idx: number, event: FocusEvent) {
+    const next = event.relatedTarget;
+    if (next instanceof Node && (event.currentTarget as HTMLElement).contains(next)) return;
+    closePicker(idx);
+  }
+
+  function onPickerInput(idx: number, event: Event) {
+    pickerOpenIdx = idx;
+    pickerQuery = (event.currentTarget as HTMLInputElement).value;
+    activeOptionIdx = 0;
+  }
+
+  function choosePickerTool(idx: number, tool: ToolSummary) {
+    closePicker(idx);
+    selectTool(idx, tool.id);
+  }
+
+  function onPickerKeydown(idx: number, event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      if (pickerOpenIdx === idx) {
+        event.preventDefault();
+        closePicker(idx);
+      }
+      return;
+    }
+
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Enter') return;
+
+    const input = event.currentTarget as HTMLInputElement;
+    if (pickerOpenIdx !== idx) {
+      if (event.key === 'Enter') return;
+      event.preventDefault();
+      void openPicker(idx, input);
+      return;
+    }
+
+    const results = buildPickerResults(idx);
+    if (results.ordered.length === 0) return;
+    event.preventDefault();
+
+    if (event.key === 'Enter') {
+      const active = results.ordered[activeOptionIdx];
+      if (active) choosePickerTool(idx, active);
+      return;
+    }
+
+    const offset = event.key === 'ArrowDown' ? 1 : -1;
+    activeOptionIdx = (activeOptionIdx + offset + results.ordered.length) % results.ordered.length;
+    void scrollActiveOption(idx, results.ordered);
   }
 
   function addStep() {
@@ -155,12 +311,14 @@
   }
 
   function removeStep(idx: number) {
+    closePicker(idx);
     steps = steps.filter((_, i) => i !== idx);
     stepStatuses = stepStatuses.filter((_, i) => i !== idx);
   }
 
   function moveUp(idx: number) {
     if (idx === 0) return;
+    closePicker(idx);
     const arr = [...steps];
     [arr[idx - 1], arr[idx]] = [arr[idx]!, arr[idx - 1]!];
     steps = arr;
@@ -168,6 +326,7 @@
 
   function moveDown(idx: number) {
     if (idx === steps.length - 1) return;
+    closePicker(idx);
     const arr = [...steps];
     [arr[idx], arr[idx + 1]] = [arr[idx + 1]!, arr[idx]!];
     steps = arr;
@@ -223,6 +382,18 @@
         stepStatuses = decoded.map(() => 'pending' as const);
       }
     }
+  });
+
+  onMount(() => {
+    void import('@wyreup/core').then(({ createDefaultRegistry }) => {
+      const registry = createDefaultRegistry();
+      toolMetadata = new Map(Array.from(registry.toolsById.values()).map((tool) => [
+        tool.id,
+        { category: tool.category, keywords: tool.keywords },
+      ]));
+    }).catch(() => {
+      // The picker remains usable with names and descriptions if metadata loading fails.
+    });
   });
 
   async function run() {
@@ -350,10 +521,6 @@
     saveTimer = setTimeout(() => { saveConfirm = false; }, 1500);
   }
 
-  function onSelectTool(idx: number, e: Event) {
-    selectTool(idx, (e.target as HTMLSelectElement).value);
-  }
-
   function formatBytes(b: number): string {
     if (b < 1024) return `${b} B`;
     if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
@@ -379,22 +546,93 @@
   <!-- Steps -->
   <div class="steps-stack">
     {#each steps as step, idx}
-      {@const avail = availableTools(idx)}
+      {@const pickerResults = buildPickerResults(idx)}
       <div class="step-card" class:step-card--error={stepStatuses[idx] === 'error'} class:step-card--done={stepStatuses[idx] === 'done'}>
         <div class="step-header">
           <span class="step-num">{String(idx + 1).padStart(2, '0')}</span>
 
           <!-- Tool selector -->
-          <select
-            class="tool-select"
-            value={step.toolId}
-            on:change={(e) => onSelectTool(idx, e)}
-          >
-            <option value="">— pick a tool —</option>
-            {#each avail as t}
-              <option value={t.id}>{t.name}</option>
-            {/each}
-          </select>
+          <div class="tool-picker" on:focusout={(event) => onPickerFocusOut(idx, event)}>
+            <input
+              class="tool-picker__input"
+              type="text"
+              role="combobox"
+              aria-label={`Search for a tool for step ${idx + 1}`}
+              aria-autocomplete="list"
+              aria-expanded={pickerOpenIdx === idx}
+              aria-controls={`chain-tool-list-${idx}`}
+              aria-activedescendant={pickerOpenIdx === idx
+                ? activePickerOptionId(idx, pickerResults.ordered)
+                : undefined}
+              autocomplete="off"
+              placeholder="Search tools…"
+              value={pickerInputValue(idx, step.toolId)}
+              on:focus={(event) => { void openPicker(idx, event.currentTarget); }}
+              on:click={(event) => { if (pickerOpenIdx !== idx) void openPicker(idx, event.currentTarget); }}
+              on:input={(event) => onPickerInput(idx, event)}
+              on:keydown={(event) => onPickerKeydown(idx, event)}
+            />
+
+            {#if pickerOpenIdx === idx}
+              <div class="tool-picker__dropdown" id={`chain-tool-list-${idx}`} role="listbox" aria-label={`Tools for step ${idx + 1}`}>
+                {#if pickerResults.ordered.length === 0}
+                  <p class="tool-picker__empty">No tools match “{pickerQuery}”.</p>
+                {:else}
+                  {#if pickerResults.hasCompatibilityContext && pickerResults.compatibleGroups.length > 0}
+                    <div class="tool-picker__section-label">Compatible tools</div>
+                  {/if}
+                  {#each pickerResults.compatibleGroups as group}
+                    <div class="tool-picker__group" role="group" aria-label={group.category}>
+                      <div class="tool-picker__category">{group.category}</div>
+                      {#each group.tools as tool}
+                        <button
+                          class="tool-picker__option"
+                          class:tool-picker__option--active={pickerResults.ordered[activeOptionIdx]?.id === tool.id}
+                          id={pickerOptionId(idx, tool.id)}
+                          type="button"
+                          role="option"
+                          aria-selected={step.toolId === tool.id}
+                          tabindex="-1"
+                          on:mouseenter={() => { activeOptionIdx = pickerResults.ordered.findIndex((item) => item.id === tool.id); }}
+                          on:mousedown|preventDefault
+                          on:click={() => choosePickerTool(idx, tool)}
+                        >
+                          <span class="tool-picker__option-name">{tool.name}</span>
+                          <span class="tool-picker__option-category">{getToolCategory(tool)}</span>
+                        </button>
+                      {/each}
+                    </div>
+                  {/each}
+
+                  {#if pickerResults.otherGroups.length > 0}
+                    <div class="tool-picker__divider" role="separator"><span>Other tools</span></div>
+                    {#each pickerResults.otherGroups as group}
+                      <div class="tool-picker__group" role="group" aria-label={group.category}>
+                        <div class="tool-picker__category">{group.category}</div>
+                        {#each group.tools as tool}
+                          <button
+                            class="tool-picker__option"
+                            class:tool-picker__option--active={pickerResults.ordered[activeOptionIdx]?.id === tool.id}
+                            id={pickerOptionId(idx, tool.id)}
+                            type="button"
+                            role="option"
+                            aria-selected={step.toolId === tool.id}
+                            tabindex="-1"
+                            on:mouseenter={() => { activeOptionIdx = pickerResults.ordered.findIndex((item) => item.id === tool.id); }}
+                            on:mousedown|preventDefault
+                            on:click={() => choosePickerTool(idx, tool)}
+                          >
+                            <span class="tool-picker__option-name">{tool.name}</span>
+                            <span class="tool-picker__option-category">{getToolCategory(tool)}</span>
+                          </button>
+                        {/each}
+                      </div>
+                    {/each}
+                  {/if}
+                {/if}
+              </div>
+            {/if}
+          </div>
 
           <!-- Step status indicator -->
           {#if stepStatuses[idx] === 'done'}
@@ -670,10 +908,16 @@
     min-width: 24px;
   }
 
-  .tool-select {
+  .tool-picker {
+    position: relative;
     flex: 1;
     min-width: 160px;
+  }
+
+  .tool-picker__input {
+    width: 100%;
     height: 32px;
+    box-sizing: border-box;
     padding: 0 var(--space-2);
     background: var(--bg-raised);
     border: 1px solid var(--border);
@@ -681,13 +925,124 @@
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    cursor: pointer;
     transition: border-color var(--duration-instant) var(--ease-sharp);
   }
 
-  .tool-select:focus-visible {
+  .tool-picker__input::placeholder {
+    color: var(--text-subtle);
+  }
+
+  .tool-picker__input:focus-visible {
     outline: 2px solid var(--accent-hover);
     outline-offset: 2px;
+  }
+
+  .tool-picker__dropdown {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: var(--space-2);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .tool-picker__section-label,
+  .tool-picker__category,
+  .tool-picker__divider span {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .tool-picker__section-label {
+    padding: var(--space-1) var(--space-2) var(--space-2);
+    color: var(--text-subtle);
+  }
+
+  .tool-picker__group + .tool-picker__group {
+    margin-top: var(--space-2);
+  }
+
+  .tool-picker__category {
+    padding: var(--space-1) var(--space-2);
+    color: var(--accent-text);
+  }
+
+  .tool-picker__option {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 34px;
+    padding: var(--space-2);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .tool-picker__option:hover,
+  .tool-picker__option--active {
+    background: var(--accent-dim);
+  }
+
+  .tool-picker__option:focus-visible {
+    outline: 2px solid var(--accent-hover);
+    outline-offset: -2px;
+  }
+
+  .tool-picker__option-name {
+    min-width: 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tool-picker__option-category {
+    flex-shrink: 0;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .tool-picker__divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 var(--space-2);
+    color: var(--text-subtle);
+  }
+
+  .tool-picker__divider::before,
+  .tool-picker__divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  .tool-picker__empty {
+    margin: 0;
+    padding: var(--space-3);
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    text-align: center;
   }
 
   .step-status {
