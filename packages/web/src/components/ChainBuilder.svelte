@@ -175,8 +175,15 @@
       }));
   }
 
-  function buildPickerResults(idx: number): ToolPickerResults {
-    const query = pickerOpenIdx === idx ? pickerQuery.trim().toLowerCase() : '';
+  // Reactive state (query, open picker, dropped file) is passed as arguments
+  // so template {@const} expressions re-evaluate when any of them change —
+  // Svelte 4 only tracks identifiers referenced in the expression itself.
+  function buildPickerResults(
+    idx: number,
+    query_: string = pickerQuery,
+    openIdx: number | null = pickerOpenIdx,
+  ): ToolPickerResults {
+    const query = openIdx === idx ? query_.trim().toLowerCase() : '';
     const filtered = visibleTools.filter((tool) => {
       if (!query) return true;
       return [
@@ -546,7 +553,7 @@
   <!-- Steps -->
   <div class="steps-stack">
     {#each steps as step, idx}
-      {@const pickerResults = buildPickerResults(idx)}
+      {@const pickerResults = buildPickerResults(idx, pickerQuery, pickerOpenIdx)}
       <div class="step-card" class:step-card--error={stepStatuses[idx] === 'error'} class:step-card--done={stepStatuses[idx] === 'done'}>
         <div class="step-header">
           <span class="step-num">{String(idx + 1).padStart(2, '0')}</span>
