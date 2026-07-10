@@ -178,6 +178,7 @@
       {:else if screen === 'create'}
         <h2 id="auth-modal-title">Get an API key</h2>
         <p class="hint">We'll email it to you. Free tools stay free — you only need this for PRO.</p>
+        <p class="hint">Packs from $5 — credits never expire. <a href="/pro">See pricing</a></p>
 
         <form on:submit|preventDefault={onCreate}>
           <input
