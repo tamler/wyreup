@@ -1,5 +1,13 @@
 # @wyreup/core
 
+## 0.6.2
+
+### Patch Changes
+
+- 5861f16: Update runtime dependencies to current majors: tesseract.js ^7.0.0 and gpt-tokenizer ^3.4.0 in core, commander ^15.0.0 in the CLI. No API changes; full test suite passes on the new versions.
+- b556b2e: Security dependency bumps: js-yaml to ^4.3.0 (quadratic-complexity DoS in merge-key handling, affects >= 4.0.0 <= 4.1.1) and diff to ^8.0.3 (DoS in parsePatch/applyPatch in the 6.x-7.x line).
+- 8b8bff3: Security hardening: password-generator now draws characters and shuffles with rejection-sampled unbiased randomness (a bare modulo over getRandomValues skewed toward low charset indices), and install-skill reads local --source files without a stat-then-read TOCTOU window.
+
 ## 0.6.1
 
 ### Patch Changes
