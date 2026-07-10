@@ -253,13 +253,25 @@ const breadcrumbLd = {
           )}
         </dl>
 
-        {/* Standard privacy callout on every page — reinforces the
-            differentiator and ranks for "private / no-upload" queries. */}
-        <div class="privacy-callout" role="note">
-          <strong>Privacy:</strong> {name} runs entirely on your device. Files
-          you provide never leave your browser — no uploads, no server,
-          no tracking. The page works offline once loaded.
-        </div>
+        {/* Privacy callout on every page. MUST stay truthful per execution
+            location: local tools never upload; credit-metered (hosted) tools
+            send the input to Wyreup's backend, so say so plainly. */}
+        {serializedTool.cost === 'credit' ? (
+          <div class="privacy-callout" role="note">
+            <strong>Privacy:</strong> {name} is a hosted PRO tool: when you run
+            it, your input is sent over TLS through Wyreup's edge to the model
+            provider, processed, and returned. Inputs and outputs are not
+            retained beyond the request; run metadata (tool, time, file name)
+            is kept for your history. Details in the{' '}
+            <a href="/legal/privacy">privacy policy</a>.
+          </div>
+        ) : (
+          <div class="privacy-callout" role="note">
+            <strong>Privacy:</strong> {name} runs entirely on your device. Files
+            you provide never leave your browser — no uploads, no server,
+            no tracking. The page works offline once loaded.
+          </div>
+        )}
       </section>
 
       {seoContent?.useCases && seoContent.useCases.length > 0 && (

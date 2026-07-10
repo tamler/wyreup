@@ -141,6 +141,26 @@ describe('compress — run()', () => {
     ).rejects.toThrow();
   });
 
+  it('never returns a larger file than the input for a same-format run', async () => {
+    // A 69-byte 1x1 PNG: any re-encode is bigger, so compress must fall
+    // back to the untouched original bytes instead of inflating.
+    const tinyPng = Uint8Array.from(
+      atob(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNoaGgAAAMEAYFL09IQAAAAAElFTkSuQmCC',
+      ),
+      (c) => c.charCodeAt(0),
+    );
+    const input = new File([tinyPng], 'tiny.png', { type: 'image/png' });
+
+    const outputs = await compress.run([input], { quality: 80 }, makeCtx());
+    const blobs = Array.isArray(outputs) ? outputs : [outputs];
+
+    expect(blobs.length).toBe(1);
+    expect(blobs[0]!.size).toBeLessThanOrEqual(input.size);
+    const roundTripped = new Uint8Array(await blobs[0]!.arrayBuffer());
+    expect(roundTripped).toEqual(tinyPng);
+  });
+
   it('reports progress events during a batch', async () => {
     const events: Array<{ stage: string }> = [];
     const ctx: ToolRunContext = {

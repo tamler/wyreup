@@ -88,6 +88,20 @@ export const compress: ToolModule<CompressParams> = {
       const targetCodec = await getCodec(outputFormat);
       const encoded = await targetCodec.encode(decoded, { quality });
 
+      // A compressor must never hand back a bigger file. Flat-color PNGs
+      // (screenshots especially) are often already smaller than any
+      // re-encode; when staying in the same format, fall back to the
+      // untouched original bytes instead of shipping an inflated result.
+      if (outputFormat === sourceFormat && encoded.byteLength >= input.size) {
+        ctx.onProgress({
+          stage: 'encoding',
+          percent: Math.floor(((i + 0.9) / inputs.length) * 100),
+          message: `${input.name} is already smaller than a re-encode — keeping the original`,
+        });
+        outputs.push(new Blob([buffer], { type: mimeFor(sourceFormat) }));
+        continue;
+      }
+
       outputs.push(new Blob([encoded], { type: mimeFor(outputFormat) }));
     }
 
