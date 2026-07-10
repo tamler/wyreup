@@ -11,6 +11,20 @@ const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
 const AMBIGUOUS = new Set(['0', 'O', 'l', '1', 'I']);
 
+// Unbiased uniform integer in [0, maxExclusive) via rejection sampling —
+// a bare modulo over getRandomValues skews toward low indices whenever
+// 2^32 is not a multiple of the charset size.
+function randomInt(maxExclusive: number): number {
+  const limit = Math.floor(0x1_0000_0000 / maxExclusive) * maxExclusive;
+  const buf = new Uint32Array(1);
+  let x: number;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0]!;
+  } while (x >= limit);
+  return x % maxExclusive;
+}
+
 function buildCharset(params: PasswordGeneratorParams): { charset: string; required: string[] } {
   const excludeAmbiguous = params.excludeAmbiguous ?? false;
 
@@ -32,10 +46,7 @@ function buildCharset(params: PasswordGeneratorParams): { charset: string; requi
   }
 
   const charset = enabledParts.map((p) => p.chars).join('');
-  const required = enabledParts.map((p) => {
-    const idx = crypto.getRandomValues(new Uint32Array(1))[0]! % p.chars.length;
-    return p.chars[idx]!;
-  });
+  const required = enabledParts.map((p) => p.chars[randomInt(p.chars.length)]!);
 
   return { charset, required };
 }
@@ -49,15 +60,13 @@ function generatePassword(params: PasswordGeneratorParams): string {
   }
 
   const remaining = length - required.length;
-  const randIndices = crypto.getRandomValues(new Uint32Array(remaining));
-  const extra = Array.from(randIndices, (n) => charset[n % charset.length]!);
+  const extra = Array.from({ length: remaining }, () => charset[randomInt(charset.length)]!);
 
   const all = [...required, ...extra];
 
-  // Fisher-Yates shuffle using crypto
-  const shuffleRand = crypto.getRandomValues(new Uint32Array(all.length));
+  // Fisher-Yates shuffle using unbiased crypto draws
   for (let i = all.length - 1; i > 0; i--) {
-    const j = shuffleRand[i]! % (i + 1);
+    const j = randomInt(i + 1);
     const tmp = all[i]!;
     all[i] = all[j]!;
     all[j] = tmp;

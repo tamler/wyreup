@@ -3,7 +3,8 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createDefaultRegistry } from '../packages/core/dist/node/index.js';
 
-const dir = '/tmp/wyreup-seo';
+// Repo-local scratch dir, written by seo-manifest.mjs (not shared /tmp).
+const dir = new URL('../.cache/seo', import.meta.url).pathname;
 const registry = createDefaultRegistry();
 const validIds = new Set(Array.from(registry.toolsById.keys()));
 

@@ -2,6 +2,11 @@
 // seoContent yet) plus a compact catalog for alsoTry cross-links.
 import { createDefaultRegistry } from '../packages/core/dist/node/index.js';
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+// Repo-local scratch dir (not the shared, world-writable /tmp).
+const outDir = join(dirname(fileURLToPath(import.meta.url)), '..', '.cache', 'seo');
 
 const registry = createDefaultRegistry();
 const all = Array.from(registry.toolsById.values());
@@ -22,7 +27,8 @@ const thin = all
     cost: t.cost,
   }));
 
-mkdirSync('/tmp/wyreup-seo', { recursive: true });
-writeFileSync('/tmp/wyreup-seo/manifest.json', JSON.stringify({ thin, catalog }, null, 2));
+mkdirSync(outDir, { recursive: true });
+writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({ thin, catalog }, null, 2));
+console.log(`wrote ${join(outDir, 'manifest.json')}`);
 console.log(`thin tools needing seoContent: ${thin.length} / total ${all.length}`);
 console.log(`catalog size: ${catalog.length}`);

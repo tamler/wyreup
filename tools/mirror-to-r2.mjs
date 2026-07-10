@@ -8,7 +8,7 @@
  * Default: direct
  */
 
-import { execSync, spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { writeFileSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,8 +54,11 @@ const TRANSFORMERS_MODELS = [
 
 async function objectExists(key) {
   try {
-    const out = execSync(
-      `pnpm exec wrangler r2 object info ${BUCKET}/${JSON.stringify(key)} 2>&1`,
+    // Args array + no shell: `key` comes from the HF tree API and must
+    // never be interpolated into a shell string.
+    const out = execFileSync(
+      'pnpm',
+      ['exec', 'wrangler', 'r2', 'object', 'info', `${BUCKET}/${key}`],
       { stdio: ['ignore', 'pipe', 'pipe'] },
     ).toString();
     return out.includes('Size') || out.includes('size');

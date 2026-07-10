@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts';
-import { mkdir, writeFile, access, readFile, stat } from 'node:fs/promises';
+import { mkdir, writeFile, access, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -72,14 +72,17 @@ export function resolveSkillsDir(
  */
 export async function readLocalSkill(sourcePath: string): Promise<string> {
   const abs = resolve(sourcePath);
-  let target = abs;
+  // Read directly and fall back on EISDIR instead of stat-then-read,
+  // so there is no window between the check and the use.
   try {
-    const s = await stat(abs);
-    if (s.isDirectory()) target = join(abs, 'skill.md');
+    return await readFile(abs, 'utf8');
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    throw new Error(`Cannot read --source "${sourcePath}": ${msg}`);
+    if ((err as NodeJS.ErrnoException).code !== 'EISDIR') {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`Cannot read --source "${sourcePath}": ${msg}`);
+    }
   }
+  const target = join(abs, 'skill.md');
   try {
     return await readFile(target, 'utf8');
   } catch (err) {

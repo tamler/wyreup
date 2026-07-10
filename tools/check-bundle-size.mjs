@@ -25,7 +25,9 @@ const DEFAULT_BUDGET_KB = 150;
  */
 const VENDOR_BUDGETS_KB = [
   // gpt-tokenizer's BPE vocabulary for GPT-4o; lazy-loaded by token-count.
+  // (v2 emitted the chunk as gpt-4o.*, v3 as GptEncoding.* — same payload.)
   { prefix: 'gpt-4o.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
+  { prefix: 'GptEncoding.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
   // pdfjs-dist worker; loaded by every PDF tool but as a Web Worker.
   { prefix: 'pdf.worker.', budgetKb: 600, why: 'pdfjs Web Worker; PDF tools only' },
   // pdfjs main chunk; loaded by PDF render tools.

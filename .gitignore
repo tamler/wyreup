@@ -49,3 +49,4 @@ pnpm-debug.log*
 # Cloudflare
 .wrangler/
 wrangler.toml.local
+.cache/
