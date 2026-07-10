@@ -66,8 +66,26 @@ function countSentences(text: string): number {
   // Naive but stable: split on terminal punctuation followed by whitespace
   // (or end of string). Good enough for proportional stats; not for
   // ground-truth NLP.
-  const matches = text.match(/[^.!?]+[.!?]+(?:\s|$)/g);
-  return matches && matches.length > 0 ? matches.length : 1;
+  let count = 0;
+  let hasContent = false;
+  let i = 0;
+  while (i < text.length) {
+    const char = text[i]!;
+    if (char !== '.' && char !== '!' && char !== '?') {
+      hasContent = true;
+      i++;
+      continue;
+    }
+    while (i < text.length && (text[i] === '.' || text[i] === '!' || text[i] === '?')) i++;
+    if (hasContent && (i === text.length || /\s/.test(text[i]!))) {
+      count++;
+      hasContent = false;
+      if (i < text.length) i++;
+    } else {
+      hasContent = false;
+    }
+  }
+  return count > 0 ? count : 1;
 }
 
 export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
@@ -106,15 +124,20 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
     minWordsForReadability: {
       type: 'number',
       label: 'min words for readability',
-      help: 'Short paragraphs (under this word count) skip the readability scores — they aren\'t reliable on small samples.',
+      help: "Short paragraphs (under this word count) skip the readability scores — they aren't reliable on small samples.",
       min: 5,
       max: 200,
       step: 1,
     },
   },
 
-  async run(inputs: File[], params: TextStatsByParagraphParams, ctx: ToolRunContext): Promise<Blob[]> {
-    if (inputs.length !== 1) throw new Error('text-stats-by-paragraph accepts exactly one text input.');
+  async run(
+    inputs: File[],
+    params: TextStatsByParagraphParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
+    if (inputs.length !== 1)
+      throw new Error('text-stats-by-paragraph accepts exactly one text input.');
     const denseThreshold = params.denseGradeThreshold ?? 14;
     const minWordsForReadability = params.minWordsForReadability ?? 30;
 
@@ -133,9 +156,8 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
       const chars = trimmed.length;
       const words = countWords(trimmed);
       const sentences = countSentences(trimmed);
-      const avgWordLen = words > 0
-        ? Math.round((trimmed.replace(/\s+/g, '').length / words) * 100) / 100
-        : 0;
+      const avgWordLen =
+        words > 0 ? Math.round((trimmed.replace(/\s+/g, '').length / words) * 100) / 100 : 0;
       totalWords += words;
       const preview = trimmed.slice(0, 80) + (trimmed.length > 80 ? '…' : '');
       const stats: ParagraphStats = {
@@ -166,9 +188,8 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
       totalWords,
       totalChars: text.length,
       denseCount,
-      averageWordsPerParagraph: paragraphs.length > 0
-        ? Math.round((totalWords / paragraphs.length) * 100) / 100
-        : 0,
+      averageWordsPerParagraph:
+        paragraphs.length > 0 ? Math.round((totalWords / paragraphs.length) * 100) / 100 : 0,
       paragraphs,
     };
 

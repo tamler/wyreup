@@ -14,11 +14,12 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, params: XmlFormatterParams = {}): Promise<string> {
   const file = new File([text], 'input.xml', { type: 'text/xml' });
-  const [out] = await xmlFormatter.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await xmlFormatter.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
-const SAMPLE_XML = '<?xml version="1.0"?><root><child>hello</child><other attr="x">world</other></root>';
+const SAMPLE_XML =
+  '<?xml version="1.0"?><root><child>hello</child><other attr="x">world</other></root>';
 
 describe('xml-formatter — metadata', () => {
   it('has id xml-formatter', () => {
@@ -54,6 +55,11 @@ describe('xml-formatter — run()', () => {
     const xml = '<root><!-- comment --><item>val</item></root>';
     const result = await run(xml, { mode: 'minify' });
     expect(result).not.toContain('<!--');
+  });
+
+  it('minify strips comments recombined by an earlier replacement', async () => {
+    const result = await run('<!<!-- inner -->-->secret-->', { mode: 'minify' });
+    expect(result).toBe('');
   });
 
   it('respects indent parameter for beautify', async () => {

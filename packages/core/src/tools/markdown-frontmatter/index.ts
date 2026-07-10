@@ -29,7 +29,10 @@ const YAML_FENCE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 const TOML_FENCE = /^\+\+\+\r?\n([\s\S]*?)\r?\n\+\+\+\r?\n?/;
 const JSON_FENCE = /^(?:---\r?\n)?(\{[\s\S]*?\n\})(?:\r?\n---)?\r?\n?/;
 
-function lineRangeFor(source: string, matchedLength: number): { startLine: number; endLine: number } {
+function lineRangeFor(
+  source: string,
+  matchedLength: number,
+): { startLine: number; endLine: number } {
   const consumed = source.slice(0, matchedLength);
   const newlineCount = (consumed.match(/\r?\n/g) ?? []).length;
   // matched block ends with a newline; lines 1..newlineCount cover the block.
@@ -45,17 +48,23 @@ function parseFlatToml(text: string): Record<string, unknown> {
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i]!;
-    const line = raw.replace(/#.*$/, '').trim();
+    const commentStart = raw.indexOf('#');
+    const line = (commentStart === -1 ? raw : raw.slice(0, commentStart)).trim();
     if (!line) continue;
     if (line.startsWith('[')) {
-      throw new Error('TOML frontmatter with tables/sections isn\'t supported by this tool — use YAML or JSON for nested data.');
+      throw new Error(
+        "TOML frontmatter with tables/sections isn't supported by this tool — use YAML or JSON for nested data.",
+      );
     }
     const eq = line.indexOf('=');
     if (eq < 0) throw new Error(`Invalid TOML line ${i + 1}: ${raw}`);
     const key = line.slice(0, eq).trim();
     const rest = line.slice(eq + 1).trim();
     let value: unknown;
-    if ((rest.startsWith('"') && rest.endsWith('"')) || (rest.startsWith("'") && rest.endsWith("'"))) {
+    if (
+      (rest.startsWith('"') && rest.endsWith('"')) ||
+      (rest.startsWith("'") && rest.endsWith("'"))
+    ) {
       value = rest.slice(1, -1);
     } else if (rest === 'true') value = true;
     else if (rest === 'false') value = false;
@@ -75,7 +84,8 @@ export async function extractFrontmatter(
   if (resolved === 'yaml' || (!resolved && YAML_FENCE.test(source))) {
     const m = YAML_FENCE.exec(source);
     if (!m) {
-      if (resolved === 'yaml') throw new Error('Expected YAML frontmatter delimited by --- fences.');
+      if (resolved === 'yaml')
+        throw new Error('Expected YAML frontmatter delimited by --- fences.');
       return { format: 'none', frontmatter: null, body: source, range: null };
     }
     const { load } = await import('js-yaml');
@@ -91,7 +101,8 @@ export async function extractFrontmatter(
   if (resolved === 'toml' || (!resolved && TOML_FENCE.test(source))) {
     const m = TOML_FENCE.exec(source);
     if (!m) {
-      if (resolved === 'toml') throw new Error('Expected TOML frontmatter delimited by +++ fences.');
+      if (resolved === 'toml')
+        throw new Error('Expected TOML frontmatter delimited by +++ fences.');
       return { format: 'none', frontmatter: null, body: source, range: null };
     }
     const data = parseFlatToml(m[1]!);
@@ -106,7 +117,8 @@ export async function extractFrontmatter(
   if (resolved === 'json' || (!resolved && /^\s*\{/.test(source))) {
     const m = JSON_FENCE.exec(source);
     if (!m) {
-      if (resolved === 'json') throw new Error('Expected JSON frontmatter (object literal at top of document).');
+      if (resolved === 'json')
+        throw new Error('Expected JSON frontmatter (object literal at top of document).');
       return { format: 'none', frontmatter: null, body: source, range: null };
     }
     let data: Record<string, unknown>;
@@ -134,7 +146,18 @@ export const markdownFrontmatter: ToolModule<MarkdownFrontmatterParams> = {
   description:
     'Extract YAML (---), TOML (+++), or JSON frontmatter from a markdown file, returning the metadata as JSON and the body separately. Auto-detects the fence style.',
   category: 'text',
-  keywords: ['markdown', 'frontmatter', 'yaml', 'toml', 'json', 'metadata', 'jekyll', 'hugo', 'gatsby', 'astro'],
+  keywords: [
+    'markdown',
+    'frontmatter',
+    'yaml',
+    'toml',
+    'json',
+    'metadata',
+    'jekyll',
+    'hugo',
+    'gatsby',
+    'astro',
+  ],
 
   input: {
     accept: ['text/markdown', 'text/plain'],
@@ -168,7 +191,11 @@ export const markdownFrontmatter: ToolModule<MarkdownFrontmatterParams> = {
     },
   },
 
-  async run(inputs: File[], params: MarkdownFrontmatterParams, ctx: ToolRunContext): Promise<Blob[]> {
+  async run(
+    inputs: File[],
+    params: MarkdownFrontmatterParams,
+    ctx: ToolRunContext,
+  ): Promise<Blob[]> {
     if (inputs.length !== 1) throw new Error('markdown-frontmatter accepts exactly one file.');
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Reading file' });
     const text = await inputs[0]!.text();

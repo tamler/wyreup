@@ -25,7 +25,11 @@ function buildLookup(alphabet: string): Uint8Array {
   return lookup;
 }
 
-export function encodeBase32(bytes: Uint8Array, hexExtended: boolean, omitPadding: boolean): string {
+export function encodeBase32(
+  bytes: Uint8Array,
+  hexExtended: boolean,
+  omitPadding: boolean,
+): string {
   const alphabet = hexExtended ? HEX_EXTENDED : STANDARD;
   let out = '';
   let bits = 0;
@@ -51,7 +55,10 @@ export function decodeBase32(text: string, hexExtended: boolean): Uint8Array {
   const alphabet = hexExtended ? HEX_EXTENDED : STANDARD;
   const lookup = buildLookup(alphabet);
   // Normalize: strip whitespace, padding, case.
-  const cleaned = text.replace(/\s+/g, '').replace(/=+$/, '').toUpperCase();
+  const normalized = text.replace(/\s+/g, '');
+  let end = normalized.length;
+  while (end > 0 && normalized[end - 1] === '=') end--;
+  const cleaned = normalized.slice(0, end).toUpperCase();
 
   const bytes: number[] = [];
   let bits = 0;
@@ -76,7 +83,8 @@ export const base32: ToolModule<Base32Params> = {
   id: 'base32',
   slug: 'base32',
   name: 'Base32',
-  description: 'Encode any file to Base32 text (RFC 4648) or decode Base32 back to bytes. Pairs with the base64 tool.',
+  description:
+    'Encode any file to Base32 text (RFC 4648) or decode Base32 back to bytes. Pairs with the base64 tool.',
   category: 'convert',
   keywords: ['base32', 'encode', 'decode', 'rfc4648', 'binary', 'text'],
 
@@ -124,7 +132,11 @@ export const base32: ToolModule<Base32Params> = {
     const omitPadding = params.omitPadding ?? false;
     const file = inputs[0]!;
 
-    ctx.onProgress({ stage: 'processing', percent: 30, message: mode === 'encode' ? 'Encoding' : 'Decoding' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 30,
+      message: mode === 'encode' ? 'Encoding' : 'Decoding',
+    });
 
     if (mode === 'encode') {
       const buffer = await file.arrayBuffer();

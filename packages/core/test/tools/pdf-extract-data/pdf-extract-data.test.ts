@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { extractFieldsFromText, pdfExtractData } from '../../../src/tools/pdf-extract-data/index.js';
+import {
+  extractFieldsFromText,
+  pdfExtractData,
+} from '../../../src/tools/pdf-extract-data/index.js';
 
 describe('pdf-extract-data — metadata', () => {
   it('has id pdf-extract-data', () => {
@@ -62,7 +65,7 @@ describe('extractFieldsFromText — full invoice', () => {
 
   it('detects tax', () => {
     const r = extractFieldsFromText(SAMPLE_INVOICE);
-    expect(r.tax?.value).toBe(2.50);
+    expect(r.tax?.value).toBe(2.5);
   });
 
   it('extracts line items', () => {
@@ -123,6 +126,15 @@ describe('extractFieldsFromText — alternate date formats', () => {
 });
 
 describe('extractFieldsFromText — missing signals', () => {
+  it('handles pathological money whitespace in under one second', () => {
+    const input = '\n'.repeat(100_000);
+    const start = performance.now();
+    const result = extractFieldsFromText(input);
+
+    expect(result.invoiceNumber).toBeUndefined();
+    expect(performance.now() - start).toBeLessThan(1_000);
+  });
+
   it('returns low confidence and warnings when little is present', () => {
     const r = extractFieldsFromText('just some random text with no fields');
     expect(r.confidence).toBe('low');

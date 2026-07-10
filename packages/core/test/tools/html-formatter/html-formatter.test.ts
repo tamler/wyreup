@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, params: HtmlFormatterParams = {}): Promise<string> {
   const file = new File([text], 'input.html', { type: 'text/html' });
-  const [out] = await htmlFormatter.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await htmlFormatter.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
@@ -50,6 +50,11 @@ describe('html-formatter — run()', () => {
     const input = '<div><!-- comment --><p>text</p></div>';
     const result = await run(input, { mode: 'minify' });
     expect(result).not.toContain('<!--');
+  });
+
+  it('minify strips comments recombined by an earlier replacement', async () => {
+    const result = await run('<!<!-- inner -->-->secret-->', { mode: 'minify' });
+    expect(result).toBe('');
   });
 
   it('respects tabWidth for beautify with nested content', async () => {

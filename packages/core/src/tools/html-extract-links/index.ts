@@ -15,7 +15,16 @@ export const defaultHtmlExtractLinksParams: HtmlExtractLinksParams = {
   dedupe: true,
 };
 
-export type LinkKind = 'a' | 'img' | 'script' | 'link' | 'iframe' | 'form' | 'video' | 'audio' | 'source';
+export type LinkKind =
+  | 'a'
+  | 'img'
+  | 'script'
+  | 'link'
+  | 'iframe'
+  | 'form'
+  | 'video'
+  | 'audio'
+  | 'source';
 
 export interface ExtractedLink {
   kind: LinkKind;
@@ -34,25 +43,57 @@ export interface HtmlExtractLinksResult {
   links: ExtractedLink[];
 }
 
-const LINK_PATTERNS: ReadonlyArray<{ kind: LinkKind; attr: 'href' | 'src' | 'action'; re: RegExp }> = [
+const LINK_PATTERNS: ReadonlyArray<{
+  kind: LinkKind;
+  attr: 'href' | 'src' | 'action';
+  re: RegExp;
+}> = [
   { kind: 'a', attr: 'href', re: /<a\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'link', attr: 'href', re: /<link\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
+  {
+    kind: 'link',
+    attr: 'href',
+    re: /<link\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
   { kind: 'img', attr: 'src', re: /<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'script', attr: 'src', re: /<script\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'iframe', attr: 'src', re: /<iframe\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'video', attr: 'src', re: /<video\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'audio', attr: 'src', re: /<audio\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'source', attr: 'src', re: /<source\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
-  { kind: 'form', attr: 'action', re: /<form\b[^>]*?\baction\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi },
+  {
+    kind: 'script',
+    attr: 'src',
+    re: /<script\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
+  {
+    kind: 'iframe',
+    attr: 'src',
+    re: /<iframe\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
+  {
+    kind: 'video',
+    attr: 'src',
+    re: /<video\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
+  {
+    kind: 'audio',
+    attr: 'src',
+    re: /<audio\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
+  {
+    kind: 'source',
+    attr: 'src',
+    re: /<source\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
+  {
+    kind: 'form',
+    attr: 'action',
+    re: /<form\b[^>]*?\baction\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
+  },
 ];
 
 function decodeEntities(s: string): string {
   return s
-    .replace(/&amp;/gi, '&')
     .replace(/&quot;/gi, '"')
     .replace(/&apos;/gi, "'")
     .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>');
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&');
 }
 
 function tryResolve(url: string, base: string): { resolved?: string; hostname?: string } {

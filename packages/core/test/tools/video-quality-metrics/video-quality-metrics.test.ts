@@ -13,17 +13,20 @@ import {
   parseQualityMetrics,
 } from '../../../src/tools/video-quality-metrics/index.js';
 
-const SSIM_LINE = '[Parsed_ssim_1 @ 0x55] SSIM Y:0.987 (18.9) U:0.991 (20.4) V:0.992 (21.0) All:0.989 (19.5)';
+const SSIM_LINE =
+  '[Parsed_ssim_1 @ 0x55] SSIM Y:0.987 (18.9) U:0.991 (20.4) V:0.992 (21.0) All:0.989 (19.5)';
 const PSNR_LINE = '[Parsed_psnr_1 @ 0x55] PSNR y:42.5 u:45.1 v:46.0 average:43.4 min:38.0 max:50.0';
 
 describe('video-quality-metrics — metadata', () => {
-  it('has id "video-quality-metrics"', () => expect(videoQualityMetrics.id).toBe('video-quality-metrics'));
+  it('has id "video-quality-metrics"', () =>
+    expect(videoQualityMetrics.id).toBe('video-quality-metrics'));
   it('takes exactly two video inputs', () => {
     expect(videoQualityMetrics.input.min).toBe(2);
     expect(videoQualityMetrics.input.max).toBe(2);
     expect(videoQualityMetrics.input.accept).toContain('video/*');
   });
-  it('output mime is application/json', () => expect(videoQualityMetrics.output.mime).toBe('application/json'));
+  it('output mime is application/json', () =>
+    expect(videoQualityMetrics.output.mime).toBe('application/json'));
   it('guards long inputs with a duration budget', () => {
     expect(videoQualityMetrics.budget?.maxDuration).toBe(7_200);
   });
@@ -48,6 +51,15 @@ describe('video-quality-metrics — buildQualityArgs()', () => {
 });
 
 describe('video-quality-metrics — parseQualityMetrics()', () => {
+  it('rejects pathological incomplete metric lines in under one second', () => {
+    const input = 'SSIM '.repeat(20_000);
+    const start = performance.now();
+    const result = parseQualityMetrics(input);
+
+    expect(result).toEqual({ psnr: null, ssim: null });
+    expect(performance.now() - start).toBeLessThan(1_000);
+  });
+
   it('parses combined psnr + ssim log', () => {
     const r = parseQualityMetrics(`${PSNR_LINE}\n${SSIM_LINE}`);
     expect(r.ssim).toEqual({ all: 0.989, y: 0.987, u: 0.991, v: 0.992 });

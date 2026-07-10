@@ -11,10 +11,15 @@ export const defaultXmlFormatterParams: XmlFormatterParams = {
 };
 
 function minifyXml(xml: string): string {
-  return xml
-    .replace(/>\s+</g, '><')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .trim();
+  let withoutComments = xml;
+  // Bound repeated stripping so adversarial nesting cannot monopolize the event loop.
+  for (let pass = 0; pass < 25; pass += 1) {
+    const stripped = withoutComments.replace(/<!--[\s\S]*?-->/g, '');
+    if (stripped === withoutComments) break;
+    withoutComments = stripped;
+  }
+
+  return withoutComments.replace(/>\s+</g, '><').trim();
 }
 
 export const xmlFormatter: ToolModule<XmlFormatterParams> = {
@@ -43,11 +48,7 @@ export const xmlFormatter: ToolModule<XmlFormatterParams> = {
 
   defaults: defaultXmlFormatterParams,
 
-  async run(
-    inputs: File[],
-    params: XmlFormatterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: XmlFormatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     const mode = params.mode ?? 'beautify';
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading formatter' });
@@ -71,7 +72,7 @@ export const xmlFormatter: ToolModule<XmlFormatterParams> = {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           plugins: [plugin as any],
           tabWidth: params.indent ?? 2,
-           
+
           xmlWhitespaceSensitivity: 'ignore',
         });
       } catch (e) {

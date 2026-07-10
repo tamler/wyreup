@@ -68,6 +68,15 @@ describe('convert-subtitles — detectSubtitleFormat()', () => {
 });
 
 describe('convert-subtitles — convertSrtToVtt()', () => {
+  it('handles a pathological timestamp line in under one second', () => {
+    const input = `1\n${'a'.repeat(100_000)}`;
+    const start = performance.now();
+    const result = convertSrtToVtt(input);
+
+    expect(result).toBe('WEBVTT\n');
+    expect(performance.now() - start).toBeLessThan(1_000);
+  });
+
   it('output starts with WEBVTT', () => {
     const result = convertSrtToVtt(SAMPLE_SRT);
     expect(result.trimStart().startsWith('WEBVTT')).toBe(true);
@@ -76,6 +85,16 @@ describe('convert-subtitles — convertSrtToVtt()', () => {
   it('uses dot separator in timestamps', () => {
     const result = convertSrtToVtt(SAMPLE_SRT);
     expect(result).toContain('00:00:01.000');
+  });
+
+  it('uses the timestamp token immediately before the arrow', () => {
+    const result = convertSrtToVtt('cue-id 00:00:01,000 --> 00:00:02,000\nText');
+    expect(result).toContain('00:00:01.000 --> 00:00:02.000');
+  });
+
+  it('skips a malformed arrow before a valid timestamp pair', () => {
+    const result = convertSrtToVtt('x-->y 00:00:01,000 --> 00:00:02,000\nText');
+    expect(result).toContain('00:00:01.000 --> 00:00:02.000');
   });
 
   it('preserves subtitle text', () => {
@@ -115,7 +134,7 @@ describe('convert-subtitles — convertVttToSrt()', () => {
 describe('convert-subtitles — run()', () => {
   it('converts SRT to VTT', async () => {
     const file = new File([SAMPLE_SRT], 'subs.srt', { type: 'text/plain' });
-    const result = await convertSubtitles.run([file], { to: 'vtt' }, makeCtx()) as Blob[];
+    const result = (await convertSubtitles.run([file], { to: 'vtt' }, makeCtx())) as Blob[];
     expect(result).toHaveLength(1);
     const text = await result[0]!.text();
     expect(text.trimStart().startsWith('WEBVTT')).toBe(true);
@@ -123,15 +142,13 @@ describe('convert-subtitles — run()', () => {
 
   it('converts VTT to SRT', async () => {
     const file = new File([SAMPLE_VTT], 'subs.vtt', { type: 'text/vtt' });
-    const result = await convertSubtitles.run([file], { to: 'srt' }, makeCtx()) as Blob[];
+    const result = (await convertSubtitles.run([file], { to: 'srt' }, makeCtx())) as Blob[];
     const text = await result[0]!.text();
     expect(text).toContain('00:00:01,000');
   });
 
   it('throws for unrecognized format', async () => {
     const file = new File(['not a sub file'], 'subs.txt', { type: 'text/plain' });
-    await expect(
-      convertSubtitles.run([file], { to: 'srt' }, makeCtx()),
-    ).rejects.toThrow(/detect/i);
+    await expect(convertSubtitles.run([file], { to: 'srt' }, makeCtx())).rejects.toThrow(/detect/i);
   });
 });

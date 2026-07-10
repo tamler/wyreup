@@ -1,8 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import {
-  validateOpenapi,
-  type OpenapiValidateResult,
-} from '../openapi-validate/index.js';
+import { validateOpenapi, type OpenapiValidateResult } from '../openapi-validate/index.js';
 
 export interface OpenapiReportParams {
   /** Also flag practice issues (missing descriptions, operationId, etc.). */
@@ -12,7 +9,7 @@ export interface OpenapiReportParams {
 export const defaultOpenapiReportParams: OpenapiReportParams = { strict: false };
 
 function escapeCell(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return s.replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
 }
 
 // Render a validation result as a Markdown report suitable for pasting

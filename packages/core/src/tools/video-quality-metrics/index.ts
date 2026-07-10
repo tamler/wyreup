@@ -27,10 +27,14 @@ export function buildQualityArgs(
   distName: string,
 ): string[] {
   return [
-    '-i', refName,
-    '-i', distName,
-    '-lavfi', `[1:v][0:v]scale2ref[dist][ref];[dist][ref]${metric}`,
-    '-f', 'null',
+    '-i',
+    refName,
+    '-i',
+    distName,
+    '-lavfi',
+    `[1:v][0:v]scale2ref[dist][ref];[dist][ref]${metric}`,
+    '-f',
+    'null',
     '-',
   ];
 }
@@ -47,22 +51,28 @@ function parseNum(log: string, re: RegExp): number | null {
  * metric that was not run (or not found) comes back as null.
  */
 export function parseQualityMetrics(log: string): QualityReport {
-  const ssimAll = parseNum(log, /SSIM[^\n]*All:\s*([\d.]+)/);
-  const psnrAvg = parseNum(log, /PSNR[^\n]*average:\s*([\d.]+|inf)/);
+  const ssimAll = parseNum(log, /SSIM[^\n]{0,512}All:[ \t]{0,10}([\d.]{1,30})/);
+  const psnrAvg = parseNum(log, /PSNR[^\n]{0,512}average:[ \t]{0,10}([\d.]{1,30}|inf)/);
 
-  const ssim = ssimAll === null ? null : {
-    all: ssimAll,
-    y: parseNum(log, /SSIM\s+Y:\s*([\d.]+)/) ?? NaN,
-    u: parseNum(log, /SSIM[^\n]*\bU:\s*([\d.]+)/) ?? NaN,
-    v: parseNum(log, /SSIM[^\n]*\bV:\s*([\d.]+)/) ?? NaN,
-  };
+  const ssim =
+    ssimAll === null
+      ? null
+      : {
+          all: ssimAll,
+          y: parseNum(log, /SSIM[ \t]{1,10}Y:[ \t]{0,10}([\d.]{1,30})/) ?? NaN,
+          u: parseNum(log, /SSIM[^\n]{0,512}\bU:[ \t]{0,10}([\d.]{1,30})/) ?? NaN,
+          v: parseNum(log, /SSIM[^\n]{0,512}\bV:[ \t]{0,10}([\d.]{1,30})/) ?? NaN,
+        };
 
-  const psnr = psnrAvg === null ? null : {
-    average: psnrAvg,
-    y: parseNum(log, /PSNR\s+y:\s*([\d.]+|inf)/) ?? NaN,
-    u: parseNum(log, /PSNR[^\n]*\bu:\s*([\d.]+|inf)/) ?? NaN,
-    v: parseNum(log, /PSNR[^\n]*\bv:\s*([\d.]+|inf)/) ?? NaN,
-  };
+  const psnr =
+    psnrAvg === null
+      ? null
+      : {
+          average: psnrAvg,
+          y: parseNum(log, /PSNR[ \t]{1,10}y:[ \t]{0,10}([\d.]{1,30}|inf)/) ?? NaN,
+          u: parseNum(log, /PSNR[^\n]{0,512}\bu:[ \t]{0,10}([\d.]{1,30}|inf)/) ?? NaN,
+          v: parseNum(log, /PSNR[^\n]{0,512}\bv:[ \t]{0,10}([\d.]{1,30}|inf)/) ?? NaN,
+        };
 
   return { psnr, ssim };
 }
@@ -71,11 +81,23 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
   id: 'video-quality-metrics',
   slug: 'video-quality-metrics',
   name: 'Video Quality Metrics',
-  description: 'Compare two videos and report PSNR and SSIM. Drop the reference (original) first, then the distorted (encoded) version. Returns a JSON report.',
-  llmDescription: 'Video Quality Metrics: compute PSNR and SSIM between two videos. inputs[0] = reference/original, inputs[1] = distorted/encoded. The distorted clip is auto-scaled to the reference resolution. Returns JSON. Does not compute VMAF.',
+  description:
+    'Compare two videos and report PSNR and SSIM. Drop the reference (original) first, then the distorted (encoded) version. Returns a JSON report.',
+  llmDescription:
+    'Video Quality Metrics: compute PSNR and SSIM between two videos. inputs[0] = reference/original, inputs[1] = distorted/encoded. The distorted clip is auto-scaled to the reference resolution. Returns JSON. Does not compute VMAF.',
   category: 'media',
   categories: ['inspect'],
-  keywords: ['video', 'quality', 'psnr', 'ssim', 'compare', 'metrics', 'reference', 'encode', 'measure'],
+  keywords: [
+    'video',
+    'quality',
+    'psnr',
+    'ssim',
+    'compare',
+    'metrics',
+    'reference',
+    'encode',
+    'measure',
+  ],
 
   input: {
     accept: ['video/*'],
@@ -120,13 +142,19 @@ export const videoQualityMetrics: ToolModule<VideoQualityMetricsParams> = {
     if (!isNaN(refDuration)) assertDurationBudget(refDuration, VIDEO_QUALITY_BUDGET);
 
     let log = '';
-    const onLog = (e: { message: string }) => { log += e.message + '\n'; };
+    const onLog = (e: { message: string }) => {
+      log += e.message + '\n';
+    };
     ff.on('log', onLog);
     try {
       const metrics: QualityMetric[] = ['psnr', 'ssim'];
       for (let i = 0; i < metrics.length; i++) {
         const metric = metrics[i]!;
-        ctx.onProgress({ stage: 'processing', percent: 20 + i * 40, message: `Computing ${metric.toUpperCase()}` });
+        ctx.onProgress({
+          stage: 'processing',
+          percent: 20 + i * 40,
+          message: `Computing ${metric.toUpperCase()}`,
+        });
         if (ctx.signal.aborted) throw new Error('Aborted');
         await ff.exec(buildQualityArgs(metric, refName, distName));
       }

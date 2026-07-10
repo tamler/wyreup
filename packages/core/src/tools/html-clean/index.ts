@@ -55,31 +55,83 @@ function decodeEntities(text: string): string {
 }
 
 const BLOCK_TAGS = new Set([
-  'address', 'article', 'aside', 'blockquote', 'br', 'div', 'dl', 'dt', 'dd',
-  'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr',
-  'li', 'main', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'tr', 'ul',
+  'address',
+  'article',
+  'aside',
+  'blockquote',
+  'br',
+  'div',
+  'dl',
+  'dt',
+  'dd',
+  'footer',
+  'form',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hr',
+  'li',
+  'main',
+  'nav',
+  'ol',
+  'p',
+  'pre',
+  'section',
+  'table',
+  'tr',
+  'ul',
 ]);
+
+// Bound repeated stripping so adversarial nesting cannot monopolize the event loop.
+const MAX_SANITIZE_PASSES = 25;
 
 export function cleanHtml(html: string, params: HtmlCleanParams): string {
   let text = html;
+  const preserveParagraphs = params.preserveParagraphs ?? true;
+  let stabilized = false;
 
-  // Strip script + style blocks entirely (including their content).
-  text = text.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '');
-  text = text.replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '');
-  // Strip HTML comments.
-  text = text.replace(/<!--[\s\S]*?-->/g, '');
+  for (let pass = 0; pass < MAX_SANITIZE_PASSES; pass += 1) {
+    const previous = text;
+    text = text
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
 
-  if (params.preserveParagraphs ?? true) {
-    // Replace block-level opening/closing tags with newlines so the
-    // textual result keeps paragraph structure. <br> emits a single
-    // newline, block boundaries emit two.
-    text = text.replace(/<br\s*\/?\s*>/gi, '\n');
-    text = text.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag: string) => {
-      return BLOCK_TAGS.has(tag.toLowerCase()) ? '\n\n' : '';
-    });
-  } else {
-    // Drop every tag without preserving structure.
-    text = text.replace(/<\/?[a-zA-Z][^>]*>/g, '');
+    if (preserveParagraphs) {
+      // Replace block-level opening/closing tags with newlines so the
+      // textual result keeps paragraph structure. <br> emits a single
+      // newline, block boundaries emit two.
+      text = text
+        .replace(/<br\s*\/?\s*>/gi, '\n')
+        .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag: string) => {
+          if (/^(?:script|style)$/i.test(tag)) return match;
+          return BLOCK_TAGS.has(tag.toLowerCase()) ? '\n\n' : '';
+        });
+    } else {
+      // Drop every tag without preserving structure.
+      text = text.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag: string) => {
+        return /^(?:script|style)$/i.test(tag) ? match : '';
+      });
+    }
+
+    if (text === previous) {
+      // Once no block can recombine, unmatched active-content tags are safe to drop.
+      const withoutActiveTags = text.replace(/<\/?(?:script|style)\b[^>]*>/gi, '');
+      if (withoutActiveTags === text) {
+        stabilized = true;
+        break;
+      }
+      text = withoutActiveTags;
+    }
+  }
+
+  if (!stabilized) {
+    // The pass bound was exhausted; neutralize any deferred markup in the stripped-so-far text.
+    text = text.replace(/[<>]/g, '');
   }
 
   if (params.decodeEntities ?? true) {
@@ -90,7 +142,10 @@ export function cleanHtml(html: string, params: HtmlCleanParams): string {
     text = text.replace(/\s+/g, ' ').trim();
   } else {
     // Tighten only the runs we created with block boundaries.
-    text = text.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    text = text
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   return text;

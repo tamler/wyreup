@@ -88,10 +88,31 @@ export interface ArmorDecode {
 }
 
 export function decodeArmor(text: string): ArmorDecode {
-  const m = /-----BEGIN PGP ([A-Z ]+?)-----([\s\S]*?)-----END PGP \1-----/.exec(text);
-  if (!m) throw new Error('No PGP armor block found.');
-  const blockType = m[1]!.trim() as PgpArmorBlockType;
-  const body = m[2]!;
+  const markerPattern = /-----(BEGIN|END) PGP ([A-Z ]{1,40})-----/g;
+  const openBlocks = new Map<string, { markerStart: number; bodyStart: number }>();
+  let selected:
+    | { markerStart: number; bodyStart: number; bodyEnd: number; rawBlockType: string }
+    | undefined;
+  let marker: RegExpExecArray | null;
+  while ((marker = markerPattern.exec(text)) !== null) {
+    const rawBlockType = marker[2]!;
+    if (marker[1] === 'BEGIN') {
+      if (!openBlocks.has(rawBlockType)) {
+        openBlocks.set(rawBlockType, {
+          markerStart: marker.index,
+          bodyStart: marker.index + marker[0].length,
+        });
+      }
+      continue;
+    }
+    const begin = openBlocks.get(rawBlockType);
+    if (begin && (!selected || begin.markerStart < selected.markerStart)) {
+      selected = { ...begin, bodyEnd: marker.index, rawBlockType };
+    }
+  }
+  if (!selected) throw new Error('No PGP armor block found.');
+  const blockType = selected.rawBlockType.trim() as PgpArmorBlockType;
+  const body = text.slice(selected.bodyStart, selected.bodyEnd);
   const lines = body.split(/\r?\n/);
   const headers: Record<string, string> = {};
   let i = 0;
@@ -134,7 +155,7 @@ export const pgpArmor: ToolModule<PgpArmorParams> = {
   slug: 'pgp-armor',
   name: 'PGP Armor',
   description:
-    'Wrap binary into OpenPGP ASCII armor with a CRC-24 checksum (or unwrap an existing armored block back to bytes + headers). Doesn\'t encrypt or sign — that\'s pgp-encrypt / pgp-sign. This tool only handles the armoring envelope.',
+    "Wrap binary into OpenPGP ASCII armor with a CRC-24 checksum (or unwrap an existing armored block back to bytes + headers). Doesn't encrypt or sign — that's pgp-encrypt / pgp-sign. This tool only handles the armoring envelope.",
   category: 'convert',
   keywords: ['pgp', 'armor', 'ascii-armor', 'encode', 'decode', 'crc24', 'rfc4880'],
 
@@ -199,7 +220,12 @@ export const pgpArmor: ToolModule<PgpArmorParams> = {
     if (mode === 'encode') {
       ctx.onProgress({ stage: 'processing', percent: 50, message: 'Encoding' });
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const armored = encodeArmor(bytes, params.blockType ?? 'MESSAGE', params.version ?? '', params.comment ?? '');
+      const armored = encodeArmor(
+        bytes,
+        params.blockType ?? 'MESSAGE',
+        params.version ?? '',
+        params.comment ?? '',
+      );
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
       return [new Blob([armored], { type: 'text/plain' })];
     }

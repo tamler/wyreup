@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function run(text: string, params: CssFormatterParams = {}): Promise<string> {
   const file = new File([text], 'styles.css', { type: 'text/css' });
-  const [out] = await cssFormatter.run([file], params, makeCtx()) as Blob[];
+  const [out] = (await cssFormatter.run([file], params, makeCtx())) as Blob[];
   return out!.text();
 }
 
@@ -33,6 +33,15 @@ describe('css-formatter — metadata', () => {
 });
 
 describe('css-formatter — run()', () => {
+  it('minifies pathological whitespace in under one second', async () => {
+    const input = `${' '.repeat(100_000)}a`;
+    const start = performance.now();
+    const result = await run(input, { mode: 'minify' });
+
+    expect(result).toBe('a');
+    expect(performance.now() - start).toBeLessThan(1_000);
+  });
+
   it('beautifies compact CSS', async () => {
     const input = '.foo{color:red;font-size:14px;}';
     const result = await run(input, { mode: 'beautify' });

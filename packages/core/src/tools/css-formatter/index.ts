@@ -13,16 +13,18 @@ export const defaultCssFormatterParams: CssFormatterParams = {
 };
 
 function minifyCss(css: string): string {
-  return css
-    // Remove CSS comments
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    // Collapse whitespace
-    .replace(/\s+/g, ' ')
-    // Remove spaces around structural characters
-    .replace(/\s*([{}:;,>~+])\s*/g, '$1')
-    // Remove trailing semicolons before closing brace
-    .replace(/;}/g, '}')
-    .trim();
+  return (
+    css
+      // Remove CSS comments
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      // Collapse whitespace
+      .replace(/\s+/g, ' ')
+      // Remove spaces around structural characters
+      .replace(/ ?([{}:;,>~+]) ?/g, '$1')
+      // Remove trailing semicolons before closing brace
+      .replace(/;}/g, '}')
+      .trim()
+  );
 }
 
 export const cssFormatter: ToolModule<CssFormatterParams> = {
@@ -51,11 +53,7 @@ export const cssFormatter: ToolModule<CssFormatterParams> = {
 
   defaults: defaultCssFormatterParams,
 
-  async run(
-    inputs: File[],
-    params: CssFormatterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: CssFormatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     const mode = params.mode ?? 'beautify';
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading formatter' });

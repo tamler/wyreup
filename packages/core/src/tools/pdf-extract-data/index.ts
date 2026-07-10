@@ -79,7 +79,7 @@ function moneyPattern(currency: string): RegExp {
   // OR a bare number followed by the currency, OR a parenthesised negative.
   const sym = escapeRegExp(currency);
   return new RegExp(
-    `\\(?\\s*${sym}\\s?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\)?|\\(?\\s*-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\s?${sym}\\)?`,
+    `\\(?[ \\t]{0,10}${sym}[ \\t]?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\)?|\\(?[ \\t]{0,10}-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?[ \\t]?${sym}\\)?`,
     'g',
   );
 }
@@ -110,7 +110,10 @@ function findDates(text: string): string[] {
     re.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
-      if (!seen.has(m[0])) { seen.add(m[0]); out.push(m[0]); }
+      if (!seen.has(m[0])) {
+        seen.add(m[0]);
+        out.push(m[0]);
+      }
     }
   }
   return out;
@@ -120,7 +123,10 @@ function findLabelledMoney(text: string, labels: string[], currency: string): Mo
   const sym = escapeRegExp(currency);
   for (const label of labels) {
     // \b prevents "Total" from matching inside "Subtotal".
-    const re = new RegExp(`\\b${escapeRegExp(label)}\\s*:?\\s*(\\(?\\s*${sym}?\\s?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\s?${sym}?\\)?)`, 'i');
+    const re = new RegExp(
+      `\\b${escapeRegExp(label)}\\s*:?\\s*(\\(?\\s*${sym}?\\s?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\s?${sym}?\\)?)`,
+      'i',
+    );
     const m = re.exec(text);
     if (m) {
       const parsed = parseMoney(m[1]!, currency);
@@ -132,7 +138,7 @@ function findLabelledMoney(text: string, labels: string[], currency: string): Mo
 
 function findInvoiceNumber(text: string): string | undefined {
   const patterns = [
-    /(?:invoice|receipt|order|reference|ref)\s*(?:#|no\.?|number)?\s*[:-]?\s*([A-Za-z0-9\-_/]{2,30})/i,
+    /(?:invoice|receipt|order|reference|ref)[ \t]{0,10}(?:(?:#|no\.?|number)[ \t]{0,10})?[:-]?[ \t]{0,10}([A-Za-z0-9\-_/]{2,30})/i,
   ];
   for (const re of patterns) {
     const m = re.exec(text);
@@ -143,7 +149,10 @@ function findInvoiceNumber(text: string): string | undefined {
 
 function findVendor(text: string): string | undefined {
   // First non-empty line that doesn't look like a date, money, or invoice number.
-  const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split(/\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   for (const line of lines.slice(0, 5)) {
     if (line.length < 2 || line.length > 80) continue;
     if (/^\d/.test(line)) continue;
@@ -156,7 +165,10 @@ function findVendor(text: string): string | undefined {
 
 function findLineItems(text: string, currency: string): PdfLineItem[] {
   const sym = escapeRegExp(currency);
-  const re = new RegExp(`^(.+?)\\s+(\\(?\\s*${sym}\\s?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\)?)\\s*$`, 'gm');
+  const re = new RegExp(
+    `^(.+?)\\s+(\\(?\\s*${sym}\\s?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\)?)\\s*$`,
+    'gm',
+  );
   const out: PdfLineItem[] = [];
   let m: RegExpExecArray | null;
   // Tokens we'd want to *exclude* (totals, subtotals — those are reported separately).
@@ -188,9 +200,16 @@ export function extractFieldsFromText(
     .filter((x): x is MoneyValue => x !== null);
 
   const total =
-    findLabelledMoney(text, ['Total', 'Amount Due', 'Amount due', 'Grand Total', 'Balance Due'], currency) ??
+    findLabelledMoney(
+      text,
+      ['Total', 'Amount Due', 'Amount due', 'Grand Total', 'Balance Due'],
+      currency,
+    ) ??
     (allMatches.length > 0
-      ? allMatches.reduce((max, m) => (Math.abs(m.value) > Math.abs(max.value) ? m : max), allMatches[0]!)
+      ? allMatches.reduce(
+          (max, m) => (Math.abs(m.value) > Math.abs(max.value) ? m : max),
+          allMatches[0]!,
+        )
       : null);
   const subtotal = findLabelledMoney(text, ['Subtotal', 'Sub-total', 'Sub total'], currency);
   const tax = findLabelledMoney(text, ['Tax', 'Sales Tax', 'Sales tax', 'VAT', 'GST'], currency);
@@ -208,8 +227,11 @@ export function extractFieldsFromText(
   if (lineItems.length === 0) warnings.push('No line items detected.');
 
   // Confidence: 3 strong signals → high, 2 → medium, ≤1 → low.
-  const strongSignals = [total, date, vendor, lineItems.length > 0 ? 1 : null].filter(Boolean).length;
-  const confidence: PdfExtractDataResult['confidence'] = strongSignals >= 3 ? 'high' : strongSignals >= 2 ? 'medium' : 'low';
+  const strongSignals = [total, date, vendor, lineItems.length > 0 ? 1 : null].filter(
+    Boolean,
+  ).length;
+  const confidence: PdfExtractDataResult['confidence'] =
+    strongSignals >= 3 ? 'high' : strongSignals >= 2 ? 'medium' : 'low';
 
   const result: PdfExtractDataResult = {
     lineItems,
@@ -243,7 +265,17 @@ export const pdfExtractData: ToolModule<PdfExtractDataParams> = {
   llmDescription:
     'Take an invoice or receipt PDF, return JSON with detected fields: vendor (first non-numeric line), invoiceNumber (after Invoice/Order/Reference labels), date (first ISO / US / long-form date), total (after Total / Amount Due labels, or fallback to largest currency value), subtotal, tax, and line items (description + amount pairs). Includes a confidence score and warnings for missing fields.',
   category: 'pdf',
-  keywords: ['pdf', 'invoice', 'receipt', 'extract', 'data', 'structured', 'fields', 'total', 'parse'],
+  keywords: [
+    'pdf',
+    'invoice',
+    'receipt',
+    'extract',
+    'data',
+    'structured',
+    'fields',
+    'total',
+    'parse',
+  ],
 
   input: {
     accept: ['application/pdf'],
@@ -308,12 +340,15 @@ export const pdfExtractData: ToolModule<PdfExtractDataParams> = {
       },
       {
         q: 'Can it extract line items?',
-        a: 'Yes — any row that ends in a currency value and isn\'t the total/subtotal/tax becomes a line item. The description is everything before the amount; the amount is parsed into a structured `{ value, raw }` object.',
+        a: "Yes — any row that ends in a currency value and isn't the total/subtotal/tax becomes a line item. The description is everything before the amount; the amount is parsed into a structured `{ value, raw }` object.",
       },
     ],
     alsoTry: [
       { id: 'pdf-to-text', why: 'Just want the raw text without structured extraction.' },
-      { id: 'pdf-extract-tables', why: 'Extract every table in the PDF, not just invoice-shaped fields.' },
+      {
+        id: 'pdf-extract-tables',
+        why: 'Extract every table in the PDF, not just invoice-shaped fields.',
+      },
       { id: 'csv-template', why: 'Feed the extracted fields into a CSV report.' },
     ],
   },

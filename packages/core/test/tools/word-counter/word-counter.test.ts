@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { wordCounter } from '../../../src/tools/word-counter/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
 import type { WordCounterResult } from '../../../src/tools/word-counter/types.js';
@@ -14,7 +14,7 @@ function makeCtx(): ToolRunContext {
 
 async function count(text: string, type = 'text/plain'): Promise<WordCounterResult> {
   const input = new File([text], 'test.txt', { type });
-  const [out] = await wordCounter.run([input], {}, makeCtx()) as Blob[];
+  const [out] = (await wordCounter.run([input], {}, makeCtx())) as Blob[];
   return JSON.parse(await out!.text()) as WordCounterResult;
 }
 
@@ -35,6 +35,23 @@ describe('word-counter — metadata', () => {
 });
 
 describe('word-counter — run()', () => {
+  it('handles pathological unclosed HTML tags in under one second', async () => {
+    const input = `${'<'.repeat(100_000)}a.`;
+    vi.stubGlobal('Intl', {});
+    const start = performance.now();
+    let result: WordCounterResult;
+    let elapsed: number;
+    try {
+      result = await count(input, 'text/html');
+      elapsed = performance.now() - start;
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(result.characters).toBe(input.length);
+    expect(elapsed).toBeLessThan(1_000);
+  });
+
   it('counts words in English text', async () => {
     const text = 'The quick brown fox jumps over the lazy dog.';
     const result = await count(text);

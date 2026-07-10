@@ -40,8 +40,19 @@ describe('openapi-report — run()', () => {
 
   it('rejects unparseable JSON', async () => {
     const file = new File(['{ not json'], 'spec.json', { type: 'application/json' });
-    await expect(
-      openapiReport.run([file], { strict: false }, makeCtx()),
-    ).rejects.toThrow(/parse/i);
+    await expect(openapiReport.run([file], { strict: false }, makeCtx())).rejects.toThrow(/parse/i);
+  });
+
+  it('replaces carriage returns in Markdown table cells', async () => {
+    const spec = JSON.stringify({
+      openapi: '3.0.0',
+      info: { title: 'Test API', version: '1.0.0' },
+      paths: { 'bad\rpath': {} },
+    });
+    const file = new File([spec], 'spec.json', { type: 'application/json' });
+    const [md] = (await openapiReport.run([file], { strict: false }, makeCtx())) as Blob[];
+    const text = await md!.text();
+    expect(text).toContain("$.paths['bad path']");
+    expect(text).not.toContain('\r');
   });
 });

@@ -19,7 +19,10 @@ export interface TextTemplateResult {
 }
 
 function lookup(data: unknown, path: string): unknown {
-  const segments = path.split('.').map((s) => s.trim()).filter(Boolean);
+  const segments = path
+    .split('.')
+    .map((s) => s.trim())
+    .filter(Boolean);
   let cursor: unknown = data;
   for (const seg of segments) {
     if (cursor === null || cursor === undefined) return undefined;
@@ -50,11 +53,14 @@ export function renderTemplate(
 ): TextTemplateResult {
   const resolved: string[] = [];
   const missing: string[] = [];
-  const rendered = template.replace(/\{\{\s*([^\s{}][^{}]*?)\s*\}\}/g, (match, expr: string) => {
+  const rendered = template.replace(/\{\{([^{}]*)\}\}/g, (match, rawExpr: string) => {
+    const expr = rawExpr.trim();
+    if (!expr || rawExpr.startsWith('{')) return match;
     const value = lookup(data, expr);
     if (value === undefined) {
       missing.push(expr);
-      if (onMissing === 'error') throw new Error(`Template placeholder "{{${expr}}}" has no matching data value.`);
+      if (onMissing === 'error')
+        throw new Error(`Template placeholder "{{${expr}}}" has no matching data value.`);
       return onMissing === 'keep' ? match : '';
     }
     resolved.push(expr);
@@ -132,7 +138,9 @@ export const textTemplate: ToolModule<TextTemplateParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [
       new Blob([result.rendered], { type: 'text/plain' }),
-      new Blob([JSON.stringify({ resolved: result.resolved, missing: result.missing }, null, 2)], { type: 'application/json' }),
+      new Blob([JSON.stringify({ resolved: result.resolved, missing: result.missing }, null, 2)], {
+        type: 'application/json',
+      }),
     ];
   },
 

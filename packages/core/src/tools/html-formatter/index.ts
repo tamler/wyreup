@@ -13,23 +13,33 @@ export const defaultHtmlFormatterParams: HtmlFormatterParams = {
 };
 
 function minifyHtml(html: string): string {
-  return html
+  let withoutComments = html;
+  // Bound repeated stripping so adversarial nesting cannot monopolize the event loop.
+  for (let pass = 0; pass < 25; pass += 1) {
     // Remove HTML comments (not conditional comments)
-    .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')
-    // Collapse whitespace between tags
-    .replace(/>\s+</g, '> <')
-    // Trim leading/trailing whitespace from lines
-    .replace(/^\s+|\s+$/gm, '')
-    // Collapse multiple spaces (not inside pre/code)
-    .replace(/[ \t]{2,}/g, ' ')
-    .trim();
+    const stripped = withoutComments.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+    if (stripped === withoutComments) break;
+    withoutComments = stripped;
+  }
+
+  return (
+    withoutComments
+      // Collapse whitespace between tags
+      .replace(/>\s+</g, '> <')
+      // Trim leading/trailing whitespace from lines
+      .replace(/^\s+|\s+$/gm, '')
+      // Collapse multiple spaces (not inside pre/code)
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim()
+  );
 }
 
 export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
   id: 'html-formatter',
   slug: 'html-formatter',
   name: 'HTML Formatter',
-  description: 'Beautify or minify HTML with Prettier. Produces clean, consistently indented markup.',
+  description:
+    'Beautify or minify HTML with Prettier. Produces clean, consistently indented markup.',
   category: 'dev',
   keywords: ['html', 'format', 'beautify', 'minify', 'pretty', 'indent', 'markup'],
 
@@ -51,11 +61,7 @@ export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
 
   defaults: defaultHtmlFormatterParams,
 
-  async run(
-    inputs: File[],
-    params: HtmlFormatterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: HtmlFormatterParams, ctx: ToolRunContext): Promise<Blob[]> {
     const mode = params.mode ?? 'beautify';
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading formatter' });

@@ -16,17 +16,60 @@ export const defaultMorseCodeParams: MorseCodeParams = {
 
 // ITU Morse code table. Punctuation per ITU-R M.1677-1.
 const ENCODE: Record<string, string> = {
-  A: '.-', B: '-...', C: '-.-.', D: '-..', E: '.', F: '..-.',
-  G: '--.', H: '....', I: '..', J: '.---', K: '-.-', L: '.-..',
-  M: '--', N: '-.', O: '---', P: '.--.', Q: '--.-', R: '.-.',
-  S: '...', T: '-', U: '..-', V: '...-', W: '.--', X: '-..-',
-  Y: '-.--', Z: '--..',
-  '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
-  '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
-  '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.', '!': '-.-.--',
-  '/': '-..-.', '(': '-.--.', ')': '-.--.-', '&': '.-...', ':': '---...',
-  ';': '-.-.-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '_': '..--.-',
-  '"': '.-..-.', '$': '...-..-', '@': '.--.-.',
+  A: '.-',
+  B: '-...',
+  C: '-.-.',
+  D: '-..',
+  E: '.',
+  F: '..-.',
+  G: '--.',
+  H: '....',
+  I: '..',
+  J: '.---',
+  K: '-.-',
+  L: '.-..',
+  M: '--',
+  N: '-.',
+  O: '---',
+  P: '.--.',
+  Q: '--.-',
+  R: '.-.',
+  S: '...',
+  T: '-',
+  U: '..-',
+  V: '...-',
+  W: '.--',
+  X: '-..-',
+  Y: '-.--',
+  Z: '--..',
+  '0': '-----',
+  '1': '.----',
+  '2': '..---',
+  '3': '...--',
+  '4': '....-',
+  '5': '.....',
+  '6': '-....',
+  '7': '--...',
+  '8': '---..',
+  '9': '----.',
+  '.': '.-.-.-',
+  ',': '--..--',
+  '?': '..--..',
+  "'": '.----.',
+  '!': '-.-.--',
+  '/': '-..-.',
+  '(': '-.--.',
+  ')': '-.--.-',
+  '&': '.-...',
+  ':': '---...',
+  ';': '-.-.-.',
+  '=': '-...-',
+  '+': '.-.-.',
+  '-': '-....-',
+  _: '..--.-',
+  '"': '.-..-.',
+  $: '...-..-',
+  '@': '.--.-.',
 };
 
 const DECODE: Record<string, string> = Object.fromEntries(
@@ -50,7 +93,7 @@ export function encodeMorse(text: string, letterSep: string, wordSep: string): s
 export function decodeMorse(morse: string): string {
   // Tolerant decoder: treat any '/' (with or without surrounding spaces) as
   // a word boundary, then split each word into letter codes by whitespace.
-  const words = morse.trim().split(/\s*[/|]\s*/);
+  const words = morse.trim().split(/[/|]/);
   const out: string[] = [];
   for (const word of words) {
     const letters = word.trim().split(/\s+/).filter(Boolean);
@@ -68,7 +111,8 @@ export const morseCode: ToolModule<MorseCodeParams> = {
   id: 'morse-code',
   slug: 'morse-code',
   name: 'Morse Code',
-  description: 'Encode text to Morse code (ITU table) or decode Morse back to text. Unrecognized characters are skipped silently.',
+  description:
+    'Encode text to Morse code (ITU table) or decode Morse back to text. Unrecognized characters are skipped silently.',
   category: 'convert',
   keywords: ['morse', 'code', 'cipher', 'encode', 'decode', 'itu', 'telegraph'],
 
@@ -126,7 +170,11 @@ export const morseCode: ToolModule<MorseCodeParams> = {
     const text = await inputs[0]!.text();
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    ctx.onProgress({ stage: 'processing', percent: 60, message: mode === 'encode' ? 'Encoding' : 'Decoding' });
+    ctx.onProgress({
+      stage: 'processing',
+      percent: 60,
+      message: mode === 'encode' ? 'Encoding' : 'Decoding',
+    });
 
     const out =
       mode === 'encode'

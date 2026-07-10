@@ -61,6 +61,19 @@ function parseTimeMs(ts: string): number {
   return 0;
 }
 
+function parseTimeLine(timeLine: string): [string, string] | null {
+  const parts = timeLine.split('-->');
+  for (let i = 0; i < parts.length - 1; i++) {
+    const startPart = parts[i]!;
+    const endPart = parts[i + 1]!;
+    if (startPart.trimEnd() === startPart || endPart.trimStart() === endPart) continue;
+    const startTimestamp = startPart.trim().split(/\s+/).pop();
+    const endTimestamp = endPart.trim().split(/\s+/)[0];
+    if (startTimestamp && endTimestamp) return [startTimestamp, endTimestamp];
+  }
+  return null;
+}
+
 export function convertSrtToVtt(srt: string, shiftMs = 0): string {
   const lines = ['WEBVTT', ''];
   const blocks = srt.trim().split(/\n\s*\n/);
@@ -73,10 +86,11 @@ export function convertSrtToVtt(srt: string, shiftMs = 0): string {
     }
     const timeLine = blockLines[lineIdx];
     if (!timeLine) continue;
-    const timeMatch = timeLine.match(/(\S+)\s+-->\s+(\S+)/);
-    if (!timeMatch) continue;
-    const startMs = parseTimeMs(timeMatch[1]!) + shiftMs;
-    const endMs = parseTimeMs(timeMatch[2]!) + shiftMs;
+    const timestamps = parseTimeLine(timeLine);
+    if (!timestamps) continue;
+    const [startTimestamp, endTimestamp] = timestamps;
+    const startMs = parseTimeMs(startTimestamp) + shiftMs;
+    const endMs = parseTimeMs(endTimestamp) + shiftMs;
     lines.push(`${vttTimestamp(Math.max(0, startMs))} --> ${vttTimestamp(Math.max(0, endMs))}`);
     lines.push(...blockLines.slice(lineIdx + 1));
     lines.push('');
@@ -94,11 +108,14 @@ export function convertVttToSrt(vtt: string, shiftMs = 0): string {
     if (blockLines[0]?.startsWith('WEBVTT') || blockLines[0]?.startsWith('NOTE')) continue;
     const timeLine = blockLines.find((l) => l.includes('-->'));
     if (!timeLine) continue;
-    const timeMatch = timeLine.match(/(\S+)\s+-->\s+(\S+)/);
-    if (!timeMatch) continue;
-    const startMs = parseTimeMs(timeMatch[1]!) + shiftMs;
-    const endMs = parseTimeMs(timeMatch[2]!) + shiftMs;
-    const textLines = blockLines.filter((l) => !l.includes('-->') && !/^\d+$/.test(l.trim()) && l.trim() !== '');
+    const timestamps = parseTimeLine(timeLine);
+    if (!timestamps) continue;
+    const [startTimestamp, endTimestamp] = timestamps;
+    const startMs = parseTimeMs(startTimestamp) + shiftMs;
+    const endMs = parseTimeMs(endTimestamp) + shiftMs;
+    const textLines = blockLines.filter(
+      (l) => !l.includes('-->') && !/^\d+$/.test(l.trim()) && l.trim() !== '',
+    );
     lines.push(String(index++));
     lines.push(`${srtTimestamp(Math.max(0, startMs))} --> ${srtTimestamp(Math.max(0, endMs))}`);
     lines.push(...textLines);
@@ -133,11 +150,7 @@ export const convertSubtitles: ToolModule<ConvertSubtitlesParams> = {
 
   defaults: defaultConvertSubtitlesParams,
 
-  async run(
-    inputs: File[],
-    params: ConvertSubtitlesParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], params: ConvertSubtitlesParams, ctx: ToolRunContext): Promise<Blob[]> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     const input = inputs[0]!;

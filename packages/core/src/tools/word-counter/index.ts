@@ -5,12 +5,22 @@ export type { WordCounterParams, WordCounterResult } from './types.js';
 export { defaultWordCounterParams } from './types.js';
 
 function stripHtmlTags(text: string): string {
-  return text.replace(/<[^>]+>/g, ' ');
+  return text.replace(/<[^<>]+>/g, ' ');
 }
 
 function countWords(text: string): number {
-  if (typeof Intl !== 'undefined' && typeof (Intl as { Segmenter?: unknown }).Segmenter === 'function') {
-    const segmenter = new (Intl as { Segmenter: new (locale: string, opts: { granularity: string }) => { segment(text: string): Iterable<{ isWordLike: boolean }> } }).Segmenter('en', { granularity: 'word' });
+  if (
+    typeof Intl !== 'undefined' &&
+    typeof (Intl as { Segmenter?: unknown }).Segmenter === 'function'
+  ) {
+    const segmenter = new (
+      Intl as {
+        Segmenter: new (
+          locale: string,
+          opts: { granularity: string },
+        ) => { segment(text: string): Iterable<{ isWordLike: boolean }> };
+      }
+    ).Segmenter('en', { granularity: 'word' });
     return [...segmenter.segment(text)].filter((s) => s.isWordLike).length;
   }
   // Fallback for environments without Intl.Segmenter
@@ -44,11 +54,7 @@ export const wordCounter: ToolModule<WordCounterParams> = {
 
   defaults: {},
 
-  async run(
-    inputs: File[],
-    _params: WordCounterParams,
-    ctx: ToolRunContext,
-  ): Promise<Blob[]> {
+  async run(inputs: File[], _params: WordCounterParams, ctx: ToolRunContext): Promise<Blob[]> {
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Counting words' });
 
     const file = inputs[0]!;
@@ -66,7 +72,9 @@ export const wordCounter: ToolModule<WordCounterParams> = {
 
     // Sentences: split on .!? followed by whitespace or end of string
     const sentenceMatches = text.match(/[^.!?]*[.!?]+/g);
-    const sentences = sentenceMatches ? sentenceMatches.filter((s) => s.trim().length > 0).length : 0;
+    const sentences = sentenceMatches
+      ? sentenceMatches.filter((s) => s.trim().length > 0).length
+      : 0;
 
     // Paragraphs: blocks separated by one or more blank lines
     const paragraphMatches = text.split(/\n\s*\n/);
