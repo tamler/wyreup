@@ -47,6 +47,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "svelte"
         update-types: ["version-update:semver-major"]
+      # pdfjs-dist 6 drops the legacy build entry points the PDF runners
+      # import — real migration, tracked as ROADMAP tech-debt item 11.
+      - dependency-name: "pdfjs-dist"
+        update-types: ["version-update:semver-major"]
       # TypeScript majors break tsup's DTS build (TS 6 did on 2026-05-25;
       # TS 7 is the tsgo compiler). Vitest 4 is deferred until tsup/TS
       # tooling settles. Revisit deliberately, not via auto-bump.

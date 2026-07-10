@@ -680,6 +680,15 @@ Ordered by priority.
     runs on the version-packages merge via a PAT/app token rather than
     `GITHUB_TOKEN`. ~30 min; removes a recurring manual step every release.
 
+11. **pdfjs-dist 6 migration.** Deferred 2026-07-10 (Dependabot #38
+    closed, majors ignored in dependabot.yml). v6 drops the
+    `pdfjs-dist/legacy/build/*` entry points that PdfRedactRunner and
+    PdfCropRunner import, so the bump is a real migration: switch both
+    runners to the modern `pdfjs-dist/build/pdf.mjs` + worker URL,
+    confirm the supported-browser floor is acceptable, and exercise the
+    PDF tools in a real browser (web unit coverage is too thin to catch
+    a broken worker handoff). Until then we stay on the patched 5.x line.
+
 ### Recurring: Truth-in-advertising audit
 
 Run quarterly. For each public surface:
