@@ -12,11 +12,32 @@ export const defaultCssFormatterParams: CssFormatterParams = {
   tabWidth: 2,
 };
 
+// Linear one-pass comment strip: indexOf instead of a lazy regex, which
+// backtracks quadratically on inputs with many unclosed openers.
+function stripCssComments(css: string): string {
+  let out = '';
+  let i = 0;
+  while (i < css.length) {
+    const start = css.indexOf('/*', i);
+    if (start === -1) {
+      out += css.slice(i);
+      break;
+    }
+    out += css.slice(i, start);
+    const end = css.indexOf('*/', start + 2);
+    if (end === -1) {
+      // Unclosed comment: keep the tail, matching the old regex behavior.
+      out += css.slice(start);
+      break;
+    }
+    i = end + 2;
+  }
+  return out;
+}
+
 function minifyCss(css: string): string {
   return (
-    css
-      // Remove CSS comments
-      .replace(/\/\*[\s\S]*?\*\//g, '')
+    stripCssComments(css)
       // Collapse whitespace
       .replace(/\s+/g, ' ')
       // Remove spaces around structural characters

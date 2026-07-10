@@ -10,16 +10,47 @@ export const defaultXmlFormatterParams: XmlFormatterParams = {
   indent: 2,
 };
 
+// Linear one-pass comment strip: indexOf instead of a lazy regex, which
+// backtracks quadratically on inputs with many unclosed openers.
+function stripXmlComments(xml: string): string {
+  let out = '';
+  let i = 0;
+  while (i < xml.length) {
+    const start = xml.indexOf('<!--', i);
+    if (start === -1) {
+      out += xml.slice(i);
+      break;
+    }
+    out += xml.slice(i, start);
+    const end = xml.indexOf('-->', start + 4);
+    if (end === -1) {
+      // Unclosed comment: keep the tail, matching the old regex behavior.
+      out += xml.slice(start);
+      break;
+    }
+    i = end + 3;
+  }
+  return out;
+}
+
 function minifyXml(xml: string): string {
   let withoutComments = xml;
   // Bound repeated stripping so adversarial nesting cannot monopolize the event loop.
   for (let pass = 0; pass < 25; pass += 1) {
-    const stripped = withoutComments.replace(/<!--[\s\S]*?-->/g, '');
+    const stripped = stripXmlComments(withoutComments);
     if (stripped === withoutComments) break;
     withoutComments = stripped;
   }
 
-  return withoutComments.replace(/>\s+</g, '><').trim();
+  return (
+    withoutComments
+      // Collapse whitespace between tags. A bare `\s+` run is linear; the
+      // neighbor check replaces the backtracking-prone `/>\s+</` form.
+      .replace(/\s+/g, (ws, off: number, str: string) =>
+        str.charAt(off - 1) === '>' && str.charAt(off + ws.length) === '<' ? '' : ws,
+      )
+      .trim()
+  );
 }
 
 export const xmlFormatter: ToolModule<XmlFormatterParams> = {

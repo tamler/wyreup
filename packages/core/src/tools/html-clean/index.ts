@@ -89,6 +89,29 @@ const BLOCK_TAGS = new Set([
 // Bound repeated stripping so adversarial nesting cannot monopolize the event loop.
 const MAX_SANITIZE_PASSES = 25;
 
+// Linear one-pass comment strip: indexOf instead of a lazy regex, which
+// backtracks quadratically on inputs with many unclosed openers.
+function stripHtmlComments(html: string): string {
+  let out = '';
+  let i = 0;
+  while (i < html.length) {
+    const start = html.indexOf('<!--', i);
+    if (start === -1) {
+      out += html.slice(i);
+      break;
+    }
+    out += html.slice(i, start);
+    const end = html.indexOf('-->', start + 4);
+    if (end === -1) {
+      // Unclosed comment: keep the tail, matching the old regex behavior.
+      out += html.slice(start);
+      break;
+    }
+    i = end + 3;
+  }
+  return out;
+}
+
 export function cleanHtml(html: string, params: HtmlCleanParams): string {
   let text = html;
   const preserveParagraphs = params.preserveParagraphs ?? true;
@@ -96,10 +119,11 @@ export function cleanHtml(html: string, params: HtmlCleanParams): string {
 
   for (let pass = 0; pass < MAX_SANITIZE_PASSES; pass += 1) {
     const previous = text;
-    text = text
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '')
-      .replace(/<!--[\s\S]*?-->/g, '');
+    text = stripHtmlComments(
+      text
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, '')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, ''),
+    );
 
     if (preserveParagraphs) {
       // Replace block-level opening/closing tags with newlines so the
@@ -141,9 +165,13 @@ export function cleanHtml(html: string, params: HtmlCleanParams): string {
   if (params.collapseWhitespace ?? false) {
     text = text.replace(/\s+/g, ' ').trim();
   } else {
-    // Tighten only the runs we created with block boundaries.
+    // Tighten only the runs we created with block boundaries. The bare
+    // `[ \t]+` run with a neighbor check is linear where `/[ \t]+\n/`
+    // backtracks on long space runs that never reach a newline.
     text = text
-      .replace(/[ \t]+\n/g, '\n')
+      .replace(/[ \t]+/g, (run, off: number, str: string) =>
+        str.charAt(off + run.length) === '\n' ? '' : run,
+      )
       .replace(/\n{3,}/g, '\n\n')
       .trim();
   }

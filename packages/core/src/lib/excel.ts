@@ -60,10 +60,7 @@ export async function writeWorkbookBuffer(wb: Workbook): Promise<ArrayBuffer> {
   if (out instanceof ArrayBuffer) return out;
   // Node Buffer / Uint8Array view path
   const view = out as unknown as Uint8Array;
-  return view.buffer.slice(
-    view.byteOffset,
-    view.byteOffset + view.byteLength,
-  ) as ArrayBuffer;
+  return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength) as ArrayBuffer;
 }
 
 /** Names of every worksheet in the workbook, in order. */
@@ -103,7 +100,10 @@ export function sheetToObjects(ws: Worksheet): Record<string, unknown>[] {
     const s =
       typeof h === 'string'
         ? h
-        : typeof h === 'number' || typeof h === 'boolean' || typeof h === 'bigint'
+        : typeof h === 'number' ||
+            typeof h === 'boolean' ||
+            typeof h === 'bigint' ||
+            h instanceof Date
           ? String(h)
           : '';
     return s || `Column${i + 1}`;
@@ -218,7 +218,7 @@ function escapeCsvField(value: unknown, delimiter: string): string {
   // spreadsheet app, so prefix string fields with an apostrophe.
   const s =
     typeof value === 'string'
-      ? defangFormula(value) as string
+      ? (defangFormula(value) as string)
       : typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint'
         ? String(value)
         : JSON.stringify(value);

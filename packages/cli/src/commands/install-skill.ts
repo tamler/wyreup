@@ -1,5 +1,5 @@
 import * as p from '@clack/prompts';
-import { mkdir, writeFile, access, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, access, readFile, open } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -69,15 +69,22 @@ export function resolveSkillsDir(location: LocationChoice, customPath?: string):
  */
 export async function readLocalSkill(sourcePath: string): Promise<string> {
   const abs = resolve(sourcePath);
-  // Read directly and fall back on EISDIR instead of stat-then-read,
-  // so there is no window between the check and the use.
+  // Open once and fstat the handle instead of stat-then-read on the path,
+  // so there is no window between the check and the use. An explicit
+  // isDirectory() check (not an EISDIR catch) because FreeBSD's readFile
+  // on a directory returns its raw contents instead of rejecting.
+  let isDirectory = false;
   try {
-    return await readFile(abs, 'utf8');
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== 'EISDIR') {
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Cannot read --source "${sourcePath}": ${msg}`);
+    const fh = await open(abs, 'r');
+    try {
+      isDirectory = (await fh.stat()).isDirectory();
+      if (!isDirectory) return await fh.readFile({ encoding: 'utf8' });
+    } finally {
+      await fh.close();
     }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Cannot read --source "${sourcePath}": ${msg}`);
   }
   const target = join(abs, 'skill.md');
   try {

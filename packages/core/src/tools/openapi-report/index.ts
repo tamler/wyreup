@@ -9,7 +9,12 @@ export interface OpenapiReportParams {
 export const defaultOpenapiReportParams: OpenapiReportParams = { strict: false };
 
 function escapeCell(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/[\r\n]+/g, ' ');
+  // Backslashes first, so escaping the pipes cannot be undone by a
+  // preexisting backslash in the cell text.
+  return s
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/[\r\n]+/g, ' ');
 }
 
 // Render a validation result as a Markdown report suitable for pasting

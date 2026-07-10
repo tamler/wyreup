@@ -79,7 +79,9 @@ function moneyPattern(currency: string): RegExp {
   // OR a bare number followed by the currency, OR a parenthesised negative.
   const sym = escapeRegExp(currency);
   return new RegExp(
-    `\\(?[ \\t]{0,10}${sym}[ \\t]?-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?\\)?|\\(?[ \\t]{0,10}-?\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?[ \\t]?${sym}\\)?`,
+    // Every quantifier is bounded so the worst case per position is
+    // constant: {0,6} thousands groups covers amounts up to 10^21.
+    `\\(?[ \\t]{0,10}${sym}[ \\t]?-?\\d{1,3}(?:,\\d{3}){0,6}(?:\\.\\d{1,2})?\\)?|\\(?[ \\t]{0,10}-?\\d{1,3}(?:,\\d{3}){0,6}(?:\\.\\d{1,2})?[ \\t]?${sym}\\)?`,
     'g',
   );
 }
