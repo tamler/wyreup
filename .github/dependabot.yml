@@ -47,6 +47,8 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'svelte'
         update-types: ['version-update:semver-major']
+      - dependency-name: '@astrojs/*'
+        update-types: ['version-update:semver-major']
       # pdfjs-dist 6 drops the legacy build entry points the PDF runners
       # import — real migration, tracked as ROADMAP tech-debt item 11.
       - dependency-name: 'pdfjs-dist'
