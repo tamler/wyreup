@@ -34,7 +34,7 @@
     "typescript": "^5.5.0",
     "vitest": "^3.2.7",
     "workbox-expiration": "^7.4.0",
-    "workbox-precaching": "^7.4.0",
+    "workbox-precaching": "^7.4.1",
     "workbox-routing": "^7.4.0",
     "workbox-strategies": "^7.4.0"
   }
