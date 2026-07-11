@@ -1,0 +1,2474 @@
+[
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-info",
+   "zip-extract",
+   "zip-flatten"
+  ],
+  "toolId": "zip-remove"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-info",
+   "zip-extract",
+   "zip-remove"
+  ],
+  "toolId": "zip-flatten"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-extract",
+   "zip-info"
+  ],
+  "toolId": "zip-create"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-create",
+   "zip-info",
+   "zip-remove",
+   "zip-flatten"
+  ],
+  "toolId": "zip-extract"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-remove",
+   "zip-flatten",
+   "zip-extract"
+  ],
+  "toolId": "zip-info"
+ },
+ {
+  "toolId": "convert",
+  "suggest": [
+   "resize",
+   "crop",
+   "compress",
+   "strip-exif",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-to-image",
+  "suggest": [
+   "pdf-to-text",
+   "merge-pdf",
+   "text-summarize",
+   "text-translate",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "base64",
+  "suggest": [
+   "hash",
+   "hmac",
+   "file-fingerprint",
+   "text-escape"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "url-encoder",
+  "suggest": [
+   "url-parse",
+   "url-build",
+   "slug",
+   "text-escape",
+   "regex-from-text-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "markdown-to-html",
+  "suggest": [
+   "html-to-pdf",
+   "html-to-markdown",
+   "html-formatter",
+   "html-clean",
+   "html-extract-links"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-to-markdown",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentences",
+   "text-keywords",
+   "text-readability"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "svg-to-png",
+  "suggest": [
+   "resize",
+   "compress",
+   "color-palette",
+   "image-info",
+   "rotate-image"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "docx-to-text",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentences",
+   "text-keywords",
+   "text-ner"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-to-geojson",
+  "suggest": [
+   "convert-geo",
+   "geojson-to-kml",
+   "csv-info",
+   "csv-to-excel"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "kml-to-geojson",
+  "suggest": [
+   "convert-geo",
+   "geojson-to-kml",
+   "gpx-to-geojson",
+   "shapefile-to-geojson",
+   "csv-to-geojson"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "geojson-to-kml",
+  "suggest": [
+   "convert-geo",
+   "kml-to-geojson",
+   "gpx-to-kml",
+   "shapefile-to-geojson",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "gpx-to-geojson",
+  "suggest": [
+   "convert-geo",
+   "geojson-to-kml",
+   "gpx-to-kml",
+   "csv-to-geojson",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "gpx-to-kml",
+  "suggest": [
+   "convert-geo",
+   "kml-to-geojson",
+   "gpx-to-geojson",
+   "geojson-to-kml",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "shapefile-to-geojson",
+  "suggest": [
+   "convert-geo",
+   "geojson-to-kml",
+   "kml-to-geojson",
+   "gpx-to-geojson",
+   "csv-to-geojson"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "convert-geo",
+  "suggest": [
+   "image-to-pdf",
+   "zip-create",
+   "excel-to-csv",
+   "csv-to-excel",
+   "csv-to-geojson"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "excel-to-csv",
+  "suggest": [
+   "csv-to-geojson",
+   "csv-merge",
+   "csv-deduplicate",
+   "csv-sort",
+   "csv-filter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "excel-to-json",
+  "suggest": [
+   "json-formatter",
+   "json-to-excel",
+   "json-flatten",
+   "json-schema-infer",
+   "csv-to-excel"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-to-excel",
+  "suggest": [
+   "merge-workbooks",
+   "excel-to-csv",
+   "excel-to-json",
+   "excel-info",
+   "split-sheets"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-to-excel",
+  "suggest": [
+   "excel-to-csv",
+   "excel-info",
+   "merge-workbooks",
+   "split-sheets"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-to-pdf",
+  "suggest": [
+   "pdf-to-text",
+   "merge-pdf",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "base32",
+  "suggest": [
+   "base64",
+   "case-converter",
+   "text-diff",
+   "word-counter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "morse-code",
+  "suggest": [
+   "case-converter",
+   "text-stats",
+   "text-diff",
+   "slug"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "roman-numeral",
+  "suggest": [
+   "json-formatter",
+   "json-diff",
+   "json-merge"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-flatten",
+  "suggest": [
+   "json-unflatten",
+   "json-formatter",
+   "json-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-unflatten",
+  "suggest": [
+   "json-flatten",
+   "json-formatter",
+   "json-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "frontmatter-to-csv",
+  "suggest": [
+   "csv-to-excel",
+   "csv-merge",
+   "csv-deduplicate",
+   "csv-filter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-to-json-schema",
+  "suggest": [
+   "json-schema-validate",
+   "json-formatter",
+   "json-yaml",
+   "json-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "base58",
+  "suggest": [
+   "base58",
+   "hash",
+   "base32",
+   "text-escape",
+   "url-encoder"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "xml-to-json",
+  "suggest": [
+   "json-to-xml",
+   "json-formatter",
+   "json-diff",
+   "json-yaml"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-to-xml",
+  "suggest": [
+   "xml-to-json",
+   "xml-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pgp-armor",
+  "suggest": [
+   "pgp-armor",
+   "hash",
+   "url-encoder",
+   "base58"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-template",
+  "suggest": [
+   "zip-extract",
+   "zip-info",
+   "zip-remove"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-to-ascii",
+  "suggest": [
+   "text-diff",
+   "hash",
+   "url-encoder",
+   "text-escape",
+   "base58"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "qr",
+  "suggest": [
+   "convert",
+   "resize",
+   "image-info",
+   "qr-reader"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "favicon",
+  "suggest": [
+   "zip-info",
+   "zip-flatten",
+   "zip-remove"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "password-generator",
+  "suggest": [
+   "password-strength",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "uuid-generator",
+  "suggest": [
+   "hash",
+   "base64",
+   "case-converter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "lorem-ipsum",
+  "suggest": [
+   "word-counter",
+   "text-stats",
+   "markdown-to-html",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "color-harmony",
+  "suggest": [
+   "color-contrast",
+   "color-converter",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "slug",
+  "suggest": [
+   "url-encoder",
+   "case-converter",
+   "hash",
+   "text-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "calculator",
+  "suggest": [
+   "unit-converter",
+   "percentage-calculator",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "unit-converter",
+  "suggest": [
+   "percentage-calculator",
+   "calculator",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "percentage-calculator",
+  "suggest": [
+   "calculator",
+   "unit-converter",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "date-calculator",
+  "suggest": [
+   "timestamp-converter",
+   "cron-parser",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "barcode",
+  "suggest": [
+   "svg-to-png",
+   "convert",
+   "resize"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "url-build",
+  "suggest": [
+   "url-parse",
+   "url-shorten-local",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "backup-codes",
+  "suggest": [
+   "password-strength",
+   "base32",
+   "base64"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "otpauth-uri",
+  "suggest": [
+   "totp-code",
+   "hotp-code",
+   "backup-codes"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "url-shorten-local",
+  "suggest": [
+   "url-parse",
+   "hash",
+   "qr-reader"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "api-key-format",
+  "suggest": [
+   "backup-codes",
+   "password-generator",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "license-key",
+  "suggest": [
+   "backup-codes",
+   "password-generator",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "bg-remove-pro",
+   "upscale-2x-pro",
+   "image-watermark",
+   "image-describe",
+   "favicon"
+  ],
+  "toolId": "image-generate-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "json-formatter",
+   "csv-json",
+   "number-base-converter",
+   "token-count"
+  ],
+  "toolId": "csv-json"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "slug",
+   "text-escape",
+   "url-encoder",
+   "word-counter"
+  ],
+  "toolId": "case-converter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "json-formatter",
+   "csv-json",
+   "json-merge",
+   "number-base-converter"
+  ],
+  "toolId": "json-yaml"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "unit-converter",
+   "color-converter",
+   "timestamp-converter",
+   "calculator"
+  ],
+  "toolId": "number-base-converter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "json-formatter",
+   "token-count",
+   "base64",
+   "hash"
+  ],
+  "toolId": "jwt-decoder"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "sql-format-explain",
+   "regex-from-text-pro",
+   "cron-from-text-pro",
+   "json-formatter"
+  ],
+  "toolId": "sql-formatter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "html-formatter",
+   "css-formatter",
+   "xml-to-json",
+   "json-formatter"
+  ],
+  "toolId": "xml-formatter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "html-minify",
+   "css-formatter",
+   "html-to-markdown",
+   "extract-article-text"
+  ],
+  "toolId": "html-formatter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "css-minify",
+   "html-formatter",
+   "color-converter",
+   "color-harmony"
+  ],
+  "toolId": "css-formatter"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "timestamp-converter",
+   "cron-from-text-pro",
+   "cron-from-text",
+   "token-count"
+  ],
+  "toolId": "cron-parser"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-stats",
+   "word-counter",
+   "text-frequency",
+   "case-converter"
+  ],
+  "toolId": "token-count"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "case-converter",
+   "text-escape",
+   "url-encoder",
+   "base64"
+  ],
+  "toolId": "text-escape"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-diff",
+   "csv-json",
+   "json-diff",
+   "case-converter"
+  ],
+  "toolId": "diff-apply"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "json-diff",
+   "json-formatter",
+   "csv-json",
+   "json-flatten"
+  ],
+  "toolId": "json-merge"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "sql-formatter",
+   "regex-explain",
+   "json-formatter",
+   "token-count"
+  ],
+  "toolId": "sql-format-explain"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "csv-sort",
+   "csv-filter",
+   "csv-json",
+   "json-formatter"
+  ],
+  "toolId": "csv-sql"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "strip-exif",
+   "convert"
+  ],
+  "toolId": "rotate-image"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "rotate-image"
+  ],
+  "toolId": "flip-image"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "image-watermark"
+  ],
+  "toolId": "grayscale"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "image-watermark"
+  ],
+  "toolId": "sepia"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "image-watermark"
+  ],
+  "toolId": "invert"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "resize",
+   "compress",
+   "image-watermark"
+  ],
+  "toolId": "crop"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "image-watermark"
+  ],
+  "toolId": "resize"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "strip-exif"
+  ],
+  "toolId": "image-watermark"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "merge-pdf",
+   "pdf-compress",
+   "reorder-pdf"
+  ],
+  "toolId": "pdf-extract-pages"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-compress",
+   "reorder-pdf",
+   "rotate-pdf"
+  ],
+  "toolId": "pdf-delete-pages"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-compress",
+   "merge-pdf",
+   "reorder-pdf"
+  ],
+  "toolId": "pdf-redact"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-compress",
+   "merge-pdf",
+   "pdf-encrypt"
+  ],
+  "toolId": "pdf-metadata"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-compress",
+   "merge-pdf",
+   "reorder-pdf"
+  ],
+  "toolId": "pdf-crop"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "image-watermark",
+   "convert"
+  ],
+  "toolId": "bg-remove-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "bg-remove-pro"
+  ],
+  "toolId": "upscale-2x-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "excel-to-csv",
+   "split-sheets",
+   "excel-info"
+  ],
+  "toolId": "merge-workbooks"
+ },
+ {
+  "deadEnd": true,
+  "suggest": [],
+  "toolId": "split-sheets"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "csv-merge",
+   "csv-sort",
+   "csv-filter"
+  ],
+  "toolId": "csv-deduplicate"
+ },
+ {
+  "toolId": "csv-merge",
+  "suggest": [
+   "csv-filter",
+   "csv-deduplicate",
+   "csv-to-json-schema",
+   "csv-json",
+   "csv-info"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-sort",
+  "suggest": [
+   "csv-filter",
+   "csv-deduplicate",
+   "csv-info",
+   "csv-to-excel",
+   "csv-merge"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-filter",
+  "suggest": [
+   "csv-sort",
+   "csv-deduplicate",
+   "csv-info",
+   "csv-to-excel",
+   "csv-merge"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "suggest": [
+   "image-info",
+   "compress",
+   "color-palette",
+   "image-diff",
+   "detect-objects"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-to-pdf",
+  "suggest": [
+   "merge-pdf",
+   "pdf-to-text",
+   "pdf-summarize",
+   "pdf-compress"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-to-text",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentiment",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ocr",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentiment",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-extract-tables",
+  "suggest": [
+   "json-path",
+   "json-to-xml",
+   "csv-json",
+   "json-flatten"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "transcribe",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentiment",
+   "text-ner",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "transcribe-pro",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentiment",
+   "text-ner"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ocr-hq",
+  "suggest": [
+   "text-translate-pro",
+   "text-summarize-pro",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-describe",
+  "suggest": [
+   "text-translate-pro",
+   "text-summarize-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "analyze-chart",
+  "suggest": [
+   "text-summarize-pro",
+   "text-translate-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-q-and-a",
+  "suggest": [
+   "text-translate-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "read-handwriting",
+  "suggest": [
+   "text-translate-pro",
+   "text-summarize-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "detect-objects",
+  "suggest": [
+   "json-path",
+   "json-to-xml"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "translate-image",
+  "suggest": [
+   "text-summarize-pro",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "transcribe-and-translate",
+  "suggest": [
+   "text-summarize-pro",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-summarize",
+  "suggest": [
+   "text-translate-pro",
+   "text-sentences"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-q-and-a",
+  "suggest": [
+   "text-translate-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-caption",
+  "suggest": [
+   "text-translate",
+   "text-summarize",
+   "text-sentiment",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-caption-detailed",
+  "suggest": [
+   "text-translate",
+   "text-summarize",
+   "text-sentiment",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ocr-pro",
+  "suggest": [
+   "text-to-speech-pro",
+   "base64",
+   "hash",
+   "word-counter",
+   "text-redact"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "chat-long-pdf-pro",
+  "suggest": [],
+  "deadEnd": true
+ },
+ {
+  "toolId": "compound-interest",
+  "suggest": [
+   "json-formatter",
+   "json-yaml",
+   "percentage-calculator",
+   "unit-converter",
+   "text-template"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "investment-dca",
+  "suggest": [
+   "json-formatter",
+   "json-yaml",
+   "percentage-calculator",
+   "unit-converter",
+   "text-template"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "color-palette",
+  "suggest": [
+   "color-harmony",
+   "convert",
+   "image-info"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-diff",
+  "suggest": [
+   "compress",
+   "convert",
+   "image-info"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-info",
+  "suggest": [
+   "color-palette",
+   "convert",
+   "strip-exif"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-info",
+  "suggest": [
+   "pdf-to-text",
+   "pdf-summarize",
+   "split-pdf",
+   "merge-pdf",
+   "page-numbers-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "hash",
+  "suggest": [
+   "hmac",
+   "file-fingerprint",
+   "pgp-sign"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-formatter",
+  "suggest": [
+   "json-diff",
+   "json-flatten",
+   "json-schema-validate",
+   "json-schema-infer",
+   "json-yaml"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "color-converter",
+  "suggest": [
+   "color-harmony",
+   "color-contrast",
+   "color-palette"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-diff",
+  "suggest": [
+   "diff-apply",
+   "json-diff",
+   "text-diff-levenshtein"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "word-counter",
+  "suggest": [
+   "text-stats",
+   "text-frequency",
+   "text-readability",
+   "text-keywords"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "timestamp-converter",
+  "suggest": [
+   "date-calculator",
+   "unit-converter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "regex-tester",
+  "suggest": [
+   "regex-visualize",
+   "regex-explain",
+   "regex-from-text-pro",
+   "sql-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "regex-from-text-pro",
+  "suggest": [
+   "regex-tester",
+   "regex-visualize",
+   "regex-explain"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "cron-from-text-pro",
+  "suggest": [
+   "cron-parser"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "qr-reader",
+  "suggest": [
+   "ocr",
+   "image-info",
+   "url-parse",
+   "url-build"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "image-similarity",
+  "suggest": [
+   "image-info",
+   "detect-objects",
+   "face-blur"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "excel-info",
+  "suggest": [
+   "excel-to-csv",
+   "excel-to-json",
+   "csv-sql",
+   "csv-merge"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "unicode-info",
+  "suggest": [
+   "text-confusable",
+   "text-suspicious",
+   "unicode-normalize",
+   "text-escape"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "hmac",
+  "suggest": [
+   "hash",
+   "pgp-sign",
+   "pgp-verify",
+   "webhook-verify"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "color-contrast",
+  "suggest": [
+   "color-converter",
+   "color-palette",
+   "color-harmony"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "password-strength",
+  "suggest": [
+   "password-generator",
+   "uuid-generator",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-frequency",
+  "suggest": [
+   "text-suspicious",
+   "text-confusable",
+   "text-stats",
+   "token-count"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-diff",
+  "suggest": [
+   "json-formatter",
+   "json-schema-validate"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "mime-detect",
+  "suggest": [
+   "hash",
+   "file-fingerprint",
+   "base64"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "totp-code",
+  "suggest": [
+   "hotp-code",
+   "otpauth-uri",
+   "backup-codes"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "url-parse",
+  "suggest": [
+   "url-build",
+   "signed-url",
+   "url-encoder"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "hotp-code",
+  "suggest": [
+   "totp-code",
+   "otpauth-uri",
+   "backup-codes"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "jwt-sign",
+  "suggest": [
+   "jwt-decoder",
+   "json-schema-validate",
+   "base64"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "webhook-verify",
+  "suggest": [
+   "webhook-replay",
+   "hmac",
+   "hash"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "signed-url",
+  "suggest": [
+   "url-parse",
+   "url-build",
+   "signed-url"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-diff",
+  "suggest": [
+   "csv-merge",
+   "csv-deduplicate",
+   "csv-filter",
+   "csv-sort"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ocr-suspicious",
+  "suggest": [
+   "text-frequency",
+   "text-stats",
+   "token-count",
+   "text-keywords"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "openapi-report",
+  "suggest": [
+   "openapi-validate",
+   "json-schema-infer",
+   "json-yaml",
+   "yaml-validate"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "webhook-replay",
+  "suggest": [
+   "webhook-verify",
+   "hash",
+   "base64"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "file-fingerprint",
+  "suggest": [
+   "mime-detect",
+   "hash",
+   "base64"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-schema-validate",
+  "suggest": [
+   "json-formatter",
+   "json-schema-infer",
+   "json-yaml"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-confusable",
+  "suggest": [
+   "unicode-normalize",
+   "text-suspicious",
+   "text-frequency",
+   "text-stats"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "yaml-validate",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-schema-infer",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "csv-info",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-path",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "favicon-from-url",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "signed-cookie-decode",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-suspicious",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "openapi-validate",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "package-json-validate",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-suspicious",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "regex-visualize",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "regex-from-text",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "cron-from-text",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "toolId": "regex-explain",
+  "suggest": [],
+  "deadEnd": false
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "trim-media",
+   "audio-enhance",
+   "transcribe",
+   "normalize-loudness",
+   "analyze-loudness"
+  ],
+  "toolId": "convert-audio"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "extract-audio",
+   "video-to-gif"
+  ],
+  "toolId": "convert-video"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "trim-media",
+   "audio-enhance",
+   "transcribe",
+   "normalize-loudness",
+   "analyze-loudness"
+  ],
+  "toolId": "extract-audio"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "audio-enhance",
+   "resize-video",
+   "convert-audio",
+   "video-to-gif"
+  ],
+  "toolId": "trim-media"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "trim-media",
+   "resize-video",
+   "extract-audio",
+   "video-to-gif",
+   "mute-video"
+  ],
+  "toolId": "compress-video"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "image-to-ascii"
+  ],
+  "toolId": "video-to-gif"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "word-counter",
+   "text-stats",
+   "text-keywords"
+  ],
+  "toolId": "convert-subtitles"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "extract-audio",
+   "video-to-gif"
+  ],
+  "toolId": "burn-subtitles"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "extract-audio",
+   "video-to-gif"
+  ],
+  "toolId": "video-concat"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "video-to-gif",
+   "extract-audio"
+  ],
+  "toolId": "video-add-text"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "resize-video",
+   "trim-media",
+   "extract-audio",
+   "mute-video"
+  ],
+  "toolId": "video-speed"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "video-to-gif",
+   "extract-audio"
+  ],
+  "toolId": "video-overlay-image"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "video-to-gif",
+   "extract-audio"
+  ],
+  "toolId": "video-crossfade"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "video-to-gif",
+   "extract-audio"
+  ],
+  "toolId": "video-color-correct"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "extract-audio",
+   "mute-video",
+   "video-to-gif"
+  ],
+  "toolId": "resize-video"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "resize-video",
+   "trim-media",
+   "video-to-gif",
+   "extract-frame"
+  ],
+  "toolId": "mute-video"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress-video",
+   "trim-media",
+   "resize-video",
+   "extract-audio",
+   "mute-video"
+  ],
+  "toolId": "rotate-video"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "compress",
+   "convert",
+   "image-info",
+   "crop",
+   "resize"
+  ],
+  "toolId": "extract-frame"
+ },
+ {
+  "toolId": "replace-audio",
+  "suggest": [
+   "trim-media",
+   "compress-video",
+   "convert-video",
+   "burn-subtitles"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "normalize-loudness",
+  "suggest": [
+   "analyze-loudness",
+   "trim-media",
+   "convert-video",
+   "video-volume"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "analyze-loudness",
+  "suggest": [
+   "normalize-loudness",
+   "trim-media",
+   "extract-audio",
+   "convert-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "video-quality-metrics",
+  "suggest": [
+   "compress-video",
+   "convert-video",
+   "extract-frame",
+   "crop-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "crop-video",
+  "suggest": [
+   "letterbox-video",
+   "fade-video",
+   "video-speed",
+   "compress-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "reverse-video",
+  "suggest": [
+   "fade-video",
+   "loop-video",
+   "video-speed",
+   "video-add-text"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "video-volume",
+  "suggest": [
+   "normalize-loudness",
+   "analyze-loudness",
+   "trim-media",
+   "convert-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "loop-video",
+  "suggest": [
+   "trim-media",
+   "video-speed",
+   "fade-video",
+   "compress-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "strip-video-metadata",
+  "suggest": [
+   "compress-video",
+   "convert-video",
+   "crop-video",
+   "video-side-by-side"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "fade-video",
+  "suggest": [
+   "vignette-video",
+   "letterbox-video",
+   "compress-video",
+   "reverse-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "vignette-video",
+  "suggest": [
+   "fade-video",
+   "letterbox-video",
+   "video-color-correct",
+   "compress-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "letterbox-video",
+  "suggest": [
+   "crop-video",
+   "compress-video",
+   "video-add-text",
+   "fade-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "mix-audio",
+  "suggest": [
+   "trim-media",
+   "compress-video",
+   "video-volume",
+   "normalize-loudness"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "video-side-by-side",
+  "suggest": [
+   "compress-video",
+   "crop-video",
+   "video-add-text",
+   "fade-video"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "compress",
+  "suggest": [
+   "convert",
+   "resize",
+   "crop",
+   "image-info",
+   "strip-exif"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-compress",
+  "suggest": [
+   "pdf-encrypt",
+   "pdf-info",
+   "pdf-to-image",
+   "merge-pdf",
+   "pdf-to-text"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-encrypt",
+  "suggest": [
+   "pdf-compress",
+   "pdf-decrypt",
+   "pdf-info",
+   "watermark-pdf",
+   "rotate-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pdf-decrypt",
+  "suggest": [
+   "pdf-encrypt",
+   "pdf-compress",
+   "pdf-info",
+   "pdf-to-text",
+   "merge-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "svg-optimizer",
+  "suggest": [
+   "svg-to-png",
+   "convert",
+   "compress",
+   "image-info",
+   "color-palette"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "upscale-2x",
+  "suggest": [
+   "compress",
+   "convert",
+   "image-info",
+   "grayscale",
+   "image-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "css-minify",
+  "suggest": [
+   "html-minify",
+   "css-formatter",
+   "html-formatter",
+   "markdown-to-html",
+   "json-formatter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-minify",
+  "suggest": [
+   "html-formatter",
+   "css-minify",
+   "markdown-to-html",
+   "extract-article-text",
+   "html-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-to-text",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "reorder-pdf"
+  ],
+  "toolId": "merge-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "merge-pdf",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "reorder-pdf"
+  ],
+  "toolId": "split-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-to-text",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "reorder-pdf"
+  ],
+  "toolId": "rotate-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-to-text",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "pdf-flatten"
+  ],
+  "toolId": "reorder-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-to-text",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "split-pdf"
+  ],
+  "toolId": "page-numbers-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-to-text",
+   "pdf-compress",
+   "pdf-encrypt",
+   "pdf-info",
+   "split-pdf"
+  ],
+  "toolId": "watermark-pdf"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-encrypt",
+   "pdf-redact",
+   "pdf-info",
+   "split-pdf",
+   "pdf-compress"
+  ],
+  "toolId": "pdf-flatten"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "pdf-flatten",
+   "pdf-info",
+   "pdf-metadata",
+   "split-pdf",
+   "pdf-encrypt"
+  ],
+  "toolId": "pdf-form-fields"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "zip-extract",
+   "image-info",
+   "convert",
+   "compress",
+   "pdf-to-image"
+  ],
+  "toolId": "pdf-extract-images"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "csv-template",
+   "pdf-to-text",
+   "pdf-extract-tables",
+   "excel-to-csv",
+   "csv-sql"
+  ],
+  "toolId": "pdf-extract-data"
+ },
+ {
+  "toolId": "strip-exif",
+  "suggest": [
+   "compress",
+   "convert",
+   "face-blur",
+   "bg-remove",
+   "resize"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "face-blur",
+  "suggest": [
+   "bg-remove",
+   "compress",
+   "convert",
+   "resize",
+   "strip-exif"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-redact-pro",
+  "suggest": [
+   "text-summarize-pro",
+   "text-translate-pro",
+   "content-safety-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pgp-encrypt",
+  "suggest": [
+   "pgp-sign",
+   "pgp-armor",
+   "hash",
+   "base64",
+   "hmac"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pgp-decrypt",
+  "suggest": [
+   "hash",
+   "base64",
+   "pgp-verify",
+   "pgp-armor",
+   "hmac"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pgp-sign",
+  "suggest": [
+   "pgp-verify",
+   "hash",
+   "base64",
+   "pgp-armor",
+   "hmac"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pgp-verify",
+  "suggest": [
+   "json-formatter",
+   "hash",
+   "hmac",
+   "pgp-encrypt"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "bg-remove",
+  "suggest": [
+   "face-blur",
+   "compress",
+   "convert",
+   "resize",
+   "strip-exif"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-redact",
+  "suggest": [
+   "html-to-markdown",
+   "html-minify",
+   "html-formatter",
+   "text-redact",
+   "html-clean"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-redact",
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "prompt-injection-demo",
+   "text-sentiment",
+   "text-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "prompt-injection-demo",
+  "suggest": [
+   "json-formatter",
+   "json-path",
+   "json-schema-validate",
+   "hash",
+   "hmac"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "content-safety-pro",
+  "suggest": [
+   "json-formatter",
+   "json-path",
+   "text-redact-pro",
+   "hash",
+   "hmac"
+  ],
+  "deadEnd": false
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-translate",
+   "text-summarize",
+   "text-sentiment",
+   "text-ner",
+   "text-keywords"
+  ],
+  "toolId": "text-sentences"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-frequency",
+   "text-ner",
+   "text-dates",
+   "text-sentences",
+   "text-stats"
+  ],
+  "toolId": "text-keywords"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-ner",
+   "text-redact",
+   "text-frequency",
+   "text-sentences",
+   "text-keywords"
+  ],
+  "toolId": "text-dates"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-summarize",
+   "text-translate",
+   "text-sentences",
+   "text-keywords",
+   "text-readability"
+  ],
+  "toolId": "extract-article-text"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-translate-pro",
+   "text-sentences",
+   "text-keywords"
+  ],
+  "toolId": "text-summarize-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-summarize-pro",
+   "text-sentences",
+   "text-readability"
+  ],
+  "toolId": "text-translate-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-keywords",
+   "text-ner-pro",
+   "text-sentiment"
+  ],
+  "toolId": "text-sentiment-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-summarize-pro",
+   "text-redact-pro",
+   "text-keywords",
+   "text-sentiment-pro",
+   "text-dates"
+  ],
+  "toolId": "text-ner-pro"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-sentiment-pro",
+   "text-keywords",
+   "text-ner"
+  ],
+  "toolId": "text-sentiment"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-ner-pro",
+   "text-summarize",
+   "text-redact-pro",
+   "text-keywords",
+   "text-dates"
+  ],
+  "toolId": "text-ner"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-translate",
+   "text-sentences",
+   "text-keywords",
+   "text-sentiment",
+   "text-readability"
+  ],
+  "toolId": "text-summarize"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-translate-pro",
+   "text-summarize",
+   "text-sentences",
+   "text-readability",
+   "text-ner-pro"
+  ],
+  "toolId": "text-translate"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-sentences",
+   "text-keywords",
+   "text-dates",
+   "text-sentiment",
+   "text-ner"
+  ],
+  "toolId": "text-embed"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-stats",
+   "text-sentences",
+   "text-summarize",
+   "text-keywords"
+  ],
+  "toolId": "text-readability"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-readability",
+   "text-sentences",
+   "text-keywords",
+   "text-summarize"
+  ],
+  "toolId": "text-stats"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-diff-levenshtein",
+   "text-stats",
+   "text-frequency"
+  ],
+  "toolId": "text-diff-levenshtein"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "text-stats",
+   "text-dates",
+   "text-ner"
+  ],
+  "toolId": "unicode-normalize"
+ },
+ {
+  "deadEnd": false,
+  "suggest": [
+   "markdown-toc",
+   "html-to-markdown",
+   "text-summarize",
+   "text-readability",
+   "text-stats"
+  ],
+  "toolId": "markdown-toc"
+ },
+ {
+  "toolId": "markdown-frontmatter",
+  "suggest": [
+   "frontmatter-to-csv",
+   "html-to-markdown",
+   "text-stats-by-paragraph"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-clean",
+  "suggest": [
+   "text-stats-by-paragraph",
+   "word-counter",
+   "text-diff"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "html-extract-links",
+  "suggest": [
+   "csv-json",
+   "json-formatter",
+   "url-parse"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-stats-by-paragraph",
+  "suggest": [
+   "csv-json",
+   "json-formatter",
+   "html-to-markdown"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "text-template",
+  "suggest": [
+   "case-converter",
+   "slug",
+   "text-stats-by-paragraph"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "translate-many-pro",
+  "suggest": [
+   "text-to-speech-pro",
+   "text-summarize-pro",
+   "text-stats-by-paragraph"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "deep-analysis-pro",
+  "suggest": [
+   "json-extract-pro",
+   "text-summarize-pro",
+   "text-to-speech-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "fix-grammar-pro",
+  "suggest": [
+   "rewrite-tone-pro",
+   "text-to-speech-pro",
+   "text-stats-by-paragraph"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "rewrite-tone-pro",
+  "suggest": [
+   "fix-grammar-pro",
+   "text-to-speech-pro",
+   "case-converter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "json-extract-pro",
+  "suggest": [
+   "csv-json",
+   "json-formatter",
+   "json-schema-validate"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "translate-indic-pro",
+  "suggest": [
+   "text-to-speech-pro",
+   "text-stats-by-paragraph",
+   "text-summarize-pro"
+  ],
+  "deadEnd": false
+ }
+]

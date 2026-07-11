@@ -1,0 +1,2513 @@
+[
+ {
+  "check": "C6",
+  "evidence": "zip-extract description says 'Optional glob filter to extract only matching files.' but the param `filter` is entirely undocumented in the paramSchema \u2014 there is no `paramSchema` property at all on the zipExtract module object. The code in `shouldInclude` and `matchesGlob` clearly implements the filter, yet users have no UI way to discover it.",
+  "finding": "The glob filter parameter is implemented in the code but completely absent from paramSchema, so the UI will never show it to users. The description promises functionality that cannot be invoked.",
+  "severity": "high",
+  "suggestion": "Add paramSchema defining the 'filter' string parameter with help text.",
+  "toolId": "zip-extract",
+  "batch": "archive"
+ },
+ {
+  "check": "C6",
+  "evidence": "zip-create return type is `Promise<Blob[]>` (see `async run(...): Promise<Blob[]>` in the code) \u2014 it returns an array of Blobs. But output.mime is 'application/zip' and description says 'Compress one or more files into a ZIP archive.' \u2014 a single ZIP archive, not multiple. The code returns a single-element array `[new File([outputBlob], filename, { type: 'application/zip' })]`, so functionally it works, but the output contract signals `multiple: false` by omission.",
+  "finding": "Return type is Blob[] (array) which is inconsistent with the single-archive promise. If the runner expects Blob[], this is harmless; if it expects a single Blob, this could break. The inconsistency should be resolved.",
+  "severity": "medium",
+  "suggestion": "Change return type to Promise<Blob> to match the single-archive output contract, or explicitly set output.multiple = false to clarify intent.",
+  "toolId": "zip-create",
+  "batch": "archive"
+ },
+ {
+  "check": "C3",
+  "evidence": "zip-info outputMime is 'application/json' and the result object contains nested objects/arrays: `files` is an array of `ZipEntryInfo` objects, and the top-level object has fields like `entries`, `totalUncompressed`, `totalCompressed`, `compressionRatio` alongside the nested `files` array. The runner only renders flat one-level objects readably; nested arrays/objects will show raw JSON code.",
+  "finding": "The JSON output contains a nested `files` array of objects which will not be rendered readably by the runner \u2014 users will see raw JSON.",
+  "severity": "low",
+  "suggestion": "Flatten the most useful info into a one-level object (e.g. entries, totalUncompressed, totalCompressed, compressionRatio) and either move per-file data to a separate output or accept raw JSON display for the nested part.",
+  "toolId": "zip-info",
+  "batch": "archive"
+ },
+ {
+  "check": "C7",
+  "evidence": "zip-remove default pattern is '**/.env' and default removeDirectories is true. If a user drags in a ZIP expecting to simply remove a few entries but does not configure the parameters, the tool silently removes all .env files and their parent directories \u2014 a destructive default that surprises users who just wanted to inspect the tool.",
+  "finding": "Default pattern removes a security-sensitive file type automatically. A user who doesn't configure params may get a cleansed archive they didn't intend to modify.",
+  "severity": "high",
+  "suggestion": "Make pattern required (no default and validate it is set explicitly) or change the default to something harmless like '*/.DS_Store'.",
+  "toolId": "zip-remove",
+  "batch": "archive"
+ },
+ {
+  "check": "C1",
+  "evidence": "zip-remove and zip-flatten re-compress with DEFLATE level 6 even if the original entries were stored uncompressed or used a different compression. A ZIP of already-compressed files (e.g. JPEGs) can grow because DEFLATE adds overhead without size benefit. The code does not check whether the output is smaller \u2014 it always re-compresses.",
+  "finding": "Both tools can silently return a larger ZIP than the input by always re-compressing (DEFLATE level 6) regardless of entry type or original compression method.",
+  "severity": "medium",
+  "suggestion": "Detect when no entries are removed/modified (output equals input except for re-compression) and either return the original bytes or offer a STORE option for already-compressed content.",
+  "toolId": "zip-remove",
+  "batch": "archive"
+ },
+ {
+  "check": "C1",
+  "evidence": "Same re-compression logic at DEFLATE level 6 in zip-flatten's `dst.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } }, ...)`. Files that are already compressed (JPEG, PNG, video) will typically grow under DEFLATE.",
+  "finding": "zip-flatten can silently produce a larger archive by always re-compressing with DEFLATE level 6.",
+  "severity": "medium",
+  "suggestion": "Same as zip-remove: detect no-op (all entries already at root) and return original bytes, or allow STORE compression.",
+  "toolId": "zip-flatten",
+  "batch": "archive"
+ },
+ {
+  "check": "C6",
+  "evidence": "zip-info description says 'list entries, sizes, compression ratio, and timestamps' but reading `compressedSize` requires accessing the private `_data` property. The comment in the code says 'JSZip doesn't expose raw compressed sizes directly, so we use the internal _data field.' This is fragile and may break with JSZip version bumps. If `_data` is absent or restructured, compressedSize and compressionRatio will silently fall back to `uncompressedSize`, producing a 0% ratio and misleading users.",
+  "finding": "Compressed size reporting depends on a private JSZip API that may break on dependency upgrades, silently returning wrong data.",
+  "severity": "medium",
+  "suggestion": "Add a try/catch around internal data access, or compute compressed size reliably via the library's public API (e.g. check JSZip's available public methods for size reporting).",
+  "toolId": "zip-info",
+  "batch": "archive"
+ },
+ {
+  "check": "C7",
+  "evidence": "zip-create has `params: none` in the metadata block (no params listed), but the code defines `ZipCreateParams` interface with `compression`, `compressionLevel`, and `filename` \u2014 and even has defaults and uses them in `run()`. The paramSchema is completely absent from the module object.",
+  "finding": "The zip-create tool accepts three parameters (compression, compressionLevel, filename) but none are surfaced to the UI via paramSchema.",
+  "severity": "high",
+  "suggestion": "Add a paramSchema defining all three parameters (or update the metadata to correctly say 'params: compression, compressionLevel, filename').",
+  "toolId": "zip-create",
+  "batch": "archive"
+ },
+ {
+  "check": "C4",
+  "evidence": "zip-create output is 'application/zip'. The catalog has shapefile-to-geojson which accepts 'application/zip', plus all other ZIP tools accept zip inputs. A user who creates a ZIP of images might want to send it to 'favicon' (takes images and outputs ZIP) or 'color-palette' (takes images, outputs JSON) \u2014 but those are semantic stretches. More naturally: after creating a ZIP, a user likely wants to inspect it (zip-info) or extract it (zip-extract). Existing chainSuggestions is empty; we must supply one entry.",
+  "finding": "No existing chainSuggestions. Adding sensible defaults: zip-extract and zip-info are the most natural next steps.",
+  "severity": "low",
+  "suggestion": "Add chainSuggestions: ['zip-extract', 'zip-info'] as plausible next steps.",
+  "toolId": "zip-create",
+  "batch": "archive"
+ },
+ {
+  "check": "C4",
+  "evidence": "zip-extract output is 'application/octet-stream' with multiple:true. Many catalog tools accept 'application/octet-stream' (hash, base64, mime-detect, file-fingerprint, etc.) and */* tools. After extracting, a user might want to zip them back (zip-create), inspect zip info (but octet-stream isn't zip), or run hash/base64 on the extracted files. The most natural chain is zip-create to re-pack, plus hash/base64 for verification. Existing chainSuggestions is empty.",
+  "finding": "No existing chainSuggestions. Adding plausible next steps: zip-create (repack), hash (verify integrity), base64 (encode for sharing).",
+  "severity": "low",
+  "suggestion": "Add chainSuggestions: ['zip-create', 'hash', 'base64'].",
+  "toolId": "zip-extract",
+  "batch": "archive"
+ },
+ {
+  "check": "C4",
+  "evidence": "zip-info output is 'application/json' \u2014 a human-facing info summary. Tools accepting application/json include json-formatter, json-diff, json-path, json-schema-validate, json-merge, json-to-xml, csv-json, etc. A user who just inspected a zip might want to remove entries (zip-remove), flatten (zip-flatten), or extract (zip-extract). Existing chainSuggestions is empty.",
+  "finding": "No existing chainSuggestions. Adding: zip-remove, zip-flatten, zip-extract as natural next steps after inspecting.",
+  "severity": "low",
+  "suggestion": "Add chainSuggestions: ['zip-remove', 'zip-flatten', 'zip-extract'].",
+  "toolId": "zip-info",
+  "batch": "archive"
+ },
+ {
+  "check": "C1",
+  "evidence": "Code always decodes to 16 kHz: `const TARGET_SR = 16000;` and `const mono16k = await decodeToMono16k(input);` \u2014 no check for input sample rate or quality.",
+  "finding": "output-worse-than-input",
+  "severity": "medium",
+  "suggestion": "Check input sample rate and skip enhancement if already >= 48 kHz, or warn the user.",
+  "toolId": "audio-enhance",
+  "batch": "audio"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: description: 'Upscale low-quality audio to clean 48 kHz.' Code: no validation of input quality before downsampling.",
+  "finding": "description-accuracy",
+  "severity": "medium",
+  "suggestion": "Clarify that the tool always processes input, even if already high-quality, and may degrade it.",
+  "toolId": "audio-enhance",
+  "batch": "audio"
+ },
+ {
+  "check": "C4",
+  "evidence": "Tool module metadata: `chainSuggestions: ['text-summarize-pro', 'text-translate-pro', 'text-redact-pro']` \u2014 these accept text/plain, not audio/mpeg.",
+  "finding": "chain-sanity",
+  "severity": "medium",
+  "suggestion": "Replace with tools that accept audio/mpeg: transcribe, audio-enhance, convert-audio, trim-media, normalize-loudness.",
+  "toolId": "text-to-speech-pro",
+  "batch": "audio"
+ },
+ {
+  "toolId": "roman-numeral",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Tool accepts */* input (min:0) but completely ignores uploaded files. The code uses only the `input` param and never reads file content (`async run(_inputs: File[], params: RomanNumeralParams, ctx: ToolRunContext)` \u2014 `_inputs` is prefixed underscore and unused). A user who uploads a file containing numbers will get no processing of that file, which the description does not disclose.",
+  "evidence": "`async run(_inputs: File[], params: RomanNumeralParams, ctx: ToolRunContext) { const mode = params.mode ?? 'encode'; const raw = (params.input ?? '').trim(); if (!raw) throw new Error('roman-numeral requires at least one value to convert.');` \u2014 no usage of `_inputs`.",
+  "suggestion": "Either remove file input acceptance (change min to 0 and accept to [] or comment) or process the file content when provided.",
+  "batch": "convert-2a"
+ },
+ {
+  "toolId": "roman-numeral",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Human-facing JSON output is nested (array of objects, array of strings) and would display as raw code in the runner rather than a readable table.",
+  "evidence": "`export interface RomanNumeralResult { mode: 'encode' | 'decode'; results: RomanNumeralEntry[]; errors: string[]; }` and output blob: `JSON.stringify(result, null, 2)` \u2014 `results` is an array of objects, `errors` is an array.",
+  "suggestion": "Consider flattening or presenting results as a one-level-per-entry if the runner doesn't handle nested JSON readably.",
+  "batch": "convert-2a"
+ },
+ {
+  "toolId": "json-unflatten",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Human-facing JSON output is nested (reconstructed object) and would display as raw code in the runner rather than a readable table.",
+  "evidence": "Output blob: `JSON.stringify(result, null, 2)` \u2014 result is a nested object/array, not a one-level object.",
+  "suggestion": "If this tool is intended for human reading, consider a flatter output format; otherwise, note that the runner will show raw JSON.",
+  "batch": "convert-2a"
+ },
+ {
+  "toolId": "html-to-pdf",
+  "check": "C7",
+  "severity": "low",
+  "finding": "The `scale` parameter is internally multiplied by 2 (`scale * 2`) for 'retina sharpness', but the metadata describes it as a plain scale without disclosing the doubling. A user setting scale=1.0 expects 1x output but gets 2x; scale=2.0 produces 4x instead of 2x.",
+  "evidence": "`canvas = await html2canvas(iDoc.body, { scale: scale * 2, ... })` and param schema: `scale: { type: 'range', label: 'Scale', min: 0.5, max: 2.0, step: 0.1 }` with default 1.0.",
+  "suggestion": "Document the internal doubling or divide the param value before passing to html2canvas so that 1.0 means 1x.",
+  "batch": "convert-2a"
+ },
+ {
+  "toolId": "csv-template",
+  "check": "C6",
+  "severity": "low",
+  "finding": "Tool silently adds a _report.json file to the output ZIP without mentioning it in the description.",
+  "evidence": "Code at line `zip.file('_report.json', JSON.stringify(...))` in csv-template/index.ts adds a metadata file to every output archive.",
+  "suggestion": "Update the description to note that a _report.json is included, or make the report opt-in via a parameter.",
+  "batch": "convert-2b"
+ },
+ {
+  "toolId": "favicon",
+  "check": "C6",
+  "severity": "low",
+  "finding": "Description says 'from any image' but tool only accepts JPEG, PNG, WebP.",
+  "evidence": "Metadata input.accept = ['image/jpeg','image/png','image/webp']",
+  "suggestion": "Change description to 'from JPEG, PNG, or WebP images' or expand accepted formats.",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "url-build",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Description claims round-trip with url-parse by passing JSON output, but tool ignores input files; user must paste JSON into spec param manually.",
+  "evidence": "Code: async run(_inputs: File[], params: UrlBuildParams, ctx) ... const raw = (params.spec ?? '').trim(); \u2014 _inputs is unused",
+  "suggestion": "Either process input file(s) as the spec, or update description to clarify that the JSON must be entered in the spec param, not piped through file input.",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "favicon",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "Missing paramSchema for sizes and includeIco params; users cannot customize these.",
+  "evidence": "types.ts defines FaviconParams with sizes and includeIco, defaults exist in index.ts (sizes: DEFAULT_SIZES, includeIco: true), but paramSchema is absent from the tool definition",
+  "suggestion": "Add paramSchema entries for sizes (array of numbers) and includeIco (boolean) so users can control output.",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "lorem-ipsum",
+  "check": "C7",
+  "severity": "low",
+  "finding": "Missing paramSchema for wordsPerSentence; users always get 8-15 words per sentence.",
+  "evidence": "types.ts defines wordsPerSentence: [number, number] with default [8, 15], code uses it, but paramSchema does not include it",
+  "suggestion": "Add a param for wordsPerSentence (e.g., a range or a tuple of min/max).",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "percentage-calculator",
+  "check": "C7",
+  "severity": "high",
+  "finding": "Only mode param is exposed in paramSchema; value, base, percent are required by compute() but users cannot set them, making the tool non-functional for custom input.",
+  "evidence": "paramSchema only lists 'mode' as an enum; but compute() destructures 'value', 'base', 'percent' and each mode requires specific inputs (e.g., base for what-percent, percent for increase-decrease)",
+  "suggestion": "Add conditional param entries for value, base, and percent that appear based on the selected mode.",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "color-harmony",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON is nested (schemes is a Record<string, string[]>) intended for human reading; runner's flat rendering would show raw JSON arrays.",
+  "evidence": "Output type ColorHarmonyResult.schemes: Record<HarmonyScheme, string[]> \u2014 each scheme contains an array of hex strings",
+  "suggestion": "Consider outputting the schemes as flat labeled values (e.g., complementary[0], complementary[1]), or rely on the runner to improve nested rendering.",
+  "batch": "create-1"
+ },
+ {
+  "toolId": "date-calculator",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON contains a nested breakdown object (years, months, days) intended for human reading; runner's flat rendering would show raw JSON.",
+  "evidence": "In diff mode, result includes breakdown: { years, months, days } \u2014 an object nested inside the top-level result",
+  "suggestion": "Flatten breakdown into top-level keys or rely on runner to handle nested objects.",
+  "batch": "create-1"
+ },
+ {
+  "check": "C4",
+  "evidence": "Output mime is image/jpeg. Multiple catalog tools accept image/jpeg inputs (bg-remove-pro, upscale-2x-pro, image-watermark, image-describe, detect-objects, color-palette, image-diff, image-info, resize, crop, grayscale, sepia, invert, rotate-image, flip-image, favicon, face-blur, ocr, ocr-hq, ocr-suspicious, color-blind-simulator, image-caption, image-caption-detailed, image-similarity, etc.) \u2014 so no dead end. Existing chainSuggestions are bg-remove-pro, upscale-2x-pro, image-watermark. Semantically useful additions: image-describe (caption the generated image), favicon (generate a favicon pack from it). These are real user next steps.",
+  "finding": "chainSuggestions field exists in metadata (bg-remove-pro, upscale-2x-pro, image-watermark) and is reasonable. The output jpeg chains naturally into many catalog tools; no dead end. Additional plausible suggestions: image-describe, favicon.",
+  "severity": "low",
+  "suggestion": "bg-remove-pro, upscale-2x-pro, image-watermark, image-describe, favicon",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C5",
+  "evidence": "Catalog.txt lists no other tool with exactly the name 'Generate Image'. The existing chainSuggestions in metadata include 'bg-remove-pro', 'upscale-2x-pro', 'image-watermark' \u2014 those are distinct tool slugs. No naming conflict found.",
+  "finding": "Naming is clear and unique. No confusable tool exists in the catalog.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C7",
+  "evidence": "params.steps defaults to 4 (code line 22: 'steps?: number' with defaultImageGenerateProParams: { steps: 4 }). paramSchema defines min:1, max:8, step:1, help: 'More steps = slightly better quality...Schnell plateaus past 4.' Default of 4 is documented as the 'sweet spot'. No glaringly missing param (e.g., negative prompt, seed, aspect ratio) is already computed internally by the code. The tool sends prompt, steps, and fileName to the pro runner. Params are reasonable.",
+  "finding": "Param defaults and range are sensible and well-documented. No surprising or missing params.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C1",
+  "evidence": "This is a text\u2192image generation tool, not a transform/optimize; its promise is creating a new file from a prompt. C1 applies only to 'transform/optimize tools'. Not applicable.",
+  "finding": "Not a transform/optimize tool. C1 does not apply.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C2",
+  "evidence": "cost is 'credit'. The code calls runPro('image-generate-pro', ...) which is a hosted/proxy function. Since cost=credit, network transmission is expected and permitted. Description says 'Hosted Flux Schnell' \u2014 accurately states it is hosted/credit-based. No privacy violation.",
+  "finding": "Hosted tool with credit cost. No privacy concern \u2014 network usage is expected and disclosed.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output mime is image/jpeg, not application/json. Check is not applicable.",
+  "finding": "Output is binary image, not JSON. C3 does not apply.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C6",
+  "evidence": "name: 'Generate Image', description: 'Hosted Flux Schnell \u2014 turns a text prompt into a 1024\u00d71024 JPEG in seconds...Uses 1 credit per run.' Code: runs runPro('image-generate-pro', {prompt, steps, fileName}, ctx) which is a hosted Flux Schnell endpoint; returns Blob with result.contentType (image/jpeg). No hidden lossy behavior, size limits, or dropped data visible in the source. Description accurately matches the code.",
+  "finding": "Description and name match the implementation. No inaccuracies found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "image-generate-pro",
+  "batch": "create-2"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in number-base-converter/index.ts line ~123: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `NumberBaseResult` output includes nested property `binaryPadded: string; hexPadded: string;` alongside `decimal`, `binary`, `octal`, `hexadecimal`. The output is a flat one-level JSON object (all values are strings). The runner renders flat one-level objects readably per C3 rules. No nested arrays/objects present in the result schema.",
+  "finding": "No finding: output is flat one-level JSON.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "number-base-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in jwt-decoder/index.ts line ~98: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `JwtDecoderResult` has `valid: boolean`, `error?: string`, `header: Record<string, unknown>`, `payload: Record<string, unknown>`, `signaturePresent: boolean`. The `header` and `payload` are nested objects (arbitrary keys). This is human-readable info of JWT contents, and nested JSON objects won't be rendered nicely by a flat renderer.",
+  "finding": "Nested JSON: header and payload are Record<string, unknown>, making the output contain nested objects that a flat renderer would show as raw code. This is human-facing information.",
+  "severity": "medium",
+  "suggestion": "Pre-render header and payload as flat key-value lists, or document that the runner's flat renderer handles this suboptimally. Alternatively, un-nest key claims (iss, sub, exp) to the top level and keep nested original under e.g. \"headerRaw\" / \"payloadRaw\".",
+  "toolId": "jwt-decoder",
+  "batch": "dev"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in cron-parser/index.ts line ~93: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `CronParserResult` has `fields: { minute: number[]; hour: number[]; dayOfMonth: number[]; month: number[]; dayOfWeek: number[]; }` \u2014 this is a nested object with arrays, which a flat one-level renderer would display as raw JSON.",
+  "finding": "Nested JSON: `fields` contains arrays, making the output go beyond one flat level. Human users reading nextRuns and fields info would see raw JSON for the nested part.",
+  "severity": "medium",
+  "suggestion": "Flatten field values into top-level keys (e.g. \"fields.minute\", \"fields.hour\") or pre-render field value summary as a string. Alternatively, move `nextRuns` display to a string field and document that the runner shows nested JSON raw.",
+  "toolId": "cron-parser",
+  "batch": "dev"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in token-count/index.ts line ~68: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `TokenCountResult` is `{ tokens: number; model: string; characters: number; ratio: number; }` \u2014 all primitive fields, one level deep. No nesting.",
+  "finding": "No finding: output is flat one-level JSON.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "token-count",
+  "batch": "dev"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in sql-format-explain/index.ts line ~209: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `SqlFormatExplainResult` has `formatted: string`, `statementType: string`, `annotations: SqlAnnotation[]` (array of objects with clause/text/explanation), `summary: string`. The annotations array is a nested structure of objects.",
+  "finding": "Nested JSON: `annotations` is an array of objects (each with clause/text/explanation), making the output contain nested structures. A flat renderer would show raw JSON for the annotations part.",
+  "severity": "medium",
+  "suggestion": "Pre-render annotations as a single formatted string (e.g. multiple lines) or flatten to top-level fields. The formatted SQL and summary alone are flat; annotations are the nesting offender.",
+  "toolId": "sql-format-explain",
+  "batch": "dev"
+ },
+ {
+  "check": "C3",
+  "evidence": "Code in json-merge/index.ts line ~147: `return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];` where `JsonMergeResult` has `merged: unknown` (the merged document, potentially deeply nested), `conflicts: JsonMergeConflict[]` (array of objects with path/base/override), and `stats` object. Both `merged` and `conflicts` are inherently nested.",
+  "finding": "Nested JSON: `merged` can be deeply nested, `conflicts` is an array of objects. Human reading the merge report would see raw nested JSON.",
+  "severity": "medium",
+  "suggestion": "Pre-render the conflicts as a formatted textual diff and the merged result perhaps as a separate output file. Document nested JSON limitation or split into multiple output Blobs.",
+  "toolId": "json-merge",
+  "batch": "dev"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name: \"JWT Decoder\" (slug: jwt-decoder). Catalog has \"jwt-sign\" and other JWT tools but none named identically. \"json-diff\" is nearby but unrelated.",
+  "finding": "No naming conflict with another catalog tool.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "jwt-decoder",
+  "batch": "dev"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name: \"CSV \u2194 JSON\" (slug: csv-json). Catalog has \"json-formatter\", \"csv-to-geojson\", \"csv-json\" (self), \"csv-sort\", \"csv-filter\", \"csv-merge\", \"csv-diff\", \"csv-deduplicate\", \"csv-info\", \"csv-to-excel\", etc. Name \"CSV \u2194 JSON\" is unique.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "csv-json",
+  "batch": "dev"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name: \"Case Converter\" (slug: case-converter). Catalog contains only one entry for case-converter.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "case-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name: \"Number Base Converter\" (slug: number-base-converter). Catalog contains only one entry.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "number-base-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name: \"SQL Formatter\" (slug: sql-formatter). Catalog also has \"sql-format-explain\". The names are similar but distinct \u2014 one formats, one also explains.",
+  "finding": "Potentially confusable with \"sql-format-explain\" (name: \"SQL Format + Explain\"). A user looking for SQL formatting might pick either.",
+  "severity": "medium",
+  "suggestion": "Rename \"sql-formatter\" to \"SQL Format (Plain)\" or ensure the description clearly says \"format only, no explanation\" to disambiguate from sql-format-explain.",
+  "toolId": "sql-formatter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Auto-detects direction from input.\" The evidence in csv-json/index.ts lines ~97-98: `const toJson = direction === 'csv-to-json' || (direction === 'auto' && !looksLikeJson(text));` and lines ~87-89: `function looksLikeJson(text: string): boolean { const t = text.trimStart(); return t.startsWith('[') || t.startsWith('{'); }`. This means a CSV file that starts with `{` or `[` (unlikely but possible if the first field is e.g. a JSON-like value) will be misdetected as JSON and produce an error. This is a limitation in auto-detection, not a failure to auto-detect in normal use.",
+  "finding": "Auto-detection heuristic is simple. Minor risk of misdetection but no evidence of hidden behavior or false promise.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "csv-json",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description says \"Converts between CSV and JSON formats. Auto-detects direction from input.\" The code in csv-json/index.ts lines ~101-106: when direction is json-to-csv (or auto-detected as such), the code does `data = JSON.parse(text); if (!Array.isArray(data)) { throw new Error('JSON input must be an array'); }`. The description does NOT mention that JSON input must be an array (not an object). This is a hidden constraint.",
+  "finding": "Description omits that JSON input must be an array. Converting a JSON object to CSV fails silently (throws error).",
+  "severity": "medium",
+  "suggestion": "Update description to mention 'JSON input must be an array of objects' or add support for object-to-CSV (single row with keys as header).",
+  "toolId": "csv-json",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Convert integers between decimal, binary, octal, and hexadecimal.\" Code in number-base-converter/index.ts lines ~99-112: uses BigInt to parse. The description says \"integers\" but BigInt can store arbitrarily large integers, not limited to standard JS Number range. No false promise \u2014 it actually handles larger numbers.",
+  "finding": "No description inaccuracy found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "number-base-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description says \"Does NOT verify the signature \u2014 for inspection only.\" Code in jwt-decoder/index.ts line ~76: `signaturePresent: parts.length === 3 && parts[2] !== ''` \u2014 accurately reports whether a signature part exists but does not verify it. Description matches code.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "jwt-decoder",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Beautify and format SQL queries with configurable keyword casing and indentation.\" The code in sql-formatter/index.ts uses `sql-formatter` library. Description does not mention minification (no minify mode is implemented). Mode is implied as beautify-only. No hidden behavior.",
+  "finding": "No description inaccuracy found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "sql-formatter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Beautify or minify XML documents. Uses Prettier for beautification.\" Code in xml-formatter/index.ts lines ~90-103: beautify mode uses prettier + @prettier/plugin-xml; minify mode uses a custom `minifyXml` function that strips comments and collapses whitespace. The description says \"Uses Prettier for beautification\" but minification is also advertised (\"Beautify or minify\") and is implemented via a custom function, not Prettier. This is accurate \u2014 it does both.",
+  "finding": "No description inaccuracy found. Both modes work as stated.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "xml-formatter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Beautify or minify HTML with Prettier.\" Code in html-formatter/index.ts lines ~64-78: beautify uses prettier (line ~73), minify uses custom `minifyHtml`. The description implies both are Prettier-powered, but minification is custom. The description is slightly misleading but functionally correct.",
+  "finding": "Minor: description says \"minify HTML with Prettier\" but minify mode uses a custom regex-based function, not Prettier.",
+  "severity": "low",
+  "suggestion": "Update description to say 'Beautify with Prettier, minify with a built-in minifier.'",
+  "toolId": "html-formatter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Beautify or minify CSS stylesheets using Prettier.\" Code in css-formatter/index.ts lines ~68-82: beautify uses prettier, minify uses custom `minifyCss`. Same pattern as html-formatter.",
+  "finding": "Minor: description says \"minify CSS stylesheets using Prettier\" but minify uses a custom function.",
+  "severity": "low",
+  "suggestion": "Update description to clarify that minification uses a built-in minifier, not Prettier.",
+  "toolId": "css-formatter",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Parse a cron expression and show the next scheduled run times. Validates syntax and lists field values.\" Code in cron-parser/index.ts lines ~92-93: `result = { valid: true, expression, description: 'Custom cron expression', nextRuns, fields };` \u2014 the description is hardcoded to 'Custom cron expression' regardless of actual semantics. The description does not promise human-readable expression descriptions; the tool does its best.",
+  "finding": "Human-readable description of the cron expression is hardcoded as 'Custom cron expression' instead of generating a meaningful description (e.g. 'At minute 0 past hour 2 every day of month every month every day of week'). This is a missing feature, not a false promise (the description doesn't claim to produce a named description).",
+  "severity": "low",
+  "suggestion": "Implement actual cron description generation (e.g. via cronstrue or a simple lookup).",
+  "toolId": "cron-parser",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Count tokens for GPT-4, GPT-3.5, and GPT-4o \u2014 useful for prompt design and cost estimation.\" Code in token-count/index.ts lines ~49-57: uses `gpt-tokenizer` (EncodingNames) for cl100k_base and o200k_base. Accurately counts tokens.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "token-count",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description says \"Encode or decode HTML entities and Unicode escape sequences.\" Code in text-escape/index.ts implements encodeHtml, decodeHtml, encodeUnicode, decodeUnicode. No hidden limitation mentioned; the description is accurate.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-escape",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Apply a unified diff (patch) to a text file. Verifies each hunk against the source and fails loudly on a mismatch. The counterpart to Text Diff.\" Code in diff-apply/index.ts: `parseHunks` function (lines ~35-54) parses unified diff with three-state hunk lines; apply logic (lines ~108-144) validates context/removal lines and throws on mismatch. Also, the `diff-apply` slug is correct.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "diff-apply",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Deep-merge two JSON documents with a conflict report. Pass two files (base, override); the second wins on collisions. ... Pairs with json-diff...\" The code makes the second file always the override. Description says \"pairs with json-diff (compare)\" \u2014 this is a cross-reference to another tool. Accurate.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "json-merge",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Identify SELECT/FROM/JOIN/WHERE/GROUP BY/HAVING/ORDER BY/LIMIT, aggregates, joins, CTEs, and statement type.\" Code in sql-format-explain/index.ts has `splitClauses` (lines ~71-97) that detects these keywords, and `explainClause` (lines ~99-153) with explanatory text for each. No hidden behavior.",
+  "finding": "No description inaccuracy found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "sql-format-explain",
+  "batch": "dev"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description: \"Load one or more CSV, JSON, or Excel files as tables, then run a SQL query across them. Each file becomes a table named after its filename. ... Runs entirely in your browser; nothing uploads.\" The code imports from `'./engine.js'` and uses SQLite via that engine. All processing is client-side. The description accurately reflects behavior.",
+  "finding": "No description inaccuracy found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "csv-sql",
+  "batch": "dev"
+ },
+ {
+  "check": "C7",
+  "evidence": "Code in case-converter/index.ts line ~10: `export const defaultCaseConverterParams: CaseConverterParams = { case: 'lower' };`. Default is 'lower'. This is not destructive per se, but a user who forgets to set the param will get all-lowercase output. Could be surprising if they expected passthrough.",
+  "finding": "Default 'lower' is a reasonable default for a converter tool that needs some default. Not a significant surprise.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "case-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C7",
+  "evidence": "Code in number-base-converter/index.ts used a dead assignment in line ~106: `value = BigInt(`${negative ? '-' : ''}0x${BigInt(`0x0`).toString(16)}`);` \u2014 this is a non-functional placeholder that is always overwritten by the following `if` block. No user-visible effect.",
+  "finding": "Dead code on line 106 that computes a BigInt and immediately discards it (overwritten in the next block). No user-facing impact.",
+  "severity": "low",
+  "suggestion": "Remove unused initialization statement.",
+  "toolId": "number-base-converter",
+  "batch": "dev"
+ },
+ {
+  "check": "C7",
+  "evidence": "Code in cron-parser/index.ts line ~75: `const nextCount = Math.min(params.nextCount ?? 5, 50);`. The param says `nextCount` defaults to 5, which is reasonable. The timezone param is optional and falls back to UTC if not provided. No surprising defaults.",
+  "finding": "No problematic defaults found.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "cron-parser",
+  "batch": "dev"
+ },
+ {
+  "check": "C7",
+  "evidence": "Code in sql-format-explain/index.ts line ~88: uses `const re = new RegExp()` to find clause keywords in the formatted SQL. The regex searches for keywords at line starts after newline \u2014 this relies on the sql-formatter output. Missing clauses may produce no annotation. Impact: the annotations list may be incomplete for complex SQL including subqueries.",
+  "finding": "Clause splitting relies on the formatter output formatting. SQL with subqueries or non-standard formatting may miss clauses. But the code handles what it can find.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "sql-format-explain",
+  "batch": "dev"
+ },
+ {
+  "check": "C7",
+  "evidence": "Code in csv-sql/index.ts: `outputFormat` defaults to 'csv' (line ~18). Description says tool outputs text/csv. The param includes 'json' as an alternative. Default is csv, which matches the primary output type.",
+  "finding": "No surprising default.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "csv-sql",
+  "batch": "dev"
+ },
+ {
+  "check": "C2",
+  "evidence": "All tools in this batch have cost: 'free' in their metadata. Checking each: csv-json, case-converter, json-yaml, number-base-converter, jwt-decoder, sql-formatter, xml-formatter, html-formatter, css-formatter, cron-parser, token-count, text-escape, diff-apply, json-merge, sql-format-explain, csv-sql \u2014 all are 'free' and the code does not send any user input over the network. Some tools load libraries dynamically via `import()` (e.g. js-yaml, sql-formatter, prettier, gpt-tokenizer, papaparse) which are bundled/npm dependencies resolved at build time, not network fetches of user data. No fetch/XHR of user input data.",
+  "finding": "All free tools are truly local; no user input transmitted. Some dynamic imports may trigger fetching of previously unbundled modules if the bundler didn't include them, but these are static dependencies from npm, not user data transmission.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "csv-json",
+  "batch": "dev"
+ },
+ {
+  "check": "C1",
+  "evidence": "flip-image/index.ts encodes with fixed `{ quality: 90 }` (line: `await codec.encode({ data: flipped, width, height }, { quality: 90 });`). If the source is lossless PNG, the re-encode at quality 90 introduces generation loss and larger size is not checked.",
+  "finding": "A flip of a lossless PNG re-encodes at JPEG-quality 90, potentially producing a larger/worse file. The tool silently returns a worse file.",
+  "severity": "medium",
+  "suggestion": "Use lossless encode options for PNG input, or at minimum compare output size and warn/fall back.",
+  "toolId": "flip-image",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "grayscale/index.ts encodes with fixed `{ quality: 90 }` (line: `const encoded = await codec.encode({ data: out, width, height }, { quality: 90 });`). No lossless path for PNG input.",
+  "finding": "Grayscale of a lossless PNG re-encodes with lossy quality setting. A lossy re-encode can produce a larger/worse file.",
+  "severity": "medium",
+  "suggestion": "Use lossless encode for PNG source, or compare output size and handle the case.",
+  "toolId": "grayscale",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "sepia/index.ts encodes with fixed `{ quality: 90 }` (line: `const encoded = await codec.encode({ data: out, width, height }, { quality: 90 });`). No lossless path for PNG input.",
+  "finding": "Sepia of a lossless PNG re-encodes with lossy quality. The tool can silently return a larger/worse file.",
+  "severity": "medium",
+  "suggestion": "Use lossless encode for PNG source, or compare output size and handle the case.",
+  "toolId": "sepia",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "invert/index.ts encodes with fixed `{ quality: 90 }` (line: `const encoded = await codec.encode({ data: out, width, height }, { quality: 90 });`). No lossless path for PNG input.",
+  "finding": "Invert of a lossless PNG re-encodes with lossy quality. The tool can silently return a larger/worse file.",
+  "severity": "medium",
+  "suggestion": "Use lossless encode for PNG source, or compare output size and handle the case.",
+  "toolId": "invert",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "crop/index.ts encodes with fixed `{ quality: 90 }` (line: `const encoded = await codec.encode({ data: out, width, height }, { quality: 90 });`). No lossless path for PNG input.",
+  "finding": "Crop of a lossless PNG re-encodes with lossy quality. The tool can silently return a larger/worse file.",
+  "severity": "medium",
+  "suggestion": "Use lossless encode for PNG source, or compare output size and handle the case.",
+  "toolId": "crop",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "resize/types.ts: `mode: 'exact' | 'fit' | 'percent'; width?: number; height?: number; percent?: number;`. When mode is 'fit' or 'exact', width/height are required but typed as optional \u2014 missing them produces a runtime error instead of a clean validation. The metadata `defaults` block sets `width: 1920, height: 1080` for an input with no awareness of the input image size, making large images shrink to 1920x1080 trunk by default, which destroys the aspect ratio on 'exact' mode and silently scales many images down in 'fit' mode.",
+  "finding": "The defaults `width: 1920, height: 1080` are applied to all modes including 'fit' \u2014 this means a user who does not set width/height will get their image scaled to fit within 1920x1080 even if the image was already smaller, which may surprise. More critically, the width/height/percent params are only validated at runtime with a throw, but typed as optional leading to confusing UX.",
+  "severity": "low",
+  "suggestion": "Either make width/height required when mode is not 'percent', or change defaults to null with explicit checks that skip resizing when no dimensions are given.",
+  "toolId": "resize",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "image-watermark/index.ts line: `ctx2d.font = \\`\\${fontSize}px sans-serif\\`;` \u2014 the font family is hardcoded to sans-serif. The color defaults to '#FFFFFF' which on a white or light background is invisible.",
+  "finding": "The watermark color defaults to white (#FFFFFF) which will be invisible on light/white image backgrounds. This is a surprising default that could lead users to think the tool is broken. Also the font family is hardcoded, limiting text rendering.",
+  "severity": "low",
+  "suggestion": "Consider a contrasting default color like '#000000' or '#808080', or document that white-on-white is invisible. Allow font family configuration.",
+  "toolId": "image-watermark",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "pdf-metadata/index.ts line: `output: { mime: 'application/pdf' }` \u2014 but in read mode the output is `application/json` (line: `return new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });`).",
+  "finding": "The tool's output MIME in the module declaration is `application/pdf` but when mode is 'read' the actual returned content type is `application/json`. The metadata claim is inaccurate.",
+  "severity": "medium",
+  "suggestion": "Change the output mime to allow either `application/pdf` or `application/json`, or document the dual output in the description.",
+  "toolId": "pdf-metadata",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C4",
+  "evidence": "split-sheets outputs `application/zip`. Catalog.txt shows `zip-extract` accepts `application/zip` and outputs `application/octet-stream`. `zip-info` accepts `application/zip` and outputs `application/json`. No tool accepts `application/zip` and outputs `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` or `image/*` etc.",
+  "finding": "split-sheets outputs a ZIP. No catalog tool accepts application/zip and produces XLSX or other structured output \u2014 only zip-extract (producing octet-stream) and zip-info (JSON) exist, which are not semantically useful chaining for a user who just split sheets.",
+  "severity": "low",
+  "suggestion": "Consider adding a tool that recombines split sheets, or mark the chain suggestions to include zip-extract as a way to get individual XLSX files out.",
+  "toolId": "split-sheets",
+  "batch": "edit-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "csv-deduplicate output is `multiple: true` promising up to two blobs (CSV + JSON stats). The code returns `[csvBlob, statsBlob]`. The `keyColumns` param type is `string` but the help says 'Comma-separated column names' \u2014 this means the user must manually type column names as a single comma-separated string. No validation handles the case where the csv has no header but the user provides names; the code will attempt to parse a name as an index via Number.parseInt which produces NaN for non-numeric strings.",
+  "finding": "keyColumns is typed as a single string with comma-separated values. The user can provide column names when hasHeader=false and the code will try to parse a non-numeric name as an index, producing NaN. The validation error message says 'Without a header, key columns must be 0-based indices' but the UI may not guide users away from this mistake.",
+  "severity": "low",
+  "suggestion": "Either change keyColumns to be an array-type param, or add more informative validation when hasHeader=false and a key name is non-numeric.",
+  "toolId": "csv-deduplicate",
+  "batch": "edit-1"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name \"CSV Merge\" is confusable with the existing catalog tool \"csv-merge\" (same id). No disambiguation needed since the id matches exactly; the name and id are consistent across the catalog entry and the source module.",
+  "evidence": "Source declares id: 'csv-merge' and name: 'CSV Merge'. Catalog at line 143 lists 'csv-merge | in: text/csv,text/plain | out: text/csv | CSV Merge'. Both point to the same tool.",
+  "suggestion": "No change needed \u2014 the names are consistent.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "Default delimiter is blank string, which triggers auto-detect from the left file via parseOptions. However, the right file is always parsed with delimiterOverride ?? leftParsed.meta.delimiter \u2014 so if the right file uses a different delimiter than the left, it will silently misparse. A surprise to users who assume each file is parsed independently.",
+  "evidence": "Source line: 'const rightParsed = Papa.parse<string[]>(rightText, { header: false, delimiter: delimiterOverride ?? leftParsed.meta.delimiter, skipEmptyLines: true });' \u2014 the right file gets the left file's delimiter, not auto-detected from its own content.",
+  "suggestion": "Either auto-detect per file, or document that both files must share the delimiter of the left file.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Description says 'Join two CSVs on a key column' but does not mention that the right file's key column is always dropped from the output. Also does not mention that for headerless CSVs, the key must be a 0-based index. This is hidden behavior that affects the result shape.",
+  "evidence": "Source line 'remappedRight = rightHeader.map((h, i) => (i === rightKeyIdx ? null : ...)).filter((h): h is string => h !== null)' drops the right key column. The description promises a join but does not disclose this column drop.",
+  "suggestion": "Update description to note that the right-side key column is excluded from the output (since it duplicates the left-side key by definition).",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Chain suggestions needed.",
+  "evidence": "Tool outputs text/csv. Catalog tools accepting text/csv include: csv-filter, csv-deduplicate, csv-sort, csv-diff, csv-to-json-schema, csv-to-excel, csv-template, csv-info, csv-json, csv-sql, convert-geo, csv-to-geojson, frontmatter-to-csv.",
+  "suggestion": "chainSuggestions: [{\"id\":\"csv-filter\",\"reason\":\"Filter rows from the merged result\"},{\"id\":\"csv-deduplicate\",\"reason\":\"Remove duplicate rows after merging\"},{\"id\":\"csv-to-json-schema\",\"reason\":\"Infer JSON schema from the merged file\"},{\"id\":\"csv-json\",\"reason\":\"Convert merged CSV to JSON\"},{\"id\":\"csv-info\",\"reason\":\"Get statistics about the merged CSV\"}]",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "When numeric comparison is off (default), values are compared with localeCompare. This sorts '10' before '2' in string order. A user who forgets to enable numeric sort gets wrong ordering with no warning. The description says 'as text or numbers' but the default is text sort which surprises many.",
+  "evidence": "Source: 'cmp = av.localeCompare(bv)' when numeric=false. Parameter default: 'numeric: false'.",
+  "suggestion": "Consider auto-detecting numeric columns (parseFloat non-NaN on all rows) or default to numeric for columns containing numbers.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Chain suggestions needed.",
+  "evidence": "Tool outputs text/csv. Catalog tools accepting text/csv include: csv-filter, csv-deduplicate, csv-merge, csv-diff, csv-to-json-schema, csv-to-excel, csv-template, csv-info, csv-json, csv-sql, convert-geo, csv-to-geojson, frontmatter-to-csv.",
+  "suggestion": "chainSuggestions: [{\"id\":\"csv-filter\",\"reason\":\"Find specific rows after sorting\"},{\"id\":\"csv-deduplicate\",\"reason\":\"Remove duplicate rows after sorting\"},{\"id\":\"csv-info\",\"reason\":\"View stats about the sorted CSV\"},{\"id\":\"csv-to-excel\",\"reason\":\"Convert sorted CSV to Excel\"},{\"id\":\"csv-merge\",\"reason\":\"Combine sorted data with another CSV\"}]",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C6",
+  "severity": "low",
+  "finding": "Description says 'greater/less than, empty, and more' \u2014 accurate. However, there are no hidden inputs in the code beyond the stated parameters. Clean.",
+  "evidence": "No discrepancies found between description and code.",
+  "suggestion": "No change needed.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C7",
+  "severity": "low",
+  "finding": "Default value column is empty string \u2014 if operator is 'equals' or 'contains', filtering against an empty value likely produces surprising results (every cell that is empty matches 'empty', but 'contains' '' matches every row). The operator 'equals' with value '' would keep only rows where the column is empty, which may be unexpected.",
+  "evidence": "Source: 'const value = params.value ?? \"\";' \u2014 default value is empty string. Operator defaults to 'equals'.",
+  "suggestion": "Consider making 'value' required when operator is not 'empty'/'not-empty', or at least document the empty-string behavior.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Chain suggestions needed.",
+  "evidence": "Tool outputs text/csv. Catalog tools accepting text/csv include: csv-sort, csv-deduplicate, csv-merge, csv-diff, csv-to-json-schema, csv-to-excel, csv-template, csv-info, csv-json, csv-sql, convert-geo, csv-to-geojson, frontmatter-to-csv.",
+  "suggestion": "chainSuggestions: [{\"id\":\"csv-sort\",\"reason\":\"Sort the filtered rows\"},{\"id\":\"csv-deduplicate\",\"reason\":\"Remove duplicates from filtered output\"},{\"id\":\"csv-info\",\"reason\":\"Get statistics about the filtered CSV\"},{\"id\":\"csv-to-excel\",\"reason\":\"Export filtered data to Excel\"},{\"id\":\"csv-merge\",\"reason\":\"Join filtered result with another CSV\"}]",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C1",
+  "severity": "medium",
+  "finding": "The tool promises a 'simulation' transform but can produce an output file larger than the input when png is selected and the input is a small JPEG \u2014 the transformed image will be PNG (lossless, often much larger) regardless of original size. The code does not check whether the result is bigger or warn the user.",
+  "evidence": "Output mime is always 'image/png' per the output spec: 'output: { mime: \"image/png\" }'. The format param only controls encoding (png/jpeg/webp) \u2014 but the declared output mime is fixed to image/png. Source encodes into whichever format chosen via format param, but the declaration says image/png. This inconsistency means the runner might mis-handle jpeg output.",
+  "suggestion": "Either update output.mime to match the format param, or add a warning when output size exceeds input.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "The declared output mime in the metadata is 'image/png' but the code actually supports PNG, JPEG, and WebP based on the 'format' parameter. The code will create a blob with the correct MIME for the chosen format, but the tool metadata declares output.mime as 'image/png' \u2014 this mismatch means the runner may display or handle the output incorrectly when JPEG or WebP is selected.",
+  "evidence": "Metadata: 'output: { mime: \"image/png\" }'. Source: 'const mime = FORMAT_MIME[format];' and 'const blob = await canvasToBlob(canvas, mime, qualityArg)' \u2014 the MIME varies by format.",
+  "suggestion": "Update output.mime to 'image/*' to reflect the actual supported output formats.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C7",
+  "severity": "low",
+  "finding": "quality default is 90, but it has a range of 1\u2013100. For format 'png', the quality parameter is listed as 'showWhen: { field: \"format\", in: [\"jpeg\", \"webp\"] }' so it's hidden for PNG. However, the code still passes undefined quality for PNG (qualityArg = undefined), which is correct. No surprise here beyond the note about the format/quality interaction already being well-handled.",
+  "evidence": "Source: 'const qualityArg = format === \"png\" ? undefined : quality / 100;' \u2014 correctly skips quality for PNG.",
+  "suggestion": "No change needed.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Chain suggestions needed.",
+  "evidence": "Tool outputs image/png. Catalog tools accepting image/png include: compress, convert, strip-exif, color-palette, image-diff, rotate-image, flip-image, grayscale, sepia, invert, image-info, crop, resize, image-watermark, favicon, ocr, face-blur, bg-remove, upscale-2x, ocr-pro, bg-remove-pro, upscale-2x-pro, image-describe, analyze-chart, image-q-and-a, read-handwriting, detect-objects, translate-image, image-caption, image-caption-detailed, image-similarity, qr-reader, ocr-suspicious, image-to-ascii, color-blind-simulator.",
+  "suggestion": "chainSuggestions: [{\"id\":\"image-info\",\"reason\":\"Check the simulated image dimensions and metadata\"},{\"id\":\"compress\",\"reason\":\"Optimize file size after simulation\"},{\"id\":\"color-palette\",\"reason\":\"Extract the color palette after the CVD transform\"},{\"id\":\"image-diff\",\"reason\":\"Compare original and simulated image side-by-side\"},{\"id\":\"detect-objects\",\"reason\":\"Check if objects are still recognizable after simulation\"}]",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C2",
+  "severity": "low",
+  "finding": "Cost is 'free'. All file processing is local: PapaParse is imported client-side, no network calls for user input. fetch of the Papaparse module from a CDN might exist but that is a static library, not input data.",
+  "evidence": "No XHR/fetch/XMLHttpRequest of user input in source.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C2",
+  "severity": "low",
+  "finding": "Cost is 'free'. All file processing is local using PapaParse imported client-side.",
+  "evidence": "No network transmission of input data in source.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C2",
+  "severity": "low",
+  "finding": "Cost is 'free'. All file processing is local using PapaParse imported client-side.",
+  "evidence": "No network transmission of input data in source.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C2",
+  "severity": "low",
+  "finding": "Cost is 'free'. All image processing is local using a Canvas API helper. No network transmission of input data.",
+  "evidence": "No XHR/fetch/XMLHttpRequest of user input in source.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name 'CSV Sort' is confusable with the existing catalog tool 'csv-sort' (same id). No disambiguation needed since the id matches exactly.",
+  "evidence": "Catalog line 161: 'csv-sort | in: text/csv,text/plain | out: text/csv | CSV Sort'. Source id: 'csv-sort'. Names are consistent.",
+  "suggestion": "No change needed.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name 'CSV Filter' is confusable with the existing catalog tool 'csv-filter' (same id). No disambiguation needed since the id matches exactly.",
+  "evidence": "Catalog line 168: 'csv-filter | in: text/csv,text/plain | out: text/csv | CSV Filter'. Source id: 'csv-filter'. Names are consistent.",
+  "suggestion": "No change needed.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name 'Color Blind Simulator' is confusable with the existing catalog tool 'color-blind-simulator' (same id). No disambiguation needed since the id matches exactly.",
+  "evidence": "Catalog line 204: 'color-blind-simulator | in: image/png,image/jpeg,image/webp | out: image/png | Color Blind Simulator'. Source id: 'color-blind-simulator'. Names are consistent.",
+  "suggestion": "No change needed.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C1",
+  "severity": "low",
+  "finding": "Not applicable \u2014 csv-merge is not a transform/optimize tool. It transforms data in structure but doesn't promise smaller/cleaner/better output.",
+  "evidence": "The tool is a join tool, not a compression/optimization tool.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C1",
+  "severity": "low",
+  "finding": "Not applicable \u2014 csv-sort is not a transform/optimize tool.",
+  "evidence": "The tool is a sorting tool, not a compression/optimization tool.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C1",
+  "severity": "low",
+  "finding": "Not applicable \u2014 csv-filter is not a transform/optimize tool.",
+  "evidence": "The tool is a filtering tool, not a compression/optimization tool.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-merge",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output includes application/json with stats. The stats object is a flat one-level object (CsvMergeResult has only primitive fields), so the runner renders it readably. No issue.",
+  "evidence": "Interface CsvMergeResult: join, keyColumn, leftRows, rightRows, outputRows, matched, leftOnly, rightOnly \u2014 all primitive values.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-sort",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output includes application/json with stats. The stats object has sortColumns as an array (nested), but that's a shallow array of strings, and the rest are flat primitives. This is borderline but acceptable \u2014 a user can read a list of column names. Not flagged.",
+  "evidence": "Interface CsvSortResult: rows (number), sortColumns (string[]), order (string), numeric (boolean), delimiter (string).",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "csv-filter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output includes application/json with stats. The stats object is a flat one-level object (CsvFilterResult has only primitive fields), so the runner renders it readably. No issue.",
+  "evidence": "Interface CsvFilterResult: rowsIn, rowsOut, rowsRemoved, column, operator, delimiter \u2014 all primitives.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "color-blind-simulator",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output mime is image/png \u2014 no JSON output, so check not applicable.",
+  "evidence": "Output block: 'output: { mime: \"image/png\" }'. The run function returns a single Blob.",
+  "suggestion": "No issue.",
+  "batch": "edit-2"
+ },
+ {
+  "toolId": "image-to-pdf",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name 'Images \u2192 PDF' uses a rightward arrow character (\u2192) which may confuse text-based UIs and is inconsistent with other tool names that use plain text (e.g., 'PDF to Text'). No other tool shares this exact name, but the special character is an oddity.",
+  "evidence": "spec metadata: name: 'Images \u2192 PDF'",
+  "suggestion": "Replace arrow with a plain-text alternative like 'Images to PDF'.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "pdf-to-text",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Metadata states 'params: none', but the source code defines a `separator` parameter (type `string`) that is used in the `run` function and has a default value.",
+  "evidence": "spec: 'params: none'. Source: `export interface PdfToTextParams { separator?: string; }` and `const separator = params.separator ?? '\\n\\n=== Page {n} ===\\n\\n';`",
+  "suggestion": "Either update metadata to declare the `separator` parameter, or remove it from code if unintended.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "ocr",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict: both this tool and 'ocr-hq' are named 'OCR' in the catalog, which will confuse users.",
+  "evidence": "spec for ocr: 'name: OCR'. spec for ocr-hq: 'name: OCR'. Both use identical display names.",
+  "suggestion": "Rename this free tool to 'OCR (Tesseract)' or 'OCR (Free)', and the credit tool to 'OCR (HQ)' or 'OCR (Pro)'.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "pdf-extract-tables",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON is deeply nested (array of `{page, rows[][]}`) and would be displayed as raw code by the runner rather than in a human-readable table format.",
+  "evidence": "Code: `allTables.push({ page: pageNum, rows });` then `JSON.stringify(allTables, null, 2)`.",
+  "suggestion": "Flatten the JSON to at most one level of nesting, or switch to CSV by default for human readability.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "pdf-extract-tables",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Metadata says 'params: none', but the code declares three parameters: `format` (json/csv), `page` (number), and `rowTolerance` (number). Also, the declared output MIME is 'application/json', but when `format='csv'` the tool outputs `text/csv`, which is inconsistent.",
+  "evidence": "spec: 'params: none'. Source: `export interface PdfExtractTablesParams { format?: 'json' | 'csv'; page?: number; rowTolerance?: number; }` and `outputBlob = new Blob([...], { type: 'text/csv' });` when format is csv.",
+  "suggestion": "Update metadata to list all params and declare output MIME as either dynamic or specifically 'application/json' with a note that CSV output overrides the MIME type.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "transcribe",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict: both this tool and 'transcribe-pro' are named 'Transcribe Audio' in the catalog.",
+  "evidence": "spec for transcribe: 'name: Transcribe Audio'. spec for transcribe-pro: 'name: Transcribe Audio'.",
+  "suggestion": "Rename one: 'Transcribe Audio (Free)' for this tool, 'Transcribe Audio (Pro)' for the credit version.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "transcribe-pro",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict with 'transcribe' (free) \u2014 both named 'Transcribe Audio'.",
+  "evidence": "spec for transcribe-pro: 'name: Transcribe Audio'. Same as free tool.",
+  "suggestion": "Rename to 'Transcribe Audio (Pro)' or similar.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "ocr-hq",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict with 'ocr' (free) \u2014 both named 'OCR'.",
+  "evidence": "spec for ocr-hq: 'name: OCR'. Same as free tool.",
+  "suggestion": "Rename to 'OCR (HQ)' or 'OCR (Pro)'.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "image-describe",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict with 'image-caption' (free) \u2014 both named 'Describe Image'.",
+  "evidence": "spec for image-describe: 'name: Describe Image'. spec for image-caption: 'name: Describe Image'.",
+  "suggestion": "Rename the free tool to 'Describe Image (Free)' or this credit tool to 'Describe Image (Pro)'.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "detect-objects",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON is nested (array of objects containing arrays of numbers) and would display as raw code rather than a human-readable summary.",
+  "evidence": "Code: `result = await runPro<{ objects: DetectedObject[]; count: number }>(...)` where `DetectedObject` has nested `box` object. Output is `JSON.stringify(result, null, 2)`.",
+  "suggestion": "Flatten the JSON to a single level or provide a tabular view.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "image-caption",
+  "check": "C5",
+  "severity": "medium",
+  "finding": "Naming conflict with 'image-describe' (credit) \u2014 both named 'Describe Image'.",
+  "evidence": "spec for image-caption: 'name: Describe Image'. spec for image-describe: 'name: Describe Image'.",
+  "suggestion": "Disambiguate by renaming the free tool to 'Caption Image' or 'Describe Image (Free)', and the credit tool to 'Describe Image (Pro)'.",
+  "batch": "export-1"
+ },
+ {
+  "toolId": "compound-interest",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON contains nested yearlyBreakdown array of objects that the runner cannot render readably",
+  "evidence": "Code at packages/core/src/tools/compound-interest/index.ts constructs result with 'yearlyBreakdown' as an array of {year, balance, contributionTotal, interestTotal} objects. The yearlyBreakdown array is nested inside the top-level JSON object.",
+  "suggestion": "Flatten the yearly breakdown into a text/plain table or provide a separate simple summary without nested arrays",
+  "batch": "finance"
+ },
+ {
+  "toolId": "hash",
+  "check": "C5",
+  "severity": "low",
+  "finding": "Name 'Hash' is confusable with 'HMAC' (both compute digests of files and share keywords like 'sha256'/'sha512'). Suggested disambiguation: rename to 'File Hash' or note in description that this is for plain integrity-only hashing vs HMAC's authenticated variant.",
+  "evidence": "Tool hash has name 'Hash' and keywords ['hash', 'checksum', 'sha256', 'sha1', 'sha512', 'integrity']. Tool hmac has name 'HMAC' and keywords ['hmac', 'signature', 'mac', 'sha256', 'sha512', 'sha1', 'authentication', 'integrity', 'sign'].",
+  "suggestion": "Rename 'Hash' to 'File Hash' or clarify scope in description.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "hash",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "The default algorithms are ['SHA-256'] but the paramSchema defines algorithms as 'multi-enum' with options SHA-1, SHA-256, SHA-512 \u2014 the defaults match. However, the description promises 'SHA-256, SHA-1, or SHA-512' but computes only the algorithms the user selects. No surprise here. But there is a missing param: the tool computes hashes for multiple input files (batchable: true), yet the result object for single input ({name, bytes, hashes}) differs structurally from multiple-input (array of same). The description does not mention this structural output difference, which could confuse consumers of the JSON.",
+  "evidence": "Description says 'Compute SHA-256, SHA-1, or SHA-512 hashes of files.' Run code: `const payload = results.length === 1 ? results[0] : results;` \u2014 single-file output is a single object, multi-file is an array. This shape polymorphism is undocumented.",
+  "suggestion": "Document output shape or always return an array.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "json-formatter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json, but the tool pretty-prints JSON for a human to read. The runner renders FLAT one-level JSON readably. However, the output is nested: a single JSON value (the parsed object/array) with nested structures. If the input JSON has nested objects/arrays, the runner will show raw code instead of a readable flat view. This is borderline \u2014 the user explicitly asked for pretty-printed JSON, so nested output is expected. But per C3 rules: if it's human-facing JSON and nested, flag it.",
+  "evidence": "Output MIME is 'application/json' and the tool's purpose is to pretty-print JSON for human reading. The output is a single JSON value that can be arbitrarily nested.",
+  "suggestion": "Accept that this is a text-display tool and the JSON is inherently nested. No change needed.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "image-similarity",
+  "check": "C2",
+  "severity": "high",
+  "finding": "The tool is marked cost 'free' and description says 'runs on your device', and it loads a CLIP model from Hugging Face (Xenova/clip-vit-base-patch16) which is a static model download. That's fine: 'fetch/XHR of static assets (model files from models.wyreup.com, wasm, dictionaries) is fine.' However, the code uses `blobToDataUrl` which creates a data URL of the image, then passes it to the model pipeline. If the model pipeline (transformers.js) runs locally, that's fine. But the tool also has a chain to 'regex-from-text-pro' which is a credit tool. No privacy violation found. No finding.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "image-similarity",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "The param `threshold` has a default of 0.85 with a range 0-1 in the type. However, the description says 'threshold for clustering (0-1)' but in the clustering function `clusterByThreshold`, images are unioned when `cosine >= threshold`. A threshold of 0 means EVERY image is in one cluster (since cosine is always >= 0), which is a valid edge case but may surprise users who expect 0 to mean 'no matching.'",
+  "evidence": "Code line: `if (cosine >= threshold) union(a, b);` \u2014 threshold defaults to 0.85.",
+  "suggestion": "No change needed; behavior is consistent with cosine similarity semantics.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "color-palette",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json and the result is a flat one-level object (vibrant, muted, topColors), except topColors is an array. The array field makes it partially nested. The runner renders flat one-level JSON readably, so topColors (array) would show raw code. However, this is minimal nesting.",
+  "evidence": "Result shape: { vibrant: string|null, muted: string|null, ..., topColors: string[] } \u2014 topColors is an array.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "word-counter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json and the result is a flat one-level object (all fields are numbers). Per C3 rules: 'the runner already renders FLAT one-level objects readably.' This is flat, no issue.",
+  "evidence": "Result type WordCounterResult has only number fields: words, characters, charactersNoSpaces, sentences, paragraphs, lines, readingTimeMinutes.",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "timestamp-converter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json and the result is a flat one-level object (all fields are string|null or number|null). No nesting beyond the top level.",
+  "evidence": "TimestampConverterResult has fields: input (string), valid (boolean), epochSeconds (number|null), epochMilliseconds (number|null), iso8601 (string|null), utc (string|null), local (string|null), relative (string|null). All flat.",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "color-converter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json and the result contains nested objects (rgb: {r,g,b}, hsl: {h,s,l}, oklch: {l,c,h}, oklab: {l,a,b}) which are sub-objects. These are one level deep and fairly readable, but per strict C3 rules, any nesting beyond one-level flat is flagged.",
+  "evidence": "ColorConverterResult has fields: rgb (object), hsl (object), oklch (object), oklab (object). These are objects/arrays within the top-level JSON.",
+  "suggestion": "No change \u2014 these are standard color representations and human-readable.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "regex-tester",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json. The result contains a matches array of objects (each has match, index, optional groups), which is nested. Not flat.",
+  "evidence": "Result: { valid, error?, matchCount, matches: [{ match, index, groups? }], truncated? } \u2014 matches is an array of objects.",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "color-palette",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "The description says 'Extract dominant colors from an image as hex codes.' The code only processes pixels with alpha >= 128 (semi-opaque threshold) and skips transparent ones, but does not mention this behavior. Also, the median-cut algorithm samples down to at most 10,000 pixels (`const stride = Math.max(1, Math.floor(data.length / (4 * 10_000)));`) which means for very large images, it may miss subtle dominant colors.",
+  "evidence": "Code line: `if (a < 128) continue; // skip transparent'  and `const stride = Math.max(1, Math.floor(data.length / (4 * 10_000)));`",
+  "suggestion": "Document that semi-transparent pixels (alpha < 128) are ignored and that large images are downsampled to 10k pixels before analysis.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "image-diff",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "The description says 'Pixel-level diff between two images of the same dimensions.' However, the code also outputs an additional JSON blob containing diff statistics (pixelsDifferent, totalPixels, percentDifferent) alongside the diff image. The description does not mention that a JSON stats output is produced.",
+  "evidence": "Return statement: `return [new Blob([diffImageBuffer], { type: 'image/png' }), new Blob([JSON.stringify(result)], { type: 'application/json' })];` \u2014 the output is TWO blobs: image/png and application/json. The metadata says output: { mime: 'image/png', multiple: true } but the JSON stats blob is undocumented.",
+  "suggestion": "Either mention the JSON stats output in the description, or remove the extra blob if not intended.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "image-diff",
+  "check": "C1",
+  "severity": "high",
+  "finding": "The tool is a transform/optimize tool (produces an image/png from image inputs) \u2014 its promise is a 'diff image' which could be bigger than the originals (e.g., diff of two identical images produces a black image larger than a JPEG). The tool does NOT handle or warn when the output is larger/worse than input. The pixelmatch library produces a full RGBA diff image at the same pixel dimensions, so for a tiny source JPEG the output PNG may be larger. The tool neither checks file sizes nor warns the user.",
+  "evidence": "The tool's output is a Blob of type 'image/png' containing the diff image. No size comparison or warning logic exists in the run function.",
+  "suggestion": "Add a warning in the description or output that the diff image may be larger than the input images.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "text-diff",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is text/plain (the main output) and an additional application/json blob for statistics. C3 only applies to JSON output. The JSON stats are flat (additions, deletions, changes \u2014 all numbers). No issue.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "hash",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json. Single-file result: { name, bytes, hashes: { SHA-256: '...' } } \u2014 hashes is a flat record. Multi-file result: array of same. The hashes field is a flat one-level object (algorithm \u2192 digest string). Flat enough.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "qr-reader",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json. Result has nested objects (location: { topLeft: {x,y}, topRight: {x,y}, ... }). Nested but readable.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "regex-from-text-pro",
+  "check": "C2",
+  "severity": "low",
+  "finding": "Cost is 'credit' and description says 'A hosted LLM handles arbitrary, open-ended phrasings.' The code uses `runPro` which presumably sends data to a hosted service. The description accurately states this is hosted. No privacy finding.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "image-similarity",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json. The result contains: images (array of {filename, index}), pairwise (array of {a, b, cosine}), and clusters (array of arrays). This is deeply nested JSON: pairwise has objects with numeric fields, clusters is an array of arrays of numbers. While the flat fields (images) are readable, pairwise and clusters are arrays-of-objects/arrays that the runner would show as raw code. Per C3, flag human-facing JSON that shows raw code.",
+  "evidence": "Result type: { images: Array<{filename: string, index: number}>, pairwise: Array<{a: number, b: number, cosine: number}>, clusters: number[][] } \u2014 pairwise is array of objects, clusters is array of arrays.",
+  "suggestion": "Consider rendering pairwise as a table or flattening the output for readability.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "excel-info",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json. The result has perSheet as an array of objects with preview (2D array of unknown values). Deeply nested: perSheet is an array of { name, rows, cols, preview: unknown[][] }. The preview field is a nested array that would show raw code. This is user-facing info meant to be read by humans.",
+  "evidence": "Result shape: { sheetCount, sheetNames, totalCells, perSheet: Array<{ name, rows, cols, preview: unknown[][] }> } \u2014 perSheet.preview is a 2D array.",
+  "suggestion": "Consider flattening the preview or rendering it as a table.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "unicode-info",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json. The result contains chars as an array of objects (UnicodeCharInfo with 9 fields each). This is a large nested array of objects. The runner would show raw JSON for these arrays. While a summary (length, codepoints, bytes, etc.) is flat, the chars array is deeply nested and human-unfriendly in raw JSON.",
+  "evidence": "Result: { length, codepoints, bytes, hasBom, ..., chars: Array<UnicodeCharInfo> } \u2014 chars is an array of objects with up to maxChars (default 5000) entries.",
+  "suggestion": "Consider paginating or truncating the chars array, or rendering it as a table in the runner.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "hmac",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json. Result is flat: { name, bytes, algorithm, encoding, digest }. All primitive fields.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "word-counter",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "The description says 'Count words, characters, sentences, paragraphs, and estimate reading time.' For HTML inputs, it strips HTML tags (`stripHtmlTags`) and then counts. However, for markdown inputs (text/markdown), the code does NOT strip markdown syntax \u2014 it passes the raw markdown text to the counter. This means words like '**bold**' would be counted as including the asterisks. The description does not mention this limitation.",
+  "evidence": "Code: `if (file.type === 'text/html' || text.trimStart().startsWith('<')) { text = stripHtmlTags(text); }` \u2014 only strips for 'text/html' or if the text starts with '<'. No markdown stripping.",
+  "suggestion": "Add markdown stripping or document that markdown syntax is not stripped before counting.",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "color-converter",
+  "check": "C7",
+  "severity": "low",
+  "finding": "The tool has no params. It always converts to all formats. That is by design. No issue.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "pdf-info",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is application/json. Result is flat: { pageCount, bytes, title, author, subject, producer, creator, createdAt, modifiedAt }. All primitive or null fields.",
+  "evidence": "",
+  "suggestion": "",
+  "batch": "inspect-1"
+ },
+ {
+  "toolId": "yaml-validate",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "The `rejectDuplicateKeys` param defaults to `true` and the code at line `json: !(params.rejectDuplicateKeys ?? true)` inverts the meaning \u2014 when `rejectDuplicateKeys` is true, `json` is set to `false`, which means js-yaml's duplicate-key rejection is explicitly DISABLED. The param name suggests the opposite of what it does.",
+  "evidence": "Code line: `json: !(params.rejectDuplicateKeys ?? true)` \u2014 when true, json=false \u2192 duplicates allowed. When false, json=true \u2192 duplicates rejected.",
+  "suggestion": "Remove the negation: `json: params.rejectDuplicateKeys ?? true` so the param name matches behavior, or rename the param to `allowDuplicateKeys`.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "json-schema-infer",
+  "check": "C3",
+  "severity": "low",
+  "finding": "The output JSON is stats/info for human reading (the schema itself), but the root object has a nested `properties` object which is an object-of-objects. The runner renders flat one-level objects, so the nested schema structure would show raw code.",
+  "evidence": "The output is a JSON Schema object, which by nature contains nested objects (properties, items, required array, etc.) as per the `inferSchema` function return type `Schema = Record<string, unknown>`. Example structure: `{ \"type\": \"object\", \"properties\": { \"name\": { \"type\": \"string\" } } }` \u2014 properties is a nested object.",
+  "suggestion": "No change needed \u2014 this is inherent to JSON Schema output; flag is only informational.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "csv-info",
+  "check": "C3",
+  "severity": "low",
+  "finding": "The output JSON (CsvInfoResult) contains a nested `columnInfo` array of objects and a `rowWidthHistogram` object. The runner renders flat one-level objects, so these nested structures would show raw code rather than a readable display.",
+  "evidence": "Output structure: `{ rows, columns, delimiter, hasHeader, rowWidthConsistent, rowWidthHistogram: {...}, columnInfo: [{name, index, type, ...}, ...] }` \u2014 columnInfo and rowWidthHistogram are nested.",
+  "suggestion": "No change needed \u2014 this is inherent to structured CSV profiling data.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "json-path",
+  "check": "C3",
+  "severity": "low",
+  "finding": "The output JSON contains a nested `matches` array of objects (each with path + value). The runner renders flat one-level objects, so this array would show raw code.",
+  "evidence": "Output structure: `{ expression, matchCount, matches: [{ path, value }, ...] }` \u2014 matches is a nested array of objects.",
+  "suggestion": "No change needed \u2014 array of results is inherent to path queries.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "favicon-from-url",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `candidates` array of objects. The runner renders flat one-level objects.",
+  "evidence": "Output structure: `{ best, candidates: [{ rel, href, resolved, ... }, ...] }` \u2014 candidates is a nested array.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "signed-cookie-decode",
+  "check": "C2",
+  "severity": "high",
+  "finding": "The tool claims cost 'free' and describes the secret as 'Never uploaded', but the code uses `crypto.subtle.importKey` and `crypto.subtle.sign` which are standard Web Crypto API calls \u2014 these run locally. No network transmission is visible in the code. PASS \u2014 no violation.",
+  "evidence": "The `run` function only uses `crypto.subtle.importKey` and `crypto.subtle.sign`, no fetch/XHR. The output is a local Blob.",
+  "suggestion": "No issue.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "text-suspicious",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `findings` array of objects. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `TextSuspiciousResult { verdict, findings: SuspiciousFinding[], totals: {...} }` \u2014 findings is nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "openapi-validate",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `issues` array of objects. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `OpenapiValidateResult { valid, version, issues: OpenapiIssue[], stats: {...} }` \u2014 issues is nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "package-json-validate",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `issues` array of objects. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `PackageJsonValidateResult { valid, name, version, issues: PackageJsonIssue[], stats: {...} }` \u2014 issues is nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "pdf-suspicious",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `document` object and optional `pages` array. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `PdfSuspiciousResult { verdict, pageCount, document: TextSuspiciousResult, pages?: [ ... ] }` \u2014 document and pages are nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "regex-visualize",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output mime is image/svg+xml, not application/json, so C3 does not apply.",
+  "evidence": "output.mime = 'image/svg+xml'",
+  "suggestion": "N/A",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "regex-from-text",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output JSON contains optional nested `alternatives` array. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `RegexFromTextResult { ..., alternatives?: [{ pattern, flags, explanation }] }` \u2014 alternatives is nested when present.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "cron-from-text",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `matchedTokens` array. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `CronFromTextResult { ..., matchedTokens: string[] }` \u2014 array is nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "regex-explain",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output contains nested `breakdown` array of objects. The runner renders flat one-level objects.",
+  "evidence": "Output interface: `RegexExplainResult { pattern, flags, summary, breakdown: RegexExplainNode[], recognisedAs?: string }` \u2014 breakdown is nested.",
+  "suggestion": "No change needed.",
+  "batch": "inspect-3"
+ },
+ {
+  "toolId": "signed-cookie-decode",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "The `secret` param has paramSchema `{ type: 'string', label: 'secret', help: 'The framework's signing key. Never uploaded.', placeholder: 'cookie-signing-secret', multiline: true }` but the tool's input `accept: ['*/*']` with `min: 0` means no input file is required \u2014 all data comes via params. A user could mistakenly paste a single-line key into a multiline field (no actual issue), but more importantly, the `style: 'auto'` default can silently guess wrong: if a Rails-style cookie `base64--hex` contains no `--`, or an Express cookie happens to contain `--`, the auto-detection misclassifies. The auto-detect logic also splits on `.` for Flask, but Express cookies with a `.` in the value (e.g. from a JSON payload) would be misidentified as Flask.",
+  "evidence": "`splitCookie` function: `if (style === 'auto') { if (cookie.includes('--')) return splitCookie(cookie, 'rails'); const parts = cookie.split('.'); if (parts.length === 3) return splitCookie(cookie, 'flask'); return splitCookie(cookie, 'express'); }` \u2014 an Express cookie like `session:eyJ1c2VyIjoiMSJ9.KzGz` has only 2 dot parts, so it would correctly go to express branch, but a cookie with value `a.b.c` (3 dot parts, even if not Flask format) would be parsed as Flask and fail with a confusing error.",
+  "suggestion": "Document the auto-detection ambiguity or add a heuristic check on value format before classifying.",
+  "batch": "inspect-3"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: 'params: none'. Source: export interface ExtractAudioParams { format: ExtractAudioFormat; bitrate?: string; } and the run() function uses params.format and params.bitrate.",
+  "finding": "toolId: extract-audio",
+  "severity": "medium",
+  "suggestion": "Parameters format and bitrate exist in code but are hidden from metadata.",
+  "toolId": "extract-audio",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "No paramSchema property defined in the ToolModule object for extractAudio, despite code implementing format and bitrate parameters.",
+  "finding": "toolId: extract-audio",
+  "severity": "low",
+  "suggestion": "Add paramSchema to expose format and bitrate in the UI.",
+  "toolId": "extract-audio",
+  "batch": "media-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: 'params: none'. Source: export interface TrimMediaParams { start: number; end: number; stream_copy?: boolean; }.",
+  "finding": "toolId: trim-media",
+  "severity": "medium",
+  "suggestion": "Parameters start, end, stream_copy exist in code but are hidden from metadata.",
+  "toolId": "trim-media",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "No paramSchema defined. Default: defaultTrimMediaParams = { start: 0, end: 30, stream_copy: false }. Default end=30 is destructive \u2014 if user does not set end, they get a 30-second clip, silently discarding later content.",
+  "finding": "toolId: trim-media",
+  "severity": "medium",
+  "suggestion": "Add paramSchema; consider changing default end to null/undefined or auto-detecting video duration.",
+  "toolId": "trim-media",
+  "batch": "media-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "Description promises 'Reduce video file size'. Run function always re-encodes with libx264 (args: '-vcodec', 'libx264', '-crf', String(crf), '-preset', preset) without comparing output size to input or warning when output is larger.",
+  "finding": "toolId: compress-video",
+  "severity": "medium",
+  "suggestion": "Check output size against input size and warn or fall back if the result is not smaller.",
+  "toolId": "compress-video",
+  "batch": "media-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: 'params: none'. Source: export interface VideoToGifParams { fps?: number; width?: number; startSeconds?: number; durationSeconds?: number; }.",
+  "finding": "toolId: video-to-gif",
+  "severity": "medium",
+  "suggestion": "Parameters fps, width, startSeconds, durationSeconds exist in code but are hidden from metadata.",
+  "toolId": "video-to-gif",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "No paramSchema defined for video-to-gif. Default width=480 may surprise users wanting full resolution.",
+  "finding": "toolId: video-to-gif",
+  "severity": "low",
+  "suggestion": "Add paramSchema; consider making width default to original video width or provide a 'scale to' param.",
+  "toolId": "video-to-gif",
+  "batch": "media-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: 'params: none'. Source: export interface ConvertSubtitlesParams { to: SubtitleFormat; timeShiftSeconds?: number; }.",
+  "finding": "toolId: convert-subtitles",
+  "severity": "medium",
+  "suggestion": "Parameters to and timeShiftSeconds exist in code but are hidden from metadata.",
+  "toolId": "convert-subtitles",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "No paramSchema defined for convert-subtitles parameters.",
+  "finding": "toolId: convert-subtitles",
+  "severity": "low",
+  "suggestion": "Add paramSchema to expose format and time shift in the UI.",
+  "toolId": "convert-subtitles",
+  "batch": "media-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "Metadata: 'params: none'. Source: export interface BurnSubtitlesParams { fontSize?: number; crf?: number; }.",
+  "finding": "toolId: burn-subtitles",
+  "severity": "medium",
+  "suggestion": "Parameters fontSize and crf exist in code but are hidden from metadata.",
+  "toolId": "burn-subtitles",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "No paramSchema defined for burn-subtitles parameters.",
+  "finding": "toolId: burn-subtitles",
+  "severity": "low",
+  "suggestion": "Add paramSchema to expose fontSize and crf in the UI.",
+  "toolId": "burn-subtitles",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "ParamSchema for contrast: { min: -2.0, max: 2.0, step: 0.1 }. Negative values produce color inversion, a surprising result not typical of color correction.",
+  "finding": "toolId: video-color-correct",
+  "severity": "low",
+  "suggestion": "Constrain contrast minimum to 0 or document the effect of negative values.",
+  "toolId": "video-color-correct",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "defaultResizeVideoParams: { width: 1280, height: undefined, crf: 23 }. A default width of 1280 means the video gets resized even if the user leaves both fields blank, contrary to the description 'Leave width or height blank to preserve the aspect ratio' \u2014 which implies no resize.",
+  "finding": "toolId: resize-video",
+  "severity": "medium",
+  "suggestion": "Remove default width/height so the video stays at original resolution when both are blank, or auto-detect original dimensions.",
+  "toolId": "resize-video",
+  "batch": "media-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "defaultRotateVideoParams: { mode: '90cw' }. If the user does not select a mode, they get a 90\u00b0 clockwise rotation, which may be surprising.",
+  "finding": "toolId: rotate-video",
+  "severity": "low",
+  "suggestion": "Consider making mode required (no default) or changing default to a no-op mode like 'none'.",
+  "toolId": "rotate-video",
+  "batch": "media-1"
+ },
+ {
+  "toolId": "video-quality-metrics",
+  "check": "C3",
+  "severity": "low",
+  "finding": "JSON output is nested (psnr and ssim are objects) and will not be rendered readably by the flat one-level renderer.",
+  "evidence": "Export interface QualityReport { psnr: { average: number; y: number; u: number; v: number } | null; ssim: { all: number; y: number; u: number; v: number } | null; } and output serialization: JSON.stringify(report, null, 2)",
+  "suggestion": "Flatten the report to a single-level object (e.g., psnr_average, psnr_y, ssim_all, ssim_y, ...) so the runner renders it readably, or render it via a custom display component.",
+  "batch": "media-2"
+ },
+ {
+  "toolId": "crop-video",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "Default crop dimensions (640x480 at x=0,y=0) may exceed input resolution, leading to an unhandled ffmpeg error. No validation checks crop bounds against input dimensions.",
+  "evidence": "defaultCropVideoParams = { width: 640, height: 480, x: 0, y: 0 }. buildCropArgs only validates w>0 && h>0 but never checks against input resolution. No probe of input dimensions is performed.",
+  "suggestion": "Add resolution probing (like duration is probed) and clamp crop region to input dimensions, or validate and surface a clear error message.",
+  "batch": "media-2"
+ },
+ {
+  "toolId": "fade-video",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "Fade-out duration longer than the clip is silently dropped \u2014 no fade-out is applied and no warning or error is given to the user.",
+  "evidence": "buildFadeFilters condition: if (fadeOut > 0 && isFinite(durationSec) && durationSec > fadeOut) \u2014 when durationSec <= fadeOut the fade-out filter is simply not included in the output args.",
+  "suggestion": "Validate that fadeOut < durationSec (or fadeIn + fadeOut <= durationSec) and surface an error to the user, or cap the fade duration to the clip length.",
+  "batch": "media-2"
+ },
+ {
+  "toolId": "vignette-video",
+  "check": "C7",
+  "severity": "low",
+  "finding": "Strength parameter minimum is clamped to 0.05, preventing the user from setting strength=0 to achieve zero vignette effect.",
+  "evidence": "const s = Math.max(0.05, Math.min(1, strength)); and paramSchema min: 0.05.",
+  "suggestion": "Allow strength=0 (or add an explicit 'off' value) so users can disable the effect entirely.",
+  "batch": "media-2"
+ },
+ {
+  "toolId": "strip-video-metadata",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Description claims 'Remove all metadata' but code only removes global container metadata, not per-stream metadata.",
+  "evidence": "buildStripMetadataArgs returns ['-i', inputName, '-map_metadata', '-1', '-c', 'copy', outputName]. Per ffmpeg documentation, -map_metadata -1 strips only the global metadata; per-stream metadata (e.g., stream-level tags) passes through unchanged with -c copy.",
+  "suggestion": "Either add '-map_metadata:s', '-1' for each stream type to truly remove all metadata, or update the description to 'Remove container-level metadata'.",
+  "batch": "media-2"
+ },
+ {
+  "toolId": "compress",
+  "check": "C1",
+  "severity": "high",
+  "finding": "The code handles output-worse-than-input for same-format re-encodes (falling back to original bytes when `encoded.byteLength >= input.size` and `outputFormat === sourceFormat`), but when `targetFormat` differs from the source format, the code unconditionally returns the re-encoded result even if it's larger. A user converting JPEG\u2192PNG or WebP\u2192PNG at low resolution could receive a file that is significantly larger than the input.",
+  "evidence": "Code at `packages/core/src/tools/compress/index.ts` lines ~68-70: `if (outputFormat === sourceFormat && encoded.byteLength >= input.size) { ... outputs.push(new Blob([buffer], { type: mimeFor(sourceFormat) })); continue; }`. When `outputFormat !== sourceFormat`, no size comparison is performed and the potentially larger re-encode is always returned.",
+  "suggestion": "Either note in the description that format conversion may increase file size, or add a size check for cross-format conversions too (with a fallback to the original when format change is not explicitly requested).",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "compress",
+  "check": "C6",
+  "severity": "low",
+  "finding": "The `paramSchema` only declares a `quality` parameter, but the TypeScript interface `CompressParams` also includes a `targetFormat` parameter. The description says 'Preserves the original format unless targetFormat is set', yet the metadata block makes no mention of format conversion capability.",
+  "evidence": "TypeScript interface at `packages/core/src/tools/compress/types.ts` lines 5-11: `export interface CompressParams { quality: number; targetFormat?: ImageFormat; }`. The `paramSchema` in `packages/core/src/tools/compress/index.ts` lines 41-49 only defines `quality`, not `targetFormat`.",
+  "suggestion": "Add `targetFormat` to the metadata paramSchema so users know they can change format, or if it is intentionally hidden, clarify in the description.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "css-minify",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "The output includes `application/json` (the stats object with `bytesIn`, `bytesOut`, `reductionPercent`, `warnings`, `errors`). This JSON is human-readable stats \u2014 it is nested (has arrays `warnings`, `errors`) and will be rendered as raw JSON code for the user, which is confusing.",
+  "evidence": "Code at `packages/core/src/tools/css-minify/index.ts` lines 101-102: `return [ new Blob([output.styles], { type: 'text/css' }), new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' }) ]`. The `result` object has `warnings: string[]` and `errors: string[]` arrays, making it nested JSON.",
+  "suggestion": "Either remove the stats JSON output entirely since minification results speak for themselves, or flatten the stats into a simple key-value structure the runner renders well (e.g. split warnings/errors into a different output format).",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "html-minify",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "The output includes `application/json` (stats with `bytesIn`, `bytesOut`, `reductionPercent`). This is a flat object (no nested arrays/objects), so the runner will render it readably. No findings.",
+  "evidence": "Code at `packages/core/src/tools/html-minify/index.ts` lines 83-86: result object has only number fields.",
+  "suggestion": "",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "compress",
+  "check": "C6",
+  "severity": "low",
+  "finding": "The description claims 'Reduce image file size by re-encoding at a lower quality', but the `quality` default is 80. If the input file was encoded at quality 80 or lower, re-encoding at quality 80 may not reduce size \u2014 a behavior the code partially handles by comparing sizes for same-format. The description is slightly misleading in suggesting size reduction is guaranteed.",
+  "evidence": "Description: 'Reduce image file size by re-encoding at a lower quality.' Default quality is 80 per `defaultCompressParams` in types.ts. The code at lines 68-70 does compare size for same format but the description does not mention the fallback behavior.",
+  "suggestion": "Consider adjusting the description to say 'Reduce image file size where possible' or mention that if the file is already well-compressed the original is kept.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "pdf-encrypt",
+  "check": "C6",
+  "severity": "high",
+  "finding": "The description says 'Password-protect a PDF with optional permission restrictions.' but the tool requires a non-empty `userPassword` \u2014 there is no 'optional' about it. The description implies the password itself is optional, but the code throws an error if `userPassword` is empty or whitespace-only.",
+  "evidence": "Code at `packages/core/src/tools/pdf-encrypt/index.ts` lines 52-54: `if (!userPassword || userPassword.trim() === '') { throw new Error('userPassword is required and must not be empty.'); }`. The defaults block at line 47 sets `userPassword: ''` which will always trigger the error.",
+  "suggestion": "Update the description to clarify that a user password is required. Also fix defaults so the user must provide a password rather than defaulting to empty.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "compress",
+  "check": "C7",
+  "severity": "low",
+  "finding": "The `quality` param has `unit: '%'` which is confusing \u2014 quality is a scale of 1-100 (not a percentage 0-100, and quality=100 doesn't mean 'best quality' in a percentage sense). It misleads users into thinking it's a percentage of the original file size.",
+  "evidence": "Metadata paramSchema for compress at line 44: `unit: '%'`. The parameter is named 'quality' and the help text says 'Lower quality = smaller file size.'",
+  "suggestion": "Remove the '%' unit or rename the parameter to make it clearer that this is an abstract quality scale, not a percentage.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "pdf-compress",
+  "check": "C7",
+  "severity": "medium",
+  "finding": "Default `pngToJpeg: true` converts PNG images to JPEG even if the PNG has transparency or is better as PNG. The code attempts to check for DeviceRGB colorspace, but due to a bug it always treats `isPng && (pngToJpeg || true)` as true (the `|| true` short-circuits the check), and only skips if the colorspace string includes 'DeviceRGB' \u2014 but PNGs with alpha that have DeviceRGB colorspace will still be converted, losing transparency data.",
+  "evidence": "Code at `packages/core/src/tools/pdf-compress/index.ts` lines 91-94: `} else if (isPng && (pngToJpeg || true)) { const colorSpaceStr = colorSpaceObj ? colorSpaceObj.toString() : ''; if (colorSpaceStr.includes('DeviceRGB') || colorSpaceStr === '') { imageData = await decodePng(...) }`. The `|| true` makes `pngToJpeg` check irrelevant. The colorspace check means only non-DeviceRGB PNGs (like DeviceN or ICCBased) are skipped.",
+  "suggestion": "Fix the bug: remove `|| true`. Also check for transparency/alpha channel before converting PNG to JPEG.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "pdf-compress",
+  "check": "C6",
+  "severity": "high",
+  "finding": "The description says it 'Does not remove unused resources, subset fonts, or repair stream encoding' but the code actually removes `DecodeParms` from every re-encoded image stream (`dict.delete(PDFName.of('DecodeParms'))`) without checking whether the original stream had decode parameters that should be preserved. This could corrupt images that rely on non-default decode parameters.",
+  "evidence": "Code at `packages/core/src/tools/pdf-compress/index.ts` line 107: `dict.delete(PDFName.of('DecodeParms'));`. No conditional check on whether `DecodeParms` existed or what it contained.",
+  "suggestion": "Document the DecodeParms removal in the tool description, or preserve the original DecodeParms when they are set.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "upscale-2x",
+  "check": "C1",
+  "severity": "low",
+  "finding": "The tool promises to 'Double the resolution' but the output pixel dimensions are not verified against the input. If the model produces output at the same resolution (e.g. model loading failure, wrong model variant), the user wouldn't know the upscale didn't happen.",
+  "evidence": "Code does not check or compare output dimensions vs input dimensions anywhere in `run()`. The model ID `Xenova/swin2SR-classical-sr-x2-64` is hardcoded, but there is no runtime assertion that width/height of the output are 2x the input.",
+  "suggestion": "Add a runtime check that output dimensions are at least as large as input dimensions, with a warning if they're not.",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "upscale-2x",
+  "check": "C2",
+  "severity": "medium",
+  "finding": "The code imports `getPipeline` from `../../lib/transformers.js` which loads a model from Hugging Face via `Xenova/swin2SR-classical-sr-x2-64`. The model download goes to `models.wyreup.com` (static assets) which is acceptable for a 'free' tool. However, the `blobToDataUrl` function converts the file contents to a base64 data URL inline, which is local processing \u2014 no network transmission of user data. PRIVACY TRUTHFULNESS: OK.",
+  "evidence": "The code passes `dataUrl` to `pipe()` which runs the model locally via transformers.js/ONNX. No fetch/XHR with input data.",
+  "suggestion": "",
+  "batch": "optimize"
+ },
+ {
+  "toolId": "html-minify",
+  "check": "C7",
+  "severity": "low",
+  "finding": "`useShortDoctype` defaults to `true`, which replaces a verbose XHTML doctype with `<!DOCTYPE html>`. This is a destructive change (change in doctype can affect rendering mode in some edge cases) but is well-documented in the param help text. Not a finding.",
+  "evidence": "Default in `defaultHtmlMinifyParams` at line 17: `useShortDoctype: true`. Help text: 'Replace verbose XHTML doctype with <!DOCTYPE html>.'",
+  "suggestion": "",
+  "batch": "optimize"
+ },
+ {
+  "check": "C1",
+  "evidence": "merge-pdf/index.ts: tool has no logic to compare input vs output size. It always creates a new PDFDocument, copies pages, and saves. If inputs contain heavy form data, metadata, or duplicate font subsets, the output blob could be larger. No guard or warning is present.",
+  "finding": "Merge PDFs can silently return a larger/worse file than input when copying produces overhead (e.g., duplicate embedded fonts, XREF table growth). No size-check before returning.",
+  "severity": "low",
+  "suggestion": "Compare total input size to output size and warn/give option to use the original if the result is larger.",
+  "toolId": "merge-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C1",
+  "evidence": "rotate-pdf/index.ts: tool always saves a new PDFDocument after rotation. The rotation is applied in-place via page.setRotation() on the original document, so no structural change normally increases size, but the save() call re-encodes and may regress metadata/font handling. No guard or warning.",
+  "finding": "Rotated PDF could silently return a larger file if pdf-lib's save() inflates the output (e.g., recompression artifacts). No size-comparison before returning.",
+  "severity": "low",
+  "suggestion": "Compare input vs output size; warn users if output exceeds input.",
+  "toolId": "rotate-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C1",
+  "evidence": "reorder-pdf/index.ts: tool creates a new PDFDocument and copies pages via out.copyPages(). This can duplicate embedded resources (fonts, images) that are shared in the source, inflating file size. No size-check before returning.",
+  "finding": "Reorder PDF Pages can silently produce a much larger file when the source uses shared resource objects that get duplicated per page during copyPages. No guard or warning.",
+  "severity": "low",
+  "suggestion": "Compare output size to input size; warn or abort if the result is substantially larger.",
+  "toolId": "reorder-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C1",
+  "evidence": "page-numbers-pdf/index.ts: tool draws page numbers onto each page using pdf-lib's page.drawText() on the loaded document, then calls doc.save(). The save() re-encodes the PDF which can increase size (e.g., redundant font subsetting). No size-comparison before returning.",
+  "finding": "Add Page Numbers can output a file larger than input due to PDF re-encoding. No size-check or warning.",
+  "severity": "low",
+  "suggestion": "Compare input vs output size and warn if output is larger.",
+  "toolId": "page-numbers-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C1",
+  "evidence": "watermark-pdf/index.ts: tool adds text/image to every page and calls pdfDoc.save(). The re-encode inflates file size, especially with image watermarks. No size comparison before returning.",
+  "finding": "Watermark PDF can silently produce a larger file (especially image watermarks). No size-guard or warning.",
+  "severity": "low",
+  "suggestion": "Compare output size to input; warn if significantly larger.",
+  "toolId": "watermark-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C4",
+  "evidence": "watermark-pdf outputs application/pdf. Catalog entries accepting application/pdf include many pdf-* tools, merge-pdf, split-pdf, rotate-pdf, reorder-pdf, etc. The tool is not a dead end.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "watermark-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C6",
+  "evidence": "description says 'cleaner file' / 'do not check' \u2014 not applicable. However pdf-flatten/index.ts line 72: 'We still return the original bytes so chains don't break, but signal it via the progress message.' The description does not mention that no-form PDFs are passed through unchanged. A user who drops a PDF without form fields expecting an error or a transformed PDF gets the original bytes silently. The progress message is invisible to users.",
+  "finding": "Flatten PDF Form description does not disclose that when the PDF has no interactive form fields, the output is the exact same input bytes. Users expecting a flattening operation may think something changed when nothing did. The only signal is a progress message ('No interactive fields \u2014 passing through'), which is non-obvious.",
+  "severity": "medium",
+  "suggestion": "Document that if the PDF has no form fields, the output is identical to input, or add a visible warning in the result.",
+  "toolId": "pdf-flatten",
+  "batch": "pdf"
+ },
+ {
+  "check": "C6",
+  "evidence": "pdf-extract-images/index.ts description: 'PDF Extract Images \u2014 pulls embedded raster images out of a PDF... Coverage varies by PDF: pdfjs preserves some image objects after rendering and not others.' The code at line 63 imports from 'pdfjs-dist/legacy/build/pdf.mjs' and line 68 does GlobalWorkerOptions.workerSrc setting. The description says 'runs in your browser', cost is 'free'. However the workerSrc resolution block uses a try/catch with require.resolve \u2014 this only works in Node. In a browser environment, if window !== 'undefined', GlobalWorkerOptions.workerSrc is never set (line 67 condition is false, so the if-block is skipped entirely), meaning the pdfjs worker will be loaded from its default location (cdnjs or bundled) which is a cross-origin fetch. That fetch transmits user data (the PDF's bytes are passed to worker threads via transferable message, but the worker script location is fetched from external origin). The description says 'runs in your browser' but the worker script fetch is a network request \u2014 this is not a user-data transmission violation (C2) since it's static assets, but the description of coverage is honest about limitations. No finding.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "pdf-extract-images",
+  "batch": "pdf"
+ },
+ {
+  "check": "C7",
+  "evidence": "watermark-pdf types.ts: color default is '#888888'. The code uses hexToRgb to parse it. hexToRgb at line 19: const cleaned = hex.replace('#', ''). If a user passes '#888' (3-char hex), it expands to '#888888' via map(c=>c+c). However if a user passes a named color like 'red' or a hex without '#', hexToRgb returns NaN R/G/B. This would crash at rgb(r,g,b) in pdf-lib. No validation exists.",
+  "finding": "Watermark PDF color parameter accepts any string but only hex colors with '#' work correctly. Named colors, hex without '#', or rgb() strings cause silent NaN crash during rendering. The paramSchema says 'CSS hex color' but there is no client-side validation before run.",
+  "severity": "medium",
+  "suggestion": "Add param validation that color starts with '#' and is valid hex, or use a proper color-picker/enum.",
+  "toolId": "watermark-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C7",
+  "evidence": "pdf-extract-images/index.ts paramSchema for 'quality' says 'showWhen: { field: \"format\", in: [\"jpeg\", \"webp\"] }'. The parameter is present and hidden for PNG, but the defaults object sets quality: 90 unconditionally. When format='png', quality is ignored by code (line 142-144: canvasToBlob(canvas, mime, format === 'png' ? undefined : quality / 100)). This is fine \u2014 no surprise.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "pdf-extract-images",
+  "batch": "pdf"
+ },
+ {
+  "check": "C7",
+  "evidence": "pdf-extract-data/index.ts defaults: currency: '$'. The paramSchema shows a string with placeholder '$' and maxLength 4. The currency is used in moneyPattern to build a regex. If a user sets currency to a multi-character string like 'USD', the regex becomes more permissive (matches literal 'USD' before digits) but parseMoney strips the currency via replace(currency, ''). If currency contains regex-special characters (e.g., '.'), escapeRegExp handles it. If currency is empty string, moneyPattern returns /().../g which matches empty string at every position \u2014 allMatches becomes infinite. This is a likely user error that crashes.",
+  "finding": "PDF Extract Data's currency parameter with an empty string causes an infinite loop in moneyPattern because escapeRegExp('') returns '' and the regex matches everywhere. No validation prevents empty currency.",
+  "severity": "medium",
+  "suggestion": "Reject empty currency parameter or default to '$' when empty.",
+  "toolId": "pdf-extract-data",
+  "batch": "pdf"
+ },
+ {
+  "check": "C3",
+  "evidence": "pdf-form-fields/index.ts output is application/json. The result is PdfFormFieldsResult { count, fields: FieldEntry[] }. FieldEntry has nested type, isRequired, isReadOnly, and optional value (string | boolean | string[]) and options (string[]). This is nested JSON (array of objects with arrays/booleans) \u2014 not a flat one-level object. The runner renders flat objects readably, but this has nested arrays/objects that would show raw code.",
+  "finding": "PDF Form Fields outputs JSON with nested objects/arrays (fields array) that is not human-readable via the runner's flat rendering. Users see raw JSON.",
+  "severity": "medium",
+  "suggestion": "Either flatten the output to a one-level object, or rely on the runner's JSON display (already shows pretty-printed JSON). This may be intentional for further processing. Flag for review: if human-facing, flatten; if machine-only, this is fine.",
+  "toolId": "pdf-form-fields",
+  "batch": "pdf"
+ },
+ {
+  "check": "C3",
+  "evidence": "pdf-extract-data/index.ts output is application/json. The result PdfExtractDataResult has nested objects (MoneyValue: { value, raw }) and arrays (lineItems, warnings, alsoTry). This is nested JSON, not flat.",
+  "finding": "PDF Extract Data outputs nested JSON with nested MoneyValue objects and lineItems array. Not flat one-level. Users see raw JSON in the runner.",
+  "severity": "low",
+  "suggestion": "If human-facing, flatten the output; otherwise this is acceptable for machine consumption.",
+  "toolId": "pdf-extract-data",
+  "batch": "pdf"
+ },
+ {
+  "check": "C2",
+  "evidence": "pdf-extract-data/index.ts: cost 'free', description says 'runs in your browser'. Code uses pdfjs-dist/legacy/build/pdf.mjs with workerSrc resolution. No fetch/XHR of user input data. PDF bytes are never transmitted. Static worker fetch is allowed. Clean.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "pdf-extract-data",
+  "batch": "pdf"
+ },
+ {
+  "check": "C2",
+  "evidence": "All tools in this batch have cost: 'free' and use pdf-lib or pdfjs-dist for PDF manipulation. No network transmission of user input data. Static worker scripts are allowed by the rules. Clean for all tools.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "merge-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C5",
+  "evidence": "catalog.txt has both 'pdf-extract-pages' and 'split-pdf'. Name 'Split PDF' vs 'Extract PDF Pages' \u2014 both extract pages from a PDF but differ in output (split produces multiple PDFs, extract-pages produces one). Not confusable enough to flag \u2014 the descriptions differentiate.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "split-pdf",
+  "batch": "pdf"
+ },
+ {
+  "check": "C5",
+  "evidence": "Catalog has both 'pdf-flatten' (Flatten PDF Form) and 'pdf-form-fields'. Names are distinct and not confusable.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "pdf-form-fields",
+  "batch": "pdf"
+ },
+ {
+  "check": "C5",
+  "evidence": "Catalog has both 'pdf-extract-images' and 'pdf-to-image' and 'image-to-pdf'. Names are distinct and description clarifies difference.",
+  "finding": "",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "pdf-extract-images",
+  "batch": "pdf"
+ },
+ {
+  "toolId": "pgp-encrypt",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Output mime metadata declares 'text/plain' but the code returns 'application/pgp-encrypted' when the armor parameter is false.",
+  "evidence": "Metadata: \"output: { mime: 'text/plain' }\" vs code: \"return [new Blob([binaryBytes.buffer as ArrayBuffer], { type: 'application/pgp-encrypted' })];\"",
+  "suggestion": "Update output mime declaration to reflect both possible types, e.g., use 'text/plain, application/pgp-encrypted' or change metadata to 'application/octet-stream' and adjust param defaults.",
+  "batch": "privacy"
+ },
+ {
+  "toolId": "bg-remove",
+  "check": "C6",
+  "severity": "medium",
+  "finding": "Output mime metadata declares 'image/png' but the code can output 'image/webp' when the outputFormat parameter is set to 'webp'.",
+  "evidence": "Metadata: \"output: { mime: 'image/png' }\" vs code lines 83-86: \"const outputMime = params.outputFormat === 'webp' ? 'image/webp' : 'image/png';\"",
+  "suggestion": "Update output mime declaration to include 'image/webp' or document that only PNG is the declared output while webp is an internal override.",
+  "batch": "privacy"
+ },
+ {
+  "toolId": "prompt-injection-demo",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output is application/json with nested structures (highlights array of objects) intended for human reading. The default flat renderer would show raw JSON, which is not readable for a human-facing display.",
+  "evidence": "Code returns JSON containing \"highlights\": [{\"start\":...,\"end\":...,\"text\":...,\"kind\":...,\"severity\":...,\"detail\":...}]. This is nested and not flat one-level.",
+  "suggestion": "Consider flattening the key human-readable fields (e.g., summary, totals) into a top-level flat object and moving nested highlights to a separate field that the runner can optionally expand, or mark the tool as interactive to use its own render.",
+  "batch": "privacy"
+ },
+ {
+  "toolId": "content-safety-pro",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output is application/json with a nested array property (categories) that would show raw JSON in the default flat renderer, reducing readability.",
+  "evidence": "Code returns JSON containing \"categories\": [...] array of strings. The runner renders flat one-level objects readably, but arrays/objects within are displayed as raw code.",
+  "suggestion": "Flatten categories into a comma-separated string or use an object with boolean keys so the runner can render it readably.",
+  "batch": "privacy"
+ },
+ {
+  "check": "C1",
+  "evidence": "The run function unconditionally joins sentences and returns the result; there is no code comparing output size to input size or warning when the result is larger.",
+  "finding": "Tool promises to split prose into individual sentences, but produces no check for cases where splitting increases file size (e.g. tiny input with oneLine=true adds newlines).",
+  "severity": "low",
+  "suggestion": "Consider a guard that warns or returns input unchanged if output would be larger.",
+  "toolId": "text-sentences",
+  "batch": "text-1"
+ },
+ {
+  "check": "C4",
+  "evidence": "Tool output is text/markdown. The only catalog tool accepting text/markdown input is markdown-to-html (accepts text/plain,text/markdown). However, markdown-toc is listed itself in catalog.txt with out: text/markdown; the chain would never loop back. No tool after text/plain or text/markdown produces text/markdown (except markdown-toc). There is no tool that consumes text/markdown as input besides itself and markdown-to-html, so practical chaining is very limited.",
+  "finding": "Output MIME text/markdown has extremely few downstream consumers in the catalog (only markdown-to-html).",
+  "severity": "low",
+  "suggestion": "Consider also outputting as text/plain so users can chain to any text tool, or list chainSuggestions including markdown-to-html.",
+  "toolId": "markdown-toc",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The run() function calls ctx.onProgress with stage: 'done' before awaiting the pro service, and then creates the Blob from result.summary. There is no post-processing or validation that the summary is actually shorter or better than input.",
+  "finding": "Name 'Summarize' and description promise 'higher-quality summarization' but the code contains no guarantee that the output is a summary \u2014 it directly wraps runPro and trusts its response. If the model returns a verbatim copy or a longer text, the tool silently accepts it.",
+  "severity": "low",
+  "suggestion": "Add a check that output length is less than input length, or document the limitation.",
+  "toolId": "text-summarize-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The run function sets target = (params.target ?? 'English').trim() || 'English'. The default param from the spec is 'English' (defaultTextTranslateProParams.target = 'English'). However, the paramSchema defines target as a string type with no enum options, meaning the user must type a language name or ISO code. The default value 'English' is a sensible default but there is no validation that the value is a valid language.",
+  "finding": "If user passes an invalid or misspelled language, the tool will silently send it to the hosted model with no error until the model potentially fails.",
+  "severity": "low",
+  "suggestion": "Add validation or a dropdown of common language options.",
+  "toolId": "text-translate-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The description says 'Returns positive / negative / neutral' but the run function wraps runPro and the type annotation says { sentiment: string } \u2014 there is no code enforcing that the result is exactly one of those three values; the model could return anything.",
+  "finding": "Description promises a ternary classification (positive / negative / neutral) but the code does not validate the model response against those three values.",
+  "severity": "medium",
+  "suggestion": "Validate the returned sentiment is one of the promised values, or soften the description.",
+  "toolId": "text-sentiment-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output is application/json with structure { sentiment: string }. This is a flat one-level object \u2014 the spec explicitly says flat one-level objects are fine.",
+  "finding": "No finding \u2014 output JSON is flat one-level.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentiment-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "Description says 'pulls people, organisations, places, dates, and money references' but the type annotation only defines NerHit with types 'PERSON' | 'ORG' | 'LOCATION' | 'DATE' | 'MONEY' | 'OTHER'. The hosted model could return any type not in this union; the code does not validate or reject unexpected entity types.",
+  "finding": "Code does not enforce the claimed entity categories \u2014 model could return types outside the documented list and they would be silently passed through to the user.",
+  "severity": "low",
+  "suggestion": "Add validation or filtering to ensure only documented entity types are included.",
+  "toolId": "text-ner-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output is application/json with structure { entities: NerHit[] }. This is a nested array structure \u2014 the spec says flat one-level objects are okay but nested arrays/objects should be flagged as they'd show raw code.",
+  "finding": "Human-facing JSON output is nested (array of objects), which the runner does not pretty-render beyond one level.",
+  "severity": "low",
+  "suggestion": "Consider a flat summary (e.g. entity count per type) alongside the raw array, or mark as machine-readable.",
+  "toolId": "text-ner-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The 'style' param is documented as optional and defaults to ''. When empty, the run function passes style: undefined (line: style: params.style?.trim() || undefined). This sends undefined to the pro runner \u2014 but the pro runner may not handle undefined gracefully or may skip the style hint entirely.",
+  "finding": "Empty string default for optional 'style' param is reasonable, but no evidence of surprising defaults.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-summarize-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C4",
+  "evidence": "Tool outputs text/plain. The catalog has many text/plain consumers, but the run function is single-file input only.",
+  "finding": "No dead end; text/plain is widely consumed.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentences",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The 'oneLine' param default is true, which outputs one sentence per line. The spec says 'One line per sentence' but a user expecting 'one line' might expect a single-line comma-separated output (which is what oneLine=false gives). The param label says 'one sentence per line' but the param name is 'oneLine' \u2014 this is potentially confusing.",
+  "finding": "Param name 'oneLine' is counterintuitive: when true, it produces multiple lines (one per sentence).",
+  "severity": "medium",
+  "suggestion": "Rename to 'multiLine' or 'linePerSentence' to match actual behavior.",
+  "toolId": "text-sentences",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. The code imports compromise library (loaded dynamically) and processes text entirely client-side. No fetch/XHR of user input is visible.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentences",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. The code uses compromise fully client-side. No network calls for user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-keywords",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output JSON has structure with nested arrays (TextKeywordsResult has arrays of KeywordEntry which are objects). This is not a flat one-level object.",
+  "finding": "Human-facing JSON output has nested arrays/objects that would show raw code in runner display.",
+  "severity": "low",
+  "suggestion": "Consider a flat summary alongside the full data, or mark as machine-oriented.",
+  "toolId": "text-keywords",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses compromise fully client-side. No network calls.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-dates",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output JSON has nested structure (TextDatesResult contains array of DateHit objects). Not flat one-level.",
+  "finding": "Human-facing JSON output has nested array of objects.",
+  "severity": "low",
+  "suggestion": "Consider a flat summary (e.g. count only) alongside detailed data.",
+  "toolId": "text-dates",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The tryNormalize function explicitly skips relative forms like 'next Tuesday' (line: if (/^(next|last|this)\\s/i.test(s)) return undefined;). The description says it optionally normalizes to ISO, but the code silently only normalizes absolute forms.",
+  "finding": "The normalize feature silently skips relative dates like 'next Tuesday' without warning, which may surprise users expecting a unified ISO result.",
+  "severity": "medium",
+  "suggestion": "Document the limitation or add a fallback/estimate for relative dates.",
+  "toolId": "text-dates",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. The code uses DOMParser and @mozilla/readability fetched dynamically; readability is a static JS asset (no user data sent). No transmission of user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "extract-article-text",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The 'format' param defaults to 'text' but when format='html', the output MIME is set to 'text/html' via Blob type. The tool's declared output mime is 'text/plain'; returning text/html may confuse downstream tools.",
+  "finding": "With format='html', the output MIME is set to 'text/html' but the declared output mime is 'text/plain' \u2014 mismatch could break chain validation.",
+  "severity": "medium",
+  "suggestion": "Either declare both output types or coerce HTML output to plain text.",
+  "toolId": "extract-article-text",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The description says 'Powered by Mozilla's Reader View algorithm'. The import is @mozilla/readability which is indeed Mozilla's Reader View algorithm. Accurate.",
+  "finding": "No inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "extract-article-text",
+  "batch": "text-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "Not a transform/optimize tool \u2014 it extracts content from HTML, which is a structural transformation, not a promise to make files smaller/cleaner.",
+  "finding": "C1 not applicable.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "extract-article-text",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'credit' \u2014 network calls are expected for hosted models. Description says 'powered by a hosted Llama-class model' and does not claim local-only execution.",
+  "finding": "No privacy misrepresentation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-summarize-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'credit'. Uses runPro, which is a hosted service. Description explicitly says 'Hosted Llama-class translation'. No claim of local-only.",
+  "finding": "No privacy misrepresentation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-translate-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'credit'. Uses runPro, a hosted service. Description says 'Hosted LLM sentiment classification'. No claim of local-only.",
+  "finding": "No privacy misrepresentation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentiment-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'credit'. Uses runPro, a hosted service. Description says 'Hosted LLM named-entity extraction'. No claim of local-only.",
+  "finding": "No privacy misrepresentation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-ner-pro",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The description says 'Classify text as positive or negative' but the code returns only 'POSITIVE' | 'NEGATIVE' with no 'neutral' class. The code at line 'label: item.label === \"POSITIVE\" ? \"POSITIVE\" : \"NEGATIVE\"' explicitly collapses any other label to NEGATIVE (including if model returns 'NEUTRAL').",
+  "finding": "Description correctly says positive or negative \u2014 no neutral class is claimed. However, the code's hard mapping could misclassify a neutral result as NEGATIVE.",
+  "severity": "low",
+  "suggestion": "Consider adding a neutral threshold or returning the raw label.",
+  "toolId": "text-sentiment",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. The code uses getPipeline which loads a model from HuggingFace (Xenova/distilbert-base-uncased-finetuned-sst-2-english) \u2014 this is a static model download from a CDN, not user input transmission. No transmission of user input.",
+  "finding": "No privacy violation \u2014 model download is a static asset fetch.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentiment",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses getPipeline to load Xenova/bert-base-NER from CDN \u2014 static asset, no user input transmission.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-ner",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output JSON has nested structure: { entities: [{ text, type, start, end, score }] }",
+  "finding": "Nested array output for human-facing JSON.",
+  "severity": "low",
+  "suggestion": "Consider flat summary or alternative display.",
+  "toolId": "text-ner",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The run function returns a Blob[] (single-element array with the result). However, the text-sentiment and text-ner (and other free tools using getPipeline) have a 'run' signature that returns Promise<Blob[]>, while text-sentences, text-keywords, text-dates, extract-article-text return Promise<Blob>. The spec metadata says outputs: something, but the two different signatures are inconsistent.",
+  "finding": "The free model-based tools (text-sentiment, text-ner, text-summarize, text-translate, text-embed, text-readability, text-stats, text-diff-levenshtein, unicode-normalize, markdown-toc) return Blob[] (array) while the compromise-based tools return Blob. This inconsistency is confusing but both work with the runner interface.",
+  "severity": "low",
+  "suggestion": "Harmonize all tools to return either Blob or Blob[], not a mix.",
+  "toolId": "text-sentiment",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses getPipeline for DistilBART model from CDN. Static asset, no user data transmission.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-summarize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The params 'maxLength' and 'minLength' default to 100 and 30 tokens. There is no validation that the input text is longer than minLength (the model will just generate a short text if input is shorter). The sizeLimit is 1 MB but these token limits refer to output, not input.",
+  "finding": "Parameters are reasonable defaults. No surprising defaults.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-summarize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. The code first tries the browser's built-in Translator API (Chrome 131+, on-device, no network). Fallback is M2M100 model from CDN (static asset). No transmission of user input to model servers \u2014 M2M100 runs locally via Transformers.js. The browser Translator is also on-device.",
+  "finding": "No privacy violation \u2014 both paths run on-device.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-translate",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The description says 'Uses your browser's built-in translator when available (Chrome 131+), falling back to the M2M100 model.' The code first tries the modern Translator API, then the legacy window.translation API, then falls to M2M100. Code matches description.",
+  "finding": "No description inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-translate",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses getPipeline for all-MiniLM-L6-v2 from CDN. Static asset. No transmission of user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-embed",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output JSON has nested structure: { embeddings: number[][], pairwise: Array<{a,b,cosine}> } \u2014 only the pairwise array is flat objects, but embeddings is a 2D array.",
+  "finding": "Output JSON has nested arrays (embeddings is number[][]).",
+  "severity": "low",
+  "suggestion": "Consider a summary showing embedding count and dimensionality instead of raw arrays.",
+  "toolId": "text-embed",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses the npm package 'text-readability' (pure JS, no network). No transmission of user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-readability",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output JSON is flat one-level object (all numeric/string values). This is fine per the spec.",
+  "finding": "No finding \u2014 flat one-level object.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-readability",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses pure JS computation. No network calls.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-stats",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output is flat one-level object with all numeric values.",
+  "finding": "No finding \u2014 flat one-level object.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-stats",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses dynamic import of 'leven' (pure JS, no network). No transmission of user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-diff-levenshtein",
+  "batch": "text-1"
+ },
+ {
+  "check": "C3",
+  "evidence": "Output is flat one-level object (distance, similarity, maxLength). Fine per the spec.",
+  "finding": "No finding \u2014 flat one-level object.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-diff-levenshtein",
+  "batch": "text-1"
+ },
+ {
+  "check": "C1",
+  "evidence": "Not a transform/optimize tool \u2014 it normalizes unicode (structural transformation, not size/quality promise).",
+  "finding": "C1 not applicable.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "unicode-normalize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C2",
+  "evidence": "Cost is 'free'. Uses String.prototype.normalize \u2014 built-in, no network. No transmission of user input.",
+  "finding": "No privacy violation.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "unicode-normalize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C6",
+  "evidence": "The description says 'removes invisible differences between identical-looking strings'. Unicode normalization does exactly that. Code uses native normalize().",
+  "finding": "No inaccuracy.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "unicode-normalize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C7",
+  "evidence": "The buildToc function calls extractHeadings which checks t.type === 'heading'. Marked's lexer produces tokens with type 'heading' for ATX headings (#) and setext headings. This is correct.",
+  "finding": "No param issues \u2014 reasonable defaults for minLevel, maxLevel, indent, skipFirstH1.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "markdown-toc",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Catalog.txt shows both 'text-diff-levenshtein' (name: Levenshtein Distance) and 'text-diff' (name: Text Diff). These are distinct: one computes edit distance (JSON), one produces text diff (text/plain). No confusable naming.",
+  "finding": "No naming conflict detected.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-diff-levenshtein",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Sentiment Analysis' vs Sentiment (text-sentiment-pro). The free version is 'Sentiment Analysis' and pro is 'Sentiment'. These are similar but not identical and the pro version is cost='credit' so the distinction is clear. No confusable issue.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-sentiment",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Named Entity Recognition' vs Named Entity Recognition (text-ner-pro). Same as above \u2014 one is free, one is pro. Distinct IDs.",
+  "finding": "No naming conflict \u2014 the 'pro' suffix distinguishes.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-ner",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Summarize Text' vs Summarize (text-summarize-pro). The free version is 'Summarize Text' and the pro is 'Summarize'. Similar but the IDs are different (text-summarize vs text-summarize-pro). Could be confusing in the UI if both are shown.",
+  "finding": "Potential confusion between 'Summarize Text' (free) and 'Summarize' (pro) in a UI list.",
+  "severity": "low",
+  "suggestion": "Consider more distinct naming or a 'pro' badge to differentiate clearly.",
+  "toolId": "text-summarize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Translate Text' vs Translate (text-translate-pro). Same pattern as summarization.",
+  "finding": "Potential confusion between 'Translate Text' (free) and 'Translate' (pro).",
+  "severity": "low",
+  "suggestion": "Consider 'Translate Text' vs 'Translate (Pro)' or similar.",
+  "toolId": "text-translate",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Text Embeddings' is unique in catalog. No conflict.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-embed",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Readability Scores' is unique in catalog.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-readability",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Text Statistics' vs 'Text Stats by Paragraph' (text-stats-by-paragraph) in catalog. Catalog.txt lists 'text-stats-by-paragraph' with name 'Text Stats by Paragraph'. These are distinct.",
+  "finding": "No naming conflict \u2014 'Text Statistics' and 'Text Stats by Paragraph' are sufficiently different.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-stats",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Levenshtein Distance' is unique. No conflict.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "text-diff-levenshtein",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Unicode Normalize' is unique. No conflict.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "unicode-normalize",
+  "batch": "text-1"
+ },
+ {
+  "check": "C5",
+  "evidence": "Tool name 'Markdown TOC' is unique in catalog.",
+  "finding": "No naming conflict.",
+  "severity": "low",
+  "suggestion": "",
+  "toolId": "markdown-toc",
+  "batch": "text-1"
+ },
+ {
+  "toolId": "markdown-frontmatter",
+  "check": "C3",
+  "severity": "low",
+  "finding": "The output MIME is application/json and the result structure contains nested objects/arrays: 'frontmatter' can be a nested Record, and 'range' is an object of form {startLine, endLine}. The runner only renders flat one-level objects readably \u2014 nested structures like these would show raw JSON.",
+  "evidence": "Source interface MarkdownFrontmatterResult { frontmatter: Record<string, unknown> | null; range: { startLine: number; endLine: number } | null; }",
+  "suggestion": "Flatten the top-level result to display frontmatter keys as own fields and range as two separate fields, or provide a summary view.",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "markdown-frontmatter",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is application/json and text/markdown. The catalog has tools that accept application/json (csv-json, json-formatter, json-schema-validate, etc.) and text/markdown (markdown-to-html, html-to-markdown, text-stats-by-paragraph, etc.), so not a dead end.",
+  "evidence": "catalog.txt shows multiple tools accepting application/json and text/plain/text/markdown.",
+  "suggestion": "No deadEnd. Suggest chains: chainSuggestions: ['frontmatter-to-csv', 'csv-json', 'html-to-markdown']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "html-clean",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain. The catalog has many tools that accept text/plain, so not a dead end.",
+  "evidence": "catalog.txt lists tools accepting text/plain, such as text-diff, word-counter, text-stats-by-paragraph, etc.",
+  "suggestion": "No deadEnd. Suggest chains: chainSuggestions: ['text-stats-by-paragraph', 'word-counter', 'text-diff']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "html-extract-links",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json and the result structure contains nested objects: 'byKind' is a partial record, 'hostnames' is a flat record (ok), but 'links' is an array of ExtractedLink objects (each an object with nested fields like resolved, hostname). The runner renders flat one-level objects readably \u2014 the nested links array would show raw JSON.",
+  "evidence": "Source interface HtmlExtractLinksResult { byKind: Partial<Record<LinkKind, number>>; links: ExtractedLink[]; } and ExtractedLink has nested optional fields.",
+  "suggestion": "Provide a flat summary count by kind at the top level so the primary readout is flat; the full links array could be collapsed or paginated.",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "html-extract-links",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is application/json. The catalog has tools that accept application/json, so not a dead end.",
+  "evidence": "catalog.txt lists many tools accepting application/json (csv-json, json-formatter, json-schema-validate, etc.).",
+  "suggestion": "No deadEnd. Suggest chains: chainSuggestions: ['csv-json', 'json-formatter', 'url-parse']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "text-stats-by-paragraph",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json and the result structure contains nested objects: 'paragraphs' is an array of ParagraphStats objects, and each ParagraphStats object may contain 'readability' (a nested object with flesch/fleschKincaid/gunningFog). The runner only renders flat one-level objects readably \u2014 these nested structures would show raw JSON.",
+  "evidence": "Source interface TextStatsByParagraphResult { paragraphs: ParagraphStats[]; } and ParagraphStats has nested readability?: { flesch: number; fleschKincaid: number; gunningFog: number; }.",
+  "suggestion": "Flatten readability fields to the paragraph level (flesch, fleschKincaid, gunningFog as top-level optional fields) so the runner's flat display works.",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "text-stats-by-paragraph",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is application/json. The catalog has tools that accept application/json, so not a dead end.",
+  "evidence": "catalog.txt lists many tools accepting application/json.",
+  "suggestion": "No deadEnd. Suggest chains: chainSuggestions: ['csv-json', 'json-formatter', 'html-to-markdown']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "text-template",
+  "check": "C3",
+  "severity": "low",
+  "finding": "Output MIME is text/plain (and application/json for the report blob). The primary output is text/plain, so C3 does not apply to the main output. The secondary report blob is application/json but is a flat { resolved: string[], missing: string[] } \u2014 a flat one-level object that the runner renders readably.",
+  "evidence": "The code returns two blobs: one text/plain (rendered text), one application/json with { resolved, missing }. The JSON has only two arrays at the top level.",
+  "suggestion": "No issue.",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "text-template",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain (main) and application/json (report). The catalog has tools that accept both text/plain and application/json, so not a dead end.",
+  "evidence": "catalog.txt lists tools accepting text/plain and application/json.",
+  "suggestion": "No deadEnd. Suggest chains: chainSuggestions: ['case-converter', 'slug', 'text-stats-by-paragraph']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "translate-many-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain. The catalog has tools that accept text/plain, so not a dead end.",
+  "evidence": "catalog.txt lists text-to-speech-pro (accepts text/plain), text-summarize-pro (accepts text/plain).",
+  "suggestion": "No deadEnd. chainSuggestions: ['text-to-speech-pro', 'text-summarize-pro', 'text-stats-by-paragraph']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "deep-analysis-pro",
+  "check": "C3",
+  "severity": "medium",
+  "finding": "Output MIME is application/json and the result structure contains nested objects: 'result' has { answer: string; reasoning: string }. Although these are flat at one level, the user sees these two text fields as JSON key-value pairs. The runner renders flat one-level objects readably \u2014 so nested isn't the issue, but the runner's flat display would show 'answer' and 'reasoning' as key-value text pairs, which is readable. However, if the 'reasoning' field is a long step-by-step text, rendering it in a flat JSON view is not ideal for a human reading experience. The 'answer' and 'reasoning' are both strings, so the flat display works, but a prose-oriented display might be better.",
+  "evidence": "Source interface AnalysisResult { answer: string; reasoning: string; } \u2014 flat one-level object.",
+  "suggestion": "Consider a custom output display for this tool rather than raw JSON, but the runner's flat rendering works.",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "deep-analysis-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is application/json. The catalog has tools that accept application/json, so not a dead end.",
+  "evidence": "catalog.txt lists many tools accepting application/json.",
+  "suggestion": "No deadEnd. chainSuggestions: ['json-extract-pro', 'text-summarize-pro', 'text-to-speech-pro']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "fix-grammar-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain. The catalog has tools that accept text/plain, so not a dead end.",
+  "evidence": "catalog.txt lists tools accepting text/plain.",
+  "suggestion": "No deadEnd. chainSuggestions: ['rewrite-tone-pro', 'text-to-speech-pro', 'text-stats-by-paragraph']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "rewrite-tone-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain. The catalog has tools that accept text/plain, so not a dead end.",
+  "evidence": "catalog.txt lists tools accepting text/plain.",
+  "suggestion": "No deadEnd. chainSuggestions: ['fix-grammar-pro', 'text-to-speech-pro', 'case-converter']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "json-extract-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is application/json. The catalog has many tools that accept application/json, so not a dead end.",
+  "evidence": "catalog.txt lists many tools accepting application/json.",
+  "suggestion": "No deadEnd. chainSuggestions: ['csv-json', 'json-formatter', 'json-schema-validate']",
+  "batch": "text-2"
+ },
+ {
+  "toolId": "translate-indic-pro",
+  "check": "C4",
+  "severity": "low",
+  "finding": "Output is text/plain. The catalog has tools that accept text/plain, so not a dead end.",
+  "evidence": "catalog.txt lists text-to-speech-pro (accepts text/plain).",
+  "suggestion": "No deadEnd. chainSuggestions: ['text-to-speech-pro', 'text-stats-by-paragraph', 'text-summarize-pro']",
+  "batch": "text-2"
+ }
+]
