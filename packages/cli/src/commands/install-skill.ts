@@ -32,21 +32,27 @@ interface SkillDef {
   sha256?: string;
 }
 
+// sha256 values are pinned to the committed skill.md files; the
+// skill-defs-hashes test recomputes them from the repo so any edit to a
+// skill file fails CI until the pins here are updated in the same commit.
 export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
   cli: {
     name: 'wyreup-cli',
     url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/cli-skill/skill.md',
     description: 'CLI-only (smallest, for Claude Code shell agents)',
+    sha256: '5dd6211ba296ddd4f3254df21c402b816f4f9e876c0cdd849be6b2f5fa98141f',
   },
   mcp: {
     name: 'wyreup-mcp',
     url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/mcp-skill/skill.md',
     description: 'MCP-only (for agents that call tools via MCP)',
+    sha256: '42138af4a4391d0ba0c53bf7ad660dd24bdcb8016e00f85ea1a825bff5723c52',
   },
   combined: {
     name: 'wyreup',
     url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/skill/skill.md',
     description: 'Both CLI and MCP (default; for most setups)',
+    sha256: '5980ebae0b6be02549fd6d89e456623fe1a8fc835d1eaadb5ad24bf4de4ca968',
   },
 };
 
