@@ -13,12 +13,14 @@ session lead. Raw data: 279 findings, 258 chain-suggestion entries
 - **No ship-blocking defects found.** All 10 worker-reported "high"
   findings were refuted, downgraded, or turned out to be intentional on
   verification (details below). The catalog's core behavior is sound.
-- **The one systemic web gap is param exposure**: 43 tools have params in
-  `defaults` that are absent from `paramSchema`. MCP/CLI agents see them
-  (the MCP server derives schemas from `defaults`), and every spot-checked
-  tool has a custom web runner supplying its own UI — but each of those 43
-  custom runners should be checked once for full param coverage
-  (e.g. does zip-extract's runner expose the promised glob `filter`?).
+- **Param exposure resolved (wave-2 audit, 2026-07-11): no functional
+  gaps.** 43 tools have params in `defaults` absent from `paramSchema`,
+  but every rendering path derives from `defaults`: the MCP server builds
+  agent schemas from it, and the web `ParamsForm` iterates `defaults`
+  directly (verified live: crop renders x/y/width/height as editable
+  inputs). `paramSchema` only upgrades widgets — labels, help text,
+  sliders, enums. The 43-tool list is therefore a widget-polish backlog,
+  not a bug list.
 - **2 dead-end tools** whose output no catalog tool accepts:
   `split-sheets`, `chat-long-pdf-pro`.
 - **242 tools now have curated chain suggestions** proposed
