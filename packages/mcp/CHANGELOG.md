@@ -1,5 +1,12 @@
 # @wyreup/mcp
 
+## 0.7.9
+
+### Patch Changes
+
+- Updated dependencies [174011f]
+  - @wyreup/core@0.6.9
+
 ## 0.7.8
 
 ### Patch Changes
