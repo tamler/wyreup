@@ -667,6 +667,9 @@ Ordered by priority.
      on any content edit). Treat the two together as one deliberate "CSP
      hardening" project; not urgent.
 10. **Release publish doesn't auto-fire after the changesets version PR.**
+    *Partially addressed 2026-07-12:* Release now has a `workflow_dispatch`
+    trigger, so the manual step is `gh workflow run Release` instead of an
+    empty commit. Fully hands-off still needs the PAT/app-token merge.
     Hit on 2026-06-09. `.github/workflows/release.yml` triggers only on
     `push: branches: [main]`. The version PR is auto-merged by the Actions
     bot's `GITHUB_TOKEN`, and GitHub deliberately suppresses workflow runs

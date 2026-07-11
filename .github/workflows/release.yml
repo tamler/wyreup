@@ -3,6 +3,10 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual trigger for the bot-merge gap: the auto-merged version PR is
+  # committed by GITHUB_TOKEN, which never fires push workflows. Instead of
+  # pushing an empty commit, run `gh workflow run Release`. (ROADMAP item 10)
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
