@@ -15,7 +15,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
   slug: 'pdf-flatten',
   name: 'Flatten PDF Form',
   description:
-    "Lock interactive form fields into the page content so values can't be edited or cleared. Useful before sending a filled form back to a counterparty. Runs entirely in your browser.",
+    "Lock interactive form fields into the page content so values can't be edited or cleared. Useful before sending a filled form back to a counterparty. A PDF with no form fields passes through unchanged. Runs entirely in your browser.",
   category: 'pdf',
   keywords: ['pdf', 'flatten', 'form', 'lock', 'fields', 'finalize', 'static'],
 

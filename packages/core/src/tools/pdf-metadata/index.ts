@@ -21,7 +21,7 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
   id: 'pdf-metadata',
   slug: 'pdf-metadata',
   name: 'PDF Metadata',
-  description: 'Read, write, or strip metadata (title, author, keywords, etc.) from a PDF.',
+  description: 'Read, write, or strip metadata (title, author, keywords, etc.) from a PDF. Read mode returns a JSON report; write and strip return the PDF.',
   category: 'edit',
   keywords: ['pdf', 'metadata', 'title', 'author', 'keywords', 'strip'],
 

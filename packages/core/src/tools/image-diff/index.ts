@@ -9,7 +9,7 @@ export const imageDiff: ToolModule<ImageDiffParams> = {
   id: 'image-diff',
   slug: 'image-diff',
   name: 'Image Diff',
-  description: 'Pixel-level diff between two images of the same dimensions.',
+  description: 'Pixel-level diff between two images of the same dimensions. Outputs a highlighted diff image plus a JSON stats report.',
   category: 'inspect',
   keywords: ['diff', 'compare', 'pixel', 'difference', 'inspect'],
 

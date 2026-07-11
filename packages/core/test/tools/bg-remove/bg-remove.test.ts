@@ -15,8 +15,8 @@ describe('bg-remove — metadata', () => {
     expect(bgRemove.input.accept).toContain('image/png');
   });
 
-  it('outputs image/png', () => {
-    expect(bgRemove.output.mime).toBe('image/png');
+  it('outputs image/* (png default, webp via outputFormat)', () => {
+    expect(bgRemove.output.mime).toBe('image/*');
   });
 
   it('has installSize ~100 MB', () => {

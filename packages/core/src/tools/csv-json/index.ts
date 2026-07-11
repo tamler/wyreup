@@ -110,7 +110,7 @@ export const csvJson: ToolModule<CsvJsonParams> = {
   id: 'csv-json',
   slug: 'csv-json',
   name: 'CSV ↔ JSON',
-  description: 'Convert between CSV and JSON formats. Auto-detects direction from input.',
+  description: 'Convert between CSV and JSON formats. Auto-detects direction from input. JSON input must be an array of objects.',
   category: 'dev',
   keywords: ['csv', 'json', 'convert', 'table', 'data', 'transform', 'spreadsheet'],
 

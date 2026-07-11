@@ -79,7 +79,7 @@ export const urlBuild: ToolModule<UrlBuildParams> = {
   slug: 'url-build',
   name: 'URL Build',
   description:
-    'Assemble a URL from JSON parts (protocol, hostname, port, path, searchParams, hash). Round-trips with url-parse — parse a URL, edit the JSON, build it back.',
+    'Assemble a URL from JSON parts (protocol, hostname, port, path, searchParams, hash) entered in the spec parameter. Round-trips with url-parse — parse a URL, edit the JSON, paste it into spec, build it back.',
   category: 'create',
   keywords: ['url', 'build', 'compose', 'assemble', 'query', 'construct'],
 

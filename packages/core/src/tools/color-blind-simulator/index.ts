@@ -73,7 +73,8 @@ export const colorBlindSimulator: ToolModule<ColorBlindSimulatorParams> = {
     max: 1,
     sizeLimit: 50 * 1024 * 1024,
   },
-  output: { mime: 'image/png' },
+  // PNG by default; JPEG/WebP when the format param says so.
+  output: { mime: 'image/*' },
 
   interactive: true,
   batchable: true,

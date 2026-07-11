@@ -32,7 +32,7 @@ export const wordCounter: ToolModule<WordCounterParams> = {
   id: 'word-counter',
   slug: 'word-counter',
   name: 'Word Counter',
-  description: 'Count words, characters, sentences, paragraphs, and estimate reading time.',
+  description: 'Count words, characters, sentences, paragraphs, and estimate reading time. HTML tags are stripped first; Markdown syntax is counted as written.',
   category: 'inspect',
   keywords: ['word', 'count', 'character', 'sentence', 'paragraph', 'reading', 'time'],
 

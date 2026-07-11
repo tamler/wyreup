@@ -15,9 +15,12 @@ function getExtFromFile(file: File): string {
 }
 
 /**
- * Strip all metadata (title, comment, encoder, GPS/location, creation time,
- * chapter tags) while stream-copying both streams — `-map_metadata -1` drops
- * the global metadata, `-c copy` keeps the media bit-for-bit.
+ * Strip container-level metadata (title, comment, GPS/location, creation
+ * time, chapter tags) while stream-copying both streams — `-map_metadata -1`
+ * drops the global metadata, `-c copy` keeps the media bit-for-bit.
+ * Per-stream tags (handler/encoder names) survive; a true all-stream strip
+ * needs `-map_metadata:s:<type> -1` per stream and runtime verification —
+ * tracked in the tool-review backlog.
  */
 export function buildStripMetadataArgs(inputName: string, outputName: string): string[] {
   return ['-i', inputName, '-map_metadata', '-1', '-c', 'copy', outputName];
@@ -28,7 +31,7 @@ export const stripVideoMetadata: ToolModule<StripVideoMetadataParams> = {
   slug: 'strip-video-metadata',
   name: 'Strip Video Metadata',
   description:
-    'Remove all metadata (location, device, creation date, tags) from a video or audio file. No re-encode.',
+    'Remove container metadata (location, device, creation date, tags) from a video or audio file. Per-stream tags like encoder names may remain. No re-encode.',
   category: 'media',
   categories: ['privacy', 'audio'],
   keywords: [

@@ -96,7 +96,8 @@ export const romanNumeral: ToolModule<RomanNumeralParams> = {
   keywords: ['roman', 'numeral', 'arabic', 'convert', 'encode', 'decode'],
 
   input: {
-    accept: ['*/*'],
+    // Params-only: the converter reads the `input` param, never file contents.
+    accept: [],
     min: 0,
     sizeLimit: 0,
   },

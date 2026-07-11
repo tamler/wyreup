@@ -169,7 +169,7 @@ export const colorPalette: ToolModule<ColorPaletteParams> = {
   id: 'color-palette',
   slug: 'color-palette',
   name: 'Color Palette',
-  description: 'Extract dominant colors from an image as hex codes.',
+  description: 'Extract dominant colors from an image as hex codes. Transparent pixels are ignored, and large images are downsampled before analysis.',
   category: 'inspect',
   keywords: ['color', 'palette', 'dominant', 'extract', 'vibrant', 'inspect'],
 

@@ -31,7 +31,8 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
     max: 1,
     sizeLimit: 20 * 1024 * 1024, // 20 MB; capped to avoid OOM at 512x512 inference
   },
-  output: { mime: 'image/png' },
+  // PNG by default; WebP when outputFormat is 'webp'.
+  output: { mime: 'image/*' },
 
   interactive: true,
   batchable: false,

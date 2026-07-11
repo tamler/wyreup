@@ -48,7 +48,7 @@ export const csvMerge: ToolModule<CsvMergeParams> = {
   slug: 'csv-merge',
   name: 'CSV Merge',
   description:
-    'Join two CSVs on a key column. Inner, left, right, or outer join — colliding column names get a configurable suffix on the right side.',
+    'Join two CSVs on a key column. Inner, left, right, or outer join — colliding column names get a configurable suffix on the right side. The right file\'s key column is dropped (it duplicates the left one).',
   category: 'edit',
   keywords: ['csv', 'merge', 'join', 'inner', 'outer', 'left', 'combine'],
 
