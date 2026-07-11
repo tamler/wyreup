@@ -1,4 +1,5 @@
 import { createRegistry, type ToolRegistry } from './registry.js';
+import { CURATED_CHAIN_SUGGESTIONS } from './chain/curated-suggestions.js';
 import { compress } from './tools/compress/index.js';
 import { convert } from './tools/convert/index.js';
 import { stripExif } from './tools/strip-exif/index.js';
@@ -536,5 +537,13 @@ export const defaultTools: ToolModule<any>[] = [
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
-  return createRegistry(defaultTools as ToolModule[]);
+  // Fill in curated next-step suggestions (phase-1 tool review) for tools
+  // that don't declare their own. Copies, not mutations, so the tool
+  // module singletons stay pristine for direct importers.
+  const tools = (defaultTools as ToolModule[]).map((t) => {
+    if (t.chainSuggestions?.length) return t;
+    const curated = CURATED_CHAIN_SUGGESTIONS[t.id];
+    return curated?.length ? { ...t, chainSuggestions: [...curated] } : t;
+  });
+  return createRegistry(tools);
 }
