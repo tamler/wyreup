@@ -867,8 +867,12 @@
   "toolId": "merge-workbooks"
  },
  {
-  "deadEnd": true,
-  "suggest": [],
+  "deadEnd": false,
+  "suggest": [
+   "zip-extract",
+   "zip-info",
+   "zip-flatten"
+  ],
   "toolId": "split-sheets"
  },
  {
@@ -1098,7 +1102,7 @@
  {
   "toolId": "chat-long-pdf-pro",
   "suggest": [],
-  "deadEnd": true
+  "deadEnd": false
  },
  {
   "toolId": "compound-interest",

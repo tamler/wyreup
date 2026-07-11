@@ -21,8 +21,11 @@ session lead. Raw data: 279 findings, 258 chain-suggestion entries
   inputs). `paramSchema` only upgrades widgets — labels, help text,
   sliders, enums. The 43-tool list is therefore a widget-polish backlog,
   not a bug list.
-- **2 dead-end tools** whose output no catalog tool accepts:
-  `split-sheets`, `chat-long-pdf-pro`.
+- ~~2 dead-end tools~~ **Corrected in wave 4 (2026-07-12): both deadEnd
+  claims were worker errors.** split-sheets (application/zip) has 20
+  legal consumers and now carries curated suggestions (zip-extract,
+  zip-info, zip-flatten); chat-long-pdf-pro (text/plain) has 116 and was
+  already curated. No dead-end tools exist in the catalog.
 - **242 tools now have curated chain suggestions** proposed
   (semantic next-steps, not MIME-legal noise) — ready to land as
   `chainSuggestions` metadata; see the JSON payload.

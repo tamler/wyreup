@@ -157,6 +157,7 @@ export const CURATED_CHAIN_SUGGESTIONS: Record<string, readonly string[]> = {
   "signed-url": ["json-formatter", "json-yaml", "json-flatten"],
   "slug": ["url-encoder", "case-converter", "hash", "text-diff"],
   "split-pdf": ["merge-pdf", "pdf-compress", "pdf-encrypt", "pdf-info", "reorder-pdf"],
+  "split-sheets": ["zip-extract", "zip-info", "zip-flatten"],
   "sql-format-explain": ["json-formatter"],
   "sql-formatter": ["sql-format-explain", "json-formatter"],
   "strip-exif": ["compress", "convert", "face-blur", "bg-remove", "resize"],
