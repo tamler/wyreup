@@ -277,6 +277,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'replace-audio': 'MultiInputRunner',
   'video-quality-metrics': 'MultiInputRunner',
   'mix-audio': 'MultiInputRunner',
+  'merge-audio': 'MultiInputRunner',
+  'audio-speed': 'PreviewRunner',
+  'images-to-gif': 'MultiInputRunner',
   'video-side-by-side': 'MultiInputRunner',
 
   // ffmpeg single-input editors (mime-aware preview)
@@ -303,6 +306,11 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // Spreadsheets / CSV
   'csv-json': 'TextResultRunner',
   'ics-to-csv': 'TextResultRunner',
+  'epub-to-text': 'TextResultRunner',
+  'har-sanitize': 'TextResultRunner',
+  'vcf-to-csv': 'TextResultRunner',
+  'toml-convert': 'TextInputRunner',
+  'ip-subnet-calc': 'JsonResultRunner',
   'x509-decode': 'TextInputRunner',
   'csv-deduplicate': 'MultiOutputRunner',
   'csv-merge': 'MultiInputRunner',

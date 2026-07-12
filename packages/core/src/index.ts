@@ -387,6 +387,14 @@ export { icsToCsv, type IcsToCsvParams, defaultIcsToCsvParams } from './tools/ic
 export { x509Decode, type X509DecodeParams, defaultX509DecodeParams } from './tools/x509-decode/index.js';
 export { heicToJpg, type HeicToJpgParams, defaultHeicToJpgParams } from './tools/heic-to-jpg/index.js';
 export { compressImageToSize, type CompressImageToSizeParams, defaultCompressImageToSizeParams } from './tools/compress-image-to-size/index.js';
+export { mergeAudio, type MergeAudioParams, defaultMergeAudioParams } from './tools/merge-audio/index.js';
+export { audioSpeed, type AudioSpeedParams, defaultAudioSpeedParams } from './tools/audio-speed/index.js';
+export { imagesToGif, type ImagesToGifParams, defaultImagesToGifParams } from './tools/images-to-gif/index.js';
+export { epubToText, type EpubToTextParams, defaultEpubToTextParams } from './tools/epub-to-text/index.js';
+export { harSanitize, type HarSanitizeParams, defaultHarSanitizeParams } from './tools/har-sanitize/index.js';
+export { vcfToCsv, type VcfToCsvParams, defaultVcfToCsvParams } from './tools/vcf-to-csv/index.js';
+export { tomlConvert, type TomlConvertParams, defaultTomlConvertParams } from './tools/toml-convert/index.js';
+export { ipSubnetCalc, type IpSubnetCalcParams, defaultIpSubnetCalcParams } from './tools/ip-subnet-calc/index.js';
 export {
   caseConverter,
   type CaseConverterParams,

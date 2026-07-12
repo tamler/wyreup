@@ -94,6 +94,14 @@ import { icsToCsv } from './tools/ics-to-csv/index.js';
 import { x509Decode } from './tools/x509-decode/index.js';
 import { heicToJpg } from './tools/heic-to-jpg/index.js';
 import { compressImageToSize } from './tools/compress-image-to-size/index.js';
+import { mergeAudio } from './tools/merge-audio/index.js';
+import { audioSpeed } from './tools/audio-speed/index.js';
+import { imagesToGif } from './tools/images-to-gif/index.js';
+import { epubToText } from './tools/epub-to-text/index.js';
+import { harSanitize } from './tools/har-sanitize/index.js';
+import { vcfToCsv } from './tools/vcf-to-csv/index.js';
+import { tomlConvert } from './tools/toml-convert/index.js';
+import { ipSubnetCalc } from './tools/ip-subnet-calc/index.js';
 import { csvToGeojson } from './tools/csv-to-geojson/index.js';
 import { kmlToGeojson } from './tools/kml-to-geojson/index.js';
 import { geojsonToKml } from './tools/geojson-to-kml/index.js';
@@ -372,6 +380,14 @@ export const defaultTools: ToolModule<any>[] = [
   x509Decode,
   heicToJpg,
   compressImageToSize,
+  mergeAudio,
+  audioSpeed,
+  imagesToGif,
+  epubToText,
+  harSanitize,
+  vcfToCsv,
+  tomlConvert,
+  ipSubnetCalc,
   csvToGeojson,
   kmlToGeojson,
   geojsonToKml,

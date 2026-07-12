@@ -2532,5 +2532,79 @@
    "strip-exif"
   ],
   "deadEnd": false
+ },
+ {
+  "toolId": "merge-audio",
+  "suggest": [
+   "convert-audio",
+   "normalize-loudness",
+   "transcribe",
+   "trim-media"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "audio-speed",
+  "suggest": [
+   "merge-audio",
+   "convert-audio",
+   "transcribe",
+   "normalize-loudness"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "images-to-gif",
+  "suggest": [
+   "video-to-gif",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "epub-to-text",
+  "suggest": [
+   "text-summarize",
+   "word-counter",
+   "text-keywords",
+   "text-to-speech-pro"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "har-sanitize",
+  "suggest": [
+   "json-formatter",
+   "json-path",
+   "text-redact"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "vcf-to-csv",
+  "suggest": [
+   "csv-to-excel",
+   "csv-json",
+   "csv-deduplicate",
+   "csv-sort"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "toml-convert",
+  "suggest": [
+   "json-formatter",
+   "json-yaml",
+   "json-schema-infer"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ip-subnet-calc",
+  "suggest": [
+   "json-formatter",
+   "json-yaml"
+  ],
+  "deadEnd": false
  }
 ]

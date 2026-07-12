@@ -12388,4 +12388,376 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'merge-audio': {
+    intro:
+      'Merge Audio joins two or more audio files — MP3, WAV, M4A — into one continuous track, in the order you drop them. It re-encodes through a proper concat pipeline, so mixed formats and sample rates come out as one clean file. Everything runs in your browser: voice memos and recordings never leave your device.',
+    useCases: [
+      'Stitch voice memos into one recording before transcribing',
+      'Join podcast segments or interview parts into a single episode file',
+      'Combine language-practice clips into one drill track',
+      "Merge sermon or lecture recordings split by a recorder's file limit",
+      'Assemble ringtone or notification sounds from short clips',
+    ],
+    faq: [
+      {
+        q: 'What formats can I merge?',
+        a: "Any mix of common audio formats — MP3, WAV, M4A, OGG. Because the tool re-encodes into your chosen output format, the inputs don't need to match each other.",
+      },
+      {
+        q: 'What order do the clips play in?',
+        a: 'The order you add them. Re-drop the files in a different order to change the sequence.',
+      },
+      {
+        q: 'Does merging lose quality?',
+        a: "The output is re-encoded (that's what makes mixed inputs work), so choose WAV for lossless output or MP3/M4A for smaller files at very good quality.",
+      },
+      {
+        q: 'Are my recordings uploaded?',
+        a: 'No. The audio engine runs entirely in your browser — it downloads once on first use, then works offline.',
+      },
+      {
+        q: 'Can I trim the clips first?',
+        a: 'Yes — run Trim Media on each clip, then merge the trimmed results.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'transcribe',
+        why: 'Turn the merged recording into text, right on your device.',
+      },
+      {
+        id: 'normalize-loudness',
+        why: 'Even out volume differences between the joined clips.',
+      },
+      {
+        id: 'convert-audio',
+        why: 'Convert the merged track to another format.',
+      },
+    ],
+  },
+  'audio-speed': {
+    intro:
+      'Audio Speed changes how fast an audio file plays — speed up a meeting recording to review it in half the time, or slow down a music passage to practice it — with a choice between keeping the pitch natural or letting it shift like tape. Processing runs entirely in your browser.',
+    useCases: [
+      'Speed up a long meeting or lecture recording to 1.5-2x for review',
+      'Slow a music passage to half speed to learn it by ear',
+      'Slow down a fast talker in a voice memo before transcribing',
+      'Create slowed or sped-up versions of a clip for editing',
+      'Adjust narration pace to fit a video slot',
+    ],
+    faq: [
+      {
+        q: 'Will voices sound like chipmunks?',
+        a: "Not by default. 'Preserve pitch' keeps voices natural at any speed. Turn it off if you want the classic tape effect where pitch rises and falls with speed.",
+      },
+      {
+        q: 'What speed range is supported?',
+        a: '0.25x (quarter speed) up to 4x, in fine steps.',
+      },
+      {
+        q: "Does it change the file's quality?",
+        a: 'The audio is re-encoded, so quality is very good but not bit-identical. For critical audio, keep the original and work on a copy.',
+      },
+      {
+        q: 'Is my recording uploaded?',
+        a: 'No — the processing engine runs in your browser and works offline after the first load.',
+      },
+      {
+        q: 'Can I change pitch without changing speed?',
+        a: 'Not directly — this tool couples them (or preserves pitch). A dedicated pitch-shift tool is on the list; tell us if you need it.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'transcribe',
+        why: 'Slow difficult audio down, then transcribe it locally.',
+      },
+      {
+        id: 'merge-audio',
+        why: 'Join the adjusted clip with others into one track.',
+      },
+      {
+        id: 'trim-media',
+        why: 'Cut the section you need before changing its speed.',
+      },
+    ],
+  },
+  'images-to-gif': {
+    intro:
+      "Images to GIF turns a handful of photos or screenshots into an animated GIF — frames in the order you drop them, with your choice of frame delay and looping. It's the quick way to make a before/after animation or a mini slideshow that plays anywhere. The GIF is assembled entirely in your browser.",
+    useCases: [
+      'Make a before/after animation from two edited photos',
+      'Turn a burst of photos into a mini stop-motion clip',
+      'Animate UI screenshots into a feature walkthrough',
+      'Build a looping product 360 from a series of angles',
+      'Combine reaction shots into a shareable loop',
+    ],
+    faq: [
+      {
+        q: 'How many images can I use?',
+        a: '2 to 50. Each becomes one frame, in the order you add them.',
+      },
+      {
+        q: 'Do the images need to be the same size?',
+        a: 'No — frames are normalized to a common size automatically, and you can set an output width to control the final dimensions.',
+      },
+      {
+        q: 'How do I control the speed?',
+        a: 'The frame delay parameter sets how long each image shows, from 20 ms (fast) to 5 seconds per frame.',
+      },
+      {
+        q: 'Why does my GIF look grainy?',
+        a: "GIF is limited to 256 colors per frame — that's the format, not the tool. Photos with smooth gradients show it most; screenshots and graphics look crisp.",
+      },
+      {
+        q: 'Are my photos uploaded?',
+        a: 'No. The GIF is encoded in your browser.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'resize',
+        why: 'Downsize photos first for a smaller GIF.',
+      },
+      {
+        id: 'compress',
+        why: 'Shrink individual frames before assembling.',
+      },
+      {
+        id: 'video-to-gif',
+        why: 'Start from a video clip instead of stills.',
+      },
+    ],
+  },
+  'epub-to-text': {
+    intro:
+      'EPUB to Text extracts the readable text from an ebook — chapters in reading order, with the title and author up top — so you can search it, analyze it, or feed it to other text tools. It completes the document trio next to PDF to Text and DOCX to Text. Extraction happens in your browser; your books stay on your device.',
+    useCases: [
+      "Extract an ebook's text to search or quote from it",
+      'Get a word count or reading-time estimate for a manuscript EPUB',
+      'Feed a chapter into the summarizer or keyword extractor',
+      'Convert a public-domain EPUB into plain text for editing',
+      'Pull text out of your own exported book to re-edit it',
+    ],
+    faq: [
+      {
+        q: 'What comes out?',
+        a: "Plain text: the book's chapters in spine (reading) order, joined with blank lines, optionally prefixed with the title and author. Formatting, images, and layout are not preserved — this is text extraction, not conversion.",
+      },
+      {
+        q: 'Does it handle DRM-protected books?',
+        a: "No. DRM-encrypted EPUBs can't be read by design. It works with DRM-free books — your own exports, public-domain titles, and DRM-free purchases.",
+      },
+      {
+        q: 'Are footnotes and links kept?',
+        a: 'Their text is kept; the linking itself is not, since the output is plain text.',
+      },
+      {
+        q: 'Is my book uploaded?',
+        a: 'No. The EPUB is unpacked and parsed entirely in your browser.',
+      },
+      {
+        q: 'Can I turn the text back into an ebook?',
+        a: 'Not here yet — this tool goes one way. Markdown-to-EPUB is on the candidate list.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'text-summarize',
+        why: 'Summarize a chapter locally.',
+      },
+      {
+        id: 'word-counter',
+        why: 'Word count and reading time for the whole book.',
+      },
+      {
+        id: 'text-keywords',
+        why: 'Pull the key topics out of the text.',
+      },
+    ],
+  },
+  'har-sanitize': {
+    intro:
+      'HAR Sanitize strips the secrets out of a browser network capture — cookies, auth headers, API keys, session tokens — so you can share the .har file with a support team or attach it to a bug report without handing over your logins. The file stays loadable in DevTools, and the whole sanitization runs in your browser, which is the only sensible place to clean a file this sensitive.',
+    useCases: [
+      'Clean a HAR before attaching it to a vendor support ticket',
+      'Share a repro capture in a public issue without leaking your session',
+      "Sanitize a teammate's capture before archiving it",
+      'Strip tokens from a capture before pasting requests into documentation',
+      'Audit what a capture would have leaked before you share it',
+    ],
+    faq: [
+      {
+        q: 'What gets redacted?',
+        a: 'Cookies (both the cookie arrays and Cookie/Set-Cookie headers), authorization headers (Authorization, X-Api-Key and friends), and query-string values whose names look secret-bearing (token, key, session, signature...). Optionally request and response bodies too.',
+      },
+      {
+        q: 'Will the file still open in DevTools?',
+        a: 'Yes. Values are replaced with [REDACTED] in place — no entries are removed, so timings and structure survive.',
+      },
+      {
+        q: 'How do I know what was changed?',
+        a: 'The sanitized file includes a summary block with counts of every redaction made.',
+      },
+      {
+        q: 'Why does sanitizing locally matter?',
+        a: "A HAR file contains your cookies and tokens — exactly the things you shouldn't paste into a random website. This tool never uploads the capture.",
+      },
+      {
+        q: 'Does it redact request bodies?',
+        a: "Only if you enable that option — bodies often contain the payload someone needs to debug, so it's off by default.",
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'json-formatter',
+        why: 'Pretty-print the sanitized capture for reading.',
+      },
+      {
+        id: 'json-path',
+        why: 'Query specific requests out of the HAR.',
+      },
+      {
+        id: 'text-redact',
+        why: "Redact further patterns the heuristics didn't catch.",
+      },
+    ],
+  },
+  'vcf-to-csv': {
+    intro:
+      'VCF to CSV converts a vCard contacts export — the .vcf file you get from an iPhone, Gmail, or any address book — into a spreadsheet-ready CSV with name, email, phone, organization, and address columns. Contact lists are personal data; this conversion runs entirely in your browser.',
+    useCases: [
+      'Open an iPhone contacts export in Excel or Google Sheets',
+      'Migrate contacts into a CRM that imports CSV',
+      'Deduplicate an address book by converting it and sorting',
+      'Audit which contacts have emails or birthdays filled in',
+      'Archive contacts as a readable table',
+    ],
+    faq: [
+      {
+        q: 'What columns come out?',
+        a: 'name, given_name, family_name, org, title, emails, phones, address, birthday, url, note — one row per contact. Multiple emails or phones are joined with semicolons in their cell.',
+      },
+      {
+        q: 'Which vCard versions work?',
+        a: 'The common ones: 3.0 (what most phones export) and 4.0, including multi-line values and TYPE parameters like CELL or WORK.',
+      },
+      {
+        q: 'Can I get JSON instead?',
+        a: 'Yes — switch the format parameter and you get the same fields as structured JSON.',
+      },
+      {
+        q: 'Is my address book uploaded?',
+        a: 'No. Parsing happens entirely in your browser — nothing about your contacts leaves your device.',
+      },
+      {
+        q: 'Does it convert CSV back to VCF?',
+        a: "Not yet — this direction covers the common 'get it into a spreadsheet' need. Tell us if you need the reverse.",
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'csv-to-excel',
+        why: 'Make an .xlsx workbook from the contacts table.',
+      },
+      {
+        id: 'csv-deduplicate',
+        why: 'Collapse duplicate contacts after conversion.',
+      },
+      {
+        id: 'ics-to-csv',
+        why: 'Do the same for your calendar events.',
+      },
+    ],
+  },
+  'toml-convert': {
+    intro:
+      "TOML Convert translates between TOML and JSON in either direction — the config format of Cargo, pyproject.toml, and countless Rust and Python projects, converted to the format your tooling actually reads. Auto-detects which way you're going. Runs entirely in your browser.",
+    useCases: [
+      'Convert a pyproject.toml section to JSON for a script that reads JSON',
+      'Turn a JSON config into TOML for a Rust project',
+      'Inspect a gnarly TOML file as pretty-printed JSON',
+      'Migrate config between tools that disagree on formats',
+      'Validate that a TOML file parses before committing it',
+    ],
+    faq: [
+      {
+        q: 'How does auto-detection work?',
+        a: "The input is tried as JSON first; if that fails, it's parsed as TOML. You can also set the direction explicitly.",
+      },
+      {
+        q: 'What happens to TOML dates?',
+        a: "TOML has native date/time values; JSON doesn't. They convert to ISO strings — stated plainly because it's the one lossy corner of the round trip.",
+      },
+      {
+        q: 'Does it preserve comments?',
+        a: "No — comments aren't part of either format's data model, so they're lost in conversion. Keep the original file if its comments matter.",
+      },
+      {
+        q: 'Is my config uploaded?',
+        a: 'No. Conversion runs in your browser.',
+      },
+      {
+        q: 'What about YAML?',
+        a: 'Use JSON ⇄ YAML — chaining the two tools covers TOML→JSON→YAML.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'json-yaml',
+        why: 'Continue the conversion into YAML.',
+      },
+      {
+        id: 'json-formatter',
+        why: 'Pretty-print the JSON output.',
+      },
+      {
+        id: 'json-schema-infer',
+        why: 'Generate a schema from the converted config.',
+      },
+    ],
+  },
+  'ip-subnet-calc': {
+    intro:
+      "IP Subnet Calculator does the CIDR math sysadmins do daily: give it 10.0.0.0/16 or 192.168.1.37/24 and it returns the network and broadcast addresses, usable host range and count, netmask and wildcard mask. Handles the /31 and /32 edge cases correctly. Pure local math — your network layout isn't something to type into a random website.",
+    useCases: [
+      'Work out the usable host range before carving up a VPC',
+      'Check whether two addresses land in the same subnet',
+      'Translate between prefix length and dotted netmask for a firewall rule',
+      'Verify a /31 point-to-point link really has two usable addresses',
+      'Sanity-check a subnet plan before writing it into infrastructure code',
+    ],
+    faq: [
+      {
+        q: 'What do I enter?',
+        a: 'An IPv4 CIDR — a network like 10.0.0.0/16, or any address with a prefix like 192.168.1.37/24 (the tool reports which network that address belongs to).',
+      },
+      {
+        q: 'What comes back?',
+        a: 'Network address, broadcast, first and last usable hosts, usable host count, netmask and wildcard mask in dotted form, and whether your input was the network address itself.',
+      },
+      {
+        q: 'Does it handle /31 and /32?',
+        a: 'Yes, per RFC 3021: a /31 has exactly two usable addresses (point-to-point), and a /32 is a single host with no broadcast semantics.',
+      },
+      {
+        q: 'IPv6?',
+        a: 'Not yet — this version is IPv4. IPv6 support is a natural follow-up; tell us if you need it.',
+      },
+      {
+        q: 'Is anything sent to a server?',
+        a: "No. It's pure arithmetic in your browser.",
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'json-formatter',
+        why: 'Pretty-print the result for a runbook.',
+      },
+      {
+        id: 'url-parse',
+        why: 'Break a full URL into its parts the same local way.',
+      },
+    ],
+  },
 };
