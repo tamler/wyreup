@@ -38,6 +38,10 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   compress: 'SimpleImageRunner',
   convert: 'SimpleImageRunner',
   crop: 'SimpleImageRunner',
+  'pixelate-region': 'SimpleImageRunner',
+  'heic-to-jpg': 'SimpleImageRunner',
+  'compress-image-to-size': 'SimpleImageRunner',
+  'image-collage': 'MultiInputRunner',
   resize: 'SimpleImageRunner',
   'rotate-image': 'SimpleImageRunner',
   'flip-image': 'SimpleImageRunner',
@@ -298,6 +302,8 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // Spreadsheets / CSV
   'csv-json': 'TextResultRunner',
+  'ics-to-csv': 'TextResultRunner',
+  'x509-decode': 'TextInputRunner',
   'csv-deduplicate': 'MultiOutputRunner',
   'csv-merge': 'MultiInputRunner',
   'csv-diff': 'MultiInputRunner',

@@ -88,6 +88,12 @@ import { imageCaptionDetailed } from './tools/image-caption-detailed/index.js';
 import { recordAudio } from './tools/record-audio/index.js';
 import { colorHarmony } from './tools/color-harmony/index.js';
 import { csvJson } from './tools/csv-json/index.js';
+import { imageCollage } from './tools/image-collage/index.js';
+import { pixelateRegion } from './tools/pixelate-region/index.js';
+import { icsToCsv } from './tools/ics-to-csv/index.js';
+import { x509Decode } from './tools/x509-decode/index.js';
+import { heicToJpg } from './tools/heic-to-jpg/index.js';
+import { compressImageToSize } from './tools/compress-image-to-size/index.js';
 import { csvToGeojson } from './tools/csv-to-geojson/index.js';
 import { kmlToGeojson } from './tools/kml-to-geojson/index.js';
 import { geojsonToKml } from './tools/geojson-to-kml/index.js';
@@ -360,6 +366,12 @@ export const defaultTools: ToolModule<any>[] = [
   recordAudio,
   colorHarmony,
   csvJson,
+  imageCollage,
+  pixelateRegion,
+  icsToCsv,
+  x509Decode,
+  heicToJpg,
+  compressImageToSize,
   csvToGeojson,
   kmlToGeojson,
   geojsonToKml,

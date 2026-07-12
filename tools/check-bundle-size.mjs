@@ -28,6 +28,8 @@ const VENDOR_BUDGETS_KB = [
   // (v2 emitted the chunk as gpt-4o.*, v3 as GptEncoding.* — same payload.)
   { prefix: 'gpt-4o.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
   { prefix: 'GptEncoding.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
+  // libheif wasm (inlined) — lazy-loaded only when heic-to-jpg runs.
+  { prefix: 'wasm-bundle.', budgetKb: 600, why: 'libheif decoder; heic-to-jpg tool only' },
   // pdfjs-dist worker; loaded by every PDF tool but as a Web Worker.
   { prefix: 'pdf.worker.', budgetKb: 600, why: 'pdfjs Web Worker; PDF tools only' },
   // pdfjs main chunk; loaded by PDF render tools.

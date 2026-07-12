@@ -381,6 +381,12 @@ export {
   type ColorHarmonyResult,
 } from './tools/color-harmony/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
+export { imageCollage, type ImageCollageParams, defaultImageCollageParams } from './tools/image-collage/index.js';
+export { pixelateRegion, type PixelateRegionParams, defaultPixelateRegionParams } from './tools/pixelate-region/index.js';
+export { icsToCsv, type IcsToCsvParams, defaultIcsToCsvParams } from './tools/ics-to-csv/index.js';
+export { x509Decode, type X509DecodeParams, defaultX509DecodeParams } from './tools/x509-decode/index.js';
+export { heicToJpg, type HeicToJpgParams, defaultHeicToJpgParams } from './tools/heic-to-jpg/index.js';
+export { compressImageToSize, type CompressImageToSizeParams, defaultCompressImageToSizeParams } from './tools/compress-image-to-size/index.js';
 export {
   caseConverter,
   type CaseConverterParams,

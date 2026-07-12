@@ -2474,5 +2474,63 @@
    "text-summarize-pro"
   ],
   "deadEnd": false
+ },
+ {
+  "toolId": "image-collage",
+  "suggest": [
+   "compress",
+   "convert",
+   "image-to-pdf",
+   "image-watermark"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "pixelate-region",
+  "suggest": [
+   "strip-exif",
+   "compress",
+   "convert",
+   "image-to-pdf"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "ics-to-csv",
+  "suggest": [
+   "csv-json",
+   "csv-to-excel",
+   "csv-sort",
+   "csv-filter"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "x509-decode",
+  "suggest": [
+   "json-formatter",
+   "json-yaml"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "heic-to-jpg",
+  "suggest": [
+   "compress",
+   "resize",
+   "strip-exif",
+   "image-to-pdf",
+   "compress-image-to-size"
+  ],
+  "deadEnd": false
+ },
+ {
+  "toolId": "compress-image-to-size",
+  "suggest": [
+   "convert",
+   "image-to-pdf",
+   "strip-exif"
+  ],
+  "deadEnd": false
  }
 ]
