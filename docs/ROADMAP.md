@@ -683,7 +683,16 @@ Ordered by priority.
     runs on the version-packages merge via a PAT/app token rather than
     `GITHUB_TOKEN`. ~30 min; removes a recurring manual step every release.
 
-11. **pdfjs-dist 6 migration.** Deferred 2026-07-10 (Dependabot #38
+11. **Pro pricing: operator wants to evaluate moving from ~80-90% margin
+    to ~20% margin (much cheaper Pro).** Raised 2026-07-12, parked for a
+    deliberate pass. Not just a number change: it means repricing packs or
+    credit grants ~5-7x (Lemon Squeezy products + /pro copy + webhook
+    credit amounts in functions/), revisiting per-tool creditCost, and it
+    supersedes the standing "50% margin floor" ship rule. Prereq: the
+    Workers AI cost-per-run measurement pass (see Hosted HTTP API item)
+    so the new prices are computed from real p95 costs, not guesses.
+
+12. **pdfjs-dist 6 migration.** Deferred 2026-07-10 (Dependabot #38
     closed, majors ignored in dependabot.yml). v6 drops the
     `pdfjs-dist/legacy/build/*` entry points that PdfRedactRunner and
     PdfCropRunner import, so the bump is a real migration: switch both

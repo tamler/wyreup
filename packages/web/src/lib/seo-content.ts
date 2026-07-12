@@ -12106,4 +12106,286 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'heic-to-jpg': {
+    intro:
+      "HEIC to JPG converts the photos your iPhone takes in Apple's HEIC/HEIF format into JPG, PNG, or WebP — formats every website, form, and app accepts. The conversion runs entirely in your browser using the same decoder Apple-compatible software uses, so your photos never upload anywhere. Once converted, the photo works with every other image tool on this site.",
+    useCases: [
+      'Convert an iPhone photo to JPG because an upload form rejects .heic files',
+      'Turn a batch of vacation HEICs into JPGs before sharing them with Android or Windows friends',
+      'Convert to PNG when you need lossless quality for editing',
+      'Convert to WebP to get the smallest file for a website',
+      'Unlock a HEIC so you can chain it into compress, resize, or strip-exif',
+    ],
+    faq: [
+      {
+        q: "Why won't websites accept my iPhone photos?",
+        a: "iPhones save photos in HEIC (High Efficiency Image Container) by default. It makes smaller files than JPG, but many websites, forms, and older apps don't understand it. Converting to JPG makes the photo universally compatible.",
+      },
+      {
+        q: 'Does my photo get uploaded to convert it?',
+        a: 'No. The HEIC decoder runs inside your browser — the photo never leaves your device. The decoder downloads once (about half a megabyte) on first use, then works offline.',
+      },
+      {
+        q: 'Which output format should I pick?',
+        a: "JPG for photos you'll share or upload (smallest, universal). PNG if you need lossless quality or plan to edit further. WebP for the web — smaller than JPG at the same quality, supported by all modern browsers.",
+      },
+      {
+        q: "Does it keep the photo's quality?",
+        a: 'JPG and WebP re-encode at the quality you choose (90% by default, visually identical for photos). PNG output is lossless — every pixel is preserved exactly.',
+      },
+      {
+        q: 'Can I convert several photos at once?',
+        a: 'Yes — drop multiple HEIC files and each converts in one run.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'compress-image-to-size',
+        why: 'Get the converted photo under an exact KB limit for a form.',
+      },
+      {
+        id: 'strip-exif',
+        why: 'Remove location and camera metadata before sharing the converted photo.',
+      },
+      {
+        id: 'resize',
+        why: 'Scale the converted photo to exact dimensions.',
+      },
+    ],
+  },
+  'compress-image-to-size': {
+    intro:
+      "Compress to Target Size shrinks a JPG, PNG, or WebP to fit an exact file-size limit in kilobytes — the '100 KB maximum' kind of requirement on passport, visa, exam, and government portal uploads. Instead of guessing at a quality slider, you type the limit and the tool searches for the best quality that fits, optionally reducing dimensions when quality alone isn't enough. Everything runs in your browser; the photo never uploads.",
+    useCases: [
+      "Get a passport or visa photo under the portal's 100 KB or 20 KB limit",
+      "Shrink a scanned document photo to fit an exam application's upload cap",
+      "Fit a headshot under a job portal's file-size restriction",
+      'Compress email attachments to a predictable size',
+      'Prepare images for a CMS that enforces per-file limits',
+    ],
+    faq: [
+      {
+        q: 'How does it hit the exact size?',
+        a: 'It binary-searches the encode quality for the largest value that lands at or under your target. If even the lowest reasonable quality is too big, and downscaling is allowed, it reduces the dimensions in small steps and searches again.',
+      },
+      {
+        q: 'What if my image is already under the target?',
+        a: "It's returned untouched, byte for byte. The tool never makes a file bigger or re-encodes needlessly.",
+      },
+      {
+        q: 'Why did my PNG come back as a JPG?',
+        a: "PNG is lossless, so it often can't reach small KB targets at all. When a PNG is over the target, the tool converts it to JPG to make the limit reachable — that's stated in the result.",
+      },
+      {
+        q: 'Will the image still look good?',
+        a: "The search keeps the highest quality that fits, so you get the best possible result for the limit. Very small targets on large images will show compression — that's the trade-off the limit forces.",
+      },
+      {
+        q: 'Is anything uploaded?',
+        a: 'No. Compression runs entirely on your device, so photos for government forms never touch a server.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'heic-to-jpg',
+        why: 'Convert an iPhone HEIC first, then compress it to the limit.',
+      },
+      {
+        id: 'resize',
+        why: 'Set exact pixel dimensions when the form specifies those too.',
+      },
+      {
+        id: 'strip-exif',
+        why: 'Remove metadata — it saves a few KB and your location stays private.',
+      },
+    ],
+  },
+  'image-collage': {
+    intro:
+      "Image Collage combines two or more photos into a single image — a horizontal strip, a vertical stack, or a grid with adjustable columns, spacing, and background color. It's the quick way to make one shareable image out of several screenshots or photos without opening an editor. Composition happens in your browser; the photos never upload.",
+    useCases: [
+      'Combine before-and-after photos into one side-by-side image',
+      'Stack screenshots vertically into a single image for a bug report',
+      'Make a 2x2 grid from vacation photos for a social post',
+      'Merge product photos into one strip for a listing',
+      'Assemble UI states into a grid for a design review',
+    ],
+    faq: [
+      {
+        q: 'How many images can I combine?',
+        a: 'Between 2 and 20 in one run. Layout is a horizontal strip, a vertical stack, or a grid with the column count you choose.',
+      },
+      {
+        q: 'Do the photos need to be the same size?',
+        a: 'No. Each image is scaled to fit its cell while keeping its aspect ratio, so mixed sizes line up cleanly.',
+      },
+      {
+        q: 'Can I control the spacing and background?',
+        a: 'Yes — spacing between images is adjustable in pixels, and the background (visible in gaps and letterboxing) takes any hex color.',
+      },
+      {
+        q: 'What format comes out?',
+        a: 'Your choice of JPG, PNG, or WebP, with a quality setting for JPG and WebP.',
+      },
+      {
+        q: 'Are my photos uploaded?',
+        a: 'No. The collage is composed entirely in your browser.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'compress',
+        why: 'Shrink the finished collage before sharing it.',
+      },
+      {
+        id: 'image-to-pdf',
+        why: 'Turn the collage into a one-page PDF.',
+      },
+      {
+        id: 'image-watermark',
+        why: 'Stamp a caption or credit on the result.',
+      },
+    ],
+  },
+  'pixelate-region': {
+    intro:
+      "Pixelate Region blocks out part of a photo or screenshot — a face, a license plate, an address, an account number — by replacing a rectangle you choose with chunky averaged blocks. It's the fastest way to hide sensitive details before sharing a screenshot. The pixelation runs entirely in your browser, which is exactly what you want for an image sensitive enough to need redacting.",
+    useCases: [
+      'Hide names and account numbers in a screenshot before posting it to a support forum',
+      'Blur a license plate in a photo before listing a car for sale',
+      "Pixelate faces of bystanders in a photo you're publishing",
+      'Obscure an address or phone number in a shared document photo',
+      'Pixelate an entire image to use as a background or teaser',
+    ],
+    faq: [
+      {
+        q: 'How do I choose what gets pixelated?',
+        a: "Set the rectangle's x, y, width, and height in pixels. Leaving width and height at 0 pixelates the whole image.",
+      },
+      {
+        q: 'Can pixelation be reversed?',
+        a: "Each block replaces its pixels with their average color, so the detail inside is genuinely discarded — there's no hidden layer to recover. Bigger block sizes discard more.",
+      },
+      {
+        q: 'What block size should I use?',
+        a: 'The default (16 px) hides text and faces at typical screenshot sizes. For high-resolution photos or extra caution, go bigger — 32 or 64.',
+      },
+      {
+        q: 'Does the image leave my device?',
+        a: 'No. The whole point is redacting sensitive content, so the tool runs entirely in your browser with no upload.',
+      },
+      {
+        q: "What about the photo's hidden metadata?",
+        a: 'Pixelation only changes pixels. Run Strip EXIF Metadata afterwards to also remove location and device info embedded in the file.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'strip-exif',
+        why: "Remove GPS and device metadata after pixelating — pixels aren't the only leak.",
+      },
+      {
+        id: 'face-blur',
+        why: 'Blur every face automatically instead of drawing rectangles.',
+      },
+      {
+        id: 'compress',
+        why: 'Shrink the redacted screenshot before sharing.',
+      },
+    ],
+  },
+  'ics-to-csv': {
+    intro:
+      "ICS to CSV turns a calendar export — the .ics file you get from Google Calendar, Outlook, or Apple Calendar — into a spreadsheet-ready CSV or JSON table of events with start, end, title, location, and description columns. It's the missing step between 'my calendar has the data' and 'I need it in Excel'. Parsing happens in your browser, so your schedule stays private.",
+    useCases: [
+      'Export Google Calendar events into Excel for timesheet or billing reconciliation',
+      'Turn a shared team calendar into a spreadsheet for planning',
+      'Archive a year of appointments as a readable table',
+      'Analyze meeting load by converting your calendar to CSV and sorting it',
+      'Migrate events into a system that imports CSV',
+    ],
+    faq: [
+      {
+        q: 'What columns does the CSV have?',
+        a: 'start, end, summary (title), location, description, status, all_day, rrule (the raw recurrence rule), and uid — one row per event.',
+      },
+      {
+        q: 'How are recurring events handled?',
+        a: 'The recurrence rule is included as its raw RRULE text in its own column, but occurrences are not expanded into separate rows. You get one row per defined event.',
+      },
+      {
+        q: 'How are time zones handled?',
+        a: "Times are output with a best-effort ISO form alongside the raw calendar value. Complex time-zone rules aren't recalculated — for cross-timezone precision, check the raw value.",
+      },
+      {
+        q: 'Can I get JSON instead of CSV?',
+        a: 'Yes — switch the format parameter to JSON for the same event fields as structured data.',
+      },
+      {
+        q: 'Is my calendar uploaded?',
+        a: 'No. The .ics file is parsed entirely in your browser.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'csv-to-excel',
+        why: 'Turn the CSV straight into an .xlsx workbook.',
+      },
+      {
+        id: 'csv-sort',
+        why: 'Sort events by start time or title.',
+      },
+      {
+        id: 'csv-filter',
+        why: 'Keep only the events matching a condition.',
+      },
+    ],
+  },
+  'x509-decode': {
+    intro:
+      "X.509 Certificate Decoder opens a PEM or DER certificate and shows what's inside: subject, issuer, validity dates with days until expiry, subject alternative names, key and signature algorithms, and SHA-1/SHA-256 fingerprints. It's the quick answer to 'what cert is this and when does it expire?' — decoded locally in your browser, which matters when the cert file is one you'd rather not paste into a random website.",
+    useCases: [
+      'Check when a TLS certificate expires before it takes production down',
+      "Verify a certificate's subject alternative names cover every domain you serve",
+      'Confirm a fingerprint matches what a vendor or CI pipeline expects',
+      'Inspect an unknown .crt or .pem file someone sent you',
+      'Tell a self-signed certificate apart from a CA-issued one',
+    ],
+    faq: [
+      {
+        q: 'What formats does it accept?',
+        a: 'PEM (the -----BEGIN CERTIFICATE----- text form) and raw DER binary — .pem, .crt, .cer files, or pasted PEM text.',
+      },
+      {
+        q: 'What does the report include?',
+        a: 'Subject, issuer, serial number, validity window with days until expiry, subject alternative names, public-key algorithm and size, signature algorithm, SHA-1 and SHA-256 fingerprints, and whether the cert is self-signed.',
+      },
+      {
+        q: 'Is the certificate sent anywhere?',
+        a: 'No. Decoding runs entirely in your browser. Certificates are public by design, but the habit of not pasting infrastructure files into web forms is a good one.',
+      },
+      {
+        q: 'Does it validate the certificate chain?',
+        a: 'No — it decodes and reports a single certificate. Chain validation against a trust store is a different job your TLS client or CA tooling does.',
+      },
+      {
+        q: 'Private keys too?',
+        a: "No, and don't paste private keys into anything. This tool reads certificates only.",
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'jwt-decoder',
+        why: 'Decode JSON Web Tokens the same local-only way.',
+      },
+      {
+        id: 'hash',
+        why: 'Fingerprint any file with SHA-256.',
+      },
+      {
+        id: 'json-formatter',
+        why: 'Pretty-print the JSON report for sharing.',
+      },
+    ],
+  },
 };
