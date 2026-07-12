@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/web",
   "version": "0.0.0",
-  "description": "Wyreup web app \u2014 wyreup.com",
+  "description": "Wyreup web app — wyreup.com",
   "license": "MIT",
   "type": "module",
   "private": true,
