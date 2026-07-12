@@ -1,6 +1,6 @@
 ---
 name: wyreup
-description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally without uploading to a cloud service — compress, convert, merge, redact, OCR, blur faces, strip metadata, chain steps, or watch a folder — via the wyreup CLI or the @wyreup/mcp MCP server. Also use when the user mentions wyreup by name.
+description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally without uploading to a cloud service — compress, convert, merge, redact, OCR, blur faces, strip metadata, chain steps, or watch a folder — via the wyreup CLI or the @wyreup/mcp MCP server. Also use when the user mentions Wyreup.
 ---
 
 # Wyreup

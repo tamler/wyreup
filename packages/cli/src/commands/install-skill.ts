@@ -50,7 +50,7 @@ export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
     name: 'wyreup',
     url: 'https://wyreup.com/skills/wyreup.md',
     description: 'Both CLI and MCP (default; for most setups)',
-    sha256: '5980ebae0b6be02549fd6d89e456623fe1a8fc835d1eaadb5ad24bf4de4ca968',
+    sha256: '78693ffde0320a4d5866e0c33de3e54269d419bb7227631c8d024f04cb4368d0',
   },
 };
 
