@@ -1,5 +1,12 @@
 # @wyreup/mcp
 
+## 0.7.11
+
+### Patch Changes
+
+- Updated dependencies [bf1651d]
+  - @wyreup/core@0.8.0
+
 ## 0.7.10
 
 ### Patch Changes
