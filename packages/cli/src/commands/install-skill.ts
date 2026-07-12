@@ -18,10 +18,8 @@ type LocationChoice = (typeof LOCATION_CHOICES)[number];
 // require a text/markdown content-type, and — when an expected hash is pinned
 // in SKILL_DEFS below — verify the SHA-256 and reject on mismatch.
 //
-// RECOMMENDATION: pin a `sha256` on each SKILL_DEFS entry once the upstream
-// skill.md content is stable. While the files still change upstream we leave
-// `sha256` unset so installs keep working, but an unpinned skill trades the
-// hash guard for the size + content-type checks only.
+// Every SKILL_DEFS entry pins a `sha256`; skills are served first-party from
+// wyreup.com/skills/ (the CLI egress lock only allows wyreup.com origins).
 const MAX_SKILL_BYTES = 512 * 1024; // 512 KB — skill.md files are a few KB
 
 interface SkillDef {
@@ -38,19 +36,19 @@ interface SkillDef {
 export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
   cli: {
     name: 'wyreup-cli',
-    url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/cli-skill/skill.md',
+    url: 'https://wyreup.com/skills/wyreup-cli.md',
     description: 'CLI-only (smallest, for Claude Code shell agents)',
     sha256: '5dd6211ba296ddd4f3254df21c402b816f4f9e876c0cdd849be6b2f5fa98141f',
   },
   mcp: {
     name: 'wyreup-mcp',
-    url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/mcp-skill/skill.md',
+    url: 'https://wyreup.com/skills/wyreup-mcp.md',
     description: 'MCP-only (for agents that call tools via MCP)',
     sha256: '42138af4a4391d0ba0c53bf7ad660dd24bdcb8016e00f85ea1a825bff5723c52',
   },
   combined: {
     name: 'wyreup',
-    url: 'https://raw.githubusercontent.com/tamler/wyreup/main/packages/skill/skill.md',
+    url: 'https://wyreup.com/skills/wyreup.md',
     description: 'Both CLI and MCP (default; for most setups)',
     sha256: '5980ebae0b6be02549fd6d89e456623fe1a8fc835d1eaadb5ad24bf4de4ca968',
   },
@@ -113,10 +111,8 @@ export async function fetchSkill(url: string, expectedSha256?: string): Promise<
     );
   }
   if (!res.ok) {
-    // 404 is the most likely real-world failure: the SKILL_DEFS URLs
-    // hardcode raw.githubusercontent.com paths to packages that may
-    // have moved, been renamed, or be on a different branch. Surface
-    // a more specific recovery hint than a generic HTTP message.
+    // 404 means the deployed site and this CLI version disagree about
+    // the skill paths. Surface a specific recovery hint.
     if (res.status === 404) {
       throw new Error(
         `Skill not found at ${url} (HTTP 404).\n` +

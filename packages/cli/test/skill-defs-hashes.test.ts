@@ -13,10 +13,12 @@ describe('SKILL_DEFS sha256 pins', () => {
 
   for (const [variant, def] of Object.entries(SKILL_DEFS)) {
     it(`${variant}: pin matches the committed skill.md`, async () => {
-      const repoPath = def.url.replace(
-        'https://raw.githubusercontent.com/tamler/wyreup/main/',
-        '',
-      );
+      const variantToRepoPath: Record<string, string> = {
+        cli: 'packages/cli-skill/skill.md',
+        mcp: 'packages/mcp-skill/skill.md',
+        combined: 'packages/skill/skill.md',
+      };
+      const repoPath = variantToRepoPath[variant]!;
       const bytes = await readFile(join(repoRoot, repoPath));
       const actual = createHash('sha256').update(bytes).digest('hex');
       expect(def.sha256, `update the ${variant} pin in SKILL_DEFS`).toBe(actual);

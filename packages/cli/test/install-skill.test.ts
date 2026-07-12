@@ -86,16 +86,16 @@ describe('resolveSkillsDir', () => {
 // ── SKILL_DEFS ────────────────────────────────────────────────────────────────
 
 describe('SKILL_DEFS', () => {
-  it('cli variant points at cli-skill package on GitHub', () => {
-    expect(SKILL_DEFS.cli.url).toContain('packages/cli-skill/skill.md');
+  it('cli variant points at the first-party cli skill URL', () => {
+    expect(SKILL_DEFS.cli.url).toContain('https://wyreup.com/skills/wyreup-cli.md');
   });
 
-  it('mcp variant points at mcp-skill package on GitHub', () => {
-    expect(SKILL_DEFS.mcp.url).toContain('packages/mcp-skill/skill.md');
+  it('mcp variant points at the first-party mcp skill URL', () => {
+    expect(SKILL_DEFS.mcp.url).toContain('https://wyreup.com/skills/wyreup-mcp.md');
   });
 
-  it('combined variant points at skill package on GitHub', () => {
-    expect(SKILL_DEFS.combined.url).toContain('packages/skill/skill.md');
+  it('combined variant points at the first-party combined skill URL', () => {
+    expect(SKILL_DEFS.combined.url).toContain('https://wyreup.com/skills/wyreup.md');
   });
 
   it('cli variant has name wyreup-cli', () => {
@@ -120,16 +120,16 @@ describe('fetchSkill', () => {
     expect(result).toBe(FAKE_SKILL_CONTENT);
   });
 
-  it('calls the correct GitHub raw URL for cli variant', async () => {
+  it('fetches the first-party URL for cli variant', async () => {
     mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
     await fetchSkill(SKILL_DEFS.cli.url);
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('packages/cli-skill/skill.md'));
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('https://wyreup.com/skills/wyreup-cli.md'));
   });
 
-  it('calls the correct GitHub raw URL for mcp variant', async () => {
+  it('fetches the first-party URL for mcp variant', async () => {
     mockFetch.mockReturnValue(makeFetchOk(FAKE_SKILL_CONTENT));
     await fetchSkill(SKILL_DEFS.mcp.url);
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('packages/mcp-skill/skill.md'));
+    expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('https://wyreup.com/skills/wyreup-mcp.md'));
   });
 
   it('throws a clear error on non-OK HTTP response', async () => {

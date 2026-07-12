@@ -1,13 +1,13 @@
 {
   "name": "@wyreup/web",
   "version": "0.0.0",
-  "description": "Wyreup web app — wyreup.com",
+  "description": "Wyreup web app \u2014 wyreup.com",
   "license": "MIT",
   "type": "module",
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/copy-skills.mjs && astro build",
     "preview": "astro preview",
     "test": "vitest run --passWithNoTests",
     "lint": "eslint src",
