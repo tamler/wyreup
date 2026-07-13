@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { stashChainFile } from './chainStorage';
+  import { appendHop, getTrail } from './hopTrail';
+  import { saveChain, type ToolbeltChainStep } from './toolbeltStorage';
 
   export let resultBlob: Blob | null = null;
   export let resultName: string = 'result';
@@ -22,6 +24,12 @@
   let nextTools: NextTool[] = [];
   let stashFailed = false;
   let saveIntermediate = false;
+  let trail: ToolbeltChainStep[] = [];
+  let savedChainId: string | null = null;
+  let savedChainName = '';
+  let savedChainSteps: ToolbeltChainStep[] = [];
+  let savedChainCreatedAt = '';
+  let savingChain = false;
 
   const STORAGE_KEY = 'wyreup:chain-save-intermediate';
 
@@ -29,6 +37,7 @@
     try {
       saveIntermediate = localStorage.getItem(STORAGE_KEY) === 'true';
     } catch { /* ignore */ }
+    if (resultBlob) trail = getTrail();
   });
 
   function toggleSaveIntermediate() {
@@ -41,6 +50,11 @@
   $: if (resultBlob) {
     loadNextTools(resultBlob);
     stashFailed = false;
+    trail = getTrail();
+    savedChainId = null;
+    savedChainName = '';
+    savedChainSteps = [];
+    savedChainCreatedAt = '';
   }
 
   async function loadNextTools(blob: Blob) {
@@ -95,46 +109,111 @@
       downloadBlob(resultBlob, resultName);
       return;
     }
+    if (sourceToolId) {
+      appendHop({ toolId: sourceToolId, params: {} });
+    }
     window.location.href = `/tools/${toolId}`;
+  }
+
+  async function saveCurrentChain() {
+    if (!sourceToolId || savingChain) return;
+    savingChain = true;
+    try {
+      const steps = [...getTrail(), { toolId: sourceToolId, params: {} }];
+      const { createDefaultRegistry } = await import('@wyreup/core');
+      const registry = createDefaultRegistry();
+      const name = steps
+        .map((step) => registry.toolsById.get(step.toolId)?.name ?? step.toolId)
+        .join(' → ');
+      const now = new Date().toISOString();
+      const id = crypto.randomUUID();
+      saveChain({ id, name, steps, createdAt: now, updatedAt: now });
+      savedChainId = id;
+      savedChainName = name;
+      savedChainSteps = steps;
+      savedChainCreatedAt = now;
+    } finally {
+      savingChain = false;
+    }
+  }
+
+  function renameSavedChain() {
+    const name = savedChainName.trim();
+    if (!savedChainId || !name) return;
+    saveChain({
+      id: savedChainId,
+      name,
+      steps: savedChainSteps,
+      createdAt: savedChainCreatedAt,
+      updatedAt: new Date().toISOString(),
+    });
+    savedChainName = name;
   }
 </script>
 
-{#if nextTools.length > 0}
+{#if nextTools.length > 0 || (resultBlob && sourceToolId && trail.length >= 1)}
   <div class="chain-section">
-    <div class="chain-header">
-      <span class="chain-label">Use this result in</span>
-      {#if stashFailed}
-        <span class="chain-notice">Couldn't carry the file over — saved a copy so you can re-upload it.</span>
-      {/if}
-      <label class="save-intermediate">
-        <input
-          type="checkbox"
-          checked={saveIntermediate}
-          on:change={toggleSaveIntermediate}
-          aria-label="Save intermediate file before navigating"
-          title="Keep this step's file in the final download when you chain into another tool."
-        />
-        <span class="save-intermediate__copy">
-          <span class="save-intermediate__label">Save intermediate</span>
-          <span class="save-intermediate__helper">Keep this step's file in the final download when you chain into another tool.</span>
-        </span>
-      </label>
-    </div>
-    <div class="chain-nodes">
-      {#each nextTools as tool}
-        <button
-          class="chain-node"
-          on:click={() => navigate(tool.id)}
-          type="button"
-        >
-          <span class="chain-node__dot" aria-hidden="true"></span>
-          <div class="chain-node__body">
-            <span class="chain-node__name">{tool.name}</span>
-            <span class="chain-node__cat">{tool.category}</span>
-          </div>
-        </button>
-      {/each}
-    </div>
+    {#if resultBlob && sourceToolId && trail.length >= 1}
+      <div class="chain-save">
+        {#if savedChainId}
+          <input
+            class="chain-save__input"
+            type="text"
+            aria-label="Chain name"
+            bind:value={savedChainName}
+            on:keydown={(event) => {
+              if (event.key === 'Enter') renameSavedChain();
+            }}
+            on:blur={renameSavedChain}
+          />
+          <a class="chain-save__link" href="/toolbelt">View saved chains →</a>
+        {:else}
+          <span class="chain-save__copy">You chained {trail.length + 1} actions.</span>
+          <button
+            class="chain-node chain-save__button"
+            type="button"
+            disabled={savingChain}
+            on:click={saveCurrentChain}
+          >Save this chain</button>
+        {/if}
+      </div>
+    {/if}
+    {#if nextTools.length > 0}
+      <div class="chain-header">
+        <span class="chain-label">Use this result in</span>
+        {#if stashFailed}
+          <span class="chain-notice">Couldn't carry the file over — saved a copy so you can re-upload it.</span>
+        {/if}
+        <label class="save-intermediate">
+          <input
+            type="checkbox"
+            checked={saveIntermediate}
+            on:change={toggleSaveIntermediate}
+            aria-label="Save intermediate file before navigating"
+            title="Keep this step's file in the final download when you chain into another tool."
+          />
+          <span class="save-intermediate__copy">
+            <span class="save-intermediate__label">Save intermediate</span>
+            <span class="save-intermediate__helper">Keep this step's file in the final download when you chain into another tool.</span>
+          </span>
+        </label>
+      </div>
+      <div class="chain-nodes">
+        {#each nextTools as tool}
+          <button
+            class="chain-node"
+            on:click={() => navigate(tool.id)}
+            type="button"
+          >
+            <span class="chain-node__dot" aria-hidden="true"></span>
+            <div class="chain-node__body">
+              <span class="chain-node__name">{tool.name}</span>
+              <span class="chain-node__cat">{tool.category}</span>
+            </div>
+          </button>
+        {/each}
+      </div>
+    {/if}
   </div>
 {/if}
 
@@ -151,6 +230,65 @@
     gap: var(--space-4);
     margin-bottom: var(--space-3);
     flex-wrap: wrap;
+  }
+
+  .chain-save {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .chain-save__copy,
+  .chain-save__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+
+  .chain-save__copy {
+    color: var(--text-muted);
+  }
+
+  .chain-save__button {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+
+  .chain-save__button:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .chain-save__input {
+    min-width: min(100%, 320px);
+    padding: var(--space-2) var(--space-3);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+
+  .chain-save__input:focus-visible {
+    border-color: var(--accent-hover);
+    outline: 2px solid var(--accent-hover);
+    outline-offset: 2px;
+  }
+
+  .chain-save__link {
+    color: var(--accent-text);
+  }
+
+  .chain-save__link:hover {
+    color: var(--accent-hover);
+  }
+
+  .chain-save__link:focus-visible {
+    outline: 2px solid var(--accent-hover);
+    outline-offset: 2px;
   }
 
   .chain-label {

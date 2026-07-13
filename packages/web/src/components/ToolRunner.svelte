@@ -4,6 +4,7 @@
   import type { SerializedTool } from './runners/types';
   import { VARIANT_MAP, type RunnerVariant } from './runners/variantMap';
   import { clearChainFile, consumeChainFile, peekChainFile } from './runners/chainStorage';
+  import { clearTrail } from './runners/hopTrail';
   import { user, authReady } from '../stores/user';
   import ProBadge from './ProBadge.svelte';
   import BuyCreditsSheet from './BuyCreditsSheet.svelte';
@@ -54,7 +55,10 @@
 
   onMount(async () => {
     const peeked = await peekChainFile();
-    if (!peeked) return;
+    if (!peeked) {
+      clearTrail();
+      return;
+    }
     if (peeked.autoAccept) {
       // User already chose this file (e.g. via /tools drop-to-filter) — load
       // it without an extra confirmation step.
