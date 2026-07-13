@@ -231,7 +231,7 @@
       {/if}
 
       {#if resultBlob}
-        <ChainSection {resultBlob} resultName="date-calculator-result.json" />
+        <ChainSection {resultBlob} sourceToolId={tool.id} resultName="date-calculator-result.json" />
       {/if}
     </div>
   </div>

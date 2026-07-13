@@ -100,7 +100,19 @@
   }
 
   $: drop = $dropStore;
-  $: recommendedJobs = drop ? jobsForMime(drop.mime).slice(0, 4) : [];
+  // A job is only recommendable when the tool that receives the dropped file
+  // actually accepts it — acceptMimes wildcards (image/*) are broader than
+  // some action tools' concrete accept lists (e.g. compress rejects HEIC).
+  $: compatibleIds = drop ? new Set(drop.compatibleTools.map((t) => t.id)) : new Set<string>();
+  $: recommendedJobs = drop
+    ? jobsForMime(drop.mime)
+        .filter((job) =>
+          job.action.kind === 'tool'
+            ? compatibleIds.has(job.action.toolId)
+            : job.action.steps.length > 0 && compatibleIds.has(job.action.steps[0]!.toolId),
+        )
+        .slice(0, 4)
+    : [];
   $: groupedTools = drop
     ? outcomeGroups.map((group) => ({
         ...group,

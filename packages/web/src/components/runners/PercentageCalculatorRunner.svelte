@@ -211,7 +211,7 @@
       {/if}
 
       {#if resultBlob}
-        <ChainSection {resultBlob} resultName="percentage-calculator-result.json" />
+        <ChainSection {resultBlob} sourceToolId={tool.id} resultName="percentage-calculator-result.json" />
       {/if}
     </div>
   </div>

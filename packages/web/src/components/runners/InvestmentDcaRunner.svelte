@@ -367,7 +367,7 @@
         {/if}
 
         {#if resultBlob}
-          <ChainSection {resultBlob} resultName="investment-dca-result.json" />
+          <ChainSection {resultBlob} sourceToolId={tool.id} resultName="investment-dca-result.json" />
         {/if}
       </div>
     {:else if result && !result.valid}

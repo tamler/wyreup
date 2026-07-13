@@ -12,7 +12,7 @@
     { label: 'Merge receipts into one PDF', href: '/tools/merge-pdf' },
     { label: 'Remove private info from a photo', href: '/tools/strip-exif' },
     { label: 'Clean up a voice recording', href: '/tools/audio-enhance' },
-    { label: 'Convert HEIC to JPG', href: '/tools/convert' },
+    { label: 'Convert HEIC to JPG', href: '/tools/heic-to-jpg' },
   ];
 
   let root: HTMLDivElement;
@@ -21,6 +21,7 @@
   let results: SearchResult[] = [];
   let activeIndex = -1;
   let open = false;
+  let focused = false;
   let loadingPromise: Promise<void> | null = null;
   let jobFuse: ReturnType<typeof createToolSearch> | null = null;
   let fuse: ReturnType<typeof createToolSearch> | null = null;
@@ -72,7 +73,11 @@
     loadingPromise = (async () => {
       try {
         const response = await fetch('/tools-index.json');
-        if (!response.ok) return;
+        if (!response.ok) {
+          // Allow a later focus to retry a failed load.
+          loadingPromise = null;
+          return;
+        }
         const tools: SearchableTool[] = await response.json();
         fuse = createToolSearch(tools);
         jobFuse = createToolSearch(
@@ -84,8 +89,11 @@
             keywords: [],
           })),
         );
-        updateResults();
+        // The fetch may resolve after the user has already left the field —
+        // never reopen the listbox for an unfocused input.
+        if (focused) updateResults();
       } catch {
+        loadingPromise = null;
         open = false;
       }
     })();
@@ -94,6 +102,7 @@
   }
 
   function handleFocus(): void {
+    focused = true;
     void loadIndex();
     if (fuse && query.trim()) updateResults();
   }
@@ -134,6 +143,7 @@
   function handleFocusOut(event: FocusEvent): void {
     const next = event.relatedTarget;
     if (!(next instanceof Node) || !root.contains(next)) {
+      focused = false;
       open = false;
       activeIndex = -1;
     }

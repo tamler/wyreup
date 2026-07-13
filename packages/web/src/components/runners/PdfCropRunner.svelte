@@ -374,7 +374,7 @@
         <button class="btn-primary" type="button" on:click={download}>Download</button>
         <button class="btn-secondary" type="button" on:click={reset}>Edit again</button>
       </div>
-      <ChainSection {tool} resultBlob={resultBlob} resultMime={resultBlob.type} />
+      <ChainSection resultBlob={resultBlob} sourceToolId={tool.id} resultName={buildDownloadName(files[0]?.name, tool.id, 'pdf')} />
     </div>
   {/if}
 </div>

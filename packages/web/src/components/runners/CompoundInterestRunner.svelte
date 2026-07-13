@@ -369,7 +369,7 @@
         </div>
 
         {#if resultBlob}
-          <ChainSection {resultBlob} resultName="compound-interest-result.json" />
+          <ChainSection {resultBlob} sourceToolId={tool.id} resultName="compound-interest-result.json" />
         {/if}
       </div>
     {:else if result && !result.valid}

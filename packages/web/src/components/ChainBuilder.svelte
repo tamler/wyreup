@@ -182,7 +182,10 @@
   let pickerSearchIndexIds = '';
 
   function getPickerSearchIndex(compatible: ToolSummary[]): ReturnType<typeof createToolSearch> {
-    const ids = compatible.map((tool) => tool.id).join('\0');
+    // Key the cache on metadata availability too: an index built before the
+    // lazy registry import resolves has no category/keyword terms and must be
+    // rebuilt once toolMetadata lands.
+    const ids = `${toolMetadata.size > 0 ? 'm' : ''}\0${compatible.map((tool) => tool.id).join('\0')}`;
     if (pickerSearchIndex && pickerSearchIndexIds === ids) {
       return pickerSearchIndex;
     }
