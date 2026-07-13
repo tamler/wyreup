@@ -103,7 +103,7 @@
   {/if}
 {:else}
   <!-- Default scenarios view -->
-  <h2 class="scenarios-heading">What can you do here, right now?</h2>
+  <h2 class="scenarios-heading">What do you need done?</h2>
   <div class="scenarios-bento">
     {#each scenarios as scenario, i}
       <a

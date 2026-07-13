@@ -152,6 +152,7 @@ const SITE_COPY_FILES = [
   'src/pages/about.astro',
   'src/pages/triggers.astro',
   'src/components/HeroDrop.svelte',
+  'src/components/HeroSearch.svelte',
   'src/components/HowItWorks.svelte',
   'src/components/PwaOnboardBanner.svelte',
   'src/components/runners/DropZone.svelte',
