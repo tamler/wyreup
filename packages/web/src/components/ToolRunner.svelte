@@ -141,8 +141,8 @@
       </div>
       {#if gateState === 'signed-out'}
         <p class="pro-gate__body">
-          This is a PRO tool. Activate your API key to use it
-          ({requiredCredits} credits per run).
+          This is a PRO tool. Unlock it with your key —
+          {requiredCredits} {requiredCredits === 1 ? 'credit' : 'credits'} per run.
           Don't have a key? You can get one in seconds — no credit card needed.
         </p>
         <div class="pro-gate__actions">

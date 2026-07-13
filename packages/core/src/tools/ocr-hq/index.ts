@@ -5,7 +5,7 @@ import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
 export const ocrHq: ToolModule<Record<string, never>> = {
   id: 'ocr-hq',
   slug: 'ocr-hq',
-  name: 'OCR',
+  name: 'High-Accuracy OCR',
   description:
     'High-quality text extraction from images and scans, powered by a hosted vision model. Output is plain text — chains into translate, summarize, and other text tools. Uses 1 credit per run.',
   category: 'export',

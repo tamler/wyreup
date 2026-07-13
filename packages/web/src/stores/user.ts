@@ -53,6 +53,14 @@ export async function activate(
     credentials: 'same-origin',
   });
   if (!res.ok) {
+    // The server's 401 body is the bare "Unauthorized" — translate it for
+    // the person staring at the modal.
+    if (res.status === 401) {
+      return {
+        ok: false,
+        error: "That key didn't work. Check the wk_live_… key from your email, or get a new one below.",
+      };
+    }
     const detail = (await res.json().catch(() => ({}))) as { error?: string };
     return { ok: false, error: detail.error || `Key not accepted (${res.status})` };
   }
