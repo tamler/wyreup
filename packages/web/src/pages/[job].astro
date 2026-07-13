@@ -7,6 +7,7 @@ import { displayName } from '../data/display-names';
 import { upsellFor } from '../data/pro-upsells';
 import { approxUsd } from '../data/pricing';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { JOB_SEO_CONTENT, type JobSeoContent } from '../lib/job-seo-content';
 
 export function getStaticPaths() {
   const reservedRoutes = new Set([
@@ -38,6 +39,10 @@ export function getStaticPaths() {
   const registry = createDefaultRegistry();
 
   return JOBS.map((job) => {
+    const seoContent = JOB_SEO_CONTENT[job.slug];
+    if (!seoContent) {
+      throw new Error(`Missing SEO content for job "${job.slug}".`);
+    }
     const toolIds =
       job.action.kind === 'tool'
         ? [job.action.toolId]
@@ -76,6 +81,7 @@ export function getStaticPaths() {
       params: { job: job.slug },
       props: {
         job,
+        seoContent,
         serializedJob,
         toolNames: tools.map((tool) => displayName(tool.id, tool.name)),
         executionSentence: hasHostedStep
@@ -93,6 +99,7 @@ export function getStaticPaths() {
 
 interface PageProps {
   job: Job;
+  seoContent: JobSeoContent;
   serializedJob: Pick<Job, 'slug' | 'title' | 'action' | 'acceptMimes'>;
   toolNames: string[];
   executionSentence: string;
@@ -100,7 +107,7 @@ interface PageProps {
   proSeam: { proToolId: string; benefit: string; creditCost: number } | null;
 }
 
-const { job, serializedJob, toolNames, executionSentence, chainBuilderHref, proSeam } =
+const { job, seoContent, serializedJob, toolNames, executionSentence, chainBuilderHref, proSeam } =
   Astro.props as PageProps;
 
 const pageUrl = `https://wyreup.com/${job.slug}`;
@@ -119,6 +126,18 @@ const webPageLd = {
   description: job.description,
   url: pageUrl,
 };
+const faqLd =
+  seoContent.faq.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: seoContent.faq.map((entry) => ({
+          '@type': 'Question',
+          name: entry.q,
+          acceptedAnswer: { '@type': 'Answer', text: entry.a },
+        })),
+      }
+    : null;
 ---
 
 <BaseLayout
@@ -129,6 +148,9 @@ const webPageLd = {
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(webPageLd)} />
+    {faqLd && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+    )}
     <script is:inline>
       // Aggregate, cookieless seam-click counter — no identifiers.
       document.addEventListener('click', (e) => {
@@ -168,6 +190,30 @@ const webPageLd = {
         <ol class="outcome__steps">
           {toolNames.map((toolName) => <li>{toolName}</li>)}
         </ol>
+      </section>
+
+      <section class="job-content" aria-labelledby="about-heading">
+        <h2 id="about-heading" class="job-content__title">About</h2>
+        <p class="job-content__intro">{seoContent.intro}</p>
+      </section>
+
+      <section class="job-content" aria-labelledby="common-uses-heading">
+        <h2 id="common-uses-heading" class="job-content__title">Common uses</h2>
+        <ul class="job-content__uses">
+          {seoContent.useCases.map((useCase) => <li>{useCase}</li>)}
+        </ul>
+      </section>
+
+      <section class="job-content" aria-labelledby="faq-heading">
+        <h2 id="faq-heading" class="job-content__title">Frequently asked questions</h2>
+        <div class="job-faq-list">
+          {seoContent.faq.map((entry) => (
+            <details class="job-faq-item">
+              <summary class="job-faq-question">{entry.q}</summary>
+              <div class="job-faq-answer"><p>{entry.a}</p></div>
+            </details>
+          ))}
+        </div>
       </section>
 
       {proSeam && (
@@ -301,6 +347,111 @@ const webPageLd = {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--accent-text);
+  }
+
+  .job-content {
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .job-content__title {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .job-content__intro {
+    max-width: 70ch;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  .job-content__uses {
+    max-width: 70ch;
+    margin: 0;
+    padding-left: var(--space-5);
+    list-style: disc;
+  }
+
+  .job-content__uses li {
+    margin-bottom: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .job-content__uses li:last-child {
+    margin-bottom: 0;
+  }
+
+  .job-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 70ch;
+  }
+
+  .job-faq-item {
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .job-faq-item[open] {
+    border-color: var(--border);
+  }
+
+  .job-faq-question {
+    position: relative;
+    padding-right: var(--space-4);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .job-faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .job-faq-question::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: var(--text-lg);
+    font-weight: 400;
+    line-height: 1;
+    color: var(--text-subtle);
+    content: '+';
+  }
+
+  .job-faq-item[open] .job-faq-question::after {
+    content: '−';
+  }
+
+  .job-faq-answer {
+    padding-top: var(--space-2);
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .job-faq-answer p {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--text-muted);
   }
 
   .job-pro-seam {
