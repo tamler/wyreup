@@ -2,6 +2,7 @@ import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { CompressParams } from './types.js';
 import { detectFormat, getCodec, type ImageFormat } from '../../lib/codecs.js';
 import { orientImageData } from '../../lib/exif.js';
+import { pickSmaller } from '../../lib/pick-smaller.js';
 
 export type { CompressParams } from './types.js';
 export { defaultCompressParams } from './types.js';
@@ -88,20 +89,33 @@ export const compress: ToolModule<CompressParams> = {
       const targetCodec = await getCodec(outputFormat);
       const encoded = await targetCodec.encode(decoded, { quality });
 
-      // A compressor must never hand back a bigger file. Flat-color PNGs
-      // (screenshots especially) are often already smaller than any
-      // re-encode; when staying in the same format, fall back to the
-      // untouched original bytes instead of shipping an inflated result.
-      if (outputFormat === sourceFormat && encoded.byteLength >= input.size) {
-        ctx.onProgress({
-          stage: 'encoding',
-          percent: Math.floor(((i + 0.9) / inputs.length) * 100),
-          message: `${input.name} is already smaller than a re-encode — keeping the original`,
-        });
-        outputs.push(new Blob([buffer], { type: mimeFor(sourceFormat) }));
+      if (outputFormat === sourceFormat) {
+        // A compressor must never hand back a bigger file. Flat-color PNGs
+        // (screenshots especially) are often already smaller than any
+        // re-encode; when staying in the same format, fall back to the
+        // untouched original bytes instead of shipping an inflated result.
+        const result = pickSmaller(
+          { bytes: buffer, mime: mimeFor(sourceFormat) },
+          { bytes: encoded, mime: mimeFor(outputFormat) },
+        );
+        if (result.keptOriginal) {
+          ctx.onProgress({
+            stage: 'encoding',
+            percent: Math.floor(((i + 0.9) / inputs.length) * 100),
+            message: `${input.name} is already smaller than a re-encode — keeping the original`,
+          });
+        }
+        outputs.push(new Blob([result.bytes as BlobPart], { type: result.mime }));
         continue;
       }
 
+      if (encoded.byteLength >= input.size) {
+        ctx.onProgress({
+          stage: 'encoding',
+          percent: Math.floor(((i + 0.9) / inputs.length) * 100),
+          message: `${input.name}: converted result is larger than the original — format change was requested, so the conversion is kept`,
+        });
+      }
       outputs.push(new Blob([encoded], { type: mimeFor(outputFormat) }));
     }
 

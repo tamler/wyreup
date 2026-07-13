@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { assertPdfPageBudget } from '../../lib/budget.js';
+import { pickSmaller } from '../../lib/pick-smaller.js';
 
 export interface PdfCompressParams {
   /** JPEG quality for embedded images, 1-100. Default 75. */
@@ -163,13 +164,19 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
     ctx.onProgress({ stage: 'encoding', percent: 85, message: 'Saving PDF' });
     const bytes = await pdfDoc.save();
+    const result = pickSmaller(
+      { bytes: buffer, mime: 'application/pdf' },
+      { bytes, mime: 'application/pdf' },
+    );
 
     ctx.onProgress({
       stage: 'done',
       percent: 100,
-      message: `Done — ${imagesProcessed} image(s) re-encoded`,
+      message: result.keptOriginal
+        ? 'Done — re-encoded PDF was not smaller, keeping the original'
+        : `Done — ${imagesProcessed} image(s) re-encoded`,
     });
-    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+    return new Blob([result.bytes as BlobPart], { type: result.mime });
   },
 
   __testFixtures: {

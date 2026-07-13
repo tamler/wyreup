@@ -32,6 +32,7 @@
   }
 
   $: canRun = files.length >= tool.input.min && state !== 'running';
+  $: showsSizeChange = tool.category === 'optimize' || tool.id === 'compress-video';
 
   function onFiles(e: CustomEvent<File[]>) {
     files = e.detail;
@@ -100,6 +101,12 @@
     if (b < 1024) return `${b} B`;
     if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
     return `${(b / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function reductionPct(before: number, after: number): string {
+    if (before === 0) return '—';
+    const pct = ((before - after) / before) * 100;
+    return `${pct > 0 ? '-' : '+'}${Math.abs(pct).toFixed(1)}%`;
   }
 </script>
 
@@ -201,6 +208,19 @@
           <span class="solder-pad" aria-hidden="true"></span>
           <span class="solder-val">{resultMime}</span>
         </div>
+        {#if showsSizeChange && originalSize > 0}
+          <div class="solder-row solder-row--accent" class:solder-row--warning={resultSize > originalSize}>
+            <span class="solder-key">Change</span>
+            <span class="solder-rule" aria-hidden="true"></span>
+            <span class="solder-pad solder-pad--accent" class:solder-pad--warning={resultSize > originalSize} aria-hidden="true"></span>
+            <span class="solder-val solder-val--accent" class:solder-val--warning={resultSize > originalSize}>{reductionPct(originalSize, resultSize)}</span>
+          </div>
+          {#if resultSize > originalSize}
+            <p class="result-size-warning" role="status">Result is larger than the original — the input may already be optimized.</p>
+          {:else if resultSize === originalSize && originalSize > 0}
+            <p class="result-size-note" role="status">No savings possible — the file was already optimized, so the original is kept unchanged.</p>
+          {/if}
+        {/if}
 
         <div class="panel-divider"></div>
         <div class="result-actions">
@@ -368,7 +388,31 @@
   .solder-key { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-muted); font-weight: 400; min-width: 80px; flex-shrink: 0; }
   .solder-rule { flex: 1; height: 1px; border-bottom: 1px solid var(--border-subtle); }
   .solder-pad { width: 3px; height: 3px; background: var(--border); flex-shrink: 0; }
+  .solder-pad--accent { background: var(--accent); }
   .solder-val { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); font-weight: 500; min-width: 80px; text-align: right; }
+  .solder-val--accent { color: var(--accent-text); }
+
+  .solder-row--warning .solder-key,
+  .solder-val--warning { color: var(--warning); }
+
+  .solder-pad--warning { background: var(--warning); }
+
+  .result-size-note {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  .result-size-warning {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(234, 179, 8, 0.08);
+    border-left: 2px solid var(--warning);
+    color: var(--warning);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+  }
 
   .result-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 

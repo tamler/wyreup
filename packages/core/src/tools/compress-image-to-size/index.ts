@@ -2,6 +2,7 @@ import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { CompressImageToSizeParams } from './types.js';
 import { detectFormat, getCodec, type ImageFormat } from '../../lib/codecs.js';
 import { orientImageData } from '../../lib/exif.js';
+import { pickSmaller } from '../../lib/pick-smaller.js';
 
 export type { CompressImageToSizeParams } from './types.js';
 export { defaultCompressImageToSizeParams } from './types.js';
@@ -173,6 +174,19 @@ export const compressImageToSize: ToolModule<CompressImageToSizeParams> = {
       }
 
       if (!best) throw new Error(`Could not encode ${input.name}.`);
+      const result = pickSmaller(
+        { bytes: buffer, mime: mimeFor(sourceFormat) },
+        { bytes: best, mime: mimeFor(searchFormat) },
+      );
+      if (result.keptOriginal) {
+        ctx.onProgress({
+          stage: 'processing',
+          percent: Math.floor(((i + 0.9) / inputs.length) * 100),
+          message: `${input.name}: target ${targetKb} KB not reachable — every re-encode was larger, keeping the original (${Math.ceil(input.size / 1024)} KB)`,
+        });
+        outputs.push(new Blob([result.bytes as BlobPart], { type: result.mime }));
+        continue;
+      }
       if (best.byteLength > targetBytes) {
         ctx.onProgress({
           stage: 'processing',
@@ -180,7 +194,7 @@ export const compressImageToSize: ToolModule<CompressImageToSizeParams> = {
           message: `${input.name}: target ${targetKb} KB not reachable — returning smallest achieved (${Math.ceil(best.byteLength / 1024)} KB)`,
         });
       }
-      outputs.push(new Blob([best], { type: mimeFor(searchFormat) }));
+      outputs.push(new Blob([result.bytes as BlobPart], { type: result.mime }));
     }
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });

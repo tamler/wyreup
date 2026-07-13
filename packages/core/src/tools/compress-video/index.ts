@@ -1,5 +1,6 @@
 import type { ToolBudget, ToolModule, ToolRunContext } from '../../types.js';
 import { assertDurationBudget } from '../../lib/budget.js';
+import { pickSmaller } from '../../lib/pick-smaller.js';
 
 export interface CompressVideoParams {
   crf?: number;
@@ -107,8 +108,30 @@ export const compressVideo: ToolModule<CompressVideoParams> = {
     await ff.deleteFile(outputName);
     const outputBytes = typeof output === 'string' ? new TextEncoder().encode(output) : output;
 
+    if (input.type === 'video/mp4') {
+      const result = pickSmaller(
+        { bytes: inputBytes, mime: 'video/mp4' },
+        { bytes: outputBytes, mime: 'video/mp4' },
+      );
+      ctx.onProgress({
+        stage: 'done',
+        percent: 100,
+        message: result.keptOriginal
+          ? `${input.name} is already smaller than a re-encode — keeping the original`
+          : 'Done',
+      });
+      return [new Blob([result.bytes as BlobPart], { type: result.mime })];
+    }
+
+    if (outputBytes.byteLength >= input.size) {
+      ctx.onProgress({
+        stage: 'encoding',
+        percent: 95,
+        message: `${input.name}: converted MP4 is larger than the original — container change requested, so the conversion is kept`,
+      });
+    }
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-    return [new Blob([outputBytes.buffer as ArrayBuffer], { type: 'video/mp4' })];
+    return [new Blob([outputBytes as BlobPart], { type: 'video/mp4' })];
   },
 
   __testFixtures: {
