@@ -245,20 +245,21 @@
       </div>
     {/if}
     {#if proSeam}
+      {@const seam = proSeam}
       <div class="pro-seam">
         <span class="pro-seam__chip">PRO</span>
-        <p class="pro-seam__benefit">{proSeam.benefit}</p>
+        <p class="pro-seam__benefit">{seam.benefit}</p>
         <p class="pro-seam__cost">
-          {proSeam.creditCost} credits · {approxUsd(proSeam.creditCost)}
+          {seam.creditCost} credits · {approxUsd(seam.creditCost)}
         </p>
-        {#if proSeam.canHandoff}
+        {#if seam.canHandoff}
           <button
             class="pro-seam__link"
             type="button"
-            on:click={() => navigate(proSeam!.proToolId)}
+            on:click={() => navigate(seam.proToolId)}
           >Try it →</button>
         {:else}
-          <a class="pro-seam__link" href={`/tools/${proSeam.proToolId}`}>Try it →</a>
+          <a class="pro-seam__link" href={`/tools/${seam.proToolId}`}>Try it →</a>
         {/if}
       </div>
     {/if}
