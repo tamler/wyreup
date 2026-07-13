@@ -1,5 +1,16 @@
 # @wyreup/core
 
+## 0.8.1
+
+### Patch Changes
+
+- 52efd5d: Curated chainSuggestions for ~50 high-traffic tools so "Use this result in"
+  suggestions read as sensible next actions instead of raw MIME matches.
+- 65de1de: Compress-family tools (compress, pdf-compress, compress-video,
+  compress-image-to-size) never return an output larger than the input without
+  keeping the original bytes or, when a format/container change was explicitly
+  requested, emitting a clear warning.
+
 ## 0.8.0
 
 ### Minor Changes
