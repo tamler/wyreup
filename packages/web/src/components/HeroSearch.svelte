@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { createToolSearch, searchTools } from '../lib/tool-search';
   import type { SearchResult, SearchableTool } from '../lib/tool-search';
+  import { JOBS, type Job } from '../data/jobs';
+  import { encodeChainSteps } from './runners/chainUrl';
 
   const dropdownId = 'hero-search-results';
   const examples = [
@@ -15,28 +17,51 @@
 
   let root: HTMLDivElement;
   let query = '';
+  let jobResults: SearchResult[] = [];
   let results: SearchResult[] = [];
   let activeIndex = -1;
   let open = false;
   let loadingPromise: Promise<void> | null = null;
+  let jobFuse: ReturnType<typeof createToolSearch> | null = null;
   let fuse: ReturnType<typeof createToolSearch> | null = null;
+  const jobsBySlug = new Map(JOBS.map((job) => [job.slug, job]));
 
   $: activeOptionId = activeIndex >= 0 ? `hero-search-option-${activeIndex}` : undefined;
+  $: resultCount = jobResults.length + results.length;
 
   function searchUrl(): string {
     return `/tools?q=${encodeURIComponent(query.trim())}`;
   }
 
+  function jobUrl(job: Job): string {
+    if (job.action.kind === 'tool') return `/tools/${job.action.toolId}`;
+    return `/chain/run?steps=${encodeURIComponent(encodeChainSteps(job.action.steps))}`;
+  }
+
+  function jobUrlFromSlug(slug: string): string {
+    const job = jobsBySlug.get(slug);
+    return job ? jobUrl(job) : searchUrl();
+  }
+
+  function resultUrl(index: number): string {
+    const jobResult = jobResults[index];
+    if (jobResult) return jobUrlFromSlug(jobResult.tool.id);
+    const toolResult = results[index - jobResults.length];
+    return toolResult ? `/tools/${toolResult.tool.id}` : searchUrl();
+  }
+
   function updateResults(): void {
     const trimmed = query.trim();
     activeIndex = -1;
-    if (!fuse || !trimmed) {
+    if (!fuse || !jobFuse || !trimmed) {
+      jobResults = [];
       results = [];
       open = false;
       return;
     }
 
-    results = searchTools(fuse, trimmed, 8);
+    jobResults = searchTools(jobFuse, trimmed, 3);
+    results = searchTools(fuse, trimmed, 6);
     open = true;
   }
 
@@ -50,6 +75,15 @@
         if (!response.ok) return;
         const tools: SearchableTool[] = await response.json();
         fuse = createToolSearch(tools);
+        jobFuse = createToolSearch(
+          JOBS.map((job) => ({
+            id: job.slug,
+            name: job.title,
+            description: job.description,
+            category: 'job',
+            keywords: [],
+          })),
+        );
         updateResults();
       } catch {
         open = false;
@@ -77,22 +111,22 @@
 
     if (event.key === 'Enter') {
       event.preventDefault();
-      if (activeIndex >= 0 && results[activeIndex]) {
-        window.location.assign(`/tools/${results[activeIndex].tool.id}`);
+      if (activeIndex >= 0 && activeIndex < resultCount) {
+        window.location.assign(resultUrl(activeIndex));
       } else {
         window.location.assign(searchUrl());
       }
       return;
     }
 
-    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && results.length > 0) {
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && resultCount > 0) {
       event.preventDefault();
       open = true;
       const direction = event.key === 'ArrowDown' ? 1 : -1;
       if (activeIndex < 0) {
-        activeIndex = direction > 0 ? 0 : results.length - 1;
+        activeIndex = direction > 0 ? 0 : resultCount - 1;
       } else {
-        activeIndex = (activeIndex + direction + results.length) % results.length;
+        activeIndex = (activeIndex + direction + resultCount) % resultCount;
       }
     }
   }
@@ -143,17 +177,34 @@
     />
 
     {#if open}
-      <div id={dropdownId} class="hero-search__dropdown" role="listbox" aria-label="Tool suggestions">
-        {#if results.length > 0}
-          {#each results as result, i}
+      <div id={dropdownId} class="hero-search__dropdown" role="listbox" aria-label="Job and tool suggestions">
+        {#if resultCount > 0}
+          {#each jobResults as result, i}
             <a
               id={`hero-search-option-${i}`}
               class:active={i === activeIndex}
               class="hero-search__result"
-              href={`/tools/${result.tool.id}`}
+              href={jobUrlFromSlug(result.tool.id)}
               role="option"
               aria-selected={i === activeIndex}
               on:mouseenter={() => (activeIndex = i)}
+            >
+              <span class="hero-search__result-copy">
+                <span class="hero-search__result-name">{result.tool.name}</span>
+                <span class="hero-search__result-description">{result.tool.description}</span>
+              </span>
+              <span class="hero-search__category">job</span>
+            </a>
+          {/each}
+          {#each results as result, i}
+            <a
+              id={`hero-search-option-${jobResults.length + i}`}
+              class:active={jobResults.length + i === activeIndex}
+              class="hero-search__result"
+              href={`/tools/${result.tool.id}`}
+              role="option"
+              aria-selected={jobResults.length + i === activeIndex}
+              on:mouseenter={() => (activeIndex = jobResults.length + i)}
             >
               <span class="hero-search__result-copy">
                 <span class="hero-search__result-name">{result.tool.name}</span>

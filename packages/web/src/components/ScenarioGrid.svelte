@@ -1,6 +1,8 @@
 <script lang="ts">
   import { dropStore } from '../stores/drop';
-  import type { ToolModule } from '@wyreup/core';
+  import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
+  import { jobsForMime, type Job } from '../data/jobs';
+  import { encodeChainSteps } from './runners/chainUrl';
 
   // Static scenario data — shown when no file is dropped
   interface Scenario {
@@ -27,6 +29,7 @@
   };
 
   const defaultIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+  const registryToolsById = createDefaultRegistry().toolsById;
 
   const scenarios: Scenario[] = [
     { label: 'Compress a photo for email', slug: 'compress', category: 'optimize', icon: categoryIcons.optimize },
@@ -37,6 +40,20 @@
     { label: 'Generate a QR code', slug: 'qr', category: 'create', icon: categoryIcons.create },
     { label: 'Resize an image for web', slug: 'resize', category: 'edit', icon: categoryIcons.edit },
     { label: 'Redact a contract before sharing', slug: 'pdf-redact', category: 'pdf', icon: categoryIcons.pdf },
+  ];
+
+  interface OutcomeGroup {
+    label: string;
+    categories: ToolModule['category'][];
+  }
+
+  const outcomeGroups: OutcomeGroup[] = [
+    { label: 'Make smaller', categories: ['optimize'] },
+    { label: 'Convert', categories: ['convert', 'export'] },
+    { label: 'Edit', categories: ['edit', 'create', 'media', 'audio', 'pdf', 'geo', 'archive'] },
+    { label: 'Remove private information', categories: ['privacy'] },
+    { label: 'Understand', categories: ['inspect', 'text', 'dev', 'finance'] },
+    { label: 'Improve with AI', categories: [] },
   ];
 
   function clearDrop() {
@@ -53,7 +70,43 @@
     return name.length > max ? name.slice(0, max) + '...' : name;
   }
 
+  function jobToolIds(job: Job): string[] {
+    return job.action.kind === 'tool'
+      ? [job.action.toolId]
+      : job.action.steps.map((step) => step.toolId);
+  }
+
+  function toolName(toolId: string): string {
+    return registryToolsById.get(toolId)?.name ?? toolId;
+  }
+
+  function jobCaption(job: Job): string {
+    return jobToolIds(job).map(toolName).join(' → ');
+  }
+
+  function jobIcon(job: Job): string {
+    const firstTool = registryToolsById.get(jobToolIds(job)[0] ?? '');
+    return firstTool ? categoryIcons[firstTool.category] ?? defaultIcon : defaultIcon;
+  }
+
+  function jobHref(job: Job): string {
+    if (job.action.kind === 'tool') return `/tools/${job.action.toolId}`;
+    return `/chain/run?steps=${encodeURIComponent(encodeChainSteps(job.action.steps))}`;
+  }
+
+  function groupLabel(tool: ToolModule): string | undefined {
+    if (tool.cost === 'credit') return 'Improve with AI';
+    return outcomeGroups.find((group) => group.categories.includes(tool.category))?.label;
+  }
+
   $: drop = $dropStore;
+  $: recommendedJobs = drop ? jobsForMime(drop.mime).slice(0, 4) : [];
+  $: groupedTools = drop
+    ? outcomeGroups.map((group) => ({
+        ...group,
+        tools: drop.compatibleTools.filter((tool) => groupLabel(tool) === group.label),
+      }))
+    : [];
 </script>
 
 {#if drop}
@@ -77,29 +130,59 @@
       <p class="empty-msg">No tools match this file type yet.</p>
     </div>
   {:else}
-    <div class="scenarios-bento">
-      {#each drop.compatibleTools.slice(0, 8) as tool, i}
-        <a
-          href={`/tools/${tool.id}`}
-          class="scenario-card"
-          style="--stagger-delay: {i * 50}ms"
-          aria-label={tool.name}
-        >
-          <div class="brackets-inner-card" aria-hidden="true"></div>
-          <div class="scenario-card__inner">
-            <span class="scenario-card__icon">{@html categoryIcons[tool.category] ?? defaultIcon}</span>
-            <div class="scenario-card__label">{tool.name}</div>
-            <div class="scenario-card__tool">{tool.category}</div>
-          </div>
-        </a>
-      {/each}
-    </div>
-    {#if drop.compatibleTools.length > 8}
-      <p class="more-tools">
-        + {drop.compatibleTools.length - 8} more —
-        <a href="/tools" class="more-tools__link">browse all tools</a>
-      </p>
+    {#if recommendedJobs.length > 0}
+      <section class="outcome-group" aria-labelledby="recommended-heading">
+        <h3 id="recommended-heading" class="outcome-heading">Recommended</h3>
+        <div class="scenarios-bento">
+          {#each recommendedJobs as job, i}
+            <a
+              href={jobHref(job)}
+              class="scenario-card"
+              style="--stagger-delay: {i * 50}ms"
+              aria-label={job.title}
+            >
+              <div class="brackets-inner-card" aria-hidden="true"></div>
+              <div class="scenario-card__inner">
+                <span class="scenario-card__icon">{@html jobIcon(job)}</span>
+                <div class="scenario-card__label">{job.title}</div>
+                <div class="scenario-card__tool">{jobCaption(job)}</div>
+              </div>
+            </a>
+          {/each}
+        </div>
+      </section>
     {/if}
+
+    {#each groupedTools as group}
+      {#if group.tools.length > 0}
+        <section class="outcome-group" aria-labelledby={`outcome-${group.label.replaceAll(' ', '-').toLowerCase()}`}>
+          <h3 id={`outcome-${group.label.replaceAll(' ', '-').toLowerCase()}`} class="outcome-heading">{group.label}</h3>
+          <div class="scenarios-bento">
+            {#each group.tools.slice(0, 6) as tool, i}
+              <a
+                href={`/tools/${tool.id}`}
+                class="scenario-card"
+                style="--stagger-delay: {i * 50}ms"
+                aria-label={tool.name}
+              >
+                <div class="brackets-inner-card" aria-hidden="true"></div>
+                <div class="scenario-card__inner">
+                  <span class="scenario-card__icon">{@html categoryIcons[tool.category] ?? defaultIcon}</span>
+                  <div class="scenario-card__label">{tool.name}</div>
+                  <div class="scenario-card__tool">{tool.category}</div>
+                </div>
+              </a>
+            {/each}
+          </div>
+          {#if group.tools.length > 6}
+            <p class="more-tools">
+              + {group.tools.length - 6} more —
+              <a href="/tools" class="more-tools__link">browse all tools</a>
+            </p>
+          {/if}
+        </section>
+      {/if}
+    {/each}
   {/if}
 {:else}
   <!-- Default scenarios view -->
@@ -188,6 +271,20 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-4);
+  }
+
+  .outcome-group + .outcome-group {
+    margin-top: var(--space-10);
+  }
+
+  .outcome-heading {
+    margin: 0 0 var(--space-4);
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   @media (min-width: 960px) {
