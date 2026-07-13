@@ -206,6 +206,32 @@
     grantError = '';
   }
 
+  let deleteError = '';
+
+  async function deleteAccount(row: AccountRow) {
+    deleteError = '';
+    const typed = prompt(
+      `Permanently delete this account and all its keys, credits, and history?\n\nType the email to confirm:\n${row.email}`,
+    );
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== row.email.toLowerCase()) {
+      deleteError = 'Email did not match — nothing was deleted.';
+      return;
+    }
+    const res = await fetch('/api/admin/users/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ email: row.email }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      deleteError = data.error || `Delete failed (${res.status})`;
+      return;
+    }
+    await fetchAll();
+  }
+
   function closeGrant() {
     grantOpen = null;
   }
@@ -488,11 +514,17 @@
               <td class="num">{a.bonus}</td>
               <td class="time">{fmtDate(a.created_at)}</td>
               <td class="time">{ago(a.last_seen)}</td>
-              <td><button type="button" class="ghost" on:click={() => openGrant(a)}>Grant</button></td>
+              <td class="row-actions">
+                <button type="button" class="ghost" on:click={() => openGrant(a)}>Grant</button>
+                <button type="button" class="ghost ghost--danger" on:click={() => deleteAccount(a)}>Delete</button>
+              </td>
             </tr>
           {/each}
         </tbody>
       </table>
+    {/if}
+    {#if deleteError}
+      <p class="delete-error" role="alert">{deleteError}</p>
     {/if}
   </section>
 
@@ -614,6 +646,20 @@
   }
   .metrics--inset {
     margin-bottom: 0;
+  }
+  .row-actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: flex-end;
+  }
+  .ghost--danger:hover {
+    color: var(--warning, #eab308);
+    border-color: var(--warning, #eab308);
+  }
+  .delete-error {
+    margin: var(--space-2) 0 0;
+    color: var(--warning, #eab308);
+    font-size: var(--text-sm);
   }
   .metric {
     padding: var(--space-4);

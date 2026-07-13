@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { user, authReady, hydrateUser, refreshBalance } from '../stores/user';
   import BuyCreditsSheet from './BuyCreditsSheet.svelte';
+  import { displayName } from '../data/display-names';
 
   interface ApiKey {
     id: string;
@@ -135,17 +136,31 @@
   function onPurchaseSuccess() {
     refreshBalance();
   }
+
+  function openAuth() {
+    window.dispatchEvent(new CustomEvent('wyreup:auth-open'));
+  }
+
+  async function signOut() {
+    await fetch('/api/account/signout', {
+      method: 'POST',
+      headers: { 'X-Wyreup-CSRF': '1' },
+      credentials: 'same-origin',
+    });
+    window.location.reload();
+  }
 </script>
 
 {#if !$authReady}
   <p class="loading">Loading…</p>
 {:else if !$user}
   <div class="signin">
-    <h2>Sign in</h2>
+    <h2>Your account lives behind your key.</h2>
     <p>
-      Paste your API key (top-right "Get PRO" button) to view your account.
-      Don't have one? You can create one from the same modal.
+      Sign in with the <code>wk_live_…</code> key from your email — or create an
+      account in seconds. No password, ever.
     </p>
+    <button type="button" class="primary" on:click={openAuth}>Sign in / create account</button>
   </div>
 {:else}
   <header class="acct-header">
@@ -164,15 +179,23 @@
       {:else if $user.subscriptionStatus === 'expired'}
         <span class="sub-badge">Monthly · expired</span>
       {/if}
-      <button type="button" class="primary" on:click={() => (showBuySheet = true)}>
-        {$user.subscriptionStatus === 'active' ? 'Buy more credits' : 'Buy credits / subscribe'}
-      </button>
+      <div class="acct-header__actions">
+        <button type="button" class="primary" on:click={() => (showBuySheet = true)}>
+          {$user.subscriptionStatus === 'active' ? 'Buy more credits' : 'Buy credits / subscribe'}
+        </button>
+        <button type="button" class="ghost" on:click={signOut}>Sign out</button>
+      </div>
     </div>
   </header>
 
-  <!-- API Keys --------------------------------------------------------- -->
+  <!-- Keys --------------------------------------------------------------- -->
   <section class="card">
-    <h3>API keys</h3>
+    <h3>Your keys</h3>
+    <p class="card-sub">
+      A key connects other places to this account — the terminal, an AI agent,
+      or another browser. Make one per device so you can revoke them
+      individually.
+    </p>
     {#if loadingKeys}
       <p class="muted">Loading…</p>
     {:else}
@@ -224,14 +247,14 @@
     {#if loadingHistory}
       <p class="muted">Loading…</p>
     {:else if history.length === 0}
-      <p class="muted">No PRO runs yet.</p>
+      <p class="muted">Nothing yet — PRO runs and their credit costs show up here.</p>
     {:else}
       <ul class="history">
         {#each history as r}
           <li class="hist-row">
-            <span class="hist-tool">{r.tool_id}</span>
+            <span class="hist-tool">{displayName(r.tool_id)}</span>
             <span class="hist-file">{r.file_name ?? '—'}</span>
-            <span class="hist-credits">−{r.credits_used}</span>
+            <span class="hist-credits">−{r.credits_used} {r.credits_used === 1 ? 'credit' : 'credits'}</span>
             <span class="hist-time">{ago(r.ran_at)}</span>
           </li>
         {/each}
@@ -263,7 +286,11 @@
   .signin p {
     color: var(--text-muted);
     max-width: 480px;
-    margin: 0 auto;
+    margin: 0 auto var(--space-4);
+  }
+  .signin code {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
   }
 
   .acct-header {
@@ -331,6 +358,17 @@
     margin: 0 0 var(--space-3);
     font-size: var(--text-md);
     font-weight: 600;
+  }
+  .card-sub {
+    margin: calc(var(--space-3) * -0.5) 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    max-width: 560px;
+  }
+  .acct-header__actions {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
   }
 
   .muted {
