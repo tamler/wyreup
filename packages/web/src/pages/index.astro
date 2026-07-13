@@ -8,6 +8,7 @@ import { createDefaultRegistry } from '@wyreup/core';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
+const localCount = allTools.filter((t) => t.cost !== 'credit').length;
 
 // Hand-curated popular tools (Deliverable 5)
 const popularToolIds = ['compress', 'convert', 'merge-pdf', 'qr', 'face-blur', 'ocr', 'strip-exif', 'audio-enhance'];
@@ -25,7 +26,7 @@ const popularTools = popularToolIds.map((id) => {
 
 <BaseLayout
   title="Wyreup — File tools that run on your device."
-  description="Drop a file; Wyreup proposes a pipeline. Compress, convert, transcribe, redact, sign — chain tools, save the chain, set a trigger. Preview-before-run is always on. Browser, terminal, or AI agent. Nothing uploads."
+  description="Drop a file; Wyreup proposes a pipeline. Compress, convert, transcribe, redact, sign — chain tools, save the chain, set a trigger. Preview-before-run is always on. Browser, terminal, or AI agent. Free tools run entirely on your device."
   surfaceMode="welcome"
 >
   <script is:inline>
@@ -44,9 +45,9 @@ const popularTools = popularToolIds.map((id) => {
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">Your files know what to do. <span class="hero__headline-accent">Nothing uploads.</span></h1>
+        <h1 class="hero__headline">Your files know what to do. <span class="hero__headline-accent">Free tools never upload.</span></h1>
         <p class="hero__body">
-          {allTools.length} tools — compress, convert, transcribe, redact, sign. Chain them, save the chain, set a trigger. Drop a file; Wyreup proposes the right tools. You confirm, it runs. Everything stays on your device.
+          {allTools.length} tools — compress, convert, transcribe, redact, sign. Chain them, save the chain, set a trigger. Drop a file; Wyreup proposes the right tools. You confirm, it runs. Free tools keep everything on your device; hosted PRO tools say so before anything is sent.
         </p>
         <p class="hero__surfaces">
           Use Wyreup in your <a href="/" class="hero__surface-link" aria-current="page">browser</a>, your <a href="/cli" class="hero__surface-link">terminal</a>, or your <a href="/skill" class="hero__surface-link">AI assistant</a>.
@@ -61,7 +62,7 @@ const popularTools = popularToolIds.map((id) => {
         <div class="trust-strip" aria-label="Key facts">
           <span class="trust-stat">{allTools.length} tools</span>
           <span class="trust-sep" aria-hidden="true">·</span>
-          <span class="trust-stat">0 uploads</span>
+          <span class="trust-stat">{localCount} run fully on-device</span>
           <span class="trust-sep" aria-hidden="true">·</span>
           <span class="trust-stat">0 tracking</span>
           <span class="trust-sep" aria-hidden="true">·</span>
@@ -100,7 +101,7 @@ const popularTools = popularToolIds.map((id) => {
   <section class="how section-rhythm" aria-labelledby="how-heading">
     <div class="container">
       <h2 id="how-heading" class="section-title">How it works</h2>
-      <p class="section-sub">Drop a file, pick a tool, run it. No upload, no signup. Try it right here:</p>
+      <p class="section-sub">Drop a file, pick a tool, run it. No signup — this demo runs right here on your device. Try it:</p>
       <HowItWorks client:load />
     </div>
 
@@ -132,7 +133,7 @@ const popularTools = popularToolIds.map((id) => {
           <div class="anywhere-card__inner">
             <div class="anywhere-card__channel">AI assistants</div>
             <div class="anywhere-card__headline">Works with Claude and other MCP clients</div>
-            <p class="anywhere-card__body">Your files never leave your machine.</p>
+            <p class="anywhere-card__body">Free tools keep files on your machine.</p>
           </div>
         </a>
         <InstallCard client:load />
@@ -146,10 +147,10 @@ const popularTools = popularToolIds.map((id) => {
     <div class="container">
       <h2 id="chain-heading" class="section-title">Chain tools together.</h2>
       <p class="chain-body">
-        Drop a file, pick a tool, see the result. Then pick another — the result becomes the next input. One drop, a cascade of outcomes. Every step runs on your device.
+        Drop a file, pick a tool, see the result. Then pick another — the result becomes the next input. One drop, a cascade of outcomes. Every step of this example runs on your device.
       </p>
       <p class="chain-bridge">
-        Run a real chain: <a href="/chain/build" class="chain-bridge__link">build a pipeline at /chain/build</a>, drop a file, and every step runs on your device. <a href="/chain/build" class="chain-cta">Try it &rarr;</a>
+        Run a real chain: <a href="/chain/build" class="chain-bridge__link">build a pipeline at /chain/build</a>, drop a file, and watch the steps run. <a href="/chain/build" class="chain-cta">Try it &rarr;</a>
       </p>
       <div class="chain-flow" aria-label="Chain demo: image.heic converted, then compressed to 247 KB JPG">
         <div class="chain-node chain-node--input" data-chain-index="0">
@@ -232,9 +233,9 @@ const popularTools = popularToolIds.map((id) => {
   <section class="privacy" aria-labelledby="privacy-heading">
     <div class="container">
       <div class="privacy-block">
-        <h2 id="privacy-heading" class="privacy-block__title">No server. No data. No tradeoff.</h2>
+        <h2 id="privacy-heading" class="privacy-block__title">Private by default. No tradeoff.</h2>
         <p class="privacy-block__body">
-          No analytics. No cookies. Nothing is sent to a server. Wyreup is open source — anyone can check how it works.
+          No analytics. No tracking cookies. Free tools run entirely on your device. Hosted PRO tools send your input over TLS, return the result, and keep nothing beyond a run record. Wyreup is open source — anyone can check how it works.
         </p>
         <a
           href="https://github.com/tamler/wyreup"

@@ -146,7 +146,7 @@
         </svg>
       </span>
       <p class="drop-zone__label">{isDragOver ? 'Release to load.' : label}</p>
-      <p class="drop-zone__hint">Drop a file or click to browse — nothing uploads.</p>
+      <p class="drop-zone__hint">Drop a file or click to browse.</p>
     {/if}
   </div>
 </div>

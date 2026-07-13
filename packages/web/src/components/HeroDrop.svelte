@@ -134,7 +134,7 @@
     <p class="hero-drop__caption">
       {isDragOver ? 'Release to detect compatible tools.' : 'Drop a file to see what you can do.'}
     </p>
-    <p class="hero-drop__sub">Nothing uploads. Everything runs on this device.</p>
+    <p class="hero-drop__sub">Dropping a file uploads nothing. Free tools run right here on this device.</p>
   </div>
 </div>
 

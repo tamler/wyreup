@@ -123,7 +123,7 @@
         Try a different file
       </button>
     {:else}
-      <p class="how-card__body">Drop any file here — or click to pick one. Nothing uploads.</p>
+      <p class="how-card__body">Drop any file here — or click to pick one. It stays on this device.</p>
     {/if}
   </div>
 

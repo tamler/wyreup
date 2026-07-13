@@ -53,7 +53,7 @@
   <div class="pwa-banner" role="banner" aria-label="Welcome onboarding">
     <div class="pwa-banner__inner">
       <p class="pwa-banner__text">
-        Welcome to Wyreup. Every tool runs on your device — nothing uploads.
+        Welcome to Wyreup. Free tools run on your device; hosted PRO tools say what they send.
         <a href="/settings" class="pwa-banner__link">Visit Settings</a> to configure which tools cache for offline.
       </p>
       <button class="pwa-banner__dismiss" on:click={dismissWelcome} aria-label="Dismiss welcome message">
