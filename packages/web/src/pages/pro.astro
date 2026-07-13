@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProBadge from '../components/ProBadge.svelte';
 import ProSignup from '../components/ProSignup.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
+import { PACKS, MONTHLY } from '../data/pricing';
 
 // Catalog is derived from the registry — every tool with cost: 'credit'
 // is a PRO tool. Grouping by credit cost is self-maintaining: add a PRO
@@ -25,11 +26,7 @@ const catalog = [...new Set(proTools.map((t) => t.cost))]
       .sort((a, b) => a.name.localeCompare(b.name)),
   }));
 
-const packs = [
-  { credits: 220, price: '$5', note: 'Starter' },
-  { credits: 480, price: '$10', note: 'Best value', featured: true },
-  { credits: 1000, price: '$20', note: 'Power' },
-];
+const starterPack = PACKS[0]!;
 
 const why = [
   { h: 'Free stays free', p: 'Every in-browser tool — compression, PDF, image, audio, code & data helpers — stays free. No account, no upload, no tracking.' },
@@ -42,7 +39,7 @@ const why = [
 <BaseLayout
   surfaceMode="welcome"
   title="Wyreup PRO — hosted-AI tools, pay only for what you run"
-  description="Sign up free in one step. PRO unlocks 30 hosted-AI tools — transcription, OCR, translation, text-to-speech, image generation, long-context PDF Q&A, structured-JSON extraction, content safety, and more. Most cost 1–2 credits. Packs from $5, or $8/mo."
+  description={`Sign up free in one step. PRO unlocks 30 hosted-AI tools — transcription, OCR, translation, text-to-speech, image generation, long-context PDF Q&A, structured-JSON extraction, content safety, and more. Most cost 1–2 credits. Packs from $${starterPack.usd}, or $${MONTHLY.usdPerMonth}/mo.`}
 >
   <article class="pro">
     <!-- Hero: copy left, signup right — mirrors the homepage hero -->
@@ -62,7 +59,7 @@ const why = [
             cost 1–2 credits a run; failed runs refund automatically.
           </p>
           <p class="hero-meta">
-            Packs from <strong>$5</strong> &nbsp;·&nbsp; or <strong>$8/mo</strong> &nbsp;·&nbsp; credits never expire
+            Packs from <strong>{`$${starterPack.usd}`}</strong> &nbsp;·&nbsp; or <strong>{`$${MONTHLY.usdPerMonth}/mo`}</strong> &nbsp;·&nbsp; credits never expire
           </p>
           <a href="#pricing" class="hero-jump">See pricing &darr;</a>
         </div>
@@ -78,30 +75,30 @@ const why = [
         <h2 class="section-title">Simple credit pricing</h2>
         <p class="section-sub">
           Buy a pack once — credits never expire — or subscribe monthly.
-          Most tools cost 1–2 credits, so a starter pack covers roughly 220
-          images generated or analyzed, 220 grammar fixes, 110 PDF Q&amp;A
+          Most tools cost 1–2 credits, so a starter pack covers roughly {starterPack.credits}
+          images generated or analyzed, {starterPack.credits} grammar fixes, 110 PDF Q&amp;A
           runs, 110 text-to-speech outputs, or 70 transcriptions.
         </p>
 
         <div class="packs">
-          {packs.map((p) => (
+          {PACKS.map((p) => (
             <div class={`pack${p.featured ? ' pack--featured' : ''}`}>
-              <span class="pack__note">{p.note}</span>
+              <span class="pack__note">{p.label}</span>
               <div class="pack__credits">{p.credits}</div>
               <div class="pack__label">credits</div>
-              <div class="pack__price">{p.price}</div>
+              <div class="pack__price">{`$${p.usd}`}</div>
             </div>
           ))}
           <div class="pack pack--monthly">
             <span class="pack__note">Monthly</span>
-            <div class="pack__credits">440</div>
+            <div class="pack__credits">{MONTHLY.credits}</div>
             <div class="pack__label">credits / month</div>
-            <div class="pack__price">$8<span class="pack__per">/mo</span></div>
+            <div class="pack__price">{`$${MONTHLY.usdPerMonth}`}<span class="pack__per">/mo</span></div>
           </div>
         </div>
 
         <p class="pricing-fine">
-          Pack credits never expire. The monthly plan grants 440 credits each
+          Pack credits never expire. The monthly plan grants {MONTHLY.credits} credits each
           cycle into the same balance — the best per-credit rate — and you
           can cancel anytime. Payment is handled by Lemon Squeezy; we never
           see your card.

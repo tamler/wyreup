@@ -6,10 +6,12 @@ import ScenarioGrid from '../components/ScenarioGrid.svelte';
 import HowItWorks from '../components/HowItWorks.svelte';
 import InstallCard from '../components/InstallCard.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
+import { PACKS, MONTHLY } from '../data/pricing';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
 const localCount = allTools.filter((t) => t.cost !== 'credit').length;
+const starterPack = PACKS[0]!;
 
 // Hand-curated popular tools (Deliverable 5)
 const popularToolIds = ['compress', 'convert', 'merge-pdf', 'qr', 'face-blur', 'ocr', 'strip-exif', 'audio-enhance'];
@@ -165,8 +167,8 @@ const popularTools = popularToolIds.map((id) => {
           Higher-accuracy transcription for accents and noisy audio.
           Production-quality upscaling and background removal. Ask questions
           across a long PDF. Most cost just 1–2 credits. Packs start at
-          <strong>220 credits for $5</strong> (never expire), or
-          <strong>$8/mo for 440 credits</strong>. Failed runs auto-refund.
+          <strong>{starterPack.credits} credits for {`$${starterPack.usd}`}</strong> (never expire), or
+          <strong>{`$${MONTHLY.usdPerMonth}/mo`} for {MONTHLY.credits} credits</strong>. Failed runs auto-refund.
         </p>
         <div class="pro-block__cta">
           <a href="/pro" class="pro-block__primary">See what PRO unlocks &rarr;</a>
