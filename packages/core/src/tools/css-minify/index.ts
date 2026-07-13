@@ -45,6 +45,7 @@ export const cssMinify: ToolModule<CssMinifyParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['css-formatter'],
   defaults: defaultCssMinifyParams,
 
   paramSchema: {

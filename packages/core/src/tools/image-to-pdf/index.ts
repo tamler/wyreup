@@ -26,6 +26,14 @@ export const imageToPdf: ToolModule<ImageToPdfParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'merge-pdf',
+    'pdf-to-text',
+    'pdf-compress',
+    'pdf-encrypt',
+    'watermark-pdf',
+    'pdf-summarize',
+  ],
   defaults: { pageSize: 'auto', margin: 36 },
 
   paramSchema: {

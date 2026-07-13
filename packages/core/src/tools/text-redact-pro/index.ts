@@ -29,7 +29,7 @@ export const textRedactPro: ToolModule<TextRedactProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-summarize-pro', 'text-translate-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: defaultTextRedactProParams,
 

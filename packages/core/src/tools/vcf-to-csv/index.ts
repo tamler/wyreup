@@ -175,6 +175,7 @@ export const vcfToCsv: ToolModule<VcfToCsvParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['csv-to-excel', 'csv-json', 'csv-deduplicate', 'csv-sort'],
   defaults: defaultVcfToCsvParams,
 
   paramSchema: {

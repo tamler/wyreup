@@ -39,6 +39,13 @@ export const upscale2x: ToolModule<Upscale2xParams> = {
   installGroup: 'image-ai',
   requires: { webgpu: 'preferred' },
 
+  chainSuggestions: [
+    'compress',
+    'convert',
+    'resize',
+    'image-to-pdf',
+    'image-watermark',
+  ],
   defaults: defaultUpscale2xParams,
 
   async run(inputs: File[], _params: Upscale2xParams, ctx: ToolRunContext): Promise<Blob[]> {

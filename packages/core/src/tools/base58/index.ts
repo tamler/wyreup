@@ -100,6 +100,7 @@ export const base58: ToolModule<Base58Params> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['hash', 'base32', 'url-encoder', 'text-escape'],
   defaults: defaultBase58Params,
 
   paramSchema: {

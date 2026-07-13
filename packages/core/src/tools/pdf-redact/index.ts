@@ -49,6 +49,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: ['pdf-compress', 'merge-pdf', 'reorder-pdf', 'pdf-encrypt'],
   defaults: {
     rectangles: [],
     color: [0, 0, 0],

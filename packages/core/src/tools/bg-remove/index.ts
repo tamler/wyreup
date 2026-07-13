@@ -42,6 +42,13 @@ export const bgRemove: ToolModule<BgRemoveParams> = {
   installGroup: 'image-ai',
   requires: { webgpu: 'preferred' },
 
+  chainSuggestions: [
+    'compress',
+    'convert',
+    'resize',
+    'face-blur',
+    'strip-exif',
+  ],
   defaults: defaultBgRemoveParams,
 
   async run(inputs: File[], params: BgRemoveParams, ctx: ToolRunContext): Promise<Blob[]> {

@@ -29,6 +29,13 @@ export const convert: ToolModule<ConvertParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'resize',
+    'crop',
+    'compress',
+    'strip-exif',
+    'image-to-pdf',
+  ],
   defaults: { targetFormat: 'webp', quality: 90 },
 
   paramSchema: {

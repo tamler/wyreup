@@ -35,7 +35,7 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-summarize-pro', 'text-sentences'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: defaultTranscribeAndTranslateParams,
   paramSchema: {

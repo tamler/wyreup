@@ -47,6 +47,7 @@ export const markdownToHtml: ToolModule<MarkdownToHtmlParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['html-to-pdf', 'html-to-markdown', 'html-formatter', 'html-clean'],
   defaults: { gfm: true },
 
   async run(inputs: File[], params: MarkdownToHtmlParams, ctx: ToolRunContext): Promise<Blob[]> {

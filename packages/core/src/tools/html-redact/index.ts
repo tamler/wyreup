@@ -84,6 +84,7 @@ export const htmlRedact: ToolModule<HtmlRedactParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['html-to-markdown', 'html-minify', 'html-formatter', 'html-clean'],
   defaults: defaultHtmlRedactParams,
 
   paramSchema: {

@@ -219,6 +219,7 @@ export const icsToCsv: ToolModule<IcsToCsvParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['csv-to-excel', 'csv-sort', 'csv-filter', 'csv-json'],
   defaults: defaultIcsToCsvParams,
 
   paramSchema: {

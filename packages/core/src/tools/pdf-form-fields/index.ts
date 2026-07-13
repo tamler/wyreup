@@ -56,7 +56,7 @@ export const pdfFormFields: ToolModule<PdfFormFieldsParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
-  chainSuggestions: ['pdf-flatten', 'pdf-info', 'pdf-metadata'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-path'],
 
   defaults: defaultPdfFormFieldsParams,
   paramSchema: {

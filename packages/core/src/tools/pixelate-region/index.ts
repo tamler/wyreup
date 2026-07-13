@@ -42,6 +42,7 @@ export const pixelateRegion: ToolModule<PixelateRegionParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['strip-exif', 'compress', 'convert', 'image-to-pdf'],
   defaults: {
     x: 0,
     y: 0,

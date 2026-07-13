@@ -91,6 +91,7 @@ export const jsonToExcel: ToolModule<JsonToExcelParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['excel-to-csv', 'excel-info', 'merge-workbooks'],
   defaults: {
     sheetName: 'Sheet1',
     boldHeaders: false,

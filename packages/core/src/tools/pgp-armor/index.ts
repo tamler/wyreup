@@ -172,6 +172,7 @@ export const pgpArmor: ToolModule<PgpArmorParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['hash', 'url-encoder', 'base58'],
   defaults: defaultPgpArmorParams,
 
   paramSchema: {

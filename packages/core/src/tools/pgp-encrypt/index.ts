@@ -32,6 +32,7 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['pgp-sign', 'pgp-armor', 'hash', 'base64'],
   defaults: defaultPgpEncryptParams,
 
   paramSchema: {

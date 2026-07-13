@@ -169,6 +169,13 @@ export const textRedact: ToolModule<TextRedactParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'text-summarize',
+    'text-translate',
+    'text-diff',
+    'word-counter',
+    'text-sentences',
+  ],
   defaults: defaultTextRedactParams,
 
   paramSchema: {

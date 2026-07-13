@@ -36,7 +36,7 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
   creditCost: 2,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-summarize-pro', 'text-translate-pro', 'text-redact-pro'],
+  chainSuggestions: ['convert-audio', 'trim-media', 'transcribe'],
 
   defaults: defaultTextToSpeechProParams,
   paramSchema: {

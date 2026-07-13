@@ -117,6 +117,7 @@ export const csvToGeojson: ToolModule<CsvToGeoJsonParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['geojson-to-kml', 'convert-geo'],
   defaults: defaultCsvToGeoJsonParams,
 
   paramSchema: {

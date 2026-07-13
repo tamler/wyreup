@@ -34,7 +34,7 @@ export const contentSafetyPro: ToolModule<ContentSafetyProParams> = {
   creditCost: 1,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-redact-pro', 'text-sentiment-pro'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-path'],
 
   defaults: defaultContentSafetyProParams,
 

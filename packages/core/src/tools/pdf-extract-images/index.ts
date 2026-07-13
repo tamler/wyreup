@@ -133,6 +133,7 @@ export const pdfExtractImages: ToolModule<PdfExtractImagesParams> = {
   memoryEstimate: 'high',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: ['zip-extract'],
   defaults: defaultPdfExtractImagesParams,
 
   paramSchema: {

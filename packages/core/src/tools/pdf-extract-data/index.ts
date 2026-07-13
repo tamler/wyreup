@@ -293,6 +293,7 @@ export const pdfExtractData: ToolModule<PdfExtractDataParams> = {
   memoryEstimate: 'medium',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: ['csv-sql', 'json-formatter'],
   defaults: defaultPdfExtractDataParams,
 
   paramSchema: {

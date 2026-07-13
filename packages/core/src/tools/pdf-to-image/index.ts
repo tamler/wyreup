@@ -45,6 +45,13 @@ export const pdfToImage: ToolModule<PdfToImageParams> = {
   memoryEstimate: 'high',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'compress',
+    'resize',
+    'ocr',
+    'convert',
+    'image-to-pdf',
+  ],
   defaults: {
     format: 'png',
     dpi: 150,

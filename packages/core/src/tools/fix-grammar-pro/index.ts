@@ -29,7 +29,7 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['rewrite-tone-pro', 'text-to-speech-pro', 'text-translate-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-translate-pro'],
 
   defaults: defaultFixGrammarProParams,
 

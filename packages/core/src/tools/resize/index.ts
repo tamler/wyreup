@@ -29,6 +29,13 @@ export const resize: ToolModule<ResizeParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: [
+    'compress',
+    'convert',
+    'strip-exif',
+    'image-to-pdf',
+    'image-watermark',
+  ],
   defaults: {
     mode: 'fit',
     width: 1920,

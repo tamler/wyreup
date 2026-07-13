@@ -53,6 +53,7 @@ export const csvTemplate: ToolModule<CsvTemplateParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['zip-extract', 'zip-info'],
   defaults: defaultCsvTemplateParams,
 
   paramSchema: {

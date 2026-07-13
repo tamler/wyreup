@@ -37,6 +37,7 @@ export const xmlToJson: ToolModule<XmlToJsonParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-to-xml', 'json-formatter', 'json-yaml'],
   defaults: defaultXmlToJsonParams,
 
   paramSchema: {

@@ -156,11 +156,10 @@ export const transcribe: ToolModule<TranscribeParams> = {
   chainSuggestions: [
     'text-summarize',
     'text-translate',
-    'text-sentiment',
-    'text-readability',
+    'text-sentences',
+    'word-counter',
     'text-stats',
-    'text-ner',
-    'markdown-to-html',
+    'text-to-speech-pro',
   ],
   outputDisplay: 'prose',
 

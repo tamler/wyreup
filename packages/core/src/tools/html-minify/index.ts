@@ -51,6 +51,7 @@ export const htmlMinify: ToolModule<HtmlMinifyParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['html-formatter', 'extract-article-text', 'html-to-pdf'],
   defaults: defaultHtmlMinifyParams,
 
   paramSchema: {

@@ -33,7 +33,7 @@ export const regexFromTextPro: ToolModule<RegexFromTextProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'mono',
 
-  chainSuggestions: ['regex-tester', 'regex-visualize', 'regex-explain'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-path'],
 
   defaults: defaultRegexFromTextProParams,
   paramSchema: {

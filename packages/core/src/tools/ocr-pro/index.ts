@@ -42,6 +42,7 @@ export const ocrPro: ToolModule<OcrProParams> = {
   installGroup: 'image-ai',
   requires: { webgpu: 'preferred' },
 
+  chainSuggestions: ['word-counter', 'text-redact', 'text-sentences', 'text-to-speech-pro'],
   defaults: defaultOcrProParams,
 
   async run(inputs: File[], _params: OcrProParams, ctx: ToolRunContext): Promise<Blob[]> {

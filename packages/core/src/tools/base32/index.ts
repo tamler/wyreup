@@ -101,6 +101,7 @@ export const base32: ToolModule<Base32Params> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['base64', 'case-converter', 'word-counter', 'text-diff'],
   defaults: defaultBase32Params,
 
   paramSchema: {

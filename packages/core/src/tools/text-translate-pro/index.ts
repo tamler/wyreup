@@ -34,7 +34,7 @@ export const textTranslatePro: ToolModule<TextTranslateProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-summarize-pro', 'text-sentences', 'text-readability'],
+  chainSuggestions: ['text-sentences', 'text-readability', 'word-counter', 'text-summarize-pro'],
 
   defaults: defaultTextTranslateProParams,
   paramSchema: {

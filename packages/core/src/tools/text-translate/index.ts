@@ -169,6 +169,7 @@ export const textTranslate: ToolModule<TextTranslateParams> = {
   installGroup: 'nlp-translate',
   requires: { webgpu: 'preferred' },
 
+  chainSuggestions: ['text-summarize', 'text-sentences', 'text-readability', 'text-translate-pro'],
   defaults: defaultTextTranslateParams,
 
   paramSchema: {

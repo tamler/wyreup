@@ -31,6 +31,7 @@ export const pdfDeletePages: ToolModule<PdfDeletePagesParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: ['pdf-compress', 'reorder-pdf', 'rotate-pdf', 'merge-pdf'],
   defaults: {
     pages: [],
   },

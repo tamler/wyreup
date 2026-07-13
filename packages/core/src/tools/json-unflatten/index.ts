@@ -90,6 +90,7 @@ export const jsonUnflatten: ToolModule<JsonUnflattenParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-flatten', 'json-formatter', 'json-diff'],
   defaults: defaultJsonUnflattenParams,
 
   paramSchema: {

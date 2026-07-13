@@ -30,6 +30,13 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'pdf-encrypt',
+    'pdf-compress',
+    'pdf-to-text',
+    'merge-pdf',
+    'pdf-info',
+  ],
   defaults: {
     password: '',
   },

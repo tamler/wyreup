@@ -38,6 +38,13 @@ export const pageNumbersPdf: ToolModule<PageNumbersPdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'split-pdf',
+    'watermark-pdf',
+  ],
   defaults: {
     position: 'bottom-center',
     fontSize: 12,

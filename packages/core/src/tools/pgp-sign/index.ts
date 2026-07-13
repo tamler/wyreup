@@ -32,6 +32,7 @@ export const pgpSign: ToolModule<PgpSignParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['pgp-verify', 'hash', 'base64', 'pgp-armor'],
   defaults: defaultPgpSignParams,
 
   paramSchema: {

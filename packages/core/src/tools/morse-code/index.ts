@@ -129,6 +129,7 @@ export const morseCode: ToolModule<MorseCodeParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['case-converter', 'text-diff', 'slug', 'word-counter'],
   defaults: defaultMorseCodeParams,
 
   paramSchema: {

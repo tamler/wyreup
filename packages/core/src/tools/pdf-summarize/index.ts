@@ -29,7 +29,7 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
   outputDisplay: 'prose',
   budget: { maxPages: 500 },
 
-  chainSuggestions: ['text-translate-pro', 'text-sentences'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-translate-pro'],
 
   defaults: {},
   paramSchema: {},

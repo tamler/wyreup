@@ -28,7 +28,7 @@ export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   creditCost: 1,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-keywords', 'text-ner-pro'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
 
   defaults: defaultTextSentimentProParams,
 

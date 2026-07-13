@@ -35,7 +35,7 @@ export const chatLongPdfPro: ToolModule<ChatLongPdfProParams> = {
   outputDisplay: 'prose',
   budget: { maxPages: 500 },
 
-  chainSuggestions: ['text-summarize-pro', 'text-to-speech-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: defaultChatLongPdfProParams,
   paramSchema: {

@@ -47,6 +47,7 @@ export const shapefileToGeojson: ToolModule<ShapefileToGeojsonParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['geojson-to-kml', 'convert-geo'],
   defaults: defaultShapefileToGeojsonParams,
 
   async run(

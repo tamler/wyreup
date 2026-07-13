@@ -28,6 +28,7 @@ export const urlEncoder: ToolModule<UrlEncoderParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['slug', 'text-escape', 'case-converter'],
   defaults: { mode: 'encode', scope: 'component' },
 
   paramSchema: {

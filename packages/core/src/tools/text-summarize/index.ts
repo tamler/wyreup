@@ -41,6 +41,13 @@ export const textSummarize: ToolModule<TextSummarizeParams> = {
   installGroup: 'nlp-standard',
   requires: { webgpu: 'preferred' },
 
+  chainSuggestions: [
+    'text-translate',
+    'text-sentences',
+    'text-keywords',
+    'word-counter',
+    'text-readability',
+  ],
   defaults: defaultTextSummarizeParams,
 
   async run(inputs: File[], params: TextSummarizeParams, ctx: ToolRunContext): Promise<Blob[]> {

@@ -28,6 +28,13 @@ export const mergePdf: ToolModule<MergePdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'watermark-pdf',
+    'reorder-pdf',
+  ],
   defaults: {},
 
   async run(inputs: File[], _params: MergePdfParams, ctx: ToolRunContext): Promise<Blob> {

@@ -75,6 +75,7 @@ export const geojsonToKml: ToolModule<GeojsonToKmlParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['kml-to-geojson', 'convert-geo'],
   defaults: defaultGeojsonToKmlParams,
 
   paramSchema: {

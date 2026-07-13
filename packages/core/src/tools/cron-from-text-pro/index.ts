@@ -31,7 +31,7 @@ export const cronFromTextPro: ToolModule<CronFromTextProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'mono',
 
-  chainSuggestions: ['cron-parser'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
 
   defaults: defaultCronFromTextProParams,
   paramSchema: {

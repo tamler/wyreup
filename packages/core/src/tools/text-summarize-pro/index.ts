@@ -34,7 +34,7 @@ export const textSummarizePro: ToolModule<TextSummarizeProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-translate-pro', 'text-sentences', 'text-keywords'],
+  chainSuggestions: ['text-sentences', 'text-keywords', 'word-counter', 'text-translate-pro'],
 
   defaults: defaultTextSummarizeProParams,
   paramSchema: {

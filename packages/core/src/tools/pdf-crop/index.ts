@@ -52,6 +52,7 @@ export const pdfCrop: ToolModule<PdfCropParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: ['pdf-compress', 'merge-pdf', 'reorder-pdf', 'pdf-encrypt'],
   defaults: {
     box: { x: 0, y: 0, width: 595, height: 842 },
   },

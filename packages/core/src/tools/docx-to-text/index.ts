@@ -38,10 +38,9 @@ export const docxToText: ToolModule<DocxToTextParams> = {
   chainSuggestions: [
     'text-summarize',
     'text-translate',
+    'word-counter',
     'text-sentences',
     'text-keywords',
-    'text-ner',
-    'text-readability',
   ],
 
   defaults: defaultDocxToTextParams,

@@ -30,6 +30,7 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['hash', 'base64', 'pgp-verify', 'pgp-armor'],
   defaults: defaultPgpDecryptParams,
 
   paramSchema: {

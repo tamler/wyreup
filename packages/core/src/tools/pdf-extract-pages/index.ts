@@ -31,6 +31,7 @@ export const pdfExtractPages: ToolModule<PdfExtractPagesParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: ['merge-pdf', 'pdf-compress', 'reorder-pdf', 'pdf-encrypt'],
   defaults: {
     pages: [1],
   },

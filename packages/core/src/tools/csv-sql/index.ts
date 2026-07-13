@@ -38,7 +38,7 @@ export const csvSql: ToolModule<CsvSqlParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
-  chainSuggestions: ['csv-sort', 'csv-filter', 'json-formatter', 'csv-json'],
+  chainSuggestions: ['csv-sort', 'csv-filter', 'csv-json', 'csv-to-excel'],
 
   defaults: defaultCsvSqlParams,
   paramSchema: {

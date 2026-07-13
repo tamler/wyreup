@@ -35,7 +35,7 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
   creditCost: 3,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-summarize-pro', 'text-to-speech-pro'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
 
   defaults: defaultDeepAnalysisProParams,
   paramSchema: {

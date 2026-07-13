@@ -33,6 +33,13 @@ export const epubToText: ToolModule<EpubToTextParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
+  chainSuggestions: [
+    'text-summarize',
+    'word-counter',
+    'text-keywords',
+    'text-sentences',
+    'text-to-speech-pro',
+  ],
   defaults: defaultEpubToTextParams,
   paramSchema: {
     includeMetadata: {

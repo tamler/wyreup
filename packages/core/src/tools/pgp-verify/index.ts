@@ -37,6 +37,7 @@ export const pgpVerify: ToolModule<PgpVerifyParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['json-formatter', 'hash', 'hmac'],
   defaults: defaultPgpVerifyParams,
 
   paramSchema: {

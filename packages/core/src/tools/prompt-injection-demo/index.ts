@@ -294,6 +294,7 @@ export const promptInjectionDemo: ToolModule<PromptInjectionDemoParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-formatter', 'json-path', 'hash'],
   defaults: defaultPromptInjectionDemoParams,
 
   paramSchema: {

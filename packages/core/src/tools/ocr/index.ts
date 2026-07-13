@@ -32,6 +32,13 @@ export const ocr: ToolModule<OcrParams> = {
   memoryEstimate: 'high',
   installSize: 10_000_000, // ~10 MB: tesseract language data
 
+  chainSuggestions: [
+    'text-summarize',
+    'text-translate',
+    'word-counter',
+    'text-sentences',
+    'text-stats',
+  ],
   defaults: {
     language: 'eng',
   },

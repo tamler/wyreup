@@ -57,6 +57,13 @@ export const reorderPdf: ToolModule<ReorderPdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'split-pdf',
+    'watermark-pdf',
+  ],
   defaults: { order: '' },
 
   async run(inputs: File[], params: ReorderPdfParams, ctx: ToolRunContext): Promise<Blob> {

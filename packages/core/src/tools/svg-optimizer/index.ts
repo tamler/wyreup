@@ -39,6 +39,7 @@ export const svgOptimizer: ToolModule<SvgOptimizerParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['svg-to-png'],
   defaults: defaultSvgOptimizerParams,
 
   async run(inputs: File[], params: SvgOptimizerParams, ctx: ToolRunContext): Promise<Blob[]> {

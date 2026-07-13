@@ -32,6 +32,7 @@ export const qr: ToolModule<QrParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['convert', 'resize', 'image-to-pdf', 'compress'],
   defaults: {
     text: '',
     size: 300,

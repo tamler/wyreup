@@ -72,6 +72,7 @@ export const frontmatterToCsv: ToolModule<FrontmatterToCsvParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['csv-to-excel', 'csv-sort', 'csv-filter', 'csv-deduplicate'],
   defaults: defaultFrontmatterToCsvParams,
 
   paramSchema: {

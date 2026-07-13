@@ -33,7 +33,7 @@ export const textNerPro: ToolModule<TextNerProParams> = {
   creditCost: 1,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-summarize-pro', 'text-redact-pro', 'text-keywords'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-path'],
 
   defaults: defaultTextNerProParams,
 

@@ -42,6 +42,13 @@ export const excelToCsv: ToolModule<ExcelToCsvParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'csv-sort',
+    'csv-filter',
+    'csv-deduplicate',
+    'csv-merge',
+    'csv-to-excel',
+  ],
   defaults: {
     sheet: '',
     delimiter: ',',

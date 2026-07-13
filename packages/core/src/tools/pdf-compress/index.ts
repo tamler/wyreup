@@ -43,6 +43,13 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
   defaults,
 
+  chainSuggestions: [
+    'merge-pdf',
+    'pdf-encrypt',
+    'watermark-pdf',
+    'pdf-to-text',
+    'split-pdf',
+  ],
   paramSchema: {
     imageQuality: {
       type: 'range',

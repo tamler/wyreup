@@ -53,7 +53,7 @@ export const recordAudio: ToolModule<RecordAudioParams> = {
 
   // Sensible chains for a fresh recording. Most common: transcribe it.
   // Then audio post-processing tools.
-  chainSuggestions: ['transcribe', 'audio-enhance', 'convert-audio', 'extract-audio', 'trim-media'],
+  chainSuggestions: ['transcribe', 'audio-enhance', 'convert-audio', 'trim-media'],
 
   defaults: defaultRecordAudioParams,
 

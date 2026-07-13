@@ -178,6 +178,7 @@ export const convertGeo: ToolModule<ConvertGeoParams> = {
   installSize: 40_000_000,
   installGroup: 'gdal',
 
+  chainSuggestions: ['zip-create'],
   defaults: defaultConvertGeoParams,
 
   paramSchema: {

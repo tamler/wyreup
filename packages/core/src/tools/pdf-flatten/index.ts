@@ -33,7 +33,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
   memoryEstimate: 'medium',
   budget: { maxPages: 2_000 },
 
-  chainSuggestions: ['pdf-encrypt', 'pdf-redact', 'pdf-info'],
+  chainSuggestions: ['pdf-encrypt', 'pdf-redact', 'pdf-compress', 'pdf-to-text'],
 
   defaults: defaultPdfFlattenParams,
   paramSchema: {

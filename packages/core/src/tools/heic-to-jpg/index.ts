@@ -79,6 +79,13 @@ export const heicToJpg: ToolModule<HeicToJpgParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: [
+    'compress',
+    'resize',
+    'strip-exif',
+    'image-to-pdf',
+    'face-blur',
+  ],
   defaults: { format: 'jpeg', quality: 90 },
 
   paramSchema: {

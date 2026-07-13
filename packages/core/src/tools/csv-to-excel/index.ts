@@ -43,6 +43,7 @@ export const csvToExcel: ToolModule<CsvToExcelParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['excel-to-csv', 'excel-to-json', 'excel-info', 'merge-workbooks'],
   defaults: {
     delimiter: 'auto',
     boldHeaders: false,

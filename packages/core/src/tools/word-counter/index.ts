@@ -52,6 +52,7 @@ export const wordCounter: ToolModule<WordCounterParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
   defaults: {},
 
   async run(inputs: File[], _params: WordCounterParams, ctx: ToolRunContext): Promise<Blob[]> {

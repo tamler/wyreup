@@ -36,7 +36,7 @@ export const imageGeneratePro: ToolModule<ImageGenerateProParams> = {
   creditCost: 1,
   memoryEstimate: 'low',
 
-  chainSuggestions: ['bg-remove-pro', 'upscale-2x-pro', 'image-watermark'],
+  chainSuggestions: ['compress', 'convert', 'image-watermark', 'bg-remove-pro'],
 
   defaults: defaultImageGenerateProParams,
   paramSchema: {

@@ -32,6 +32,13 @@ export const compress: ToolModule<CompressParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'convert',
+    'resize',
+    'crop',
+    'strip-exif',
+    'image-to-pdf',
+  ],
   defaults: { quality: 80 },
 
   paramSchema: {

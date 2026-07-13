@@ -216,6 +216,13 @@ export const audioEnhance: ToolModule<AudioEnhanceParams> = {
   requires: { webgpu: 'preferred' },
   budget: AUDIO_ENHANCE_BUDGET,
 
+  chainSuggestions: [
+    'transcribe',
+    'convert-audio',
+    'normalize-loudness',
+    'trim-media',
+    'audio-speed',
+  ],
   defaults: defaultAudioEnhanceParams,
 
   async run(inputs: File[], _params: AudioEnhanceParams, ctx: ToolRunContext): Promise<Blob[]> {

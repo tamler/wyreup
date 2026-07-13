@@ -43,6 +43,7 @@ export const pdfMetadata: ToolModule<PdfMetadataParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: ['pdf-compress', 'merge-pdf', 'pdf-encrypt', 'pdf-to-text'],
   defaults: {
     mode: 'read',
   },

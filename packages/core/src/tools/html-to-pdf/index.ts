@@ -42,6 +42,13 @@ export const htmlToPdf: ToolModule<HtmlToPdfParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: [
+    'pdf-to-text',
+    'merge-pdf',
+    'pdf-compress',
+    'pdf-encrypt',
+    'watermark-pdf',
+  ],
   defaults: {
     pageSize: 'A4',
     orientation: 'portrait',

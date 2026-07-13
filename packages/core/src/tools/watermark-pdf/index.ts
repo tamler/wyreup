@@ -45,6 +45,13 @@ export const watermarkPdf: ToolModule<WatermarkPdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'split-pdf',
+    'merge-pdf',
+  ],
   defaults: {
     mode: 'text',
     text: 'CONFIDENTIAL',

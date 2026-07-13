@@ -36,6 +36,13 @@ export const stripExif: ToolModule<StripExifParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'compress',
+    'resize',
+    'face-blur',
+    'image-to-pdf',
+    'bg-remove',
+  ],
   defaults: {},
 
   async run(inputs: File[], _params: StripExifParams, ctx: ToolRunContext): Promise<Blob[]> {

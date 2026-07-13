@@ -26,7 +26,7 @@ export const ocrHq: ToolModule<Record<string, never>> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-translate-pro', 'text-summarize-pro', 'text-sentences'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: {},
   paramSchema: {},

@@ -29,6 +29,13 @@ export const pdfToText: ToolModule<PdfToTextParams> = {
   memoryEstimate: 'medium',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'text-summarize',
+    'text-translate',
+    'word-counter',
+    'text-sentences',
+    'text-stats',
+  ],
   defaults: {
     separator: '\n\n=== Page {n} ===\n\n',
   },

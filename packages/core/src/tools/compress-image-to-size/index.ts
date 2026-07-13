@@ -81,6 +81,13 @@ export const compressImageToSize: ToolModule<CompressImageToSizeParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'convert',
+    'image-to-pdf',
+    'strip-exif',
+    'resize',
+    'compress',
+  ],
   defaults: { targetKb: 200, allowDownscale: true },
 
   paramSchema: {

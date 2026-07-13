@@ -203,6 +203,7 @@ export const harSanitize: ToolModule<HarSanitizeParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: ['json-formatter', 'json-path', 'json-yaml'],
   defaults: defaultHarSanitizeParams,
 
   paramSchema: {

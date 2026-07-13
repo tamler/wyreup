@@ -208,6 +208,13 @@ export const faceBlur: ToolModule<FaceBlurParams> = {
   installSize: 1_000_000, // ~1 MB: MediaPipe WASM + BlazeFace model
   // No `requires` field — MediaPipe runs on WASM universally (no WebGPU needed)
 
+  chainSuggestions: [
+    'compress',
+    'convert',
+    'resize',
+    'strip-exif',
+    'image-to-pdf',
+  ],
   defaults: defaultFaceBlurParams,
 
   async run(inputs: File[], params: FaceBlurParams, ctx: ToolRunContext): Promise<Blob[]> {

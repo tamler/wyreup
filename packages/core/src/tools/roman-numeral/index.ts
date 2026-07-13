@@ -108,6 +108,7 @@ export const romanNumeral: ToolModule<RomanNumeralParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-formatter', 'json-diff'],
   defaults: defaultRomanNumeralParams,
 
   paramSchema: {

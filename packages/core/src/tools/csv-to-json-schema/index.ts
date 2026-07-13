@@ -141,6 +141,7 @@ export const csvToJsonSchema: ToolModule<CsvToJsonSchemaParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-schema-validate', 'json-formatter', 'json-yaml'],
   defaults: defaultCsvToJsonSchemaParams,
 
   paramSchema: {

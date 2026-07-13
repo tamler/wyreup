@@ -44,6 +44,13 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'watermark-pdf',
+    'pdf-to-text',
+    'merge-pdf',
+    'pdf-decrypt',
+  ],
   defaults: {
     userPassword: '',
   },

@@ -44,7 +44,7 @@ export const textDates: ToolModule<TextDatesParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-ner', 'text-redact', 'text-frequency'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
 
   defaults: defaultTextDatesParams,
   paramSchema: {

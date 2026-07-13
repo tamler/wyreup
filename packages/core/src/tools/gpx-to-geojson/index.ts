@@ -43,6 +43,7 @@ export const gpxToGeojson: ToolModule<GpxToGeojsonParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['geojson-to-kml', 'convert-geo'],
   defaults: defaultGpxToGeojsonParams,
 
   async run(inputs: File[], _params: GpxToGeojsonParams, ctx: ToolRunContext): Promise<Blob[]> {

@@ -31,7 +31,7 @@ export const translateImage: ToolModule<TranslateImageParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-summarize-pro', 'text-sentences'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: defaultTranslateImageParams,
   paramSchema: {

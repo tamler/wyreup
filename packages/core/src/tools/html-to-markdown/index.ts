@@ -28,6 +28,13 @@ export const htmlToMarkdown: ToolModule<HtmlToMarkdownParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: [
+    'text-summarize',
+    'text-translate',
+    'word-counter',
+    'text-sentences',
+    'text-keywords',
+  ],
   defaults: { headingStyle: 'atx' },
 
   paramSchema: {

@@ -90,6 +90,7 @@ export const imageToAsciiArt: ToolModule<ImageToAsciiParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['word-counter', 'text-diff', 'hash'],
   defaults: defaultImageToAsciiParams,
 
   paramSchema: {

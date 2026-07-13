@@ -93,6 +93,7 @@ export const pdfExtractTables: ToolModule<PdfExtractTablesParams> = {
 
   defaults,
 
+  chainSuggestions: ['json-formatter', 'json-flatten', 'csv-json'],
   async run(inputs: File[], params: PdfExtractTablesParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 

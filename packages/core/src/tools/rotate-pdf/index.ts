@@ -75,6 +75,13 @@ export const rotatePdf: ToolModule<RotatePdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 2_000 },
 
+  chainSuggestions: [
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'reorder-pdf',
+    'merge-pdf',
+  ],
   defaults: { degrees: 90, pages: 'all' },
 
   paramSchema: {

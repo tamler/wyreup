@@ -95,7 +95,7 @@ export const textKeywords: ToolModule<TextKeywordsParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
-  chainSuggestions: ['text-summarize', 'text-ner', 'text-frequency'],
+  chainSuggestions: ['json-formatter', 'json-yaml', 'json-flatten'],
 
   defaults: defaultTextKeywordsParams,
   paramSchema: {

@@ -77,6 +77,13 @@ export const splitPdf: ToolModule<SplitPdfParams> = {
   memoryEstimate: 'low',
   budget: { maxPages: 5_000 },
 
+  chainSuggestions: [
+    'merge-pdf',
+    'pdf-compress',
+    'pdf-encrypt',
+    'pdf-to-text',
+    'reorder-pdf',
+  ],
   defaults: { mode: 'all', ranges: '' },
 
   paramSchema: {

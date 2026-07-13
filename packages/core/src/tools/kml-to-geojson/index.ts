@@ -32,6 +32,7 @@ export const kmlToGeojson: ToolModule<KmlToGeojsonParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['geojson-to-kml', 'convert-geo'],
   defaults: defaultKmlToGeojsonParams,
 
   async run(inputs: File[], _params: KmlToGeojsonParams, ctx: ToolRunContext): Promise<Blob[]> {

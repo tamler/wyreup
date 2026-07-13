@@ -25,7 +25,7 @@ export const readHandwriting: ToolModule<Record<string, never>> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-translate-pro', 'text-summarize-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter', 'text-summarize-pro'],
 
   defaults: {},
   paramSchema: {},

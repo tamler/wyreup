@@ -28,6 +28,13 @@ export const svgToPng: ToolModule<SvgToPngParams> = {
   cost: 'free',
   memoryEstimate: 'medium',
 
+  chainSuggestions: [
+    'resize',
+    'compress',
+    'strip-exif',
+    'image-to-pdf',
+    'convert',
+  ],
   defaults: {
     scale: 1,
   },

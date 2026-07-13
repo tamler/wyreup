@@ -43,6 +43,7 @@ export const excelToJson: ToolModule<ExcelToJsonParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['json-formatter', 'json-to-excel', 'json-flatten', 'json-schema-infer'],
   defaults: {
     sheet: 'all',
     arrayStyle: 'objects',

@@ -91,6 +91,7 @@ export const base64: ToolModule<Base64Params> = {
   cost: 'free',
   memoryEstimate: 'low',
 
+  chainSuggestions: ['hash', 'hmac', 'text-escape', 'file-fingerprint'],
   defaults: { mode: 'encode', urlSafe: false },
 
   paramSchema: {
