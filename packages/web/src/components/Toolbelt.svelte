@@ -12,7 +12,14 @@
   import { encodeChainSteps } from './runners/chainUrl';
   import TriggerRulesSection from './TriggerRulesSection.svelte';
 
+  interface RecentTool {
+    id: string;
+    name: string;
+    ts: number;
+  }
+
   let chains: ToolbeltChain[] = [];
+  let recentTools: RecentTool[] = [];
   let loaded = false;
 
   let renamingId: string | null = null;
@@ -22,8 +29,50 @@
   let importSuccess = '';
   let importTimer: ReturnType<typeof setTimeout> | null = null;
 
+  function loadRecentTools(): RecentTool[] {
+    try {
+      const raw = localStorage.getItem('wyreup:recent-tools');
+      if (!raw) return [];
+      const parsed: unknown = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      const out: RecentTool[] = [];
+      for (const item of parsed) {
+        if (
+          item != null &&
+          typeof item === 'object' &&
+          typeof (item as RecentTool).id === 'string' &&
+          typeof (item as RecentTool).name === 'string' &&
+          typeof (item as RecentTool).ts === 'number'
+        ) {
+          out.push({
+            id: (item as RecentTool).id,
+            name: (item as RecentTool).name,
+            ts: (item as RecentTool).ts,
+          });
+        }
+        if (out.length >= 8) break;
+      }
+      return out;
+    } catch {
+      return [];
+    }
+  }
+
+  /** Relative timestamp for recent tools (e.g. "2h ago"). */
+  function relativeTime(ts: number): string {
+    const diff = Date.now() - ts;
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  }
+
   onMount(() => {
     chains = getAllChains();
+    recentTools = loadRecentTools();
     loaded = true;
   });
 
@@ -107,64 +156,93 @@
       return iso;
     }
   }
+
+  $: isFullyEmpty = loaded && chains.length === 0 && recentTools.length === 0;
 </script>
 
 <div class="toolbelt">
   {#if !loaded}
     <p class="loading">Loading...</p>
-  {:else if chains.length === 0}
+  {:else if isFullyEmpty}
     <div class="empty-state">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon" aria-hidden="true">
         <rect x="3" y="3" width="18" height="18" rx="2"/>
         <path d="M3 9h18M9 21V9"/>
       </svg>
-      <p class="empty-msg">No saved chains yet.</p>
-      <p class="empty-hint">Build one at <a href="/chain/build" class="kit-link">/chain/build</a> or save a chain after running it.</p>
+      <h2 class="empty-msg">Nothing saved yet.</h2>
+      <p class="empty-hint">Run any tool and it shows up here. Chain a few actions together and save the chain — it becomes a one-click workflow you can rerun, export, or hand to the CLI.</p>
+      <div class="empty-actions">
+        <a href="/tools" class="btn-secondary">Browse tools</a>
+        <a href="/chain/build" class="btn-secondary">Build a chain</a>
+      </div>
     </div>
   {:else}
-    <div class="chains-list">
-      {#each chains as chain (chain.id)}
-        <div class="chain-row">
-          <div class="chain-row__info">
-            {#if renamingId === chain.id}
-              <input
-                class="rename-input"
-                type="text"
-                bind:value={renameValue}
-                on:keydown={(e) => {
-                  if (e.key === 'Enter') commitRename();
-                  if (e.key === 'Escape') renamingId = null;
-                }}
-                on:blur={commitRename}
-              />
-            {:else}
-              <span class="chain-name">{chain.name}</span>
-            {/if}
-            <span class="chain-date">{formatDate(chain.updatedAt)}</span>
-          </div>
+    {#if recentTools.length > 0}
+      <section class="toolbelt-section" aria-labelledby="recent-tools-heading">
+        <h2 id="recent-tools-heading" class="section-heading">Recent tools</h2>
+        <ul class="recent-list">
+          {#each recentTools as tool (tool.id)}
+            <li class="recent-row">
+              <a href={`/tools/${tool.id}`} class="recent-link">
+                <span class="recent-name">{tool.name}</span>
+                <span class="recent-time">{relativeTime(tool.ts)}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
 
-          <!-- Step preview -->
-          <div class="step-preview" aria-label="Chain steps">
-            {#each chain.steps as step, idx}
-              <span class="preview-chip">{step.toolId}</span>
-              {#if idx < chain.steps.length - 1}
-                <span class="preview-pipe" aria-hidden="true">→</span>
-              {/if}
-            {/each}
-          </div>
+    <section class="toolbelt-section" aria-labelledby="saved-chains-heading">
+      <h2 id="saved-chains-heading" class="section-heading">Saved chains</h2>
+      {#if chains.length === 0}
+        <p class="section-empty">No saved chains of actions yet. Build one after you run a few tools.</p>
+      {:else}
+        <div class="chains-list">
+          {#each chains as chain (chain.id)}
+            <div class="chain-row">
+              <div class="chain-row__info">
+                {#if renamingId === chain.id}
+                  <input
+                    class="rename-input"
+                    type="text"
+                    bind:value={renameValue}
+                    on:keydown={(e) => {
+                      if (e.key === 'Enter') commitRename();
+                      if (e.key === 'Escape') renamingId = null;
+                    }}
+                    on:blur={commitRename}
+                  />
+                {:else}
+                  <span class="chain-name">{chain.name}</span>
+                {/if}
+                <span class="chain-date">{formatDate(chain.updatedAt)}</span>
+              </div>
 
-          <!-- Actions -->
-          <div class="chain-row__actions">
-            <a href={chainToUrl(chain, 'run')} class="btn-action">Run</a>
-            <a href={chainToUrl(chain, 'build')} class="btn-action">Edit</a>
-            <button class="btn-action" type="button" on:click={() => startRename(chain)}>Rename</button>
-            <button class="btn-action" type="button" on:click={() => handleDuplicate(chain.id)}>Duplicate</button>
-            <button class="btn-action btn-action--danger" type="button" on:click={() => handleDelete(chain.id)}>Delete</button>
-            <button class="btn-action" type="button" on:click={() => shareChain(chain)}>Share</button>
-          </div>
+              <!-- Step preview -->
+              <div class="step-preview" aria-label="Steps in this chain of actions">
+                {#each chain.steps as step, idx}
+                  <span class="preview-chip">{step.toolId}</span>
+                  {#if idx < chain.steps.length - 1}
+                    <span class="preview-pipe" aria-hidden="true">→</span>
+                  {/if}
+                {/each}
+              </div>
+
+              <!-- Actions -->
+              <div class="chain-row__actions">
+                <a href={chainToUrl(chain, 'run')} class="btn-action">Run</a>
+                <a href={chainToUrl(chain, 'build')} class="btn-action">Edit</a>
+                <button class="btn-action" type="button" on:click={() => startRename(chain)}>Rename</button>
+                <button class="btn-action" type="button" on:click={() => handleDuplicate(chain.id)}>Duplicate</button>
+                <button class="btn-action btn-action--danger" type="button" on:click={() => handleDelete(chain.id)}>Delete</button>
+                <button class="btn-action" type="button" on:click={() => shareChain(chain)}>Share</button>
+              </div>
+            </div>
+          {/each}
         </div>
-      {/each}
-    </div>
+      {/if}
+    </section>
   {/if}
 
   <!-- Utility row -->
@@ -185,7 +263,12 @@
 
   <hr class="toolbelt__divider" />
 
-  <TriggerRulesSection />
+  <section class="triggers-section" aria-labelledby="triggers-heading">
+    <h2 id="triggers-heading" class="section-heading">Advanced: trigger rules</h2>
+    <div class="triggers-section__body">
+      <TriggerRulesSection />
+    </div>
+  </section>
 </div>
 
 <style>
@@ -201,10 +284,79 @@
     border-top: 1px solid var(--border);
   }
 
+  .toolbelt-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .section-heading {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .section-empty {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--text-subtle);
+    line-height: 1.5;
+  }
+
   .loading {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     color: var(--text-subtle);
+  }
+
+  /* Recent tools */
+  .recent-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .recent-row {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .recent-row:last-child { border-bottom: none; }
+
+  .recent-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-elevated);
+    text-decoration: none;
+    transition: background var(--duration-fast) var(--ease-sharp);
+  }
+
+  .recent-link:hover { background: var(--bg-raised); }
+  .recent-link:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: -2px; }
+
+  .recent-name {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .recent-time {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    flex-shrink: 0;
   }
 
   /* Empty state */
@@ -222,8 +374,10 @@
   }
 
   .empty-msg {
+    margin: 0;
     font-family: var(--font-sans);
     font-size: var(--text-sm);
+    font-weight: 500;
     color: var(--text-muted);
   }
 
@@ -232,15 +386,15 @@
     font-size: var(--text-sm);
     color: var(--text-subtle);
     line-height: 1.6;
+    max-width: 36rem;
   }
 
-  .kit-link {
-    color: var(--accent-text);
-    text-decoration: none;
-    font-family: var(--font-mono);
+  .empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
   }
-
-  .kit-link:hover { text-decoration: underline; }
 
   /* Chains list */
   .chains-list {
@@ -381,6 +535,9 @@
     font-size: var(--text-base);
     font-weight: 500;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     transition:
       background var(--duration-instant) var(--ease-sharp),
       border-color var(--duration-instant) var(--ease-sharp);
@@ -400,5 +557,16 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--danger);
+  }
+
+  /* Advanced trigger rules — retitle; hide nested component title */
+  .triggers-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .triggers-section__body :global(.rules__title) {
+    display: none;
   }
 </style>
