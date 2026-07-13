@@ -35,6 +35,14 @@ jobs:
           # runs the API returns "already exists" and we proceed to deploy.
           command: pages project create wyreup --production-branch main
         continue-on-error: true
+      - name: Apply D1 migrations
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Runs before the code deploy so new endpoints never race their
+          # schema. Idempotent: already-applied migrations are skipped.
+          command: d1 migrations apply wyreup-prod --remote
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
