@@ -64,7 +64,47 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       LIMIT 10`,
   ).all<{ id: string; email: string; created_at: number }>();
 
+  // Signup-attempt pressure (create_attempts records one 'email' and one
+  // 'ip' row per allowed attempt; blocked-over-cap requests are never
+  // inserted, so bucket counts max out at the caps in create.ts).
+  const last24h = now - DAY_MS;
+  const attempts = await env.DB.prepare(
+    `SELECT
+       SUM(CASE WHEN bucket_kind = 'ip' AND attempted_at >= ?1 THEN 1 ELSE 0 END) AS attempts24h,
+       SUM(CASE WHEN bucket_kind = 'ip' AND attempted_at >= ?2 THEN 1 ELSE 0 END) AS attempts7d,
+       COUNT(DISTINCT CASE WHEN bucket_kind = 'ip' AND attempted_at >= ?1 THEN bucket_val END) AS ips24h,
+       COUNT(DISTINCT CASE WHEN bucket_kind = 'email' AND attempted_at >= ?1 THEN bucket_val END) AS emails24h
+     FROM create_attempts`,
+  )
+    .bind(last24h, last7d)
+    .first<{
+      attempts24h: number | null;
+      attempts7d: number | null;
+      ips24h: number | null;
+      emails24h: number | null;
+    }>();
+
+  // IPs that hit the daily cap — the closest thing to a blocked-actor list.
+  const cappedIps = await env.DB.prepare(
+    `SELECT bucket_val AS ip, COUNT(*) AS n
+       FROM create_attempts
+      WHERE bucket_kind = 'ip' AND attempted_at >= ?
+      GROUP BY bucket_val
+     HAVING n >= 10
+      ORDER BY n DESC
+      LIMIT 10`,
+  )
+    .bind(last24h)
+    .all<{ ip: string; n: number }>();
+
   return json({
+    signupAttempts: {
+      attempts24h: attempts?.attempts24h ?? 0,
+      attempts7d: attempts?.attempts7d ?? 0,
+      distinctIps24h: attempts?.ips24h ?? 0,
+      distinctEmails24h: attempts?.emails24h ?? 0,
+      cappedIps: cappedIps.results ?? [],
+    },
     users: {
       total: userTotal?.n ?? 0,
       signups7d: signups7d?.n ?? 0,

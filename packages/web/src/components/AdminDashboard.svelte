@@ -15,6 +15,13 @@
       refundCount: number;
       balanceOutstanding: number;
     };
+    signupAttempts: {
+      attempts24h: number;
+      attempts7d: number;
+      distinctIps24h: number;
+      distinctEmails24h: number;
+      cappedIps: Array<{ ip: string; n: number }>;
+    };
     refundsByTool: Array<{ tool_id: string; runs: number; refunds: number }>;
     recentSignups: Array<{ id: string; email: string; created_at: number }>;
   }
@@ -399,6 +406,37 @@
     </div>
   </section>
 
+  <section class="card">
+    <h3>Signup attempts</h3>
+    <div class="metrics metrics--inset">
+      <div class="metric">
+        <div class="metric__label">Attempts 24h</div>
+        <div class="metric__num">{stats.signupAttempts?.attempts24h ?? 0}</div>
+        <div class="metric__sub">{stats.signupAttempts?.attempts7d ?? 0} last 7d</div>
+      </div>
+      <div class="metric">
+        <div class="metric__label">Distinct IPs 24h</div>
+        <div class="metric__num">{stats.signupAttempts?.distinctIps24h ?? 0}</div>
+        <div class="metric__sub">{stats.signupAttempts?.distinctEmails24h ?? 0} distinct emails</div>
+      </div>
+      <div class="metric">
+        <div class="metric__label">IPs at daily cap</div>
+        <div class="metric__num">{stats.signupAttempts?.cappedIps?.length ?? 0}</div>
+        <div class="metric__sub">rate-limited actors</div>
+      </div>
+    </div>
+    {#if (stats.signupAttempts?.cappedIps?.length ?? 0) > 0}
+      <ul class="signups">
+        {#each stats.signupAttempts.cappedIps as c}
+          <li>
+            <span class="signups__email">{c.ip}</span>
+            <span class="signups__time">{c.n} attempts</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </section>
+
   {#if stats.recentSignups.length > 0}
     <section class="card">
       <h3>Latest signups</h3>
@@ -573,6 +611,9 @@
     .metrics {
       grid-template-columns: repeat(2, 1fr);
     }
+  }
+  .metrics--inset {
+    margin-bottom: 0;
   }
   .metric {
     padding: var(--space-4);

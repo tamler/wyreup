@@ -1,0 +1,76 @@
+# Scheduled signup/abuse monitor.
+#
+# Calls the admin alerts endpoint every 6 hours. If any alert fires — or the
+# endpoint itself is unreachable (the breakage canary) — the job fails and
+# opens/updates a GitHub issue, which lands in the operator's inbox via
+# normal GitHub notifications.
+#
+# Setup (one-time): add repo secret WYREUP_ADMIN_KEY — a wk_live_… key
+# belonging to an ADMIN_EMAILS account. Nothing runs without it.
+
+name: Signup alerts
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check admin alerts endpoint
+        id: check
+        env:
+          ADMIN_KEY: ${{ secrets.WYREUP_ADMIN_KEY }}
+        run: |
+          if [ -z "$ADMIN_KEY" ]; then
+            echo "body=WYREUP_ADMIN_KEY secret is not configured — the signup monitor cannot run." >> "$GITHUB_OUTPUT"
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          set +e
+          RESP=$(curl -sS --max-time 30 -w '\n%{http_code}' \
+            -H "Authorization: Bearer $ADMIN_KEY" \
+            https://wyreup.com/api/admin/alerts)
+          CURL_EXIT=$?
+          set -e
+          BODY=$(echo "$RESP" | sed '$d')
+          CODE=$(echo "$RESP" | tail -1)
+          echo "HTTP $CODE"
+          echo "$BODY"
+          if [ "$CURL_EXIT" -ne 0 ] || [ "$CODE" != "200" ]; then
+            echo "body=Alerts endpoint unhealthy (curl exit $CURL_EXIT, HTTP $CODE). The API may be down — signups could be broken. Body: $BODY" >> "$GITHUB_OUTPUT"
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          OK=$(echo "$BODY" | jq -r '.ok')
+          if [ "$OK" != "true" ]; then
+            MSGS=$(echo "$BODY" | jq -r '.alerts[].message' | sed 's/^/- /')
+            {
+              echo 'body<<EOF'
+              echo "Signup monitor alerts:"
+              echo "$MSGS"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update alert issue
+        if: steps.check.outputs.failed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: ${{ steps.check.outputs.body }}
+        run: |
+          TITLE="Signup monitor alert"
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
+          exit 1
