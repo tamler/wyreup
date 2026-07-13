@@ -4,6 +4,8 @@ import JobLauncher from '../components/JobLauncher.svelte';
 import { encodeChainSteps } from '../components/runners/chainUrl';
 import { JOBS, type Job } from '../data/jobs';
 import { displayName } from '../data/display-names';
+import { upsellFor } from '../data/pro-upsells';
+import { approxUsd } from '../data/pricing';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 export function getStaticPaths() {
@@ -48,6 +50,18 @@ export function getStaticPaths() {
       return tool;
     });
     const hasHostedStep = tools.some((tool) => tool.cost === 'credit');
+    // Quality-first Pro seam: if the job's primary tool has a hosted
+    // sibling, offer the stronger version — benefit first, price as detail.
+    const upsell = upsellFor(toolIds[0]!);
+    const upsellTool = upsell ? registry.toolsById.get(upsell.proToolId) : undefined;
+    const proSeam =
+      upsell && upsellTool
+        ? {
+            proToolId: upsell.proToolId,
+            benefit: upsell.benefit,
+            creditCost: upsellTool.creditCost ?? 1,
+          }
+        : null;
     // The launcher must accept only what the RECEIVING tool accepts — the
     // job's acceptMimes wildcards (image/*) can be broader than the first
     // tool's concrete list (compress rejects HEIC/SVG/GIF).
@@ -71,6 +85,7 @@ export function getStaticPaths() {
           job.action.kind === 'chain'
             ? `/chain/build?steps=${encodeURIComponent(encodeChainSteps(job.action.steps))}`
             : null,
+        proSeam,
       },
     };
   });
@@ -82,9 +97,10 @@ interface PageProps {
   toolNames: string[];
   executionSentence: string;
   chainBuilderHref: string | null;
+  proSeam: { proToolId: string; benefit: string; creditCost: number } | null;
 }
 
-const { job, serializedJob, toolNames, executionSentence, chainBuilderHref } =
+const { job, serializedJob, toolNames, executionSentence, chainBuilderHref, proSeam } =
   Astro.props as PageProps;
 
 const pageUrl = `https://wyreup.com/${job.slug}`;
@@ -113,6 +129,21 @@ const webPageLd = {
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(webPageLd)} />
+    <script is:inline>
+      // Aggregate, cookieless seam-click counter — no identifiers.
+      document.addEventListener('click', (e) => {
+        const a = e.target instanceof Element ? e.target.closest('[data-seam]') : null;
+        if (!a) return;
+        try {
+          navigator.sendBeacon(
+            '/api/metrics/hit',
+            JSON.stringify({ kind: 'job-seam-click', detail: a.getAttribute('data-seam') }),
+          );
+        } catch {
+          /* best-effort */
+        }
+      });
+    </script>
   </Fragment>
 
   <section class="job-page">
@@ -138,6 +169,21 @@ const webPageLd = {
           {toolNames.map((toolName) => <li>{toolName}</li>)}
         </ol>
       </section>
+
+      {proSeam && (
+        <aside class="job-pro-seam">
+          <p class="job-pro-seam__benefit">
+            <span class="job-pro-seam__chip">PRO</span>
+            {proSeam.benefit}
+          </p>
+          <a class="job-pro-seam__link" href={`/tools/${proSeam.proToolId}`} data-seam={proSeam.proToolId}>
+            Try the stronger version &rarr;
+          </a>
+          <p class="job-pro-seam__cost">
+            {proSeam.creditCost} {proSeam.creditCost === 1 ? 'credit' : 'credits'} per run · {approxUsd(proSeam.creditCost)}
+          </p>
+        </aside>
+      )}
 
       <nav class="job-links" aria-label="More ways to use Wyreup">
         <a href="/tools">Browse all tools &rarr;</a>
@@ -255,6 +301,41 @@ const webPageLd = {
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     color: var(--accent-text);
+  }
+
+  .job-pro-seam {
+    margin-top: var(--space-8);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    max-width: 560px;
+  }
+  .job-pro-seam__chip {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    margin-right: var(--space-2);
+    letter-spacing: 0.04em;
+  }
+  .job-pro-seam__benefit {
+    margin: 0 0 var(--space-2);
+    color: var(--text-primary);
+  }
+  .job-pro-seam__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--accent-text);
+  }
+  .job-pro-seam__cost {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
   }
 
   .job-links {

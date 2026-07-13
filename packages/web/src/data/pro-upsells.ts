@@ -39,7 +39,22 @@ export const PRO_UPSELLS: ProUpsell[] = [
   {
     freeToolId: 'text-summarize',
     proToolId: 'text-summarize-pro',
-    benefit: 'Frontier-model summaries for long or messy text.',
+    benefit: 'Frontier-model summaries that hold up on long or messy text.',
+  },
+  {
+    freeToolId: 'text-translate',
+    proToolId: 'text-translate-pro',
+    benefit: 'Natural-sounding translation across 100+ languages, not phrasebook output.',
+  },
+  {
+    freeToolId: 'text-redact',
+    proToolId: 'text-redact-pro',
+    benefit: 'Catches names, addresses, and identifiers the pattern-based redactor misses.',
+  },
+  {
+    freeToolId: 'pdf-redact',
+    proToolId: 'text-redact-pro',
+    benefit: 'Catches names, addresses, and identifiers that simple patterns miss.',
   },
 ];
 

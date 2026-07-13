@@ -97,7 +97,21 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     .bind(last24h)
     .all<{ ip: string; n: number }>();
 
+  // Aggregate funnel counters (page_events may not be migrated yet).
+  let funnel: { day: string; kind: string; detail: string; n: number }[] = [];
+  try {
+    const rows = await env.DB.prepare(
+      `SELECT day, kind, detail, n FROM page_events
+        WHERE day >= date('now', '-14 days')
+        ORDER BY day DESC, kind, n DESC`,
+    ).all<{ day: string; kind: string; detail: string; n: number }>();
+    funnel = rows.results ?? [];
+  } catch {
+    // Table missing — surface an empty funnel rather than a 500.
+  }
+
   return json({
+    funnel,
     signupAttempts: {
       attempts24h: attempts?.attempts24h ?? 0,
       attempts7d: attempts?.attempts7d ?? 0,

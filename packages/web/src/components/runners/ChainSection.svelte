@@ -114,6 +114,18 @@
     }
   }
 
+  function recordSeamClick(proToolId: string) {
+    // Aggregate, cookieless signal: which quality seams get clicked.
+    try {
+      navigator.sendBeacon(
+        '/api/metrics/hit',
+        JSON.stringify({ kind: 'pro-seam-click', detail: proToolId }),
+      );
+    } catch {
+      /* metrics are best-effort */
+    }
+  }
+
   function downloadBlob(blob: Blob, filename: string) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -244,15 +256,22 @@
     {/if}
     {#if proSeam}
       {@const seam = proSeam}
+      <!-- Quality-first: the benefit is the pitch; price is fine print.
+           Always a plain link — the Pro sibling should redo the job on the
+           user's ORIGINAL input, not on this already-processed result. -->
       <div class="pro-seam">
-        <span class="pro-seam__chip">PRO</span>
-        <p class="pro-seam__benefit">{seam.benefit}</p>
-        <p class="pro-seam__cost">
-          {seam.creditCost} credits · {approxUsd(seam.creditCost)}
+        <p class="pro-seam__benefit">
+          <span class="pro-seam__chip">PRO</span>
+          {seam.benefit}
         </p>
-        <!-- Always a plain link: the Pro sibling should redo the job on the
-             user's ORIGINAL input, not on this already-processed result. -->
-        <a class="pro-seam__link" href={`/tools/${seam.proToolId}`}>Try it →</a>
+        <a
+          class="pro-seam__link"
+          href={`/tools/${seam.proToolId}`}
+          on:click={() => recordSeamClick(seam.proToolId)}
+        >Try the stronger version →</a>
+        <p class="pro-seam__cost">
+          {seam.creditCost} {seam.creditCost === 1 ? 'credit' : 'credits'} per run · {approxUsd(seam.creditCost)}
+        </p>
       </div>
     {/if}
   </div>

@@ -39,8 +39,16 @@ const why = [
 <BaseLayout
   surfaceMode="welcome"
   title="Wyreup PRO — hosted-AI tools, pay only for what you run"
-  description={`Sign up free in one step. PRO unlocks 30 hosted-AI tools — transcription, OCR, translation, text-to-speech, image generation, long-context PDF Q&A, structured-JSON extraction, content safety, and more. Most cost 1–2 credits. Packs from $${starterPack.usd}, or $${MONTHLY.usdPerMonth}/mo.`}
+  description={`For when the result has to be right: hosted-AI tools for hard scans, noisy audio, natural translation, and long documents. Sign up free in one step. Packs from $${starterPack.usd}, or $${MONTHLY.usdPerMonth}/mo.`}
 >
+  <script is:inline>
+    // Aggregate, cookieless page counter — no identifiers, best-effort.
+    try {
+      navigator.sendBeacon('/api/metrics/hit', JSON.stringify({ kind: 'pro-page-view' }));
+    } catch {
+      /* metrics are best-effort */
+    }
+  </script>
   <article class="pro">
     <!-- Hero: copy left, signup right — mirrors the homepage hero -->
     <section class="pro-hero">
@@ -48,18 +56,18 @@ const why = [
         <div class="hero-copy">
           <div class="hero-chip"><ProBadge /><span>Wyreup PRO</span></div>
           <h1 class="hero-title">
-            Hosted-AI tools. Pay only for what you run.
+            For when the result has to be right.
           </h1>
           <p class="hero-sub">
-            Every tool that runs in your browser stays free. PRO adds the AI
-            tools that need real servers — transcription, OCR, translation
-            (100+ languages), text-to-speech, image generation, long-context
-            PDF Q&A, structured-JSON extraction, content safety, and more.
-            Tools chain together so one tool's output feeds the next. Most
-            cost 1–2 credits a run; failed runs refund automatically.
+            Every tool that runs in your browser stays free — and good. PRO is
+            for the jobs free can't do justice: reading a scan that's barely
+            legible, transcription that survives accents and background noise,
+            translation that sounds like a person wrote it, production-quality
+            image work, and answers from a two-hundred-page PDF. Hosted-AI
+            tools on real servers, chained into the same workflows.
           </p>
           <p class="hero-meta">
-            Packs from <strong>{`$${starterPack.usd}`}</strong> &nbsp;·&nbsp; or <strong>{`$${MONTHLY.usdPerMonth}/mo`}</strong> &nbsp;·&nbsp; credits never expire
+            Packs from <strong>{`$${starterPack.usd}`}</strong> &nbsp;·&nbsp; or <strong>{`$${MONTHLY.usdPerMonth}/mo`}</strong> &nbsp;·&nbsp; credits never expire &nbsp;·&nbsp; failed runs refund automatically
           </p>
           <a href="#pricing" class="hero-jump">See pricing &darr;</a>
         </div>

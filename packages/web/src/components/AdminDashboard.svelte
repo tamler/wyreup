@@ -7,6 +7,7 @@
   import { user, authReady, hydrateUser } from '../stores/user';
 
   interface Stats {
+    funnel: Array<{ day: string; kind: string; detail: string; n: number }>;
     users: { total: number; signups7d: number; active7d: number };
     credits: {
       purchased: number;
@@ -430,6 +431,22 @@
       <div class="metric__num">{stats.credits.refundCount}</div>
       <div class="metric__sub">all time</div>
     </div>
+  </section>
+
+  <section class="card">
+    <h3>Pro funnel (14 days)</h3>
+    {#if (stats.funnel?.length ?? 0) === 0}
+      <p class="muted">No events yet — /pro views and quality-seam clicks land here.</p>
+    {:else}
+      <ul class="signups">
+        {#each stats.funnel as ev}
+          <li>
+            <span class="signups__email">{ev.day} · {ev.kind}{ev.detail ? ` · ${ev.detail}` : ''}</span>
+            <span class="signups__time">{ev.n}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </section>
 
   <section class="card">
