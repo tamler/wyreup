@@ -51,7 +51,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="hero__copy">
         <h1 class="hero__headline">Drop a file. <span class="hero__headline-accent">Get it ready for whatever comes next.</span></h1>
         <p class="hero__body">
-          Compress, convert, clean up, extract, understand, protect, share. Drop a file and see what you can do with it. Free tools run on your device; paid PRO tools tell you before anything is sent.
+          Compress, convert, clean up, extract, understand, protect, share. Drop a file and see what you can do with it. Free tools run on your device; paid PRO tools tell you before anything is sent to a remote computer.
         </p>
         <HeroSearch client:load />
         <div class="hero__actions">
@@ -204,8 +204,8 @@ const popularTools = popularToolIds.map((id) => {
         <a href="/skill" class="anywhere-card brackets">
           <div class="brackets-inner" aria-hidden="true"></div>
           <div class="anywhere-card__inner">
-            <div class="anywhere-card__channel">AI assistants</div>
-            <div class="anywhere-card__headline">Works with Claude and other MCP clients</div>
+            <div class="anywhere-card__channel">AI agents</div>
+            <div class="anywhere-card__headline">Works with agents — Claude, Codex, Hermes, OpenClaw, and more</div>
             <p class="anywhere-card__body">Free tools keep files on your machine.</p>
           </div>
         </a>
@@ -247,7 +247,16 @@ const popularTools = popularToolIds.map((id) => {
   /* Content-fit hero leaves the next section visible without coupling the
      page rhythm to viewport height. */
   .hero {
-    padding-block: clamp(48px, 7vh, 96px);
+    /* Roomy but not a full-viewport false floor: ~80svh leaves the next
+       section peeking above the fold on common desktop heights. */
+    min-height: clamp(560px, 80svh, 880px);
+    display: flex;
+    align-items: center;
+    padding-block: clamp(56px, 8vh, 112px);
+  }
+
+  .hero > .container {
+    width: 100%;
   }
 
   /* ── Hero ── */

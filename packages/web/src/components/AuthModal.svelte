@@ -151,8 +151,8 @@
       <button type="button" class="close" aria-label="Close" on:click={close}>×</button>
 
       {#if screen === 'activate'}
-        <h2 id="auth-modal-title">Enter your API key</h2>
-        <p class="hint">Activate PRO tools by pasting your <code>wk_live_…</code> key.</p>
+        <h2 id="auth-modal-title">Enter your key</h2>
+        <p class="hint">Paste the <code>wk_live_…</code> key from your email to unlock PRO tools.</p>
 
         <form on:submit|preventDefault={onActivate}>
           <input
@@ -176,7 +176,7 @@
           </div>
         </form>
       {:else if screen === 'create'}
-        <h2 id="auth-modal-title">Get an API key</h2>
+        <h2 id="auth-modal-title">Get your key</h2>
         <p class="hint">We'll email it to you. Free tools stay free — you only need this for PRO.</p>
         <p class="hint">Packs from $5 — credits never expire. <a href="/pro">See pricing</a></p>
 

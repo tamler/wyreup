@@ -5,6 +5,7 @@
 
   import { createEventDispatcher, onDestroy } from 'svelte';
   import { refreshBalance, user } from '../stores/user';
+  import { PACKS as PRICING_PACKS } from '../data/pricing';
 
   // LS overlay — loaded on demand the first time the user clicks Buy.
   // Avoids paying the script cost on page loads where the user never
@@ -43,11 +44,17 @@
   const dispatch = createEventDispatcher<{ close: void; success: void }>();
 
   type Pack = 'starter' | 'standard' | 'power' | 'monthly';
-  const PACKS: { id: Pack; credits: number; price: string; tag?: string }[] = [
-    { id: 'starter', credits: 220, price: '$5' },
-    { id: 'standard', credits: 480, price: '$10', tag: 'Best value' },
-    { id: 'power', credits: 1000, price: '$20' },
-  ];
+  // Pack ids are the server checkout contract; credits/prices come from the
+  // single pricing source (index order matches: Starter, Best value, Power).
+  const PACK_IDS: Pack[] = ['starter', 'standard', 'power'];
+  const PACKS: { id: Pack; credits: number; price: string; tag?: string }[] = PRICING_PACKS.map(
+    (pack, i) => ({
+      id: PACK_IDS[i]!,
+      credits: pack.credits,
+      price: `$${pack.usd}`,
+      tag: pack.featured ? pack.label : undefined,
+    }),
+  );
 
   $: hasActiveSubscription = $user?.subscriptionStatus === 'active';
 
