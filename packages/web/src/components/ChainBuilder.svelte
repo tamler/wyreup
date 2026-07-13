@@ -9,6 +9,7 @@
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
   import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core';
   import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
+  import { createToolSearch, searchTools } from '../lib/tool-search';
 
   interface ToolSummary {
     id: string;
@@ -175,6 +176,30 @@
       }));
   }
 
+  // Fuse index over the MIME-compatible set for the open picker. Rebuilt when
+  // the compatible tool-id set changes (picker step / input MIME / runnable pool).
+  let pickerSearchIndex: ReturnType<typeof createToolSearch> | null = null;
+  let pickerSearchIndexIds = '';
+
+  function getPickerSearchIndex(compatible: ToolSummary[]): ReturnType<typeof createToolSearch> {
+    const ids = compatible.map((tool) => tool.id).join('\0');
+    if (pickerSearchIndex && pickerSearchIndexIds === ids) {
+      return pickerSearchIndex;
+    }
+    pickerSearchIndexIds = ids;
+    pickerSearchIndex = createToolSearch(
+      compatible.map((tool) => ({
+        id: tool.id,
+        name: tool.name,
+        description: tool.description,
+        category: getToolCategory(tool),
+        keywords: getToolKeywords(tool),
+        requires: tool.requires,
+      })),
+    );
+    return pickerSearchIndex;
+  }
+
   // Reactive state (query, open picker, dropped file) is passed as arguments
   // so template {@const} expressions re-evaluate when any of them change —
   // Svelte 4 only tracks identifiers referenced in the expression itself.
@@ -183,39 +208,54 @@
     query_: string = pickerQuery,
     openIdx: number | null = pickerOpenIdx,
   ): ToolPickerResults {
-    const query = openIdx === idx ? query_.trim().toLowerCase() : '';
-    const filtered = visibleTools.filter((tool) => {
-      if (!query) return true;
-      return [
-        tool.name,
-        tool.id,
-        tool.description,
-        getToolCategory(tool),
-        ...getToolKeywords(tool),
-      ].some((value) => value.toLowerCase().includes(query));
-    });
+    const query = openIdx === idx ? query_.trim() : '';
     const mime = prevOutputMime(idx);
 
-    if (!mime) {
-      const compatibleGroups = groupTools(filtered);
+    // MIME-compatibility pre-filter is authoritative: the Fuse index is built
+    // only over tools that could accept this step's input (or all runnable
+    // tools when there is no prior MIME to constrain against).
+    const compatible = mime
+      ? visibleTools.filter((tool) => isCompatible(tool, mime))
+      : visibleTools;
+
+    if (!query) {
+      // Empty query: category-grouped full listing (unchanged).
+      if (!mime) {
+        const compatibleGroups = groupTools(compatible);
+        return {
+          compatibleGroups,
+          otherGroups: [],
+          ordered: compatibleGroups.flatMap((group) => group.tools),
+          hasCompatibilityContext: false,
+        };
+      }
+
+      const compatibleGroups = groupTools(compatible);
+      const otherGroups = groupTools(visibleTools.filter((tool) => !isCompatible(tool, mime)));
       return {
         compatibleGroups,
-        otherGroups: [],
+        otherGroups,
+        // Only compatible tools are selectable: a chain edge the engine will
+        // reject must not be buildable from the picker (a failing step after
+        // credit-metered steps have already run is the worst outcome).
         ordered: compatibleGroups.flatMap((group) => group.tools),
-        hasCompatibilityContext: false,
+        hasCompatibilityContext: true,
       };
     }
 
-    const compatibleGroups = groupTools(filtered.filter((tool) => isCompatible(tool, mime)));
-    const otherGroups = groupTools(filtered.filter((tool) => !isCompatible(tool, mime)));
+    // Non-empty query: Fuse rank order — do not re-sort or re-group by category.
+    const index = getPickerSearchIndex(compatible);
+    const byId = new Map(compatible.map((tool) => [tool.id, tool]));
+    const ranked = searchTools(index, query)
+      .map((result) => byId.get(result.tool.id))
+      .filter((tool): tool is ToolSummary => tool != null);
+
     return {
-      compatibleGroups,
-      otherGroups,
-      // Only compatible tools are selectable: a chain edge the engine will
-      // reject must not be buildable from the picker (a failing step after
-      // credit-metered steps have already run is the worst outcome).
-      ordered: compatibleGroups.flatMap((group) => group.tools),
-      hasCompatibilityContext: true,
+      // Single group preserves Fuse ranking when the template iterates groups.
+      compatibleGroups: ranked.length > 0 ? [{ category: '', tools: ranked }] : [],
+      otherGroups: [],
+      ordered: ranked,
+      hasCompatibilityContext: mime != null,
     };
   }
 
