@@ -10,6 +10,7 @@
     type ToolbeltChain,
   } from './runners/toolbeltStorage';
   import { encodeChainSteps } from './runners/chainUrl';
+  import { displayName } from '../data/display-names';
   import TriggerRulesSection from './TriggerRulesSection.svelte';
 
   interface RecentTool {
@@ -170,7 +171,7 @@
         <path d="M3 9h18M9 21V9"/>
       </svg>
       <h2 class="empty-msg">Nothing saved yet.</h2>
-      <p class="empty-hint">Run any tool and it shows up here. Chain a few actions together and save the chain — it becomes a one-click workflow you can rerun, export, or hand to the CLI.</p>
+      <p class="empty-hint">Run any tool and it shows up here. Chain a few actions together and save the chain — it becomes a one-click workflow you can run again whenever the same job comes back.</p>
       <div class="empty-actions">
         <a href="/tools" class="btn-secondary">Browse tools</a>
         <a href="/chain/build" class="btn-secondary">Build a chain</a>
@@ -222,7 +223,7 @@
               <!-- Step preview -->
               <div class="step-preview" aria-label="Steps in this chain of actions">
                 {#each chain.steps as step, idx}
-                  <span class="preview-chip">{step.toolId}</span>
+                  <span class="preview-chip">{displayName(step.toolId)}</span>
                   {#if idx < chain.steps.length - 1}
                     <span class="preview-pipe" aria-hidden="true">→</span>
                   {/if}
@@ -248,10 +249,10 @@
   <!-- Utility row -->
   <div class="utility-row">
     <button class="btn-secondary" type="button" on:click={handleExport} disabled={chains.length === 0}>
-      Export all (JSON)
+      Back up (JSON file)
     </button>
     <button class="btn-secondary" type="button" on:click={handleImportClick}>
-      Import (JSON)
+      Restore from backup
     </button>
     {#if importSuccess}
       <span class="import-success" aria-live="polite">{importSuccess}</span>

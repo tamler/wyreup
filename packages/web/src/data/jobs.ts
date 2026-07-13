@@ -34,7 +34,7 @@ export const JOBS: Job[] = [
   {
     slug: 'scan-to-searchable-text',
     title: 'Make a scan searchable',
-    description: 'Extract selectable, searchable text from a scanned image.',
+    description: 'Pull the text out of a photo or scanned page so you can copy and search it.',
     action: { kind: 'tool', toolId: 'ocr' },
     acceptMimes: ['image/*'],
     priority: 20,

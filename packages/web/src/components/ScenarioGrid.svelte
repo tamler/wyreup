@@ -2,6 +2,7 @@
   import { dropStore } from '../stores/drop';
   import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
   import { jobsForMime, type Job } from '../data/jobs';
+  import { displayName } from '../data/display-names';
   import { encodeChainSteps } from './runners/chainUrl';
 
   // Static scenario data — shown when no file is dropped
@@ -77,7 +78,7 @@
   }
 
   function toolName(toolId: string): string {
-    return registryToolsById.get(toolId)?.name ?? toolId;
+    return displayName(toolId, registryToolsById.get(toolId)?.name);
   }
 
   function jobCaption(job: Job): string {
@@ -175,12 +176,12 @@
                 href={`/tools/${tool.id}`}
                 class="scenario-card"
                 style="--stagger-delay: {i * 50}ms"
-                aria-label={tool.name}
+                aria-label={displayName(tool.id, tool.name)}
               >
                 <div class="brackets-inner-card" aria-hidden="true"></div>
                 <div class="scenario-card__inner">
                   <span class="scenario-card__icon">{@html categoryIcons[tool.category] ?? defaultIcon}</span>
-                  <div class="scenario-card__label">{tool.name}</div>
+                  <div class="scenario-card__label">{displayName(tool.id, tool.name)}</div>
                   <div class="scenario-card__tool">{tool.category}</div>
                 </div>
               </a>
@@ -211,7 +212,7 @@
         <div class="scenario-card__inner">
           <span class="scenario-card__icon">{@html scenario.icon}</span>
           <div class="scenario-card__label">{scenario.label}</div>
-          <div class="scenario-card__tool">{scenario.slug}</div>
+          <div class="scenario-card__tool">{toolName(scenario.slug)}</div>
         </div>
       </a>
     {/each}

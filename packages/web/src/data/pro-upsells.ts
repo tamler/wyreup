@@ -13,7 +13,7 @@ export const PRO_UPSELLS: ProUpsell[] = [
     freeToolId: 'ocr',
     proToolId: 'ocr-hq',
     benefit:
-      'Higher-accuracy OCR — better with hard-to-read scans and handwriting.',
+      'Higher-accuracy text reading — better with hard-to-read scans and handwriting.',
   },
   {
     freeToolId: 'transcribe',
@@ -24,7 +24,7 @@ export const PRO_UPSELLS: ProUpsell[] = [
   {
     freeToolId: 'upscale-2x',
     proToolId: 'upscale-2x-pro',
-    benefit: 'Production-quality enlargement on a hosted GPU.',
+    benefit: 'Production-quality enlargement from our servers.',
   },
   {
     freeToolId: 'bg-remove',

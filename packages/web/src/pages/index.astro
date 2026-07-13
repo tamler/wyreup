@@ -7,6 +7,7 @@ import HowItWorks from '../components/HowItWorks.svelte';
 import InstallCard from '../components/InstallCard.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 import { PACKS, MONTHLY } from '../data/pricing';
+import { displayName } from '../data/display-names';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
@@ -50,7 +51,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="hero__copy">
         <h1 class="hero__headline">Drop a file. <span class="hero__headline-accent">Get it ready for whatever comes next.</span></h1>
         <p class="hero__body">
-          Compress, convert, clean up, extract, understand, protect, share. Wyreup finds the right tool and keeps the work moving. Free tools run on your device; hosted PRO tools say so before anything is sent.
+          Compress, convert, clean up, extract, understand, protect, share. Drop a file and see what you can do with it. Free tools run on your device; paid PRO tools tell you before anything is sent.
         </p>
         <HeroSearch client:load />
         <div class="hero__actions">
@@ -62,9 +63,9 @@ const popularTools = popularToolIds.map((id) => {
         <div class="trust-strip" aria-label="Key facts">
           <span class="trust-stat">{allTools.length} tools</span>
           <span class="trust-sep" aria-hidden="true">·</span>
-          <span class="trust-stat">{localCount} run fully on-device</span>
+          <span class="trust-stat">{localCount} keep files on your device</span>
           <span class="trust-sep" aria-hidden="true">·</span>
-          <span class="trust-stat">0 tracking</span>
+          <span class="trust-stat">no tracking</span>
           <span class="trust-sep" aria-hidden="true">·</span>
           <span class="trust-stat">open source</span>
         </div>
@@ -142,8 +143,8 @@ const popularTools = popularToolIds.map((id) => {
       <h2 id="popular-heading" class="section-title">Popular tools</h2>
       <div class="popular-grid">
         {popularTools.map((tool) => (
-          <a href={`/tools/${tool.id}`} class="popular-card" aria-label={`${tool.name} — ${tool.category}`}>
-            <div class="popular-card__name">{tool.name}</div>
+          <a href={`/tools/${tool.id}`} class="popular-card" aria-label={`${displayName(tool.id, tool.name)} — ${tool.category}`}>
+            <div class="popular-card__name">{displayName(tool.id, tool.name)}</div>
             <div class="popular-card__cat">{tool.category}</div>
             <p class="popular-card__desc">{tool.description}</p>
           </a>
@@ -220,7 +221,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="privacy-block">
         <h2 id="privacy-heading" class="privacy-block__title">Private by default. No tradeoff.</h2>
         <p class="privacy-block__body">
-          No analytics. No tracking cookies. Free tools run entirely on your device. Hosted PRO tools send your input over TLS, return the result, and keep nothing beyond a run record. Wyreup is open source — anyone can check how it works.
+          No analytics. No tracking cookies. Free tools run entirely on your device. PRO tools that run on our servers send your file over a secure connection, return the result, and keep nothing beyond a record of the run. Wyreup is open source — anyone can check how it works.
         </p>
         <a
           href="https://github.com/tamler/wyreup"

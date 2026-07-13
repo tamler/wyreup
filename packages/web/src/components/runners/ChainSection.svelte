@@ -5,6 +5,7 @@
   import { saveChain, type ToolbeltChainStep } from './toolbeltStorage';
   import { upsellFor } from '../../data/pro-upsells';
   import { approxUsd } from '../../data/pricing';
+  import { displayName } from '../../data/display-names';
 
   export let resultBlob: Blob | null = null;
   export let resultName: string = 'result';
@@ -91,7 +92,7 @@
 
     nextTools = pool.slice(0, 6).map((t) => ({
       id: t.id,
-      name: t.name,
+      name: displayName(t.id, t.name),
       category: t.category,
       description: t.description,
     }));
@@ -150,7 +151,7 @@
       const { createDefaultRegistry } = await import('@wyreup/core');
       const registry = createDefaultRegistry();
       const name = steps
-        .map((step) => registry.toolsById.get(step.toolId)?.name ?? step.toolId)
+        .map((step) => displayName(step.toolId, registry.toolsById.get(step.toolId)?.name))
         .join(' → ');
       const now = new Date().toISOString();
       const id = crypto.randomUUID();
@@ -195,7 +196,7 @@
           />
           <a class="chain-save__link" href="/toolbelt">View saved chains →</a>
         {:else}
-          <span class="chain-save__copy">You chained {trail.length + 1} actions.</span>
+          <span class="chain-save__copy">You chained {trail.length + 1} actions — each result fed the next.</span>
           <button
             class="chain-node chain-save__button"
             type="button"
@@ -216,12 +217,12 @@
             type="checkbox"
             checked={saveIntermediate}
             on:change={toggleSaveIntermediate}
-            aria-label="Save intermediate file before navigating"
-            title="Keep this step's file in the final download when you chain into another tool."
+            aria-label="Also download this step's file before moving on"
+            title="Download this step's file too when you send the result into another tool."
           />
           <span class="save-intermediate__copy">
-            <span class="save-intermediate__label">Save intermediate</span>
-            <span class="save-intermediate__helper">Keep this step's file in the final download when you chain into another tool.</span>
+            <span class="save-intermediate__label">Also keep this step's file</span>
+            <span class="save-intermediate__helper">Download this step's file too when you send the result into another tool.</span>
           </span>
         </label>
       </div>

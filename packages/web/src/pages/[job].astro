@@ -3,6 +3,7 @@ import { createDefaultRegistry } from '@wyreup/core';
 import JobLauncher from '../components/JobLauncher.svelte';
 import { encodeChainSteps } from '../components/runners/chainUrl';
 import { JOBS, type Job } from '../data/jobs';
+import { displayName } from '../data/display-names';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 export function getStaticPaths() {
@@ -62,7 +63,7 @@ export function getStaticPaths() {
       props: {
         job,
         serializedJob,
-        toolNames: tools.map((tool) => tool.name),
+        toolNames: tools.map((tool) => displayName(tool.id, tool.name)),
         executionSentence: hasHostedStep
           ? 'Uses a hosted PRO step — you approve before anything is sent.'
           : 'Runs entirely on your device — the file never uploads.',
