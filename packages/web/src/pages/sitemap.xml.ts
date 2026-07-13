@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createDefaultRegistry } from '@wyreup/core';
+import { JOBS } from '../data/jobs';
 
 const SITE = 'https://wyreup.com';
 
@@ -14,6 +15,11 @@ export const GET: APIRoute = () => {
       loc: `${SITE}${path}`,
       changefreq: 'weekly',
       priority: path === '' ? '1.0' : '0.8',
+    })),
+    ...JOBS.map((job) => ({
+      loc: `${SITE}/${job.slug}`,
+      changefreq: 'weekly',
+      priority: '0.8',
     })),
     ...toolSlugs.map((id) => ({
       loc: `${SITE}/tools/${id}`,

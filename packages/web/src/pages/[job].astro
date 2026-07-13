@@ -1,0 +1,288 @@
+---
+import { createDefaultRegistry } from '@wyreup/core';
+import JobLauncher from '../components/JobLauncher.svelte';
+import { encodeChainSteps } from '../components/runners/chainUrl';
+import { JOBS, type Job } from '../data/jobs';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+export function getStaticPaths() {
+  const reservedRoutes = new Set([
+    'tools',
+    'about',
+    'pro',
+    'cli',
+    'mcp',
+    'skill',
+    'settings',
+    'toolbelt',
+    'triggers',
+    'chain',
+    'category',
+    'legal',
+    'account',
+    'admin',
+    'share',
+    'share-receive',
+    '404',
+  ]);
+  const collisions = JOBS.filter((job) => reservedRoutes.has(job.slug));
+  if (collisions.length > 0) {
+    throw new Error(
+      `Job slugs collide with reserved routes: ${collisions.map((job) => job.slug).join(', ')}`,
+    );
+  }
+
+  const registry = createDefaultRegistry();
+
+  return JOBS.map((job) => {
+    const toolIds =
+      job.action.kind === 'tool'
+        ? [job.action.toolId]
+        : job.action.steps.map((step) => step.toolId);
+    const tools = toolIds.map((toolId) => {
+      const tool = registry.toolsById.get(toolId);
+      if (!tool) {
+        throw new Error(`Job "${job.slug}" references unknown tool "${toolId}".`);
+      }
+      return tool;
+    });
+    const hasHostedStep = tools.some((tool) => tool.cost === 'credit');
+    const serializedJob = {
+      slug: job.slug,
+      title: job.title,
+      action: job.action,
+      acceptMimes: job.acceptMimes,
+    };
+
+    return {
+      params: { job: job.slug },
+      props: {
+        job,
+        serializedJob,
+        toolNames: tools.map((tool) => tool.name),
+        executionSentence: hasHostedStep
+          ? 'Uses a hosted PRO step — you approve before anything is sent.'
+          : 'Runs entirely on your device — the file never uploads.',
+        chainBuilderHref:
+          job.action.kind === 'chain'
+            ? `/chain/build?steps=${encodeURIComponent(encodeChainSteps(job.action.steps))}`
+            : null,
+      },
+    };
+  });
+}
+
+interface PageProps {
+  job: Job;
+  serializedJob: Pick<Job, 'slug' | 'title' | 'action' | 'acceptMimes'>;
+  toolNames: string[];
+  executionSentence: string;
+  chainBuilderHref: string | null;
+}
+
+const { job, serializedJob, toolNames, executionSentence, chainBuilderHref } =
+  Astro.props as PageProps;
+
+const pageUrl = `https://wyreup.com/${job.slug}`;
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: 'https://wyreup.com/' },
+    { '@type': 'ListItem', position: 2, name: job.title, item: pageUrl },
+  ],
+};
+const webPageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: job.title,
+  description: job.description,
+  url: pageUrl,
+};
+---
+
+<BaseLayout
+  title={`${job.title} — Wyreup`}
+  description={job.description}
+  surfaceMode="welcome"
+>
+  <Fragment slot="head">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(webPageLd)} />
+  </Fragment>
+
+  <section class="job-page">
+    <div class="container job-page__container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="breadcrumb__link">Wyreup</a>
+        <span class="breadcrumb__sep" aria-hidden="true">/</span>
+        <span class="breadcrumb__current" aria-current="page">{job.title}</span>
+      </nav>
+
+      <header class="job-header">
+        <h1 class="job-title">{job.title}</h1>
+        <p class="job-lede">
+          {job.description} <span class="job-lede__execution">{executionSentence}</span>
+        </p>
+      </header>
+
+      <JobLauncher client:load job={serializedJob} />
+
+      <section class="outcome" aria-labelledby="what-happens-heading">
+        <h2 id="what-happens-heading" class="outcome__title">What happens</h2>
+        <ol class="outcome__steps">
+          {toolNames.map((toolName) => <li>{toolName}</li>)}
+        </ol>
+      </section>
+
+      <nav class="job-links" aria-label="More ways to use Wyreup">
+        <a href="/tools">Browse all tools &rarr;</a>
+        {chainBuilderHref && <a href={chainBuilderHref}>Open in chain builder &rarr;</a>}
+      </nav>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .job-page {
+    padding: clamp(48px, 7vh, 88px) 0 var(--space-16);
+  }
+
+  .job-page__container {
+    max-width: 920px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+  }
+
+  .breadcrumb__link {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-instant) var(--ease-sharp);
+  }
+
+  .breadcrumb__link:hover {
+    color: var(--text-primary);
+  }
+
+  .breadcrumb__sep {
+    color: var(--text-subtle);
+  }
+
+  .breadcrumb__current {
+    color: var(--text-primary);
+  }
+
+  .job-header {
+    max-width: 760px;
+    margin-bottom: var(--space-8);
+  }
+
+  .job-title {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-sans);
+    font-size: clamp(2.25rem, 7vw, var(--text-hero));
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+  }
+
+  .job-lede {
+    max-width: 680px;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .job-lede__execution {
+    color: var(--text-primary);
+  }
+
+  .outcome {
+    display: grid;
+    grid-template-columns: minmax(140px, 0.35fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .outcome__title {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .outcome__steps {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: outcome-step;
+  }
+
+  .outcome__steps li {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: baseline;
+    font-size: var(--text-md);
+    color: var(--text-primary);
+    counter-increment: outcome-step;
+  }
+
+  .outcome__steps li::before {
+    content: counter(outcome-step, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--accent-text);
+  }
+
+  .job-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    padding-top: var(--space-8);
+  }
+
+  .job-links a {
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .job-links a:hover {
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 640px) {
+    .job-page {
+      padding-top: var(--space-8);
+    }
+
+    .breadcrumb {
+      margin-bottom: var(--space-6);
+    }
+
+    .outcome {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+  }
+</style>
