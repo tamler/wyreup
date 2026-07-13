@@ -2,8 +2,6 @@ import type { ToolModule, ToolRunContext } from '../../types.js';
 import { assertPdfPageBudget } from '../../lib/budget.js';
 import { runPro } from '../../lib/pro-runner.js';
 import { pdfToText } from '../pdf-to-text/index.js';
-import { textTranslate } from '../text-translate/index.js';
-import { translateManyPro } from '../translate-many-pro/index.js';
 
 export interface TranslateDocumentProParams {
   source?: string;
@@ -15,14 +13,49 @@ export const defaultTranslateDocumentProParams: TranslateDocumentProParams = {
   target: 'es',
 };
 
-const translateManySourceSchema = translateManyPro.paramSchema?.source;
-const textTranslateSourceSchema = textTranslate.paramSchema?.sourceLang;
-const M2M100_LANGUAGE_OPTIONS =
-  translateManySourceSchema?.type === 'enum'
-    ? translateManySourceSchema.options
-    : textTranslateSourceSchema?.type === 'enum'
-      ? textTranslateSourceSchema.options
-      : [];
+// Curated m2m100 language list for the document UI. Superset of the
+// text-translate dropdown plus the languages our real traffic speaks
+// (Filipino, Khmer, Burmese, Lao, Bengali, Tamil, Urdu, Persian, Swahili).
+const M2M100_LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: 'Chinese (Simplified)' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'ru', label: 'Russian' },
+  { value: 'ar', label: 'Arabic' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'it', label: 'Italian' },
+  { value: 'nl', label: 'Dutch' },
+  { value: 'pl', label: 'Polish' },
+  { value: 'tr', label: 'Turkish' },
+  { value: 'vi', label: 'Vietnamese' },
+  { value: 'th', label: 'Thai' },
+  { value: 'id', label: 'Indonesian' },
+  { value: 'tl', label: 'Filipino (Tagalog)' },
+  { value: 'ms', label: 'Malay' },
+  { value: 'km', label: 'Khmer' },
+  { value: 'my', label: 'Burmese' },
+  { value: 'lo', label: 'Lao' },
+  { value: 'bn', label: 'Bengali' },
+  { value: 'ta', label: 'Tamil' },
+  { value: 'ur', label: 'Urdu' },
+  { value: 'fa', label: 'Persian' },
+  { value: 'sw', label: 'Swahili' },
+  { value: 'sv', label: 'Swedish' },
+  { value: 'da', label: 'Danish' },
+  { value: 'no', label: 'Norwegian' },
+  { value: 'fi', label: 'Finnish' },
+  { value: 'el', label: 'Greek' },
+  { value: 'he', label: 'Hebrew' },
+  { value: 'cs', label: 'Czech' },
+  { value: 'hu', label: 'Hungarian' },
+  { value: 'ro', label: 'Romanian' },
+  { value: 'uk', label: 'Ukrainian' },
+];
 
 async function extractPdfText(file: File, ctx: ToolRunContext): Promise<string> {
   const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
@@ -59,7 +92,7 @@ export const translateDocumentPro: ToolModule<TranslateDocumentProParams> = {
   slug: 'translate-document-pro',
   name: 'Translate a Document',
   description:
-    'Translate a whole PDF or text file across 100+ languages, powered by a hosted translation model. Text is extracted on your device; only the text is sent. Output is plain text — chains into summarize, text-to-speech, and PDF tools. Uses 3 credits per run. Documents up to 40 pages.',
+    'Translate a whole PDF or text file across 35+ languages, powered by a hosted translation model. Text is extracted on your device; only the text is sent. Output is plain text — chains into summarize, text-to-speech, and PDF tools. Uses 3 credits per run. Documents up to 40 pages.',
   category: 'text',
   keywords: ['translate', 'document', 'pdf', 'language', 'pro', 'hosted'],
 

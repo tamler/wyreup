@@ -470,7 +470,24 @@ export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_C
       (match) => match.index !== 0,
     );
     const preferred = paragraphBreaks.at(-1);
-    const splitAt = preferred?.index === undefined ? maxChars : preferred.index + preferred[0].length;
+    let splitAt =
+      preferred?.index === undefined ? -1 : preferred.index + preferred[0].length;
+    if (splitAt === -1) {
+      // No paragraph break in the window: prefer the last whitespace so we
+      // never cut a word in half — unless that would emit a chunk with no
+      // actual content (window starting with leading whitespace).
+      const lastSpace = window.search(/\s\S*$/);
+      splitAt =
+        lastSpace > 0 && window.slice(0, lastSpace + 1).trim().length > 0
+          ? lastSpace + 1
+          : maxChars;
+    }
+    // Never split a surrogate pair — a boundary between a high and low
+    // surrogate would corrupt emoji/CJK-extension characters.
+    const before = text.charCodeAt(offset + splitAt - 1);
+    if (before >= 0xd800 && before <= 0xdbff && splitAt > 1) {
+      splitAt -= 1;
+    }
     chunks.push(text.slice(offset, offset + splitAt));
     offset += splitAt;
   }
@@ -491,8 +508,17 @@ async function translateDocumentPro(raw: RunnerInput, env: Env): Promise<RunnerO
   const sourceRaw = (raw as Record<string, unknown>).source;
   const source = typeof sourceRaw === 'string' && sourceRaw.trim() ? sourceRaw.trim() : 'en';
   const chunks = __chunkDocumentText(textRaw);
+  // Aggregate deadline: the char cap already bounds this to <=30 model
+  // calls, but a slow provider must not stack thirty 30s timeouts.
+  const DOC_RUN_DEADLINE_MS = 100_000;
+  const startedAt = Date.now();
   const translations: string[] = [];
   for (const chunk of chunks) {
+    if (Date.now() - startedAt > DOC_RUN_DEADLINE_MS) {
+      throw new Error(
+        'Translation is taking too long for this document — try a shorter document or split it.',
+      );
+    }
     const result = await runTranslateMany(env, { text: chunk, source, target });
     translations.push(result.translation);
   }

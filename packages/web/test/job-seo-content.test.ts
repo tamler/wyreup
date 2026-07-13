@@ -41,12 +41,12 @@ describe('job landing-page SEO content', () => {
       const content = JOB_SEO_CONTENT[job.slug];
       expect(content, job.slug).toBeDefined();
 
-      const wordCount = content!.intro.trim().split(/\s+/).length;
+      const wordCount = content.intro.trim().split(/\s+/).length;
       expect(wordCount, `${job.slug} intro word count`).toBeGreaterThanOrEqual(90);
       expect(wordCount, `${job.slug} intro word count`).toBeLessThanOrEqual(140);
-      expect(content!.intro, `${job.slug} intro`).not.toMatch(/\n/);
-      expect(content!.useCases, `${job.slug} use cases`).toHaveLength(4);
-      expect(content!.faq, `${job.slug} FAQs`).toHaveLength(4);
+      expect(content.intro, `${job.slug} intro`).not.toMatch(/\n/);
+      expect(content.useCases, `${job.slug} use cases`).toHaveLength(4);
+      expect(content.faq, `${job.slug} FAQs`).toHaveLength(4);
     }
   });
 
