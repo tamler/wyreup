@@ -27,7 +27,6 @@
     proToolId: string;
     benefit: string;
     creditCost: number;
-    canHandoff: boolean;
   }
 
   let nextTools: NextTool[] = [];
@@ -97,19 +96,17 @@
       description: t.description,
     }));
 
-    // Single honest Pro seam for free tools with a hosted sibling.
+    // Single honest Pro seam for free tools with a hosted sibling. Always a
+    // plain link — the Pro tool should rerun the job on the original input,
+    // never on this already-processed result.
     const pair = sourceToolId ? upsellFor(sourceToolId) : undefined;
     if (pair) {
       const pro = registry.toolsById.get(pair.proToolId);
       const creditCost = pro?.creditCost ?? 0;
-      const canHandoff = registry
-        .toolsForFiles([file])
-        .some((t) => t.id === pair.proToolId);
       proSeam = {
         proToolId: pair.proToolId,
         benefit: pair.benefit,
         creditCost,
-        canHandoff,
       };
     } else {
       proSeam = null;
@@ -252,15 +249,9 @@
         <p class="pro-seam__cost">
           {seam.creditCost} credits · {approxUsd(seam.creditCost)}
         </p>
-        {#if seam.canHandoff}
-          <button
-            class="pro-seam__link"
-            type="button"
-            on:click={() => navigate(seam.proToolId)}
-          >Try it →</button>
-        {:else}
-          <a class="pro-seam__link" href={`/tools/${seam.proToolId}`}>Try it →</a>
-        {/if}
+        <!-- Always a plain link: the Pro sibling should redo the job on the
+             user's ORIGINAL input, not on this already-processed result. -->
+        <a class="pro-seam__link" href={`/tools/${seam.proToolId}`}>Try it →</a>
       </div>
     {/if}
   </div>

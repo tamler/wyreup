@@ -47,11 +47,14 @@ export function getStaticPaths() {
       return tool;
     });
     const hasHostedStep = tools.some((tool) => tool.cost === 'credit');
+    // The launcher must accept only what the RECEIVING tool accepts — the
+    // job's acceptMimes wildcards (image/*) can be broader than the first
+    // tool's concrete list (compress rejects HEIC/SVG/GIF).
     const serializedJob = {
       slug: job.slug,
       title: job.title,
       action: job.action,
-      acceptMimes: job.acceptMimes,
+      acceptMimes: [...tools[0]!.input.accept],
     };
 
     return {
