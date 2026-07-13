@@ -30,6 +30,8 @@ export const PRICING: Readonly<Record<string, number>> = {
   'text-to-speech-pro': 2,
   'content-safety-pro': 1,
   'translate-many-pro': 1,
+  // Wave 2 — document translation (2026-07-13)
+  'translate-document-pro': 3,
   'deep-analysis-pro': 3,
   'fix-grammar-pro': 1,
   'rewrite-tone-pro': 1,

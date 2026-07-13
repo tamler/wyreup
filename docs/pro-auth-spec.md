@@ -54,6 +54,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `bg-remove-pro` | 4 | Large RMBG model |
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
+| `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 

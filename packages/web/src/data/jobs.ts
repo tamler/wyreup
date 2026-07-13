@@ -124,6 +124,14 @@ export const JOBS: Job[] = [
     priority: 230,
   },
   {
+    slug: 'translate-a-document',
+    title: 'Translate a document',
+    description: 'Turn a PDF or text file into another language.',
+    action: { kind: 'tool', toolId: 'translate-document-pro' },
+    acceptMimes: ['application/pdf', 'text/plain'],
+    priority: 240,
+  },
+  {
     slug: 'shrink-video',
     title: 'Make a video smaller',
     description: 'Reduce a video file so it is easier to upload or share.',

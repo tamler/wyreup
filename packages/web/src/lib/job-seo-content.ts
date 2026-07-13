@@ -343,6 +343,34 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       },
     ],
   },
+  'translate-a-document': {
+    intro:
+      "Translate the full readable text of a PDF or plain-text document into another language without copying one section at a time. For a PDF, Wyreup extracts the text in your browser, then sends that extracted text to Wyreup's servers for translation by a hosted language model; the original PDF bytes are not sent. Plain-text files are sent as text to the same service. The result is a plain-text translation, so page design, images, tables, and exact formatting are not reproduced. Documents with scanned image pages need OCR first. Review names, specialist terms, figures, and legally important wording against the source before sharing or relying on the translated document.",
+    useCases: [
+      'Translate a readable PDF report for a colleague who uses another language.',
+      'Convert a plain-text guide into another language for a wider audience.',
+      'Prepare translated document text for summarizing or text-to-speech.',
+      'Read the contents of a multilingual handout without translating each page separately.',
+    ],
+    faq: [
+      {
+        q: 'What is sent to the server for translation?',
+        a: "For a PDF, text is extracted in your browser and that extracted text is sent to Wyreup's servers. The original PDF bytes are not sent. For a plain-text file, its text is sent directly.",
+      },
+      {
+        q: 'Will the translated document keep its original layout?',
+        a: 'No. The output is plain text, so page layout, fonts, images, columns, and table formatting are not preserved.',
+      },
+      {
+        q: 'Can it translate a scanned PDF?',
+        a: 'A scan may contain images without readable embedded text. Run OCR first, then translate the extracted text.',
+      },
+      {
+        q: 'Should I rely on the translation without reviewing it?',
+        a: 'No automated translation is guaranteed to preserve every nuance. Check proper names, technical language, numbers, instructions, and legal or medical wording carefully.',
+      },
+    ],
+  },
   'shrink-video': {
     intro:
       'Make a video file smaller so it is easier to upload, attach, store, or share. Phone recordings and exported clips can be much larger than messaging apps, forms, or slow connections handle comfortably. This job compresses the video into a lighter copy, trading some picture detail for reduced file size while keeping the source recording available. Processing happens in your browser, and the selected video stays on the device during this job. Longer or high-resolution videos take more time and memory to process, especially on a phone or older computer. File-size savings vary by source and compression history, so play the downloaded result and check motion, sound, and readable on-screen text before sending it.',

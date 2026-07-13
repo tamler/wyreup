@@ -268,6 +268,7 @@ import { pdfExtractData } from './tools/pdf-extract-data/index.js';
 import { textToSpeechPro } from './tools/text-to-speech-pro/index.js';
 import { contentSafetyPro } from './tools/content-safety-pro/index.js';
 import { translateManyPro } from './tools/translate-many-pro/index.js';
+import { translateDocumentPro } from './tools/translate-document-pro/index.js';
 import { deepAnalysisPro } from './tools/deep-analysis-pro/index.js';
 import { fixGrammarPro } from './tools/fix-grammar-pro/index.js';
 import { rewriteTonePro } from './tools/rewrite-tone-pro/index.js';
@@ -554,6 +555,7 @@ export const defaultTools: ToolModule<any>[] = [
   textToSpeechPro,
   contentSafetyPro,
   translateManyPro,
+  translateDocumentPro,
   deepAnalysisPro,
   fixGrammarPro,
   rewriteTonePro,

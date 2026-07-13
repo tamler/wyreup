@@ -79,6 +79,7 @@ const RUNNERS: Record<string, Runner> = {
   'text-to-speech-pro': textToSpeechPro,
   'content-safety-pro': contentSafetyPro,
   'translate-many-pro': translateManyPro,
+  'translate-document-pro': translateDocumentPro,
   'deep-analysis-pro': deepAnalysisPro,
   'fix-grammar-pro': fixGrammarPro,
   'rewrite-tone-pro': rewriteTonePro,
@@ -451,6 +452,52 @@ async function translateManyPro(raw: RunnerInput, env: Env): Promise<RunnerOutpu
   const source = typeof sourceRaw === 'string' && sourceRaw.length > 0 ? sourceRaw : 'en';
   const result = await runTranslateMany(env, { text, source, target });
   return { ...result, source, target };
+}
+
+const MAX_DOC_CHARS = 120_000;
+const TRANSLATION_CHUNK_CHARS = 4_000;
+
+export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_CHARS): string[] {
+  if (!Number.isInteger(maxChars) || maxChars < 1) {
+    throw new Error('maxChars must be a positive integer');
+  }
+
+  const chunks: string[] = [];
+  let offset = 0;
+  while (text.length - offset > maxChars) {
+    const window = text.slice(offset, offset + maxChars);
+    const paragraphBreaks = [...window.matchAll(/\r?\n[\t ]*\r?\n/g)].filter(
+      (match) => match.index !== 0,
+    );
+    const preferred = paragraphBreaks.at(-1);
+    const splitAt = preferred?.index === undefined ? maxChars : preferred.index + preferred[0].length;
+    chunks.push(text.slice(offset, offset + splitAt));
+    offset += splitAt;
+  }
+  if (offset < text.length) chunks.push(text.slice(offset));
+  return chunks;
+}
+
+async function translateDocumentPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+  const textRaw = (raw as Record<string, unknown>).text;
+  if (typeof textRaw !== 'string' || textRaw.trim().length === 0) {
+    throw new Error("'text' (non-empty string) is required");
+  }
+  if (textRaw.length > MAX_DOC_CHARS) {
+    throw new Error('Document exceeds the 40-page limit (120,000 characters maximum).');
+  }
+
+  const target = readText(raw, 'target').trim();
+  const sourceRaw = (raw as Record<string, unknown>).source;
+  const source = typeof sourceRaw === 'string' && sourceRaw.trim() ? sourceRaw.trim() : 'en';
+  const chunks = __chunkDocumentText(textRaw);
+  const translations: string[] = [];
+  for (const chunk of chunks) {
+    const result = await runTranslateMany(env, { text: chunk, source, target });
+    translations.push(result.translation);
+  }
+
+  return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
 }
 
 // DeepSeek R1 emits a <think>...</think> reasoning trace before the final
