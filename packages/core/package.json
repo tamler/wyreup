@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/core",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Privacy-first, browser-native tool library — compress, convert, redact, and more. Every tool runs on-device.",
   "keywords": [
     "wyreup",
