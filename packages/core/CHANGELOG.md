@@ -1,5 +1,11 @@
 # @wyreup/core
 
+## 0.9.0
+
+### Minor Changes
+
+- 650b74c: New PRO tool translate-document-pro: whole-document translation (PDF/text, 100+ languages, hosted m2m100), 3 credits, 40-page cap.
+
 ## 0.8.2
 
 ### Patch Changes
