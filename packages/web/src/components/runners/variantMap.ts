@@ -359,6 +359,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'chat-long-pdf-pro': 'TextResultRunner',
   'pdf-q-and-a': 'TextResultRunner',
   'pdf-summarize': 'TextResultRunner',
+  'translate-document-pro': 'TextResultRunner',
   'pdf-extract-data': 'JsonResultRunner',
 
   // Audio → text (transcribe + translate in one step)
