@@ -13,11 +13,11 @@
     "populate-manifest": "tsx scripts/populate-manifest.ts"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260710.1",
+    "@cloudflare/workers-types": "^5.20260731.1",
     "@types/node": "^20.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0",
     "vitest": "^3.2.7",
-    "wrangler": "^4.84.0"
+    "wrangler": "^4.116.0"
   }
 }
