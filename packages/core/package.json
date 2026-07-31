@@ -90,7 +90,7 @@
     "culori": "^4.0.0",
     "diff": "^8.0.3",
     "exceljs": "^4.4.0",
-    "fast-xml-parser": "^5.9.3",
+    "fast-xml-parser": "^5.10.1",
     "gdal3.js": "^2.8.1",
     "gifenc": "^1.0.3",
     "gpt-tokenizer": "^3.4.0",
