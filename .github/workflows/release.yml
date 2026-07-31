@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
@@ -35,11 +35,13 @@ jobs:
 
       - run: pnpm build
 
-      # npm OIDC trusted-publishing requires npm >= 11.5.1; Node 20 ships
-      # with npm 10. Upgrade so `pnpm changeset publish` shells out to a
-      # version that knows how to mint an OIDC id-token for the npm registry.
-      # Pinned to the 11 line: npm 12 requires Node >= 22, so @latest
-      # self-bricks with EBADENGINE on this job's Node 20.
+      # npm OIDC trusted-publishing requires npm >= 11.5.1. Node 24 already
+      # bundles npm 11.x, so this step is belt-and-braces rather than load-
+      # bearing — it pins the floor explicitly so a future runner image that
+      # ships a different bundled npm can't silently break OIDC publishing.
+      # Kept on the 11 line deliberately: npm 12 is what `@latest` resolves
+      # to now, and moving the publish path onto an untested npm major is a
+      # change worth making on its own, not as a side effect of a Node bump.
       - name: Upgrade npm for OIDC trusted publishing
         run: npm install -g npm@11
 

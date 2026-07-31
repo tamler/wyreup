@@ -19,7 +19,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Build first so downstream packages can resolve @wyreup/core types.
@@ -30,14 +30,22 @@ jobs:
       - run: pnpm typecheck
 
   unit-tests:
-    name: Unit tests
+    # @wyreup/core, /cli and /mcp all publish `engines: node >=20`, so the
+    # floor has to be tested, not just asserted — otherwise the claim rots
+    # the first time someone uses a 22+ only API. 22.x is the midpoint; 24.x
+    # is what we develop on. Verified green on all three as of this commit.
+    name: Unit tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # MCP worker tests fork dist/worker.js — build first so that artifact
@@ -52,14 +60,18 @@ jobs:
     # process-global, so vitest's default threaded pool can race with
     # other tests' cwd-relative work. Skipped from `pnpm test`; run it
     # here in a dedicated job where the process is fresh and isolated.
-    name: convert-geo Node integration
+    name: convert-geo Node integration (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @wyreup/core build
@@ -73,7 +85,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -92,7 +104,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: node tools/check-isolation.mjs
@@ -130,7 +142,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -145,7 +157,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
@@ -219,7 +231,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # `pnpm audit --prod` exits non-zero on any vulnerability in
