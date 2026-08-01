@@ -6,7 +6,7 @@
 // give them their own budget with a documented reason. New entries here
 // require justification in the comment.
 
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
@@ -104,6 +104,47 @@ export async function checkBundleSize({ targetDir, extensions, maxGzipKb }) {
   return { ok: violations.length === 0, violations };
 }
 
+/**
+ * Cloudflare Pages rejects any single asset over 25 MiB, and it rejects it
+ * at *deploy* time — the build succeeds, CI goes green, and the failure only
+ * shows up after the commit is already on main.
+ *
+ * checkBundleSize above can't catch this: it measures gzipped size and only
+ * looks at .js/.mjs. Pages measures raw bytes and cares about every file. A
+ * 25.6 MiB onnxruntime-web .wasm went through CI clean for exactly that
+ * reason, then broke the deploy.
+ *
+ * So this walks every file and compares raw size against the real limit.
+ * `warnRatio` surfaces assets that are close enough to matter — the ONNX
+ * wasm currently sits around 95%, so a routine patch bump can push it over.
+ *
+ * @param {object} options
+ * @param {string} options.targetDir
+ * @param {number} [options.limitBytes] Pages' hard per-file cap.
+ * @param {number} [options.warnRatio] Fraction of the limit that triggers a warning.
+ * @returns {Promise<{ ok: boolean, violations: Array<{ file: string, bytes: number }>, warnings: Array<{ file: string, bytes: number, pct: number }> }>}
+ */
+export async function checkPagesFileSize({
+  targetDir,
+  limitBytes = 25 * 1024 * 1024,
+  warnRatio = 0.9,
+}) {
+  const violations = [];
+  const warnings = [];
+  const files = await walkDir(targetDir);
+
+  for (const file of files) {
+    const { size } = await stat(file);
+    if (size > limitBytes) {
+      violations.push({ file, bytes: size });
+    } else if (size >= limitBytes * warnRatio) {
+      warnings.push({ file, bytes: size, pct: Math.round((size / limitBytes) * 100) });
+    }
+  }
+
+  return { ok: violations.length === 0, violations, warnings };
+}
+
 async function walkDir(dir) {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
@@ -130,12 +171,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     extensions: ['.js', '.mjs'],
   });
 
-  if (!result.ok) {
-    console.error('Bundle size check FAILED:');
-    for (const v of result.violations) {
-      console.error(`  ${v.file}: ${v.sizeKb} KB (budget ${v.budgetKb} KB)`);
+  const pages = await checkPagesFileSize({ targetDir: 'packages/web/dist' });
+
+  if (!result.ok || !pages.ok) {
+    if (!result.ok) {
+      console.error('Bundle size check FAILED:');
+      for (const v of result.violations) {
+        console.error(`  ${v.file}: ${v.sizeKb} KB (budget ${v.budgetKb} KB)`);
+      }
+    }
+    if (!pages.ok) {
+      console.error('Cloudflare Pages per-file limit EXCEEDED (deploy would fail):');
+      for (const v of pages.violations) {
+        console.error(`  ${v.file}: ${(v.bytes / 1024 / 1024).toFixed(2)} MiB (limit 25 MiB)`);
+      }
     }
     process.exit(1);
+  }
+
+  for (const w of pages.warnings) {
+    console.warn(`  warning: ${w.file} is ${w.pct}% of the 25 MiB Pages limit`);
   }
 
   console.log(`Bundle size check passed`);
