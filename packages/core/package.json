@@ -56,7 +56,16 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist .turbo"
   },
+  "peerDependencies": {
+    "@huggingface/transformers": "^4.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@huggingface/transformers": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@types/js-yaml": "^4.0.9",
     "@types/turndown": "^5.0.6",
     "tsup": "^8.5.1",
@@ -67,7 +76,6 @@
     "@cantoo/pdf-lib": "^2.8.1",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
-    "@huggingface/transformers": "^4.2.0",
     "@jsquash/jpeg": "^1.6.0",
     "@jsquash/png": "^3.1.1",
     "@jsquash/webp": "^1.5.0",

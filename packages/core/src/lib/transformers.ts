@@ -19,6 +19,7 @@
  *     for PWA users whose process is more likely to be killed under
  *     memory pressure.
  */
+import type * as Transformers from '@huggingface/transformers';
 import type { ToolRunContext } from '../types.js';
 import { getModelCdn } from './model-cdn.js';
 
@@ -112,7 +113,26 @@ export async function getPipeline(
   // heap is most useful before allocating the next big model.
   evictToFit();
 
-  const transformersMod = await import('@huggingface/transformers');
+  // transformers.js is an OPTIONAL peer dependency: only 12 of the ~276
+  // tools need it, and it drags in onnxruntime plus a `sharp` pinned to a
+  // range with unpatched libvips CVEs. Making the other 264 tools carry that
+  // isn't defensible, so consumers opt in explicitly — which also puts the
+  // sharp version under their control, where an override actually works.
+  // A bare module-not-found here would be baffling, so name the remedy.
+  let transformersMod: typeof Transformers;
+  try {
+    transformersMod = await import('@huggingface/transformers');
+  } catch (err) {
+    throw new Error(
+      'This tool needs @huggingface/transformers, which @wyreup/core declares as an ' +
+        'optional peer dependency rather than installing for you. Install it alongside ' +
+        'core:\n\n  npm install @huggingface/transformers\n\n' +
+        'Note that it currently resolves sharp <0.35.0, which carries unpatched libvips ' +
+        'advisories. Pin a patched sharp in your project root, where overrides take effect:\n\n' +
+        '  "overrides": { "sharp": "^0.35.3" }\n\n' +
+        `Original import failure: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   const { pipeline } = transformersMod;
 
   // If a CDN base is configured (e.g. for the R2 self-hosting cutover),

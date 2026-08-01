@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.7.0",
+    "@huggingface/transformers": "^4.2.0",
     "@wyreup/core": "workspace:*",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0"

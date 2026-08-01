@@ -49,6 +49,7 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@wyreup/core": "workspace:*"
   },

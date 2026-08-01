@@ -99,9 +99,56 @@ Open work, in priority order:
 
 ## Dependency hygiene
 
-- `pnpm audit --prod --audit-level=high` runs in CI (with `continue-on-error` while the Astro backlog clears).
+- `pnpm audit --prod --audit-level=high` runs in CI and is **blocking**. It was
+  previously `continue-on-error`; that soft failure let nine HIGH advisories
+  accumulate unseen, because a soft-failing job reads as a passing run. Don't
+  reach for `continue-on-error` to get past it — patch the dependency, add a
+  `pnpm.overrides` entry, or record a written non-exploitability argument in
+  `pnpm.auditConfig` and a section here.
 - Dependabot proposes weekly grouped updates; security/parser libs (DOMPurify, JSZip, pdfjs-dist, MCP/Anthropic SDKs) are flagged for prioritized review.
-- Root `package.json` `pnpm.overrides` pins `fast-uri`, `protobufjs`, `serialize-javascript`, `devalue` to versions that close known transitive advisories.
+- Root `package.json` `pnpm.overrides` pins `fast-uri`, `protobufjs`, `serialize-javascript`, `devalue`, `sharp` and `adm-zip` to versions that close known transitive advisories.
+
+## sharp / libvips, and why overrides don't reach consumers
+
+`@huggingface/transformers` depends on `sharp@^0.34.5`. sharp below 0.35.0
+inherits libvips advisories CVE-2026-33327, -33328, -35590 and -35591.
+
+The root `pnpm.overrides` entry pins sharp to `^0.35.3`, which protects this
+repo: local builds, CI, and everything deployed to Pages. **It does not protect
+consumers of the published packages.** Overrides — pnpm's, npm's, and yarn's
+`resolutions` — are only honoured in the root project doing the install. They
+are not part of the published manifest.
+
+Two fixes were tested and rejected on evidence, not assumption:
+
+- Declaring `sharp@^0.35.3` directly in `@wyreup/core`. `^0.34.5` resolves to
+  `>=0.34.5 <0.35.0`, so the ranges are disjoint: npm installs 0.35.3 hoisted
+  *and* 0.34.5 nested under transformers, and transformers loads the nested
+  copy. Confirmed by installing into a scratch project.
+- Waiting on upstream. `4.2.0` is the current latest and still pins `^0.34.5`;
+  the `next` tag is older.
+
+What was done instead: `@huggingface/transformers` became an **optional peer
+dependency** of `@wyreup/core`. Only 12 of ~276 tools need it, so the remaining
+264 no longer drag in a vulnerable transitive dependency. Consumers who want the
+AI tools install the peer themselves, which puts sharp in *their* root where an
+override works:
+
+```json
+{ "overrides": { "sharp": "^0.35.3" } }
+```
+
+Verified by packing core and installing it into a clean project: sharp is no
+longer present at all, and `npm audit` reports no HIGH advisories. Previously
+the same test yielded sharp 0.34.5.
+
+**Residual exposure:** `@wyreup/cli` and `@wyreup/mcp` are applications rather
+than libraries, so they declare transformers directly to keep AI tools working
+out of the box — and therefore still resolve sharp `<0.35.0` transitively.
+Operators running either in production and processing untrusted images should
+pin `sharp` in their own project root. This can only be closed properly upstream
+in transformers; revisit when a release moves off `^0.34.5`, at which point the
+`sharp` override here and the peer-dependency split can both be reconsidered.
 
 ## Production deployment checklist
 
