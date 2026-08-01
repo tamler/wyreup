@@ -211,21 +211,23 @@ jobs:
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    # `continue-on-error: true` because the lone HIGH advisory at the
-    # time of this commit (GHSA-wrwg-2hg8-v723 — Astro server-island
-    # reflected XSS) is non-exploitable for wyreup.com:
-    #   - output: 'static' (no SSR runtime)
-    #   - no `server:defer` directives anywhere in packages/web/src
-    #     (enforced by the web-security-invariants job above)
-    # The Astro 5 upgrade would force a Svelte 4 → 5 migration across
-    # ~15 client:load components for zero defense-in-depth gain on this
-    # specific CVE. See SECURITY.md → "Astro CVE non-exploitability".
+    # This gate is BLOCKING. It was previously continue-on-error, justified
+    # by "the lone HIGH advisory is the Astro server-island XSS, which is
+    # non-exploitable here". That rationale went stale without anyone
+    # noticing: the Astro GHSA moved into pnpm.auditConfig.ignoreGhsas, and
+    # the job then sat red on nine *unrelated* HIGH advisories — invisibly,
+    # because a soft-failing job reads as passing at a glance. That is the
+    # whole failure mode of continue-on-error on a security check.
     #
-    # Future HIGH/CRITICAL advisories still surface in PR checks here
-    # for review — they just don't fail the gate. Flip to required
-    # once the Astro advisory is patched (i.e. when an Astro 4.x
-    # release ships a backport) or once Astro 5 migration is done.
-    continue-on-error: true
+    # The prod tree is now clean at high+ (see the pnpm.overrides for sharp
+    # and adm-zip), so the gate is enforced. If a new HIGH lands, this job
+    # fails and the PR stops — which is the point. Do NOT reach for
+    # continue-on-error to get past it; either patch the dependency, add a
+    # pnpm.overrides entry, or record a written non-exploitability argument
+    # in auditConfig.ignoreGhsas plus SECURITY.md.
+    #
+    # Moderate/low still do not gate (--audit-level=high) and are handled
+    # via Dependabot; the deferred Astro advisories live there.
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
