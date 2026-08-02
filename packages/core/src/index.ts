@@ -1,6 +1,13 @@
 // Wyreup core — tool library public API
 
-export const WYREUP_CORE_VERSION = '0.0.0';
+// Replaced at build time by tsup's `define` with the version from
+// package.json — see tsup.config.ts. The fallback is what you get running
+// from source (vitest imports src directly and applies no define), so it is
+// deliberately marked '-src' rather than a plausible-looking version number:
+// a wrong-but-believable value is worse than an obviously-unbuilt one.
+declare const __WYREUP_CORE_VERSION__: string | undefined;
+export const WYREUP_CORE_VERSION: string =
+  typeof __WYREUP_CORE_VERSION__ === 'string' ? __WYREUP_CORE_VERSION__ : '0.0.0-src';
 
 export type {
   ToolModule,
