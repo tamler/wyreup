@@ -1,5 +1,12 @@
 # @wyreup/cli
 
+## 0.7.17
+
+### Patch Changes
+
+- Updated dependencies [97981c3]
+  - @wyreup/core@1.0.1
+
 ## 0.7.16
 
 ### Patch Changes
