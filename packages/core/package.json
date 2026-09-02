@@ -90,7 +90,7 @@
     "@tmcw/togeojson": "^7.1.2",
     "@types/papaparse": "^5.5.2",
     "@types/qrcode": "^1.5.6",
-    "@xmldom/xmldom": "^0.9.10",
+    "@xmldom/xmldom": "^0.9.12",
     "ajv": "^8.20.0",
     "clean-css": "^5.3.3",
     "compromise": "^14.16.0",
