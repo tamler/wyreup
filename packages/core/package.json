@@ -126,7 +126,7 @@
     "shpjs": "^6.2.0",
     "smol-toml": "^1.7.1",
     "sql-formatter": "^15.8.2",
-    "svgo": "^3.3.4",
+    "svgo": "^3.3.5",
     "tesseract.js": "^7.0.0",
     "text-readability": "^1.1.1",
     "turndown": "^7.2.4"
