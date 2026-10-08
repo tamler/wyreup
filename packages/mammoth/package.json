@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/mammoth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Maintained Mammoth DOCX library distribution without the standalone CLI",
   "license": "BSD-2-Clause",
   "repository": {

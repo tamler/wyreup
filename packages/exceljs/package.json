@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/exceljs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Maintained ExcelJS library distribution with native UUID generation",
   "license": "MIT",
   "repository": {
