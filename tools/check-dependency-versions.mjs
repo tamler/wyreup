@@ -52,7 +52,8 @@ export async function checkInstalledVersions(directory) {
     for (const [name, mandatory] of required) {
       assert(/^(?:@[a-z0-9._-]+\/)?[a-z0-9._-]+$/i.test(name) && name.split('/').every(part => part !== '.' && part !== '..'), `Invalid dependency name: ${name}`);
       let installed;
-      for (const search of require.resolve.paths(name) ?? []) {
+      // A bare builtin name returns null, but its npm browser package still belongs to this graph.
+      for (const search of require.resolve.paths(`${name}/package.json`) ?? []) {
         const candidate = path.join(search, name);
         installed = await realpath(candidate).catch(error => {
           if (error.code === 'ENOENT') return null;

@@ -135,6 +135,19 @@ describe('published dependency security', () => {
     expect(versions.filter(entry => entry.name === 'sharp')).toEqual([{ name: 'sharp', version: '0.35.5' }]);
   });
 
+  it.each(['buffer', 'util', 'assert'])('checks the declared browser package %s despite the same Node builtin name', async name => {
+    const { outer, sharp } = await pnpmOuter({ dependencies: { [name]: '*' } }, '0.35.5');
+    const browserPackage = await installed(`node_modules/.pnpm/${name}@1/node_modules/${name}`, {
+      name, version: '1.0.0', dependencies: { sharp: '^0.35.5' },
+    });
+    await symlink(browserPackage, path.resolve(outer, '../../' + name));
+    await symlink(sharp, path.resolve(browserPackage, '../sharp'));
+    expect(createRequire(path.join(outer, 'package.json')).resolve.paths(name)).toBeNull();
+    await expect(checkInstalledVersions(directory)).resolves.toContainEqual({ name: 'sharp', version: '0.35.5' });
+    await writeFile(path.join(sharp, 'package.json'), JSON.stringify({ name: 'sharp', version: '0.35.4' }));
+    await expect(checkInstalledVersions(directory)).rejects.toThrow('Unsafe dependency version: sharp@0.35.4');
+  });
+
   it('rejects consumer overrides instead of accepting a misleading clean root audit', async () => {
     const file = await pack({ name: '@wyreup/example', version: '1.0.0', overrides: { sharp: '^0.35.4' } });
     await expect(inspectTarball(file)).rejects.toThrow('must not depend on overrides');
