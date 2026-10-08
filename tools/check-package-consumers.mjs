@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createReadStream } from 'node:fs';
-import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -9,16 +9,15 @@ import { promisify } from 'node:util';
 import { loadArtifacts } from './check-release-artifacts.mjs';
 import { build } from 'esbuild';
 import { checkInstalledVersions } from './check-dependency-versions.mjs';
+import { assertNpmMajor, resolveNpmCli } from './consumer-package-managers.mjs';
 
 const exec = promisify(execFile);
 const root = path.resolve(import.meta.dirname, '..');
 const { artifacts } = await loadArtifacts('artifacts');
-const scratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
-const npmCli = process.platform === 'win32'
-  ? path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')
-  : await realpath((await exec('which', ['npm'])).stdout.trim());
+const npmCli = await resolveNpmCli();
 const pnpmCli = process.env.npm_execpath;
 assert(pnpmCli?.includes('pnpm'), 'Run this check through pnpm check:consumers');
+const scratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
 const entries = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
 let origin;
 const server = createServer((request, response) => {
@@ -77,8 +76,11 @@ async function run(cli, args, cwd, ignoreScripts = false) {
 }
 
 try {
+  const npmVersion = (await run(npmCli, ['--version'], root)).stdout.trim();
+  assertNpmMajor(npmVersion, process.env.WYREUP_EXPECTED_NPM_MAJOR);
+  console.log(`npm executable: ${npmCli}`);
   for (const [manager, cli] of [['npm', npmCli], ['pnpm', pnpmCli]]) {
-    console.log(`${manager} ${(await run(cli, ['--version'], root)).stdout.trim()}`);
+    console.log(`${manager} ${manager === 'npm' ? npmVersion : (await run(cli, ['--version'], root)).stdout.trim()}`);
     for (const ignoreScripts of [false, true]) {
       for (const artifact of artifacts) {
         for (const withPeer of artifact.name === '@wyreup/core' ? [false, true] : [false]) {

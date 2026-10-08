@@ -151,6 +151,8 @@ jobs:
           path: artifacts/
       - run: pnpm release:verify
       - run: pnpm check:consumers
+        env:
+          WYREUP_EXPECTED_NPM_MAJOR: ${{ matrix.runtime.npm }}
 
   isolation-check:
     name: Isolation check
