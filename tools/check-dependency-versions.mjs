@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readdir, readFile, realpath } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 export const minimumVersions = Object.freeze({
@@ -23,38 +24,66 @@ export function assertMinimumVersion(name, version) {
   assert(comparison >= 0, `Unsafe dependency version: ${name}@${version}; requires >=${floor}`);
 }
 
-// Inspect nested npm packages and pnpm's virtual store, following links once.
-// A safe top-level dependency never conceals an affected nested copy.
+// Follow installed package links and their declared resolution graph. Physical
+// pnpm store directories can outlive the lock graph after an ordinary update.
 export async function checkInstalledVersions(directory) {
   const visited = new Set();
   const versions = [];
+  async function modules(candidate) {
+    const entries = await readdir(candidate, { withFileTypes: true }).catch(error => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    });
+    for (const entry of entries) {
+      if (entry.name === '.bin' || entry.name === '.pnpm' || (!entry.isDirectory() && !entry.isSymbolicLink())) continue;
+      const installed = path.join(candidate, entry.name);
+      if (entry.name.startsWith('@')) await modules(installed);
+      else await visit(installed);
+    }
+  }
+  async function dependencies(pkg, manifest) {
+    const required = new Map(Object.keys(pkg.dependencies ?? {}).map(name => [name, true]));
+    for (const name of Object.keys(pkg.optionalDependencies ?? {})) required.set(name, false);
+    for (const name of Object.keys(pkg.peerDependencies ?? {})) {
+      const mandatory = pkg.peerDependenciesMeta?.[name]?.optional !== true;
+      required.set(name, mandatory || required.get(name) === true);
+    }
+    const require = createRequire(manifest);
+    for (const [name, mandatory] of required) {
+      assert(/^(?:@[a-z0-9._-]+\/)?[a-z0-9._-]+$/i.test(name) && name.split('/').every(part => part !== '.' && part !== '..'), `Invalid dependency name: ${name}`);
+      let installed;
+      for (const search of require.resolve.paths(name) ?? []) {
+        const candidate = path.join(search, name);
+        installed = await realpath(candidate).catch(error => {
+          if (error.code === 'ENOENT') return null;
+          throw error;
+        });
+        if (installed) break;
+      }
+      assert(installed || !mandatory, `Missing required dependency: ${pkg.name} -> ${name}`);
+      if (installed) await visit(installed);
+    }
+  }
   async function visit(candidate) {
     const resolved = await realpath(candidate);
     if (visited.has(resolved)) return;
     visited.add(resolved);
-    const manifest = await readFile(path.join(resolved, 'package.json'), 'utf8').catch(error => {
+    const manifest = path.join(resolved, 'package.json');
+    const contents = await readFile(manifest, 'utf8').catch(error => {
       if (error.code === 'ENOENT') return null;
       throw error;
     });
-    if (manifest) {
-      const pkg = JSON.parse(manifest);
+    if (contents) {
+      const pkg = JSON.parse(contents);
       assertMinimumVersion(pkg.name, pkg.version);
       if (minimumVersions[pkg.name]) versions.push({ name: pkg.name, version: pkg.version });
-      const nested = path.join(resolved, 'node_modules');
-      const entries = await readdir(nested, { withFileTypes: true }).catch(error => {
-        if (error.code === 'ENOENT') return [];
-        throw error;
-      });
-      for (const entry of entries) {
-        if (entry.name !== '.bin' && (entry.isDirectory() || entry.isSymbolicLink())) await visit(path.join(nested, entry.name));
-      }
+      await modules(path.join(resolved, 'node_modules'));
+      await dependencies(pkg, manifest);
       return;
     }
-    for (const entry of await readdir(resolved, { withFileTypes: true })) {
-      if (entry.name === '.bin' || (!entry.isDirectory() && !entry.isSymbolicLink())) continue;
-      await visit(path.join(resolved, entry.name));
-    }
+    assert(resolved === await realpath(directory), `Installed package has no manifest: ${resolved}`);
+    await modules(path.join(resolved, 'node_modules'));
   }
-  await visit(path.join(directory, 'node_modules'));
+  await visit(directory);
   return versions;
 }

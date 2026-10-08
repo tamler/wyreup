@@ -74,7 +74,7 @@ jobs:
           # schema. Idempotent: already-applied migrations are skipped.
           command: d1 migrations apply wyreup-prod --remote
       - name: Deploy model worker
-        run: pnpm --filter @wyreup/worker-models deploy
+        run: pnpm --filter @wyreup/worker-models run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

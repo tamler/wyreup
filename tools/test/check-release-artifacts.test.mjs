@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, writeFile, symlink } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { c as createTar } from 'tar';
@@ -18,6 +19,26 @@ async function pack(manifest) {
   const file = path.join(directory, 'package.tgz');
   await createTar({ cwd: directory, file, gzip: true }, ['package']);
   return file;
+}
+
+async function installed(relative, manifest) {
+  const location = path.join(directory, relative);
+  await mkdir(location, { recursive: true });
+  await writeFile(path.join(location, 'package.json'), JSON.stringify(manifest));
+  return location;
+}
+
+async function pnpmOuter(declarations, sharpVersion = '0.35.4') {
+  const outer = await installed('node_modules/.pnpm/outer@1/node_modules/@example/outer', {
+    name: '@example/outer', version: '1.0.0', ...declarations,
+  });
+  const sharp = await installed(`node_modules/.pnpm/sharp@${sharpVersion}/node_modules/sharp`, {
+    name: 'sharp', version: sharpVersion,
+  });
+  await mkdir(path.join(directory, 'node_modules/@example'), { recursive: true });
+  await symlink(outer, path.join(directory, 'node_modules/@example/outer'));
+  await symlink(sharp, path.resolve(outer, '../../sharp'));
+  return { outer, sharp };
 }
 
 describe('published dependency security', () => {
@@ -59,11 +80,59 @@ describe('published dependency security', () => {
     await expect(checkInstalledVersions(directory)).rejects.toThrow('Unsafe dependency version: sharp@0.35.4');
   });
 
-  it('inspects pnpm virtual-store dependencies', async () => {
-    const nested = path.join(directory, 'node_modules/.pnpm/sharp@0.35.4/node_modules/sharp');
-    await mkdir(nested, { recursive: true });
-    await writeFile(path.join(nested, 'package.json'), JSON.stringify({ name: 'sharp', version: '0.35.4' }));
-    await expect(checkInstalledVersions(directory)).rejects.toThrow('Unsafe dependency version');
+  it('rejects linked pnpm sibling dependencies despite a safe direct copy', async () => {
+    await installed('node_modules/sharp', { name: 'sharp', version: '0.35.5' });
+    await pnpmOuter({ dependencies: { sharp: '^0.35.4' } });
+    await expect(checkInstalledVersions(directory)).rejects.toThrow('Unsafe dependency version: sharp@0.35.4');
+  });
+
+  it('ignores unlinked obsolete store copies after an update while inspecting active links', async () => {
+    await installed('node_modules/.pnpm/sharp@0.35.4/node_modules/sharp', { name: 'sharp', version: '0.35.4' });
+    await pnpmOuter({ dependencies: { sharp: '^0.35.5' } }, '0.35.5');
+    await expect(checkInstalledVersions(directory)).resolves.toContainEqual({ name: 'sharp', version: '0.35.5' });
+  });
+
+  it('inspects manifests even when package exports block the package.json subpath', async () => {
+    await installed('node_modules/sharp', { name: 'sharp', version: '0.35.5', exports: { '.': './index.js' } });
+    const require = createRequire(path.join(directory, 'package.json'));
+    expect(() => require.resolve('sharp/package.json')).toThrow('not defined by "exports"');
+    await expect(checkInstalledVersions(directory)).resolves.toContainEqual({ name: 'sharp', version: '0.35.5' });
+  });
+
+  it('fails a missing required consumer dependency while not requiring uninstalled dev dependencies', async () => {
+    await installed('.', { name: 'consumer', version: '1.0.0', devDependencies: { 'wyreup-uninstalled-dev-fixture': '*' } });
+    await expect(checkInstalledVersions(directory)).resolves.toEqual([]);
+    await installed('.', { name: 'consumer', version: '1.0.0', dependencies: { 'wyreup-missing-required-fixture': '*' } });
+    await expect(checkInstalledVersions(directory)).rejects.toThrow('Missing required dependency: consumer -> wyreup-missing-required-fixture');
+  });
+
+  it('permits absent optional dependencies and optional peers, but not absent required peers', async () => {
+    await installed('node_modules/outer', { name: 'outer', version: '1.0.0',
+      dependencies: { 'wyreup-missing-optional-fixture': '*' },
+      optionalDependencies: { 'wyreup-missing-optional-fixture': '*' },
+      peerDependencies: { 'wyreup-missing-peer-fixture': '*' },
+      peerDependenciesMeta: { 'wyreup-missing-peer-fixture': { optional: true } },
+    });
+    await expect(checkInstalledVersions(directory)).resolves.toEqual([]);
+    await installed('node_modules/outer', { name: 'outer', version: '1.0.0', peerDependencies: { 'wyreup-missing-peer-fixture': '*' } });
+    await expect(checkInstalledVersions(directory)).rejects.toThrow('Missing required dependency: outer -> wyreup-missing-peer-fixture');
+  });
+
+  it.each(['optional dependency', 'optional peer'])('rejects an affected installed %s in a linked pnpm graph', async kind => {
+    const declarations = kind === 'optional dependency'
+      ? { optionalDependencies: { sharp: '*' } }
+      : { peerDependencies: { sharp: '*' }, peerDependenciesMeta: { sharp: { optional: true } } };
+    await pnpmOuter(declarations);
+    await expect(checkInstalledVersions(directory)).rejects.toThrow('Unsafe dependency version: sharp@0.35.4');
+  });
+
+  it('deduplicates real paths through cyclic dependency links', async () => {
+    const { outer, sharp } = await pnpmOuter({ dependencies: { sharp: '^0.35.5' } }, '0.35.5');
+    await writeFile(path.join(sharp, 'package.json'), JSON.stringify({ name: 'sharp', version: '0.35.5', dependencies: { '@example/outer': '*' } }));
+    await mkdir(path.resolve(sharp, '../@example'), { recursive: true });
+    await symlink(outer, path.resolve(sharp, '../@example/outer'));
+    const versions = await checkInstalledVersions(directory);
+    expect(versions.filter(entry => entry.name === 'sharp')).toEqual([{ name: 'sharp', version: '0.35.5' }]);
   });
 
   it('rejects consumer overrides instead of accepting a misleading clean root audit', async () => {
