@@ -4,3 +4,5 @@
 *.tsx text
 *.js text
 *.mjs text
+packages/exceljs/UPSTREAM.json text eol=lf
+packages/mammoth/UPSTREAM.json text eol=lf
