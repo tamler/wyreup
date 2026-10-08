@@ -83,11 +83,11 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
 
     if (armor) {
-      const encryptedArmored = (await openpgp.encrypt({
+      const encryptedArmored = await openpgp.encrypt({
         message,
         encryptionKeys: publicKey,
         format: 'armored',
-      })) as unknown as string;
+      });
       return [new Blob([encryptedArmored], { type: 'text/plain; charset=utf-8' })];
     }
 
@@ -96,8 +96,8 @@ export const pgpEncrypt: ToolModule<PgpEncryptParams> = {
       encryptionKeys: publicKey,
       format: 'binary',
     });
-    const binaryBytes = encryptedBinary as Uint8Array;
-    return [new Blob([binaryBytes.buffer as ArrayBuffer], { type: 'application/pgp-encrypted' })];
+    const binaryBytes = new Uint8Array(encryptedBinary);
+    return [new Blob([binaryBytes], { type: 'application/pgp-encrypted' })];
   },
 
   __testFixtures: {

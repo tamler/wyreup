@@ -1,0 +1,9 @@
+This package derives from ExcelJS 4.4.0, Copyright (c) 2014-2019 Guyon Roche,
+distributed under the MIT license preserved in vendor/LICENSE.
+Wyreup replaces UUID v4 generation with the platform cryptographic API and
+rebuilds the browser distribution from verified source with audited dependencies.
+StreamBuf.pipe returns its destination, preserving the standard stream contract
+required by the upgraded archiver dependency used for streaming XLSX output.
+The browser bundle's constituent package versions and license texts appear in
+vendor/THIRD-PARTY-NOTICES.txt and vendor/BROWSER-DEPENDENCIES.json.
+The streaming workbook reader uses unzipper's native async iterator to preserve all file-backed archive entries with the updated unzipper dependency.

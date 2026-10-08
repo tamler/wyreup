@@ -1,0 +1,53 @@
+{
+  "name": "@wyreup/mammoth",
+  "version": "0.1.0",
+  "description": "Maintained Mammoth DOCX library distribution without the standalone CLI",
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/mammoth"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "vendor/lib/index.js",
+  "browser": "vendor/dist/mammoth.browser.mjs",
+  "types": "vendor/lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./vendor/lib/index.d.ts",
+      "browser": "./vendor/dist/mammoth.browser.mjs",
+      "node": "./vendor/lib/index.js",
+      "default": "./vendor/lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "vendor",
+    "README.md",
+    "UPSTREAM.json",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "node ../../tools/build-mammoth.mjs",
+    "prepack": "node ../../tools/build-mammoth.mjs --verify",
+    "test": "node --test test/*.test.cjs"
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "^0.9.12",
+    "base64-js": "^1.5.1",
+    "bluebird": "~3.4.7",
+    "dingbat-to-unicode": "^1.0.2",
+    "jszip": "^3.10.2",
+    "lop": "^0.4.2",
+    "underscore": "^1.13.8",
+    "xmlbuilder": "^10.1.1"
+  },
+  "devDependencies": {
+    "buffer": "6.0.3"
+  }
+}

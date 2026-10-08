@@ -48,14 +48,18 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
       }
     }
     const probeBuffer = await inputs[0]!.arrayBuffer();
-    const probeDoc = await getDocument({
+    const probeTask = getDocument({
       data: new Uint8Array(probeBuffer),
       disableFontFace: true,
       disableRange: true,
       disableStream: true,
-    }).promise;
-    assertPdfPageBudget(probeDoc.numPages, { maxPages: 500 });
-    await probeDoc.destroy();
+    });
+    try {
+      const probeDoc = await probeTask.promise;
+      assertPdfPageBudget(probeDoc.numPages, { maxPages: 500 });
+    } finally {
+      await probeTask.destroy();
+    }
 
     const text = await extractPdfText(inputs[0]!, ctx);
     if (!text) throw new Error('No extractable text found in the PDF.');

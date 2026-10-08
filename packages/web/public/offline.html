@@ -114,15 +114,17 @@
       <p class="brand">Wyreup &middot; offline</p>
       <h1>You're offline.</h1>
       <p>
-        Wyreup runs every tool in your browser, so most things keep working without a network
-        connection. The page you wanted just isn't in this device's cache yet.
+        Free tools process files locally in your browser. Cached tools can work without a connection
+        when their required assets are available. The page you wanted isn't in this device's cache
+        yet.
       </p>
       <ul class="hints">
-        <li>Pages you've visited before will load offline.</li>
+        <li>Previously cached pages may still be available offline.</li>
         <li>
-          Tools that download a model on first use need to be online for that download — once
-          cached, they run offline forever.
+          Model tools need a connection for their first download. They can run offline while the
+          model and runtime assets remain cached on this device.
         </li>
+        <li>PRO tools and tools that fetch network resources need a connection.</li>
         <li>If this is your first visit, reconnect to load the catalog.</li>
       </ul>
       <div class="actions">
@@ -133,11 +135,28 @@
       <p class="footer-note">Auto-refreshes when the connection comes back.</p>
     </main>
     <script>
-      // Auto-refresh once we're back online so the user lands on the page
-      // they were trying to reach (or the home page) without thinking.
-      window.addEventListener('online', () => {
-        location.reload();
-      });
+      // Reconnect applies only while this offline document is current.
+      let active = true;
+
+      function refreshWhenOnline() {
+        if (active && navigator.onLine) location.reload();
+      }
+
+      function deactivate() {
+        active = false;
+        window.removeEventListener('online', refreshWhenOnline);
+      }
+
+      function activate(event) {
+        active = true;
+        window.addEventListener('online', refreshWhenOnline);
+        if (event.persisted) refreshWhenOnline();
+      }
+
+      window.addEventListener('online', refreshWhenOnline);
+      window.addEventListener('beforeunload', deactivate);
+      window.addEventListener('pagehide', deactivate);
+      window.addEventListener('pageshow', activate);
     </script>
   </body>
 </html>

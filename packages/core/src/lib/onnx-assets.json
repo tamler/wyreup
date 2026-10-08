@@ -1,0 +1,126 @@
+{
+  "runtimes": [
+    {
+      "version": "1.24.3",
+      "assets": [
+        {
+          "file": "ort-wasm-simd-threaded.asyncify.mjs",
+          "bytes": 48533,
+          "sha256": "dee69056fbfedf946ba0d9026e191c1361c5455895355e03f4346bf9308e58eb"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.asyncify.wasm",
+          "bytes": 27190919,
+          "sha256": "f33595b9f7ea51aa6f646dd5a2bde6fbb1c7bcde0b9d2b5f240011a09c1830d0"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jsep.mjs",
+          "bytes": 46595,
+          "sha256": "9a99acd12acc495184c9ea4d458ac9424f8180aacfbc7b8371ed64f9351e4a81"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jsep.wasm",
+          "bytes": 25014754,
+          "sha256": "2e0a3d0e3f6b7c13ecfaba38c13691fd19c9ed470e72f9d7d8416ca59ab6dbcd"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jspi.mjs",
+          "bytes": 45481,
+          "sha256": "1622f02ae35e41f8df9db21f750ae1d494c1b0df3cb3f9d669ea2be8a69a0417"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jspi.wasm",
+          "bytes": 16894865,
+          "sha256": "47989653e231e7184f580c42199463bd6b77470e89d8241e27446193eadeb98b"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.mjs",
+          "bytes": 24274,
+          "sha256": "5687566b1bc1c8cf628d76c2ddb16b2a3b81a7997273d4666564880495088e57"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.wasm",
+          "bytes": 12361745,
+          "sha256": "be0e129949062ad50290ef94683fac8be5bb6156f709e030b7a5f1661a2f6c17"
+        }
+      ],
+      "licenses": [
+        {
+          "file": "LICENSE",
+          "bytes": 1073,
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "commit": "3a728b75062256951b6e19ce718907cf1a1d4cf0",
+          "sourceUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/3a728b75062256951b6e19ce718907cf1a1d4cf0/LICENSE"
+        },
+        {
+          "file": "ThirdPartyNotices.txt",
+          "bytes": 325054,
+          "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2",
+          "commit": "3a728b75062256951b6e19ce718907cf1a1d4cf0",
+          "sourceUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/3a728b75062256951b6e19ce718907cf1a1d4cf0/ThirdPartyNotices.txt"
+        }
+      ]
+    },
+    {
+      "version": "1.31.0-dev.20260914-8d85527a0",
+      "assets": [
+        {
+          "file": "ort-wasm-simd-threaded.asyncify.mjs",
+          "bytes": 53057,
+          "sha256": "0966b6105cd936744498aa60df7a22cbd47af3374dbc64a9ab561c08a71e3611"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.asyncify.wasm",
+          "bytes": 26861777,
+          "sha256": "49871f5a4409519797e127440868a6d1923339d9185907f301a5b2a1d90af082"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jsep.mjs",
+          "bytes": 46851,
+          "sha256": "c2f80e915e9df63289788a99d434d8c4e00e64e9c1f030f4b80b022458dd2c99"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jsep.wasm",
+          "bytes": 28352885,
+          "sha256": "62ff86b2f2fa3a79eb87a7e4720e8ea9051942bf975f314181bf7dcef2feac06"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jspi.mjs",
+          "bytes": 50918,
+          "sha256": "6b37a3974dbd96a752fdc1805e1bdc2dca3ead7e380703c092240c2352c71dbf"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.jspi.wasm",
+          "bytes": 16811691,
+          "sha256": "173146c55eb8c7e01f8be3f7b7376fbde14118d91607583ab7caf4feac98e59c"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.mjs",
+          "bytes": 24381,
+          "sha256": "c57ca56328877353a575e51bbca6f18450027d6c9bf2307a2cb2c41363b4de9f"
+        },
+        {
+          "file": "ort-wasm-simd-threaded.wasm",
+          "bytes": 14264838,
+          "sha256": "06ba057753da3847e4c24f02d91ab133455b0817c69a44993a9a53a2146df9e3"
+        }
+      ],
+      "licenses": [
+        {
+          "file": "LICENSE",
+          "bytes": 1073,
+          "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+          "commit": "8d85527a010e294a26b274749f74294b2a32cec5",
+          "sourceUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/8d85527a010e294a26b274749f74294b2a32cec5/LICENSE"
+        },
+        {
+          "file": "ThirdPartyNotices.txt",
+          "bytes": 338088,
+          "sha256": "143764b952fdb1a7c69ce653bfba74a7744d6a8a573bfb73e235fba356c83de3",
+          "commit": "8d85527a010e294a26b274749f74294b2a32cec5",
+          "sourceUrl": "https://raw.githubusercontent.com/microsoft/onnxruntime/8d85527a010e294a26b274749f74294b2a32cec5/ThirdPartyNotices.txt"
+        }
+      ]
+    }
+  ]
+}

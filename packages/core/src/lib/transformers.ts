@@ -21,10 +21,11 @@
  */
 import type * as Transformers from '@huggingface/transformers';
 import type { ToolRunContext } from '../types.js';
-import { getModelCdn } from './model-cdn.js';
+import { applyModelCdnToTransformersEnv } from './model-cdn.js';
 
 const MAX_PIPELINES = 2;
 const IDLE_EVICT_MS = 5 * 60 * 1000;
+export const DEFAULT_PIPELINE_DTYPE = 'q8';
 
 const pipelineCache: Map<string, unknown> = new Map();
 
@@ -113,12 +114,8 @@ export async function getPipeline(
   // heap is most useful before allocating the next big model.
   evictToFit();
 
-  // transformers.js is an OPTIONAL peer dependency: only 12 of the ~276
-  // tools need it, and it drags in onnxruntime plus a `sharp` pinned to a
-  // range with unpatched libvips CVEs. Making the other 264 tools carry that
-  // isn't defensible, so consumers opt in explicitly — which also puts the
-  // sharp version under their control, where an override actually works.
-  // A bare module-not-found here would be baffling, so name the remedy.
+  // Model inference is optional for library consumers; CLI/MCP install the
+  // official runtime directly. Name the remedy when the peer is unavailable.
   let transformersMod: typeof Transformers;
   try {
     transformersMod = await import('@huggingface/transformers');
@@ -126,10 +123,7 @@ export async function getPipeline(
     throw new Error(
       'This tool needs @huggingface/transformers, which @wyreup/core declares as an ' +
         'optional peer dependency rather than installing for you. Install it alongside ' +
-        'core:\n\n  npm install @huggingface/transformers\n\n' +
-        'Note that it currently resolves sharp <0.35.0, which carries unpatched libvips ' +
-        'advisories. Pin a patched sharp in your project root, where overrides take effect:\n\n' +
-        '  "overrides": { "sharp": "^0.35.3" }\n\n' +
+        'core:\n\n  npm install @huggingface/transformers@^4.3.1\n\n' +
         `Original import failure: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
@@ -140,11 +134,7 @@ export async function getPipeline(
   // fetched from the configured host instead of huggingface.co. Set every
   // time because env state on the library is module-global; another pipeline
   // call later in the session might be the first one after setModelCdn ran.
-  const cdnBase = getModelCdn();
-  if (cdnBase !== null) {
-    const env = (transformersMod as { env?: { remoteHost?: string } }).env;
-    if (env) env.remoteHost = cdnBase;
-  }
+  applyModelCdnToTransformersEnv(transformersMod.env);
 
   // Aggregate progress across files. Transformers.js emits per-file events
   // (initiate, download, progress, done) which would otherwise show as
@@ -159,6 +149,8 @@ export async function getPipeline(
   }
 
   const pipe = await pipeline(task as Parameters<typeof pipeline>[0], model, {
+    // Use the same verified quantized model files in Node and browsers.
+    dtype: DEFAULT_PIPELINE_DTYPE,
     ...options,
     // Progress callback receives an untyped object from the Transformers.js library.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

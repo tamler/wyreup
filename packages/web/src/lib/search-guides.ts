@@ -256,25 +256,25 @@ const CONTENT_CORRECTIONS: Record<
   },
   'image-similarity': {
     intro:
-      'This image-similarity tool is experimental. The current version passes encoded image data through a text feature-extraction pipeline, so its scores do not establish visual similarity. Do not use scores or clusters to identify duplicates, delete photos or make other decisions. Processing attempts run on your device and model assets download when needed; visual-comparison behavior still needs correction and validation.',
+      'Compare images using CLIP image embeddings and review pairwise similarity scores and suggested groups. Processing runs on your device; model and runtime assets download when needed. Scores are suggestions for manual review, not proof that two photos are duplicates. Inspect originals before deleting photos.',
     useCases: [
-      'Explore the experimental interface with non-sensitive test images while retaining every original.',
-      'Inspect reported JSON values for debugging without interpreting them as visual-similarity evidence.',
-      'Compare image dimensions or pixel differences with the dedicated inspection tools instead.',
+      'Review a small group of images and inspect pairs with high similarity scores.',
+      'Download scores and suggested groups as JSON while retaining your original files.',
+      'Check suspected matches with pixel differences or file checksums when you need stronger evidence.',
     ],
     answers: {
       'What does the score mean?':
-        'The current score is not validated as visual similarity. This version sends encoded image data through text feature extraction rather than an image pipeline. Do not interpret higher values as proof of a visual match.',
+        'The score is cosine similarity between CLIP image embeddings. A higher score indicates more similar embeddings, but does not prove that the files or pictured objects are identical.',
       'Is this the same as a pixel diff?':
-        'No. This experimental implementation is not a validated visual comparison. Use Image Diff for a pixel-level comparison of supported same-size images.',
+        'No. This tool compares image embeddings. Use Image Diff for a pixel-level comparison of supported same-size images, or Hash to check whether file bytes are identical.',
       'Do the images leave my device?':
-        'The processing attempt runs locally in the browser without uploading your image contents. Model and runtime assets may download when needed. Local processing does not make the current similarity results reliable.',
+        'Image processing runs locally in your browser without uploading your image contents. Model and runtime assets download when needed.',
       'Which formats are supported?':
-        'The interface accepts JPEG, PNG and WebP and requires at least two images. Accepted input does not establish reliable visual-comparison output in the current version.',
+        'The tool accepts JPEG, PNG and WebP and requires at least two images.',
       'Do the images have to be the same size?':
-        'The interface accepts different dimensions, but the current scores are not validated across any dimensions or aspect ratios. Do not rely on them for a match.',
+        'No. Images are decoded and prepared for the embedding model. Different dimensions are accepted, but scores still require manual review.',
       'Will it match two photos of the same object taken differently?':
-        'That behavior has not been established for the current implementation. Do not use it to determine whether photos show the same object or are duplicates.',
+        'A score does not establish that two photos show the same object. This tool suggests pairs to inspect; it does not automatically confirm duplicates or delete files.',
     },
     alsoTry: [
       { id: 'image-diff', why: 'Compare supported same-size images at the pixel level.' },

@@ -100,11 +100,11 @@ for (const path of [
 }
 check('404 index policy', () => assert.match(content(read('404.html'), 'robots') ?? '', /noindex/));
 
-check('image similarity experimental disclosure', () => {
+check('image similarity review guidance', () => {
   const html = htmlAt('/tools/image-similarity/');
-  assert.match(title(html), /experimental/i);
-  assert.match(content(html, 'description') ?? '', /not validated/i);
-  assert.match(html, /do not use.*(?:duplicates|delete|deletion)/i);
+  assert.match(title(html), /image similarity checker/i);
+  assert.match(content(html, 'description') ?? '', /inspect originals before deleting/i);
+  assert.match(html, /not proof that two photos are duplicates/i);
 });
 
 const priority = new Map([

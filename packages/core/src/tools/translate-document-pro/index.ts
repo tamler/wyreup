@@ -70,16 +70,17 @@ async function extractPdfText(file: File, ctx: ToolRunContext): Promise<string> 
   }
 
   const probeBuffer = await file.arrayBuffer();
-  const probeDoc = await getDocument({
+  const probeTask = getDocument({
     data: new Uint8Array(probeBuffer),
     disableFontFace: true,
     disableRange: true,
     disableStream: true,
-  }).promise;
+  });
   try {
+    const probeDoc = await probeTask.promise;
     assertPdfPageBudget(probeDoc.numPages, { maxPages: 40 });
   } finally {
-    await probeDoc.destroy();
+    await probeTask.destroy();
   }
 
   const out = await pdfToText.run([file], { separator: '\n\n' }, ctx);

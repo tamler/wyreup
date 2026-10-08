@@ -50,3 +50,7 @@ pnpm-debug.log*
 .wrangler/
 wrangler.toml.local
 .cache/
+artifacts/
+packages/*/vendor/
+packages/*/.excel-build-*/
+packages/*/.mammoth-build-*/

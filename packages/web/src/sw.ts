@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { cleanupOutdatedCaches, matchPrecache, precacheAndRoute } from 'workbox-precaching';
-import { setCatchHandler } from 'workbox-routing';
+import { registerRoute, setCatchHandler } from 'workbox-routing';
+import { NetworkOnly } from 'workbox-strategies';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -13,21 +14,37 @@ const MAX_SHARED_FILE_BYTES = 100 * 1024 * 1024; // 100 MB
 // Orphan TTL: any share intake older than this is sweepable.
 const SHARE_INTAKE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
 
-// Injected by vite-pwa at build time
-precacheAndRoute(self.__WB_MANIFEST);
+// Injected by Workbox at build time.
+precacheAndRoute(self.__WB_MANIFEST, {
+  urlManipulation: ({ url }) => {
+    const canonical = new URL(url);
+    if (canonical.pathname !== '/') canonical.pathname = canonical.pathname.replace(/\/+$/, '');
+    const aliases = canonical.href === url.href ? [] : [new URL(canonical)];
+    // Static page markup is shared by query variants; the browser keeps the
+    // original URL so tool inputs and attribution parameters remain available.
+    if (canonical.search && !/\.[^/]+$/.test(canonical.pathname)) {
+      canonical.search = '';
+      aliases.push(canonical);
+    }
+    return aliases;
+  },
+});
 cleanupOutdatedCaches();
+// Precached routes win first. Other GET navigations reach the catch handler
+// when the network fails; POST share submissions keep their own handler.
+registerRoute(({ request }) => request.mode === 'navigate', new NetworkOnly(), 'GET');
 
 // Offline fallback for navigations: when the network is unreachable AND
 // the requested URL isn't in the precache (e.g. a deep link to a page the
 // user hasn't visited before, or a route added after the SW was last
-// updated), serve the precached /offline.html so the user sees something
+// updated), serve the precached /offline so the user sees something
 // actionable instead of the browser's default offline error.
 //
 // setCatchHandler runs only after every other handler has rejected, so
 // the happy path (online navigation, precached navigation) is unaffected.
 setCatchHandler(async ({ request }) => {
   if (request.destination === 'document') {
-    const fallback = await matchPrecache('/offline.html');
+    const fallback = await matchPrecache('/offline');
     if (fallback) return fallback;
   }
   return Response.error();

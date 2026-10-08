@@ -1,27 +1,53 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-  # Manual trigger for the bot-merge gap: the auto-merged version PR is
-  # committed by GITHUB_TOKEN, which never fires push workflows. Instead of
-  # pushing an empty commit, run `gh workflow run Release`. (ROADMAP item 10)
-  workflow_dispatch:
+  # Manual recovery runs CI on main first: gh workflow run CI --ref main.
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency: release-main
 
 jobs:
   release:
     name: Release
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       id-token: write
+      actions: read
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # changesets/action resets its release branch to github.context.sha.
+      # For workflow_run, that context can point at a newer default-branch
+      # commit than the CI run that triggered this job. Refuse to proceed
+      # unless every view of main is still the exact tested commit.
+      - name: Confirm release commit passed CI
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONTEXT_SHA: ${{ github.sha }}
+        run: |
+          set -e
+          git fetch origin main
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)"
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [ "$TESTED_SHA" != "$CONTEXT_SHA" ] \
+            || [ "$TESTED_SHA" != "$CHECKED_OUT_SHA" ] \
+            || [ "$TESTED_SHA" != "$MAIN_SHA" ]; then
+            echo "::error::Release refused: tested CI commit is no longer the exact main commit Changesets would release."
+            echo "tested=$TESTED_SHA context=$CONTEXT_SHA checkout=$CHECKED_OUT_SHA main=$MAIN_SHA"
+            exit 1
+          fi
 
       - uses: pnpm/action-setup@v6
 
@@ -33,7 +59,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm build
+      - uses: actions/download-artifact@v5
+        with:
+          name: release-artifacts
+          path: artifacts/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm release:verify
 
       # npm OIDC trusted-publishing requires npm >= 11.5.1. Node 24 already
       # bundles npm 11.x, so this step is belt-and-braces rather than load-
@@ -49,7 +81,7 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          publish: pnpm changeset publish
+          publish: pnpm release:publish
           version: pnpm changeset version
           commit: 'chore(release): version packages'
           title: 'chore(release): version packages'

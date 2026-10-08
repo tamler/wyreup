@@ -6,14 +6,15 @@
  * downloads: empty input, unknown tools, invalid chains, unknown groups.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { prefetchCommand } from '../src/commands/prefetch.js';
 
 describe('prefetchCommand', () => {
   let logs: string[];
   let errs: string[];
-  let logSpy: ReturnType<typeof vi.spyOn>;
-  let errSpy: ReturnType<typeof vi.spyOn>;
-  let prevExitCode: number | string | undefined;
+  let logSpy: MockInstance<typeof console.log>;
+  let errSpy: MockInstance<typeof console.error>;
+  let prevExitCode: typeof process.exitCode;
 
   beforeEach(() => {
     logs = [];

@@ -81,7 +81,7 @@ export const pdfFlatten: ToolModule<PdfFlattenParams> = {
 
     const bytes = await doc.save();
     ctx.onProgress({ stage: 'done', percent: 100 });
-    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+    return new Blob([bytes.buffer], { type: 'application/pdf' });
   },
 
   __testFixtures: {

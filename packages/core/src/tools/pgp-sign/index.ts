@@ -87,12 +87,12 @@ export const pgpSign: ToolModule<PgpSignParams> = {
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
 
     if (armor) {
-      const sigArmored = (await openpgp.sign({
+      const sigArmored = await openpgp.sign({
         message,
         signingKeys: privateKey,
         detached: true,
         format: 'armored',
-      })) as unknown as string;
+      });
       return [new Blob([sigArmored], { type: 'text/plain; charset=utf-8' })];
     }
 
@@ -102,8 +102,8 @@ export const pgpSign: ToolModule<PgpSignParams> = {
       detached: true,
       format: 'binary',
     });
-    const sigBytes = sigBinary as Uint8Array;
-    return [new Blob([sigBytes.buffer as ArrayBuffer], { type: 'application/pgp-signature' })];
+    const sigBytes = new Uint8Array(sigBinary);
+    return [new Blob([sigBytes], { type: 'application/pgp-signature' })];
   },
 
   __testFixtures: {

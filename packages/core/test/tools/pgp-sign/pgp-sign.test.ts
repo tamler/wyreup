@@ -25,7 +25,7 @@ beforeAll(async () => {
   const openpgp = await import('openpgp');
   const { privateKey } = await openpgp.generateKey({
     type: 'ecc',
-    curve: 'curve25519',
+    curve: 'curve25519Legacy',
     userIDs: [{ name: 'Test User', email: 'test@example.com' }],
     format: 'armored',
   });

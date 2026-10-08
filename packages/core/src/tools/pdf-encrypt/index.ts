@@ -110,7 +110,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
     const bytes = await pdfDoc.save();
 
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
-    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+    return new Blob([bytes.buffer], { type: 'application/pdf' });
   },
 
   __testFixtures: {

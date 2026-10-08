@@ -33,7 +33,11 @@
  * the bucket is provisioned and `setModelCdn` is called.
  */
 
+import onnxAssets from './onnx-assets.json';
+
 let CONFIGURED_BASE: string | null = null;
+const defaultRemoteHosts = new WeakMap<object, string | undefined>();
+const defaultWasmPaths = new WeakMap<object, unknown>();
 
 /**
  * Set the base URL all model assets resolve under. Pass `null` (or call
@@ -71,17 +75,68 @@ export function modelUrl(path: string, upstreamFallback: string): string {
 }
 
 async function tryUpdateTransformersHost(): Promise<void> {
-  if (CONFIGURED_BASE === null) return;
   try {
     const mod = (await import('@huggingface/transformers').catch(() => null)) as {
       env?: { remoteHost?: string; remotePathTemplate?: string };
     } | null;
     if (mod?.env) {
-      mod.env.remoteHost = CONFIGURED_BASE;
+      applyModelCdnToTransformersEnv(mod.env);
     }
   } catch {
     // transformers.js not available or failed to import — fine, the
     // pipeline loader will retry the env.remoteHost write when it imports
     // the library itself.
   }
+}
+
+/** Preserve the official model/revision path template and restore the prior host on reset. */
+export function applyModelCdnToTransformersEnv(env: {
+  remoteHost?: string;
+  backends?: { onnx?: unknown };
+}): void {
+  if (!defaultRemoteHosts.has(env)) defaultRemoteHosts.set(env, env.remoteHost);
+  env.remoteHost = CONFIGURED_BASE ?? defaultRemoteHosts.get(env);
+  const onnx = env.backends?.onnx as
+    | {
+        versions?: { web?: string };
+        wasm?: { wasmPaths?: unknown };
+      }
+    | undefined;
+  // Native Node inference has no web runtime and keeps its own asset handling.
+  if (!onnx?.versions?.web || !onnx.wasm) return;
+  const wasm = onnx.wasm;
+  if (!defaultWasmPaths.has(wasm)) {
+    const original = wasm.wasmPaths;
+    defaultWasmPaths.set(
+      wasm,
+      original && typeof original === 'object' ? { ...original } : original,
+    );
+  }
+  const original = defaultWasmPaths.get(wasm);
+  if (CONFIGURED_BASE === null) {
+    wasm.wasmPaths = original && typeof original === 'object' ? { ...original } : original;
+    return;
+  }
+  const runtime = onnxAssets.runtimes.find((item) => item.version === onnx.versions?.web);
+  if (!runtime) throw new Error(`Unpinned ONNX browser runtime: ${onnx.versions.web}`);
+  if (!original || typeof original !== 'object')
+    throw new Error('ONNX browser runtime has no pinned asset paths');
+  const paths = original as { mjs?: unknown; wasm?: unknown };
+  const remapped: { mjs: string; wasm: string } = { mjs: '', wasm: '' };
+  for (const kind of ['mjs', 'wasm'] as const) {
+    const source = paths[kind];
+    if (typeof source !== 'string')
+      throw new Error(`ONNX browser runtime has no ${kind} asset path`);
+    const file = new URL(source).pathname.split('/').at(-1);
+    if (
+      !file ||
+      !file.endsWith('.' + kind) ||
+      !runtime.assets.some((asset) => asset.file === file)
+    ) {
+      throw new Error(`Unpinned ONNX browser asset: ${file ?? kind}`);
+    }
+    remapped[kind] = modelUrl(`onnxruntime-web@${runtime.version}/dist/${file}`, source);
+  }
+  // Preserve the official asyncify/base choice, including the Safari fallback.
+  wasm.wasmPaths = remapped;
 }

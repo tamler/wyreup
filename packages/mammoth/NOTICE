@@ -1,0 +1,11 @@
+This package derives from Mammoth 1.13.0, Copyright (c) Michael Williamson,
+distributed under the BSD-2-Clause license preserved in vendor/LICENSE.
+Wyreup distributes the library, upstream types and browser source, omitting
+the standalone command-line program and its argparse dependency. The library
+uses patched dependency ranges, including @xmldom/xmldom 0.9.
+Its XML adapter explicitly supplies the XML MIME type and uses the current
+onError callback, retaining upstream rejection of parser errors and warnings.
+The browser distribution is rebuilt from the verified library source with
+the upstream browser replacements. Constituent package versions and complete
+license texts appear in vendor/THIRD-PARTY-NOTICES.txt and
+vendor/BROWSER-DEPENDENCIES.json.

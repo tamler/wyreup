@@ -3,7 +3,7 @@
  * using ExcelJS (migrated from SheetJS — see packages/core/src/lib/excel.ts
  * for the migration story).
  */
-import ExcelJS from 'exceljs';
+import ExcelJS from '@wyreup/exceljs';
 import type { ToolRunContext } from '../../src/types.js';
 
 export function makeCtx(): ToolRunContext {

@@ -1,0 +1,61 @@
+{
+  "name": "@wyreup/exceljs",
+  "version": "0.1.0",
+  "description": "Maintained ExcelJS library distribution with native UUID generation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tamler/wyreup.git",
+    "directory": "packages/exceljs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "main": "vendor/excel.js",
+  "browser": "vendor/dist/exceljs.browser.mjs",
+  "types": "vendor/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./vendor/index.d.ts",
+      "browser": "./vendor/dist/exceljs.browser.mjs",
+      "node": "./vendor/excel.js",
+      "default": "./vendor/excel.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "vendor",
+    "README.md",
+    "UPSTREAM.json",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "node ../../tools/build-exceljs.mjs",
+    "prepack": "node ../../tools/build-exceljs.mjs --verify",
+    "test": "node --test test/*.test.cjs"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "dayjs": "^1.11.23",
+    "fast-csv": "^4.3.6",
+    "jszip": "^3.10.2",
+    "readable-stream": "^3.6.2",
+    "saxes": "^5.0.1",
+    "tmp": "^0.2.7",
+    "unzipper": "^0.12.5"
+  },
+  "devDependencies": {
+    "buffer": "6.0.3",
+    "core-js": "3.50.0",
+    "create-hash": "1.2.0",
+    "events": "3.3.0",
+    "process": "0.11.10",
+    "randombytes": "2.1.0",
+    "regenerator-runtime": "0.14.1",
+    "stream-browserify": "3.0.0",
+    "util": "0.12.5"
+  }
+}

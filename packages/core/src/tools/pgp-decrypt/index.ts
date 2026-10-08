@@ -1,4 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
+import type { Message } from 'openpgp';
 
 export interface PgpDecryptParams {
   privateKey: string;
@@ -74,7 +75,7 @@ export const pgpDecrypt: ToolModule<PgpDecryptParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 60, message: 'Decrypting' });
 
-    let message: Awaited<ReturnType<typeof openpgp.readMessage>>;
+    let message: Message<string | Uint8Array>;
     try {
       message = await openpgp.readMessage({ armoredMessage: text });
     } catch {

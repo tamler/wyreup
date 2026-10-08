@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { fileURLToPath } from 'node:url';
 import { createDefaultRegistry } from '../../../src/default-registry.js';
 import {
   defaultTranslateDocumentProParams,
@@ -6,7 +7,7 @@ import {
 } from '../../../src/tools/translate-document-pro/index.js';
 import type { ToolRunContext } from '../../../src/types.js';
 
-const RUNNERS_MODULE = '../../../../../functions/_lib/runners.js';
+const RUNNERS_MODULE = fileURLToPath(new URL('../../../../../functions/_lib/runners.js', import.meta.url));
 
 function makeCtx(): ToolRunContext {
   return {

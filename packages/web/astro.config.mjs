@@ -1,17 +1,14 @@
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
-import AstroPWA from '@vite-pwa/astro';
+import wyreupPwa from './scripts/pwa.mjs';
+import onnxAssets from './scripts/onnx-assets.mjs';
 
 export default defineConfig({
   site: 'https://wyreup.com',
   output: 'static',
   integrations: [
     svelte(),
-    AstroPWA({
-      registerType: 'autoUpdate',
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
+    wyreupPwa({
       manifest: {
         // Stable identity that survives reinstalls and start_url changes.
         // The PWA spec recommends an `id` so the browser can recognize
@@ -117,18 +114,27 @@ export default defineConfig({
         // Raise the limit above the 25 MB ort-wasm file so the build doesn't error
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
       },
-      devOptions: { enabled: false },
     }),
   ],
   build: {
     inlineStylesheets: 'auto',
   },
   vite: {
+    plugins: [onnxAssets()],
+    environments: {
+      prerender: {
+        resolve: {
+          // Astro 7 builds static pages in its separate prerender environment.
+          external: ['@wyreup/exceljs', '@wyreup/mammoth'],
+        },
+      },
+    },
     ssr: {
-      // These packages contain native .node binaries. Vite/Rollup cannot bundle
-      // them — externalize so they are resolved at runtime by Node instead.
-      // They are only invoked inside tool run() functions, not during SSG.
+      // Keep Node-only native and file/stream libraries outside the SSG bundle.
+      // Browser builds select the scoped libraries' rebuilt browser exports.
       external: [
+        '@wyreup/exceljs',
+        '@wyreup/mammoth',
         '@resvg/resvg-js',
         '@napi-rs/canvas',
         'tesseract.js',
@@ -141,6 +147,14 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              { name: 'pdf-lib', test: /\/node_modules\/pdf-lib\// },
+              { name: 'pdf-lib-extended', test: /\/node_modules\/@cantoo\/pdf-lib\// },
+            ],
+          },
+        },
         // Native packages are dynamic-imported inside tool run() functions.
         // They must not be bundled into the client chunk — mark as external.
         external: [

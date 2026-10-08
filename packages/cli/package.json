@@ -29,7 +29,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13.0"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -48,8 +48,8 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@clack/prompts": "^1.7.0",
-    "@huggingface/transformers": "^4.2.0",
+    "@clack/prompts": "^1.8.1",
+    "@huggingface/transformers": "^4.3.1",
     "@wyreup/core": "workspace:*",
     "chokidar": "^5.0.0",
     "commander": "^15.0.0"
@@ -57,6 +57,6 @@
   "devDependencies": {
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   }
 }

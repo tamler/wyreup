@@ -78,7 +78,7 @@ async function hashUrl(url: string): Promise<{ sha256: string; bytes: number } |
     );
     return null;
   }
-  const buf = Buffer.from(await res.arrayBuffer());
+  const buf = new Uint8Array(await res.arrayBuffer());
   if (buf.byteLength > MAX_HASHABLE_BYTES) {
     process.stderr.write(
       `  ~ ${url} — ${(buf.byteLength / 1024 / 1024).toFixed(0)} MB exceeds cap (no Content-Length declared); skipping\n`,

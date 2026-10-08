@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { listCommand } from '../src/commands/list.js';
 
 describe('listCommand', () => {
   let logs: string[];
-  let logSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: MockInstance<typeof console.log>;
 
   beforeEach(() => {
     logs = [];

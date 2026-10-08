@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
@@ -28,18 +29,16 @@ jobs:
       - run: pnpm build
       - run: pnpm lint:root
       - run: pnpm typecheck
+      - run: pnpm typecheck:functions
 
   unit-tests:
-    # @wyreup/core, /cli and /mcp all publish `engines: node >=20`, so the
-    # floor has to be tested, not just asserted — otherwise the claim rots
-    # the first time someone uses a 22+ only API. 22.x is the midpoint; 24.x
-    # is what we develop on. Verified green on all three as of this commit.
+    # Exercise the published runtime floor as well as the current LTS.
     name: Unit tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20.x, 22.x, 24.x]
+        node-version: [22.13.0, 24.x]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -52,7 +51,11 @@ jobs:
       # exists. Without this, `runInWorker` fails to spawn and every worker-
       # dispatched test reports "Tool worker crashed (exit=1, signal=null)".
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - run: pnpm --filter @wyreup/web check:pwa
+      - run: pnpm --filter @wyreup/web check:remote-cache
+      - run: pnpm --filter @wyreup/web check:pgp
 
   gdal-node-integration:
     # convert-geo's Node bridge uses a process.chdir() workaround for an
@@ -65,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20.x, 22.x, 24.x]
+        node-version: [22.13.0, 24.x]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -74,7 +77,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @wyreup/core build
+      - run: pnpm --filter @wyreup/core... build
       - run: WYREUP_GDAL_NODE=1 pnpm --filter @wyreup/core test convert-geo
 
   build:
@@ -89,12 +92,65 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm check:packages
+      - run: node packages/web/scripts/check-seo.mjs
+      - run: pnpm exec vitest run tools/test
+      - run: pnpm release:pack
+      - run: pnpm release:verify
       - uses: actions/upload-artifact@v7
         with:
           name: build-output
           path: |
             packages/*/dist
             !packages/*/dist/**/*.map
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-artifacts
+          path: artifacts/
+
+  functions:
+    name: Backend security tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update && sudo apt-get install -y sqlite3
+      - run: pnpm test:functions
+
+  package-consumers:
+    name: Packed consumers (${{ matrix.os }}, Node ${{ matrix.runtime.node }}, npm ${{ matrix.runtime.npm }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        runtime:
+          - { node: 22.13.0, npm: 11 }
+          - { node: 24.x, npm: 12 }
+        include:
+          - os: ubuntu-latest
+            runtime: { node: 24.x, npm: 11 }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.runtime.node }}
+          cache: pnpm
+      - run: npm install -g npm@${{ matrix.runtime.npm }}
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v5
+        with:
+          name: release-artifacts
+          path: artifacts/
+      - run: pnpm release:verify
+      - run: pnpm check:consumers
 
   isolation-check:
     name: Isolation check
@@ -164,16 +220,9 @@ jobs:
       - run: node tools/check-bundle-size.mjs
 
   web-security-invariants:
-    # Enforces the non-exploitability claim for GHSA-wrwg-2hg8-v723
-    # (Astro reflected XSS via server islands). The advisory affects
-    # the `server:defer` directive; wyreup.com is output: 'static'
-    # and does not use server islands. This job fails the PR if
-    # anyone introduces `server:defer` (or `server:` directives more
-    # broadly) so the non-exploitability claim stays true.
-    #
-    # Flip to a full Astro 4 → 5 + Svelte 4 → 5 migration only when
-    # a real driver lands (feature need or advisory affecting a
-    # surface we actually use). See SECURITY.md for the rationale.
+    # Defense-in-depth for the static deployment model. The framework is kept
+    # patched, and this separately prevents a future change from silently
+    # introducing server islands without the required threat-model review.
     name: Web security invariants
     runs-on: ubuntu-latest
     steps:
@@ -185,25 +234,19 @@ jobs:
           # Invert: fail (exit 1 from the job) when ANY match is found.
           if grep -rn 'server:defer\|server-islands\|serverIslands' packages/web/src 2>/dev/null; then
             echo "::error::Astro server: directive found in packages/web/src." \
-                 "This re-introduces exposure to GHSA-wrwg-2hg8-v723 (server-island reflected XSS)." \
-                 "Either remove the directive OR complete the Astro 5 + Svelte 5 migration first."
+                 "Server-side rendering needs an explicit security and deployment review."
             exit 1
           fi
           echo "OK — no Astro server-island directives in packages/web/src."
       - name: "Assert astro.config.mjs keeps output: 'static'"
         run: |
           set -e
-          # The grep above is defense-in-depth. The actual invariant that
-          # keeps server islands unreachable is `output: 'static'` in
-          # astro.config.mjs — Astro builds will refuse server-side
-          # features without an SSR adapter when this is set. If the
-          # output mode is ever changed to 'server' or 'hybrid', the
-          # GHSA-wrwg-2hg8-v723 attack surface re-opens regardless of
-          # whether anyone writes server:defer.
+          # The grep above is defense-in-depth. `output: 'static'` is the
+          # deployment contract; changing it requires an SSR adapter and a
+          # separate review of request routing, headers, and authentication.
           if ! grep -qE "output:\s*['\"]static['\"]" packages/web/astro.config.mjs; then
             echo "::error::packages/web/astro.config.mjs no longer declares output: 'static'." \
-                 "This re-opens the GHSA-wrwg-2hg8-v723 attack surface." \
-                 "Either restore output: 'static' OR complete the Astro 5 + Svelte 5 migration first."
+                 "Restore static output or complete an explicit SSR security review."
             exit 1
           fi
           echo "OK — packages/web is output: 'static'."
@@ -211,23 +254,7 @@ jobs:
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    # This gate is BLOCKING. It was previously continue-on-error, justified
-    # by "the lone HIGH advisory is the Astro server-island XSS, which is
-    # non-exploitable here". That rationale went stale without anyone
-    # noticing: the Astro GHSA moved into pnpm.auditConfig.ignoreGhsas, and
-    # the job then sat red on nine *unrelated* HIGH advisories — invisibly,
-    # because a soft-failing job reads as passing at a glance. That is the
-    # whole failure mode of continue-on-error on a security check.
-    #
-    # The prod tree is now clean at high+ (see the pnpm.overrides for sharp
-    # and adm-zip), so the gate is enforced. If a new HIGH lands, this job
-    # fails and the PR stops — which is the point. Do NOT reach for
-    # continue-on-error to get past it; either patch the dependency, add a
-    # pnpm.overrides entry, or record a written non-exploitability argument
-    # in auditConfig.ignoreGhsas plus SECURITY.md.
-    #
-    # Moderate/low still do not gate (--audit-level=high) and are handled
-    # via Dependabot; the deferred Astro advisories live there.
+    # All severities and both production and development dependencies block.
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -236,9 +263,5 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # `pnpm audit --prod` exits non-zero on any vulnerability in
-      # production dependencies. Dev-only advisories don't block CI
-      # because they don't ship to users. `--audit-level=high` gates
-      # the build on high+critical only — moderate/low are reported
-      # via Dependabot.
-      - run: pnpm audit --prod --audit-level=high
+      - run: pnpm audit --prod
+      - run: pnpm audit

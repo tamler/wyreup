@@ -1,15 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
+  "globalDependencies": ["pnpm-lock.yaml", "patches/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".astro/**"],
-      "inputs": ["src/**", "package.json", "tsconfig.json"]
+      "outputs": ["dist/**", ".astro/**", "vendor/**"]
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
-      "inputs": ["src/**", "test/**", "package.json"]
+      "outputs": []
     },
     "lint": {
       "outputs": [],
@@ -20,6 +20,8 @@
       "outputs": [],
       "inputs": ["src/**", "test/**", "tsconfig.json"]
     },
+    "@wyreup/exceljs#build": { "cache": false },
+    "@wyreup/mammoth#build": { "cache": false },
     "dev": {
       "cache": false,
       "persistent": true

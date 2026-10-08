@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { getPipeline } from '../../lib/transformers.js';
+import { transformerImage } from '../../lib/transformer-image.js';
 
 export interface ImageSimilarityParams {
   /** Cosine similarity threshold for clustering (0-1). Default 0.85. */
@@ -19,6 +20,7 @@ export interface ImageSimilarityResult {
 // CLIP ViT-B/16 — MIT licensed, 87 MB quantized
 // https://huggingface.co/Xenova/clip-vit-base-patch16
 const MODEL_ID = 'Xenova/clip-vit-base-patch16';
+export const IMAGE_SIMILARITY_PIPELINE_TASK = 'image-feature-extraction';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -120,7 +122,7 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
 
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading CLIP model' });
 
-    const pipe = (await getPipeline(ctx, 'feature-extraction', MODEL_ID, {
+    const pipe = (await getPipeline(ctx, IMAGE_SIMILARITY_PIPELINE_TASK, MODEL_ID, {
       dtype: 'q8',
     })) as (
       input: unknown,
@@ -142,9 +144,9 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
 
       const arrayBuffer = await inputs[i]!.arrayBuffer();
       const blob = new Blob([arrayBuffer], { type: inputs[i]!.type });
-      const dataUrl = await blobToDataUrl(blob);
+      const image = await transformerImage(blob);
 
-      const result = await pipe(dataUrl, { pooling: 'mean', normalize: true });
+      const result = await pipe(image);
       embeddings.push(Array.from(result.data));
     }
 
@@ -180,17 +182,3 @@ export const imageSimilarity: ToolModule<ImageSimilarityParams> = {
     expectedOutputMime: ['application/json'],
   },
 };
-
-async function blobToDataUrl(blob: Blob): Promise<string> {
-  if (typeof FileReader !== 'undefined') {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-  const buf = await blob.arrayBuffer();
-  const b64 = Buffer.from(buf).toString('base64');
-  return `data:${blob.type};base64,${b64}`;
-}

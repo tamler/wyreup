@@ -8,7 +8,12 @@ Wyreup CLI — privacy-first file tools from the shell. Same engine as [wyreup.c
 npm install -g @wyreup/cli
 ```
 
-Requires Node >= 20.
+Requires Node >= 22.13.0. Model tools install the official Transformers.js runtime.
+After upgrading an existing installation, refresh its transitive lockfile and
+reinstall, then run a full dependency audit; old nested native dependencies can
+otherwise remain pinned. See the [core migration guidance](../core/README.md)
+for model dependency floors and the OpenPGP.js 6 boundary: standard v4 material
+is supported, while experimental legacy v5 key packets are rejected.
 
 ## Quick start
 

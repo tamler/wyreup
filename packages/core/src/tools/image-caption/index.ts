@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { getPipeline } from '../../lib/transformers.js';
+import { transformerImage } from '../../lib/transformer-image.js';
 
 export interface ImageCaptionParams {
   /**
@@ -79,10 +80,6 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
     }
     const input = inputs[0]!;
 
-    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
-      throw new Error('image-caption requires a browser environment (URL.createObjectURL).');
-    }
-
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({
@@ -92,7 +89,7 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
     });
 
     const pipe = (await getPipeline(ctx, 'image-to-text', MODEL_ID)) as (
-      image: string,
+      image: unknown,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ generated_text: string }>>;
 
@@ -104,13 +101,8 @@ export const imageCaption: ToolModule<ImageCaptionParams> = {
       message: 'Generating caption',
     });
 
-    const url = URL.createObjectURL(input);
-    let result: Array<{ generated_text: string }>;
-    try {
-      result = await pipe(url, { max_new_tokens: params.maxLength ?? 30 });
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    const image = await transformerImage(input);
+    const result = await pipe(image, { max_new_tokens: params.maxLength ?? 30 });
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 

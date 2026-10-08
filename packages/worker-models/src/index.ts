@@ -31,6 +31,7 @@
  */
 
 import { MANIFEST, STRICT_VERIFICATION } from './manifest.js';
+import { pinnedRuntime } from './pinned-runtime.js';
 
 export interface Env {
   MODELS: R2Bucket;
@@ -219,6 +220,9 @@ export default {
     if (!key) {
       return new Response('Not Found', { status: 404 });
     }
+
+    // This namespace never enters the legacy stream-before-verify handler.
+    if (key.startsWith('onnxruntime-web@')) return pinnedRuntime(request, key, env.MODELS);
 
     // Allowlist gate. Any path that doesn't match a known upstream is
     // refused before we touch R2 or talk to upstream.

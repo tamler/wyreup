@@ -19,7 +19,7 @@ Wyreup is a privacy-first file-processing toolkit with four execution surfaces:
 | **Web** (`wyreup.com`) | Untrusted user-uploaded files; HTML/SVG output; cross-origin attack vectors | Client-side parsing in user's tab (no shared server state); DOMPurify on user-visible HTML; per-tool input size caps; CSP/SRI on first-party origin |
 | **MCP** (`@wyreup/mcp`) | LLM agent autonomously constructs tool calls — paths, params, redirects | Path allowlist + worker re-validation; child_process fork isolation; fetch egress lock; capability annotations for client approval; per-tool timeout; atomic+symlink-safe output writes; bearer-token sanitization |
 | **CLI** (`@wyreup/cli`) | User invokes commands intentionally; risk is mostly footguns | Same atomic+symlink-safe writes; fetch egress lock (multi-origin: wyreup.com + models.wyreup.com); per-command `--timeout` flag; refuse-by-default `--overwrite` |
-| **Cloudflare worker** (`@wyreup/worker-models`, `models.wyreup.com`) | Supply-chain proxy for AI model assets; bandwidth/storage abuse | Hard allowlist of HuggingFace slugs + version-pinned prefixes; path-traversal rejection; method allowlist (GET/HEAD/OPTIONS); 1.5 GB streaming size cap; 30 s upstream timeout; immutable cache headers |
+| **Cloudflare worker** (`@wyreup/worker-models`, `models.wyreup.com`) | Supply-chain proxy for AI model assets; bandwidth/storage abuse | Hard allowlist of HuggingFace slugs + version-pinned prefixes; path-traversal rejection; method allowlist (GET/HEAD/OPTIONS). ONNX runtime assets require exact pinned lengths and native R2 SHA-256 verification before serving, with a 120 s fetch timeout. Other model assets retain the 1.5 GB streaming cap and 30 s timeout. Immutable headers apply to successful responses. |
 
 ## Hardened components
 
@@ -50,12 +50,12 @@ Atomic output publishing: writes go through `<target>.tmp.<pid>-<uuid>` opened w
 
 ## Web HTML sink audit
 
-The web app has 11 places that assign to `innerHTML` or use Astro `set:html`. All have been audited:
+HTML rendering must preserve these boundaries:
 
-- **3 sites** in `pages/tools/[slug].astro` use `set:html={JSON.stringify(...)}` for JSON-LD structured data. Input is server-derived tool metadata, not user input. Safe.
-- **7 sites** in `pages/share-receive.astro` use `innerHTML` with literal string templates (no interpolation of user input). Safe.
-- **1 site** in `layouts/BaseLayout.astro` (search dropdown) interpolates tool fields through `escapeHtml()` and URL parameters through `URLSearchParams`. Safe.
-- **3 runner components** (`TextResultRunner`, `TextInputRunner`, `TwoTextInputRunner`) render tool-produced HTML through `DOMPurify.sanitize()`. Safe.
+- Tool-page JSON-LD uses trusted server-derived metadata, not user input.
+- Share-receive templates use literal HTML without interpolating user input.
+- The layout search dropdown escapes tool fields with `escapeHtml()` and builds URL parameters with `URLSearchParams`.
+- HTML result runners (`TextResultRunner`, `TextInputRunner`, `TwoTextInputRunner`) sanitize tool-produced HTML with `DOMPurify.sanitize()`.
 
 No raw user input reaches HTML sinks without sanitization. New HTML rendering MUST follow one of these patterns:
 
@@ -73,18 +73,17 @@ No raw user input reaches HTML sinks without sanitization. New HTML rendering MU
 
 `zip-create` is the producer side and is not subject to these defenses (the threat model is the opposite direction).
 
-## Astro CVE non-exploitability
+## Web framework and remote image cache
 
-`pnpm audit` reports **GHSA-wrwg-2hg8-v723** (HIGH) — *Astro reflected XSS via the server islands feature* — against `astro@4.16.19` in `packages/web`. The fix is `astro@>=5.15.8`, a major-version upgrade.
+The website uses Astro 7 and Svelte 5. Astro pages remain statically generated;
+separate Cloudflare Pages Functions implement API routes. The
+`web-security-invariants` CI job rejects Astro `server:` directives in page source.
 
-**This advisory is non-exploitable for wyreup.com.** Evidence:
-
-- `packages/web` is configured with `output: 'static'` (SSG only — no SSR runtime, no Pages Functions).
-- The vulnerable surface is the `server:defer` directive. `grep -rn 'server:defer\|server-islands\|serverIslands' packages/web/src` returns **zero matches**. Every island in the codebase uses `client:load` (browser-side Svelte hydration), which the advisory does not affect.
-
-**The non-exploitability is enforced by CI.** The `web-security-invariants` job in `.github/workflows/ci.yml` fails any PR that introduces an Astro `server:` directive into `packages/web/src`. Re-introducing the vulnerable surface would require either removing that CI step or completing an Astro 4 → 5 + Svelte 4 → 5 migration first (~15 `client:load` components plus PWA reconfig).
-
-The audit job runs with `continue-on-error: true` only because of this one advisory. New high/critical advisories still surface in PR checks. The audit gate will be flipped to required when either Astro ships a 4.x backport, or when a real driver (feature need / advisory affecting a surface we actually use) justifies the Astro 5 migration.
+The exact-version Astro patch removes the unused remote-image HTTP cache and
+its `http-cache-semantics` dependency. Remote image requests revalidate rather
+than trusting cached policy decisions. `check:remote-cache` exercises expiry,
+conditional requests, empty responses and errors against the installed patched
+source. Astro upgrades must review and replace the patch before installation.
 
 ## What this does NOT defend against
 
@@ -99,56 +98,52 @@ Open work, in priority order:
 
 ## Dependency hygiene
 
-- `pnpm audit --prod --audit-level=high` runs in CI and is **blocking**. It was
-  previously `continue-on-error`; that soft failure let nine HIGH advisories
-  accumulate unseen, because a soft-failing job reads as a passing run. Don't
-  reach for `continue-on-error` to get past it — patch the dependency, add a
-  `pnpm.overrides` entry, or record a written non-exploitability argument in
-  `pnpm.auditConfig` and a section here.
-- Dependabot proposes weekly grouped updates; security/parser libs (DOMPurify, JSZip, pdfjs-dist, MCP/Anthropic SDKs) are flagged for prioritized review.
-- Root `package.json` `pnpm.overrides` pins `fast-uri`, `protobufjs`, `serialize-javascript`, `devalue`, `sharp` and `adm-zip` to versions that close known transitive advisories.
+- CI blocks on both production and complete dependency audits at every severity.
+  No advisory exclusions or soft failures are permitted.
+- Dependabot proposes weekly grouped updates; security and parser libraries
+  require compatibility checks alongside the audit.
+- Workspace overrides affect repository installations only. Published package
+  safety is checked by installing actual release tarballs into isolated npm and
+  pnpm projects without consumer overrides. Normal and disabled install scripts
+  are covered, with full audits and a walk of nested dependency versions.
+- Runtime releases require Node 22.13 or a supported newer release. OpenPGP 6
+  keeps standard version-4 keys compatible but rejects legacy version-5 keys by
+  default; see the package READMEs for migration guidance.
 
-## sharp / libvips, and why overrides don't reach consumers
+## AI dependencies and existing consumer locks
 
-`@huggingface/transformers` depends on `sharp@^0.34.5`. sharp below 0.35.0
-inherits libvips advisories CVE-2026-33327, -33328, -35590 and -35591.
+Core keeps the official `@huggingface/transformers` runtime as an optional peer;
+CLI and MCP include it for their AI tools. The supported range starts at
+Transformers 4.3.1. Clean-consumer checks require native ONNX CPU inference,
+image decoding, and patched nested versions, including sharp 0.35.5 or newer.
 
-The root `pnpm.overrides` entry pins sharp to `^0.35.3`, which protects this
-repo: local builds, CI, and everything deployed to Pages. **It does not protect
-consumers of the published packages.** Overrides — pnpm's, npm's, and yarn's
-`resolutions` — are only honoured in the root project doing the install. They
-are not part of the published manifest.
+Existing lockfiles can retain an older vulnerable version allowed by an upstream
+range. Updating Wyreup alone does not guarantee that transitive locks refresh.
+Update the dependency graph and audit it:
 
-Two fixes were tested and rejected on evidence, not assumption:
-
-- Declaring `sharp@^0.35.3` directly in `@wyreup/core`. `^0.34.5` resolves to
-  `>=0.34.5 <0.35.0`, so the ranges are disjoint: npm installs 0.35.3 hoisted
-  *and* 0.34.5 nested under transformers, and transformers loads the nested
-  copy. Confirmed by installing into a scratch project.
-- Waiting on upstream. `4.2.0` is the current latest and still pins `^0.34.5`;
-  the `next` tag is older.
-
-What was done instead: `@huggingface/transformers` became an **optional peer
-dependency** of `@wyreup/core`. Only 12 of ~276 tools need it, so the remaining
-264 no longer drag in a vulnerable transitive dependency. Consumers who want the
-AI tools install the peer themselves, which puts sharp in *their* root where an
-override works:
-
-```json
-{ "overrides": { "sharp": "^0.35.3" } }
+```sh
+npm update
+npm audit
+# or
+pnpm update --depth Infinity
+pnpm audit
 ```
 
-Verified by packing core and installing it into a clean project: sharp is no
-longer present at all, and `npm audit` reports no HIGH advisories. Previously
-the same test yielded sharp 0.34.5.
+The consumer gate retains before/after locks and audits for a seeded vulnerable
+Transformers/sharp graph and requires the updated graph to pass without overrides.
 
-**Residual exposure:** `@wyreup/cli` and `@wyreup/mcp` are applications rather
-than libraries, so they declare transformers directly to keep AI tools working
-out of the box — and therefore still resolve sharp `<0.35.0` transitively.
-Operators running either in production and processing untrusted images should
-pin `sharp` in their own project root. This can only be closed properly upstream
-in transformers; revisit when a release moves off `^0.34.5`, at which point the
-`sharp` override here and the peer-dependency split can both be reconsidered.
+## Maintained library distributions and release artifacts
+
+`@wyreup/exceljs` and `@wyreup/mammoth` are scoped library distributions built
+from pinned upstream archives. They retain upstream licenses and provenance,
+rebuild browser bundles from declared dependencies, and verify generated-file
+inventories before packing. ExcelJS compatibility changes preserve file and
+stream APIs; Mammoth excludes upstream CLI-only dependencies.
+
+Release artifacts record the source commit, versions and tarball hashes. CI
+verifies exact tarballs before consumer tests; publishing uses those artifacts.
+Changesets owns version bumps. Repository audits and a successful source push
+alone do not establish that npm consumers received the release.
 
 ## Production deployment checklist
 

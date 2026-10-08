@@ -28,8 +28,11 @@ const VENDOR_BUDGETS_KB = [
   // (v2 emitted the chunk as gpt-4o.*, v3 as GptEncoding.* — same payload.)
   { prefix: 'gpt-4o.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
   { prefix: 'GptEncoding.', budgetKb: 1100, why: 'gpt-tokenizer vocab; token-count tool only' },
-  // libheif wasm (inlined) — lazy-loaded only when heic-to-jpg runs.
-  { prefix: 'wasm-bundle.', budgetKb: 600, why: 'libheif decoder; heic-to-jpg tool only' },
+  // libheif 1.23.5 inlined WASM measures 694.98 KiB gzip, HEIC tool only.
+  { prefix: 'wasm-bundle.', budgetKb: 700, why: 'libheif decoder; heic-to-jpg tool only' },
+  // Explicit package chunks keep PDF libraries out of generic es.* exemptions.
+  { prefix: 'pdf-lib.', budgetKb: 250, why: 'pdf-lib; PDF tools only' },
+  { prefix: 'pdf-lib-extended.', budgetKb: 250, why: '@cantoo/pdf-lib; PDF tools only' },
   // pdfjs-dist worker; loaded by every PDF tool but as a Web Worker.
   { prefix: 'pdf.worker.', budgetKb: 600, why: 'pdfjs Web Worker; PDF tools only' },
   // pdfjs main chunk; loaded by PDF render tools.
@@ -46,6 +49,11 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'xlsx.', budgetKb: 500, why: 'sheetjs; excel-* tools only' },
   // exceljs; richer Excel parser used alongside sheetjs by some excel-* tools.
   { prefix: 'exceljs.min.', budgetKb: 300, why: 'exceljs; excel-* tools only' },
+  {
+    prefix: 'exceljs.browser.',
+    budgetKb: 300,
+    why: 'rebuilt scoped ExcelJS; spreadsheet tools only',
+  },
   // Astro page chunk that wraps an excel tool's runner.
   { prefix: 'excel-', budgetKb: 250, why: 'excel-* tool page chunks; lazy-loaded' },
   // Main app entry. Larger than ideal — see ROADMAP "Tech debt" #5
@@ -55,6 +63,8 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'main.', budgetKb: 500, why: 'app entry; ROADMAP tech debt #5 to shrink' },
   // Astro tool runner top-level chunk.
   { prefix: 'ToolRunner.', budgetKb: 500, why: 'shared runner shell; same as main' },
+  // Astro 7 emits the shared core tool registry separately from the runner.
+  { prefix: 'browser.', budgetKb: 250, why: '@wyreup/core registry; runner-loaded' },
   // html-minifier-terser is the bulk of the html-minify tool; lazy-loaded.
   { prefix: 'htmlminifier.', budgetKb: 200, why: 'html-minifier-terser; html-minify tool only' },
   // clean-css for css-minify; lazy-loaded.

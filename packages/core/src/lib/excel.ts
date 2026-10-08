@@ -11,8 +11,8 @@
 // Everything here is lazy: `loadExcelJs()` only imports the lib on
 // first use, so tools that never read xlsx don't pay the bundle cost.
 
-import type * as ExcelJsType from 'exceljs';
-import type { Workbook, Worksheet, Row, CellValue } from 'exceljs';
+import type * as ExcelJsType from '@wyreup/exceljs';
+import type { Workbook, Worksheet, Row, CellValue } from '@wyreup/exceljs';
 
 type ExcelJsModule = typeof ExcelJsType;
 
@@ -24,7 +24,7 @@ async function loadExcelJs(): Promise<ExcelJsModule> {
     // build targets — sometimes it's the module, sometimes it's
     // module.default. Normalize here so callers can do `new
     // ExcelJS.Workbook()` without thinking.
-    ExcelJsPromise = import('exceljs').then((m) => {
+    ExcelJsPromise = import('@wyreup/exceljs').then((m) => {
       const mod = (m as { default?: ExcelJsModule }).default ?? m;
       return mod;
     });

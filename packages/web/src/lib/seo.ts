@@ -82,10 +82,10 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
       'Inspect interactive PDF form fields locally: names, types, required and read-only flags, and optional current values. Download a JSON report without editing the PDF.',
   },
   'image-similarity': {
-    heading: 'Image similarity — experimental',
-    title: 'Image similarity tool — experimental, results not validated — Wyreup',
+    heading: 'Compare image similarity locally',
+    title: 'Image similarity checker — compare photos locally — Wyreup',
     description:
-      'Experimental image-similarity tool for JPG, PNG and WebP. Current scores are not validated for visual comparison; do not use them to identify duplicates or delete photos.',
+      'Compare JPG, PNG and WebP images with local image embeddings. Review similarity scores and groups as suggestions, and inspect originals before deleting photos.',
   },
   'otpauth-uri': {
     heading: 'Build an otpauth URI and QR code',

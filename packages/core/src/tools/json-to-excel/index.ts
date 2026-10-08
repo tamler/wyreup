@@ -1,5 +1,5 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import type { Workbook } from 'exceljs';
+import type { Workbook } from '@wyreup/exceljs';
 import {
   newWorkbook,
   addWorksheet,

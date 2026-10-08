@@ -3,20 +3,47 @@
 // Catches honest mistakes like "I forgot this was a CDN link" before they ship.
 
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { join, relative } from 'node:path';
+import onnxAssets from '../packages/core/src/lib/onnx-assets.json' with { type: 'json' };
 
 /**
  * @param {object} options
  * @param {string} options.distDir
  * @param {string[]} options.allowlist
+ * @param {boolean} [options.verifyOnnxNotices] - verify the two pinned built
+ *   upstream notices before excluding their passive citations from scanning.
  * @param {RegExp[]} [options.pathExemptions] - file paths matching any of
  *   these regexes are skipped from the scan. Used for pages that
  *   legitimately reference third-party vendors in user-facing copy (e.g.
  *   the privacy / refund policies disclose data processors by name).
  * @returns {Promise<{ ok: boolean, violations: Array<{ file: string, domain: string }> }>}
  */
-export async function checkPrivacy({ distDir, allowlist, pathExemptions = [] }) {
+export async function checkPrivacy({
+  distDir,
+  allowlist,
+  pathExemptions = [],
+  verifyOnnxNotices = false,
+}) {
   const violations = [];
+  const verifiedNotices = new Set();
+  if (verifyOnnxNotices) {
+    for (const version of ['1.24.3', '1.31.0-dev.20260914-8d85527a0']) {
+      const notice = onnxAssets.runtimes
+        .find((runtime) => runtime.version === version)
+        ?.licenses.find((license) => license.file === 'ThirdPartyNotices.txt');
+      if (!notice) throw new Error(`Missing pinned ONNX notice: ${version}`);
+      const path = `licenses/onnxruntime-web@${version}/ThirdPartyNotices.txt`;
+      const bytes = await readFile(join(distDir, path));
+      if (
+        bytes.length !== notice.bytes ||
+        createHash('sha256').update(bytes).digest('hex') !== notice.sha256
+      ) {
+        throw new Error(`Built ONNX notice does not match its pin: ${path}`);
+      }
+      verifiedNotices.add(path);
+    }
+  }
   const files = await walkDir(distDir);
 
   // Match http://... or https://... URLs (but not relative paths).
@@ -24,6 +51,7 @@ export async function checkPrivacy({ distDir, allowlist, pathExemptions = [] }) 
 
   for (const file of files) {
     if (!isScannable(file)) continue;
+    if (verifiedNotices.has(relative(distDir, file).split('\\').join('/'))) continue;
     if (pathExemptions.some((re) => re.test(file))) continue;
     const content = await readFile(file, 'utf8');
 
@@ -126,7 +154,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   let totalViolations = 0;
   for (const dir of distDirs) {
-    const result = await checkPrivacy({ distDir: dir, allowlist, pathExemptions });
+    const result = await checkPrivacy({
+      distDir: dir,
+      allowlist,
+      pathExemptions,
+      verifyOnnxNotices: dir === 'packages/web/dist',
+    });
     if (!result.ok) {
       console.error(`Privacy scan FAILED in ${dir}:`);
       for (const v of result.violations) {

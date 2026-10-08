@@ -42,14 +42,22 @@ Each cluster has one primary landing page. Supporting pages have a different use
 | Next | Open PGP file / decrypt PGP online | [/tools/pgp-decrypt/](https://wyreup.com/tools/pgp-decrypt/) | `/tools/pgp-armor/` distinguishes decoding an envelope from decrypting; encryption/signature pages cover separate tasks. | `open pgp file`: one query impression; too small to infer demand. Requires a private key. |
 | Next | PGP ASCII armor / armor decoder | [/tools/pgp-armor/](https://wyreup.com/tools/pgp-armor/) | Decrypt tool explains encrypted payloads. | One click/11 page impressions. Inspect which queries produced that visibility. Armor is not encryption. |
 | Next | List PDF form fields / AcroForm field names | [/tools/pdf-form-fields/](https://wyreup.com/tools/pdf-form-fields/) | PDF category offers filling/flattening tools for different goals. | One click/3 page impressions. JSON inspection output, not form editing. |
-| Blocked from promotion | Image similarity / near-duplicate photo checker | [/tools/image-similarity/](https://wyreup.com/tools/image-similarity/) | `/tools/image-diff/` compares pixels; `/tools/image-info/` reports dimensions, format and size. | One click/3 page impressions. Committed runtime uses text feature extraction on encoded image data, so scores are not validated visual similarity. Correct and validate the runtime separately before promoting this cluster. |
+| Measure cautiously | Image similarity / compare photos | [/tools/image-similarity/](https://wyreup.com/tools/image-similarity/) | `/tools/image-diff/` compares pixels; `/tools/hash/` checks file bytes. | One click/3 page impressions. Runtime now uses decoded images and CLIP image embeddings. Duplicate/distinct fixture checks pass in Node and Chrome; broader accuracy is unmeasured. Scores suggest manual review, not automatic duplicate or deletion decisions. |
 | Next | otpauth URI generator / TOTP QR code | [/tools/otpauth-uri/](https://wyreup.com/tools/otpauth-uri/) | TOTP/HOTP tools perform a different operation from enrollment. | `otpauth`: five query impressions. Keep secrets and QR codes private. |
 | Developer | MCP image PDF file tools / local file tools for agents | [/mcp/](https://wyreup.com/mcp/) | `/skill/` explains choosing/invoking tools; `/cli/` serves shell workflows. | Audience and demand unmeasured. Distinguish local tool execution from assistant-provider data handling and hosted PRO. |
 | Developer | CLI image compression / command line PDF tools | [/cli/](https://wyreup.com/cli/) | MCP and skill pages cover assistant integration. | Audience and demand unmeasured. Setup/model downloads and hosted calls limit offline availability. |
 
 Unrelated visible queries such as `reevown` and `rewrapper` do not establish a need for new pages. Investigate their landing page and intent first. The home page describes the product, the tools page aids discovery, and categories organize real task families; they do not replace focused task pages.
 
-The isolated release's capability check used committed `origin/main` source rather than the original dirty core. It found that `image-similarity/index.ts` calls the text `feature-extraction` pipeline with a data URL, while the installed Transformers text pipeline tokenizes that string instead of processing image pixels. Its page now labels the tool experimental, warns against duplicate/deletion decisions and narrows all related explanatory copy. This is a copy correction, not a runtime fix or acceptance of image-comparison results. No core changes are included in this SEO release.
+The original isolated SEO release's capability check used committed `origin/main` source rather than the original dirty core. It found that `image-similarity/index.ts` called the text `feature-extraction` pipeline with a data URL, while the installed Transformers text pipeline tokenized that string instead of processing image pixels. That release labelled the tool experimental, warned against duplicate/deletion decisions and narrowed related explanatory copy. It corrected copy without changing or accepting the runtime.
+
+The subsequent dependency remediation corrects the runtime to decoded image
+feature extraction. Actual Node and built Chrome workflows return cosine 1 for
+duplicate fixtures, a lower score for a distinct fixture, the expected groups,
+matching downloaded JSON and a cached repeat. Current copy describes this
+behavior with manual-review limits. These fixtures establish compatibility,
+not general duplicate-detection accuracy or search-ranking gains. ONNX runtime
+asset delivery and live acceptance remain part of the release checks.
 
 ## Local implementation and release checks
 

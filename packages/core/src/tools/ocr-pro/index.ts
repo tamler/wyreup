@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { getPipeline } from '../../lib/transformers.js';
+import { transformerImage } from '../../lib/transformer-image.js';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface OcrProParams {
@@ -68,9 +69,9 @@ export const ocrPro: ToolModule<OcrProParams> = {
 
     const arrayBuffer = await input.arrayBuffer();
     const blob = new Blob([arrayBuffer], { type: input.type });
-    const dataUrl = await blobToDataUrl(blob);
+    const image = await transformerImage(blob);
 
-    const result = await pipe(dataUrl);
+    const result = await pipe(image);
 
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -88,17 +89,3 @@ export const ocrPro: ToolModule<OcrProParams> = {
     expectedOutputMime: ['text/plain'],
   },
 };
-
-async function blobToDataUrl(blob: Blob): Promise<string> {
-  if (typeof FileReader !== 'undefined') {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-  const buf = await blob.arrayBuffer();
-  const b64 = Buffer.from(buf).toString('base64');
-  return `data:${blob.type};base64,${b64}`;
-}

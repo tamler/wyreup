@@ -9,6 +9,7 @@
  * — these are utility commands, not core flow.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { MockInstance } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -17,8 +18,8 @@ import { cacheListCommand, cacheClearCommand } from '../src/commands/cache.js';
 describe('cache commands', () => {
   let tmp: string;
   let savedEnv: string | undefined;
-  let logSpy: ReturnType<typeof vi.spyOn>;
-  let errSpy: ReturnType<typeof vi.spyOn>;
+  let logSpy: MockInstance<typeof console.log>;
+  let errSpy: MockInstance<typeof console.error>;
 
   beforeEach(async () => {
     tmp = await mkdtemp(join(tmpdir(), 'wyreup-cache-test-'));

@@ -40,7 +40,23 @@ export default tseslint.config(
     },
   },
   {
+    files: ['packages/exceljs/**/*.cjs', 'packages/mammoth/**/*.cjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { __dirname: 'readonly', process: 'readonly', Buffer: 'readonly', Blob: 'readonly' },
+    },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
+    files: ['packages/exceljs/src/**/*.mjs', 'packages/mammoth/src/**/*.mjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
     ignores: [
+      'packages/*/vendor/**',
+      'packages/*/.excel-build-*/**',
+      'packages/*/.mammoth-build-*/**',
       '**/node_modules/**',
       '**/dist/**',
       '**/.astro/**',
