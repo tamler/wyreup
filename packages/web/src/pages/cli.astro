@@ -3,23 +3,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="CLI — Wyreup in your terminal"
-  description="Run every Wyreup tool from the shell. Same engine as the web, same privacy — scriptable, offline, CI-ready."
+  title="CLI file tools — compress images & process PDFs — Wyreup"
+  description="Run supported Wyreup file tools from your terminal for scripts and batches. Free local execution, setup downloads and optional hosted PRO tools have distinct requirements."
 >
   <div class="dist-page">
     <div class="container">
 
       <!-- Hero -->
       <section class="dist-hero" aria-labelledby="cli-heading">
-        <h1 id="cli-heading" class="dist-hero__title">Wyreup in your terminal.</h1>
+        <h1 id="cli-heading" class="dist-hero__title">File tools in your terminal.</h1>
         <p class="dist-hero__sub">
-          Every Wyreup tool from the shell. Same engine as the web, same privacy — scriptable, batch-friendly, offline.
+          Compress images, process PDFs and run supported file tools from scripts and batches.
+          Free tools execute locally; optional hosted PRO tools use your API key and credits.
         </p>
         <div class="dist-hero__cmd">
           <code class="dist-hero__cmd-text">npx @wyreup/cli compress photo.jpg</code>
         </div>
         <p class="dist-hero__note">
-          npm publish is imminent. View the source now on
+          Install from npm or inspect the source on
           <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="inline-link">GitHub</a>.
         </p>
       </section>
@@ -70,13 +71,13 @@ wyreup compress photo.jpg</code></pre>
             <div class="example-card__inner">
               <div class="example-card__label">Face blur</div>
               <pre class="example-card__cmd"><code>wyreup face-blur vacation.jpg \
-  -o anonymized.jpg</code></pre>
+  -o blurred.png</code></pre>
             </div>
           </div>
           <div class="example-card">
             <div class="example-card__inner">
               <div class="example-card__label">OCR extraction</div>
-              <pre class="example-card__cmd"><code>wyreup ocr scan.pdf \
+              <pre class="example-card__cmd"><code>wyreup ocr scan.png \
   -o text.txt</code></pre>
             </div>
           </div>
@@ -106,8 +107,8 @@ wyreup compress --help</code></pre>
       <section class="dist-section" aria-labelledby="cli-pro-heading">
         <h2 id="cli-pro-heading" class="dist-section__title">Pro tools in the CLI</h2>
         <p class="dist-section__body">
-          Every <a href="/pro" class="inline-link">Pro tool</a> runs from
-          the shell too — same credits, same balance as the web. Sign in
+          Supported <a href="/pro" class="inline-link">PRO tools</a> run from
+          the shell too — using your account credits and balance. Sign in
           once with your API key (get one at
           <a href="/account" class="inline-link">/account</a>):
         </p>
@@ -158,16 +159,16 @@ wyreup image-generate-pro prompt.txt --steps 4 -o art.jpg</code></pre>
             <p class="why-item__body">Pipe into bash, make, or a CI workflow.</p>
           </li>
           <li class="why-item">
-            <span class="why-item__label">Air-gapped environments</span>
+            <span class="why-item__label">Local processing</span>
             <span class="why-item__rule" aria-hidden="true"></span>
             <span class="why-item__pad" aria-hidden="true"></span>
-            <p class="why-item__body">Works offline. No server call, ever.</p>
+            <p class="why-item__body">Local image and PDF operations keep files on your machine. Setup may download packages or models; offline use depends on cached assets and the tool. Network utilities and hosted PRO need a connection.</p>
           </li>
           <li class="why-item">
-            <span class="why-item__label">Every tool</span>
+            <span class="why-item__label">Tool catalog</span>
             <span class="why-item__rule" aria-hidden="true"></span>
             <span class="why-item__pad" aria-hidden="true"></span>
-            <p class="why-item__body">Same names as the web. <a href="/tools" class="inline-link">Browse the catalog &rarr;</a></p>
+            <p class="why-item__body">Use <code class="inline-code">wyreup list</code> to see tools in your installed version. <a href="/tools" class="inline-link">Browse the web catalog &rarr;</a></p>
           </li>
           <li class="why-item">
             <span class="why-item__label">Agent-friendly</span>

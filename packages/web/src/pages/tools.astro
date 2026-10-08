@@ -4,6 +4,7 @@ import ToolFilter from '../components/ToolFilter.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 import SavedChainsSection from '../components/SavedChainsSection.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
+import { TOOL_PAGE_METADATA } from '../lib/seo';
 
 const registry = createDefaultRegistry();
 
@@ -13,7 +14,7 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   name: t.name,
   category: t.category,
   categories: t.categories ?? [],
-  description: t.description,
+  description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description,
   keywords: t.keywords ?? [],
   requiresWebgpu: t.requires?.webgpu,
   requires: t.requires
@@ -52,7 +53,7 @@ const exampleChains: ExampleChain[] = [
     situation: 'Before emailing a photo — strip the GPS data, blur faces, shrink it.',
     steps: ['strip-exif', 'face-blur', 'compress'],
     inputHint: 'Drop a JPG/PNG photo',
-    outputHint: 'Anonymized, smaller image',
+    outputHint: 'Cleaned, blurred image — review before sharing',
   },
   {
     id: 'receipts',
@@ -61,7 +62,7 @@ const exampleChains: ExampleChain[] = [
     situation: 'When you have a pile of receipt photos and need one PDF for expenses.',
     steps: ['image-to-pdf', 'merge-pdf'],
     inputHint: 'Drop 2+ receipt images',
-    outputHint: 'One searchable PDF',
+    outputHint: 'One PDF of receipt images',
   },
   {
     id: 'scan-to-text',
@@ -69,7 +70,7 @@ const exampleChains: ExampleChain[] = [
     description: 'OCR a scanned document, then word-count the result.',
     situation: 'When you have a scanned page and need the words out of it.',
     steps: ['ocr', 'word-counter'],
-    inputHint: 'Drop a scanned PDF or image',
+    inputHint: 'Drop a scanned page image',
     outputHint: 'Plain text + word stats',
   },
   {
@@ -145,9 +146,9 @@ function toolDisplayName(id: string): string {
 ---
 
 <BaseLayout
-  title="Tools — Wyreup"
-  description="Browser-native tools across image, PDF, audio, video, text, dev, security, privacy, data, and geo categories. Compress, convert, inspect, redact, sign — nothing uploads."
-  ogDescription="Browser-native tools — image, PDF, audio/video, text, dev, security, privacy, data, geo. All run locally, no uploads."
+  title="Image, PDF, audio & file tools — Wyreup"
+  description="Find tools to compress images, convert files, inspect PDFs, remove metadata and process audio or text. Free browser tools and clearly labeled hosted PRO options."
+  ogDescription="Browse image, PDF, audio, video, text, data and developer tools. Free tools execute on your device; optional hosted PRO tools explain their data flow."
 >
   <div class="reserve-pwa-banner">
     <PwaOnboardBanner client:load />
@@ -155,7 +156,7 @@ function toolDisplayName(id: string): string {
   <section class="tools-page">
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title">Tools</h1>
+        <h1 class="page-title">Image, PDF and file tools</h1>
       </div>
 
       <div class="reserve-saved-chains">

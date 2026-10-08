@@ -6,6 +6,9 @@ import ToolCapabilityBanner from '../../components/ToolCapabilityBanner.svelte';
 import ToolDownloadNotice from '../../components/ToolDownloadNotice.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 import { SEO_CONTENT } from '../../lib/seo-content';
+import { canonicalPageUrl, TOOL_PAGE_METADATA } from '../../lib/seo';
+import { correctedToolSeoContent, SEARCH_GUIDES } from '../../lib/search-guides';
+import SearchGuide from '../../components/SearchGuide.astro';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -14,7 +17,7 @@ export async function getStaticPaths() {
   return allTools.map((tool) => {
     // Inline ToolModule.seoContent wins; otherwise fall back to the
     // generated catalog backfill keyed by id.
-    const seoContent = tool.seoContent ?? SEO_CONTENT[tool.id];
+    const seoContent = correctedToolSeoContent(tool.id, tool.seoContent ?? SEO_CONTENT[tool.id]);
     // Related tools: same category (exclude self), limit 6
     const sameCategory = allTools
       .filter((t) => t.category === tool.category && t.id !== tool.id)
@@ -31,8 +34,8 @@ export async function getStaticPaths() {
       .slice(0, 3);
 
     const relatedTools = [
-      ...sameCategory.map((t) => ({ id: t.id, name: t.name, category: t.category, description: t.description })),
-      ...crossOutput.map((t) => ({ id: t.id, name: t.name, category: t.category, description: t.description })),
+      ...sameCategory.map((t) => ({ id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description })),
+      ...crossOutput.map((t) => ({ id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description })),
     ].slice(0, 8);
 
     // Resolve any `alsoTry` ids to real tool data so the link panel can render.
@@ -50,7 +53,7 @@ export async function getStaticPaths() {
           id: tool.id,
           slug: tool.slug ?? tool.id,
           name: tool.name,
-          description: tool.description,
+          description: TOOL_PAGE_METADATA[tool.id]?.description ?? tool.description,
           llmDescription: tool.llmDescription,
           category: tool.category,
           keywords: tool.keywords ?? [],
@@ -88,14 +91,17 @@ export async function getStaticPaths() {
 const { serializedTool, relatedTools, alsoTry } = Astro.props;
 const { name, description, category, keywords, seoContent } = serializedTool;
 
-const seoTitle = `${name} — Wyreup`;
-const seoDescription = description;
+const pageMetadata = TOOL_PAGE_METADATA[serializedTool.id];
+const heading = pageMetadata?.heading ?? name;
+const seoTitle = pageMetadata?.title ?? `${name} — Wyreup`;
+const seoDescription = pageMetadata?.description ?? description;
+const guide = SEARCH_GUIDES[serializedTool.id];
 // Social metadata must match execution location like the privacy callout:
 // hosted PRO tools do send the input to Wyreup's backend.
 const ogDescription =
   serializedTool.cost === 'credit'
-    ? `${description} Hosted PRO tool — pay per run, credits never expire.`
-    : `${description} Runs entirely in your browser — no uploads.`;
+    ? `${seoDescription} Hosted PRO tool — pay per run, credits never expire.`
+    : seoDescription;
 
 // Auto-generated content. Used for every tool page (whether or not
 // seoContent is present) — adds depth that one-line descriptions miss
@@ -115,14 +121,16 @@ const installGroup = serializedTool.installGroup;
 const softwareLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name,
-  description,
+  name: heading,
+  description: seoDescription,
   applicationCategory: 'BrowserApplication',
   operatingSystem: 'Any',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  ...(serializedTool.cost === 'credit'
+    ? {}
+    : { offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } }),
   author: { '@type': 'Organization', name: 'Wyreup' },
   keywords: keywords.join(', '),
-  url: `https://wyreup.com/tools/${serializedTool.id}`,
+  url: canonicalPageUrl(`/tools/${serializedTool.id}`),
 };
 const faqLd = seoContent?.faq && seoContent.faq.length > 0
   ? {
@@ -142,13 +150,13 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: 'https://wyreup.com/' },
-    { '@type': 'ListItem', position: 2, name: 'Tools', item: 'https://wyreup.com/tools' },
+    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: canonicalPageUrl('/') },
+    { '@type': 'ListItem', position: 2, name: 'Tools', item: canonicalPageUrl('/tools') },
     {
       '@type': 'ListItem',
       position: 3,
       name,
-      item: `https://wyreup.com/tools/${serializedTool.id}`,
+      item: canonicalPageUrl(`/tools/${serializedTool.id}`),
     },
   ],
 };
@@ -188,10 +196,10 @@ const breadcrumbLd = {
           )}
         </div>
         <div class="tool-title-row">
-          <h1 class="tool-title">{name}</h1>
-          <ShareToolButton client:load toolName={name} toolDescription={description} />
+          <h1 class="tool-title">{heading}</h1>
+          <ShareToolButton client:load toolName={heading} toolDescription={seoDescription} />
         </div>
-        <p class="tool-description">{description}</p>
+        <p class="tool-description">{seoDescription}</p>
       </header>
 
       <ToolCapabilityBanner client:load requires={serializedTool.requires} toolName={name} />
@@ -202,6 +210,7 @@ const breadcrumbLd = {
         installGroup={serializedTool.installGroup}
       />
       <ToolRunner client:load tool={serializedTool} />
+      {guide && <SearchGuide guide={guide} />}
 
       {/* Auto-generated rich body — runs for every tool page.
           Renders the hand-written seoContent.intro when present, else
@@ -272,9 +281,12 @@ const breadcrumbLd = {
           </div>
         ) : (
           <div class="privacy-callout" role="note">
-            <strong>Privacy:</strong> {name} runs entirely on your device. Files
-            you provide never leave your browser — no uploads, no server,
-            no tracking. The page works offline once loaded.
+            <strong>Privacy:</strong> This free tool executes in your browser.
+            {guide && ' Its image processing keeps your selected photo on your device.'}
+            {' '}Setup may download code, codecs or models. Network utilities can
+            make requests as part of their task; free does not mean every tool
+            works offline. Check this tool's description and the{' '}
+            <a href="/legal/privacy">privacy policy</a> for its data flow.
           </div>
         )}
       </section>

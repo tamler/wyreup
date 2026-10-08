@@ -7,6 +7,7 @@ import PwaShell from '../components/PwaShell.svelte';
 import TriggerRuntime from '../components/TriggerRuntime.svelte';
 import AccountMenu from '../components/AccountMenu.svelte';
 import AuthModal from '../components/AuthModal.svelte';
+import { canonicalPageUrl, isIndexablePath } from '../lib/seo';
 
 interface Props {
   title: string;
@@ -14,6 +15,7 @@ interface Props {
   ogTitle?: string;
   ogDescription?: string;
   surfaceMode?: 'engineering' | 'welcome';
+  noindex?: boolean;
 }
 
 const {
@@ -22,6 +24,7 @@ const {
   ogTitle = title,
   ogDescription = description,
   surfaceMode = 'engineering',
+  noindex = false,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
@@ -31,7 +34,8 @@ const bodyClass = surfaceMode === 'welcome' ? 'surface-welcome' : '';
 // so dev/preview builds emit the right value too. Tools rely on a
 // stable canonical to consolidate signals when the same page is reached
 // via /tools/<slug>?q= variants from the header search.
-const canonicalUrl = `https://wyreup.com${currentPath}`;
+const canonicalUrl = canonicalPageUrl(currentPath);
+const excludeFromSearch = noindex || !isIndexablePath(currentPath);
 ---
 
 <!DOCTYPE html>
@@ -40,6 +44,7 @@ const canonicalUrl = `https://wyreup.com${currentPath}`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    {excludeFromSearch && <meta name="robots" content="noindex,follow" />}
     <meta name="theme-color" content="#FAF7F0" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

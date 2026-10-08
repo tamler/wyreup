@@ -8,6 +8,7 @@ import InstallCard from '../components/InstallCard.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 import { PACKS, MONTHLY } from '../data/pricing';
 import { displayName } from '../data/display-names';
+import { TOOL_PAGE_METADATA } from '../lib/seo';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
@@ -24,13 +25,13 @@ const popularTools = popularToolIds.map((id) => {
         `Either rename in packages/web/src/pages/index.astro or remove from popularToolIds.`,
     );
   }
-  return { id: t.id, name: t.name, category: t.category, description: t.description };
+  return { id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description };
 });
 ---
 
 <BaseLayout
-  title="Wyreup — Drop a file. Get it ready for whatever comes next."
-  description="Compress, convert, clean up, extract, understand, protect, and share files. Free tools run entirely on your device, no signup needed; hosted PRO tools say what they send."
+  title="Wyreup — Free image, PDF & file tools for your browser"
+  description="Compress images, convert HEIC to JPG, remove photo metadata and work with PDFs. Free tools execute on your device; optional hosted PRO tools explain what they send."
   surfaceMode="welcome"
 >
   <script is:inline>
@@ -104,7 +105,7 @@ const popularTools = popularToolIds.map((id) => {
         Every result offers a next step — the output of one tool becomes the input of the next. Run a chain of actions once, save it with one click, and it is yours to rerun.
       </p>
       <a href="/chain/build" class="chain-cta">Build a chain &rarr;</a>
-      <div class="chain-flow" aria-label="Chain demo: image.heic converted, then compressed to 247 KB JPG">
+      <div class="chain-flow" aria-label="Example workflow: image.heic converted to JPG, then compressed; output size varies">
         <div class="chain-node chain-node--input" data-chain-index="0">
           <div class="chain-node__inner">
             <span class="chain-node__dot" aria-hidden="true"></span>
@@ -115,7 +116,7 @@ const popularTools = popularToolIds.map((id) => {
         <div class="chain-node" data-chain-index="1">
           <div class="chain-node__inner">
             <span class="chain-node__dot" aria-hidden="true"></span>
-            <span class="chain-node__label">convert</span>
+            <span class="chain-node__label">heic-to-jpg</span>
           </div>
         </div>
         <span class="chain-arrow" aria-hidden="true"></span>
@@ -129,7 +130,7 @@ const popularTools = popularToolIds.map((id) => {
         <div class="chain-node chain-node--output" data-chain-index="3">
           <div class="chain-node__inner">
             <span class="chain-node__dot chain-node__dot--active" aria-hidden="true"></span>
-            <span class="chain-node__label">247 KB JPG</span>
+            <span class="chain-node__label">JPG copy</span>
           </div>
         </div>
       </div>
@@ -198,7 +199,7 @@ const popularTools = popularToolIds.map((id) => {
           <div class="anywhere-card__inner">
             <div class="anywhere-card__channel">Command line</div>
             <div class="anywhere-card__headline"><code>npx @wyreup/cli</code></div>
-            <p class="anywhere-card__body">Shell-scriptable, batch-friendly, offline.</p>
+            <p class="anywhere-card__body">Shell-scriptable, batch-friendly. Local tools and optional hosted PRO.</p>
           </div>
         </a>
         <a href="/skill" class="anywhere-card brackets">

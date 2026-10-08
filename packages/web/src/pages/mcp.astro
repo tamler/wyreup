@@ -3,17 +3,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout
-  title="MCP server — Wyreup for agents"
-  description="An MCP server that exposes Wyreup's tools to Claude Code, Cline, Continue, and any MCP-compatible client. Files never leave your machine."
+  title="MCP file tools — images, PDFs & OCR for AI agents — Wyreup"
+  description="Use Wyreup file tools through an MCP server: compress images, work with PDFs and extract text. Local execution, setup downloads and optional hosted PRO are documented."
 >
   <div class="dist-page">
     <div class="container">
 
       <!-- Hero -->
       <section class="dist-hero" aria-labelledby="mcp-heading">
-        <h1 id="mcp-heading" class="dist-hero__title">Wyreup for agents.</h1>
+        <h1 id="mcp-heading" class="dist-hero__title">MCP file tools for AI agents.</h1>
         <p class="dist-hero__sub">
-          An MCP server that exposes Wyreup's tools to Claude Code, Cline, Continue, and any MCP-compatible client.
+          Give an MCP-compatible assistant tools for images, PDFs, OCR and other file tasks. Free tools execute on your machine; optional hosted PRO tools use your API key.
         </p>
       </section>
 
@@ -27,8 +27,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <h2 id="what-mcp-heading" class="dist-section__title">What is MCP</h2>
         <p class="dist-section__body">
           MCP is an open protocol that lets AI assistants call external tools.
-          Wyreup's MCP server wraps every tool so your agent can compress images, redact PDFs,
-          or blur faces on your machine — without your files ever leaving it.
+          Wyreup's MCP server exposes supported registry tools so your agent can compress images,
+          work with PDFs or blur detected faces. Local image and PDF operations process files on
+          your machine. Setup can download packages, runtimes or models; network-related tools
+          make requests as described by their task. Optional hosted PRO tools send their inputs
+          for remote processing. Your assistant provider may also receive tool requests and
+          results according to its own settings — local file processing does not make the entire
+          agent conversation private.
           Learn more at <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" class="inline-link">modelcontextprotocol.io</a>.
         </p>
       </section>
@@ -63,7 +68,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           The <code class="inline-code">WYREUP_API_KEY</code> field is optional — omit it
           and the free in-browser-class tools still work. Provide it
           (get one at <a href="/account" class="inline-link">/account</a>) to
-          unlock the 30 hosted-AI Pro tools (transcription, OCR,
+          unlock supported hosted-AI PRO tools (transcription, OCR,
           translation, text-to-speech, image generation, long-context
           PDF Q&amp;A, structured-JSON extraction, and more). The agent
           sees only the tools your config has unlocked, so there's no

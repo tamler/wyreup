@@ -158,11 +158,18 @@ into the Pro story later as fallback seams.
   SoftwareApplication + FAQ + BreadcrumbList JSON-LD, canonical URLs,
   and an auto-generated facts table + About section for every tool.
   Hand-written `seoContent` is enriched per tool as signal warrants.
+- **Search growth (active 2026-10-08).** [SEO strategy](SEO-STRATEGY.md)
+  maps priority query clusters to existing pages, records the verified
+  Search Console baseline and defines weekly manual indexing/performance
+  reviews. Improve task copy and discovery before adding more routes.
 - **Toolbelt as the wedge.** Showpiece preset chains on landing
   (PDF → text → translate; image → describe → alt-text).
 - **One Show HN attempt** with triggers + catalog-breadth angle.
 - **Traffic measurement.** Cloud-hosted analytics (Plausible, Fathom,
-  etc.) is a hard no — see below. Options: server-side log analysis
+  etc.) is a hard no — see below. Google Search Console is verified and
+  provides search visibility measurement without a visitor script;
+  it does not measure successful tool runs or all traffic. Other options:
+  server-side log analysis
   on Cloudflare access logs, or self-hosted Plausible on our own
   infra. Decision deferred; not load-bearing for the free push.
 

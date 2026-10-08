@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { createDefaultRegistry } from '@wyreup/core';
+import { TOOL_PAGE_METADATA } from '../../lib/seo';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -16,115 +17,115 @@ export async function getStaticPaths() {
   const categoryMeta: Record<string, { displayName: string; h1: string; sub: string; description: string; intro: string }> = {
     image: {
       displayName: 'Image',
-      h1: 'Work with images.',
-      sub: 'Compress, convert, resize, blur faces, strip metadata. Nothing uploads.',
-      description: 'Compress, convert, resize, and edit images in your browser. Strip EXIF metadata, blur faces, remove backgrounds. No upload required.',
-      intro: `Compress a photo for email. Convert HEIC to JPG. Strip camera metadata and GPS coordinates before sharing. Blur faces in a crowd shot. Resize for the web. Remove a background without a subscription. All image operations run on your device — the file you drop never leaves the browser tab.
+      h1: 'Image editing and conversion tools',
+      sub: 'Compress, convert, resize, blur faces and strip metadata.',
+      description: 'Find image tools to compress, convert and resize photos, strip EXIF metadata, blur faces and remove backgrounds. Check each tool for formats and execution details.',
+      intro: `Compress a photo for email. Convert HEIC to JPG. Strip camera metadata and GPS coordinates before sharing. Blur detected faces in a crowd shot and review the result. Resize for the web. Choose the tool that matches your file and destination.
 
 Every tool in this category handles common image tasks that used to require desktop software or paid cloud services. Drop a file, pick settings, download the result.`,
     },
     pdf: {
       displayName: 'PDF',
-      h1: 'Do things with PDFs.',
-      sub: 'Merge, split, compress, redact, extract. Every operation runs on your device.',
-      description: 'Merge, split, rotate, encrypt, and redact PDF files. All processing runs in your browser — nothing uploads to a server.',
-      intro: `Split a long scan into single pages. Merge contracts into one file. Redact sensitive sections before sending. Encrypt with a password. Add page numbers to a submission. Rotate a mis-scanned page. Every Wyreup PDF tool runs in your browser — the file you drop never uploads to a server.
+      h1: 'PDF editing, extraction and compression tools',
+      sub: 'Merge, split, compress, redact and extract PDF content.',
+      description: 'Browse free PDF tools to merge, split, rotate, encrypt, redact and inspect forms. Check supported operations and limits before processing a document.',
+      intro: `Split a long scan into single pages. Merge contracts into one file. Redact sensitive sections before sending. Encrypt with a password. Add page numbers to a submission. Rotate a mis-scanned page. Check the selected tool's limits and inspect the result before sending a document.
 
-PDF manipulation usually requires a desktop app or a cloud service that stores your documents. Wyreup keeps that processing local.`,
+PDF tools cover document structure, visible pages and extracted content. Choose a tool according to the operation and data flow you need.`,
     },
     media: {
       displayName: 'Media',
-      h1: 'Convert audio and video.',
-      sub: 'Trim, convert formats, extract audio, compress. All in your browser.',
-      description: 'Convert, compress, trim, and edit video and audio files in your browser. No upload, no server processing.',
-      intro: `Convert a video to a different format. Trim a clip to the right length. Extract audio from a recording. Compress a large video for sharing. Add subtitles directly to the video file. Speed up or slow down footage. All media processing uses browser-native codec APIs — no file leaves your device.
+      h1: 'Audio and video conversion tools',
+      sub: 'Trim, convert formats, extract audio and compress media.',
+      description: 'Convert, compress, trim and edit video and audio files. Check supported codecs, browser requirements and execution details for the selected tool.',
+      intro: `Convert a video to a different format. Trim a clip to the right length. Extract audio from a recording. Compress a large video for sharing. Add subtitles directly to the video file. Speed up or slow down footage. Codec support and memory requirements vary by operation.
 
 Video and audio work have historically required heavy desktop software. These tools handle the common cases without installation.`,
     },
     audio: {
       displayName: 'Audio',
-      h1: 'Make audio sound better.',
+      h1: 'Audio enhancement and processing tools',
       sub: 'Upscale low-quality recordings. Convert between formats.',
-      description: 'Enhance and process audio files in your browser. Noise reduction and quality improvement, fully on-device.',
-      intro: `Enhance a voice recording with noise reduction. Clean up audio before transcription or sharing. Audio processing runs entirely in your browser using local compute — your recording never touches an external server.
+      description: 'Find audio tools for enhancement, noise reduction and format conversion. Compare requirements and free or hosted execution before running a recording.',
+      intro: `Enhance a voice recording with noise reduction. Clean up audio before transcription or sharing. Compare the selected tool's requirements and listen to the result; quality depends on the recording.
 
 Clear audio matters for transcription accuracy, accessibility, and professional output. These tools handle the preprocessing step that makes everything downstream easier.`,
     },
     convert: {
       displayName: 'Convert',
-      h1: 'Turn one format into another.',
+      h1: 'File format conversion tools',
       sub: 'Images, PDFs, documents, data.',
-      description: 'Convert files between formats — images, documents, spreadsheets, markup, and data. All conversions run locally.',
-      intro: `Convert Markdown to HTML for a CMS. Transform CSV to JSON for an API. Turn an SVG into a PNG at any size. Convert spreadsheet formats without Excel. Encode and decode Base64. Convert HTML back to readable Markdown. Each conversion happens in your browser with no intermediate server.
+      description: 'Convert images, documents, spreadsheets, markup and data between formats. Select a converter that supports your input and intended output.',
+      intro: `Convert Markdown to HTML for a CMS. Transform CSV to JSON for an API. Turn an SVG into a PNG. Convert spreadsheet formats without Excel. Encode and decode Base64. Convert HTML back to readable Markdown. Check supported inputs and output settings before converting.
 
 Format conversion is one of the most frequent developer and document tasks. These tools cover the common cases quickly.`,
     },
     edit: {
       displayName: 'Edit',
-      h1: 'Tweak a file.',
+      h1: 'Image and PDF editing tools',
       sub: 'Crop, rotate, flip, watermark. No signup.',
-      description: 'Crop, rotate, flip, watermark, and adjust images and PDFs directly in your browser.',
+      description: 'Crop, rotate, flip, watermark and adjust images and PDFs. Browse free browser tools and optional hosted PRO editing tools.',
       intro: `Crop an image to a specific region. Rotate a mis-oriented photo. Apply a grayscale or sepia filter. Add a watermark to protect your work. Extract or delete specific pages from a PDF. Crop a PDF to a region. These are the edit operations you reach for before sending a file on.
 
-All editing runs locally — no account needed, no file stored on a third-party server.`,
+Keep the source file and inspect the edited copy before replacing or publishing an asset.`,
     },
     optimize: {
       displayName: 'Optimize',
-      h1: 'Shrink files.',
-      sub: 'Reduce file sizes without losing quality you will notice.',
-      description: 'Compress images, PDFs, and SVGs to reduce file size without losing quality. Runs entirely on your device.',
+      h1: 'Image, PDF and SVG optimization tools',
+      sub: 'Compress files and compare quality with file size.',
+      description: 'Compress images and PDFs or optimize SVGs. Savings vary by source; lossy image re-encoding can change quality. Inspect the output before using it.',
       intro: `Compress a JPEG before attaching it to an email. Shrink a PDF for a file upload limit. Optimize an SVG for a webpage. Upscale a small image to double its resolution using AI. File size reduction matters for email, storage, and web performance.
 
-These tools apply the right optimization algorithm for each file type — lossy compression for photos, lossless for documents and vectors.`,
+Compression methods differ by file type. Image and PDF tools may re-encode image data with a quality tradeoff; already compressed sources may not shrink. SVG optimization changes markup. Inspect the result for your intended use.`,
     },
     privacy: {
       displayName: 'Privacy',
-      h1: 'Leave nothing behind.',
+      h1: 'Photo metadata, face blur and file privacy tools',
       sub: 'Strip metadata, encrypt PDFs, blur faces, redact regions.',
-      description: 'Strip metadata, blur faces, remove backgrounds, and encrypt files. Every privacy tool runs on your device.',
-      intro: `Strip GPS and camera data from a photo before posting. Blur faces in a group shot. Remove a background without a cloud service that stores your images. Encrypt a file with PGP before sending. Verify a PGP signature on a received document. Privacy tools are only meaningful if they are trustworthy — these run entirely on your device with no network calls.
+      description: "Remove photo EXIF and GPS metadata, blur detected faces, redact regions and encrypt files. Review limitations and each tool's data flow before sharing.",
+      intro: `Strip GPS and camera data from a photo before posting. Blur detected faces in a group shot, then check for missed people. Encrypt a file with PGP before sending. Verify a PGP signature on a received document. Choose the operation that addresses the information you need to protect.
 
-The file you process never leaves your browser. You can verify that claim in the source code.`,
+Metadata removal and face blur do not guarantee anonymity. Review visible clues, output quality and the selected tool's execution details. Source code is available for inspection.`,
     },
     create: {
       displayName: 'Create',
-      h1: 'Make small things.',
+      h1: 'QR code, password and file generation tools',
       sub: 'QR codes, UUIDs, passwords, lorem ipsum.',
-      description: 'Generate QR codes, passwords, UUIDs, favicons, barcodes, and other outputs without a backend.',
+      description: 'Generate QR codes, passwords, UUIDs, favicons, barcodes and other outputs. Choose the matching tool and check its input requirements.',
       intro: `Generate a QR code for a URL or contact card. Create a secure random password. Produce a UUID for a database record. Build a favicon set from an image. Generate a barcode for a product label. Produce lorem ipsum placeholder text. Create a slug for a URL.
 
-Generation tools produce something from nothing or from minimal input. All computation runs in your browser — no API key, no signup, no rate limit.`,
+Generation tools create outputs from text, settings or a source file. Check the selected tool's formats and execution requirements.`,
     },
     inspect: {
       displayName: 'Inspect',
-      h1: 'See inside a file.',
+      h1: 'File inspection and comparison tools',
       sub: 'Dimensions, metadata, hashes, structure.',
-      description: 'Examine file metadata, diff images and text, decode tokens, and analyze color — all in your browser.',
-      intro: `Read the EXIF metadata embedded in a photo. Check the dimensions, colorspace, and bit depth of an image. Diff two images to find pixel-level differences. Parse a JWT without a decoder service. Test a regex against sample input. Count words in a document. Inspect a ZIP before extracting it. Read color values in any format.
+      description: 'Examine file properties, compare images and text, decode tokens and analyze color. Check each inspection tool\'s output and execution details.',
+      intro: `Check an image's format, dimensions and file size. Diff two images to find pixel-level differences. Parse a JWT without a decoder service. Test a regex against sample input. Count words in a document. Inspect a ZIP before extracting it. Convert color values between supported formats.
 
 Inspection tools tell you what is in a file or string without modifying it. Useful for debugging, verification, and auditing.`,
     },
     export: {
       displayName: 'Export',
-      h1: 'Pull content out.',
+      h1: 'Text, OCR and data extraction tools',
       sub: 'Extract text, tables, pages, or convert to simpler formats.',
-      description: 'Extract text, run OCR, and export structured data from documents. All extraction runs in your browser.',
+      description: 'Extract text, run OCR and export structured data from images and documents. Check supported formats and local or hosted execution for each tool.',
       intro: `Extract plain text from a PDF for further processing. Run OCR on a scanned image or document to get searchable text. Extract tables from a PDF into structured JSON. Pull audio from a video file. Export data to a format your next tool expects.
 
 Extraction is the first step in many document workflows. Getting clean output out of a file lets you process it further without manual copying.`,
     },
     text: {
       displayName: 'Text',
-      h1: 'Clean up text and data.',
+      h1: 'Text analysis and transformation tools',
       sub: 'Format JSON, decode JWTs, diff text, count words.',
-      description: 'Analyze, translate, summarize, and transform text using on-device AI models. No data leaves your browser.',
+      description: 'Analyze, translate, summarize and transform text. Compare free tools and optional hosted models, with data flow and requirements shown on each tool page.',
       intro: `Analyze the sentiment of a review or feedback batch. Run named entity recognition to extract names, places, and organizations. Summarize a long document. Translate text between languages. Compute readability scores for content targeting. Get word and character statistics. Calculate token counts for LLM input planning.
 
-Text AI tools use browser-native model inference where possible. Input text stays in your browser tab.`,
+Text tools use different models and algorithms. Compare the selected tool's capabilities and execution details, then verify its output before using it.`,
     },
     dev: {
       displayName: 'Dev',
-      h1: 'Clean up text and data.',
+      h1: 'Developer text and data tools',
       sub: 'Format JSON, decode JWTs, diff text, count words.',
       description: 'Format JSON, YAML, SQL, CSS, and HTML. Convert data formats. Decode tokens and parse cron expressions.',
       intro: `Format a minified JSON payload for reading. Convert CSV to JSON for an API call. Decode a JWT to inspect its claims. Parse a cron expression to verify its schedule. Format SQL before committing it. Convert between number bases. Escape and unescape strings. Count tokens in a prompt before sending it to an LLM.
@@ -133,7 +134,7 @@ Developer utility tools handle the small-but-frequent text transformation tasks 
     },
     finance: {
       displayName: 'Finance',
-      h1: 'Quick math.',
+      h1: 'Financial calculator tools',
       sub: 'Compound interest, dollar-cost averaging, percentages, dates.',
       description: 'Calculate compound interest, model DCA investment strategies, and run financial projections in your browser.',
       intro: `Calculate how a lump sum grows under compound interest over time. Model a dollar-cost averaging investment plan across different contribution schedules. Run financial projections with different rate assumptions. All computation runs locally — no financial data leaves your device.
@@ -142,7 +143,7 @@ Financial calculators are a common daily-use tool for investors and planners. Th
     },
     archive: {
       displayName: 'Archive',
-      h1: 'Zip and unzip.',
+      h1: 'ZIP archive creation and extraction tools',
       sub: 'Create, extract, inspect archives.',
       description: 'Create ZIP archives, extract ZIP files, and inspect archive contents — all in your browser.',
       intro: `Create a ZIP archive from multiple files for a single download or email attachment. Extract the contents of a ZIP without installing software. Inspect a ZIP to see its file list and metadata before extracting. Archive tools are the last step before sharing a batch of files and the first step when receiving one.
@@ -151,12 +152,12 @@ All archive operations run in-browser using compression APIs. No files are sent 
     },
     geo: {
       displayName: 'Geo',
-      h1: 'Convert geospatial data.',
+      h1: 'Geospatial data conversion tools',
       sub: 'GeoJSON, KML, GPX, Shapefile, and the rest of the GIS family.',
       description: 'Convert between GeoJSON, KML, GPX, Shapefile, GeoPackage, FlatGeobuf, TopoJSON, and CSV. Every conversion runs in your browser.',
       intro: `Turn a Google Earth KML into GeoJSON for a web map. Convert a Strava GPX track to KML to visualize the ride. Pull a CSV of latitude/longitude points into a proper GeoJSON FeatureCollection. Open a zipped ESRI Shapefile from a GIS portal without ArcGIS or QGIS installed. Bridge a GeoJSON layer into GeoPackage or FlatGeobuf for the next tool downstream. Every geospatial conversion runs locally — your map data never uploads to a service.
 
-The narrow tools (KML to GeoJSON, GPX to KML, Shapefile to GeoJSON, CSV to GeoJSON) cover the most-searched conversions with tiny dependencies. The catch-all Convert Geospatial Data tool wraps GDAL/OGR via WebAssembly for everything else, including round-trips between any pair of vector formats.`,
+The focused tools handle KML to GeoJSON, GPX to KML, Shapefile to GeoJSON and CSV to GeoJSON. The broader Convert Geospatial Data tool wraps GDAL/OGR via WebAssembly for supported vector formats; check its format options and input requirements.`,
     },
   };
 
@@ -167,10 +168,14 @@ The narrow tools (KML to GeoJSON, GPX to KML, Shapefile to GeoJSON, CSV to GeoJS
     const meta = categoryMeta[cat] ?? {
       displayName: cat.charAt(0).toUpperCase() + cat.slice(1),
       h1: `${cat.charAt(0).toUpperCase() + cat.slice(1)} tools.`,
-      sub: `${cat.charAt(0).toUpperCase() + cat.slice(1)} tools that run on your device.`,
-      description: `${cat} tools that run in your browser. No upload required.`,
+      sub: `Browse ${cat} tools and choose the operation you need.`,
+      description: `Browse ${cat} tools. Check each tool's supported files, requirements and execution details.`,
       intro: `These tools handle common ${cat} tasks directly in your browser.`,
     };
+    const hasHostedTools = catTools.some((tool) => tool.cost === 'credit');
+    const executionNote = hasHostedTools
+      ? 'This category includes free browser tools and hosted PRO tools. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup.'
+      : 'These free tools execute in your browser. Setup can download code, codecs or models; network-related tasks can make requests. Check each tool for requirements and offline availability.';
 
     // Related categories: pick up to 4 others that share tools with similar output mimes
     const catMimes = new Set(catTools.map((t) => t.output?.mime));
@@ -193,11 +198,12 @@ The narrow tools (KML to GeoJSON, GPX to KML, Shapefile to GeoJSON, CSV to GeoJS
         catSub: meta.sub,
         metaDescription: meta.description,
         intro: meta.intro,
+        executionNote,
         catTools: catTools.map((t) => ({
           id: t.id,
           name: t.name,
           category: t.category,
-          description: t.description,
+          description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description,
         })),
         relatedCats,
         allCategories: categories,
@@ -206,7 +212,7 @@ The narrow tools (KML to GeoJSON, GPX to KML, Shapefile to GeoJSON, CSV to GeoJS
   });
 }
 
-const { displayName, catH1, catSub, metaDescription, intro, catTools, relatedCats } = Astro.props;
+const { displayName, catH1, catSub, metaDescription, intro, executionNote, catTools, relatedCats } = Astro.props;
 const introParas = intro.split('\n\n').filter(Boolean);
 ---
 
@@ -233,6 +239,7 @@ const introParas = intro.split('\n\n').filter(Boolean);
         <p class="cat-sub">{catSub}</p>
         <div class="cat-intro">
           {introParas.map((para) => <p class="cat-intro__para">{para}</p>)}
+          <p class="cat-intro__para">{executionNote}</p>
         </div>
       </header>
 

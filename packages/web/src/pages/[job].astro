@@ -8,6 +8,9 @@ import { upsellFor } from '../data/pro-upsells';
 import { approxUsd } from '../data/pricing';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { JOB_SEO_CONTENT, type JobSeoContent } from '../lib/job-seo-content';
+import { canonicalPageUrl } from '../lib/seo';
+import { JOB_SEARCH_GUIDES } from '../lib/search-guides';
+import SearchGuide from '../components/SearchGuide.astro';
 
 export function getStaticPaths() {
   const reservedRoutes = new Set([
@@ -110,12 +113,13 @@ interface PageProps {
 const { job, seoContent, serializedJob, toolNames, executionSentence, chainBuilderHref, proSeam } =
   Astro.props as PageProps;
 
-const pageUrl = `https://wyreup.com/${job.slug}`;
+const pageUrl = canonicalPageUrl(`/${job.slug}`);
+const guide = JOB_SEARCH_GUIDES[job.slug];
 const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: 'https://wyreup.com/' },
+    { '@type': 'ListItem', position: 1, name: 'Wyreup', item: canonicalPageUrl('/') },
     { '@type': 'ListItem', position: 2, name: job.title, item: pageUrl },
   ],
 };
@@ -184,6 +188,7 @@ const faqLd =
       </header>
 
       <JobLauncher client:load job={serializedJob} />
+      {guide && <SearchGuide guide={guide} />}
 
       <section class="outcome" aria-labelledby="what-happens-heading">
         <h2 id="what-happens-heading" class="outcome__title">What happens</h2>

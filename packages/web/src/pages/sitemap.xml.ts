@@ -1,28 +1,52 @@
 import type { APIRoute } from 'astro';
 import { createDefaultRegistry } from '@wyreup/core';
 import { JOBS } from '../data/jobs';
+import { canonicalPageUrl } from '../lib/seo';
 
-const SITE = 'https://wyreup.com';
-
-const STATIC_PAGES = ['', '/tools', '/about'];
+const STATIC_PAGES = [
+  '/',
+  '/tools',
+  '/about',
+  '/mcp',
+  '/cli',
+  '/skill',
+  '/triggers',
+  '/pro',
+  '/legal/privacy',
+  '/legal/terms',
+  '/legal/refund',
+];
 
 export const GET: APIRoute = () => {
   const registry = createDefaultRegistry();
   const toolSlugs = Array.from(registry.toolsById.keys());
+  const categories = [
+    ...new Set(
+      Array.from(registry.toolsById.values()).flatMap((tool) => [
+        tool.category,
+        ...(tool.categories ?? []),
+      ]),
+    ),
+  ].sort();
 
   const urls = [
     ...STATIC_PAGES.map((path) => ({
-      loc: `${SITE}${path}`,
+      loc: canonicalPageUrl(path),
       changefreq: 'weekly',
-      priority: path === '' ? '1.0' : '0.8',
+      priority: path === '/' ? '1.0' : '0.8',
     })),
     ...JOBS.map((job) => ({
-      loc: `${SITE}/${job.slug}`,
+      loc: canonicalPageUrl(`/${job.slug}`),
       changefreq: 'weekly',
       priority: '0.8',
     })),
     ...toolSlugs.map((id) => ({
-      loc: `${SITE}/tools/${id}`,
+      loc: canonicalPageUrl(`/tools/${id}`),
+      changefreq: 'monthly',
+      priority: '0.7',
+    })),
+    ...categories.map((category) => ({
+      loc: canonicalPageUrl(`/category/${category}`),
       changefreq: 'monthly',
       priority: '0.7',
     })),
