@@ -1,20 +1,133 @@
 /**
- * Minimal EXIF orientation handling for JPEG images.
+ * EXIF orientation handling for JPEG, PNG, and WebP images.
  *
  * @jsquash/jpeg's decoder returns raw pixel data without applying the EXIF
  * orientation tag — so photos taken in portrait mode on a phone (which set
  * EXIF orientation to rotate-90-CW and store the pixels in landscape) come
  * out of the decoder sideways.
  *
- * This module reads the EXIF orientation byte from a JPEG buffer and
- * applies the corresponding rotation/flip to an ImageData object. Call
- * `decodeJpegOrientation` with the raw JPEG bytes before decoding, then
- * `applyOrientation` on the decoded ImageData.
- *
- * Non-JPEG inputs always return orientation 1 (no change).
+ * Container readers bound TIFF offsets to the metadata payload. Orientation
+ * is applied to decoded pixels before re-encoding without metadata.
  */
 
 export type ExifOrientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+interface OrientationTag {
+  orientation: ExifOrientation;
+  valueOffset: number;
+  little: boolean;
+}
+
+function hasBytes(view: DataView, offset: number, length: number, end = view.byteLength): boolean {
+  return offset >= 0 && length >= 0 && end <= view.byteLength && offset <= end - length;
+}
+
+function isExifHeader(view: DataView, start: number, end: number): boolean {
+  return (
+    hasBytes(view, start, 6, end) &&
+    view.getUint32(start) === 0x45786966 &&
+    view.getUint16(start + 4) === 0
+  );
+}
+
+/** Read only the IFD0 orientation tag; never follow offsets outside its TIFF payload. */
+function tiffOrientation(view: DataView, start: number, end: number): OrientationTag | null {
+  if (!hasBytes(view, start, 8, end)) return null;
+  const endian = view.getUint16(start);
+  const little = endian === 0x4949;
+  if ((!little && endian !== 0x4d4d) || view.getUint16(start + 2, little) !== 42) return null;
+  const relativeIfd = view.getUint32(start + 4, little);
+  if (relativeIfd < 8) return null;
+  const ifd = start + relativeIfd;
+  if (!hasBytes(view, ifd, 2, end)) return null;
+  const entries = view.getUint16(ifd, little);
+  // The table includes a two-byte count, twelve bytes per entry, and a next-IFD pointer.
+  if (!hasBytes(view, ifd, 2 + entries * 12 + 4, end)) return null;
+  for (let i = 0; i < entries; i++) {
+    const entry = ifd + 2 + i * 12;
+    if (view.getUint16(entry, little) !== 0x0112) continue;
+    if (view.getUint16(entry + 2, little) !== 3 || view.getUint32(entry + 4, little) !== 1)
+      return null;
+    const orientation = view.getUint16(entry + 8, little);
+    if (orientation < 1 || orientation > 8) return null;
+    return { orientation: orientation as ExifOrientation, valueOffset: entry + 8, little };
+  }
+  return null;
+}
+
+function jpegOrientationTag(view: DataView): OrientationTag | null {
+  if (!hasBytes(view, 0, 2) || view.getUint16(0) !== 0xffd8) return null;
+  let offset = 2;
+  while (offset < view.byteLength) {
+    if (view.getUint8(offset) !== 0xff) return null;
+    // JPEG permits consecutive 0xff fill bytes before a marker code.
+    while (offset < view.byteLength && view.getUint8(offset) === 0xff) offset++;
+    if (!hasBytes(view, offset, 1)) return null;
+    const marker = view.getUint8(offset++);
+    // Stop at compressed scan data or EOI; other lengthless markers are not metadata segments.
+    if (
+      marker === 0xda ||
+      marker === 0xd9 ||
+      marker === 0xd8 ||
+      marker === 0x01 ||
+      marker === 0 ||
+      (marker >= 0xd0 && marker <= 0xd7)
+    )
+      return null;
+    if (!hasBytes(view, offset, 2)) return null;
+    const length = view.getUint16(offset);
+    if (length < 2 || !hasBytes(view, offset, length)) return null;
+    const end = offset + length;
+    const start = offset + 2;
+    if (marker === 0xe1 && isExifHeader(view, start, end)) {
+      return tiffOrientation(view, start + 6, end);
+    }
+    offset = end;
+  }
+  return null;
+}
+
+function pngOrientation(view: DataView): ExifOrientation {
+  if (!hasBytes(view, 0, 8) || view.getUint32(0) !== 0x89504e47 || view.getUint32(4) !== 0x0d0a1a0a)
+    return 1;
+  let offset = 8;
+  while (hasBytes(view, offset, 12)) {
+    const length = view.getUint32(offset);
+    if (length > 0x7fffffff || !hasBytes(view, offset, length + 12)) return 1;
+    const type = view.getUint32(offset + 4);
+    const start = offset + 8;
+    if (type === 0x65584966) return tiffOrientation(view, start, start + length)?.orientation ?? 1;
+    if (type === 0x49454e44) return 1;
+    offset += length + 12;
+  }
+  return 1;
+}
+
+function webpOrientation(view: DataView): ExifOrientation {
+  if (
+    !hasBytes(view, 0, 12) ||
+    view.getUint32(0) !== 0x52494646 ||
+    view.getUint32(8) !== 0x57454250
+  )
+    return 1;
+  const size = view.getUint32(4, true);
+  if (size < 4 || size % 2 !== 0 || size > view.byteLength - 8) return 1;
+  const end = size + 8;
+  let offset = 12;
+  while (hasBytes(view, offset, 8, end)) {
+    const length = view.getUint32(offset + 4, true);
+    const start = offset + 8;
+    const paddedLength = length + (length % 2);
+    if (!hasBytes(view, start, paddedLength, end)) return 1;
+    if (length % 2 !== 0 && view.getUint8(start + length) !== 0) return 1;
+    if (view.getUint32(offset) === 0x45584946) {
+      const tiffStart = isExifHeader(view, start, start + length) ? start + 6 : start;
+      return tiffOrientation(view, tiffStart, start + length)?.orientation ?? 1;
+    }
+    offset = start + paddedLength;
+  }
+  return 1;
+}
 
 /**
  * Parse EXIF orientation from a JPEG buffer. Returns 1 (identity) if:
@@ -23,61 +136,7 @@ export type ExifOrientation = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
  *  - orientation tag is missing or out of range
  */
 export function decodeJpegOrientation(buffer: ArrayBuffer): ExifOrientation {
-  const view = new DataView(buffer);
-  if (view.byteLength < 4) return 1;
-  // JPEG SOI marker
-  if (view.getUint16(0) !== 0xffd8) return 1;
-
-  let offset = 2;
-  while (offset < view.byteLength) {
-    if (offset + 4 > view.byteLength) return 1;
-    const marker = view.getUint16(offset);
-    offset += 2;
-    // APP1 (EXIF)
-    if (marker === 0xffe1) {
-      // Skip the 2-byte segment-length header; we walk the IFD directly.
-      offset += 2;
-      // Expect "Exif\0\0" header
-      if (offset + 6 > view.byteLength) return 1;
-      if (
-        view.getUint32(offset) !== 0x45786966 /* 'Exif' */ ||
-        view.getUint16(offset + 4) !== 0x0000
-      )
-        return 1;
-      const tiffOffset = offset + 6;
-      // TIFF header: II (little-endian) or MM (big-endian)
-      const endian = view.getUint16(tiffOffset);
-      const little = endian === 0x4949;
-      if (!little && endian !== 0x4d4d) return 1;
-      // Magic 0x002a
-      if (view.getUint16(tiffOffset + 2, little) !== 0x002a) return 1;
-      // Offset to 0th IFD
-      const ifdOffset = tiffOffset + view.getUint32(tiffOffset + 4, little);
-      if (ifdOffset + 2 > view.byteLength) return 1;
-      const entries = view.getUint16(ifdOffset, little);
-      for (let i = 0; i < entries; i++) {
-        const entryOffset = ifdOffset + 2 + i * 12;
-        if (entryOffset + 12 > view.byteLength) return 1;
-        const tag = view.getUint16(entryOffset, little);
-        if (tag === 0x0112) {
-          // Orientation — stored as SHORT (type 3), count 1, value in first 2 bytes of the value field
-          const orientation = view.getUint16(entryOffset + 8, little);
-          if (orientation >= 1 && orientation <= 8) return orientation as ExifOrientation;
-          return 1;
-        }
-      }
-      // No orientation tag in IFD
-      return 1;
-    } else if ((marker & 0xff00) === 0xff00 && marker !== 0xffff) {
-      // Other marker: skip its segment
-      if (offset + 2 > view.byteLength) return 1;
-      const segmentLength = view.getUint16(offset);
-      offset += segmentLength;
-    } else {
-      return 1;
-    }
-  }
-  return 1;
+  return jpegOrientationTag(new DataView(buffer))?.orientation ?? 1;
 }
 
 export interface ImageDataLike {
@@ -156,16 +215,24 @@ export function applyOrientation(img: ImageDataLike, orientation: ExifOrientatio
 }
 
 /**
- * Convenience: decode EXIF orientation from a JPEG buffer (returns 1 for
- * non-JPEG inputs or buffers without EXIF) and apply it to decoded pixels.
+ * Apply the supported container's EXIF orientation to decoded pixels.
+ * Missing or malformed metadata leaves the decoded image unchanged.
  */
 export function orientImageData(
   buffer: ArrayBuffer,
   mimeType: string,
   decoded: ImageDataLike,
 ): ImageDataLike {
-  if (!mimeType.includes('jpeg') && !mimeType.includes('jpg')) return decoded;
-  const orientation = decodeJpegOrientation(buffer);
+  const mime = mimeType.toLowerCase();
+  const view = new DataView(buffer);
+  const orientation =
+    mime === 'image/jpeg' || mime === 'image/jpg'
+      ? decodeJpegOrientation(buffer)
+      : mime === 'image/png'
+        ? pngOrientation(view)
+        : mime === 'image/webp'
+          ? webpOrientation(view)
+          : 1;
   return applyOrientation(decoded, orientation);
 }
 
@@ -228,49 +295,11 @@ export function setJpegOrientation(
   buffer: ArrayBuffer,
   newOrientation: ExifOrientation,
 ): Uint8Array | null {
-  const view = new DataView(buffer);
-  if (view.byteLength < 4) return null;
-  if (view.getUint16(0) !== 0xffd8) return null;
-
-  let offset = 2;
-  while (offset < view.byteLength) {
-    if (offset + 4 > view.byteLength) return null;
-    const marker = view.getUint16(offset);
-    offset += 2;
-    if (marker === 0xffe1) {
-      offset += 2;
-      if (offset + 6 > view.byteLength) return null;
-      if (view.getUint32(offset) !== 0x45786966 || view.getUint16(offset + 4) !== 0x0000) {
-        return null;
-      }
-      const tiffOffset = offset + 6;
-      const endian = view.getUint16(tiffOffset);
-      const little = endian === 0x4949;
-      if (!little && endian !== 0x4d4d) return null;
-      if (view.getUint16(tiffOffset + 2, little) !== 0x002a) return null;
-      const ifdOffset = tiffOffset + view.getUint32(tiffOffset + 4, little);
-      if (ifdOffset + 2 > view.byteLength) return null;
-      const entries = view.getUint16(ifdOffset, little);
-      for (let i = 0; i < entries; i++) {
-        const entryOffset = ifdOffset + 2 + i * 12;
-        if (entryOffset + 12 > view.byteLength) return null;
-        if (view.getUint16(entryOffset, little) === 0x0112) {
-          const out = new Uint8Array(buffer.slice(0));
-          const outView = new DataView(out.buffer);
-          outView.setUint16(entryOffset + 8, newOrientation, little);
-          return out;
-        }
-      }
-      return null;
-    } else if ((marker & 0xff00) === 0xff00 && marker !== 0xffff) {
-      if (offset + 2 > view.byteLength) return null;
-      const segmentLength = view.getUint16(offset);
-      offset += segmentLength;
-    } else {
-      return null;
-    }
-  }
-  return null;
+  const tag = jpegOrientationTag(new DataView(buffer));
+  if (!tag) return null;
+  const out = new Uint8Array(buffer.slice(0));
+  new DataView(out.buffer).setUint16(tag.valueOffset, newOrientation, tag.little);
+  return out;
 }
 
 /**
