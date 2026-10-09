@@ -31,6 +31,7 @@ export async function hydrateUser(): Promise<void> {
       user.set(data);
     } else {
       user.set(null);
+      await res.arrayBuffer();
     }
   } catch {
     user.set(null);
