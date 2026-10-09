@@ -1,5 +1,13 @@
 # @wyreup/mcp
 
+## 1.0.1
+
+### Patch Changes
+
+- 7a9ce82: Preserve displayed EXIF orientation when re-encoding PNG and WebP images, including metadata removal. Bound orientation parsing to each container's metadata payload and validate TIFF tag type, count, and offsets while preserving JPEG lossless orientation updates.
+- Updated dependencies [7a9ce82]
+  - @wyreup/core@2.0.1
+
 ## 1.0.0
 
 ### Major Changes
