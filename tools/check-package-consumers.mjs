@@ -65,6 +65,7 @@ async function run(cli, args, cwd, ignoreScripts = false) {
   try {
     return await exec(process.execPath, [cli, ...args], {
       ...managerOptions,
+      timeout: process.platform === 'win32' && ['install', 'update'].includes(args[0]) ? 600_000 : managerOptions.timeout,
       ...(ignoreScripts ? { env: { ...managerOptions.env, npm_config_ignore_scripts: 'true' } } : {}),
       cwd,
     });
