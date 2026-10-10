@@ -1,5 +1,13 @@
 # @wyreup/cli
 
+## 1.0.2
+
+### Patch Changes
+
+- Make published dependency manifests deterministic after workspace version conversion so repeated releases preserve exact package archive integrity.
+- Updated dependencies
+  - @wyreup/core@2.0.2
+
 ## 1.0.1
 
 ### Patch Changes

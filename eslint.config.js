@@ -40,7 +40,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/exceljs/**/*.cjs', 'packages/mammoth/**/*.cjs'],
+    files: ['packages/exceljs/**/*.cjs', 'packages/mammoth/**/*.cjs', '.pnpmfile.cjs'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       sourceType: 'commonjs',

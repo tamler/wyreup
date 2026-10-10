@@ -9,6 +9,8 @@ overrides:
   miniflare>sharp: ^0.35.5
   tsup>esbuild: ^0.28.2
 
+pnpmfileChecksum: sha256-EZtZexfkh6Pn5gkVzrGn00Ez0ofIsIAftPfcZ5aZOkk=
+
 patchedDependencies:
   astro@7.3.7:
     hash: 5001093e803a3efb213f4408eba6b708cf24bd1711f6459c9a7b8374a6acf286
