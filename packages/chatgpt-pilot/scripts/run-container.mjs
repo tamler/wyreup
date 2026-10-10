@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { configuredOutputOrigins } from './output-delivery.mjs';
 
 const image = process.env.WYREUP_CHATGPT_IMAGE;
 if (!image || !/^sha256:[a-f0-9]{64}$/.test(image)) {
@@ -6,6 +7,12 @@ if (!image || !/^sha256:[a-f0-9]{64}$/.test(image)) {
   process.exit(1);
 }
 const hosts = process.env.WYREUP_CHATGPT_DOWNLOAD_HOSTS ?? '';
+let outputOrigins;
+try { outputOrigins = configuredOutputOrigins(process.env.WYREUP_CHATGPT_OUTPUT_ORIGINS).join(','); }
+catch {
+  process.stderr.write('Output origins must be exact lowercase HTTPS DNS origins separated by commas.\n');
+  process.exit(1);
+}
 if (hosts.length > 4096 || (hosts !== '' && hosts.split(',').some(host => host.length > 253
   || !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(host)))) {
   process.stderr.write('Download hosts must be exact lowercase DNS names separated by commas.\n');
@@ -15,7 +22,8 @@ const docker = spawn('docker', [
   'run', '--rm', '-i', '--read-only', '--memory=1g', '--memory-swap=1g',
   '--cpus=2', '--pids-limit=64', '--cap-drop=ALL', '--security-opt=no-new-privileges',
   '--user=1000:1000', '--network=bridge', '--log-driver=none',
-  '--env', 'WYREUP_CHATGPT_DOWNLOAD_HOSTS=' + hosts, image,
+  '--env', 'WYREUP_CHATGPT_DOWNLOAD_HOSTS=' + hosts,
+  '--env', 'WYREUP_CHATGPT_OUTPUT_ORIGINS=' + outputOrigins, image,
 ], {
   stdio: ['pipe', 'inherit', 'inherit'],
   env: { PATH: process.env.PATH ?? '/usr/local/bin:/usr/bin:/bin',

@@ -11,7 +11,7 @@ export const LIMITS = Object.freeze({
   workerHeapMb: 128,
 });
 
-export const UI_URI = 'ui://widget/wyreup-result.html';
+export const UI_URI = 'ui://widget/wyreup-result-openai-files-v2.html';
 
 export const ERROR_MESSAGES = {
   INVALID_ARGUMENTS: 'The file arguments or options are invalid.',

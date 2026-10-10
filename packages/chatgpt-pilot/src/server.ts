@@ -6,6 +6,7 @@ import { createJobController } from './jobs.js';
 import { LIMITS, ERROR_MESSAGES, PilotError, safeError, UI_URI } from './limits.js';
 import { TOOLS, validateArguments, validateOutput } from './schemas.js';
 import type { ErrorDetails, Operation } from './types.js';
+import { configuredOutputOrigins } from '../scripts/output-delivery.mjs';
 
 export function boundedResult(result: CallToolResult): CallToolResult {
   if (!validateOutput(result.structuredContent) || Buffer.byteLength(JSON.stringify(result)) > LIMITS.envelopeBytes) {
@@ -22,10 +23,12 @@ export function errorResult(operation: Operation, error: unknown): CallToolResul
     ...(safe.code === 'FILE_HOST_NOT_ENABLED' && safe.downloadHost ? { downloadHost: safe.downloadHost } : {}),
     ...(safe.code === 'TARGET_UNREACHABLE' && safe.target ? { targetReached: false, ...safe.target } : {}),
   };
-  return boundedResult({ isError: true, structuredContent: { ...details }, content: [{ type: 'text', text: details.message }] });
+  const message = details.downloadHost ? `${details.message} Observed hostname: ${details.downloadHost}.` : details.message;
+  return boundedResult({ isError: true, structuredContent: { ...details }, content: [{ type: 'text', text: message }] });
 }
 
-export function createServer(hosts: ReadonlySet<string>, jobs = createJobController(hosts)): Server {
+export function createServer(hosts: ReadonlySet<string>, jobs = createJobController(hosts), outputOrigins: readonly string[] = []): Server {
+  const origins = configuredOutputOrigins(outputOrigins.join(','));
   const server = new Server({ name: 'wyreup-private-chatgpt-pilot', version: '0.1.0' }, {
     capabilities: { tools: {}, resources: {} },
     instructions: 'Three bounded file workflows. Inputs and outputs pass through OpenAI; processing runs on the operator host. This does not sanitize visible content or PDF active content.',
@@ -49,9 +52,12 @@ export function createServer(hosts: ReadonlySet<string>, jobs = createJobControl
   server.setRequestHandler(ReadResourceRequestSchema, async request => {
     if (request.params.uri !== UI_URI) throw new McpError(ErrorCode.InvalidParams, 'Unknown resource.');
     const html = await readFile(new URL('./widget.html', import.meta.url), 'utf8');
+    if (!html.includes('</head>')) throw new McpError(ErrorCode.InternalError, 'Invalid result card.');
+    const configuration = JSON.stringify(origins).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026');
     return { contents: [{ uri: UI_URI, mimeType: 'text/html;profile=mcp-app',
-      text: html,
-      _meta: { ui: { csp: { connectDomains: [], resourceDomains: [], redirectDomains: [] } } },
+      text: html.replace('</head>', '<script type="application/json" id="wyreup-output-origins">' + configuration + '</script></head>'),
+      _meta: { ui: { csp: { connectDomains: [], resourceDomains: [], frameDomains: [] } },
+        'openai/widgetCSP': { connect_domains: [], resource_domains: [], frame_domains: [], redirect_domains: origins } },
     }] };
   });
   return server;

@@ -3,8 +3,9 @@ import sharp from 'sharp';
 import { describe, expect, it, vi } from 'vitest';
 import { createJobController } from '../src/jobs.js';
 import { errorResult, boundedResult } from '../src/server.js';
-import { LIMITS, PilotError } from '../src/limits.js';
+import { ERROR_MESSAGES, LIMITS, PilotError } from '../src/limits.js';
 import { validateOutput } from '../src/schemas.js';
+import { permittedUrl } from '../src/download.js';
 
 const args = {
   file: { download_url: 'https://files.example.test/URL_CANARY', file_id: 'ID_CANARY', file_name: 'NAME_CANARY' },
@@ -12,6 +13,31 @@ const args = {
 };
 
 describe('bounded private result and worker isolation contracts', () => {
+  it('exposes only the validated denied hostname in model-visible error text', () => {
+    const hostname = 'files.example.test';
+    const signedUrl = 'https://' + hostname + '/PRIVATE_PATH_CANARY?signature=SIGNED_QUERY_CANARY&credential=CREDENTIAL_CANARY&file_id=ID_CANARY&file_name=NAME_CANARY';
+    let failure: unknown;
+    try { permittedUrl(signedUrl, new Set()); }
+    catch (error) { failure = error; }
+    expect(failure).toBeInstanceOf(PilotError);
+    expect(failure).toHaveProperty('code', 'FILE_HOST_NOT_ENABLED');
+    const result = errorResult('strip_image_metadata', failure);
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toMatchObject({ status: 'error', code: 'FILE_HOST_NOT_ENABLED', downloadHost: hostname });
+    expect(validateOutput(result.structuredContent)).toBe(true);
+    expect(result._meta).toBeUndefined();
+    const serialized = JSON.stringify(result);
+    for (const value of [signedUrl, 'https://', 'PRIVATE_PATH_CANARY', 'SIGNED_QUERY_CANARY', 'CREDENTIAL_CANARY', 'ID_CANARY', 'NAME_CANARY']) {
+      expect(serialized).not.toContain(value);
+    }
+    const unrelated = errorResult('strip_image_metadata', new PilotError('FILE_URL_NOT_ALLOWED', hostname));
+    expect(unrelated.content).toEqual([{ type: 'text', text: ERROR_MESSAGES.FILE_URL_NOT_ALLOWED }]);
+    expect(unrelated.structuredContent?.downloadHost).toBeUndefined();
+    expect(validateOutput(unrelated.structuredContent)).toBe(true);
+    const visibleText = result.content.filter(item => item.type === 'text').map(item => item.text).join('\n');
+    expect(visibleText).toContain(hostname);
+  });
+
   it('accepts a 7 MiB inline result and rejects even one extra raw byte', () => {
     const acceptedBytes = 7 * 1024 * 1024;
     const result = {

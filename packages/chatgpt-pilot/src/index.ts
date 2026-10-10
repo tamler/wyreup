@@ -2,10 +2,11 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { configuredHosts } from './download.js';
 import { LIMITS } from './limits.js';
 import { createServer } from './server.js';
+import { configuredOutputOrigins } from '../scripts/output-delivery.mjs';
 
 try {
   const hosts = configuredHosts(process.env.WYREUP_CHATGPT_DOWNLOAD_HOSTS);
-  const server = createServer(hosts);
+  const server = createServer(hosts, undefined, configuredOutputOrigins(process.env.WYREUP_CHATGPT_OUTPUT_ORIGINS));
   let closing = false;
   const close = (): void => {
     if (closing) return;
