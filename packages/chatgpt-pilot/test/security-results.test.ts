@@ -96,7 +96,7 @@ describe('bounded private result and worker isolation contracts', () => {
     expect(result._meta).toBeUndefined();
     expect(validateOutput(result.structuredContent)).toBe(true);
     expect(JSON.stringify(result)).not.toContain('CANARY');
-  });
+  }, LIMITS.workerMs + 10_000);
 
   it('rejects a complete JSON envelope above the ceiling even with valid structured metadata', () => {
     const result = {
