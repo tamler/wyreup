@@ -181,6 +181,7 @@ const CONTENT_CORRECTIONS: Record<
     intro?: string;
     useCases?: string[];
     answers?: Record<string, string>;
+    faq?: ToolSeoContent['faq'];
     alsoTry?: ToolSeoContent['alsoTry'];
   }
 > = {
@@ -220,6 +221,20 @@ const CONTENT_CORRECTIONS: Record<
       'Can the blur be reversed?':
         'Blur is baked into the output pixels, but it does not guarantee anonymity. People may remain identifiable from an insufficient blur or other details. Keep the original separately and inspect the result.',
     },
+    alsoTry: [
+      {
+        id: 'strip-exif',
+        why: 'Blurring faces hides who is in a photo; stripping EXIF removes the GPS and camera trail that says where and when.',
+      },
+      {
+        id: 'image-watermark',
+        why: 'Add a label or branding to the anonymized image before publishing.',
+      },
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers to a PDF. Underlying content can remain recoverable; this is not secure redaction.',
+      },
+    ],
   },
   'strip-exif': {
     intro:
@@ -282,6 +297,152 @@ const CONTENT_CORRECTIONS: Record<
       { id: 'hash', why: 'Compare file checksums for byte-level verification.' },
     ],
   },
+  'pdf-redact': {
+    intro:
+      'Redact PDF adds solid rectangles to a new PDF copy as visual covers. It does not securely remove the underlying content: text and images can remain recoverable, including after Compress PDF. Use it only when the underlying content is already safe for recipients to access. Processing runs locally in your browser.',
+    useCases: [
+      'Mark areas intended for removal in an internal review copy whose original content is safe for every recipient to access',
+      'Add visual cover rectangles to a demonstration PDF containing non-confidential sample data',
+      'Prepare a visual mockup of a masked document without claiming that its content has been deleted',
+    ],
+    faq: [
+      {
+        q: 'Is the redacted text truly gone?',
+        a: 'No. The rectangles cover content visually, but underlying text can remain extractable. The PDF output is not secure redaction.',
+      },
+      {
+        q: 'Does my document get uploaded?',
+        a: 'No. Redaction is applied locally in your browser; the file stays on your device.',
+      },
+      {
+        q: 'How do I make the redaction permanent?',
+        a: 'This tool does not offer permanent content removal. Compress PDF re-encodes embedded images to reduce file size; it does not remove the text or image content beneath these rectangles.',
+      },
+      {
+        q: 'Can I redact multiple areas on different pages?',
+        a: 'Yes. You can place solid rectangles over content across pages in a single pass.',
+      },
+      {
+        q: 'Is the original file altered?',
+        a: 'No. The tool outputs a new redacted copy and leaves your source untouched.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'pdf-compress',
+        why: 'Reduce file size by re-encoding embedded images. Compression does not remove content beneath visual covers.',
+      },
+      {
+        id: 'pdf-metadata',
+        why: 'Inspect or clear title, author, subject, keywords, creator and producer fields separately; this does not remove covered page content.',
+      },
+      {
+        id: 'pdf-encrypt',
+        why: 'Add password protection separately; encryption does not remove the underlying covered content.',
+      },
+    ],
+  },
+  'pdf-encrypt': {
+    alsoTry: [
+      {
+        id: 'pdf-decrypt',
+        why: 'Remove the password again when you no longer need the protection.',
+      },
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers before password protection. The covered content remains in the PDF and may be recoverable.',
+      },
+      {
+        id: 'pdf-metadata',
+        why: 'Strip identifying author and title metadata before distributing a protected PDF.',
+      },
+    ],
+  },
+  'pdf-metadata': {
+    alsoTry: [
+      {
+        id: 'pdf-info',
+        why: 'Inspect the existing metadata and page count before deciding what to change.',
+      },
+      { id: 'strip-exif', why: 'Do the equivalent metadata scrub on standalone images.' },
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers separately from metadata edits. The covers do not securely remove page content.',
+      },
+    ],
+  },
+  'pdf-suspicious': {
+    alsoTry: [
+      {
+        id: 'text-suspicious',
+        why: 'Run the same prompt-injection and homoglyph scan on raw text you already have.',
+      },
+      {
+        id: 'pdf-to-text',
+        why: "Pull the PDF's text out yourself to review exactly what an LLM would ingest.",
+      },
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers for a review copy; extraction can still recover the covered text, so this does not neutralize suspicious PDF content.',
+      },
+    ],
+  },
+  'text-redact': {
+    intro:
+      "Text Redact finds and replaces personally identifiable information in plain text: emails, phone numbers, SSNs, Luhn-validated credit card numbers, IP addresses, URLs, UUIDs, and AWS access keys, with room to add your own regex patterns. It edits the output text rather than placing visual covers on PDF pages. Everything happens in your browser, so the sensitive data you're scrubbing never gets uploaded.",
+    faq: [
+      {
+        q: 'What PII patterns does it detect out of the box?',
+        a: 'Emails, phone numbers, SSNs, credit cards (Luhn-validated), IP addresses, URLs, UUIDs, and AWS access keys.',
+      },
+      {
+        q: 'Can I add my own patterns?',
+        a: "Yes. You can supply custom regular expressions to catch organization-specific identifiers the built-in patterns don't cover.",
+      },
+      {
+        q: 'Is my text uploaded?',
+        a: 'No. Redaction runs entirely client-side in your browser, so the text and the PII in it never leave your device.',
+      },
+      {
+        q: 'How is this different from Redact PDF?',
+        a: 'Text Redact replaces matching patterns in the output plain text. Redact PDF only adds visual cover rectangles: underlying PDF content may remain recoverable, including after compression. It is not a secure document-redaction equivalent.',
+      },
+      {
+        q: 'Will pattern-based redaction catch everything?',
+        a: 'It catches well-structured PII like emails and card numbers reliably, but free-form mentions (a name in a sentence) need a language-aware tool; for that, see Redact PII.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers to a PDF rather than replacing text. Underlying content may remain recoverable.',
+      },
+      {
+        id: 'text-redact-pro',
+        why: 'Catch free-form PII like names and places that regex patterns miss, using a hosted LLM.',
+      },
+      {
+        id: 'file-fingerprint',
+        why: 'Hash the redacted output to prove the version you shared is the one you intended.',
+      },
+    ],
+  },
+  'text-redact-pro': {
+    alsoTry: [
+      {
+        id: 'text-redact',
+        why: "Run a fully in-browser, free redaction pass when you'd rather your text never leave the device.",
+      },
+      {
+        id: 'text-ner-pro',
+        why: 'Identify exactly which people and organisations appear before deciding what to redact.',
+      },
+      {
+        id: 'pdf-redact',
+        why: 'Add visual covers to a PDF. Unlike text replacement, these rectangles do not securely remove the underlying content.',
+      },
+    ],
+  },
 };
 
 export function correctedToolSeoContent(
@@ -295,6 +456,8 @@ export function correctedToolSeoContent(
     ...(correction.intro ? { intro: correction.intro } : {}),
     ...(correction.useCases ? { useCases: correction.useCases } : {}),
     ...(correction.alsoTry ? { alsoTry: correction.alsoTry } : {}),
-    faq: content.faq?.map((entry) => ({ ...entry, a: correction.answers?.[entry.q] ?? entry.a })),
+    faq:
+      correction.faq ??
+      content.faq?.map((entry) => ({ ...entry, a: correction.answers?.[entry.q] ?? entry.a })),
   };
 }

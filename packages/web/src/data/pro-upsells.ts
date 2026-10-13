@@ -51,11 +51,6 @@ export const PRO_UPSELLS: ProUpsell[] = [
     proToolId: 'text-redact-pro',
     benefit: 'Catches names, addresses, and identifiers the pattern-based redactor misses.',
   },
-  {
-    freeToolId: 'pdf-redact',
-    proToolId: 'text-redact-pro',
-    benefit: 'Catches names, addresses, and identifiers that simple patterns miss.',
-  },
 ];
 
 export function upsellFor(freeToolId: string): ProUpsell | undefined {
