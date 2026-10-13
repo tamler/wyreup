@@ -1,5 +1,13 @@
 # @wyreup/cli
 
+## 1.0.3
+
+### Patch Changes
+
+- 28e7ec5: Correct PDF visual-cover disclosures: rectangles and subsequent PDF compression do not securely remove covered content. Update related web recommendations and distributed tool descriptions.
+- Updated dependencies [28e7ec5]
+  - @wyreup/core@2.0.3
+
 ## 1.0.2
 
 ### Patch Changes
