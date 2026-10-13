@@ -22,6 +22,8 @@
     },
     "@wyreup/exceljs#build": { "cache": false },
     "@wyreup/mammoth#build": { "cache": false },
+    "@wyreup/exceljs#test": { "dependsOn": ["build", "^build"], "outputs": [] },
+    "@wyreup/mammoth#test": { "dependsOn": ["build", "^build"], "outputs": [] },
     "dev": {
       "cache": false,
       "persistent": true
