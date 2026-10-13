@@ -27,9 +27,9 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
   slug: 'pdf-redact',
   name: 'Redact PDF',
   description:
-    'Permanently cover content in a PDF with solid rectangles. ' +
-    'Underlying text objects may still be extractable by specialized tools. ' +
-    'For forensic-grade redaction, flatten the output via pdf-compress after redacting.',
+    'Cover PDF content visually with solid rectangles. ' +
+    'Underlying text and images can remain recoverable, including after Compress PDF. ' +
+    'This tool does not securely remove confidential content.',
   category: 'edit',
   keywords: ['pdf', 'redact', 'cover', 'hide', 'privacy', 'black'],
 

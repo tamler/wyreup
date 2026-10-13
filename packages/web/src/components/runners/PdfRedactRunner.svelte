@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
@@ -101,9 +102,19 @@
       pdfDoc = pdf;
       pageCount = pdf.numPages;
       currentPage = 1;
+      await tick();
+      if (!canvasEl) throw new Error('PDF preview canvas did not mount.');
       await renderPage();
       state = 'editing';
     } catch (err) {
+      preloadedFile = null;
+      files = [];
+      pdfDoc = null;
+      pageCount = 0;
+      currentPage = 1;
+      rectangles = [];
+      pageWidthPt = 0;
+      pageHeightPt = 0;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
@@ -131,7 +142,7 @@
     canvasEl.width = viewport.width;
     canvasEl.height = viewport.height;
     const ctx = canvasEl.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) throw new Error('Unable to create a 2D context for PDF preview.');
     await page.render({ canvasContext: ctx, viewport }).promise;
     // Page dimensions in PDF points (view = [x0,y0,x1,y1]).
     pageWidthPt = page.view[2]! - page.view[0]!;
@@ -289,6 +300,7 @@
 </script>
 
 <div class="runner">
+  <p>Visual cover only. Underlying text and images can remain recoverable. Compress PDF does not make this secure redaction. Do not use this output to securely remove confidential content.</p>
   {#if state === 'idle' || files.length === 0}
     <DropZone
       accept={tool.input.accept}
@@ -326,8 +338,10 @@
         <button class="btn-ghost-sm" on:click={clearAll} disabled={rectangles.length === 0} type="button">Clear all</button>
       </div>
     </div>
+  {/if}
 
-    <div class="canvas-stage">
+  {#if pdfDoc}
+    <div class="canvas-stage" hidden={state !== 'editing' && state !== 'running'}>
       <canvas bind:this={canvasEl} class="pdf-canvas"></canvas>
       <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div
@@ -357,7 +371,9 @@
         {/if}
       </div>
     </div>
+  {/if}
 
+  {#if state === 'editing' || state === 'running'}
     <p class="hint">Drag on the page to draw a redaction rectangle. Click an existing rectangle to delete it.</p>
 
     {#if state !== 'running'}

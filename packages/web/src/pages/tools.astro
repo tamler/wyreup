@@ -84,12 +84,12 @@ const exampleChains: ExampleChain[] = [
   },
   {
     id: 'redact-share',
-    name: 'Redact and lock a PDF',
-    description: 'Redact sensitive regions, encrypt with password, add page numbers.',
-    situation: 'Before sharing a contract — black out the sensitive bits, then lock it.',
+    name: 'Cover and password-protect a PDF',
+    description: 'Add visual rectangles, encrypt with a password and add page numbers. Underlying content can remain recoverable.',
+    situation: 'When a PDF needs visual covers and password protection without secure content removal.',
     steps: ['pdf-redact', 'pdf-encrypt', 'page-numbers-pdf'],
-    inputHint: 'Drop a contract or document PDF',
-    outputHint: 'Locked, numbered, redacted PDF',
+    inputHint: 'Drop a PDF whose content is safe for recipients to access',
+    outputHint: 'Password-protected, numbered PDF with visual covers',
   },
   {
     id: 'dev-data',

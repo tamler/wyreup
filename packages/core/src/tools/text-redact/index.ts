@@ -138,7 +138,7 @@ export const textRedact: ToolModule<TextRedactParams> = {
   slug: 'text-redact',
   name: 'Text Redact',
   description:
-    'Replace PII patterns in text — emails, phones, SSNs, credit cards (Luhn-validated), IPs, URLs, UUIDs, AWS access keys. Optional custom regex patterns. Text-only sibling of pdf-redact.',
+    'Replace PII patterns in text — emails, phones, SSNs, credit cards (Luhn-validated), IPs, URLs, UUIDs, AWS access keys. Optional custom regex patterns.',
   category: 'privacy',
   keywords: [
     'redact',

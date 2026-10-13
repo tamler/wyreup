@@ -48,9 +48,9 @@ Run it now: [wyreup.com/chain/run?steps=image-to-pdf|pdf-compress](https://wyreu
 
 ---
 
-### Redact and lock a contract
+### Add visual covers and password-protect a PDF
 
-Drop a PDF. Blur the signature block, add a password, add page numbers to the output.
+Drop a PDF whose underlying content is safe for recipients to access. Add visual cover rectangles, a password and page numbers. The covers and password do not remove the underlying content.
 
 ```
 pdf-redact → pdf-encrypt → page-numbers-pdf
