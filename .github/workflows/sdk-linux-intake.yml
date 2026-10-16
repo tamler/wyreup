@@ -1,0 +1,64 @@
+name: SDK Linux read-only intake
+
+on:
+  push:
+    branches: [verify/wyreup-linux-intake-20261016]
+    paths:
+      - .github/actions/sdk-linux-intake/parent.mjs
+      - .github/actions/sdk-linux-intake/collector.py
+      - .github/actions/sdk-linux-intake/collector-binding.json
+      - .github/actions/sdk-linux-intake/action.yml
+      - .github/workflows/sdk-linux-intake.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdk-linux-intake-${{ github.run_id }}-${{ github.run_attempt }}
+  cancel-in-progress: false
+
+jobs:
+  metadata-intake:
+    if: >-
+      github.repository == 'tamler/wyreup' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/verify/wyreup-linux-intake-20261016' &&
+      github.event.created == true &&
+      github.event.before == '0000000000000000000000000000000000000000' &&
+      github.run_attempt == '1'
+    runs-on: ubuntu-24.04
+    # This provider ceiling is not the parent's original30s deadline or a
+    # guarantee of retained custody after unexpected external termination.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+          set-safe-directory: false
+      - id: intake
+        name: One fixed30s public metadata intake
+        uses: ./.github/actions/sdk-linux-intake
+        with:
+          run_id: ${{ github.run_id }}
+          run_attempt: ${{ github.run_attempt }}
+      - name: Upload only fully closed usable metadata
+        if: ${{ !cancelled() && steps.intake.outcome == 'success' && steps.intake.outputs.upload_safe == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sdk-linux-intake-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ steps.intake.outputs.root }}/invocation.json
+            ${{ steps.intake.outputs.root }}/collector.stdout.log
+            ${{ steps.intake.outputs.root }}/collector.stderr.log
+            ${{ steps.intake.outputs.root }}/parent-result.json
+            ${{ steps.intake.outputs.root }}/closure.json
+            ${{ steps.intake.outputs.root }}/manifest.json
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+          overwrite: false
+          include-hidden-files: false

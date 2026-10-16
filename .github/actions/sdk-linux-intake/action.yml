@@ -1,0 +1,17 @@
+name: Fixed Linux read-only intake
+description: One bounded public host-metadata intake without SDK or privilege operations
+inputs:
+  run_id:
+    description: Actual GitHub run ID used only for exclusive ownership
+    required: true
+  run_attempt:
+    description: Actual GitHub run attempt used only for exclusive ownership
+    required: true
+outputs:
+  upload_safe:
+    description: True only for on-time fully closed COMPLETE_USABLE observations
+  root:
+    description: The exact exclusive run-attempt root, never an input path selector
+runs:
+  using: node24
+  main: parent.mjs
