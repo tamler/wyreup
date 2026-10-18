@@ -1,0 +1,537 @@
+name: SDK Linux stock context intake 20261018
+on:
+  push:
+    branches:
+      - verify/sdk-linux-context-intake-20261018-0
+permissions: {}
+concurrency:
+  group: sdk-linux-stock-context-${{ github.run_id }}-${{ github.run_attempt }}
+  cancel-in-progress: false
+jobs:
+  context:
+    if: >-
+      github.repository == 'tamler/wyreup' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/verify/sdk-linux-context-intake-20261018-0' &&
+      github.run_attempt == '1' &&
+      github.event.deleted == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Bounded stock context only
+        shell: /usr/bin/python3 -I -S -B {0}
+        run: |
+          import time
+          
+          START_NS = time.monotonic_ns()
+          DEADLINE_NS = START_NS + 30_000_000_000
+          
+          import errno
+          import hashlib
+          import json
+          import os
+          import re
+          import shlex
+          import stat
+          import sys
+          
+          TEXT_CAP = 65_536
+          DPKG_CAP = 16 * 1024 * 1024
+          BINARY_CAP = 64 * 1024 * 1024
+          READ_CAP = 256 * 1024 * 1024
+          OUTPUT_CAP = 65_536
+          CONFIG_PATHS = (
+              '/etc/npmrc', '/usr/etc/npmrc', '/usr/local/etc/npmrc',
+              '/usr/share/nodejs/npm/npmrc', '/usr/local/lib/node_modules/npm/npmrc',
+          )
+          TOOLS = (
+              ('ps', '/usr/bin/ps', 'SOURCE43_LITERAL'),
+              ('ip', '/usr/bin/ip', 'SOURCE43_LITERAL'),
+              ('setpriv', '/usr/bin/setpriv', 'SOURCE43_LITERAL'),
+              ('apparmor', '/usr/sbin/apparmor_parser', 'SOURCE43_LITERAL'),
+              ('sudo', '/usr/bin/sudo', 'SOURCE43_LITERAL'),
+              ('python', '/usr/bin/python3', 'OBSERVATION_ONLY'),
+              ('alternateIp', '/usr/sbin/ip', 'OBSERVATION_ONLY'),
+              ('systemLoader', '/lib64/ld-linux-x86-64.so.2', 'OBSERVATION_ONLY'),
+          )
+          NPM_PATHS = (
+              '/usr/bin/npm', '/usr/local/bin/npm',
+              '/usr/share/nodejs/npm/bin/npm-cli.js', '/usr/share/nodejs/npm/package.json',
+              '/usr/local/lib/node_modules/npm/bin/npm-cli.js',
+              '/usr/local/lib/node_modules/npm/package.json',
+          )
+          NPM_ROOTS = ('/usr/share/nodejs/npm/', '/usr/local/lib/node_modules/npm/')
+          SYSTEM_ROOTS = ('/usr/bin/', '/usr/sbin/', '/usr/lib/', '/usr/lib64/', '/lib/', '/lib64/')
+          PACKAGES = (
+              'procps', 'iproute2', 'util-linux', 'apparmor', 'sudo', 'libc6',
+              'python3-minimal', 'python3.12-minimal', 'nodejs', 'npm',
+          )
+          NSS_PATHS = ('/etc/passwd', '/etc/group', '/etc/nsswitch.conf')
+          state = {'readBytes': 0, 'opened': 0, 'closed': 0, 'first': None, 'phase': 'START'}
+          open_fds = set()
+          cache = {}
+          facts = {}
+          
+          
+          class StopIntake(Exception):
+              pass
+          
+          
+          def remember(code):
+              if state['first'] is None:
+                  state['first'] = code
+          
+          
+          def check():
+              if time.monotonic_ns() >= DEADLINE_NS:
+                  remember('DEADLINE')
+              if state['first'] is not None:
+                  raise StopIntake()
+          
+          
+          def stop(code):
+              remember(code)
+              raise StopIntake()
+          
+          
+          def nine(value):
+              return [str(item) for item in (
+                  value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_gid,
+                  value.st_nlink, value.st_size, value.st_mtime_ns, value.st_ctime_ns,
+              )]
+          
+          
+          def close_fd(fd):
+              # A deadline never prevents the one close attempt or starts a new grace.
+              if time.monotonic_ns() >= DEADLINE_NS:
+                  remember('DEADLINE')
+              try:
+                  os.close(fd)
+              except OSError:
+                  remember('CLOSE_UNCONFIRMED')
+              else:
+                  open_fds.remove(fd)
+                  state['closed'] += 1
+              if time.monotonic_ns() >= DEADLINE_NS:
+                  remember('DEADLINE')
+          
+          
+          def config_status(path):
+              # Deliberately no resolver, readlink, stat record, hash or body reader.
+              check()
+              try:
+                  os.lstat(path)
+              except OSError as error:
+                  status = ('ABSENT' if error.errno == errno.ENOENT else
+                            'DENIED' if error.errno in (errno.EACCES, errno.EPERM) else 'HELD')
+              else:
+                  status = 'PRESENT'
+              check()
+              return {'path': path, 'status': status}
+          
+          
+          def resolve_regular(path):
+              pending = path.strip('/').split('/')
+              current = '/'
+              links = []
+              final_info = None
+              while pending:
+                  check()
+                  component = pending.pop(0)
+                  candidate = os.path.join(current, component)
+                  try:
+                      info = os.lstat(candidate)
+                  except OSError as error:
+                      check()
+                      if error.errno == errno.ENOENT:
+                          return None, None, links, 'HELD' if links else 'ABSENT'
+                      if error.errno in (errno.EACCES, errno.EPERM):
+                          return None, None, links, 'DENIED'
+                      stop('PATH_IO')
+                  check()
+                  if stat.S_ISLNK(info.st_mode):
+                      if len(links) >= 8:
+                          return None, None, links, 'HELD'
+                      try:
+                          target = os.readlink(candidate)
+                      except OSError:
+                          stop('LINK_IO')
+                      check()
+                      if not target or len(target.encode('utf-8')) > 1024 or not re.fullmatch(r'[ -~]+', target):
+                          return None, None, links, 'HELD'
+                      links.append({'path': candidate, 'target': target, 'physicalNine': nine(info)})
+                      joined = target if target.startswith('/') else os.path.join(current, target)
+                      joined = os.path.normpath(os.path.join(joined, *pending))
+                      pending = joined.strip('/').split('/')
+                      current = '/'
+                      continue
+                  if pending and not stat.S_ISDIR(info.st_mode):
+                      return None, None, links, 'HELD'
+                  current = candidate
+                  final_info = info
+              return current, final_info, links, 'OBSERVED'
+          
+          
+          def admitted_target(path, canonical, kind):
+              if kind == 'osRelease':
+                  return canonical in ('/etc/os-release', '/usr/lib/os-release')
+              if kind in ('nss', 'dpkg'):
+                  return canonical == path
+              if kind == 'npm':
+                  suffix = '/package.json' if path.endswith('/package.json') else '.js'
+                  return canonical.startswith(SYSTEM_ROOTS) or (
+                      canonical.startswith(NPM_ROOTS) and canonical.endswith(suffix))
+              return canonical.startswith(SYSTEM_ROOTS)
+          
+          
+          def regular_file(path, kind, limit, keep_body=False):
+              assert path not in CONFIG_PATHS and path != '/proc/meminfo'
+              check()
+              canonical, info, links, status = resolve_regular(path)
+              row = {'path': path, 'status': status, 'links': links}
+              if status != 'OBSERVED':
+                  return row, None
+              if not stat.S_ISREG(info.st_mode) or not admitted_target(path, canonical, kind):
+                  row['status'] = 'HELD'
+                  return row, None
+              before = nine(info)
+              if info.st_size > limit:
+                  stop('FILE_CAP')
+              key = tuple(before)
+              if key in cache:
+                  previous, body = cache[key]
+                  row.update(previous)
+              else:
+                  fd = None
+                  chunks = []
+                  digest = hashlib.sha256()
+                  try:
+                      check()
+                      fd = os.open(canonical, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                      open_fds.add(fd)
+                      state['opened'] += 1
+                      check()
+                      if nine(os.fstat(fd)) != before:
+                          stop('FILE_DRIFT')
+                      check()
+                      remaining = info.st_size
+                      while remaining:
+                          check()
+                          amount = min(65_536, remaining, READ_CAP - state['readBytes'])
+                          if amount <= 0:
+                              stop('READ_CAP')
+                          block = os.read(fd, amount)
+                          state['readBytes'] += len(block)
+                          check()
+                          if not block:
+                              stop('SHORT_FILE')
+                          digest.update(block)
+                          if keep_body:
+                              chunks.append(block)
+                          remaining -= len(block)
+                      check()
+                      if nine(os.fstat(fd)) != before:
+                          stop('FILE_DRIFT')
+                      check()
+                  except OSError as error:
+                      if fd is None and error.errno in (errno.EACCES, errno.EPERM):
+                          check()
+                          row['status'] = 'DENIED'
+                          return row, None
+                      stop('FILE_IO')
+                  finally:
+                      if fd is not None:
+                          close_fd(fd)
+                  check()
+                  body = b''.join(chunks) if keep_body else None
+                  row.update({'canonicalPath': canonical, 'bytes': info.st_size,
+                              'sha256': digest.hexdigest(), 'physicalNine': before})
+                  cache[key] = ({k: v for k, v in row.items() if k not in ('path', 'status', 'links')}, body)
+              row['canonicalPath'] = canonical
+              after_path, after_info, after_links, after_status = resolve_regular(path)
+              if after_status != 'OBSERVED' or after_path != canonical or nine(after_info) != before or after_links != links:
+                  stop('FILE_DRIFT')
+              row['links'] = links
+              check()
+              return row, body
+          
+          
+          def mem_available():
+              fd = None
+              body = None
+              try:
+                  check()
+                  fd = os.open('/proc/meminfo', os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                  open_fds.add(fd)
+                  state['opened'] += 1
+                  check()
+                  amount = min(TEXT_CAP, READ_CAP - state['readBytes'])
+                  if amount < TEXT_CAP:
+                      stop('READ_CAP')
+                  body = os.read(fd, amount)
+                  state['readBytes'] += len(body)
+                  check()
+              except OSError:
+                  return {'status': 'UNKNOWN'}
+              finally:
+                  if fd is not None:
+                      close_fd(fd)
+              check()
+              if len(body) >= TEXT_CAP:
+                  return {'status': 'UNKNOWN'}
+              values = []
+              for line in body.splitlines():
+                  check()
+                  if line.startswith(b'MemAvailable:'):
+                      match = re.fullmatch(rb'MemAvailable:\s+([0-9]+)\s+kB', line)
+                      if not match:
+                          return {'status': 'UNKNOWN'}
+                      values.append(match.group(1))
+              if len(values) != 1:
+                  return {'status': 'UNKNOWN'}
+              try:
+                  value = int(values[0])
+              except ValueError:
+                  return {'status': 'UNKNOWN'}
+              check()
+              return {'status': 'OBSERVED', 'kilobytes': value}
+          
+          
+          def os_release(body):
+              selected = {}
+              try:
+                  for line in body.decode('utf-8', 'strict').splitlines():
+                      check()
+                      key, separator, value = line.partition('=')
+                      if separator and key in ('ID', 'VERSION_ID', 'PRETTY_NAME'):
+                          if key in selected:
+                              return {'status': 'UNKNOWN'}
+                          parsed = shlex.split(value, comments=False, posix=True)
+                          if len(parsed) != 1:
+                              return {'status': 'UNKNOWN'}
+                          selected[key] = parsed[0]
+              except (UnicodeError, ValueError):
+                  return {'status': 'UNKNOWN'}
+              return {'status': 'OBSERVED', 'selected': selected} if len(selected) == 3 else {'status': 'UNKNOWN'}
+          
+          
+          def unique_json(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      raise ValueError()
+                  result[key] = value
+              return result
+          
+          
+          def npm_metadata(body):
+              try:
+                  value = json.loads(body.decode('utf-8', 'strict'), object_pairs_hook=unique_json,
+                                     parse_constant=lambda value: (_ for _ in ()).throw(ValueError()))
+                  if type(value) is dict and type(value.get('name')) is str and type(value.get('version')) is str:
+                      return {'status': 'OBSERVED', 'name': value['name'], 'version': value['version']}
+              except (UnicodeError, ValueError, RecursionError):
+                  pass
+              return {'status': 'UNKNOWN'}
+          
+          
+          def nss_selected(body, role):
+              try:
+                  lines = body.decode('utf-8', 'strict').splitlines()
+                  selected = []
+                  for line in lines:
+                      check()
+                      if not line or line.startswith('#'):
+                          continue
+                      if role == 'nsswitch':
+                          line = line.split('#', 1)[0]
+                          key, separator, value = line.partition(':')
+                          if separator and key.strip() in ('passwd', 'group'):
+                              selected.append({'database': key.strip(), 'services': value.split()})
+                          continue
+                      fields = line.split(':')
+                      if len(fields) != (7 if role == 'passwd' else 4) or not re.fullmatch(r'[0-9]+', fields[2]):
+                          return {'status': 'UNKNOWN'}
+                      name = 'nobody' if role == 'passwd' else 'nogroup'
+                      if fields[0] == name or fields[2] == '65534':
+                          if role == 'passwd':
+                              if not re.fullmatch(r'[0-9]+', fields[3]):
+                                  return {'status': 'UNKNOWN'}
+                              selected.append({'name': fields[0], 'uid': int(fields[2]), 'gid': int(fields[3]),
+                                               'home': fields[5], 'shell': fields[6]})
+                          else:
+                              selected.append({'name': fields[0], 'gid': int(fields[2])})
+                  if role == 'nsswitch':
+                      duplicates = any(sum(row['database'] == key for row in selected) != 1 for key in ('passwd', 'group'))
+                  else:
+                      duplicates = len(selected) != 1
+                  return {'status': 'OBSERVED', 'selected': selected, 'missingOrAmbiguous': duplicates}
+              except (UnicodeError, ValueError):
+                  return {'status': 'UNKNOWN'}
+          
+          
+          def dpkg_selected(body):
+              unknown = [{'Package': name, 'status': 'UNKNOWN'} for name in PACKAGES]
+              try:
+                  text = body.decode('utf-8', 'strict')
+                  if text and not text.endswith('\n'):
+                      return unknown
+                  rows = {name: [] for name in PACKAGES}
+                  stanza = {}
+                  last = None
+                  for line in text.splitlines() + ['']:
+                      check()
+                      if not line:
+                          if stanza:
+                              if 'package' not in stanza or 'status' not in stanza:
+                                  return unknown
+                              package = stanza['package']
+                              if not re.fullmatch(r'[a-z0-9][a-z0-9+.-]+', package):
+                                  return unknown
+                              if package in rows:
+                                  rows[package].append(stanza)
+                          stanza, last = {}, None
+                          continue
+                      if line[0] in ' \t':
+                          if last is None or last in ('package', 'version', 'architecture', 'status', 'source'):
+                              return unknown
+                          continue
+                      key, separator, value = line.partition(':')
+                      if not separator or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*', key):
+                          return unknown
+                      key = key.lower()
+                      if key in stanza:
+                          return unknown
+                      stanza[key] = value.strip()
+                      last = key
+                  if any(len(values) > 1 for values in rows.values()):
+                      return unknown
+                  result = []
+                  for name in PACKAGES:
+                      values = rows[name]
+                      if not values:
+                          result.append({'Package': name, 'status': 'ABSENT'})
+                      else:
+                          row = values[0]
+                          result.append({'Package': name, 'status': 'OBSERVED', 'Version': row.get('version'),
+                                         'Architecture': row.get('architecture'), 'Status': row['status'],
+                                         'Source': row.get('source')})
+                  return result
+              except (UnicodeError, ValueError):
+                  return unknown
+          
+          
+          def collect():
+              check()
+              if sys.platform != 'linux':
+                  stop('PLATFORM')
+              image = {}
+              for key in ('ImageOS', 'ImageVersion'):
+                  check()
+                  value = os.environ.get(key)
+                  check()
+                  if type(value) is str and re.fullmatch(r'[A-Za-z0-9._+-]+', value) and len(value) <= 128:
+                      image[key] = {'status': 'OBSERVED', 'value': value}
+                  else:
+                      image[key] = {'status': 'UNKNOWN', 'reason': 'UNAVAILABLE'}
+              facts['imageContext'] = image
+              state['phase'] = 'KERNEL_CLOCK'
+              check()
+              kernel = os.uname()
+              check()
+              clock = time.get_clock_info('monotonic')
+              check()
+              facts['kernel'] = {key: getattr(kernel, key) for key in ('sysname', 'release', 'version', 'machine')}
+              facts['python'] = {'version': list(sys.version_info), 'executable': sys.executable}
+              facts['clock'] = {'implementation': clock.implementation, 'resolution': clock.resolution,
+                                'monotonic': clock.monotonic, 'adjustable': clock.adjustable}
+              resources = {}
+              for name, call in (('cpuCount', os.cpu_count), ('affinityCount', lambda: len(os.sched_getaffinity(0))),
+                                 ('physicalPages', lambda: os.sysconf('SC_PHYS_PAGES')),
+                                 ('pageSize', lambda: os.sysconf('SC_PAGE_SIZE'))):
+                  check()
+                  try:
+                      resources[name] = call()
+                  except (OSError, ValueError, AttributeError):
+                      resources[name] = None
+                  check()
+              facts['resources'] = resources
+              state['phase'] = 'CONFIG_STATUS'
+              facts['configCandidates'] = [config_status(path) for path in CONFIG_PATHS]
+              state['phase'] = 'MEMINFO'
+              facts['resources']['memAvailable'] = mem_available()
+              state['phase'] = 'OS_RELEASE'
+              row, body = regular_file('/etc/os-release', 'osRelease', TEXT_CAP, True)
+              facts['osRelease'] = {'file': row, 'value': os_release(body) if body is not None else {'status': 'UNKNOWN'}}
+              facts['tools'] = []
+              for role, path, scope in TOOLS:
+                  state['phase'] = 'TOOLS'
+                  row, _ = regular_file(path, 'tool', BINARY_CAP)
+                  facts['tools'].append({'role': role, 'scope': scope, 'file': row})
+              facts['npmCandidates'] = []
+              for path in NPM_PATHS:
+                  state['phase'] = 'NPM'
+                  row, body = regular_file(path, 'npm', TEXT_CAP, path.endswith('package.json'))
+                  item = {'file': row}
+                  if path.endswith('package.json'):
+                      item['package'] = npm_metadata(body) if body is not None else {'status': 'UNKNOWN'}
+                  facts['npmCandidates'].append(item)
+              facts['nss'] = []
+              for path in NSS_PATHS:
+                  state['phase'] = 'NSS'
+                  row, body = regular_file(path, 'nss', TEXT_CAP, True)
+                  facts['nss'].append({'file': row, 'value': nss_selected(body, path.rsplit('/', 1)[-1].split('.')[0])
+                                       if body is not None else {'status': 'UNKNOWN'}})
+              state['phase'] = 'DPKG'
+              facts['packages'] = [{'Package': name, 'status': 'UNKNOWN'} for name in PACKAGES]
+              row, body = regular_file('/var/lib/dpkg/status', 'dpkg', DPKG_CAP, True)
+              facts['dpkgStatusFile'] = row
+              if body is not None:
+                  facts['packages'] = dpkg_selected(body)
+              check()
+          
+          
+          exit_code = 1
+          try:
+              collect()
+          except StopIntake:
+              pass
+          except BaseException:
+              remember('UNEXPECTED')
+          
+          try:
+              if time.monotonic_ns() >= DEADLINE_NS:
+                  remember('DEADLINE')
+              if open_fds:
+                  remember('CLOSE_UNCONFIRMED')
+              result = {
+                  'schemaVersion': 1,
+                  'classification': 'STOCK_HOST_CONTEXT_ONLY' if state['first'] is None else 'INCOMPLETE_CONTEXT',
+                  'startedMonotonicNs': str(START_NS), 'deadlineMonotonicNs': str(DEADLINE_NS),
+                  'observedThroughMonotonicNs': str(time.monotonic_ns()),
+                  'firstFailure': state['first'], 'lastPhase': state['phase'],
+                  'positiveBodyReadBytes': state['readBytes'], 'readCapBytes': READ_CAP,
+                  'openedFiles': state['opened'], 'closedFiles': state['closed'],
+                  'unconfirmedFileClosures': len(open_fds), 'facts': facts,
+                  'scope': 'No SDK, NSS runtime, native/source equivalence, Root authority, qualification or release acceptance.',
+                  'publicationAndProcessClosure': 'ROOT_EXTERNAL_OBSERVATION_REQUIRED',
+              }
+              raw = (json.dumps(result, ensure_ascii=True, allow_nan=False, separators=(',', ':')) + '\n').encode('ascii')
+              if len(raw) > OUTPUT_CAP:
+                  remember('OUTPUT_CAP')
+                  raw = (json.dumps({'schemaVersion': 1, 'classification': 'INCOMPLETE_CONTEXT',
+                                     'firstFailure': state['first'], 'lastPhase': state['phase'],
+                                     'positiveBodyReadBytes': state['readBytes'], 'unconfirmedFileClosures': len(open_fds)},
+                                    separators=(',', ':')) + '\n').encode('ascii')
+              if time.monotonic_ns() >= DEADLINE_NS:
+                  remember('DEADLINE')
+                  raw = (json.dumps({'schemaVersion': 1, 'classification': 'INCOMPLETE_CONTEXT',
+                                     'firstFailure': state['first'], 'deadlineExceeded': True,
+                                     'unconfirmedFileClosures': len(open_fds)}, separators=(',', ':')) + '\n').encode('ascii')
+              written = os.write(1, raw)
+              if written == len(raw) and time.monotonic_ns() < DEADLINE_NS:
+                  exit_code = 1 if state['first'] is not None else 0
+          except BaseException:
+              # A partial/empty record or failed write is an outer failure, never retried.
+              exit_code = 1
+          sys.exit(exit_code)
