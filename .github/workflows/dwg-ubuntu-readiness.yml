@@ -1,0 +1,653 @@
+name: DWG offline readiness prerequisite data
+on:
+  push:
+    branches:
+      - verify/dwg-ubuntu-readiness-20261021-0
+permissions: {}
+jobs:
+  prerequisite-data:
+    if: >-
+      github.repository == 'tamler/wyreup' &&
+      github.ref == 'refs/heads/verify/dwg-ubuntu-readiness-20261021-0' &&
+      github.event_name == 'push' &&
+      github.run_attempt == 1 &&
+      github.event.deleted != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Fixed prerequisite metadata only
+        shell: /usr/bin/python3 -I -S -B {0}
+        run: |
+          import time
+          
+          START_WALL_NS=time.time_ns()
+          START_MONOTONIC_NS=time.monotonic_ns()
+          END_WALL_NS=START_WALL_NS+30_000_000_000
+          END_MONOTONIC_NS=START_MONOTONIC_NS+30_000_000_000
+          
+          import hashlib
+          import errno
+          import json
+          import os
+          import posixpath
+          import re
+          import stat
+          import sys
+          import zlib
+          
+          READ_MAX=256*1048576
+          OUTPUT_MAX=65536
+          TOOL_MAX=8*1048576
+          STATUS_MAX=8*1048576
+          LIST_MAX=262144
+          PROFILE_MAX=262144
+          MANUAL_MAX=262144
+          MANUAL_DECODE_MAX=1048576
+          ROLES=('python3','autoreconf','autoconf','autom4te','automake','aclocal','libtoolize','m4','make','perl','bwrap','unshare')
+          PKGS=('python3-minimal','python3.12-minimal','autoconf','automake','libtool','libtool-bin','m4','make','perl-base','perl','bubblewrap','util-linux')
+          LIST_PATHS=tuple('/var/lib/dpkg/info/'+pkg+arch+'.list' for pkg in PKGS for arch in ('',':amd64'))
+          PROC_PATHS=('/proc/sys/kernel/apparmor_restrict_unprivileged_userns','/proc/sys/user/max_user_namespaces','/proc/sys/kernel/unprivileged_userns_clone')
+          PROFILE_PATHS=('/etc/apparmor.d/bwrap','/etc/apparmor.d/bwrap-userns-restrict')
+          MANUALS=(('autoreconf','/usr/share/man/man1/autoreconf.1',False),('autoreconf','/usr/share/man/man1/autoreconf.1.gz',True),('bwrap','/usr/share/man/man1/bwrap.1',False),('bwrap','/usr/share/man/man1/bwrap.1.gz',True))
+          FLAGS={'autoreconf':('--force','--install','--include','-I'),'bwrap':('--unshare-net','--unshare-user','--ro-bind','--bind','--proc','--dev','--die-with-parent','--new-session','--clearenv','--setenv')}
+          ROOTS=('/usr','/bin','/sbin','/lib','/lib64','/etc/alternatives','/etc/apparmor.d','/var/lib/dpkg','/proc/sys')
+          REF='refs/heads/verify/dwg-ubuntu-readiness-20261021-0'
+          DECIMAL=re.compile(r'0|[1-9][0-9]{0,19}')
+          
+          def nine(s):
+              return [str(getattr(s,k)) for k in ('st_dev','st_ino','st_mode','st_uid','st_gid','st_nlink','st_size','st_mtime_ns','st_ctime_ns')]
+          
+          def encode(v):return (json.dumps(v,ensure_ascii=True,separators=(',',':'),allow_nan=False)+'\n').encode()
+          
+          def json_length(value):
+              def size(v):
+                  if v is None:return 4
+                  if type(v) is bool:return 4 if v else 5
+                  if type(v) is int:return len(str(v))
+                  if type(v) is str:
+                      return 2+sum(2 if c in '\"\\\b\f\n\r\t' else 6 if ord(c)<32 or 126<ord(c)<=65535 else 12 if ord(c)>65535 else 1 for c in v)
+                  if type(v) in (list,tuple):return 2+max(0,len(v)-1)+sum(size(x) for x in v)
+                  assert type(v) is dict and all(type(k) is str for k in v)
+                  return 2+max(0,len(v)-1)+sum(size(k)+1+size(x) for k,x in v.items())
+              return size(value)+1
+          
+          def canonical_literal(path):
+              assert type(path) is str and path.startswith('/') and len(path.encode())<=4096 and not any(c in path for c in '\x00\r\n\\')
+              assert path=='/' or all(c not in ('','.','..') for c in path.split('/')[1:])
+              return path
+          
+          def admitted(path):return any(path==root or path.startswith(root+'/') for root in ROOTS)
+          
+          class RoutineRefusal(AssertionError):pass
+          class PathPolicyRefusal(RoutineRefusal):pass
+          class ClockExpired(AssertionError):pass
+          class ReadCapExceeded(AssertionError):pass
+          class MetadataCapExceeded(AssertionError):pass
+          class OverflowWitness(AssertionError):pass
+          class InstabilityObserved(AssertionError):pass
+          class OutputOversize(AssertionError):pass
+          class OutputMeasureFailure(AssertionError):pass
+          class OutputEncodeFailure(AssertionError):pass
+          FATAL=(ClockExpired,ReadCapExceeded,MetadataCapExceeded,OverflowWitness,InstabilityObserved)
+          
+          def require(value,kind=RoutineRefusal):
+              if not value:raise kind()
+          
+          def error_types(first,secondary):
+              return {'firstType':type(first).__name__ if first is not None else None,'secondaryTypes':[type(e).__name__ for e in secondary]}
+          
+          class Context:
+              def __init__(self,ops=os,clock=True):
+                  self.ops=ops;self.clock=clock;self.positive=0;self.owners=[];self.first=None;self.secondary=[];self.witness=None;self.regular_pins={};self.metadata_count=0
+                  self.file_errors=[];self.output_positive=0
+                  self.data={'tools':[{'role':role,'status':'UNKNOWN_NOT_COLLECTED','candidates':[]} for role in ROLES],
+                      'collectionState':{k:False for k in ('provenance','tools','dpkgStatus','fixedPackageLists','procfs','apparmorProfiles','manuals')},
+                      'selectedPackageRecords':[],'fixedPackageLists':[],'procfs':[],'apparmorProfiles':[],'manuals':[]}
+              @classmethod
+              def testing(cls,ops=None):return cls(ops if ops is not None else os,False)
+              def tick(self):
+                  if self.clock:require(START_WALL_NS<=time.time_ns()<=END_WALL_NS and START_MONOTONIC_NS<=time.monotonic_ns()<=END_MONOTONIC_NS,ClockExpired)
+              def call(self,fn,*args):
+                  self.tick();value=fn(*args);self.tick();return value
+              def fail(self,error):
+                  if self.first is None:self.first=error
+                  elif error is not self.first and not any(error is e for e in self.secondary):self.secondary.append(error)
+              def metadata(self,path):
+                  self.metadata_count+=1;require(self.metadata_count<=8192,MetadataCapExceeded)
+                  return self.call(self.ops.lstat,path)
+              def file_error(self,path,first,secondary=(),owner_index=None):
+                  wrappers=[];seen=set()
+                  while isinstance(first,RoutineRefusal) and first.__cause__ is not None and id(first) not in seen:
+                      seen.add(id(first));wrappers.append(first);first=first.__cause__
+                  rest=[]
+                  for error in list(reversed(wrappers))+list(secondary):
+                      if error is not first and not any(error is old for old in rest):rest.append(error)
+                  row={'path':path,'ownerIndex':owner_index,'first':first,'secondary':rest};self.file_errors.append(row)
+                  return len(self.file_errors)-1
+              def unstable(self,error):
+                  self.fail(error);wrapper=InstabilityObserved();self.fail(wrapper)
+                  try:self.tick()
+                  except BaseException as later:self.fail(later)
+                  raise wrapper from error
+              def stable(self,fn,*args):
+                  try:return self.call(fn,*args)
+                  except OSError as error:self.unstable(error)
+              def resolve(self,path):
+                  original=canonical_literal(path);links=[];dirs=[];seen=set();current='/';parts=path.split('/')[1:];observed_link=None
+                  try:
+                      while parts:
+                          part=parts.pop(0);candidate=posixpath.join(current,part)
+                          s=self.metadata(candidate)
+                          require(s.st_uid==0,PathPolicyRefusal)
+                          if stat.S_ISLNK(s.st_mode):
+                              observed_link={'path':candidate,'physicalNine':nine(s)}
+                              require(candidate not in seen and len(links)<8,PathPolicyRefusal);seen.add(candidate)
+                              try:literal=self.call(self.ops.readlink,candidate)
+                              except OSError as error:
+                                  if error.errno in (errno.ENOENT,errno.EINVAL):self.unstable(error)
+                                  raise
+                              require(type(literal) is str and 0<len(literal.encode())<=4096 and not any(x in literal for x in '\x00\r\n\\'),PathPolicyRefusal)
+                              try:after=self.metadata(candidate)
+                              except OSError as error:self.unstable(error)
+                              require(nine(after)==nine(s),InstabilityObserved)
+                              target=posixpath.normpath(literal if literal.startswith('/') else posixpath.join(current,literal))
+                              row={'path':candidate,'literal':literal,'target':target,'physicalNine':nine(s)};links.append(row);observed_link=None
+                              require(admitted(target),PathPolicyRefusal)
+                              parts=target.split('/')[1:]+parts;current='/'
+                          else:
+                              require(not s.st_mode&0o022,PathPolicyRefusal)
+                              if parts:require(stat.S_ISDIR(s.st_mode),PathPolicyRefusal);dirs.append({'path':candidate,'identityFive':nine(s)[:5]})
+                              else:require(stat.S_ISREG(s.st_mode),PathPolicyRefusal)
+                              current=candidate
+                      return {'path':original,'status':'RESOLVED','canonical':current,'links':links,'parentIdentities':dirs,'physicalNine':nine(s)}
+                  except FATAL:
+                      self.data['incompleteResolution']={'path':original,'links':links,'parentIdentities':dirs,'observedLink':observed_link};raise
+                  except FileNotFoundError as error:
+                      index=self.file_error(original,error)
+                      try:self.tick()
+                      except BaseException:
+                          self.data['incompleteResolution']={'path':original,'links':links,'parentIdentities':dirs,'observedLink':observed_link};raise
+                      return {'path':original,'status':'ABSENT','fileErrorIndex':index,'links':links,'parentIdentities':dirs}
+                  except (PathPolicyRefusal,OSError) as error:
+                      index=self.file_error(original,error)
+                      try:self.tick()
+                      except BaseException:
+                          self.data['incompleteResolution']={'path':original,'links':links,'parentIdentities':dirs,'observedLink':observed_link};raise
+                      return {'path':original,'status':'HELD','reason':type(error).__name__,'fileErrorIndex':index,'links':links,'parentIdentities':dirs}
+                  except BaseException:
+                      self.data['incompleteResolution']={'path':original,'links':links,'parentIdentities':dirs,'observedLink':observed_link};raise
+              def read(self,path,maximum,proc=False,resolved=None):
+                  assert type(maximum) is int and 0<maximum<=TOOL_MAX
+                  self.tick()
+                  try:s=self.metadata(path)
+                  except FileNotFoundError as error:
+                      if resolved is not None:self.unstable(error)
+                      index=self.file_error(path,error);self.tick()
+                      return {'path':path,'status':'ABSENT','fileErrorIndex':index},None
+                  except OSError as error:
+                      if resolved is not None:self.unstable(error)
+                      index=self.file_error(path,error);self.tick()
+                      return {'path':path,'status':'HELD_UNREADABLE','fileErrorIndex':index},None
+                  require(stat.S_ISREG(s.st_mode) and s.st_uid==0 and not s.st_mode&0o022,InstabilityObserved)
+                  if resolved is not None:require(nine(s)==resolved['physicalNine'],InstabilityObserved)
+                  if not proc and s.st_size>maximum:return {'path':path,'status':'HELD_OVERSIZED','statNine':nine(s),'cap':maximum},None
+                  # The fixed category cap is reserved before opening; procfs size0 is
+                  # deliberately not used to predict its positive payload or EOF.
+                  require(self.positive+maximum+1<=READ_MAX,ReadCapExceeded)
+                  row={'path':path,'acquired':False,'closeAttempted':False,'closed':False,'pending':False,'positiveBytes':0,'prefixBytes':0,'prefixSHA256':None,'eof':False}
+                  owner_index=len(self.owners);self.owners.append(row);fd=None;body=bytearray();h=hashlib.sha256();error=None;cleanup=[];routine=False
+                  try:
+                      self.tick();fd=self.ops.open(path,os.O_RDONLY|os.O_NOFOLLOW);row['acquired']=True;row['pending']=True;self.tick()
+                      require(nine(self.stable(self.ops.fstat,fd))==nine(s),InstabilityObserved)
+                      boundary=maximum if proc else s.st_size
+                      while True:
+                          count=min(65536,boundary-len(body)+1)
+                          require(count>0 and self.positive+count<=READ_MAX,ReadCapExceeded)
+                          self.tick();part=self.ops.read(fd,count);assert type(part) is bytes and len(part)<=count
+                          self.positive+=len(part);row['positiveBytes']+=len(part)
+                          allowed=min(len(part),boundary-len(body));prefix=part[:allowed];body.extend(prefix);h.update(prefix)
+                          row['prefixBytes']=len(body);row['prefixSHA256']=h.hexdigest()
+                          if len(part)>allowed:
+                              if self.witness is None:self.witness={'path':path,'byte':part[allowed],'cap':boundary}
+                              raise OverflowWitness('ONE_OVERFLOW_WITNESS')
+                          if not part:row['eof']=True
+                          self.tick()
+                          if not part:break
+                      if not proc:require(len(body)==s.st_size,InstabilityObserved)
+                      require(nine(self.stable(self.ops.fstat,fd))==nine(s),InstabilityObserved)
+                  except BaseException as reason:
+                      error=reason;routine=isinstance(reason,(OSError,RoutineRefusal))
+                      if not routine:self.fail(reason)
+                  finally:
+                      if fd is not None:
+                          row['closeAttempted']=True
+                          try:self.ops.close(fd);row['closed']=True;row['pending']=False
+                          except BaseException as reason:self.fail(reason);cleanup.append(reason)
+                  if error is not None or cleanup:
+                      first=error if error is not None else cleanup[0];rest=cleanup if error is not None else cleanup[1:]
+                      index=self.file_error(path,first,rest,owner_index)
+                      if cleanup:raise cleanup[0] if routine or error is None else error
+                      if routine:
+                          self.tick();return {'path':path,'status':'HELD_UNREADABLE','ownerIndex':owner_index,'fileErrorIndex':index},None
+                      raise error
+                  self.tick()
+                  try:after=self.metadata(path)
+                  except OSError as reason:self.unstable(reason)
+                  require(nine(after)==nine(s),InstabilityObserved)
+                  pin={'path':path,'bytes':len(body),'sha256':h.hexdigest(),'physicalNine':nine(s)}
+                  self.regular_pins[path]=pin
+                  return {'path':path,'status':'WHOLEPINNED','pin':pin,'ownerIndex':owner_index},bytes(body)
+          
+          def scalar(body):
+              require(type(body) is bytes and len(body)<=256)
+              try:text=body.decode('ascii')
+              except UnicodeError as error:raise RoutineRefusal() from error
+              if text.endswith('\n'):text=text[:-1]
+              require(DECIMAL.fullmatch(text))
+              return int(text)
+          
+          def package_status(body):
+              require(type(body) is bytes and len(body)<=STATUS_MAX and b'\x00' not in body and b'\r' not in body)
+              result=[];seen=set();anomalies=[];holds=[];offset=0
+              for raw in body.split(b'\n\n'):
+                  start=offset;offset+=len(raw)+2
+                  if not raw:continue
+                  lines=raw.splitlines();identity=[];ambiguous=False;previous_package=False
+                  span={'byteStart':start,'byteEnd':start+len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
+                  for line in lines:
+                      require(len(line)<=65536)
+                      if line.startswith(b'Package:'):
+                          value=line[8:].lstrip(b' ')
+                          if not re.fullmatch(rb'[a-z0-9][a-z0-9+.-]*',value):ambiguous=True
+                          else:identity.append(value.decode('ascii'))
+                          previous_package=True
+                      else:
+                          if re.match(rb'(?i:package)[ \t]*:',line) or previous_package and line.startswith((b' ',b'\t')):ambiguous=True
+                          previous_package=False
+                  if ambiguous or len(identity)!=1:holds.append(dict(span,reason='AMBIGUOUS_PACKAGE_IDENTITY'));continue
+                  selected=identity[0] in PKGS;current={};last=None;bad=False
+                  try:
+                      for encoded in lines:
+                          line=encoded.decode('utf8')
+                          if line.startswith((' ','\t')):
+                              require(last is not None);current[last]+='\n'+line
+                          else:
+                              key,sep,value=line.partition(':');require(sep and re.fullmatch('[A-Za-z0-9][A-Za-z0-9-]*',key) and key not in current)
+                              current[key]=value.lstrip(' ');last=key
+                  except (UnicodeError,RoutineRefusal) as error:
+                      if selected:raise RoutineRefusal('SELECTED_STATUS_MALFORMED') from error
+                      bad=True
+                  if not selected:
+                      if bad:anomalies.append(dict(span,reason='UNRELATED_MALFORMED_FIELDS'))
+                      continue
+                  for key in ('Package','Status','Architecture','Version'):require(current.get(key) and '\n' not in current[key])
+                  key=(current['Package'],current['Architecture']);require(key not in seen);seen.add(key)
+                  result.append({k:current[k] for k in ('Package','Status','Architecture','Version','Source') if k in current})
+              return {'selectedRecords':result,'unrelatedAnomalies':anomalies,'identityHolds':holds}
+          
+          def ownership_matches(body,targets,usrmerge):
+              require(type(body) is bytes and len(body)<=LIST_MAX and b'\x00' not in body)
+              matches=[];skipped=0
+              entries=body.split(b'\n')
+              if entries and entries[-1]==b'':entries.pop()
+              for raw in entries:
+                  try:entry=raw.decode('utf8')
+                  except UnicodeError as error:raise RoutineRefusal() from error
+                  if entry=='/.':skipped+=1;continue
+                  try:canonical_literal(entry)
+                  except AssertionError as error:raise RoutineRefusal() from error
+                  translated='/usr'+entry if usrmerge and (entry.startswith('/bin/') or entry.startswith('/sbin/')) else entry
+                  if entry in targets or translated in targets:matches.append({'listed':entry,'canonicalUsrMerged':translated})
+              return {'matches':matches,'skippedRootEntries':skipped}
+          
+          def manual_decode(body,compressed):
+              require(len(body)<=MANUAL_MAX)
+              if not compressed:require(len(body)<=MANUAL_DECODE_MAX);return body
+              try:
+                  decoder=zlib.decompressobj(31);parts=[];total=0
+                  for offset in range(0,len(body),65536):
+                      incoming=body[offset:offset+65536];require(not decoder.eof)
+                      while True:
+                          out=decoder.decompress(incoming,min(65536,MANUAL_DECODE_MAX-total+1));total+=len(out);require(total<=MANUAL_DECODE_MAX);parts.append(out)
+                          incoming=decoder.unconsumed_tail
+                          if not incoming:break
+                      require(not decoder.unused_data)
+                  require(decoder.eof and not decoder.unused_data and not decoder.unconsumed_tail)
+                  return b''.join(parts)
+              except zlib.error as error:raise RoutineRefusal() from error
+          
+          def flag_contexts(body,flags,manual=False):
+              result=[]
+              for flag in flags:
+                  needle=flag.encode();positions=[];covered=[]
+                  if manual and b'-' in needle:
+                      escaped=needle.replace(b'-',b'\\-');at=0
+                      while True:
+                          index=body.find(escaped,at)
+                          if index<0:break
+                          positions.append((index,index+len(escaped),'escaped'));covered.append((index,index+len(escaped)));at=index+len(escaped)
+                  at=0
+                  while True:
+                      index=body.find(needle,at)
+                      if index<0:break
+                      if not any(a<=index and index+len(needle)<=b for a,b in covered):positions.append((index,index+len(needle),'literal'))
+                      at=index+len(needle)
+                  positions.sort()
+                  contexts=[]
+                  for index,stop,spelling in positions[:2]:
+                      begin=max(0,index-16);end=min(len(body),begin+64)
+                      contexts.append({'matchStart':index,'matchEnd':stop,'spelling':spelling,'byteStart':begin,'byteEnd':end,'text':body[begin:end].decode('utf8','replace'),'truncated':begin>0 or end<len(body)})
+                  result.append({'flag':flag,'matches':len(positions),'contexts':contexts,'omittedMatches':max(0,len(positions)-2),'semanticSupportAccepted':False})
+              return result
+          
+          def classify(rows):
+              return {'readinessAccepted':False,'enforcementObserved':False,'requiredHolds':[r['role'] for r in rows if r['status']!='OBSERVED'],'laterConfinementFixtureRequired':True,'nativeConversionAccepted':False}
+          
+          def collect(ctx):
+              assert sys.platform=='linux'
+              context={}
+              for key in ('GITHUB_REPOSITORY','GITHUB_REF','GITHUB_EVENT_NAME','GITHUB_RUN_ATTEMPT','GITHUB_RUN_ID','GITHUB_SHA','ImageOS','ImageVersion'):
+                  value=os.environ.get(key);assert value is None or len(value.encode())<=4096;context[key]=value
+              assert context['GITHUB_REPOSITORY']=='tamler/wyreup' and context['GITHUB_REF']==REF and context['GITHUB_EVENT_NAME']=='push' and context['GITHUB_RUN_ATTEMPT']=='1'
+              assert re.fullmatch('[1-9][0-9]{0,19}',context['GITHUB_RUN_ID'] or '') and re.fullmatch('[0-9a-f]{40}',context['GITHUB_SHA'] or '')
+              uname=os.uname();provenance={'system':uname.sysname,'release':uname.release,'version':uname.version,'machine':uname.machine,'uid':os.getuid(),'euid':os.geteuid(),'pythonExecutable':sys.executable,'pythonVersion':sys.version,'github':context}
+              assert uname.machine=='x86_64' and os.geteuid()!=0
+              ctx.data['provenance']=provenance;ctx.data['collectionState']['provenance']=True
+              tool_rows=ctx.data['tools'];all_candidates=[];targets=set();bin_usrmerge=False
+              for role in ROLES:
+                  tool=next(r for r in tool_rows if r['role']==role);candidates=tool['candidates']
+                  for prefix in ('/usr/bin/','/bin/'):
+                      path=prefix+role;resolved=ctx.resolve(path);item={'role':role,'candidate':path,'resolution':resolved,'status':resolved['status']};candidates.append(item);all_candidates.append(item)
+                      if any(r['path']=='/bin' and r['target']=='/usr/bin' for r in resolved['links']):bin_usrmerge=True
+                      if resolved['status']=='RESOLVED':
+                          info=resolved['physicalNine'];mode=int(info[2])
+                          if not mode&0o111:item['status']='HELD_NOT_EXECUTABLE'
+                          else:
+                              read,body=ctx.read(resolved['canonical'],TOOL_MAX,resolved=resolved);item['status']=read['status'];item['body']=read
+                              if body is not None:
+                                  item['status']='OBSERVED';item['setuid']=bool(mode&stat.S_ISUID);item['setgid']=bool(mode&stat.S_ISGID);item['mode']=mode;item['uid']=int(info[3]);item['nlink']=int(info[5])
+                                  item['format']='ELF' if body.startswith(b'\x7fELF') else 'script' if body.startswith(b'#!') else 'OTHER_NOT_EVALUATED'
+                                  if body.startswith(b'#!'):
+                                      line=body.split(b'\n',1)[0]
+                                      try:require(len(line)<=4096);item['shebang']=line.decode('utf8')
+                                      except (UnicodeError,RoutineRefusal) as error:
+                                          item['status']='HELD_MALFORMED_SHEBANG';item['fileErrorIndex']=ctx.file_error(resolved['canonical'],error,owner_index=read['ownerIndex'])
+                                  if role=='autoreconf' and item['format']=='script':item['literalSourceContexts']=flag_contexts(body,FLAGS['autoreconf']+('LIBTOOLIZE','ACLOCAL','M4'))
+                                  targets.update((path,resolved['canonical']))
+                  chosen=next((r for r in candidates if r['status']=='OBSERVED'),None)
+                  tool.update(status='OBSERVED' if chosen else 'HELD',selectedCandidate=chosen['candidate'] if chosen else None)
+              ctx.data['collectionState']['tools']=True
+              status_path='/var/lib/dpkg/status';status_resolve=ctx.resolve(status_path);status_record={'resolution':status_resolve};packages=[]
+              ctx.data['dpkgStatus']=status_record
+              if status_resolve['status']=='RESOLVED':
+                  row,body=ctx.read(status_resolve['canonical'],STATUS_MAX,resolved=status_resolve);status_record['read']=row
+                  if body is not None:
+                      try:
+                          parsed=package_status(body);status_record['parsed']=parsed;packages=parsed['selectedRecords']
+                      except RoutineRefusal as error:status_record.update(status='HELD_MALFORMED_STATUS',fileErrorIndex=ctx.file_error(status_resolve['canonical'],error,owner_index=row['ownerIndex']))
+              ctx.data['selectedPackageRecords']=packages;ctx.data['collectionState']['dpkgStatus']=True
+              lists=ctx.data['fixedPackageLists']
+              for file in LIST_PATHS:
+                  resolved=ctx.resolve(file);row={'path':file,'resolution':resolved,'matches':[],'skippedRootEntries':0};lists.append(row)
+                  if resolved['status']=='RESOLVED':
+                      read,body=ctx.read(resolved['canonical'],LIST_MAX,resolved=resolved);row['read']=read
+                      if body is not None:
+                          try:row.update(ownership_matches(body,targets,bin_usrmerge))
+                          except RoutineRefusal as error:row.update(status='HELD_MALFORMED_LIST',fileErrorIndex=ctx.file_error(resolved['canonical'],error,owner_index=read['ownerIndex']))
+              ctx.data['collectionState']['fixedPackageLists']=True
+              for tool in tool_rows:
+                  own=[]
+                  for record in lists:
+                      literal=record['path'].rsplit('/',1)[1][:-5];package=literal.split(':')[0]
+                      matching=[r for r in record['matches'] if any(r['listed']==c['candidate'] or r['canonicalUsrMerged']==c['resolution'].get('canonical') for c in tool['candidates'])]
+                      if matching:
+                          versions=[p for p in packages if p['Package']==package and p['Status']=='install ok installed' and p['Architecture'] in ('amd64','all')]
+                          own.append({'listPath':record['path'],'matches':matching,'installedPackageRecords':versions})
+                  tool['packageAssociations']=own
+                  if tool['status']=='OBSERVED' and not any(r['installedPackageRecords'] for r in own):tool['packageAssociationHeld']=True
+              policies=ctx.data['procfs']
+              for file in PROC_PATHS:
+                  resolved=ctx.resolve(file);row={'path':file,'resolution':resolved,'status':resolved['status']};policies.append(row)
+                  if resolved['status']=='RESOLVED':
+                      read,body=ctx.read(resolved['canonical'],256,proc=True,resolved=resolved);row['read']=read;row['status']=read['status']
+                      if body is not None:
+                          try:row['value']=scalar(body)
+                          except RoutineRefusal as error:row.update(status='HELD_MALFORMED_SCALAR',fileErrorIndex=ctx.file_error(resolved['canonical'],error,owner_index=read['ownerIndex']))
+              ctx.data['collectionState']['procfs']=True
+              profiles=ctx.data['apparmorProfiles']
+              for file in PROFILE_PATHS:
+                  resolved=ctx.resolve(file);row={'path':file,'resolution':resolved};profiles.append(row)
+                  if resolved['status']=='RESOLVED':
+                      read,body=ctx.read(resolved['canonical'],PROFILE_MAX,resolved=resolved);row['read']=read
+                      if body is not None:row['literalContexts']=flag_contexts(body,('bwrap','userns','deny','capability'))
+              ctx.data['collectionState']['apparmorProfiles']=True
+              manuals=ctx.data['manuals']
+              for role,file,compressed in MANUALS:
+                  resolved=ctx.resolve(file);row={'role':role,'path':file,'compressed':compressed,'resolution':resolved};manuals.append(row)
+                  if resolved['status']=='RESOLVED':
+                      read,body=ctx.read(resolved['canonical'],MANUAL_MAX,resolved=resolved);row['read']=read
+                      if body is not None:
+                          try:
+                              decoded=manual_decode(body,compressed);row['decodedBytes']=len(decoded);row['decodedSHA256']=hashlib.sha256(decoded).hexdigest();row['literalContexts']=flag_contexts(decoded,FLAGS[role],manual=True)
+                          except RoutineRefusal as error:row.update(status='HELD_MALFORMED_MANUAL',fileErrorIndex=ctx.file_error(resolved['canonical'],error,owner_index=read['ownerIndex']))
+              ctx.data['collectionState']['manuals']=True
+              for pin in ctx.regular_pins.values():
+                  try:current=ctx.metadata(pin['path'])
+                  except OSError as error:ctx.unstable(error)
+                  require(nine(current)==pin['physicalNine'],InstabilityObserved)
+              require(not any(r['pending'] for r in ctx.owners),InstabilityObserved)
+              ctx.data['usrMergeObserved']=bin_usrmerge
+              return snapshot(ctx,True)
+          
+          def snapshot(ctx,complete=False):
+              result=ctx.data
+              def held(v):
+                  if type(v) is dict:return any(k=='status' and type(x) is str and (x=='ABSENT' or x.startswith('HELD')) or k=='packageAssociationHeld' and x or held(x) for k,x in v.items())
+                  if type(v) is list:return any(held(x) for x in v)
+                  return False
+              has_holds=bool(ctx.file_errors) or held(result) or bool(result.get('dpkgStatus',{}).get('parsed',{}).get('identityHolds'))
+              result.update(classification='INCOMPLETE_PREREQUISITE_DATA_HOLD' if ctx.first is not None or not complete else 'CLOSED_PREREQUISITE_DATA_WITH_HOLDS' if has_holds else 'CLOSED_PREREQUISITE_DATA_NOT_READINESS',
+                  clock={'wallStartNs':START_WALL_NS,'wallEndNs':END_WALL_NS,'monotonicStartNs':START_MONOTONIC_NS,'monotonicEndNs':END_MONOTONIC_NS},
+                  scope=classify(result['tools']),readLedger={'positiveBytes':ctx.positive,'readCap':READ_MAX,'metadataCalls':ctx.metadata_count,'closedReaders':sum(r['closed'] for r in ctx.owners),'readers':len(ctx.owners),'allEOF':all(r['eof'] for r in ctx.owners)},
+                  ownership=ctx.owners,fileErrors=[dict(path=r['path'],ownerIndex=r['ownerIndex'],**error_types(r['first'],r['secondary'])) for r in ctx.file_errors],globalErrors=error_types(ctx.first,ctx.secondary),witness=ctx.witness,
+                  ordinaryVendorTrust='GitHub Runner/system Python/Ubuntu packages; no source-binary, native-loader, kernel or enforcement equivalence',
+                  publication={'admitted':False,'appRefFilters':'UNKNOWN_PENDING_REAUTH_AND_FRESH_ROOT_OBSERVATIONS','classicBranchProtections':'UNASSIGNED','workflowRunSubscribers':'UNASSIGNED','githubWritePerformedByCollector':False},
+                  limits={'tool':TOOL_MAX,'dpkgStatus':STATUS_MAX,'list':LIST_MAX,'proc':256,'profile':PROFILE_MAX,'manualEncoded':MANUAL_MAX,'manualDecoded':MANUAL_DECODE_MAX,'symlinkHops':8,'stdout':OUTPUT_MAX},
+                  limitations=['PRE_WRITE_SNAPSHOT only; returned late publication is nonzero.','Metadata observations are not command/namespace/enforcement/native success.','Kernel/image strings are provenance, not equality gates.','Literal/troff contexts are not runtime flag support.','Opaque Python/runner/vendor initialization IO is ordinary trust, not zero or an RSS quota.','Publication/app/ref/subscriber/protection facts remain externally held.'])
+              return result
+          
+          def fallback(ctx,reason,length):
+              if reason in ('OUTPUT_MEASURE_FAILURE','OUTPUT_ENCODE_FAILURE'):length=None
+              def bounded_integer(value):return value if type(value) is int and 0<=value<=99999999999999999999 else None
+              def name(error):
+                  value=type(error).__name__ if error is not None else '';return value[:32],len(value)>32
+              first,flag=name(ctx.first);second=[name(e) for e in ctx.secondary[:8]]
+              witness=None
+              if ctx.witness is not None:witness={'category':'READ_OVERFLOW','pathSHA256':hashlib.sha256(ctx.witness['path'].encode()).hexdigest(),'byte':ctx.witness['byte']}
+              record={'classification':'OUTPUT_PROJECTION_PREREQUISITE_DATA_HOLD','reason':reason,'fullPremeasuredLength':bounded_integer(length),'lengthStatus':'MEASURED' if bounded_integer(length) is not None else 'UNAVAILABLE',
+                  'positiveBytes':bounded_integer(ctx.positive),'metadataCalls':bounded_integer(ctx.metadata_count),'readers':bounded_integer(len(ctx.owners)),'closedReaders':bounded_integer(sum(r['closed'] for r in ctx.owners)),'pendingReaders':bounded_integer(sum(r['pending'] for r in ctx.owners)),
+                  'firstType':first,'firstTypeTruncated':flag,'secondaryTypes':[x[0] for x in second],'secondaryTypesTruncated':[x[1] for x in second],'omittedSecondaryCount':bounded_integer(max(0,len(ctx.secondary)-8)),
+                  'witness':witness,'roles':[{'role':r['role'],'status':r['status']} for r in ctx.data['tools']],
+                  'readinessAccepted':False,'enforcementObserved':False,'nativeConversionAccepted':False,'completeDetailOmitted':True}
+              validate_fallback(record);return record
+          
+          def validate_fallback(record):
+              assert record['reason'] in ('OUTPUT_OVERSIZE','SEMANTIC_OVERSIZE','WIRE_OVERSIZE','OUTPUT_MEASURE_FAILURE','OUTPUT_ENCODE_FAILURE')
+              assert type(record['firstType']) is str and len(record['firstType'])<=32 and type(record['firstTypeTruncated']) is bool
+              names=record['secondaryTypes'];flags=record['secondaryTypesTruncated']
+              assert type(names) is list and len(names)<=8 and all(type(n) is str and len(n)<=32 for n in names)
+              assert type(flags) is list and len(flags)==len(names) and all(type(f) is bool for f in flags)
+              assert record['roles']==[{'role':role,'status':row['status']} for role,row in zip(ROLES,record['roles'])] and len(record['roles'])==12
+              assert all(r['status'] in ('UNKNOWN_NOT_COLLECTED','HELD','OBSERVED') for r in record['roles'])
+              assert not record['readinessAccepted'] and not record['enforcementObserved'] and not record['nativeConversionAccepted'] and record['completeDetailOmitted'] is True
+          
+          # BEGIN_DWG_SHARED_CODEC_V1
+          SHARED_SCHEMA='dwg-prerequisite-shared-v1'
+          SHARED_TABLES=('paths','physicalNine','identityFive','parentIdentities','contexts','packages','digests')
+          SHARED_SEMANTIC_MAX=262144
+          SHARED_WIRE_MAX=65536
+          _SHARED_PATH_KEYS=('path','candidate','canonical','listPath','listed','canonicalUsrMerged','target','pythonExecutable','selectedCandidate')
+          _SHARED_DIGEST_KEYS=('sha256','prefixSHA256','decodedSHA256')
+          _SHARED_PACKAGE_KEYS=('selectedPackageRecords','selectedRecords','installedPackageRecords')
+          
+          def shared_bytes(value):
+              return json.dumps(value,ensure_ascii=True,separators=(',',':'),allow_nan=False).encode('ascii')
+          
+          def shared_project(value):
+              tables={name:[] for name in SHARED_TABLES};indices={name:{} for name in SHARED_TABLES};active=set()
+              def intern(name,original):
+                  key=shared_bytes(original)
+                  if key in indices[name]:return indices[name][key]
+                  index=len(tables[name]);indices[name][key]=index;tables[name].append(None)
+                  tables[name][index]=visit(original) if name in ('parentIdentities','contexts') else original
+                  return index
+              def visit(item):
+                  if type(item) in (dict,list):
+                      identity=id(item);assert identity not in active;active.add(identity)
+                      try:
+                          if type(item) is list:return [visit(x) for x in item]
+                          out={}
+                          for key,child in item.items():
+                              assert type(key) is str and not key.endswith(('Ref','Refs'))
+                              if key in _SHARED_PATH_KEYS and type(child) is str and child.startswith('/'):
+                                  out[key+'Ref']=intern('paths',child)
+                              elif key in _SHARED_DIGEST_KEYS and child is not None:
+                                  out[key+'Ref']=intern('digests',child)
+                              elif key in ('physicalNine','identityFive','parentIdentities','contexts') and type(child) is list:
+                                  out[key+'Ref']=intern(key,child)
+                              elif key in _SHARED_PACKAGE_KEYS and type(child) is list:
+                                  out[key+'Refs']=[intern('packages',row) for row in child]
+                              else:out[key]=visit(child)
+                          return out
+                      finally:active.remove(identity)
+                  assert item is None or type(item) in (bool,int,float,str)
+                  return item
+              record=visit(value)
+              return {'schema':SHARED_SCHEMA,'tables':tables,'record':record}
+          
+          def _shared_reference(key,value,tables):
+              if key.endswith('Refs'):
+                  base=key[:-4];assert base in _SHARED_PACKAGE_KEYS and type(value) is list
+                  assert all(type(index) is int and 0<=index<len(tables['packages']) for index in value)
+                  return base,[tables['packages'][index] for index in value]
+              if not key.endswith('Ref'):return key,value
+              base=key[:-3]
+              name='paths' if base in _SHARED_PATH_KEYS else 'digests' if base in _SHARED_DIGEST_KEYS else base
+              assert name in ('paths','digests','physicalNine','identityFive','parentIdentities','contexts')
+              assert type(value) is int and 0<=value<len(tables[name])
+              return base,tables[name][value]
+          
+          def _shared_measure(record,tables):
+              def measure(item):
+                  if type(item) is list:
+                      total=2+max(0,len(item)-1)
+                      for child in item:
+                          total+=measure(child);assert total<=SHARED_SEMANTIC_MAX
+                      return total
+                  if type(item) is dict:
+                      total=2+max(0,len(item)-1);keys=set()
+                      for key,child in item.items():
+                          assert type(key) is str
+                          original,expanded=_shared_reference(key,child,tables)
+                          assert original not in keys;keys.add(original)
+                          total+=len(shared_bytes(original))+1+measure(expanded);assert total<=SHARED_SEMANTIC_MAX
+                      return total
+                  assert item is None or type(item) in (bool,int,float,str)
+                  total=len(shared_bytes(item));assert total<=SHARED_SEMANTIC_MAX
+                  return total
+              length=measure(record)+1;assert length<=SHARED_SEMANTIC_MAX
+              return length
+          
+          def _shared_restore(record,tables):
+              if type(record) is list:return [_shared_restore(x,tables) for x in record]
+              if type(record) is dict:
+                  out={}
+                  for key,value in record.items():
+                      original,expanded=_shared_reference(key,value,tables)
+                      assert original not in out
+                      out[original]=_shared_restore(expanded,tables)
+                  return out
+              return record
+          
+          def _shared_validate_tables(tables):
+              assert type(tables) is dict and tuple(tables)==SHARED_TABLES
+              for name,rows in tables.items():
+                  assert type(rows) is list
+                  seen=set()
+                  for row in rows:
+                      encoded=shared_bytes(row);assert encoded not in seen;seen.add(encoded)
+                      if name=='paths':
+                          assert type(row) is str and row.startswith('/') and '\x00' not in row
+                      elif name in ('physicalNine','identityFive'):
+                          assert type(row) is list and len(row)==(9 if name=='physicalNine' else 5)
+                          assert all(type(x) is str and x and str(int(x))==x for x in row)
+                      elif name=='digests':
+                          assert type(row) is str and len(row)==64 and all(c in '0123456789abcdef' for c in row)
+                      elif name=='parentIdentities':
+                          assert type(row) is list
+                          for parent in row:
+                              assert type(parent) is dict and tuple(parent)==('pathRef','identityFiveRef')
+                              for key,index in parent.items():
+                                  _shared_reference(key,index,tables)
+                      elif name=='contexts':
+                          assert type(row) is list
+                          for context in row:
+                              assert type(context) is dict and tuple(context)==('matchStart','matchEnd','spelling','byteStart','byteEnd','text','truncated')
+                              assert all(type(context[k]) is int and context[k]>=0 for k in ('matchStart','matchEnd','byteStart','byteEnd'))
+                              assert context['matchStart']<=context['matchEnd'] and context['byteStart']<=context['byteEnd'] and context['byteEnd']-context['byteStart']<=64
+                              assert context['spelling'] in ('literal','escaped') and type(context['text']) is str and len(context['text'])<=64 and type(context['truncated']) is bool
+                      else:
+                          assert type(row) is dict and tuple(row) in (('Package','Status','Architecture','Version'),('Package','Status','Architecture','Version','Source'))
+                          assert all(type(x) is str for x in row.values()) and all(row[k] for k in ('Package','Status','Architecture','Version'))
+          
+          def shared_decode(body):
+              assert type(body) is bytes and 0<len(body)<=SHARED_WIRE_MAX
+              def pairs(items):
+                  out={}
+                  for key,value in items:
+                      assert key not in out;out[key]=value
+                  return out
+              def constant(value):raise ValueError('NONFINITE_JSON')
+              packet=json.loads(body.decode('utf8','strict'),object_pairs_hook=pairs,parse_constant=constant)
+              assert type(packet) is dict and tuple(packet)==('schema','tables','record') and packet['schema']==SHARED_SCHEMA
+              assert shared_bytes(packet)+b'\n'==body
+              tables=packet['tables'];_shared_validate_tables(tables)
+              length=_shared_measure(packet['record'],tables)
+              restored=_shared_restore(packet['record'],tables)
+              assert len(shared_bytes(restored))+1==length
+              assert shared_bytes(shared_project(restored))+b'\n'==body
+              return restored
+          # END_DWG_SHARED_CODEC_V1
+          
+          def main():
+              ctx=Context();result=None
+              try:result=collect(ctx);ctx.tick()
+              except BaseException as error:ctx.fail(error)
+              if ctx.first is not None:
+                  result=snapshot(ctx)
+              length=None;reason=None
+              try:
+                  try:length=json_length(result)
+                  except BaseException as error:ctx.fail(error);ctx.fail(OutputMeasureFailure());reason='OUTPUT_MEASURE_FAILURE'
+                  if reason is None and length>SHARED_SEMANTIC_MAX:ctx.fail(OutputOversize());reason='SEMANTIC_OVERSIZE'
+                  if reason is None:
+                      try:wire=shared_project(result);length=json_length(wire)
+                      except BaseException as error:ctx.fail(error);ctx.fail(OutputMeasureFailure());reason='OUTPUT_MEASURE_FAILURE'
+                  if reason is None and length>OUTPUT_MAX:ctx.fail(OutputOversize());reason='WIRE_OVERSIZE'
+                  if reason is None:
+                      try:body=encode(wire);assert len(body)==length
+                      except BaseException as error:ctx.fail(error);ctx.fail(OutputEncodeFailure());reason='OUTPUT_ENCODE_FAILURE'
+                  if reason is not None:
+                      record=fallback(ctx,reason,length);length=json_length(record);assert length<=7552 and length<=8192
+                      body=encode(record);assert len(body)==length
+                  # The one body is a pre-write snapshot. A returned late publication
+                  # makes exit nonzero without a second projection or invented EOF.
+                  if ctx.first is None:ctx.tick()
+                  at=0
+                  while at<len(body):
+                      n=os.write(1,body[at:]);assert 0<n<=len(body)-at;at+=n;ctx.output_positive+=n
+                  if ctx.first is None:ctx.tick()
+              except BaseException as error:ctx.fail(error)
+              return 1 if ctx.first is not None else 0
+          
+          if __name__=='__main__':raise SystemExit(main())
