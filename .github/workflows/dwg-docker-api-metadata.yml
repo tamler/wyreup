@@ -1,0 +1,511 @@
+name: DWG local Docker API metadata
+on:
+  push:
+    branches: [verify/dwg-docker-api-metadata-20261022-0]
+    paths: [.github/workflows/dwg-docker-api-metadata.yml]
+permissions: {}
+jobs:
+  metadata:
+    if: ${{ github.repository == 'tamler/wyreup' && github.ref == 'refs/heads/verify/dwg-docker-api-metadata-20261022-0' && github.event_name == 'push' && github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Fixed read-only local daemon metadata
+        shell: /bin/bash --noprofile --norc -e {0}
+        run: |
+          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C LC_ALL=C TZ=UTC /usr/bin/python3 -I -S -B - <<'PY_DWG_DOCKER_API'
+          """Fixed read-only local-daemon DATA collector; entry requires separate admission."""
+          import hashlib
+          import http.client
+          import json
+          import math
+          import os
+          import re
+          import socket
+          import stat
+          import struct
+          import sys
+          import time
+          
+          ENV = {'PATH': '/usr/bin:/bin', 'LANG': 'C', 'LC_ALL': 'C', 'TZ': 'UTC'}
+          ENDPOINT = '/run/docker.sock'
+          PATHS = ('/version', '/info')
+          BODY_MAX, META_MAX, LINE_MAX, FIELD_MAX = 16384, 16384, 8192, 64
+          RAW_MAX, READ_MAX, SUMMARY_MAX = 65536, 268435456, 65536
+          COMPONENTS = ('Engine', 'containerd', 'runc', 'docker-init')
+          PENDING_STATE = None
+          
+          
+          class Refusal(Exception):
+              def __init__(self, code):
+                  self.code = code
+                  super().__init__(code)
+          
+          
+          def require(value, code):
+              if not value:
+                  raise Refusal(code)
+          
+          
+          def encoded_size(value):
+              if value is None:
+                  return 4
+              if type(value) is bool:
+                  return 4 if value else 5
+              if type(value) is int:
+                  require(len(str(value)) <= 20, 'INTEGER_SIZE')
+                  return len(str(value))
+              if type(value) is str:
+                  total = 2
+                  for char in value:
+                      cp = ord(char)
+                      total += 2 if char in '\\"\b\f\n\r\t' else 6 if cp < 32 or 127 <= cp <= 65535 else 12 if cp > 65535 else 1
+                  return total
+              if type(value) is list:
+                  return 2 + max(0, len(value) - 1) + sum(encoded_size(x) for x in value)
+              require(type(value) is dict and all(type(k) is str for k in value), 'JSON_TYPE')
+              return 2 + max(0, len(value) - 1) + sum(encoded_size(k) + 1 + encoded_size(v) for k, v in value.items())
+          
+          
+          def bounded_record(value, limit):
+              size = encoded_size(value)
+              require(size <= limit, 'RECORD_LIMIT')
+              result = json.dumps(value, ensure_ascii=True, separators=(',', ':')).encode('ascii')
+              require(len(result) == size, 'RECORD_MEASURE')
+              return result
+          
+          
+          def public_string(value, limit=256):
+              if value is None:
+                  return None
+              require(type(value) is str and len(value) <= limit and all(32 <= ord(c) <= 126 for c in value), 'PUBLIC_STRING')
+              return value
+          
+          
+          def project_version(value):
+              require(type(value) is dict, 'VERSION_OBJECT')
+              keys = ('Version', 'ApiVersion', 'MinAPIVersion', 'GitCommit', 'GoVersion', 'Os', 'Arch', 'KernelVersion', 'BuildTime')
+              result = {k: public_string(value.get(k)) for k in keys}
+              components = value.get('Components', [])
+              require(type(components) is list and len(components) <= 32, 'COMPONENTS')
+              selected = {}
+              for component in components:
+                  require(type(component) is dict, 'COMPONENT_OBJECT')
+                  name = component.get('Name')
+                  if name not in COMPONENTS:
+                      continue
+                  require(name not in selected, 'COMPONENT_DUPLICATE')
+                  details = component.get('Details', {})
+                  require(type(details) is dict, 'COMPONENT_DETAILS')
+                  selected[name] = {'Name': name, 'Version': public_string(component.get('Version')), 'GitCommit': public_string(details.get('GitCommit'))}
+              result['Components'] = [selected[n] for n in COMPONENTS if n in selected]
+              return result
+          
+          
+          def project_info(value):
+              require(type(value) is dict, 'INFO_OBJECT')
+              result = {k: public_string(value.get(k)) for k in ('CgroupDriver', 'CgroupVersion', 'DefaultRuntime', 'Driver')}
+              options = value.get('SecurityOptions')
+              require(options is None or type(options) is list and len(options) <= 32, 'SECURITY_OPTIONS')
+              result['SecurityOptions'] = None if options is None else [public_string(x) for x in options]
+              runtimes = value.get('Runtimes')
+              require(runtimes is None or type(runtimes) is dict and len(runtimes) <= 16, 'RUNTIMES')
+              result['Runtimes'] = None
+              if runtimes is not None:
+                  result['Runtimes'] = {}
+                  for name, item in runtimes.items():
+                      require(type(name) is str and re.fullmatch(r'[A-Za-z0-9_.-]{1,64}', name) and type(item) is dict, 'RUNTIME_NAME')
+                      path = public_string(item.get('path'))
+                      require(path is None or re.fullmatch(r'[A-Za-z0-9_./+-]{1,256}', path), 'RUNTIME_PATH')
+                      result['Runtimes'][name] = {'path': path, 'argumentsPresent': bool(item.get('runtimeArgs') or item.get('args'))}
+              return result
+          
+          
+          class State:
+              def __init__(self, clock=None):
+                  self.clock = clock or (lambda: (time.time_ns(), time.monotonic_ns()))
+                  self.start = self.clock()
+                  self.end = tuple(v + 30_000_000_000 for v in self.start)
+                  self.active_end = self.end
+                  self.first, self.secondary = None, []
+                  self.seen = set()
+                  self.owners, self.requests, self.retained = [], [], []
+                  self.positive_read = 0
+          
+              def remember(self, error):
+                  if id(error) not in self.seen:
+                      self.seen.add(id(error))
+                      if self.first is None:
+                          self.first = error
+                      else:
+                          self.secondary.append(error)
+          
+              def tick(self):
+                  now = self.clock()
+                  require(all(s <= n <= e for s, n, e in zip(self.start, now, self.active_end)), 'CLOCK')
+                  return now
+          
+              def remaining(self):
+                  now = self.tick()
+                  return min(e - n for e, n in zip(self.active_end, now)) / 1_000_000_000
+          
+              def call(self, fn, *args):
+                  self.tick()
+                  try:
+                      value = fn(*args)
+                  except BaseException as error:
+                      self.remember(error)
+                      try:
+                          self.tick()
+                      except BaseException as later:
+                          self.remember(later)
+                      raise
+                  self.tick()
+                  return value
+          
+              def begin(self, path):
+                  require(self.first is None and len(self.requests) < 2 and path == PATHS[len(self.requests)], 'REQUEST_ORDER')
+                  now = self.tick()
+                  self.active_end = tuple(min(end, n + 5_000_000_000) for end, n in zip(self.end, now))
+                  row = {'path': path, 'rawPositive': 0, 'rawSHA256': None, 'bodyPositive': 0, 'bodySHA256': None, 'metadataPositive': 0, 'headerFields': 0, 'trailerFields': 0, 'readAheadBytes': 0, 'wireEOF': False, 'framingEOF': False, 'peer': None, 'status': None}
+                  self.requests.append(row)
+                  return row
+          
+              def own(self, obj):
+                  row = {'object': obj, 'acquired': True, 'closeAttempted': False, 'closed': False, 'pending': True}
+                  self.owners.append(row)
+                  return row
+          
+              def cleanup(self):
+                  for row in reversed(self.owners):
+                      if row['closeAttempted']:
+                          continue
+                      row['closeAttempted'] = True
+                      try:
+                          row['object'].close()
+                          row['closed'], row['pending'] = True, False
+                      except BaseException as error:
+                          self.remember(error)
+          
+              def owner_facts(self):
+                  return [{k: v for k, v in row.items() if k != 'object'} for row in self.owners]
+          
+          
+          class Reader:
+              """Unbuffered, exact-size stdlib file seam; no hidden read-ahead."""
+              def __init__(self, state, row, sock):
+                  self.state, self.row, self.sock = state, row, sock
+                  self.phase, self.status_seen, self.in_line = 'headers', False, False
+                  self.closed = False
+                  self.raw_hash = hashlib.sha256()
+          
+              def receive(self, count):
+                  state, row = self.state, self.row
+                  require(not self.closed or self.phase == 'wire-eof', 'READER_CLOSED')
+                  count = min(count, 8192, RAW_MAX - row['rawPositive'] + 1)
+                  require(count > 0 and state.positive_read + count <= READ_MAX, 'READ_RESERVATION')
+                  state.call(self.sock.settimeout, state.remaining())
+                  state.tick()
+                  try:
+                      data = self.sock.recv(count)
+                  except BaseException as error:
+                      state.remember(error)
+                      try:
+                          state.tick()
+                      except BaseException as later:
+                          state.remember(later)
+                      raise
+                  require(type(data) is bytes and len(data) <= count, 'SOCKET_RETURN')
+                  state.positive_read += len(data)
+                  row['rawPositive'] += len(data)
+                  if data:
+                      self.raw_hash.update(data)
+                      row['rawSHA256'] = self.raw_hash.hexdigest()
+                  else:
+                      row['wireEOF'] = True
+                      row['rawSHA256'] = self.raw_hash.hexdigest()
+                  if self.in_line:
+                      row['metadataPositive'] += len(data)
+                  require(row['rawPositive'] <= RAW_MAX, 'RAW_LIMIT')
+                  require(row['metadataPositive'] <= META_MAX, 'METADATA_LIMIT')
+                  state.tick()
+                  return data
+          
+              def read(self, count=-1):
+                  require(type(count) is int and 0 <= count <= RAW_MAX + 1, 'READ_SIZE')
+                  parts, size = [], 0
+                  while size < count:
+                      data = self.receive(count - size)
+                      if not data:
+                          break
+                      parts.append(data)
+                      size += len(data)
+                  return b''.join(parts)
+          
+              def readline(self, limit=-1):
+                  bound = min(LINE_MAX, limit) if limit >= 0 else LINE_MAX
+                  result = bytearray()
+                  self.in_line = True
+                  try:
+                      while len(result) < bound:
+                          data = self.receive(1)
+                          if not data:
+                              break
+                          result += data
+                          if data == b'\n':
+                              break
+                      require(not result or result.endswith(b'\n'), 'LINE_LIMIT')
+                  finally:
+                      self.in_line = False
+                  if result not in (b'', b'\r\n', b'\n'):
+                      if self.phase == 'headers' and not self.status_seen:
+                          self.status_seen = True
+                      elif self.phase in ('headers', 'trailers'):
+                          key = 'headerFields' if self.phase == 'headers' else 'trailerFields'
+                          self.row[key] += 1
+                          require(self.row['headerFields'] + self.row['trailerFields'] <= FIELD_MAX, 'FIELD_LIMIT')
+                  return bytes(result)
+          
+              def flush(self):
+                  return None
+          
+              def close(self):
+                  self.closed = True
+          
+          
+          class Transport:
+              def __init__(self, reader):
+                  self.reader = reader
+          
+              def makefile(self, mode):
+                  require(mode == 'rb', 'FILE_MODE')
+                  return self.reader
+          
+          
+          class Response(http.client.HTTPResponse):
+              def __init__(self, reader):
+                  self.reader = reader
+                  self.close_attempted = False
+                  super().__init__(Transport(reader), method='GET')
+          
+              def _read_and_discard_trailer(self):
+                  previous = self.reader.phase
+                  self.reader.phase = 'trailers'
+                  try:
+                      return super()._read_and_discard_trailer()
+                  finally:
+                      self.reader.phase = previous
+          
+              def close(self):
+                  if self.close_attempted:
+                      return
+                  self.close_attempted = True
+                  super().close()
+          
+          
+          def physical_nine(value):
+              return [str(v) for v in (value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_gid, value.st_nlink, value.st_size, value.st_mtime_ns, value.st_ctime_ns)]
+          
+          
+          def socket_facts(call):
+              directories = []
+              for path in ('/', '/var', '/run'):
+                  value = call(os.lstat, path)
+                  require(stat.S_ISDIR(value.st_mode) and value.st_uid == 0 and not value.st_mode & 0o022, 'SOCKET_PARENT')
+                  directories.append({'path': path, 'physicalNine': physical_nine(value)})
+              alias = call(os.lstat, '/var/run')
+              if stat.S_ISLNK(alias.st_mode):
+                  target = call(os.readlink, '/var/run')
+                  require(alias.st_uid == 0 and target in ('/run', '../run'), 'SOCKET_ALIAS')
+              else:
+                  require(stat.S_ISDIR(alias.st_mode) and alias.st_uid == 0 and not alias.st_mode & 0o022, 'SOCKET_ALIAS')
+                  require((alias.st_dev, alias.st_ino) == (call(os.lstat, '/run').st_dev, call(os.lstat, '/run').st_ino), 'SOCKET_ALIAS_ID')
+                  target = '/run'
+              value = call(os.lstat, ENDPOINT)
+              other = call(lambda: os.stat('/var/run/docker.sock', follow_symlinks=False))
+              require(stat.S_ISSOCK(value.st_mode) and value.st_uid == 0 and physical_nine(value) == physical_nine(other), 'SOCKET_NODE')
+              return {'canonical': ENDPOINT, 'physicalNine': physical_nine(value), 'alias': target, 'aliasNine': physical_nine(alias), 'directories': directories}
+          
+          
+          def strict_json(body):
+              def pairs(items):
+                  result = {}
+                  for key, value in items:
+                      require(key not in result, 'JSON_DUPLICATE')
+                      result[key] = value
+                  return result
+              def constant(_):
+                  raise Refusal('JSON_NONFINITE')
+              def finite_float(token):
+                  value = float(token)
+                  require(math.isfinite(value), 'JSON_NONFINITE')
+                  return value
+              value = json.loads(body.decode('utf-8'), object_pairs_hook=pairs, parse_constant=constant, parse_float=finite_float)
+              require(type(value) is dict, 'JSON_OBJECT')
+              return value
+          
+          
+          def incomplete_prefix(error):
+              parts, seen = [], set()
+              current = error
+              for _ in range(8):
+                  if not isinstance(current, http.client.IncompleteRead) or id(current) in seen:
+                      break
+                  seen.add(id(current))
+                  require(type(current.partial) is bytes, 'PARTIAL_TYPE')
+                  parts.append(current.partial)
+                  current = current.__cause__
+              require(sum(len(p) for p in parts) <= BODY_MAX + 1, 'PARTIAL_LIMIT')
+              return b''.join(parts)
+          
+          
+          def request(state, path, factory=socket.socket, facts=None, peer_option=None):
+              row = state.begin(path)
+              if facts is None:
+                  facts = lambda: socket_facts(state.call)
+              baseline, response, reader = None, None, None
+              body = bytearray()
+              def retain(data):
+                  body.extend(data)
+                  row['bodyPositive'] = len(body)
+                  row['bodySHA256'] = hashlib.sha256(body).hexdigest()
+                  require(len(body) <= BODY_MAX, 'BODY_LIMIT')
+              try:
+                  baseline = state.call(facts)
+                  row['socket'] = baseline
+                  state.tick()
+                  sock = factory(socket.AF_UNIX, socket.SOCK_STREAM)
+                  state.own(sock)
+                  state.tick()
+                  state.call(sock.settimeout, state.remaining())
+                  state.call(sock.connect, ENDPOINT)
+                  require(state.call(facts) == baseline, 'SOCKET_DRIFT')
+                  option = getattr(socket, 'SO_PEERCRED', None) if peer_option is None else peer_option
+                  if option is False or option is None:
+                      row['peer'] = 'UNAVAILABLE'
+                  else:
+                      data = state.call(sock.getsockopt, socket.SOL_SOCKET, option, struct.calcsize('3i'))
+                      require(len(data) == struct.calcsize('3i'), 'PEER_SIZE')
+                      pid, uid, gid = struct.unpack('3i', data)
+                      require(pid >= 0 and uid == 0 and gid >= 0, 'PEER_UID')
+                      row['peer'] = {'pid': pid, 'uid': uid, 'gid': gid, 'role': 'CONNECTED_PEER_NOT_DAEMON_PROVENANCE'}
+                  wire = ('GET ' + path + ' HTTP/1.1\r\nHost: localhost\r\nAccept: application/json\r\nAccept-Encoding: identity\r\nConnection: close\r\n\r\n').encode('ascii')
+                  state.call(sock.sendall, wire)
+                  reader = Reader(state, row, sock)
+                  response = Response(reader)
+                  state.retained.extend((reader, response))
+                  response.begin()
+                  state.tick()
+                  row['status'] = response.status
+                  require(response.status == 200, 'HTTP_STATUS')
+                  lengths = response.headers.get_all('Content-Length', [])
+                  transfers = response.headers.get_all('Transfer-Encoding', [])
+                  encodings = response.headers.get_all('Content-Encoding', [])
+                  require(len(lengths) <= 1 and len(transfers) <= 1 and not (lengths and transfers), 'HTTP_FRAMING')
+                  require(not transfers or transfers[0].strip().lower() == 'chunked', 'HTTP_TRANSFER')
+                  require(not encodings or len(encodings) == 1 and encodings[0].strip().lower() == 'identity', 'HTTP_ENCODING')
+                  if lengths:
+                      require(re.fullmatch(r'[0-9]{1,20}', lengths[0]) is not None, 'HTTP_LENGTH')
+                      require(int(lengths[0]) <= BODY_MAX, 'BODY_DECLARED')
+                  require(response.will_close, 'HTTP_CLOSE')
+                  reader.phase = 'body'
+                  while True:
+                      try:
+                          data = response.read(min(8192, BODY_MAX + 1 - len(body)))
+                      except http.client.IncompleteRead as error:
+                          state.remember(error)
+                          retain(incomplete_prefix(error))
+                          raise
+                      retain(data)
+                      state.tick()
+                      if not data:
+                          break
+                  if lengths and len(body) != int(lengths[0]):
+                      raise http.client.IncompleteRead(bytes(body), int(lengths[0]) - len(body))
+                  require(response.isclosed(), 'FRAMING_EOF')
+                  row['framingEOF'] = True
+                  reader.phase = 'wire-eof'
+                  if not row['wireEOF']:
+                      require(reader.receive(1) == b'', 'TRAILING_DATA')
+                  require(row['wireEOF'], 'WIRE_EOF')
+                  value = strict_json(bytes(body))
+                  state.tick()
+              except BaseException as error:
+                  state.remember(error)
+              finally:
+                  if response is not None:
+                      try:
+                          response.close()
+                      except BaseException as error:
+                          state.remember(error)
+                  if reader is not None:
+                      reader.close()
+                  state.cleanup()
+                  if baseline is not None:
+                      try:
+                          require(state.call(facts) == baseline, 'SOCKET_DRIFT')
+                      except BaseException as error:
+                          state.remember(error)
+              if state.first is not None:
+                  raise state.first
+              state.tick()
+              return value
+          
+          
+          def collect(state, factory=socket.socket, facts=None, peer_option=None):
+              version = project_version(request(state, '/version', factory, facts, peer_option))
+              info = project_info(request(state, '/info', factory, facts, peer_option))
+              projection = {'version': version, 'info': info}
+              require(encoded_size(projection) <= 49152, 'PROJECTION_LIMIT')
+              return {'classification': 'CLOSED_LOCAL_DOCKER_METADATA_DATA', 'data': projection, 'runtimeSecurityAccepted': False, 'imageAccepted': False, 'confinementObserved': False, 'readinessAccepted': False, 'nativeConversionAccepted': False}
+          
+          
+          def error_type(error):
+              name = type(error).__name__
+              return {'type': name[:32], 'typeTruncated': len(name) > 32}
+          
+          
+          def main():
+              global PENDING_STATE
+              state = State()
+              result = None
+              try:
+                  require(sys.platform == 'linux' and os.getuid() != 0 and dict(os.environ) == ENV, 'ENTRY')
+                  require(len(sys.argv) == 1, 'ARGUMENTS')
+                  result = collect(state)
+              except BaseException as error:
+                  state.remember(error)
+              state.cleanup()
+              try:
+                  state.tick()
+              except BaseException as error:
+                  state.remember(error)
+              metadata = {'snapshot': 'PRE_WRITE_SNAPSHOT', 'successMeansPrewriteOnly': True, 'clock': {'start': list(state.start), 'end': list(state.end), 'observed': list(state.clock())}, 'requests': state.requests, 'owners': state.owner_facts(), 'explicitPositiveReadBytes': state.positive_read, 'first': None if state.first is None else error_type(state.first), 'secondary': [error_type(e) for e in state.secondary[:8]], 'secondaryTruncated': len(state.secondary) > 8}
+              try:
+                  require(encoded_size(metadata) <= 8192, 'METADATA_RECORD')
+                  if state.first is not None:
+                      result = {'classification': 'HELD_LOCAL_DOCKER_METADATA', 'runtimeSecurityAccepted': False, 'imageAccepted': False, 'confinementObserved': False, 'readinessAccepted': False, 'nativeConversionAccepted': False}
+                  result['metadata'] = metadata
+                  data = bounded_record(result, SUMMARY_MAX - 1) + b'\n'
+                  offset = 0
+                  while offset < len(data):
+                      state.tick()
+                      size = os.write(1, data[offset:])
+                      require(size > 0, 'STDOUT_ZERO')
+                      offset += size
+                      state.tick()
+              except BaseException as error:
+                  state.remember(error)
+                  try:
+                      os.write(2, b'DWG_DOCKER_METADATA_PUBLICATION_HOLD\n')
+                  except BaseException as later:
+                      state.remember(later)
+              if any(row['pending'] for row in state.owners):
+                  PENDING_STATE = state
+              return 1 if state.first is not None else 0
+          
+          
+          if __name__ == '__main__':
+              raise SystemExit(main())
+          PY_DWG_DOCKER_API
