@@ -92,9 +92,9 @@
       <a href="/chain/build" class="saved-chains__add">+ New chain</a>
     </header>
 
-    <div class="chain-grid" role="list">
+    <div class="chain-grid">
       {#each chains as chain (chain.id)}
-        <a href={chainHref(chain)} class="chain-card brackets" role="listitem" aria-label="Chain: {chain.name}">
+        <a href={chainHref(chain)} class="chain-card brackets" aria-label="Chain: {chain.name}">
           <div class="brackets-inner" aria-hidden="true"></div>
           <div class="chain-card__inner">
             <div class="chain-card__header">

@@ -1,0 +1,140 @@
+{
+  "authoring": "Original procedural uncompressed PDF objects and vector rectangles; no copied input, no production converter or conversion helper used.",
+  "target": "Green rectangle at exact listed PDF points; blue rectangle at origin+[width-50,height-45,25,20] must remain outside redaction.",
+  "rounding": "PDF point geometry is exact; drag-bound quantization tolerance is derived from one actual CSS pointer pixel in each measured overlay, not a codec tolerance.",
+  "outputs": [
+    {
+      "filename": "landmark.pdf",
+      "bytes": 607,
+      "sha256": "64699212bb9a72ae2e5618aafa0ccb58cc81d5ec338e4703334c2d9ff7607888",
+      "pages": [
+        {
+          "origin": [
+            0,
+            0
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": [
+            40,
+            50,
+            80,
+            60
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "origins-rotations-mixed.pdf",
+      "bytes": 2238,
+      "sha256": "69c23639a4b6e8f0b677f2594e78d029dc379f2bd6debfe10922d90e812d35e3",
+      "pages": [
+        {
+          "origin": [
+            0,
+            0
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": [
+            40,
+            50,
+            80,
+            60
+          ]
+        },
+        {
+          "origin": [
+            20,
+            30
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": [
+            60,
+            80,
+            80,
+            60
+          ]
+        },
+        {
+          "origin": [
+            20,
+            30
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 90,
+          "target": [
+            60,
+            80,
+            80,
+            60
+          ]
+        },
+        {
+          "origin": [
+            20,
+            30
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 180,
+          "target": [
+            60,
+            80,
+            80,
+            60
+          ]
+        },
+        {
+          "origin": [
+            20,
+            30
+          ],
+          "size": [
+            400,
+            300
+          ],
+          "rotation": 270,
+          "target": [
+            60,
+            80,
+            80,
+            60
+          ]
+        },
+        {
+          "origin": [
+            -10,
+            15
+          ],
+          "size": [
+            500,
+            200
+          ],
+          "rotation": 0,
+          "target": [
+            30,
+            55,
+            80,
+            60
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -33,7 +33,7 @@ export async function balanceCommand(opts: { json?: boolean }): Promise<void> {
   }
 
   if (res.status === 401) {
-    process.stderr.write('Your key was rejected. Run `wyreup login` to set a new one.\n');
+    process.stderr.write('Your key was rejected. Request a new emailed key at https://wyreup.com/account, then run `wyreup login`.\n');
     process.exit(1);
   }
   if (!res.ok) {

@@ -53,11 +53,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const updates: Array<[LimitKey, number]> = [];
 
   if (body.daily_spend_cap_credits !== undefined) {
-    const n =
-      typeof body.daily_spend_cap_credits === 'number'
-        ? Math.trunc(body.daily_spend_cap_credits)
-        : NaN;
-    if (!Number.isFinite(n) || n < 0) {
+    const n = typeof body.daily_spend_cap_credits === 'number' ? body.daily_spend_cap_credits : NaN;
+    if (!Number.isInteger(n) || n < 0) {
       return json({ error: 'daily_spend_cap_credits must be a non-negative integer' }, 400);
     }
     // Sanity ceiling — a typo here could disable the layer in practice.

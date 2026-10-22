@@ -76,10 +76,18 @@ export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
     if (mode === 'minify') {
       result = minifyHtml(text);
     } else {
-      const prettier = await import('prettier');
+      const [prettier, html, postcss, babel, estree] = await Promise.all([
+        import('prettier/standalone'),
+        import('prettier/plugins/html'),
+        import('prettier/plugins/postcss'),
+        import('prettier/plugins/babel'),
+        import('prettier/plugins/estree'),
+      ]);
+      if (ctx.signal.aborted) throw new Error('Aborted');
       try {
         result = await prettier.format(text, {
           parser: 'html',
+          plugins: [html, postcss, babel, estree],
           printWidth: params.printWidth ?? 80,
           tabWidth: params.tabWidth ?? 2,
         });
@@ -88,6 +96,7 @@ export const htmlFormatter: ToolModule<HtmlFormatterParams> = {
       }
     }
 
+    if (ctx.signal.aborted) throw new Error('Aborted');
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([result], { type: 'text/html' })];
   },

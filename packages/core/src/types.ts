@@ -19,7 +19,11 @@ export type ToolCategory =
   | 'media'
   | 'archive'
   | 'text'
-  | 'geo';
+  | 'geo'
+  | 'building'
+  | 'hardware'
+  | 'planning'
+  | 'design';
 
 /**
  * Runtime surfaces a tool can run on. Use this to gate tools that need
@@ -175,6 +179,8 @@ export type ParamFieldSchema =
       minLength?: number;
       maxLength?: number;
       multiline?: boolean;
+      /** Mask the value in browser-generated forms. */
+      secret?: boolean;
       showWhen?: ShowWhenCondition;
     }
   | {

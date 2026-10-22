@@ -85,4 +85,22 @@ describe('chain integration — real tool chains', () => {
     expect(outputs.length).toBe(1);
     expect(outputs[0]!.type).toBe('image/jpeg');
   });
+
+  it('preserves every page through split-pdf → pdf-to-text', async () => {
+    const input = loadFixture('doc-multipage.pdf', 'application/pdf');
+    const outputs = await runDefaultChain(
+      [
+        { toolId: 'split-pdf', params: { mode: 'all' } },
+        { toolId: 'pdf-to-text', params: {} },
+      ],
+      [input],
+      makeCtx(),
+    );
+
+    expect(outputs).toHaveLength(3);
+    const texts = await Promise.all(outputs.map((output) => output.text()));
+    expect(texts[0]).toContain('page 1 of 3');
+    expect(texts[1]).toContain('page 2 of 3');
+    expect(texts[2]).toContain('page 3 of 3');
+  });
 });

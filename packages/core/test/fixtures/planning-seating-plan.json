@@ -1,0 +1,1 @@
+{"version":1,"kind":"seating","guests":[{"id":"guest1","name":"Alex"},{"id":"guest2","name":"Alex"}],"tables":[{"id":"table1","name":"Friends","capacity":2}],"assignments":[{"guestId":"guest1","tableId":"table1"}]}

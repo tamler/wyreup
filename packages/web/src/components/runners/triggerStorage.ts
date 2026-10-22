@@ -20,7 +20,7 @@ import {
   type TriggerRule,
   type FireRecord,
   TRIGGER_KIT_VERSION,
-} from '@wyreup/core';
+} from '@wyreup/core/execution';
 
 const RULES_KEY = 'wyreup:toolbelt:trigger-rules';
 const FIRES_KEY = 'wyreup:toolbelt:trigger-fires';

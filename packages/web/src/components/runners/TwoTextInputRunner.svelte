@@ -1,17 +1,29 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import FlatJsonResult from './FlatJsonResult.svelte';
   import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import type { PreloadAdmission, SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
+  import { readImportedText } from './textImportPolicy';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  onDestroy(releaseOwnedWakeLocks);
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
   // Two side-by-side textareas. Wraps each into a synthetic File so the
   // existing tool runtime (which expects File[]) works unchanged.
@@ -26,21 +38,51 @@
   let resultBlob: Blob | null = null;
   let resultText = '';
   let resultMime = '';
+  let generation = 0;
+  let disposed = false;
+  let controller: AbortController | null = null;
+  let attemptedPreload: File | null = null;
+  let originalFile: File | null = null;
+  let reading = false;
+  const urls = new Set<string>();
+  const timers = new Set<ReturnType<typeof setTimeout>>();
 
   // Chain hand-off: if a single file was piped in, drop it into the first
   // textarea so the user can paste the second half manually.
-  let preloadConsumed = false;
-  $: if (preloadedFile && !preloadConsumed) {
-    preloadConsumed = true;
-    void preloadedFile.text().then((t) => {
-      textA = t;
-    });
+  $: if (preloadedFile && preloadedFile !== attemptedPreload) {
+    attemptedPreload = preloadedFile;
+    void importOriginal(preloadedFile);
   }
+
+  async function importOriginal(file: File) {
+    reset(); originalFile = file; reading = true;
+    const own = generation;
+    try {
+      const text = await readImportedText(file, tool.id, params, tool.input.sizeLimit);
+      if (disposed || generation !== own || originalFile !== file) return;
+      textA = text;
+      onPreloadAdmission?.({ file, status: 'admitted' });
+    } catch (cause) {
+      if (!disposed && generation === own && originalFile === file) {
+        state = 'error'; errorMsg = cause instanceof Error ? cause.message : 'Could not read the input file.';
+        onPreloadAdmission?.({ file, status: 'refused', message: errorMsg });
+      }
+    } finally { if (generation === own) reading = false; }
+  }
+
+  function downloadOriginal() {
+    if (!originalFile) return;
+    const url = URL.createObjectURL(originalFile); urls.add(url);
+    const link = document.createElement('a'); link.href = url; link.download = originalFile.name; link.click();
+  }
+
+  function edited() { reset(); }
+  function dismissOriginal() { originalFile = null; reset(); }
 
   $: canRun =
     textA.trim().length > 0 &&
     textB.trim().length > 0 &&
-    state !== 'running';
+    state !== 'running' && !reading;
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
   $: isHtml = resultMime === 'text/html';
@@ -49,6 +91,9 @@
 
   async function run() {
     if (!canRun) return;
+    reset();
+    const own = generation;
+    const abort = new AbortController(); controller = abort;
     state = 'running';
     errorMsg = '';
     resultText = '';
@@ -57,35 +102,40 @@
     const fileA = new File([textA], 'a.txt', { type: 'text/plain' });
     const fileB = new File([textB], 'b.txt', { type: 'text/plain' });
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
+      if (disposed || generation !== own) return;
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
       const result = await toolModule.run([fileA, fileB], params, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+        onProgress: (p) => { if (!disposed && generation === own) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
+      if (disposed || generation !== own) return;
 
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
 
+      const raw = await blob.text();
+      if (disposed || generation !== own) return;
       resultBlob = blob;
       resultMime = blob.type;
-      const raw = await blob.text();
       resultText = isJsonMime(blob.type) ? prettifyJson(raw) : raw;
       markToolUsed(tool.id);
       state = 'done';
     } catch (err) {
-      state = 'error';
-      errorMsg = err instanceof Error ? err.message : String(err);
+      if (!disposed && generation === own) { state = 'error'; errorMsg = err instanceof Error ? err.message : String(err); }
     } finally {
-      releaseWakeLock();
+      wake.release();
+      wakeOwners.delete(wake);
+      if (generation === own) controller = null;
     }
   }
 
@@ -102,6 +152,11 @@
   }
 
   function reset() {
+    generation++; reading = false; controller?.abort(); controller = null;
+    releaseOwnedWakeLocks();
+    for (const url of urls) URL.revokeObjectURL(url); urls.clear();
+    for (const timer of timers) clearTimeout(timer); timers.clear();
+    copied = false;
     state = 'idle';
     errorMsg = '';
     resultText = '';
@@ -111,27 +166,32 @@
   let copied = false;
 
   async function copyResult() {
+    const own = generation;
     try {
       await navigator.clipboard.writeText(resultText);
+      if (disposed || generation !== own) return;
       copied = true;
-      setTimeout(() => { copied = false; }, 1500);
-    } catch { /* ignore */ }
+      const timer = setTimeout(() => { if (generation === own) copied = false; timers.delete(timer); }, 1500); timers.add(timer);
+    } catch { if (!disposed && generation === own) errorMsg = 'Copy unavailable. Use Download.'; }
   }
 
   function download() {
     if (!resultBlob) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
+    const url = URL.createObjectURL(resultBlob); urls.add(url); a.href = url;
     const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
     a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); timers.delete(timer); }, 1000); timers.add(timer);
   }
 
   function swap() {
+    reset();
     const t = textA;
     textA = textB;
     textB = t;
   }
+  onDestroy(() => { disposed = true; reset(); });
 </script>
 
 <div class="runner">
@@ -140,12 +200,13 @@
       <div class="text-pane__header">
         <span class="text-pane__label">A</span>
         {#if textA}
-          <button class="btn-ghost-sm" on:click={() => { textA = ''; }} type="button">Clear</button>
+          <button class="btn-ghost-sm" on:click={() => { textA = ''; edited(); }} type="button">Clear</button>
         {/if}
       </div>
       <textarea
         class="text-pane__textarea"
         bind:value={textA}
+        on:input={edited}
         placeholder="First text…"
         rows="8"
         spellcheck="false"
@@ -158,12 +219,13 @@
       <div class="text-pane__header">
         <span class="text-pane__label">B</span>
         {#if textB}
-          <button class="btn-ghost-sm" on:click={() => { textB = ''; }} type="button">Clear</button>
+          <button class="btn-ghost-sm" on:click={() => { textB = ''; edited(); }} type="button">Clear</button>
         {/if}
       </div>
       <textarea
         class="text-pane__textarea"
         bind:value={textB}
+        on:input={edited}
         placeholder="Second text…"
         rows="8"
         spellcheck="false"
@@ -171,11 +233,13 @@
     </div>
   </div>
 
+  {#if originalFile}<p>Original file: {originalFile.name}.</p><div><button class="btn-secondary" type="button" on:click={downloadOriginal}>Download original</button><button class="btn-secondary" type="button" on:click={() => originalFile && importOriginal(originalFile)}>Retry original</button><button class="btn-secondary" type="button" on:click={dismissOriginal}>Dismiss original</button></div>{/if}
+
   <ParamsForm
     defaults={tool.defaults}
     paramSchema={tool.paramSchema}
     bind:params
-    on:change={(e) => { params = e.detail; }}
+    on:change={(e) => { params = e.detail; reset(); }}
   />
 
   {#if state !== 'running'}
@@ -186,6 +250,7 @@
 
   {#if state === 'running'}
     <ProgressBar stage={progress.stage} percent={progress.percent} message={progress.message} />
+    <button class="btn-secondary" type="button" on:click={reset}>Cancel</button>
   {/if}
 
   {#if state === 'error'}
@@ -198,7 +263,7 @@
     </div>
   {/if}
 
-  {#if state === 'done' && resultText}
+  {#if state === 'done' && resultBlob}
     <div class="result-panel brackets">
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
@@ -212,6 +277,7 @@
           </div>
         </div>
         <div class="panel-divider"></div>
+        {#if errorMsg}<p role="alert">{errorMsg}</p>{/if}
 
         {#if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">

@@ -1,17 +1,31 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
-  import type { ToolProgress } from '@wyreup/core';
+  import { tryReserveMediaJob } from '../../lib/mediaJobReservation';
+  import type { SerializedTool, PreloadAdmission } from './types';
+import { fileMatchesMime, type ToolProgress } from '@wyreup/core/execution';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  let generation = 0;
+  let disposed = false;
+  onDestroy(() => { disposed = true; generation++; releaseOwnedWakeLocks(); if (resultUrl) URL.revokeObjectURL(resultUrl); if (mediaUrl) URL.revokeObjectURL(mediaUrl); if (previewTimer !== null) clearTimeout(previewTimer); });
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
-  let files: File[] = preloadedFile ? [preloadedFile] : [];
+  let files: File[] = [];
   let dropError = '';
 
   type State = 'idle' | 'running' | 'done' | 'error';
@@ -36,9 +50,8 @@
   let dragging: 'start' | 'end' | null = null;
   let previewTimer: number | null = null;
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
-  }
+  let priorPreload: File | null = null;
+  $: if (preloadedFile !== priorPreload) { priorPreload = preloadedFile; onFiles(new CustomEvent('files', { detail: preloadedFile ? [preloadedFile] : [] })); }
 
   $: file = files[0] ?? null;
   $: isVideo = file?.type.startsWith('video/') ?? false;
@@ -59,9 +72,17 @@
     duration > 0 &&
     end > start;
 
+  function intakeError(file: File): string {
+    if (!fileMatchesMime(file, tool.input.accept)) return `File type not accepted. Expected: ${tool.input.accept.join(', ')}`;
+    if (tool.input.sizeLimit !== undefined && file.size > tool.input.sizeLimit) return `${file.name} exceeds this tool's size limit.`;
+    return '';
+  }
+
   function onFiles(e: CustomEvent<File[]>) {
-    files = e.detail;
-    dropError = '';
+    const refused = e.detail.find((file) => intakeError(file));
+    generation++;
+    files = refused ? [] : e.detail;
+    dropError = refused ? intakeError(refused) : '';
     state = 'idle';
     duration = 0;
     start = 0;
@@ -71,6 +92,9 @@
       resultUrl = null;
     }
     resultBlob = null;
+    if (!disposed && refused && refused === preloadedFile) {
+      onPreloadAdmission?.({ file: refused, status: 'refused', message: dropError });
+    }
   }
 
   function onMediaLoaded() {
@@ -144,21 +168,34 @@
 
   async function run() {
     if (!canRun || !file) return;
+    const lease = tryReserveMediaJob([tool.id]);
+    if (!lease) {
+      state = 'error';
+      errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.';
+      return;
+    }
+    const attempt = ++generation;
+    const capturedFiles = [...files];
+    const capturedParams = { start, end, stream_copy: streamCopy };
+    const capturedToolId = tool.id;
+    const imported = preloadedFile;
+    const admission = onPreloadAdmission;
+    const current = () => !disposed && attempt === generation && tool.id === capturedToolId && preloadedFile === imported && capturedFiles.length === files.length && capturedFiles.every((file, index) => file === files[index]) && start === capturedParams.start && end === capturedParams.end && streamCopy === capturedParams.stream_copy;
     state = 'running';
     errorMsg = '';
     originalSize = file.size;
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const params = { start, end, stream_copy: streamCopy };
-      const result = await toolModule.run(files, params, {
+      const result = await toolModule.run(capturedFiles, capturedParams, {
         onProgress: (p) => {
-          progress = p;
+          if (current()) progress = p;
         },
         signal: new AbortController().signal,
         cache: new Map(),
@@ -168,6 +205,7 @@
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
+      if (!current()) return;
 
       resultBlob = blob;
       resultSize = blob.size;
@@ -176,15 +214,22 @@
       resultUrl = URL.createObjectURL(blob);
       markToolUsed(tool.id);
       state = 'done';
+      if (imported && capturedFiles.includes(imported)) admission?.({ file: imported, status: 'admitted' });
     } catch (err) {
+      if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+      if (imported && capturedFiles.includes(imported)) admission?.({ file: imported, status: 'refused', message: errorMsg });
     } finally {
-      releaseWakeLock();
+      lease.release();
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    generation++;
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     resultBlob = null;
@@ -213,6 +258,7 @@
 <div class="runner">
   <DropZone
     accept={tool.input.accept}
+    sizeLimit={tool.input.sizeLimit}
     multiple={false}
     bind:files
     bind:error={dropError}

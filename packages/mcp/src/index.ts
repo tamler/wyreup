@@ -1,22 +1,14 @@
 #!/usr/bin/env node
-import './install-egress.js'; // MUST be first — installs egress lock before any module captures fetch
+import { startupError } from './install-egress.js'; // MUST be first — installs egress lock before any module captures fetch
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createDefaultRegistry, setModelCdn } from '@wyreup/core';
+import { createDefaultRegistry } from '@wyreup/core';
 import { createWyreupMcpServer } from './server.js';
 
-// Route every AI-model fetch through models.wyreup.com (R2-backed,
-// first-party origin). Override with WYREUP_MODEL_CDN=disabled to fall
-// back to upstream CDNs (escape hatch for testing or if R2 is down).
-{
-  const cdnOverride = process.env.WYREUP_MODEL_CDN;
-  if (cdnOverride === 'disabled') {
-    setModelCdn(null);
-  } else {
-    setModelCdn(cdnOverride && cdnOverride.length > 0 ? cdnOverride : 'https://models.wyreup.com');
-  }
-}
-
 async function main(): Promise<void> {
+  if (startupError) {
+    console.error(`[wyreup-mcp] ${startupError}`);
+    process.exit(1);
+  }
   const server = await createWyreupMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);

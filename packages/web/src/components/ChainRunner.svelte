@@ -1,11 +1,16 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
   import DropZone from './runners/DropZone.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
   import BatchFolderRun from './BatchFolderRun.svelte';
   import { decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/toolbeltStorage';
-  import { peekChainFile, consumeChainFile } from './runners/chainStorage';
+  import { peekChainHandover, clearChainHandover, type ChainHandover } from './runners/chainStorage';
+  import { clearTrail } from './runners/hopTrail';
+  import { tryReserveMediaJob } from '../lib/mediaJobReservation';
+  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
+  import { user, authReady } from '../stores/user';
   import type { ToolProgress } from '@wyreup/core';
 
   interface ToolSummary {
@@ -29,36 +34,22 @@
     installGroup: string | undefined;
   }
 
-  // Persisted per-chain auto-run consent. Keyed by a hash of the
-  // step string so the same chain can auto-run on repeat visits, but
-  // a different chain in the same `auto=1` URL still has to be
-  // confirmed once.
-  const CONSENT_KEY = 'wyreup:chain-autorun-consent';
-  function loadConsents(): Record<string, number> {
-    try {
-      const raw = localStorage.getItem(CONSENT_KEY);
-      return raw ? (JSON.parse(raw) as Record<string, number>) : {};
-    } catch { return {}; }
-  }
-  function saveConsent(fingerprint: string) {
-    try {
-      const all = loadConsents();
-      all[fingerprint] = Date.now();
-      localStorage.setItem(CONSENT_KEY, JSON.stringify(all));
-    } catch { /* localStorage unavailable */ }
-  }
-  function hasConsent(fingerprint: string): boolean {
-    const all = loadConsents();
-    return typeof all[fingerprint] === 'number';
-  }
-
   let resolvedSteps: ResolvedStep[] = [];
   let invalidIds: string[] = [];
   let parseError = false;
   let chainName = '';
   let stepsFingerprint = '';
-  let pendingAutoRun = false;
   let totalInstallSize = 0;
+  let mounted = false;
+  let generation = 0;
+  let handover: ChainHandover | null = null;
+  let recoveryMessage = '';
+  let chainAdmission: { file: File; token: string | null; fingerprint: string } | null = null;
+  let urlSteps = '';
+  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
+  $: if (pendingPaid) { inputFile; stepsFingerprint; if (!pendingPaid.current()) pendingPaid = null; }
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
 
   let inputFiles: File[] = [];
   let dropError = '';
@@ -72,6 +63,17 @@
 
   let resultBlob: Blob | null = null;
   let resultUrl: string | null = null;
+  let resultBlobs: Blob[] = [];
+
+  function clearResults() {
+    resultBlobs = [];
+    resultBlob = null;
+    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+    for (const url of downloadUrls) URL.revokeObjectURL(url);
+    downloadUrls.clear();
+    for (const timer of downloadTimers) clearTimeout(timer);
+    downloadTimers.clear();
+  }
 
   let saveConfirm = false;
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -81,9 +83,18 @@
   let showEndOfRunPrompt = false;
   let endOfRunSaved = false;
 
-  onMount(() => {
-    const url = new URL(window.location.href);
-    const src = stepsParam || url.searchParams.get('steps') || '';
+  function resolveSteps(src: string) {
+    generation++;
+    pendingPaid = null;
+    runState = 'idle';
+    errorMsg = '';
+    clearResults();
+    chainAdmission = null;
+    if (handover?.kind === 'ready' || handover?.kind === 'recoverable') inputFiles = [];
+    resolvedSteps = [];
+    invalidIds = [];
+    parseError = false;
+    stepsFingerprint = src;
     if (!src) {
       parseError = true;
       return;
@@ -95,7 +106,7 @@
     }
     // Optional ?name=<urlencoded> for shareable chains. Cap to 80 chars
     // and strip control chars to avoid weird display.
-    const rawName = url.searchParams.get('name') ?? '';
+    const rawName = new URL(window.location.href).searchParams.get('name') ?? '';
     chainName = rawName
       // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x1F\x7F]/g, '')
@@ -131,43 +142,62 @@
       footprint += s.installSize;
     }
     totalInstallSize = footprint;
-    stepsFingerprint = src;
-
-    // Pull a chained-in file off chainStorage if one is waiting (e.g. a
-    // trigger handed off via /chain/run?auto=1, or an upstream tool's
-    // result stashed for this chain). Then, if `auto=1` is in the URL,
-    // kick off run() automatically once Svelte has reflected state.
-    void (async () => {
-      const peeked = await peekChainFile();
-      if (peeked) {
-        const file = await consumeChainFile();
-        if (file) inputFiles = [file];
-      }
-      if (url.searchParams.get('auto') === '1') {
-        await tick();
-        if (inputFiles.length > 0 && resolvedSteps.length > 0 && invalidIds.length === 0) {
-          // Auto-run consent gate — chains with any heavy install
-          // footprint (AI/ML models) must get explicit confirmation
-          // on first sight. Once confirmed, the consent persists
-          // so repeat visits run hands-free.
-          if (totalInstallSize > 0 && !hasConsent(stepsFingerprint)) {
-            pendingAutoRun = true;
-            return;
-          }
-          void run();
-        }
-      }
-    })();
+  }
+  onMount(() => {
+    mounted = true;
+    urlSteps = new URL(window.location.href).searchParams.get('steps') ?? '';
+    resolveSteps(stepsParam || urlSteps);
+    void retryOriginal();
+  });
+  $: if (mounted && (stepsParam || urlSteps) !== stepsFingerprint) resolveSteps(stepsParam || urlSteps);
+  onDestroy(() => {
+    mounted = false;
+    generation++;
+    clearResults();
+    if (saveTimer) clearTimeout(saveTimer);
   });
 
-  function approveAutoRun() {
-    saveConsent(stepsFingerprint);
-    pendingAutoRun = false;
-    void run();
+  async function retryOriginal() {
+    const attempt = ++generation;
+    const next = await peekChainHandover();
+    if (!mounted || attempt !== generation) return;
+    handover = next;
+    recoveryMessage = next?.kind === 'unavailable' || next?.kind === 'recoverable' ? next.message : '';
   }
 
-  function declineAutoRun() {
-    pendingAutoRun = false;
+  function useOriginal() {
+    if (!handover || handover.kind === 'unavailable' || parseError || invalidIds.length || resolvedSteps.length === 0) return;
+    generation++;
+    runState = 'idle';
+    clearTrail();
+    chainAdmission = { file: handover.file, token: handover.token, fingerprint: stepsFingerprint };
+    inputFiles = [handover.file];
+    recoveryMessage = 'Original selected. Run this chain separately; no work has started.';
+  }
+
+  function downloadOriginal() {
+    if (!handover || handover.kind === 'unavailable') return;
+    const url = URL.createObjectURL(handover.file);
+    downloadUrls.add(url);
+    const anchor = document.createElement('a');
+    anchor.href = url; anchor.download = handover.file.name; anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
+  }
+
+  async function dismissOriginal() {
+    if (!handover || handover.kind === 'unavailable') return;
+    generation++;
+    const captured = handover;
+    chainAdmission = null;
+    clearTrail();
+    if (!captured.token || !await clearChainHandover(captured.token)) {
+      recoveryMessage = 'Storage ownership could not be confirmed. Original retained.';
+      return;
+    }
+    if (!mounted || handover !== captured) return;
+    inputFiles = [];
+    handover = null;
   }
 
   function fmtSize(bytes: number): string {
@@ -184,26 +214,56 @@
 
   async function run() {
     if (!canRun || !inputFile) return;
+    const capturedFile = inputFile;
+    const capturedFingerprint = stepsFingerprint;
+    const chain = structuredClone(resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params })));
+    const admission = chainAdmission;
+    const attempt = ++generation;
+    const current = () => mounted && attempt === generation && inputFile === capturedFile && stepsFingerprint === capturedFingerprint;
     runState = 'running';
     errorMsg = '';
-    resultBlob = null;
+    clearResults();
     showEndOfRunPrompt = false;
     endOfRunSaved = false;
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
 
     try {
-      const { runChain, createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
+      if (!current()) return;
+      const paid = summarizePaidChain(chain, registry);
+      const account = get(user);
+      assertPaidAccount(paid, get(authReady), account);
+      if (paid.steps.length) {
+        runState = 'idle';
+        pendingPaid = { text: paidChainDisclosure(paid, [capturedFile], account!.email), current, confirm: async () => {
+          if (!current()) { pendingPaid = null; return; }
+          const latest = summarizePaidChain(chain, registry), latestAccount = get(user);
+          assertPaidAccount(latest, get(authReady), latestAccount);
+          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
+          pendingPaid = null;
+          await execute();
+        } };
+        return;
+      }
+      await execute();
+
+      async function execute() {
+      if (!current()) return;
+      const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
+      if (!lease) { runState = 'error'; errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.'; return; }
+      runState = 'running';
+      try {
+      const { runChain } = await import('../lib/core-execution');
+      if (!current()) return;
       const ac = new AbortController();
       const cache = new Map<string, unknown>();
 
-      const chain = resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params }));
-
       const result = await runChain(
         chain,
-        [inputFile],
+        [capturedFile],
         {
-          onProgress: (p) => { progress = p; },
+          onProgress: (p) => { if (current()) progress = p; },
           signal: ac.signal,
           cache,
           executionId: crypto.randomUUID(),
@@ -213,19 +273,40 @@
 
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
-      if (!blob) throw new Error('No output produced.');
+      if (!blob || !blobs.every((value) => value instanceof Blob)) throw new Error('No complete output produced.');
+      if (!current()) return;
 
       resultBlob = blob;
       if (resultUrl) URL.revokeObjectURL(resultUrl);
       resultUrl = URL.createObjectURL(blob);
+      resultBlobs = [...blobs];
       runState = 'done';
       // Auto-show save prompt after successful run
       saveName = resolvedSteps.map((s) => s.name).join('-');
       showEndOfRunPrompt = true;
+      if (admission?.token && admission.file === capturedFile && admission.fingerprint === capturedFingerprint) {
+        const cleared = await clearChainHandover(admission.token);
+        if (current()) {
+          if (cleared) { handover = null; chainAdmission = null; recoveryMessage = ''; }
+          else recoveryMessage = 'Output is ready. Storage changed or could not be cleared; original retained.';
+        }
+      }
+      } catch (error) {
+        if (current()) { runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
+      } finally { lease.release(); }
+      }
     } catch (err) {
+      if (!current()) return;
       runState = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
+  }
+
+  async function confirmPaid() {
+    const pending = pendingPaid;
+    if (!pending) return;
+    try { await pending.confirm(); }
+    catch (error) { if (pending.current()) { pendingPaid = null; runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function confirmEndOfRunSave() {
@@ -247,10 +328,11 @@
   }
 
   function reset() {
+    generation++;
+    pendingPaid = null;
     runState = 'idle';
     errorMsg = '';
-    resultBlob = null;
-    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+    clearResults();
   }
 
   function download() {
@@ -260,6 +342,19 @@
     const ext = resultBlob.type.split('/')[1] ?? 'bin';
     a.download = `chain-result.${ext}`;
     a.click();
+  }
+
+  function downloadOutput(index: number) {
+    const blob = resultBlobs[index];
+    if (!blob || runState !== 'done') return;
+    const url = URL.createObjectURL(blob);
+    downloadUrls.add(url);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `chain-output-${index + 1}.${blob.type.split('/')[1] ?? 'bin'}`;
+    anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 
   function openSaveDialog() {
@@ -333,6 +428,31 @@
       {/each}
     </div>
 
+    {#if handover}
+      <div class="consent-panel" role="status">
+        {#if handover.kind === 'unavailable'}
+          <p>{handover.message}</p>
+          <button type="button" on:click={retryOriginal}>Retry original</button>
+        {:else}
+          <p>Original file: {handover.file.name} — {handover.file.size.toLocaleString()} bytes, {handover.file.type || 'unknown type'}</p>
+          {#if handover.targetToolId}<p>Intended tool: {handover.targetToolId}</p>{/if}
+          <p>{recoveryMessage || 'Stored files never run automatically. Choose this original, then Run.'}</p>
+          <button type="button" on:click={useOriginal} disabled={parseError || invalidIds.length > 0 || runState === 'running'}>Use this file for this chain</button>
+          <button type="button" on:click={downloadOriginal}>Download original</button>
+          <button type="button" on:click={retryOriginal}>Retry original</button>
+          <button type="button" on:click={dismissOriginal}>Dismiss original</button>
+        {/if}
+      </div>
+    {/if}
+
+    {#if pendingPaid}
+      <section role="dialog" aria-label="Confirm paid chain">
+        <p style="white-space: pre-wrap">{pendingPaid.text}</p>
+        <button type="button" on:click={confirmPaid}>Confirm paid chain</button>
+        <button type="button" on:click={reset}>Cancel paid chain</button>
+      </section>
+    {/if}
+
     <!-- Drop zone -->
     <DropZone
       accept={['*/*']}
@@ -341,13 +461,15 @@
       bind:error={dropError}
       label="Drop a file to run this chain"
       on:files={(e) => {
+        chainAdmission = null;
+        clearTrail();
         inputFiles = e.detail;
         dropError = '';
         reset();
       }}
     />
 
-    {#if pendingAutoRun}
+    {#if totalInstallSize > 0}
       <div class="consent-panel" role="alertdialog" aria-labelledby="consent-title">
         <div class="consent-panel__head">
           <span class="consent-panel__icon" aria-hidden="true">
@@ -360,8 +482,7 @@
           <h3 id="consent-title" class="consent-panel__title">This chain will download <strong>{fmtSize(totalInstallSize)}</strong> on first run</h3>
         </div>
         <p class="consent-panel__body">
-          You opened a link with auto-run enabled. Before running, confirm
-          you trust this chain. Models cache for offline use after the first run.
+          Running this chain may download these models. Models cache for offline use after the first run. Run remains an explicit action.
         </p>
         <ul class="consent-panel__steps">
           {#each resolvedSteps as s}
@@ -373,10 +494,6 @@
             </li>
           {/each}
         </ul>
-        <div class="consent-panel__actions">
-          <button class="btn-primary" type="button" on:click={approveAutoRun}>Run chain</button>
-          <button class="btn-ghost-sm" type="button" on:click={declineAutoRun}>Cancel</button>
-        </div>
       </div>
     {/if}
 
@@ -443,6 +560,9 @@
           <div class="panel-divider"></div>
           <div class="result-actions">
             <button class="btn-primary" type="button" on:click={download}>Download result</button>
+            {#each resultBlobs.slice(1) as blob, index}
+              <button class="btn-secondary" type="button" on:click={() => downloadOutput(index + 1)}>Download output {index + 2}</button>
+            {/each}
             <button class="btn-secondary" type="button" on:click={openSaveDialog}>Save to Chains</button>
             <a href={editUrl} class="btn-secondary">Edit in builder</a>
           </div>

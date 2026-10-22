@@ -1,8 +1,8 @@
 const INSTALLED = Symbol.for('@wyreup/mcp/egress-installed');
 const ORIGINAL = Symbol.for('@wyreup/mcp/egress-original-fetch');
 // Mutable allowed-origin holder. The locked fetch reads this at call time so
-// the worker can narrow/repoint the allowlist to the trusted job.proOrigin
-// (delivered via IPC, never via worker env) without reinstalling the hook.
+// the worker can configure the trusted origins delivered in its IPC job
+// without reinstalling the hook.
 const ALLOWED = Symbol.for('@wyreup/mcp/egress-allowed-origin');
 const MAX_REDIRECTS = 5;
 
@@ -16,15 +16,26 @@ export class EgressBlockedError extends Error {
   }
 }
 
-function toUrl(input: string | Request | URL): URL {
-  if (input instanceof URL) return input;
-  if (typeof input === 'string') return new URL(input);
-  return new URL(input.url);
+function normalizeOrigins(origins: string | readonly string[]): Set<string> {
+  const values = typeof origins === 'string' ? [origins] : origins;
+  return new Set(values.map((origin) => new URL(origin).origin));
 }
 
-export function installEgressLock(allowedOrigin: string): void {
+function describeOrigins(origins: ReadonlySet<string>): string {
+  return Array.from(origins).join(', ');
+}
+
+async function discardResponse(response: Response): Promise<void> {
+  try {
+    await response.body?.cancel();
+  } catch {
+    // Disposal must not replace the redirect's primary result.
+  }
+}
+
+export function installEgressLock(allowedOrigins: string | readonly string[]): void {
   const g = globalThis as unknown as Record<symbol, unknown>;
-  const allowedAtInstall = new URL(allowedOrigin).origin;
+  const allowedAtInstall = normalizeOrigins(allowedOrigins);
   if (g[INSTALLED]) return;
   g[INSTALLED] = true;
   g[ORIGINAL] = globalThis.fetch;
@@ -36,22 +47,53 @@ export function installEgressLock(allowedOrigin: string): void {
     init: RequestInit = {},
     hops = 0,
   ): Promise<Response> => {
-    const allowed = g[ALLOWED] as string;
-    const url = toUrl(input);
-    if (url.origin !== allowed) throw new EgressBlockedError(url.origin, allowed);
+    const allowed = g[ALLOWED] as Set<string>;
+    const allowedDescription = describeOrigins(allowed);
+    const request = new Request(input, init);
+    const url = new URL(request.url);
+    if (!allowed.has(url.origin)) {
+      throw new EgressBlockedError(url.origin, allowedDescription);
+    }
 
-    const userRedirect = init.redirect ?? 'follow';
-    const response = await original(input, { ...init, redirect: 'manual' });
+    const userRedirect = request.redirect;
+    const response = await original(request, { redirect: 'manual' });
 
-    if (response.status >= 300 && response.status < 400) {
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
       if (userRedirect === 'manual') return response;
-      if (userRedirect === 'error') throw new TypeError('redirect not allowed');
-      if (hops >= MAX_REDIRECTS) throw new EgressBlockedError('max-redirects', allowed);
-      const loc = response.headers.get('location');
-      if (!loc) return response;
-      const next = new URL(loc, response.url);
-      if (next.origin !== allowed) throw new EgressBlockedError(next.origin, allowed);
-      return locked(next, init, hops + 1);
+      let nextRequest: Request;
+      try {
+        if (userRedirect === 'error') throw new TypeError('redirect not allowed');
+        const loc = response.headers.get('location');
+        if (!loc) return response;
+        if (hops >= MAX_REDIRECTS) throw new EgressBlockedError('max-redirects', allowedDescription);
+        const next = new URL(loc, response.url || request.url);
+        if (!allowed.has(next.origin)) throw new EgressBlockedError(next.origin, allowedDescription);
+        const rewrite = ((response.status === 301 || response.status === 302) && request.method === 'POST') ||
+          (response.status === 303 && request.method !== 'GET' && request.method !== 'HEAD');
+        if (!rewrite && request.body !== null) {
+          throw new TypeError('Redirect would replay a request body');
+        }
+        const headers = new Headers(request.headers);
+        if (rewrite) {
+          for (const name of ['content-encoding', 'content-language', 'content-location', 'content-type', 'content-length']) {
+            headers.delete(name);
+          }
+        }
+        if (next.origin !== url.origin) {
+          for (const name of ['authorization', 'cookie', 'proxy-authorization']) headers.delete(name);
+        }
+        nextRequest = new Request(next, {
+          method: rewrite ? 'GET' : request.method, headers, signal: request.signal,
+          redirect: userRedirect, credentials: request.credentials, cache: request.cache,
+          mode: request.mode, referrer: request.referrer, referrerPolicy: request.referrerPolicy,
+          integrity: request.integrity, keepalive: request.keepalive,
+        });
+      } catch (error) {
+        await discardResponse(response);
+        throw error;
+      }
+      await discardResponse(response);
+      return locked(nextRequest, {}, hops + 1);
     }
     return response;
   };
@@ -60,18 +102,20 @@ export function installEgressLock(allowedOrigin: string): void {
 }
 
 /**
- * Repoint the already-installed lock to a single trusted origin. Called by the
- * worker with `job.proOrigin` — a value that arrives over IPC from the parent
- * and is NOT settable via the worker's (scrubbed) environment. This lets a dev
- * who runs the parent against a local backend (WYREUP_ORIGIN=http://localhost)
- * still reach that origin from the worker, WITHOUT exposing an env-overridable
- * allowlist an attacker inside the worker could broaden. No-op if the lock
- * isn't installed yet.
+ * Replace the already-installed lock's trusted origins. The worker receives
+ * these values over IPC from the parent rather than from its scrubbed
+ * environment, so model downloads and Pro calls work without exposing an
+ * env-controlled allowlist inside the process that holds the Pro key.
  */
-export function setEgressAllowedOrigin(allowedOrigin: string): void {
+export function setEgressAllowedOrigins(allowedOrigins: string | readonly string[]): void {
   const g = globalThis as unknown as Record<symbol, unknown>;
   if (!g[INSTALLED]) return;
-  g[ALLOWED] = new URL(allowedOrigin).origin;
+  g[ALLOWED] = normalizeOrigins(allowedOrigins);
+}
+
+/** Backwards-compatible single-origin helper. */
+export function setEgressAllowedOrigin(allowedOrigin: string): void {
+  setEgressAllowedOrigins(allowedOrigin);
 }
 
 // Test-only escape: restores the original fetch and clears the install flag.

@@ -1,5 +1,4 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import rs from 'text-readability';
 
 export interface TextStatsByParagraphParams {
   /** Highlight paragraphs above this Flesch-Kincaid grade level as "dense". */
@@ -143,6 +142,9 @@ export const textStatsByParagraph: ToolModule<TextStatsByParagraphParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 25, message: 'Reading text' });
     const text = await inputs[0]!.text();
+    if (ctx.signal.aborted) throw new Error('Aborted');
+
+    const { default: rs } = await import('text-readability');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 55, message: 'Splitting paragraphs' });

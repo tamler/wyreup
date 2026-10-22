@@ -3,6 +3,7 @@ import {
   imageSimilarity,
   cosineSimilarity,
   clusterByThreshold,
+  IMAGE_SIMILARITY_PIPELINE_TASK,
 } from '../../../src/tools/image-similarity/index.js';
 
 describe('image-similarity — metadata', () => {
@@ -36,6 +37,10 @@ describe('image-similarity — metadata', () => {
 
   it('outputs application/json', () => {
     expect(imageSimilarity.output.mime).toBe('application/json');
+  });
+
+  it('uses the image feature extraction pipeline', () => {
+    expect(IMAGE_SIMILARITY_PIPELINE_TASK).toBe('image-feature-extraction');
   });
 });
 

@@ -55,6 +55,27 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
     userPassword: '',
   },
 
+  paramSchema: {
+    userPassword: {
+      type: 'string',
+      label: 'Open password',
+      secret: true,
+      help: 'Required to open the encrypted PDF.',
+    },
+    ownerPassword: {
+      type: 'string',
+      label: 'Owner password',
+      secret: true,
+      help: 'Optional. Defaults to the open password when left blank.',
+    },
+    permissions: {
+      type: 'json',
+      label: 'Permissions',
+      placeholder: '{"printing":"none","copying":false}',
+      help: 'Optional PDF permissions object.',
+    },
+  },
+
   async run(inputs: File[], params: PdfEncryptParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
@@ -102,7 +123,7 @@ export const pdfEncrypt: ToolModule<PdfEncryptParams> = {
 
     pdfDoc.encrypt({
       userPassword,
-      ownerPassword: ownerPassword ?? userPassword,
+      ownerPassword: ownerPassword?.trim() ? ownerPassword : userPassword,
       permissions: cantooPermissions,
     });
 

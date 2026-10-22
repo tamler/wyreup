@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
@@ -6,11 +7,18 @@
   import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
-  import type { ToolProgress } from '@wyreup/core';
+  import type { PreloadAdmission, SerializedTool } from './types';
+  import type { ToolModule, ToolProgress } from '@wyreup/core';
+  import { allowsEmptyText, checkTextUnicode } from './liveTextState';
+  import { readImportedText, textAdmissionRequiresRun } from './textImportPolicy';
+  import { prepareMarkdownPreview } from './markdownPreview';
+  import { markdownCellLines, prepareMarkdownTablePreview, MARKDOWN_TABLE_PAGE_SIZE, type MarkdownTableView } from './markdownTablePreview';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let injectedTool: ToolModule<Record<string, unknown>> | undefined = undefined;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+  export let showChain = true;
 
   let inputText = '';
   let params: Record<string, unknown> = { ...tool.defaults };
@@ -22,18 +30,70 @@
   let resultBlob: Blob | null = null;
   let resultText = '';
   let resultMime = '';
+  let tablePreview: MarkdownTableView | null = null;
+  let tablePage = 0;
+  let generation = 0;
+  let controller: AbortController | null = null;
+  let disposed = false;
+  let priorInput = inputText;
+  let priorParams = params;
+  const urls = new Set<string>();
+  const timers = new Set<ReturnType<typeof setTimeout>>();
 
-  // Chained-from-prior-tool: read its bytes into the textarea so the user
-  // can edit before running.
-  let preloadConsumed = false;
-  $: if (preloadedFile && !preloadConsumed) {
-    preloadConsumed = true;
-    void preloadedFile.text().then((t) => {
-      inputText = t;
-    });
+  let attemptedPreload: File | null = null;
+  let originalFile: File | null = null;
+  let inputRevision = 0;
+  let originalRevision = 0;
+  let useOriginal = false;
+  let preloadReading = false;
+  $: if (preloadedFile && preloadedFile !== attemptedPreload) {
+    attemptedPreload = preloadedFile;
+    void importOriginal(preloadedFile);
   }
 
-  $: canRun = inputText.trim().length > 0 && state !== 'running';
+  async function importOriginal(file: File) {
+    reset();
+    originalFile = file;
+    useOriginal = false;
+    preloadReading = true;
+    const own = generation;
+    const revision = inputRevision;
+    try {
+      const text = await readImportedText(file, tool.id, params, tool.input.sizeLimit);
+      if (disposed || generation !== own || inputRevision !== revision || originalFile !== file) return;
+      inputText = text; priorInput = text;
+      originalRevision = inputRevision;
+      useOriginal = true;
+      if (!textAdmissionRequiresRun(tool.id)) onPreloadAdmission?.({ file, status: 'admitted' });
+    } catch (cause) {
+      if (!disposed && generation === own && originalFile === file) {
+        state = 'error'; errorMsg = cause instanceof Error ? cause.message : 'Could not read the input file.';
+        onPreloadAdmission?.({ file, status: 'refused', message: errorMsg });
+      }
+    } finally { if (generation === own) preloadReading = false; }
+  }
+
+  function inputEdited() {
+    inputRevision++;
+    useOriginal = false;
+    preloadReading = false;
+    reset();
+  }
+
+  function downloadOriginal() {
+    if (!originalFile) return;
+    const url = URL.createObjectURL(originalFile); urls.add(url);
+    const link = document.createElement('a'); link.href = url; link.download = originalFile.name; link.click();
+  }
+
+  function dismissOriginal() {
+    originalFile = null; useOriginal = false; preloadReading = false; reset();
+  }
+
+  $: if (inputText !== priorInput || params !== priorParams) {
+    priorInput = inputText; priorParams = params; reset();
+  }
+  $: canRun = !preloadReading && (inputText.trim().length > 0 || allowsEmptyText(tool.id, params)) && state !== 'running';
   $: isHtml = resultMime === 'text/html';
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
@@ -41,45 +101,60 @@
   // Input is user-typed text — markdown-to-html and friends are designed
   // to convert it into rendered HTML, but a hostile chain/trigger could
   // pipe attacker-controlled text through these tools to inject script.
-  $: safeHtml = isHtml ? DOMPurify.sanitize(resultText) : '';
+  $: safeHtml = isHtml ? tool.id === 'markdown-to-html' ? resultText : DOMPurify.sanitize(resultText) : '';
 
   async function run() {
     if (!canRun) return;
+    reset();
+    const own = generation;
+    const revision = inputRevision;
+    const capturedOriginal = useOriginal && originalRevision === revision ? originalFile : null;
+    const capturedParams = params;
+    const abort = new AbortController();
+    controller = abort;
     state = 'running';
     errorMsg = '';
     resultText = '';
     resultBlob = null;
 
-    const file = new File([inputText], 'input.txt', { type: 'text/plain' });
-
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
-      const registry = createDefaultRegistry();
-      const toolModule = registry.toolsById.get(tool.id);
+      if (!capturedOriginal) checkTextUnicode(tool.id, capturedParams, inputText);
+      const preparedTable = tool.id === 'markdown-table-generator' ? prepareMarkdownTablePreview(inputText, params) : null;
+      const file = capturedOriginal ?? new File([inputText], 'input.txt', { type: 'text/plain' });
+      const toolModule = injectedTool ?? (await import('../../lib/core-execution')).createDefaultRegistry().toolsById.get(tool.id);
+      if (disposed || generation !== own) return;
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run([file], params, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+      const result = await toolModule.run([file], capturedParams, {
+        onProgress: (p) => { if (!disposed && generation === own) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
+      if (disposed || generation !== own) return;
 
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
 
-      resultBlob = blob;
-      resultMime = blob.type;
-      resultText = isJsonMime(blob.type)
-        ? prettifyJson(await blob.text())
-        : await blob.text();
+      const output = await blob.text();
+      if (disposed || generation !== own) return;
+      const prepared = tool.id === 'markdown-to-html' ? prepareMarkdownPreview(output) : { blob, text: output };
+      resultBlob = prepared.blob;
+      resultMime = prepared.blob.type;
+      resultText = isJsonMime(prepared.blob.type) ? prettifyJson(prepared.text) : prepared.text;
+      tablePreview = preparedTable;
       markToolUsed(tool.id);
       state = 'done';
+      if (capturedOriginal && originalFile === capturedOriginal && inputRevision === revision && params === capturedParams) {
+        onPreloadAdmission?.({ file: capturedOriginal, status: 'admitted' });
+      }
     } catch (err) {
-      state = 'error';
-      errorMsg = err instanceof Error ? err.message : String(err);
-    }
+      if (!disposed && generation === own) {
+        state = 'error'; errorMsg = err instanceof Error ? err.message : String(err);
+        if (capturedOriginal && originalFile === capturedOriginal) onPreloadAdmission?.({ file: capturedOriginal, status: 'refused', message: errorMsg });
+      }
+    } finally { if (generation === own) controller = null; }
   }
 
   function isJsonMime(m: string) {
@@ -95,25 +170,39 @@
   }
 
   function reset() {
+    generation++;
+    preloadReading = false;
+    controller?.abort(); controller = null;
+    for (const url of urls) URL.revokeObjectURL(url);
+    urls.clear();
+    for (const timer of timers) clearTimeout(timer);
+    timers.clear();
+    copied = false;
     state = 'idle';
     errorMsg = '';
     resultText = '';
     resultBlob = null;
+    tablePreview = null;
+    tablePage = 0;
   }
 
   function clearInput() {
     inputText = '';
-    reset();
+    inputEdited();
   }
+
+  function cancel() { useOriginal = false; reset(); }
 
   let copied = false;
 
   async function copyResult() {
+    const own = generation;
     try {
       await navigator.clipboard.writeText(resultText);
+      if (disposed || generation !== own) return;
       copied = true;
-      setTimeout(() => { copied = false; }, 1500);
-    } catch { /* ignore */ }
+      const timer = setTimeout(() => { if (generation === own) copied = false; timers.delete(timer); }, 1500); timers.add(timer);
+    } catch { if (!disposed && generation === own) errorMsg = 'Copy unavailable. Use Download.'; }
   }
 
   // Tier-0 TTS via Web Speech API. Browser/OS provides the voices —
@@ -144,10 +233,11 @@
   function download() {
     if (!resultBlob) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
+    const url = URL.createObjectURL(resultBlob); urls.add(url); a.href = url;
     const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
     a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); timers.delete(timer); }, 1000); timers.add(timer);
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -159,6 +249,7 @@
   }
 
   $: charCount = inputText.length;
+  onDestroy(() => { disposed = true; reset(); if (speaking) window.speechSynthesis.cancel(); });
 </script>
 
 <div class="runner">
@@ -175,12 +266,19 @@
     <textarea
       class="text-input__textarea"
       bind:value={inputText}
+      on:input={inputEdited}
       on:keydown={handleKeydown}
       placeholder={`Type or paste text here. Cmd/Ctrl+Enter to run ${tool.name}.`}
       rows="8"
+      aria-label="Input text"
       spellcheck="false"
     ></textarea>
   </div>
+
+  {#if originalFile}
+    <p>Original file retained: {originalFile.name}. {useOriginal ? 'Run uses its unchanged bytes.' : 'Edited text runs separately from the original.'}</p>
+    <div><button class="btn-secondary" type="button" on:click={downloadOriginal}>Download original</button><button class="btn-secondary" type="button" on:click={() => originalFile && importOriginal(originalFile)}>Retry original</button><button class="btn-secondary" type="button" on:click={dismissOriginal}>Dismiss original</button></div>
+  {/if}
 
   <ParamsForm
     defaults={tool.defaults}
@@ -197,6 +295,7 @@
 
   {#if state === 'running'}
     <ProgressBar stage={progress.stage} percent={progress.percent} message={progress.message} />
+    <button class="btn-secondary" on:click={cancel} type="button">Cancel</button>
   {/if}
 
   {#if state === 'error'}
@@ -209,7 +308,7 @@
     </div>
   {/if}
 
-  {#if state === 'done' && resultText}
+  {#if state === 'done' && resultBlob}
     <div class="result-panel brackets">
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
@@ -228,6 +327,17 @@
           </div>
         </div>
         <div class="panel-divider"></div>
+        <p>{resultBlob.size.toLocaleString()} output bytes{resultText === '' ? ' — Empty output.' : ''}</p>
+        {#if errorMsg}<p role="alert">{errorMsg}</p>{/if}
+
+        {#if tablePreview}
+          <section aria-label="Safe Markdown table preview">
+            <h3>Table preview</h3>
+            <p>{tablePreview.rows.length.toLocaleString()} data rows; page {tablePage + 1} of {Math.max(1, Math.ceil(tablePreview.rows.length / MARKDOWN_TABLE_PAGE_SIZE))}. The Markdown artifact includes every row. Cell HTML is shown as text; cell line breaks use DOM line breaks.</p>
+            <div class="table-scroll"><table><caption>Entered table cells</caption><thead><tr>{#each tablePreview.headers as header}<th scope="col">{#each markdownCellLines(header) as line, index}{#if index}<br />{/if}{line}{/each}</th>{/each}</tr></thead><tbody>{#each tablePreview.rows.slice(tablePage * MARKDOWN_TABLE_PAGE_SIZE, (tablePage + 1) * MARKDOWN_TABLE_PAGE_SIZE) as row}<tr>{#each row as cell}<td>{#each markdownCellLines(cell) as line, index}{#if index}<br />{/if}{line}{/each}</td>{/each}</tr>{/each}</tbody></table></div>
+            <div class="table-pages"><button type="button" class="btn-secondary" disabled={tablePage === 0} on:click={() => tablePage--}>Previous table page</button><button type="button" class="btn-secondary" disabled={(tablePage + 1) * MARKDOWN_TABLE_PAGE_SIZE >= tablePreview.rows.length} on:click={() => tablePage++}>Next table page</button></div>
+          </section>
+        {/if}
 
         {#if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
@@ -239,7 +349,7 @@
           <pre class="text-viewer" role="region" aria-label="Text result">{resultText}</pre>
         {/if}
 
-        {#if resultBlob}
+        {#if resultBlob && showChain}
           <ChainSection
             resultBlob={resultBlob}
             sourceToolId={tool.id}
@@ -369,6 +479,11 @@
   .result-panel__inner { background: var(--bg-raised); border: 1px solid var(--border-subtle); border-radius: calc(var(--radius-md) - 1px); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 
   .result-actions { display: flex; gap: var(--space-2); }
+  .table-scroll { max-width: 100%; overflow-x: auto; }
+  table { border-collapse: collapse; min-width: 100%; }
+  th, td { border: 1px solid var(--border); padding: var(--space-2); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+  caption { text-align: left; font-weight: 600; }
+  .table-pages { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
   .text-viewer {
     font-family: var(--font-mono);

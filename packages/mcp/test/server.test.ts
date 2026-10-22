@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createWyreupMcpServer } from '../src/server.js';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { mkdtemp, rm } from 'node:fs/promises';
 
 const FIXTURES = new URL('../../core/test/fixtures', import.meta.url).pathname;
@@ -55,7 +55,7 @@ describe('createWyreupMcpServer', () => {
     process.env['WYREUP_API_KEY'] = 'wk_test_mcp_unit';
     // Allow both the fixtures directory and tmpdir so path validation
     // does not block the functional tool tests.
-    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpdir()}`;
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}${delimiter}${tmpdir()}`;
     server = await createWyreupMcpServer();
     tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-mcp-test-'));
   });
@@ -69,6 +69,15 @@ describe('createWyreupMcpServer', () => {
   });
 
   // ── list_tools ──────────────────────────────────────────────────────────────
+
+  it('reports the published package version in MCP server metadata', async () => {
+    const packageJson = JSON.parse(
+      await readFile(new URL('../package.json', import.meta.url), 'utf8'),
+    ) as { version: string };
+    // MCP SDK keeps the Initialize response metadata on this private field.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    expect((server as any)._serverInfo.version).toBe(packageJson.version);
+  });
 
   it('lists every registry tool that runs on the mcp surface, plus wyreup_chain', async () => {
     // Hardcoded counts drift; instead, assert structural equality with
@@ -281,7 +290,7 @@ describe('audit log [spec §#6]', () => {
   beforeAll(async () => {
     process.env['WYREUP_API_KEY'] = 'wk_test_audit';
     tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-audit-test-'));
-    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpDir}`;
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}${delimiter}${tmpDir}`;
   });
 
   afterAll(async () => {
@@ -326,7 +335,7 @@ describe('createWyreupMcpServer — Pro auth env gate', () => {
   const ORIG_ALLOW = process.env['WYREUP_ALLOW_PATHS'];
 
   beforeAll(() => {
-    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpdir()}`;
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}${delimiter}${tmpdir()}`;
   });
 
   afterAll(() => {
@@ -427,7 +436,7 @@ describe('worker dispatch [spec §#8]', () => {
   beforeAll(async () => {
     process.env['WYREUP_API_KEY'] = 'wk_test_worker_dispatch';
     tmpDir = await mkdtemp(join(tmpdir(), 'wyreup-worker-test-'));
-    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpDir}`;
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}${delimiter}${tmpDir}`;
     server = await createWyreupMcpServer();
   });
 

@@ -1,13 +1,14 @@
 import { readFile, mkdir, stat } from 'node:fs/promises';
-import { basename, join, resolve, sep, extname } from 'node:path';
-import { homedir } from 'node:os';
+import { basename, join, resolve, sep, extname, parse } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import chokidar from 'chokidar';
 import type { FSWatcher } from 'chokidar';
-import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
+import { createDefaultRegistry, runChain, parseChainString, serializeChain, toolRunsOnSurface } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
+import { resolveProOrigin } from '../lib/credentials.js';
 
 // ──── options ─────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,11 @@ export interface WatchOptions {
    * a few files before letting it run on a bulk drop.
    */
   maxFiles?: number;
+}
+
+export interface WatchHandle {
+  /** Stop accepting events, drain queued work, and release signal listeners. */
+  stop(): Promise<void>;
 }
 
 interface ToolbeltChainStep {
@@ -75,15 +81,13 @@ async function loadFromKit(path: string, nameOrId: string): Promise<string> {
 // ──── path-scope guard ────────────────────────────────────────────────────────
 
 /**
- * Disallow watching system directories or the user's whole home dir
- * unless --allow-system is passed. Watching `/` or `$HOME` would queue
- * every dotfile change for the rest of forever.
+ * Guard logical system paths and the whole home directory unless
+ * --allow-system is passed. Selected home children and temporary paths
+ * are allowed; this comparison does not resolve symlinks.
  */
 function isSystemPath(absPath: string): boolean {
-  const home = homedir();
+  const home = resolve(homedir());
   const blocked = [
-    '/',
-    home,
     '/etc',
     '/usr',
     '/var',
@@ -96,13 +100,13 @@ function isSystemPath(absPath: string): boolean {
     'C:\\Windows',
     'C:\\Program Files',
     'C:\\Program Files (x86)',
-  ];
-  for (const b of blocked) {
-    // Exact match OR `b` followed by a path separator (don't block /etcd because of /etc)
-    if (absPath === b) return true;
-    if (b !== '/' && absPath === b + sep) return true;
+  ].map((path) => resolve(path));
+  if (absPath === parse(absPath).root || absPath === home || blocked.includes(absPath)) return true;
+  if (absPath.startsWith(home + sep)) return false;
+  for (const temporary of [resolve(tmpdir()), resolve('/private/tmp')]) {
+    if (absPath === temporary || absPath.startsWith(temporary + sep)) return false;
   }
-  return false;
+  return blocked.some((path) => absPath.startsWith(path + sep));
 }
 
 // ──── MIME helpers ────────────────────────────────────────────────────────────
@@ -161,7 +165,7 @@ class WorkQueue {
 
 // ──── runner ──────────────────────────────────────────────────────────────────
 
-export async function executeWatch(watchPath: string, opts: WatchOptions): Promise<void> {
+export async function executeWatch(watchPath: string, opts: WatchOptions): Promise<WatchHandle> {
   // Resolve chain
   let rawSteps = '';
   if (opts.fromKit) {
@@ -194,8 +198,13 @@ export async function executeWatch(watchPath: string, opts: WatchOptions): Promi
   const registry = createDefaultRegistry();
   for (let i = 0; i < chain.length; i++) {
     const step = chain[i]!;
-    if (!registry.toolsById.has(step.toolId)) {
+    const tool = registry.toolsById.get(step.toolId);
+    if (!tool) {
       process.stderr.write(`Unknown tool in step ${i + 1}: "${step.toolId}"\n`);
+      process.exit(1);
+    }
+    if (!toolRunsOnSurface(tool, 'cli')) {
+      process.stderr.write(`Tool "${tool.id}" is not available on CLI. Use its web page.\n`);
       process.exit(1);
     }
   }
@@ -281,21 +290,28 @@ export async function executeWatch(watchPath: string, opts: WatchOptions): Promi
 
   // ──── graceful shutdown (defined early so handleFile can call it) ─────────
 
-  const shutdown = async (): Promise<void> => {
-    if (aborting) return;
+  let shutdownPromise: Promise<void> | null = null;
+
+  const shutdown = (exitProcess: boolean): Promise<void> => {
+    if (shutdownPromise) return shutdownPromise;
     aborting = true;
-    log(`shutting down — draining ${queue.size()} in-flight…`);
-    // Close the watcher first so no new events arrive. Don't abort the
-    // signal here — in-flight work should finish naturally. (SIGINT is a
-    // separate path that does abort.)
-    if (watcherRef.current) await watcherRef.current.close();
-    await queue.drain();
-    log(`done. processed=${processed} failed=${failed} skipped=${skipped}`);
-    process.exit(0);
+    shutdownPromise = (async () => {
+      log(`shutting down — draining ${queue.size()} in-flight…`);
+      // Close the watcher first so no new events arrive. Don't abort the
+      // signal here — in-flight work should finish naturally. (SIGINT is a
+      // separate path that does abort.)
+      if (watcherRef.current) await watcherRef.current.close();
+      await queue.drain();
+      process.off('SIGINT', onSigint);
+      process.off('SIGTERM', onSigterm);
+      log(`done. processed=${processed} failed=${failed} skipped=${skipped}`);
+      if (exitProcess) process.exit(0);
+    })();
+    return shutdownPromise;
   };
 
   const triggerShutdown = (): void => {
-    void shutdown();
+    void shutdown(true);
   };
 
   // ──── handle one file event ────────────────────────────────────────────────
@@ -349,6 +365,7 @@ export async function executeWatch(watchPath: string, opts: WatchOptions): Promi
           signal: ac.signal,
           cache: new Map(),
           executionId: randomUUID(),
+          proOrigin: resolveProOrigin(),
         };
 
         const outputs = await runChain(chain, [file], ctx, registry);
@@ -418,17 +435,25 @@ export async function executeWatch(watchPath: string, opts: WatchOptions): Promi
     log(`watcher error: ${err instanceof Error ? err.message : String(err)}`);
   });
 
-  const sigShutdown = async () => {
+  async function sigShutdown() {
     // Same as shutdown but also aborts in-flight work, so Ctrl-C is snappy.
     if (aborting) return;
     ac.abort();
-    await shutdown();
-  };
+    await shutdown(true);
+  }
 
-  process.on('SIGINT', () => {
+  function onSigint() {
     void sigShutdown();
-  });
-  process.on('SIGTERM', () => {
+  }
+
+  function onSigterm() {
     void sigShutdown();
-  });
+  }
+
+  process.on('SIGINT', onSigint);
+  process.on('SIGTERM', onSigterm);
+
+  return {
+    stop: () => shutdown(false),
+  };
 }

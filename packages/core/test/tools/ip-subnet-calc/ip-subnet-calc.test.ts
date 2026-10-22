@@ -26,7 +26,7 @@ describe('ip-subnet-calc — metadata', () => {
     expect(ipSubnetCalc.category).toBe('dev');
     expect(ipSubnetCalc.categories).toEqual(['dev', 'inspect']);
     expect(ipSubnetCalc.input).toEqual({ accept: [], min: 0, max: 0 });
-    expect(ipSubnetCalc.defaults).toEqual({ cidr: '192.168.1.0/24' });
+    expect(ipSubnetCalc.defaults).toEqual({ cidr: '192.168.1.0/24', splitEnabled: false, splitPrefix: 26 });
     expect(ipSubnetCalc.llmDescription).toBeTruthy();
   });
 });

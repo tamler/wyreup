@@ -5,6 +5,34 @@
 import type { ToolSeoContent } from '@wyreup/core';
 
 export const SEO_CONTENT: Record<string, ToolSeoContent> = {
+  'domain-age-checker': {
+    intro:
+      'Domain Registration Age is a free network lookup. The entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key is required. Registration age may differ from first-ever use.',
+    useCases: [
+      'Inspect the current registration date of a public domain',
+      'Compare full elapsed days with age measured using UTC calendar dates',
+    ],
+    faq: [
+      {
+        q: 'Does this run locally?',
+        a: 'The lookup needs a connection. Wyreup queries the public registration registry for the entered domain; IANA supplies only the public provider list and does not receive the queried domain.',
+      },
+      {
+        q: 'Is this the first-ever use date?',
+        a: 'Registration age can describe the current registration. Missing registration data remains unknown; a not-found result does not guarantee availability.',
+      },
+      {
+        q: 'What is retained?',
+        a: 'Wyreup keeps no domain-query database. Temporary rotating HMAC network counters and random short-lived reservation tokens enforce shared public limits. Shared networks can reach those limits together. Cleanup runs on later requests; platform logs, backups, local operator exports, and saved results have separate retention.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'url-parser',
+        why: 'Inspect a URL locally before choosing its domain for a network lookup.',
+      },
+    ],
+  },
   'analyze-chart': {
     intro:
       "Analyze Chart reads an image of a chart, graph, or diagram and explains the data and main trend in plain English. Reach for it when you have a screenshot of a dashboard or a figure from a report and want a quick read on what it's showing. The hosted vision model returns plain text and costs 1 credit per run.",
@@ -10760,7 +10788,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does my image get uploaded?',
-        a: 'Yes. This is a Pro tool: the image is sent to a hosted GPU to run Real-ESRGAN, unlike the free in-browser tools that never leave your device. It is processed for the upscale and not retained.',
+        a: 'Yes. This is a Pro tool: the image is sent to a hosted GPU to run Real-ESRGAN. Local image tools such as Resize process images on your device. The hosted image is processed for the upscale and not retained.',
       },
       {
         q: 'Should I pick 2x or 4x?',

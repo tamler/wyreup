@@ -1,0 +1,151 @@
+[
+  {
+    "name": "benign-alt",
+    "input": "![plain alternative](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"plain alternative\"></p>\n",
+    "src": "/safe.png",
+    "alt": "plain alternative"
+  },
+  {
+    "name": "plain-double-quote",
+    "input": "![plain \" data-probe=\"quote](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"plain &quot; data-probe=&quot;quote\"></p>\n",
+    "src": "/safe.png",
+    "alt": "plain \" data-probe=\"quote"
+  },
+  {
+    "name": "plain-single-quote",
+    "input": "![plain ' data-probe='single](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"plain ' data-probe='single\"></p>\n",
+    "src": "/safe.png",
+    "alt": "plain ' data-probe='single"
+  },
+  {
+    "name": "angle-ampersand",
+    "input": "![angle < > &](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"angle < > &\"></p>\n",
+    "src": "/safe.png",
+    "alt": "angle < > &"
+  },
+  {
+    "name": "raw-inline-html",
+    "input": "![<b data-probe=\"raw\">bold</b>](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"<b data-probe=&quot;raw&quot;>bold</b>\"></p>\n",
+    "src": "/safe.png",
+    "alt": "<b data-probe=\"raw\">bold</b>"
+  },
+  {
+    "name": "backslash-double-quote",
+    "input": "![escaped \\\" data-probe=\\\"escape](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"escaped &quot; data-probe=&quot;escape\"></p>\n",
+    "src": "/safe.png",
+    "alt": "escaped \" data-probe=\"escape"
+  },
+  {
+    "name": "codespan-double-quote",
+    "input": "![`\" data-probe=\"code`](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"&quot; data-probe=&quot;code\"></p>\n",
+    "src": "/safe.png",
+    "alt": "\" data-probe=\"code"
+  },
+  {
+    "name": "quote-event-attribute",
+    "input": "![plain\" onerror=\"void 0\" data-probe=\"event](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"plain&quot; onerror=&quot;void 0&quot; data-probe=&quot;event\"></p>\n",
+    "src": "/safe.png",
+    "alt": "plain\" onerror=\"void 0\" data-probe=\"event"
+  },
+  {
+    "name": "entity-double-quote",
+    "input": "![plain &quot; data-probe=&quot;entity](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"plain &quot; data-probe=&quot;entity\"></p>\n",
+    "src": "/safe.png",
+    "alt": "plain \" data-probe=\"entity"
+  },
+  {
+    "name": "raw-html-outside-alt",
+    "input": "<b data-probe=\"outside\">bold</b>",
+    "html": "<p>&lt;b data-probe=&quot;outside&quot;&gt;bold&lt;/b&gt;</p>\n",
+    "text": "<b data-probe=\"outside\">bold</b>"
+  },
+  {
+    "name": "nested-emphasis",
+    "input": "![nested *em* **strong** ~~gone~~ `code`](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"nested em strong gone code\"></p>\n",
+    "htmlNoGfm": "<p><img src=\"/safe.png\" alt=\"nested em strong ~~gone~~ code\"></p>\n",
+    "src": "/safe.png",
+    "alt": "nested em strong gone code",
+    "altNoGfm": "nested em strong ~~gone~~ code"
+  },
+  {
+    "name": "nested-emphasis-quote",
+    "input": "![*em\" data-probe=\"nested*](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"em&quot; data-probe=&quot;nested\"></p>\n",
+    "src": "/safe.png",
+    "alt": "em\" data-probe=\"nested"
+  },
+  {
+    "name": "nested-link",
+    "input": "![a [link](https://example.invalid) z](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"a link z\"></p>\n",
+    "src": "/safe.png",
+    "alt": "a link z"
+  },
+  {
+    "name": "entities-once",
+    "input": "![&quot; &#34; &#x22; &amp;quot; &amp;amp;](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"&quot; &#34; &#x22; &amp;quot; &amp;amp;\"></p>\n",
+    "src": "/safe.png",
+    "alt": "\" \" \" &quot; &amp;"
+  },
+  {
+    "name": "title-and-query",
+    "input": "![plain alt](/a?x=1&y=2 \"Title &#34; quote\")",
+    "html": "<p><img src=\"/a?x=1&y=2\" alt=\"plain alt\" title=\"Title &#34; quote\"></p>\n",
+    "src": "/a?x=1&y=2",
+    "alt": "plain alt",
+    "title": "Title \" quote"
+  },
+  {
+    "name": "empty-image",
+    "input": "![]()",
+    "html": "<p><img src=\"\" alt=\"\"></p>\n",
+    "src": "",
+    "alt": ""
+  },
+  {
+    "name": "unicode-alt",
+    "input": "![café 😀](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"café 😀\"></p>\n",
+    "src": "/safe.png",
+    "alt": "café 😀"
+  },
+  {
+    "name": "percent-destination",
+    "input": "![plain](/a%20b)",
+    "html": "<p><img src=\"/a%20b\" alt=\"plain\"></p>\n",
+    "src": "/a%20b",
+    "alt": "plain"
+  },
+  {
+    "name": "dangerous-entity-scheme",
+    "input": "![alt](javascript&colon;alert(1))",
+    "html": "<p><img src=\"#\" alt=\"alt\"></p>\n",
+    "src": "#",
+    "alt": "alt"
+  },
+  {
+    "name": "nonrecursive-entity",
+    "input": "![&amp;#34;](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"&amp;#34;\"></p>\n",
+    "src": "/safe.png",
+    "alt": "&#34;"
+  },
+  {
+    "name": "moderate-nested-raw-text",
+    "input": "![*label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)* *label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)*](/safe.png)",
+    "html": "<p><img src=\"/safe.png\" alt=\"label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png) label&quot; [link&quot;name](https://example.invalid/a) ![inner&quot;image](/inner.png)\"></p>\n",
+    "src": "/safe.png",
+    "alt": "label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png) label\" [link\"name](https://example.invalid/a) ![inner\"image](/inner.png)"
+  }
+]

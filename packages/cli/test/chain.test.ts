@@ -2,6 +2,7 @@
  * Tests for the `chain` command — executeChain() and extractStepsFromUrl().
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type * as Registry from '../../core/src/registry.js';
 
 // ──── fs/promises mock ────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ const mockStripExifRun = vi.fn();
 const mockCompressRun = vi.fn();
 
 const TOOL_STRIP_EXIF = {
+  surfaces: undefined as ('web' | 'cli' | 'mcp')[] | undefined,
   id: 'strip-exif',
   slug: 'strip-exif',
   name: 'Strip EXIF',
@@ -73,10 +75,11 @@ const TOOL_COMPRESS = {
 const mockRunChain = vi.fn();
 const mockParseChainString = vi.fn();
 
-vi.mock('@wyreup/core', () => ({
+vi.mock('@wyreup/core', async () => ({
+  toolRunsOnSurface: (await vi.importActual<typeof Registry>('../../core/src/registry.js')).toolRunsOnSurface,
   createDefaultRegistry: () => ({
     tools: [TOOL_STRIP_EXIF, TOOL_COMPRESS],
-    toolsById: new Map([
+    toolsById: new Map<string, typeof TOOL_STRIP_EXIF | typeof TOOL_COMPRESS>([
       ['strip-exif', TOOL_STRIP_EXIF],
       ['compress', TOOL_COMPRESS],
     ]),
@@ -107,6 +110,7 @@ beforeEach(() => {
   mockParseChainString.mockReset();
   mockStripExifRun.mockReset();
   mockCompressRun.mockReset();
+  TOOL_STRIP_EXIF.surfaces = undefined;
 
   vi.spyOn(process.stderr, 'write').mockImplementation((s) => {
     stderrOutput.push(typeof s === 'string' ? s : s.toString());
@@ -176,7 +180,23 @@ describe('extractStepsFromUrl', () => {
 // ──── executeChain — basic ────────────────────────────────────────────────────
 
 describe('executeChain — basic run', () => {
+  it.each([false, true])('rejects a web-only step before input or execution (dryRun=%s)', async (dryRun) => {
+    TOOL_STRIP_EXIF.surfaces = ['web'];
+    mockParseChainString.mockReturnValue(makeChain(['strip-exif']));
+    mockReadFile.mockResolvedValue(Buffer.from('private-original'));
+    mockRunChain.mockResolvedValue([makeImageBlob()]);
+
+    await expect(executeChain(['/tmp/photo.jpg'], {
+      steps: 'strip-exif', output: '/tmp/out.jpg', dryRun,
+    })).rejects.toThrow('process.exit(1)');
+    expect(stderrOutput.join('')).toMatch(/strip-exif.*CLI|CLI.*strip-exif/i);
+    expect(mockReadFile).not.toHaveBeenCalled();
+    expect(mockRunChain).not.toHaveBeenCalled();
+    expect(mockAtomicPublish).not.toHaveBeenCalled();
+  });
+
   it('runs a two-step chain and writes to -o', async () => {
+    const initialSigintListeners = process.listenerCount('SIGINT');
     const chain = makeChain(['strip-exif', 'compress']);
     mockParseChainString.mockReturnValue(chain);
     mockReadFile.mockResolvedValue(Buffer.from('fake-jpeg'));
@@ -190,6 +210,7 @@ describe('executeChain — basic run', () => {
     expect(mockRunChain).toHaveBeenCalledOnce();
     expect(mockAtomicPublish).toHaveBeenCalledWith('/tmp/clean.jpg', expect.any(Uint8Array), false);
     expect(exitCode).toBeUndefined();
+    expect(process.listenerCount('SIGINT')).toBe(initialSigintListeners);
   });
 
   it('passes step params to runChain', async () => {
@@ -208,6 +229,8 @@ describe('executeChain — basic run', () => {
       chain,
       expect.any(Array),
       expect.any(Object),
+      expect.any(Object),
+      0,
       expect.any(Object),
     );
   });
@@ -299,6 +322,53 @@ describe('executeChain — error cases', () => {
 // ──── executeChain — multi-output ─────────────────────────────────────────────
 
 describe('executeChain — multi-output', () => {
+  it('uses runChain fan-out semantics while saving every intermediate', async () => {
+    const chain = makeChain(['strip-exif', 'compress']);
+    mockParseChainString.mockReturnValue(chain);
+    mockReadFile.mockResolvedValue(Buffer.from('fake'));
+    mockRunChain.mockImplementation(async (...args: unknown[]) => {
+      const hooks = args[5] as {
+        onStepComplete?: (event: {
+          index: number;
+          step: { toolId: string; params: Record<string, unknown> };
+          outputs: File[];
+        }) => Promise<void>;
+      };
+      await hooks.onStepComplete?.({
+        index: 0,
+        step: chain[0]!,
+        outputs: [
+          new File([makeImageBlob()], 'one.jpg', { type: 'image/jpeg' }),
+          new File([makeImageBlob()], 'two.jpg', { type: 'image/jpeg' }),
+        ],
+      });
+      return [makeImageBlob()];
+    });
+
+    await executeChain(['/tmp/photo.jpg'], {
+      steps: 'strip-exif|compress',
+      saveIntermediates: '/tmp/steps',
+      output: '/tmp/final.jpg',
+    });
+
+    expect(mockRunChain).toHaveBeenCalledOnce();
+    expect(mockAtomicPublish).toHaveBeenCalledWith(
+      '/tmp/steps/step-1-strip-exif-0.jpg',
+      expect.any(Uint8Array),
+      false,
+    );
+    expect(mockAtomicPublish).toHaveBeenCalledWith(
+      '/tmp/steps/step-1-strip-exif-1.jpg',
+      expect.any(Uint8Array),
+      false,
+    );
+    expect(mockAtomicPublish).toHaveBeenCalledWith(
+      '/tmp/final.jpg',
+      expect.any(Uint8Array),
+      false,
+    );
+  });
+
   it('writes multiple files to -O directory', async () => {
     const chain = makeChain(['strip-exif']);
     mockParseChainString.mockReturnValue(chain);

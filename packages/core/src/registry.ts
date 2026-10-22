@@ -1,4 +1,7 @@
 import type { ToolModule, ToolCategory, MimePattern, Surface } from './types.js';
+import { mimeMatches, validateToolInputs } from './lib/input-validation.js';
+
+export { mimeMatches } from './lib/input-validation.js';
 
 /**
  * True if this tool is exposed on the given runtime surface.
@@ -71,9 +74,7 @@ export function createRegistry(tools: ToolModule[]): ToolRegistry {
  * - Every file's MIME type must match one of the accept patterns.
  */
 function filesMatchInput(files: File[], input: ToolModule['input']): boolean {
-  if (files.length < input.min) return false;
-  if (input.max !== undefined && files.length > input.max) return false;
-  return files.every((f) => input.accept.some((p) => mimeMatches(f.type, p)));
+  return validateToolInputs(files, input) === null;
 }
 
 /**
@@ -85,18 +86,6 @@ function filesMatchInput(files: File[], input: ToolModule['input']): boolean {
  * suffixed form, and without this normalization the captured-blob would
  * match nothing in the chain panel.
  */
-export function mimeMatches(mime: string, pattern: MimePattern): boolean {
-  if (pattern === '*' || pattern === '*/*') return true;
-  // Strip parameters (anything after `;`) before comparison.
-  const baseMime = (mime.split(';')[0] ?? '').trim().toLowerCase();
-  const basePattern = (pattern.split(';')[0] ?? '').trim().toLowerCase();
-  if (basePattern.endsWith('/*')) {
-    const prefix = basePattern.slice(0, -1); // 'image/'
-    return baseMime.startsWith(prefix);
-  }
-  return baseMime === basePattern;
-}
-
 /**
  * Decide whether a producer's declared output MIME could feed a
  * consumer's `accept` list. Used by chain UIs (builder, dry-run, panel)
@@ -114,6 +103,7 @@ export function mimeMatches(mime: string, pattern: MimePattern): boolean {
  */
 export function couldFlowTo(producerOutput: string, consumerAccept: MimePattern[]): boolean {
   const out = (producerOutput.split(';')[0] ?? '').trim().toLowerCase();
+  if (out === '*' || out === '*/*') return consumerAccept.length > 0;
   if (out.endsWith('/*')) {
     const family = out.slice(0, -1); // 'image/'
     return consumerAccept.some((pattern) => {

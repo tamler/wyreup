@@ -1,16 +1,62 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import type { SerializedTool, PreloadAdmission } from './types';
   import type { ToolProgress } from '@wyreup/core';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  onDestroy(releaseOwnedWakeLocks);
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+
+  let disposed = false;
+  let generation = 0;
+  let controller: AbortController | null = null;
+  let activePreload: File | null = null;
+  let observedPreload = preloadedFile;
+  const attemptedPreloads = new WeakSet<File>();
+  if (preloadedFile) attemptedPreloads.add(preloadedFile);
+  const ownedUrls = new Set<string>();
+  function ownedUrl(blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    ownedUrls.add(url);
+    return url;
+  }
+  function reportPreload(file: File | null, status: 'admitted' | 'refused') {
+    if (!disposed && file && file === preloadedFile && files.includes(file)) {
+      onPreloadAdmission?.(status === 'admitted' ? { file, status } : { file, status, message: 'The file input was not interpreted by this tool.' });
+    }
+  }
+  function invalidateRun() {
+    releaseOwnedWakeLocks();
+    reportPreload(activePreload, 'refused');
+    activePreload = null;
+    generation++;
+    controller?.abort();
+    controller = null;
+    for (const url of ownedUrls) URL.revokeObjectURL(url);
+    ownedUrls.clear();
+  }
+  function stagePreload(file: File | null) {
+    const candidate = file && !attemptedPreloads.has(file) ? file : null;
+    if (candidate) attemptedPreloads.add(candidate);
+    onFiles(new CustomEvent<File[]>('files', { detail: candidate ? [candidate] : [] }));
+  }
+  onDestroy(() => { disposed = true; invalidateRun(); });
 
   let files: File[] = preloadedFile ? [preloadedFile] : [];
   let params: Record<string, unknown> = { ...tool.defaults };
@@ -23,17 +69,24 @@
   let resultBlobs: Blob[] = [];
   let resultUrls: string[] = [];
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
+  $: if (preloadedFile !== observedPreload) {
+    observedPreload = preloadedFile;
+    stagePreload(preloadedFile);
   }
 
   $: canRun = files.length >= tool.input.min && state !== 'running';
 
   function onFiles(e: CustomEvent<File[]>) {
+    invalidateRun();
     files = e.detail;
     dropError = '';
     state = 'idle';
     clearResults();
+  }
+
+  function parametersChanged(e: CustomEvent<Record<string, unknown>>) {
+    onFiles(new CustomEvent<File[]>('files', { detail: files }));
+    params = e.detail;
   }
 
   function clearResults() {
@@ -44,37 +97,59 @@
 
   async function run() {
     if (!canRun) return;
+    invalidateRun();
+    const own = ++generation;
+    const abort = new AbortController();
+    controller = abort;
+    const ownTool = tool;
+    const ownId = tool.id;
+    const inputFiles = [...files];
+    const inputParams = { ...params };
+    activePreload = preloadedFile && inputFiles.includes(preloadedFile) ? preloadedFile : null;
+    const current = () => !disposed && generation === own && !abort.signal.aborted && tool === ownTool && tool.id === ownId;
     state = 'running';
     errorMsg = '';
     clearResults();
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
+      if (!current()) return;
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run(files, params, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+      const result = await toolModule.run(inputFiles, inputParams, {
+        onProgress: (p) => { if (current()) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
+      if (!current()) return;
 
       resultBlobs = Array.isArray(result) ? result : [result];
-      resultUrls = resultBlobs.map((b) => URL.createObjectURL(b));
+      resultUrls = resultBlobs.map(ownedUrl);
       markToolUsed(tool.id);
       state = 'done';
+      reportPreload(activePreload, 'admitted');
+      activePreload = null;
     } catch (err) {
+      if (!current()) return;
+      reportPreload(activePreload, 'refused');
+      activePreload = null;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     } finally {
-      releaseWakeLock();
+      if (generation === own) { controller = null; activePreload = null; }
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    invalidateRun();
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     clearResults();
@@ -110,13 +185,14 @@
 <div class="runner">
   <DropZone
     accept={tool.input.accept}
+    sizeLimit={tool.input.sizeLimit}
     multiple={false}
     bind:files
     bind:error={dropError}
     on:files={onFiles}
   />
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={parametersChanged} />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">

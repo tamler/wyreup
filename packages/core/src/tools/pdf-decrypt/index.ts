@@ -41,6 +41,15 @@ export const pdfDecrypt: ToolModule<PdfDecryptParams> = {
     password: '',
   },
 
+  paramSchema: {
+    password: {
+      type: 'string',
+      label: 'Password',
+      secret: true,
+      help: 'The password currently protecting this PDF.',
+    },
+  },
+
   async run(inputs: File[], params: PdfDecryptParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 

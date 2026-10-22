@@ -14,4 +14,7 @@ export interface ColorConverterResult {
   oklchString: string;
   oklab: { l: number; a: number; b: number };
   valid: boolean;
+  alpha: number | null;
+  gamut: 'srgb' | 'outside-srgb' | null;
+  opaquePickerHex: string;
 }

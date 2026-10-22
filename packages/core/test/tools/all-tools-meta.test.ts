@@ -111,6 +111,10 @@ describe('ToolModule structural invariants', () => {
           'archive',
           'text',
           'geo',
+          'building',
+          'hardware',
+          'planning',
+          'design',
         ]);
         expect(valid.has(tool.category)).toBe(true);
       });

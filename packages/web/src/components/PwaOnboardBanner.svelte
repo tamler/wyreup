@@ -53,7 +53,7 @@
   <div class="pwa-banner" role="banner" aria-label="Welcome onboarding">
     <div class="pwa-banner__inner">
       <p class="pwa-banner__text">
-        Welcome to Wyreup. Free tools run on your device; hosted PRO tools say what they send.
+        Welcome to Wyreup. Local tools process on your device; network lookups and hosted PRO tools say what they send.
         <a href="/settings" class="pwa-banner__link">Visit Settings</a> to configure which tools cache for offline.
       </p>
       <button class="pwa-banner__dismiss" on:click={dismissWelcome} aria-label="Dismiss welcome message">
@@ -76,7 +76,7 @@
             <line x1="12" y1="2" x2="12" y2="15"/>
           </svg>
         </span>
-        Share button in Safari, then choose <strong>Add to Home Screen</strong>. Works fully offline once installed.
+        Share button in Safari, then choose <strong>Add to Home Screen</strong>. Cached local tools can work offline; network lookups and hosted PRO need a connection.
       </p>
       <button class="pwa-banner__dismiss" on:click={dismissIosHint} aria-label="Dismiss install hint">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

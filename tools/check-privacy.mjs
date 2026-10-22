@@ -5,7 +5,133 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
+import { parse } from 'parse5';
 import onnxAssets from '../packages/core/src/lib/onnx-assets.json' with { type: 'json' };
+import pdfjsAssets from '../packages/core/src/lib/pdfjs-assets.json' with { type: 'json' };
+import financeSources from '../packages/core/src/utilities/finance-sources.json' with { type: 'json' };
+
+function escapeAstroHtml(value) {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+  })[character]);
+}
+
+function uniqueIndex(source, value) {
+  const index = source.indexOf(value);
+  return index >= 0 && source.lastIndexOf(value) === index ? index : -1;
+}
+
+function descendants(node) {
+  const result = [];
+  const pending = [node];
+  while (pending.length) {
+    const current = pending.pop();
+    result.push(current);
+    pending.push(...(current.childNodes ?? []));
+  }
+  return result;
+}
+
+function attribute(node, name) {
+  return node.attrs?.find((item) => item.name === name)?.value;
+}
+
+function passiveAncestry(node) {
+  const active = new Set(['a', 'script', 'style', 'template', 'noscript', 'iframe',
+    'object', 'embed', 'textarea', 'title', 'xmp', 'noembed', 'plaintext', 'select']);
+  for (let current = node; current; current = current.parentNode) {
+    if (active.has(current.tagName) ||
+        (current.namespaceURI && current.namespaceURI !== 'http://www.w3.org/1999/xhtml') ||
+        current.attrs?.some((item) => item.name === 'style' || item.name.startsWith('on'))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function typedObject(value) {
+  return Array.isArray(value) && value.length === 2 && value[0] === 0 &&
+    value[1] !== null && typeof value[1] === 'object' && !Array.isArray(value[1]);
+}
+
+function typedString(value) {
+  return Array.isArray(value) && value.length === 2 && value[0] === 0 &&
+    typeof value[1] === 'string';
+}
+
+// Return protocol-start indexes only. Every other URL still enters the original scan.
+function financeCitationIndexes(content, path) {
+  const indexes = new Set();
+  const id = /^tools\/([a-z0-9-]+)\/index\.html$/.exec(path)?.[1];
+  if (!id || !Object.hasOwn(financeSources.sources, id)) return indexes;
+  try {
+    const errors = [];
+    const document = parse(content, { sourceCodeLocationInfo: true,
+      onParseError: (error) => errors.push(error.code) });
+    if (errors.length) return indexes;
+    const nodes = descendants(document);
+    const islands = nodes.filter((node) => node.tagName === 'astro-island' &&
+      /^\/_astro\/ToolRunner\.[\w-]+\.js$/.test(attribute(node, 'component-url') ?? '') &&
+      attribute(node, 'component-export') === 'default');
+    const prose = nodes.filter((node) => attribute(node, 'class')?.split(/\s+/).includes('tool-prose'));
+    if (islands.length !== 1 || prose.length !== 1 || !passiveAncestry(islands[0])) return indexes;
+    const island = islands[0];
+    const props = attribute(island, 'props');
+    const location = island.sourceCodeLocation?.attrs?.props;
+    if (typeof props !== 'string' || !location || !island.sourceCodeLocation.endTag ||
+        content.slice(location.startOffset, location.endOffset) !== `props="${escapeAstroHtml(props)}"`) return indexes;
+    const parsed = JSON.parse(props);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) ||
+        JSON.stringify(parsed) !== props || !Object.hasOwn(parsed, 'tool') ||
+        !typedObject(parsed.tool)) return indexes;
+    const tool = parsed.tool[1];
+    if (!Object.hasOwn(tool, 'id') || !typedString(tool.id) || tool.id[1] !== id ||
+        !Object.hasOwn(tool, 'seoContent') || !typedObject(tool.seoContent)) return indexes;
+    const seo = tool.seoContent[1];
+    if (!Object.hasOwn(seo, 'intro') || !typedString(seo.intro)) return indexes;
+    const intro = seo.intro[1];
+    const urls = financeSources.sources[id];
+    const suffix = `Official definitions checked ${financeSources.checkedOn}: ${urls.join(' ')}`;
+    const suffixStart = intro.length - suffix.length;
+    if (suffixStart < 0 || !intro.endsWith(suffix) || uniqueIndex(intro, suffix) !== suffixStart) return indexes;
+
+    // Canonical typed path and unique tuple slices prevent a different JSON field qualifying.
+    for (const [parent, key] of [[parsed, 'tool'], [tool, 'seoContent'], [seo, 'intro']]) {
+      const tuple = JSON.stringify(parent[key]);
+      const pair = `${JSON.stringify(key)}:${tuple}`;
+      if (uniqueIndex(JSON.stringify(parent), pair) < 0 || uniqueIndex(props, tuple) < 0) return indexes;
+    }
+    const introTupleStart = uniqueIndex(props, JSON.stringify(seo.intro));
+    const paragraphs = descendants(prose[0]).filter((node) => node.tagName === 'p' &&
+      node.childNodes?.length === 1 && node.childNodes[0].nodeName === '#text' &&
+      node.childNodes[0].value === intro);
+    if (paragraphs.length !== 1 || !passiveAncestry(paragraphs[0])) return indexes;
+    const paragraph = paragraphs[0];
+    const text = paragraph.childNodes[0].sourceCodeLocation;
+    if (!text || !paragraph.sourceCodeLocation?.startTag || !paragraph.sourceCodeLocation.endTag ||
+        text.startOffset < paragraph.sourceCodeLocation.startTag.endOffset ||
+        text.endOffset > paragraph.sourceCodeLocation.endTag.startOffset ||
+        content.slice(text.startOffset, text.endOffset) !== escapeAstroHtml(intro)) return indexes;
+    const candidate = [];
+    let suffixOffset = suffixStart + `Official definitions checked ${financeSources.checkedOn}: `.length;
+    for (const url of urls) {
+      const visible = text.startOffset + escapeAstroHtml(intro.slice(0, suffixOffset)).length;
+      const jsonPrefix = props.slice(0, introTupleStart + 3) + JSON.stringify(intro.slice(0, suffixOffset)).slice(0, -1);
+      const serialized = location.startOffset + 'props="'.length + escapeAstroHtml(jsonPrefix).length;
+      const rawVisible = escapeAstroHtml(url);
+      const rawSerialized = escapeAstroHtml(JSON.stringify(url).slice(1, -1));
+      if (content.slice(visible, visible + rawVisible.length) !== rawVisible ||
+          content.slice(serialized, serialized + rawSerialized.length) !== rawSerialized ||
+          serialized < location.startOffset || serialized + rawSerialized.length >= location.endOffset) return indexes;
+      candidate.push(visible, serialized);
+      suffixOffset += url.length + 1;
+    }
+    for (const index of candidate) indexes.add(index);
+  } catch {
+    // Ambiguous or malformed candidates keep all original violations.
+  }
+  return indexes;
+}
 
 /**
  * @param {object} options
@@ -13,6 +139,8 @@ import onnxAssets from '../packages/core/src/lib/onnx-assets.json' with { type: 
  * @param {string[]} options.allowlist
  * @param {boolean} [options.verifyOnnxNotices] - verify the two pinned built
  *   upstream notices before excluding their passive citations from scanning.
+ * @param {boolean} [options.verifyPdfJsNotices] - verify all three pinned
+ *   versioned PDF.js notices before excluding their passive citations.
  * @param {RegExp[]} [options.pathExemptions] - file paths matching any of
  *   these regexes are skipped from the scan. Used for pages that
  *   legitimately reference third-party vendors in user-facing copy (e.g.
@@ -24,9 +152,33 @@ export async function checkPrivacy({
   allowlist,
   pathExemptions = [],
   verifyOnnxNotices = false,
+  verifyPdfJsNotices = false,
 }) {
   const violations = [];
   const verifiedNotices = new Set();
+  if (verifyPdfJsNotices) {
+    const required = ['LICENSE.txt', 'NOTICE.txt', 'PATCH-NOTICE.txt'];
+    if (pdfjsAssets.version !== '6.4.299' || pdfjsAssets.notices.length !== required.length) {
+      throw new Error('Pinned PDF.js notice manifest does not match the reviewed version and set.');
+    }
+    const paths = [];
+    for (const file of required) {
+      const notices = pdfjsAssets.notices.filter((notice) => notice.file === file);
+      if (notices.length !== 1)
+        throw new Error(`Missing or duplicate pinned PDF.js notice: ${file}`);
+      const notice = notices[0];
+      const path = `licenses/pdfjs-dist@${pdfjsAssets.version}/${file}`;
+      const bytes = await readFile(join(distDir, path));
+      if (
+        bytes.length !== notice.bytes ||
+        createHash('sha256').update(bytes).digest('hex') !== notice.sha256
+      ) {
+        throw new Error(`Built PDF.js notice does not match its pin: ${path}`);
+      }
+      paths.push(path);
+    }
+    for (const path of paths) verifiedNotices.add(path);
+  }
   if (verifyOnnxNotices) {
     for (const version of ['1.24.3', '1.31.0-dev.20260914-8d85527a0']) {
       const notice = onnxAssets.runtimes
@@ -54,8 +206,10 @@ export async function checkPrivacy({
     if (verifiedNotices.has(relative(distDir, file).split('\\').join('/'))) continue;
     if (pathExemptions.some((re) => re.test(file))) continue;
     const content = await readFile(file, 'utf8');
+    const passiveCitations = financeCitationIndexes(content, relative(distDir, file).split('\\').join('/'));
 
     for (const match of content.matchAll(urlRegex)) {
+      if (passiveCitations.has(match.index)) continue;
       const domain = match[1];
       if (isAllowed(domain, allowlist)) continue;
       violations.push({ file, domain });
@@ -159,6 +313,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       allowlist,
       pathExemptions,
       verifyOnnxNotices: dir === 'packages/web/dist',
+      verifyPdfJsNotices: dir === 'packages/web/dist',
     });
     if (!result.ok) {
       console.error(`Privacy scan FAILED in ${dir}:`);

@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createDefaultRegistry } from '@wyreup/core';
+import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 export const GET: APIRoute = () => {
   const registry = createDefaultRegistry();
@@ -7,8 +8,8 @@ export const GET: APIRoute = () => {
     id: t.id,
     name: t.name,
     category: t.category,
-    description: t.description,
-    keywords: t.keywords ?? [],
+    description: projectToolDiscoveryMetadata(t).description,
+    keywords: projectToolDiscoveryMetadata(t).keywords,
     requires: t.requires
       ? { webgpu: t.requires.webgpu, minMemoryGB: t.requires.minMemoryGB }
       : undefined,

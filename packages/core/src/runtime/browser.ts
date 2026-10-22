@@ -1,7 +1,5 @@
-// Browser runtime adapter. Wave 0 placeholder; populated in Wave 1.
-// Consumed via conditional exports when the package is imported in a browser context.
-
 import type { RuntimeAdapter } from './types.js';
+import { createCanvas, loadImage } from '../lib/canvas.js';
 
 export const browserAdapter: RuntimeAdapter = {
   isAvailable(): boolean {
@@ -11,10 +9,10 @@ export const browserAdapter: RuntimeAdapter = {
         'undefined'
     );
   },
-  createCanvas(_width: number, _height: number): unknown {
-    throw new Error('browserAdapter.createCanvas: Wave 1 implementation pending');
+  createCanvas(width: number, height: number): Promise<unknown> {
+    return createCanvas(width, height);
   },
-  createImageFromBlob(_blob: Blob): Promise<unknown> {
-    throw new Error('browserAdapter.createImageFromBlob: Wave 1 implementation pending');
+  createImageFromBlob(blob: Blob): Promise<unknown> {
+    return loadImage(blob);
   },
 };

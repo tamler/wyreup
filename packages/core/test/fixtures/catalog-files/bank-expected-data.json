@@ -1,0 +1,86 @@
+{
+  "author": "Wyreup test fixture",
+  "source": "bank-fixtures.ts",
+  "inputMime": "application/pdf",
+  "outputMime": "text/csv",
+  "pageSize": [600, 800],
+  "rowTolerance": 2,
+  "mapping": {
+    "mode": "signed-amount",
+    "date": [35, 115],
+    "description": [115, 350],
+    "amount": [350, 430],
+    "balance": [430, 510]
+  },
+  "opening": "1000.00",
+  "debitCreditMapping": {
+    "mode": "debit-credit",
+    "date": [35, 115],
+    "description": [115, 350],
+    "debit": [350, 390],
+    "credit": [390, 430],
+    "balance": [430, 510]
+  },
+  "closing": "912.66",
+  "acceptedTransactionAmounts": ["-12.34", "25.00", "-100.00"],
+  "acceptedTransactionSum": "-87.34",
+  "reconciliationDelta": "0.00",
+  "status": "reconciled",
+  "rows": [
+    { "id": "p1-l1", "y": 760, "decision": "accept", "role": "opening", "balance": "1000.00" },
+    {
+      "id": "p1-l2",
+      "y": 700,
+      "decision": "accept",
+      "role": "transaction",
+      "date": "2026-01-01",
+      "amount": "-12.34",
+      "balance": "987.66",
+      "description": "Card purchase continued note"
+    },
+    {
+      "id": "p1-l3",
+      "y": 680,
+      "decision": "attach",
+      "role": "non-financial",
+      "attachTo": "p1-l2",
+      "originalText": "continued note"
+    },
+    {
+      "id": "p1-l4",
+      "y": 650,
+      "decision": "accept",
+      "role": "transaction",
+      "date": "2026-01-02",
+      "amount": "25.00",
+      "balance": "1012.66"
+    },
+    {
+      "id": "p2-l1",
+      "y": 700,
+      "decision": "accept",
+      "role": "transaction",
+      "date": "2026-01-03",
+      "amount": "-100.00",
+      "balance": "912.66"
+    },
+    { "id": "p2-l2", "y": 650, "decision": "accept", "role": "closing", "balance": "912.66" }
+  ],
+  "ignoredTransfer": {
+    "printedClosing": "912.66",
+    "acceptedTransactionSum": "12.66",
+    "computedClosing": "1012.66",
+    "reconciliationDelta": "100.00",
+    "status": "reviewed-with-exceptions"
+  },
+  "variants": {
+    "debit-credit": "Actual unsigned debits 12.34 and 100.00 at x360; unsigned credit 25.00 at x400. Exact signed nets -12.34,+25.00,-100.00 are computed once.",
+    "fragmented": "Date, amount and balance fragments use alternating Helvetica/Courier runs inside each published column interval.",
+    "blank": "Third page has no text or painting operators: visual blank.",
+    "scan": "Third page has a 1 by 1 raster painted at 400 by 150 PDF points: visual nontext, explicit review required.",
+    "mixed": "First text page also has the 1 by 1 raster: visual mixed, explicit review required.",
+    "unknown": "Third page has a 2 by 2 raster, exceeding configured maxImageSize 1: operator-list rejection, visual unknown required.",
+    "rotated": "Transaction date runs rotate 90 degrees: horizontal-layout rejection required.",
+    "many-pages": "101 actual PDF pages: page-count rejection required before extraction."
+  }
+}

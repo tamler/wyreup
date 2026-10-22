@@ -5,7 +5,7 @@ import { transformerImage } from '../../lib/transformer-image.js';
 export interface ImageCaptionDetailedParams {
   /**
    * Maximum tokens to generate. Higher = longer captions, slower
-   * inference. Default 50 (BLIP can stretch farther than vit-gpt2's 30).
+   * inference. Default 50.
    */
   maxLength?: number;
 }
@@ -14,11 +14,9 @@ export const defaultImageCaptionDetailedParams: ImageCaptionDetailedParams = {
   maxLength: 50,
 };
 
-// BLIP-base image captioning — BSD-3, ~250 MB quantized.
-// https://huggingface.co/Xenova/blip-image-captioning-base
-// Tier-2 quality upgrade on top of the existing vit-gpt2 image-caption
-// tool. Same image-to-text pipeline, drop-in API.
-const MODEL_ID = 'Xenova/blip-image-captioning-base';
+// Use the standard captioning model with a larger generation budget.
+// Hosted model availability is verified separately from this configuration.
+export const IMAGE_CAPTION_DETAILED_MODEL_ID = 'Xenova/vit-gpt2-image-captioning';
 
 const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/bmp'];
 
@@ -27,9 +25,8 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
   slug: 'image-caption-detailed',
   name: 'Describe Image (Detailed)',
   description:
-    'Generate a richer, more accurate description of any image using BLIP-base. ' +
-    '~250 MB model downloads on first use, then works offline. ' +
-    'Slower but more descriptive than the standard captioner.',
+    'Generate a longer description of an image with a larger caption budget. ' +
+    'The model downloads on first use, then works offline.',
   category: 'export',
   keywords: [
     'caption',
@@ -39,7 +36,6 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
     'accessibility',
     'vlm',
     'vision',
-    'blip',
     'detailed',
   ],
 
@@ -55,7 +51,7 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
   batchable: false,
   cost: 'free',
   memoryEstimate: 'medium',
-  installSize: 250_000_000,
+  installSize: 100_000_000,
   installGroup: 'vision-llm',
   requires: { webgpu: 'preferred' },
 
@@ -98,10 +94,10 @@ export const imageCaptionDetailed: ToolModule<ImageCaptionDetailedParams> = {
     ctx.onProgress({
       stage: 'loading-deps',
       percent: 0,
-      message: 'Loading BLIP captioning model (~250 MB on first use)',
+      message: 'Loading captioning model (~100 MB on first use)',
     });
 
-    const pipe = (await getPipeline(ctx, 'image-to-text', MODEL_ID)) as (
+    const pipe = (await getPipeline(ctx, 'image-to-text', IMAGE_CAPTION_DETAILED_MODEL_ID)) as (
       image: unknown,
       options?: Record<string, unknown>,
     ) => Promise<Array<{ generated_text: string }>>;

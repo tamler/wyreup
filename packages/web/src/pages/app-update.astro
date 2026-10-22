@@ -1,0 +1,32 @@
+---
+import PwaUpdateStatus from '../components/PwaUpdateStatus.svelte';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Update Wyreup</title>
+    <meta name="description" content="Finish your work and close all Wyreup tabs and windows before reopening to use a waiting update." />
+  </head>
+  <body>
+    <main>
+      <h1>Update Wyreup</h1>
+      <p>A waiting update takes over after all tabs and windows using the previous version close.</p>
+      <ol>
+        <li>Finish your work and download your results in each Wyreup tab or window.</li>
+        <li>Close all Wyreup tabs and windows, including this recovery tab.</li>
+        <li>Reopen Wyreup to use the waiting update.</li>
+      </ol>
+      <p>This page does not check whether your other tabs have unfinished work. It does not clear your data, activate an update, or reload your tools.</p>
+      <PwaUpdateStatus client:load />
+      <noscript><p>Update checks need JavaScript. The instructions above still apply.</p></noscript>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(body) { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
+  main { max-width: 42rem; margin: 3rem auto; padding: 0 1.5rem; }
+  li { margin: .75rem 0; }
+</style>

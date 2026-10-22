@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-05-25';
+const lastUpdated = '2026-10-11';
 ---
 
 <BaseLayout
@@ -44,10 +44,13 @@ const lastUpdated = '2026-05-25';
     <p>There are two tiers:</p>
     <ul>
       <li>
-        <strong>Free tools</strong> run entirely on your device — in
-        your browser, or locally via the CLI / MCP. Wyreup is not
-        involved at runtime; your input files, parameters, and outputs
-        never reach our infrastructure. Free tools require no account.
+        <strong>Free tools</strong> include local file processing and
+        public network lookups. Local tools process on your device.
+        Domain Registration Age sends the entered domain to Wyreup,
+        which reads the public IANA bootstrap without sending IANA the
+        queried domain, then sends the domain to its registration registry.
+        No API key is required. Registration age may differ from first-ever
+        use; missing records do not guarantee a domain is available.
       </li>
       <li>
         <strong>PRO tools</strong> are tools where, when <strong>you</strong>
@@ -240,8 +243,13 @@ const lastUpdated = '2026-05-25';
       use PRO tools with that data.
     </p>
     <p>
-      Free tools are not affected — they run entirely on your device
-      and never touch Cloudflare's network or any third-party model.
+      Local tools process on your device. Free public lookups can route
+      through Wyreup's Cloudflare edge to a registration registry in
+      another country. Review the tool's disclosure and source information.
+      Shared public limits use temporary rotating network counters and
+      random short-lived reservation tokens. Expired records are pruned
+      on later requests; platform logs, backups, assistant records, and
+      local operator exports have their own retention. See our privacy policy.
     </p>
     <p>
       We may suspend or revoke access for violation of these rules
@@ -271,7 +279,10 @@ const lastUpdated = '2026-05-25';
     </p>
     <p>
       You are responsible for keeping your own backups of any data you
-      process through Wyreup. We retain nothing.
+      process through Wyreup. Local file tools do not send us your files or outputs.
+      Network lookup inputs are processed as disclosed by each tool. Temporary
+      admission counters, account metadata, platform logs and backups have the
+      retention limits described in our <a href="/legal/privacy">Privacy Policy</a>.
     </p>
     <p>
       Some jurisdictions do not allow the exclusion of certain

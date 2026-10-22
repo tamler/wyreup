@@ -1,7 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { createToolSearch } from '../lib/tool-search';
-  import { stashChainFile } from './runners/chainStorage';
+  import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
+  import { setTrailHandover } from './runners/hopTrail';
+  import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
   import type { ToolRequires } from '@wyreup/core';
 
@@ -24,6 +26,7 @@
     installGroup?: string;
     accept: string[];
     cost?: string;
+    surfaces?: ('web' | 'cli' | 'mcp')[];
   }
 
   function toolInCategory(t: Tool, cat: string): boolean {
@@ -134,23 +137,14 @@
   // compatible with that file's MIME. Stacks with category chips + header
   // search. Local to this page — no cross-route store leakage.
 
-  function mimeMatches(toolMimes: string[], filterMimes: string[]): boolean {
-    for (const filter of filterMimes) {
-      const filterPrefix = filter.endsWith('/*') ? filter.slice(0, -2) : null;
-      for (const toolMime of toolMimes) {
-        if (filterPrefix) {
-          if (toolMime.startsWith(filterPrefix + '/') || toolMime === filter) return true;
-        } else {
-          if (toolMime === filter) return true;
-        }
-      }
-    }
-    return false;
-  }
-
   // Keep the actual File so tool-card clicks can hand it off via sessionStorage.
   let droppedFile: { name: string; mime: string; file: File } | null = null;
   let isDragOver = false;
+  let handoffError = '';
+  let handingOff = false;
+  let disposed = false;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
 
   function handleDropZoneDragOver(e: DragEvent) {
     e.preventDefault();
@@ -209,8 +203,31 @@
     if (!droppedFile) return;
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    await stashChainFile(droppedFile.file, { autoAccept: true });
+    if (handingOff) return;
+    const captured = droppedFile.file;
+    const target = tools.find((tool) => tool.id === toolId);
+    if (!target || !acceptsBrowserFile(target, captured)) { handoffError = 'This tool cannot import the original. It was retained.'; return; }
+    handingOff = true; handoffError = '';
+    const result = await stashChainHandover(captured, { autoAccept: true, targetToolId: target.id });
+    if (disposed || droppedFile?.file !== captured) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      if (!cleared && !disposed) handoffError = 'Shared storage could not confirm deleting this handover token. Original retained.';
+      handingOff = false; return;
+    }
+    if (!result.stored || !setTrailHandover([], result.token, target.id)) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      handoffError = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
+      handingOff = false; return;
+    }
     window.location.href = `/tools/${toolId}`;
+  }
+
+  function downloadOriginal() {
+    if (!droppedFile) return;
+    const url = URL.createObjectURL(droppedFile.file); downloadUrls.add(url);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = droppedFile.file.name; anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 
   // Counts per category from the device-runnable subset. Tools with
@@ -259,7 +276,6 @@
   function applyFilter() {
     const q = query.trim();
     // Filter-by-dropped-file: treat the dropped MIME as the constraint.
-    const droppedMimeFilter = droppedFile ? [droppedFile.mime] : null;
     let pool = visibleTools.list;
     if (aiOnly) pool = pool.filter(isAiTool);
     if (proOnly) pool = pool.filter(isProTool);
@@ -276,13 +292,13 @@
       const byId = new Map(pool.map((t) => [t.id, t]));
       const hydrated = results.map((r) => byId.get(r.id)!).filter(Boolean);
       const catFiltered = hydrated.filter((t) => toolMatchesCategoryFilter(t, activeCategories));
-      filtered = droppedMimeFilter
-        ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
+      filtered = droppedFile
+        ? fileToolCandidates(catFiltered, droppedFile.file)
         : catFiltered;
     } else {
       const catFiltered = pool.filter((t) => toolMatchesCategoryFilter(t, activeCategories));
-      filtered = droppedMimeFilter
-        ? catFiltered.filter((t) => mimeMatches(t.accept, droppedMimeFilter))
+      filtered = droppedFile
+        ? fileToolCandidates(catFiltered, droppedFile.file)
         : catFiltered;
     }
     filterEpoch += 1;
@@ -350,6 +366,9 @@
   });
 
   onDestroy(() => {
+    disposed = true;
+    for (const url of downloadUrls) URL.revokeObjectURL(url);
+    for (const timer of downloadTimers) clearTimeout(timer);
     // onDestroy fires during SSR teardown as well — guard browser globals.
     if (typeof document === 'undefined') return;
     document.removeEventListener('wyreup:filedrop', handleGlobalFileDrop);
@@ -416,6 +435,11 @@
 {/if}
 
 <!-- Category chip filter -->
+{#if handoffError}
+  <p role="alert">{handoffError}</p>
+  <button type="button" on:click={downloadOriginal}>Download original</button>
+{/if}
+
 <div class="filter-bar">
   <div class="filter-chips" role="group" aria-label="Filter by category">
     {#if aiCount > 0}
@@ -493,12 +517,11 @@
     {/if}
   </div>
 {:else}
-  <div class="tool-grid" role="list">
+  <div class="tool-grid">
     {#each filtered as tool, i (`${filterEpoch}-${tool.id}`)}
       <a
         href={`/tools/${tool.id}`}
         class="tool-card brackets"
-        role="listitem"
         aria-label="{tool.name} — {tool.category}"
         style="--stagger-delay: {i * 50}ms"
         on:click={(e) => handleToolCardClick(e, tool.id)}

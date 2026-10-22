@@ -1,0 +1,28 @@
+name: Scheduled dependency security
+
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-and-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: pnpm audit --prod
+      - run: pnpm audit
+      - name: Review upstream runtime and maintained library dependencies
+        if: always()
+        run: |
+          npm view @huggingface/transformers version dependencies --json
+          npm view onnxruntime-node version dependencies --json
+          npm view exceljs version dependencies --json
+          echo 'Review the official Transformers dependency floors and maintained library UPSTREAM.json records before accepting dependency changes.' >> "$GITHUB_STEP_SUMMARY"

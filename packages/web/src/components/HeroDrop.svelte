@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '@wyreup/core/execution';
   import { dropStore } from '../stores/drop';
+  import { fileToolCandidates } from '../lib/file-tool-candidates';
 
   let isDragOver = false;
   let zone: HTMLElement;
@@ -98,7 +99,7 @@
   function processFile(file: File) {
     const mime = file.type || 'application/octet-stream';
     const registry = createDefaultRegistry();
-    const compatibleTools = registry.toolsForFiles([file]);
+    const compatibleTools = fileToolCandidates([...registry.toolsById.values()], file);
     dropStore.set({ file, mime, compatibleTools });
 
     // Scroll to scenarios section after brief delay so Svelte re-renders first
@@ -134,7 +135,7 @@
     <p class="hero-drop__caption">
       {isDragOver ? 'Release to detect compatible tools.' : 'Drop a file to see what you can do.'}
     </p>
-    <p class="hero-drop__sub">Dropping a file uploads nothing. Free tools run right here on this device.</p>
+    <p class="hero-drop__sub">Dropping a file here keeps it on this device. Local tools process here; network tools explain what they send.</p>
   </div>
 </div>
 

@@ -9,6 +9,8 @@ export type WorkerJob = {
   timeoutMs: number;
   proApiKey?: string;
   proOrigin: string;
+  modelCdn: string | null;
+  modelAllowedOrigins: string[];
   allowedRoots: AllowedRoots;
   allowOverwrite: boolean;
   maxBytes: number;

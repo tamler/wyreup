@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+  import type { ToolModule } from '@wyreup/core';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import type { PreloadAdmission, SerializedTool } from './types';
 
   // Live color-converter — type any color string and see it as a swatch
   // plus every standard format with copy buttons. Pure passthrough to
@@ -11,8 +13,10 @@
   // in sync with what's on screen.
 
   export let tool: SerializedTool;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+  export let injectedTool: ToolModule<Record<string, never>> | undefined = undefined;
+  export let showChain = true;
 
   interface ConvertResult {
     input: string;
@@ -25,44 +29,95 @@
     oklchString: string;
     oklab: { l: number; a: number; b: number };
     valid: boolean;
+    alpha: number | null;
+    gamut: 'srgb' | 'outside-srgb' | null;
+    opaquePickerHex: string;
   }
 
   let inputColor = '#ffb000';
+  let preloadBlocked = !!preloadedFile;
+  let pickerHex = '#ffb000';
+  let pickerIntent: string | null = null;
   let result: ConvertResult | null = null;
   let resultBlob: Blob | null = null;
   let copied: string | null = null;
   let errorMsg = '';
+  let notice = '';
+  let generation = 0;
+  let controller: AbortController | null = null;
+  let destroyed = false;
+  const urls = new Set<string>();
+  let observedPreload: File | null = null;
+  let preloadCandidate: File | null = null;
+  let candidateValue = '';
+  const attemptedPreloads = new WeakSet<File>();
 
-  $: void recompute(inputColor);
+  $: if (preloadedFile !== observedPreload) stagePreload(preloadedFile);
+  $: if (!preloadBlocked) void recompute(inputColor);
+  function report(file: File, status: 'admitted' | 'refused') {
+    if (!destroyed && file === preloadedFile)
+      onPreloadAdmission?.(status === 'admitted' ? { file, status } : { file, status, message: 'Color input was not interpreted as a valid color.' });
+  }
+  function discardCandidate() {
+    if (preloadCandidate) report(preloadCandidate, 'refused');
+    preloadCandidate = null;
+  }
 
   async function recompute(value: string) {
+    const ownPreload = preloadCandidate && candidateValue === value ? preloadCandidate : null;
+    const ownTool = tool;
+    const own = ++generation;
+    controller?.abort();
+    controller = new AbortController();
+    const signal = controller.signal;
+    result = null;
+    resultBlob = null;
+    copied = null;
+    notice = '';
+    for (const url of urls) URL.revokeObjectURL(url);
+    urls.clear();
     errorMsg = '';
-    if (!value.trim()) {
+    if (!value.trim() && !ownPreload) {
       result = null;
       resultBlob = null;
       return;
     }
     try {
+      if (new TextEncoder().encode(value).length > 1024) throw new Error('Color input exceeds 1 KiB.');
       const file = new File([value], 'color.txt', { type: 'text/plain' });
-      const { createDefaultRegistry } = await import('@wyreup/core');
-      const registry = createDefaultRegistry();
-      const toolModule = registry.toolsById.get(tool.id);
-      if (!toolModule) return;
+      const toolModule = injectedTool ?? (await import('../../lib/core-execution')).createDefaultRegistry().toolsById.get(tool.id);
+      if (destroyed || own !== generation || ownTool !== tool || signal.aborted) return;
+      if (!toolModule) throw new Error('Color converter unavailable.');
       const blobs = await toolModule.run([file], {}, {
         onProgress: () => {},
-        signal: new AbortController().signal,
+        signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
       const blob = Array.isArray(blobs) ? blobs[0] : blobs;
-      if (!blob) return;
+      if (destroyed || own !== generation || ownTool !== tool || signal.aborted) return;
+      if (!blob) throw new Error('Color converter returned no result.');
+      const converted = JSON.parse(await blob.text()) as ConvertResult;
+      if (destroyed || own !== generation || ownTool !== tool || signal.aborted) return;
       resultBlob = blob;
-      result = JSON.parse(await blob.text()) as ConvertResult;
+      result = converted;
+      if (converted.valid && converted.opaquePickerHex) {
+        pickerHex = converted.opaquePickerHex;
+        if (pickerIntent === value)
+          notice = 'Picker edits replace the source with an opaque sRGB color, including any alpha or wide-gamut color.';
+      }
+      pickerIntent = null;
       markToolUsed(tool.id);
+      if (ownPreload && ownPreload === preloadCandidate) {
+        report(ownPreload, converted.valid ? 'admitted' : 'refused');
+        preloadCandidate = null;
+      }
     } catch (err) {
+      if (destroyed || own !== generation || ownTool !== tool) return;
       result = null;
       resultBlob = null;
       errorMsg = err instanceof Error ? err.message : String(err);
+      if (ownPreload && ownPreload === preloadCandidate) { report(ownPreload, 'refused'); preloadCandidate = null; }
     }
   }
 
@@ -76,20 +131,84 @@
   }
 
   async function copy(label: string, value: string) {
+    const own = generation;
     try {
       await navigator.clipboard.writeText(value);
+      if (destroyed || own !== generation) return;
       copied = label;
-      setTimeout(() => { if (copied === label) copied = null; }, 1200);
-    } catch { /* ignore */ }
+      notice = `Copied ${label}.`;
+    } catch { if (!destroyed && own === generation) notice = 'Copy unavailable. Use Download JSON.'; }
   }
 
   function downloadJson() {
     if (!resultBlob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(resultBlob);
+    urls.add(a.href);
     a.download = buildDownloadName(undefined, tool.id, 'json');
     a.click();
   }
+
+  function pick(event: Event) {
+    const value = (event.currentTarget as HTMLInputElement).value;
+    if (value !== inputColor || preloadBlocked) discardCandidate();
+    pickerHex = value;
+    pickerIntent = value;
+    preloadBlocked = false;
+    if (inputColor === value && result?.valid) {
+      notice = 'Picker edits replace the source with an opaque sRGB color, including any alpha or wide-gamut color.';
+      pickerIntent = null;
+    }
+    inputColor = value;
+  }
+  function typed(event: Event) {
+    const value = (event.currentTarget as HTMLInputElement).value;
+    if (value === inputColor && !preloadBlocked) return;
+    discardCandidate();
+    generation++;
+    controller?.abort();
+    pickerIntent = null;
+    preloadBlocked = false;
+    inputColor = value;
+  }
+  function preloadFailed(message: string) {
+    generation++;
+    controller?.abort();
+    result = null;
+    resultBlob = null;
+    copied = null;
+    notice = '';
+    for (const url of urls) URL.revokeObjectURL(url);
+    urls.clear();
+    errorMsg = message;
+  }
+  function stagePreload(file: File | null) {
+    observedPreload = file;
+    discardCandidate();
+    preloadFailed(''); preloadBlocked = true;
+    if (!file) { inputColor = ''; return; }
+    if (attemptedPreloads.has(file)) { errorMsg = 'This file was already attempted. Use Retry to load it again.'; return; }
+    attemptedPreloads.add(file);
+    const own = generation, ownTool = tool;
+    preloadCandidate = file;
+    void (async () => {
+      try {
+        if (file.size > 1024) throw new Error('Color input exceeds 1 KiB.');
+        const bytes = await file.slice(0, 1025).arrayBuffer();
+        if (destroyed || own !== generation || ownTool !== tool || preloadedFile !== file) return;
+        if (bytes.byteLength > 1024) throw new Error('Color input exceeds 1 KiB.');
+        const value = new TextDecoder().decode(bytes);
+        candidateValue = value; inputColor = value; preloadBlocked = false;
+      } catch (cause) {
+        if (!destroyed && own === generation && ownTool === tool && preloadedFile === file) {
+          preloadFailed(cause instanceof Error && cause.message === 'Color input exceeds 1 KiB.' ? cause.message : 'Unable to read color input.');
+          report(file, 'refused'); preloadCandidate = null;
+        }
+      }
+    })();
+  }
+  onDestroy(() => { destroyed = true; generation++; controller?.abort();
+    for (const url of urls) URL.revokeObjectURL(url); urls.clear(); });
 
   // Round per-format helpers
   function rgbCanonical(r: ConvertResult): string {
@@ -103,8 +222,8 @@
   function hslCanonical(r: ConvertResult): string {
     const { h, s, l, a } = r.hsl;
     const hh = Math.round(h);
-    const ss = Math.round(s * 100);
-    const ll = Math.round(l * 100);
+    const ss = Math.round(s);
+    const ll = Math.round(l);
     return a !== undefined && a !== 1
       ? `hsla(${hh}, ${ss}%, ${ll}%, ${a})`
       : `hsl(${hh}, ${ss}%, ${ll}%)`;
@@ -117,19 +236,24 @@
     <input
       class="input-row__picker"
       type="color"
-      bind:value={inputColor}
+      value={pickerHex}
+      on:input={pick}
       aria-label="Color picker"
     />
     <input
       id="color-input-text"
       class="input-row__text"
       type="text"
-      bind:value={inputColor}
+      value={inputColor}
+      on:input={typed}
       placeholder="any: #ffb000, rgb(255,176,0), hsl(41 100% 50%), tomato"
       spellcheck="false"
       aria-label="Color string"
     />
   </div>
+
+  <p>The picker shows an opaque sRGB approximation. Typing an advanced CSS color preserves its source and alpha.</p>
+  {#if notice}<p role="status">{notice}</p>{/if}
 
   {#if errorMsg && !result}
     <div class="error-panel" role="alert">
@@ -150,6 +274,7 @@
         </div>
 
         <div class="formats">
+          <p>Alpha: {result.alpha}. Gamut: {result.gamut}.</p>
           {#each [
             { label: 'HEX', value: result.hex },
             { label: 'RGB', value: rgbCanonical(result) },
@@ -178,7 +303,7 @@
           <pre class="json-view">{JSON.stringify(result, null, 2)}</pre>
         </details>
 
-        {#if resultBlob}
+        {#if resultBlob && showChain}
           <ChainSection
             resultBlob={resultBlob}
             sourceToolId={tool.id}

@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "classification": "S_ONLY_SOURCE_KEYED_CALLBACK_BEHAVIOR",
+  "revisions": [
+    {
+      "revisionId": "s-before-original-suite-browser-binding-0",
+      "qualificationRevisionId": "after-source0-followup-browser-binding-0",
+      "sourcePins": [
+        {
+          "path": "domainFunctionsHarness.mjs",
+          "bytes": 39862,
+          "sha256": "a7b9d7dc893616e9551a57e8cd3828dddb600b13472a9abf06a775ae72ed0769"
+        },
+        {
+          "path": "domain-functions-integration.test.ts",
+          "bytes": 11097,
+          "sha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649"
+        },
+        {
+          "path": "domainFunctionsHarness.d.mts",
+          "bytes": 1392,
+          "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83"
+        },
+        {
+          "path": "productionBrowserHarness.ts",
+          "bytes": 31376,
+          "sha256": "bb4135a9a7940c98075eafcb1d0ace3dbd3e7d9b4aab2d638a66c53d4167150f"
+        }
+      ],
+      "qualificationPrimitive": {
+        "path": "fixtures/domainLifecyclePrimitives.ts",
+        "bytes": 42516,
+        "sha256": "289bfd26aded01fb57db787ef6175196130f52972a795f1efaf03eb80ce31d71"
+      },
+      "historicalDataSha256": "afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734",
+      "currentDataSha256": "e9679de836903fa262ba094b8384caf6bc8febb5dd64353210ce4ab98624c787",
+      "epochMs": 1792022400000,
+      "microtaskTurns": 128,
+      "factories": [
+        {
+          "key": "vitest",
+          "marker": "suiteVitest"
+        },
+        {
+          "key": "playwright",
+          "marker": "suiteBrowser"
+        },
+        {
+          "key": "./productionBrowserHarness",
+          "marker": "suiteFixture"
+        },
+        {
+          "key": "./domainFunctionsHarness.mjs",
+          "marker": "suiteHost"
+        },
+        {
+          "key": "node:fs/promises",
+          "marker": "suiteFs"
+        },
+        {
+          "key": "node:os",
+          "marker": "suiteOs"
+        }
+      ],
+      "extraFactory": {
+        "key": "node:http",
+        "marker": "suiteHttp",
+        "members": [
+          "createServer"
+        ]
+      },
+      "exports": {
+        "helperFs": [
+          "createWriteStream",
+          "promises"
+        ],
+        "helperChildren": [
+          "fork",
+          "spawn"
+        ],
+        "helperModule": [
+          "createRequire"
+        ],
+        "suiteVitest": [
+          "afterAll",
+          "beforeAll",
+          "expect",
+          "it"
+        ],
+        "suiteBrowser": [
+          "chromium"
+        ],
+        "suiteFixture": [
+          "buildProductionCatalogFixture"
+        ],
+        "suiteHost": [
+          "startDomainFunctionsHost"
+        ],
+        "suiteFs": [
+          "mkdtemp",
+          "readFile",
+          "writeFile"
+        ],
+        "suiteOs": [
+          "tmpdir"
+        ]
+      },
+      "objects": {
+        "chromium": [
+          "launch"
+        ],
+        "fixture": [
+          "close",
+          "distDir",
+          "manifest"
+        ],
+        "browser": [
+          "close",
+          "newContext"
+        ],
+        "host": [
+          "close",
+          "inspect",
+          "resetAdmission",
+          "setProviderScenario",
+          "url"
+        ]
+      },
+      "registrations": {
+        "beforeAll": {
+          "count": 1,
+          "timeout": 240000
+        },
+        "afterAll": {
+          "count": 1,
+          "timeout": 15000
+        },
+        "tests": [
+          {
+            "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-error from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute",
+            "timeout": 60000
+          },
+          {
+            "name": "fails closed with missing-secret on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "fails closed with missing-database on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work",
+            "timeout": 60000
+          }
+        ]
+      },
+      "selectedFaultName": "fails closed with missing-secret on the actual binding boundary",
+      "paths": {
+        "tmp": "/unit-domain-suite/tmp",
+        "evidence": "/unit-domain-suite/tmp/wyreup-domain-browser-s-owned",
+        "dist": "/unit-domain-suite/fixture/dist",
+        "manifest": "/unit-domain-suite/fixture/manifest.json"
+      },
+      "coreDist": [
+        {
+          "path": "browser/index.js",
+          "bytes": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "safeOracle": {
+        "pendingFixtureClose": 0,
+        "lateCloseInvocations": 1,
+        "settledFixtureClose": 1,
+        "postTeardownHostAcquisitions": 0,
+        "postTeardownUiAcquisitions": 0,
+        "networkAndServerCalls": 0
+      },
+      "cases": [
+        {
+          "id": "S1",
+          "heldAcquisition": "mainHost",
+          "releasePrecedingCloses": [
+            "browser"
+          ],
+          "lateClose": "mainHost"
+        },
+        {
+          "id": "S2",
+          "heldAcquisition": "browser",
+          "releasePrecedingCloses": [],
+          "lateClose": "browser"
+        },
+        {
+          "id": "S3",
+          "heldAcquisition": "faultHost",
+          "releasePrecedingCloses": [
+            "mainHost",
+            "browser"
+          ],
+          "lateClose": "faultHost"
+        }
+      ]
+    },
+    {
+      "revisionId": "s-after-source3-final-integration-176",
+      "qualificationRevisionId": "after-source3-final-integration-176",
+      "sourcePins": [
+        {
+          "path": "domainFunctionsHarness.mjs",
+          "bytes": 39862,
+          "sha256": "fd62477b1690344dc10936fb7f45ef1d4183df7bbb764b5aa910680b436a0e5c"
+        },
+        {
+          "path": "domain-functions-integration.test.ts",
+          "bytes": 11097,
+          "sha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649"
+        },
+        {
+          "path": "domainFunctionsHarness.d.mts",
+          "bytes": 1392,
+          "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83"
+        },
+        {
+          "path": "productionBrowserHarness.ts",
+          "bytes": 31407,
+          "sha256": "940cb2c32183be3ec5c6d7c966c5652170087be3dbf87c4f68ae56b56ac3bb05"
+        }
+      ],
+      "qualificationPrimitive": {
+        "path": "fixtures/domainLifecyclePrimitives.ts",
+        "bytes": 42516,
+        "sha256": "60f162707fd229b78ebf98e60061d5812fe7273edd7c346d58d646ef20940391"
+      },
+      "historicalDataSha256": "afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734",
+      "currentDataSha256": "168a54606f4504d01b254132b6ad4a9d0e38bf66e1223e26b67d71be617454f4",
+      "epochMs": 1792022400000,
+      "microtaskTurns": 128,
+      "factories": [
+        {
+          "key": "vitest",
+          "marker": "suiteVitest"
+        },
+        {
+          "key": "playwright",
+          "marker": "suiteBrowser"
+        },
+        {
+          "key": "./productionBrowserHarness",
+          "marker": "suiteFixture"
+        },
+        {
+          "key": "./domainFunctionsHarness.mjs",
+          "marker": "suiteHost"
+        },
+        {
+          "key": "node:fs/promises",
+          "marker": "suiteFs"
+        },
+        {
+          "key": "node:os",
+          "marker": "suiteOs"
+        }
+      ],
+      "extraFactory": {
+        "key": "node:http",
+        "marker": "suiteHttp",
+        "members": [
+          "createServer"
+        ]
+      },
+      "exports": {
+        "helperFs": [
+          "createWriteStream",
+          "promises"
+        ],
+        "helperChildren": [
+          "fork",
+          "spawn"
+        ],
+        "helperModule": [
+          "createRequire"
+        ],
+        "suiteVitest": [
+          "afterAll",
+          "beforeAll",
+          "expect",
+          "it"
+        ],
+        "suiteBrowser": [
+          "chromium"
+        ],
+        "suiteFixture": [
+          "buildProductionCatalogFixture"
+        ],
+        "suiteHost": [
+          "startDomainFunctionsHost"
+        ],
+        "suiteFs": [
+          "mkdtemp",
+          "readFile",
+          "writeFile"
+        ],
+        "suiteOs": [
+          "tmpdir"
+        ]
+      },
+      "objects": {
+        "chromium": [
+          "launch"
+        ],
+        "fixture": [
+          "close",
+          "distDir",
+          "manifest"
+        ],
+        "browser": [
+          "close",
+          "newContext"
+        ],
+        "host": [
+          "close",
+          "inspect",
+          "resetAdmission",
+          "setProviderScenario",
+          "url"
+        ]
+      },
+      "registrations": {
+        "beforeAll": {
+          "count": 1,
+          "timeout": 240000
+        },
+        "afterAll": {
+          "count": 1,
+          "timeout": 15000
+        },
+        "tests": [
+          {
+            "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-error from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute",
+            "timeout": 60000
+          },
+          {
+            "name": "fails closed with missing-secret on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "fails closed with missing-database on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work",
+            "timeout": 60000
+          }
+        ]
+      },
+      "selectedFaultName": "fails closed with missing-secret on the actual binding boundary",
+      "paths": {
+        "tmp": "/unit-domain-suite/tmp",
+        "evidence": "/unit-domain-suite/tmp/wyreup-domain-browser-s-owned",
+        "dist": "/unit-domain-suite/fixture/dist",
+        "manifest": "/unit-domain-suite/fixture/manifest.json"
+      },
+      "coreDist": [
+        {
+          "path": "browser/index.js",
+          "bytes": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "safeOracle": {
+        "pendingFixtureClose": 0,
+        "lateCloseInvocations": 1,
+        "settledFixtureClose": 1,
+        "postTeardownHostAcquisitions": 0,
+        "postTeardownUiAcquisitions": 0,
+        "networkAndServerCalls": 0
+      },
+      "cases": [
+        {
+          "id": "S1",
+          "heldAcquisition": "mainHost",
+          "releasePrecedingCloses": [
+            "browser"
+          ],
+          "lateClose": "mainHost"
+        },
+        {
+          "id": "S2",
+          "heldAcquisition": "browser",
+          "releasePrecedingCloses": [],
+          "lateClose": "browser"
+        },
+        {
+          "id": "S3",
+          "heldAcquisition": "faultHost",
+          "releasePrecedingCloses": [
+            "mainHost",
+            "browser"
+          ],
+          "lateClose": "faultHost"
+        }
+      ]
+    },
+    {
+      "revisionId": "s-after-source3-suite-lifecycle-178",
+      "qualificationRevisionId": "after-source3-suite-lifecycle-178",
+      "sourcePins": [
+        {
+          "path": "domainFunctionsHarness.mjs",
+          "bytes": 39862,
+          "sha256": "fd62477b1690344dc10936fb7f45ef1d4183df7bbb764b5aa910680b436a0e5c"
+        },
+        {
+          "path": "domain-functions-integration.test.ts",
+          "bytes": 14476,
+          "sha256": "0168ab3146f74c7a85b9da0287f3f6b3219294bfe3de84ec08bf4077e2c5ad62"
+        },
+        {
+          "path": "domainFunctionsHarness.d.mts",
+          "bytes": 1392,
+          "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83"
+        },
+        {
+          "path": "productionBrowserHarness.ts",
+          "bytes": 31407,
+          "sha256": "940cb2c32183be3ec5c6d7c966c5652170087be3dbf87c4f68ae56b56ac3bb05"
+        }
+      ],
+      "qualificationPrimitive": {
+        "path": "fixtures/domainLifecyclePrimitives.ts",
+        "bytes": 42516,
+        "sha256": "60f162707fd229b78ebf98e60061d5812fe7273edd7c346d58d646ef20940391"
+      },
+      "historicalDataSha256": "afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734",
+      "currentDataSha256": "af2413e836aa92e693fe2d69d7bb22d88aacb92bc0b665d43a915bbdc30054f5",
+      "epochMs": 1792022400000,
+      "microtaskTurns": 128,
+      "factories": [
+        {
+          "key": "vitest",
+          "marker": "suiteVitest"
+        },
+        {
+          "key": "playwright",
+          "marker": "suiteBrowser"
+        },
+        {
+          "key": "./productionBrowserHarness",
+          "marker": "suiteFixture"
+        },
+        {
+          "key": "./domainFunctionsHarness.mjs",
+          "marker": "suiteHost"
+        },
+        {
+          "key": "node:fs/promises",
+          "marker": "suiteFs"
+        },
+        {
+          "key": "node:os",
+          "marker": "suiteOs"
+        }
+      ],
+      "extraFactory": {
+        "key": "node:http",
+        "marker": "suiteHttp",
+        "members": [
+          "createServer"
+        ]
+      },
+      "exports": {
+        "helperFs": [
+          "createWriteStream",
+          "promises"
+        ],
+        "helperChildren": [
+          "fork",
+          "spawn"
+        ],
+        "helperModule": [
+          "createRequire"
+        ],
+        "suiteVitest": [
+          "afterAll",
+          "beforeAll",
+          "expect",
+          "it"
+        ],
+        "suiteBrowser": [
+          "chromium"
+        ],
+        "suiteFixture": [
+          "buildProductionCatalogFixture"
+        ],
+        "suiteHost": [
+          "startDomainFunctionsHost"
+        ],
+        "suiteFs": [
+          "mkdtemp",
+          "readFile",
+          "writeFile"
+        ],
+        "suiteOs": [
+          "tmpdir"
+        ]
+      },
+      "objects": {
+        "chromium": [
+          "launch"
+        ],
+        "fixture": [
+          "close",
+          "distDir",
+          "manifest"
+        ],
+        "browser": [
+          "close",
+          "newContext"
+        ],
+        "host": [
+          "close",
+          "inspect",
+          "resetAdmission",
+          "setProviderScenario",
+          "url"
+        ]
+      },
+      "registrations": {
+        "beforeAll": {
+          "count": 1,
+          "timeout": 240000
+        },
+        "afterAll": {
+          "count": 1,
+          "timeout": 15000
+        },
+        "tests": [
+          {
+            "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-error from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute",
+            "timeout": 60000
+          },
+          {
+            "name": "fails closed with missing-secret on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "fails closed with missing-database on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work",
+            "timeout": 60000
+          }
+        ]
+      },
+      "selectedFaultName": "fails closed with missing-secret on the actual binding boundary",
+      "paths": {
+        "tmp": "/unit-domain-suite/tmp",
+        "evidence": "/unit-domain-suite/tmp/wyreup-domain-browser-s-owned",
+        "dist": "/unit-domain-suite/fixture/dist",
+        "manifest": "/unit-domain-suite/fixture/manifest.json"
+      },
+      "coreDist": [
+        {
+          "path": "browser/index.js",
+          "bytes": 1,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "safeOracle": {
+        "pendingFixtureClose": 0,
+        "lateCloseInvocations": 1,
+        "settledFixtureClose": 1,
+        "postTeardownHostAcquisitions": 0,
+        "postTeardownUiAcquisitions": 0,
+        "networkAndServerCalls": 0
+      },
+      "cases": [
+        {
+          "id": "S1",
+          "heldAcquisition": "mainHost",
+          "releasePrecedingCloses": [
+            "browser"
+          ],
+          "lateClose": "mainHost"
+        },
+        {
+          "id": "S2",
+          "heldAcquisition": "browser",
+          "releasePrecedingCloses": [],
+          "lateClose": "browser"
+        },
+        {
+          "id": "S3",
+          "heldAcquisition": "faultHost",
+          "releasePrecedingCloses": [
+            "mainHost",
+            "browser"
+          ],
+          "lateClose": "faultHost"
+        }
+      ]
+    }
+  ]
+}

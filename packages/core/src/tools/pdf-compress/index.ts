@@ -1,6 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { assertPdfPageBudget } from '../../lib/budget.js';
 import { pickSmaller } from '../../lib/pick-smaller.js';
+import { getCodec, type Codec } from '../../lib/codecs.js';
 
 export interface PdfCompressParams {
   /** JPEG quality for embedded images, 1-100. Default 75. */
@@ -43,13 +44,7 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
   defaults,
 
-  chainSuggestions: [
-    'merge-pdf',
-    'pdf-encrypt',
-    'watermark-pdf',
-    'pdf-to-text',
-    'split-pdf',
-  ],
+  chainSuggestions: ['merge-pdf', 'pdf-encrypt', 'watermark-pdf', 'pdf-to-text', 'split-pdf'],
   paramSchema: {
     imageQuality: {
       type: 'range',
@@ -79,7 +74,8 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Loading PDF' });
 
-    const { PDFDocument, PDFName, PDFRawStream } = await import('pdf-lib');
+    const { PDFDocument, PDFName, PDFNumber, PDFRawStream, decodePDFRawStream } =
+      await import('pdf-lib');
     const buffer = await inputs[0]!.arrayBuffer();
     const pdfDoc = await PDFDocument.load(buffer);
     assertPdfPageBudget(pdfDoc.getPageCount(), { maxPages: 2_000 });
@@ -88,12 +84,13 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
     ctx.onProgress({ stage: 'processing', percent: 20, message: 'Scanning for images' });
 
-    // Walk the PDF objects looking for image XObjects
-    const { encode: encodeJpeg } = await import('@jsquash/jpeg');
-    const { decode: decodePng } = await import('@jsquash/png');
-    const { decode: decodeJpeg } = await import('@jsquash/jpeg');
-
+    // Walk the PDF objects looking for image XObjects. Use the shared codec
+    // loader so jSquash's WASM is initialized correctly in Node/CLI/MCP.
+    let jpegCodecPromise: Promise<Codec> | null = null;
+    const loadJpegCodec = () => (jpegCodecPromise ??= getCodec('jpeg'));
     let imagesProcessed = 0;
+    let imagesAttempted = 0;
+    let lastImageError: unknown;
 
     const context = pdfDoc.context;
     const indirectObjects = (context as unknown as { indirectObjects: Map<unknown, unknown> })
@@ -128,23 +125,65 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
         const width = parseInt(widthObj.toString(), 10);
         const height = parseInt(heightObj.toString(), 10);
         if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) continue;
-
-        ctx.onProgress({
-          stage: 'processing',
-          percent: 20 + Math.floor((i / entries.length) * 60),
-          message: `Re-encoding image ${imagesProcessed + 1}`,
-        });
+        const pixelCount = width * height;
+        if (!Number.isSafeInteger(pixelCount) || pixelCount > 100_000_000) continue;
 
         try {
-          let imageData: ImageData | null = null;
+          let imageData: {
+            data: Uint8ClampedArray;
+            width: number;
+            height: number;
+          } | null = null;
 
           if (isJpeg) {
-            imageData = await decodeJpeg(obj.contents.slice().buffer);
-          } else if (isPng && (pngToJpeg || true)) {
-            // Check if it has alpha channel — if so, we can't convert to JPEG
-            const colorSpaceStr = colorSpaceObj ? colorSpaceObj.toString() : '';
-            if (colorSpaceStr.includes('DeviceRGB') || colorSpaceStr === '') {
-              imageData = await decodePng(obj.contents.slice().buffer);
+            imagesAttempted++;
+            ctx.onProgress({
+              stage: 'processing',
+              percent: 20 + Math.floor((i / entries.length) * 60),
+              message: `Re-encoding image ${imagesAttempted}`,
+            });
+            const jpegCodec = await loadJpegCodec();
+            imageData = await jpegCodec.decode(obj.contents.slice());
+          } else if (isPng && pngToJpeg) {
+            const colorSpace = colorSpaceObj?.toString();
+            const bits = Number.parseInt(
+              dict.get(PDFName.of('BitsPerComponent'))?.toString() ?? '',
+              10,
+            );
+            const hasAlphaOrMask =
+              dict.get(PDFName.of('SMask')) !== undefined ||
+              dict.get(PDFName.of('Mask')) !== undefined;
+            const hasPredictor = dict.get(PDFName.of('DecodeParms')) !== undefined;
+            const channels = colorSpace === '/DeviceRGB' ? 3 : colorSpace === '/DeviceGray' ? 1 : 0;
+
+            // A FlateDecode PDF image is raw pixel samples, not a PNG file.
+            // Support the unambiguous opaque 8-bit RGB/gray form and leave
+            // indexed, alpha-masked, predicted, and CMYK streams untouched.
+            if (channels > 0 && bits === 8 && !hasAlphaOrMask && !hasPredictor) {
+              imagesAttempted++;
+              ctx.onProgress({
+                stage: 'processing',
+                percent: 20 + Math.floor((i / entries.length) * 60),
+                message: `Re-encoding image ${imagesAttempted}`,
+              });
+              const decoded = decodePDFRawStream(obj).decode();
+              const expectedLength = pixelCount * channels;
+              if (decoded.length !== expectedLength) {
+                throw new Error(
+                  `Decoded image has ${decoded.length} bytes; expected ${expectedLength}`,
+                );
+              }
+              const rgba = new Uint8ClampedArray(pixelCount * 4);
+              for (let pixel = 0; pixel < pixelCount; pixel++) {
+                const source = pixel * channels;
+                const target = pixel * 4;
+                const red = decoded[source]!;
+                rgba[target] = red;
+                rgba[target + 1] = channels === 3 ? decoded[source + 1]! : red;
+                rgba[target + 2] = channels === 3 ? decoded[source + 2]! : red;
+                rgba[target + 3] = 255;
+              }
+              imageData = { data: rgba, width, height };
             }
           }
 
@@ -152,21 +191,32 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
 
           // Re-encode as JPEG
           const quality = imageQuality / 100;
-          const jpegBytes = await encodeJpeg(imageData, { quality });
+          const jpegCodec = await loadJpegCodec();
+          const jpegBytes = await jpegCodec.encode(imageData, { quality });
 
           // Replace stream contents
           const newContents = new Uint8Array(jpegBytes);
           // Rebuild the stream: update filter and length
           dict.set(PDFName.of('Filter'), PDFName.of('DCTDecode'));
+          dict.set(PDFName.of('ColorSpace'), PDFName.of('DeviceRGB'));
+          dict.set(PDFName.of('BitsPerComponent'), PDFNumber.of(8));
           dict.delete(PDFName.of('DecodeParms'));
+          dict.delete(PDFName.of('Decode'));
           // Replace contents directly
           (obj as unknown as { contents: Uint8Array }).contents = newContents;
 
           imagesProcessed++;
-        } catch {
-          // Skip images that fail to decode/encode — best effort
+        } catch (error) {
+          lastImageError = error;
         }
       }
+    }
+
+    if (imagesAttempted > 0 && imagesProcessed === 0) {
+      const detail = lastImageError instanceof Error ? `: ${lastImageError.message}` : '';
+      throw new Error(
+        `Could not re-encode any of ${imagesAttempted} supported PDF images${detail}`,
+      );
     }
 
     ctx.onProgress({ stage: 'encoding', percent: 85, message: 'Saving PDF' });
@@ -180,7 +230,7 @@ export const pdfCompress: ToolModule<PdfCompressParams> = {
       stage: 'done',
       percent: 100,
       message: result.keptOriginal
-        ? 'Done — re-encoded PDF was not smaller, keeping the original'
+        ? `Done — ${imagesProcessed} image(s) re-encoded, but the result was not smaller; keeping the original`
         : `Done — ${imagesProcessed} image(s) re-encoded`,
     });
     return new Blob([result.bytes as BlobPart], { type: result.mime });

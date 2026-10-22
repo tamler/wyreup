@@ -21,6 +21,72 @@ interface ToolPageMetadata {
 
 // Web copy describes search tasks without changing registry names or tool APIs.
 export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
+  'csv-viewer': {
+    heading: 'View and edit CSV files',
+    title: 'CSV viewer and editor — search, sort & export — Wyreup',
+    description:
+      'Open CSV files locally, search all rows, edit cells and export the complete edited or filtered table. Quoted fields and numeric strings stay intact.',
+  },
+  'psd-to-png': {
+    heading: 'Convert a saved PSD composite to PNG',
+    title: 'PSD to PNG converter — saved 8-bit composites — Wyreup',
+    description:
+      'Export the saved RGB or grayscale composite from an 8-bit raw or RLE PSD locally. Layers are not recomposited; PSB and ZIP compression are unsupported.',
+  },
+  'mp3-to-midi': {
+    heading: 'Create a MIDI pitch sketch from MP3',
+    title: 'MP3 to MIDI — experimental monophonic melody — Wyreup',
+    description:
+      'Decode an MP3 locally, review detected notes and export a MIDI pitch sketch. Experimental monophonic transcription; chords, drums and voice reconstruction are unsupported.',
+  },
+  'bank-statement-to-csv': {
+    heading: 'Review bank statement PDF data and export CSV',
+    title: 'Bank statement PDF to CSV — reviewed local export — Wyreup',
+    description:
+      'Extract supported horizontal text from a bank statement PDF locally. Map columns, review every line and check balances before exporting CSV. Scans need OCR first.',
+  },
+  'stl-to-gcode': {
+    heading: 'Create contour-only G-code from STL',
+    title: 'STL to contour G-code — local geometry preview — Wyreup',
+    description:
+      'Slice supported closed STL meshes into contour-only G-code locally. Inspect layers and dimensions; output has no extrusion, heating or homing commands.',
+  },
+  'domain-age-checker': {
+    heading: 'Check domain registration age',
+    title: 'Domain age checker — public RDAP registration data — Wyreup',
+    description:
+      'Check public registration dates and age through Wyreup and the domain registry. Registration age can differ from first-ever use. No API key required.',
+  },
+  'code-beautifier': {
+    heading: 'Beautify JavaScript, JSON, CSS, HTML, XML or SQL',
+    title: 'Code beautifier — six local language formatters — Wyreup',
+    description:
+      'Format code locally with installed language parsers and download the complete result. Input is not executed; HTML and SQL formatting does not guarantee valid syntax.',
+  },
+  'aspect-ratio-calculator': {
+    heading: 'Calculate an aspect ratio or missing dimension',
+    title: 'Aspect ratio calculator — exact decimal ratios — Wyreup',
+    description:
+      'Reduce positive decimal dimensions to an exact ratio or calculate a missing width or height. Missing dimensions round to six decimal places when necessary.',
+  },
+  'word-counter': {
+    heading: 'Count words, characters and UTF-8 bytes',
+    title: 'Word and character counter — live local text statistics — Wyreup',
+    description:
+      'Count words, UTF-16 characters, Unicode code points, graphemes and UTF-8 bytes locally. Estimate speaking time and compare text with your chosen length limit.',
+  },
+  'ip-subnet-calc': {
+    heading: 'Calculate and split IPv4 subnets',
+    title: 'IPv4 subnet calculator — CIDR and subnet splitting — Wyreup',
+    description:
+      'Calculate network ranges and split a CIDR block into up to 4,096 subnets locally. Page through results or download the complete JSON report.',
+  },
+  'cron-from-text': {
+    heading: 'Build and inspect a cron expression',
+    title: 'Cron expression builder — explicit timezone and next runs — Wyreup',
+    description:
+      'Build five-field cron expressions and inspect upcoming runs from an explicit date and IANA timezone. Review the day-of-month/day-of-week rule; no jobs are scheduled.',
+  },
   compress: {
     heading: 'Compress images',
     title: 'Compress images online — JPEG, PNG & WebP — Wyreup',

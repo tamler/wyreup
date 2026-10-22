@@ -1,0 +1,217 @@
+{
+  "authoring": "Original raw PDF objects/xref; no copied input or production conversion helpers. Existing two fixtures and original provenance unchanged.",
+  "uniformPage1Views": [
+    [
+      40,
+      50,
+      120,
+      110
+    ],
+    [
+      100,
+      80,
+      120,
+      110
+    ],
+    [
+      100,
+      80,
+      120,
+      110
+    ]
+  ],
+  "uniformPage2Views": [
+    [
+      110,
+      85,
+      190,
+      145
+    ],
+    [
+      110,
+      85,
+      190,
+      145
+    ],
+    [
+      110,
+      85,
+      190,
+      145
+    ]
+  ],
+  "emptyIntersectionError": "The crop box does not intersect page 2. Draw a different box or turn off Apply to all pages.",
+  "fractionalScope": "Exercised diagnostic only. Bitmap dimension choice is an exact SOURCE-review item, not distinguished by old output tolerances.",
+  "outputs": [
+    {
+      "filename": "apply-to-all-partial.pdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "cropBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": [
+            40,
+            50,
+            80,
+            60
+          ]
+        },
+        {
+          "mediaBox": [
+            100,
+            80,
+            300,
+            180
+          ],
+          "cropBox": [
+            100,
+            80,
+            300,
+            180
+          ],
+          "rotation": 90,
+          "target": [
+            110,
+            85,
+            80,
+            60
+          ]
+        },
+        {
+          "mediaBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "cropBox": [
+            100,
+            80,
+            300,
+            180
+          ],
+          "rotation": 180,
+          "target": [
+            110,
+            85,
+            80,
+            60
+          ]
+        }
+      ],
+      "bytes": 1074,
+      "sha256": "84da00973b1de2d58b122ed37b67bec47b1a4d30ffda5be48be0dd5f82fe7077"
+    },
+    {
+      "filename": "apply-to-all-empty.pdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "cropBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": [
+            40,
+            50,
+            80,
+            60
+          ]
+        },
+        {
+          "mediaBox": [
+            600,
+            600,
+            800,
+            700
+          ],
+          "cropBox": [
+            600,
+            600,
+            800,
+            700
+          ],
+          "rotation": 0,
+          "target": [
+            640,
+            650,
+            80,
+            20
+          ]
+        }
+      ],
+      "bytes": 808,
+      "sha256": "4711b5c066bd3cfdf714a8d8879c24eba6f276cd7b3fce26e729890dbb54e968"
+    },
+    {
+      "filename": "fractional-bitmap.pdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0,
+            0,
+            612,
+            792
+          ],
+          "cropBox": [
+            0,
+            0,
+            612,
+            792
+          ],
+          "rotation": 0,
+          "target": [
+            40,
+            50,
+            80,
+            60
+          ]
+        }
+      ],
+      "bytes": 536,
+      "sha256": "719043c862ceb349ce1e994c887acb405071e17e01fc58c1d9491e9180457b2e"
+    },
+    {
+      "filename": "empty-page.pdf",
+      "pages": [
+        {
+          "mediaBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "cropBox": [
+            0,
+            0,
+            400,
+            300
+          ],
+          "rotation": 0,
+          "target": null
+        }
+      ],
+      "bytes": 505,
+      "sha256": "8a08655121b7084d997493135bf90cea19688289163190374574573d47dc417a"
+    }
+  ]
+}

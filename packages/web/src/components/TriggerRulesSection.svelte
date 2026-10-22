@@ -17,7 +17,7 @@
   } from './runners/triggerStorage';
   import { getAllChains, type ToolbeltChain } from './runners/toolbeltStorage';
   import type { TriggerRule } from '@wyreup/core';
-  import { DEFAULT_RATE_LIMIT } from '@wyreup/core';
+import { DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
 
   let rules: TriggerRule[] = [];
   let chains: ToolbeltChain[] = [];

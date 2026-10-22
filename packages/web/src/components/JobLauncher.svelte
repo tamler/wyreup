@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { mimeMatches } from '@wyreup/core';
+  import { onDestroy } from 'svelte';
+import { fileMatchesMime, createDefaultRegistry } from '@wyreup/core/execution';
   import { encodeChainSteps, type ChainStepSpec } from './runners/chainUrl';
-  import { stashChainFile } from './runners/chainStorage';
+  import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
+  import { clearTrail, setTrailHandover } from './runners/hopTrail';
+  import { acceptsBrowserFile } from '../lib/file-tool-candidates';
 
   type SerializedJobAction =
     | { kind: 'tool'; toolId: string; params?: Record<string, unknown> }
@@ -22,6 +25,11 @@
   let isHandingOff = false;
   let error = '';
   let handoffFailed = false;
+  let original: File | null = null;
+  let disposed = false;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
+  onDestroy(() => { disposed = true; for (const url of downloadUrls) URL.revokeObjectURL(url); for (const timer of downloadTimers) clearTimeout(timer); });
 
   const MIME_LABELS: Record<string, string> = {
     'image/*': 'image files',
@@ -31,15 +39,6 @@
     'video/*': 'video files',
     'application/pdf': 'PDF files',
     'text/csv': 'CSV files',
-  };
-  const MIME_EXTENSIONS: Record<string, string[]> = {
-    'image/*': ['avif', 'bmp', 'gif', 'heic', 'heif', 'jpeg', 'jpg', 'png', 'svg', 'tif', 'tiff', 'webp'],
-    'image/heic': ['heic'],
-    'image/heif': ['heif'],
-    'audio/*': ['aac', 'flac', 'm4a', 'mp3', 'oga', 'ogg', 'opus', 'wav', 'weba'],
-    'video/*': ['m4v', 'mkv', 'mov', 'mp4', 'mpeg', 'mpg', 'ogv', 'webm'],
-    'application/pdf': ['pdf'],
-    'text/csv': ['csv'],
   };
 
   $: targetUrl =
@@ -88,13 +87,7 @@
   }
 
   function acceptsFile(file: File): boolean {
-    if (job.acceptMimes.some((pattern) => mimeMatches(file.type, pattern))) return true;
-    if (file.type) return false;
-
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    return extension
-      ? job.acceptMimes.some((pattern) => MIME_EXTENSIONS[pattern]?.includes(extension))
-      : false;
+    return fileMatchesMime(file, job.acceptMimes);
   }
 
   async function handOff(file: File): Promise<void> {
@@ -107,16 +100,40 @@
       return;
     }
 
+    original = file;
+    const action = job.action;
+    const registry = createDefaultRegistry();
+    const firstId = action.kind === 'tool' ? action.toolId : action.steps[0]?.toolId;
+    const first = firstId ? registry.toolsById.get(firstId) : undefined;
+    if (!first || !acceptsBrowserFile(first, file) || (action.kind === 'chain' && action.steps.some((step) => !registry.toolsById.has(step.toolId)))) {
+      error = 'This job cannot import the original. Download it or choose another tool.'; handoffFailed = true; return;
+    }
+    const capturedJob = job, destination = targetUrl;
     isHandingOff = true;
-    const stashed = await stashChainFile(file);
-    if (stashed) {
-      window.location.assign(targetUrl);
+    const result = await stashChainHandover(file, action.kind === 'tool' ? { autoAccept: true, targetToolId: first.id } : { autoAccept: false });
+    if (disposed || job !== capturedJob) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      if (!cleared && !disposed) { error = 'Shared storage could not confirm deleting this handover token. Original retained.'; handoffFailed = true; }
+      isHandingOff = false; return;
+    }
+    if (result.stored && (action.kind === 'chain' || setTrailHandover([], result.token, first.id))) {
+      if (action.kind === 'chain') clearTrail();
+      window.location.assign(destination);
       return;
     }
 
-    error = 'Could not hand the file off — open the tool directly:';
+    const cleared = !result.stored || await clearChainHandover(result.token);
+    error = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
     handoffFailed = true;
     isHandingOff = false;
+  }
+
+  function downloadOriginal(): void {
+    if (!original) return;
+    const url = URL.createObjectURL(original); downloadUrls.add(url);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = original.name; anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 </script>
 
@@ -125,6 +142,8 @@
     class="file-input"
     bind:this={fileInput}
     type="file"
+    tabindex="-1"
+    aria-hidden="true"
     accept={job.acceptMimes.join(',')}
     on:change={handleInput}
   />
@@ -134,6 +153,7 @@
     bind:this={dropButton}
     type="button"
     disabled={isHandingOff}
+    aria-label={`Choose a file to ${actionLabel}`}
     aria-describedby={error ? 'job-launcher-error' : undefined}
     on:click={openFilePicker}
     on:dragover={handleDragOver}
@@ -173,7 +193,7 @@
   {#if error}
     <p id="job-launcher-error" class="error-row" role="alert">
       <span>{error}</span>
-      {#if handoffFailed}<a href={targetUrl}>Open directly</a>{/if}
+      {#if handoffFailed}<button type="button" on:click={downloadOriginal}>Download original</button>{/if}
     </p>
   {/if}
 </div>

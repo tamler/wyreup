@@ -58,7 +58,9 @@
     <div class="dl-notice__body">
       <strong>First run downloads ~{sizeStr}.</strong>
       <span>
-        The model is cached after the first use, then runs offline.
+        Required assets download when needed. Local processing can work offline
+        when all required assets are available in this browser. Network lookups
+        and hosted PRO processing require a connection.
         {#if installGroup}
           Manage downloads on the
           <a href="/settings" class="dl-notice__link">settings page</a>.

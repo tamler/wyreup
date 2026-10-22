@@ -1,17 +1,18 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type { ComponentType } from 'svelte';
-  import type { SerializedTool } from './runners/types';
+  import type { SerializedTool, PreloadAdmission } from './runners/types';
   import { VARIANT_MAP, type RunnerVariant } from './runners/variantMap';
-  import { clearChainFile, consumeChainFile, peekChainFile } from './runners/chainStorage';
-  import { clearTrail } from './runners/hopTrail';
+  import { clearChainHandover, peekChainHandover } from './runners/chainStorage';
+  import { clearTrail, getTrailHandover } from './runners/hopTrail';
+  import { acceptsBrowserFile } from '../lib/file-tool-candidates';
   import { user, authReady } from '../stores/user';
   import ProBadge from './ProBadge.svelte';
   import BuyCreditsSheet from './BuyCreditsSheet.svelte';
 
   // Dynamic-import map: each runner becomes its own Vite chunk, fetched only
-  // when the matching tool page mounts. Saves ~150KB on the initial ToolRunner
-  // bundle (29 variants × ~5-15KB each after gzip and hoisted shared deps).
+  // when the matching tool page mounts, keeping the component bodies out of
+  // the initial ToolRunner chunk.
   // The keys match the RunnerVariant union; TS will error if a variant is added
   // to variantMap without a loader here.
   const variantLoaders: Record<RunnerVariant, () => Promise<{ default: ComponentType }>> = {
@@ -44,44 +45,186 @@
     ZipInfoRunner: () => import('./runners/ZipInfoRunner.svelte'),
     ExcelInfoRunner: () => import('./runners/ExcelInfoRunner.svelte'),
     VideoConcatRunner: () => import('./runners/VideoConcatRunner.svelte'),
+    FinanceRunner: () => import('./runners/FinanceRunner.svelte'),
+    PlanningRowsRunner: () => import('./runners/PlanningRowsRunner.svelte'),
+    PhotographyContractRunner: () => import('./runners/PhotographyContractRunner.svelte'),
+    TimerRunner: () => import('./runners/TimerRunner.svelte'),
+    SeatingChartRunner: () => import('./runners/SeatingChartRunner.svelte'),
+    NamesRunner: () => import('./runners/NamesRunner.svelte'),
+    UtilityRunner: () => import('./runners/UtilityRunner.svelte'),
+    GeneratorRunner: () => import('./runners/GeneratorRunner.svelte'),
+    GradientPreview: () => import('./runners/GradientPreview.svelte'),
+    PsdPngRunner: () => import('./runners/PsdPngRunner.svelte'),
+    CsvViewerRunner: () => import('./runners/CsvViewerRunner.svelte'),
+    BankStatementRunner: () => import('./runners/BankStatementRunner.svelte'),
+    StlContourRunner: () => import('./runners/StlContourRunner.svelte'),
+    MidiPitchRunner: () => import('./runners/MidiPitchRunner.svelte'),
+    BuildingRowsRunner: () => import('./runners/BuildingRowsRunner.svelte'),
+    ConstructionEstimateRunner: () => import('./runners/ConstructionEstimateRunner.svelte'),
+    GamepadRunner: () => import('./runners/GamepadRunner.svelte'),
+    TouchscreenRunner: () => import('./runners/TouchscreenRunner.svelte'),
+    LiveTextRunner: () => import('./runners/LiveTextRunner.svelte'),
   };
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
 
   let chainFile: File | null = null;
-  let chainBanner = false;
-  let chainMeta: { name: string; type: string } | null = null;
+  let handover: Extract<Awaited<ReturnType<typeof peekChainHandover>>, { file: File }> | null = null;
+  let recoveryMessage = '';
+  let dismissedFile: File | null = null;
+  let admittedFile: File | null = null;
+  let editorMode: 'automatic' | 'manual' = 'automatic';
+  let attemptGeneration = 0;
+  let mountGeneration = 0;
+  const consumedTokens = new Set<string>();
+  const pendingConsumptions = new Map<string, Promise<boolean>>();
+  let mounted = false;
+  let priorToolId = tool.id;
+  let priorExternalFile = preloadedFile;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
 
-  onMount(async () => {
-    const peeked = await peekChainFile();
-    if (!peeked) {
-      clearTrail();
-      return;
-    }
-    if (peeked.autoAccept) {
-      // User already chose this file (e.g. via /tools drop-to-filter) — load
-      // it without an extra confirmation step.
-      chainFile = await consumeChainFile();
-      return;
-    }
-    chainMeta = peeked;
-    chainBanner = true;
+  onMount(() => {
+    mounted = true;
+    const own = attemptGeneration;
+    void peekChainHandover().then((peeked) => {
+      if (!mounted || own !== attemptGeneration) return;
+      if (!peeked) { clearTrail(); return; }
+      if (peeked.kind === 'unavailable') {
+        recoveryMessage = peeked.message;
+        clearTrail();
+        return;
+      }
+      handover = peeked;
+      const trail = getTrailHandover();
+      if (!trail || trail.token !== peeked.token || trail.targetToolId !== tool.id || peeked.targetToolId !== tool.id)
+        clearTrail();
+      if (peeked.kind === 'recoverable') recoveryMessage = peeked.message;
+      if (peeked.intentValid && peeked.autoAccept === true && peeked.targetToolId === tool.id)
+        acceptChain();
+    }).catch(() => { if (mounted && own === attemptGeneration) recoveryMessage = 'Could not recover the stored file.'; });
   });
 
-  async function acceptChain() {
-    chainFile = await consumeChainFile();
-    chainBanner = false;
+  function acceptChain() {
+    const file = handover?.file ?? preloadedFile;
+    if (!file) return;
+    if (!canStage(file)) {
+      recoveryMessage = automaticText && editorMode === 'automatic' && file.size > 1024 * 1024
+        ? 'This file exceeds the automatic editor limit. Select Manual/file, then use the original.'
+        : 'This runner cannot import this file. Download the original or choose a compatible tool.';
+      return;
+    }
+    attemptGeneration++;
+    mountGeneration++;
+    dismissedFile = null;
+    admittedFile = null;
+    chainFile = file;
+    recoveryMessage = '';
   }
 
   async function dismissChain() {
-    await clearChainFile();
-    chainBanner = false;
+    const file = recoveryFile;
+    if (!file) return;
+    const own = attemptGeneration;
+    const token = handover?.file === file ? handover.token : null;
+    if (token && !await consumeToken(token)) {
+      if (mounted && own === attemptGeneration) recoveryMessage = 'Stored file changed or could not be cleared. The original remains available here.';
+      return;
+    }
+    if (!mounted || own !== attemptGeneration || recoveryFile !== file) return;
+    attemptGeneration++;
+    if (effectivePreloaded === file) chainFile = file;
+    dismissedFile = file;
+    handover = null;
+    recoveryMessage = token ? '' : 'Dismissed from this page. No shared record was deleted without a token.';
+    clearTrail();
   }
 
-  $: variant = VARIANT_MAP[tool.id] ?? 'SimpleImageRunner';
-  $: runnerPromise = variantLoaders[variant]().then((m) => m.default);
-  $: effectivePreloaded = chainFile ?? preloadedFile;
+  function canStage(file: File): boolean {
+    return !unsupported && acceptsBrowserFile(tool, file)
+      && !(automaticText && editorMode === 'automatic' && file.size > 1024 * 1024);
+  }
+
+  function selectEditorMode(mode: 'automatic' | 'manual') {
+    if (editorMode === mode) return;
+    editorMode = mode;
+    attemptGeneration++;
+    mountGeneration++;
+    if (chainFile === dismissedFile) chainFile = null;
+    recoveryMessage = '';
+  }
+
+  function consumeToken(token: string): Promise<boolean> {
+    if (consumedTokens.has(token)) return Promise.resolve(true);
+    const pending = pendingConsumptions.get(token);
+    if (pending) return pending;
+    const operation = clearChainHandover(token).then((consumed) => {
+      if (consumed) consumedTokens.add(token);
+      return consumed;
+    }).finally(() => { pendingConsumptions.delete(token); });
+    pendingConsumptions.set(token, operation);
+    return operation;
+  }
+
+  function admissionFor(id: string, file: File | null, own: number) {
+    return async (result: PreloadAdmission) => {
+      if (!mounted || own !== attemptGeneration || tool.id !== id || !file || file === dismissedFile || result.file !== file || effectivePreloaded !== file) return;
+      if (result.status === 'refused') { recoveryMessage = result.message; return; }
+      const token = handover?.file === file ? handover.token : null;
+      if (token && !await consumeToken(token)) {
+        if (mounted && own === attemptGeneration) recoveryMessage = 'The stored record changed or could not be cleared. Your original remains available.';
+        return;
+      }
+      if (!mounted || own !== attemptGeneration || tool.id !== id || file === dismissedFile || effectivePreloaded !== file) return;
+      admittedFile = file;
+      recoveryMessage = token || !handover ? '' : 'Imported locally; shared storage remains because no valid token was available.';
+    };
+  }
+
+  function downloadOriginal() {
+    if (!recoveryFile) return;
+    const url = URL.createObjectURL(recoveryFile);
+    downloadUrls.add(url);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = recoveryFile.name;
+    link.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
+  }
+
+  $: if (tool.id !== priorToolId || preloadedFile !== priorExternalFile) {
+    if (preloadedFile !== priorExternalFile && preloadedFile !== dismissedFile) dismissedFile = null;
+    priorToolId = tool.id;
+    priorExternalFile = preloadedFile;
+    attemptGeneration++;
+    mountGeneration++;
+    chainFile = null;
+    admittedFile = null;
+    editorMode = 'automatic';
+    recoveryMessage = '';
+    clearTrail();
+  }
+  $: variant = VARIANT_MAP[tool.id];
+  $: automaticText = variant === 'LiveTextRunner';
+  $: activeVariant = automaticText && editorMode === 'manual' ? 'TextInputRunner' : variant;
+  $: loader = activeVariant ? variantLoaders[activeVariant] : undefined;
+  $: unsupported = typeof loader !== 'function';
+  $: runnerPromise = typeof loader === 'function' ? loader().then((m) => m.default) : null;
+  $: recoveryFile = handover?.file ?? preloadedFile;
+  $: externalEligible = preloadedFile && preloadedFile !== dismissedFile && !unsupported
+    && acceptsBrowserFile(tool, preloadedFile)
+    && !(automaticText && editorMode === 'automatic' && preloadedFile.size > 1024 * 1024);
+  $: effectivePreloaded = chainFile ?? (externalEligible ? preloadedFile : null);
+  $: onPreloadAdmission = admissionFor(tool.id, effectivePreloaded, attemptGeneration);
+  onDestroy(() => {
+    mounted = false;
+    attemptGeneration++;
+    for (const url of downloadUrls) URL.revokeObjectURL(url);
+    for (const timer of downloadTimers) clearTimeout(timer);
+    downloadUrls.clear(); downloadTimers.clear();
+  });
 
   // PRO gate -------------------------------------------------------------
   // A PRO tool (cost === 'credit') is loaded into the regular runner only
@@ -108,24 +251,44 @@
 </script>
 
 <div class="tool-runner">
-  {#if chainBanner && chainMeta}
+  {#if recoveryFile && recoveryFile !== dismissedFile && (recoveryFile !== admittedFile || recoveryMessage)}
     <div class="chain-banner" role="status">
       <div class="chain-banner__body">
         <span class="chain-banner__label">Continue from previous tool</span>
-        <span class="chain-banner__file">{chainMeta.name}</span>
+        <span class="chain-banner__file">{recoveryFile.name} — {recoveryFile.size.toLocaleString()} bytes, {recoveryFile.type || 'unknown type'}</span>
+        {#if handover?.targetToolId}<span>Intended tool: {String(handover.targetToolId)}</span>{/if}
+        {#if recoveryMessage}<p role="status">{recoveryMessage}</p>{/if}
       </div>
       <div class="chain-banner__actions">
         <button class="btn-primary-sm" on:click={acceptChain} type="button">Use this file</button>
+        <button class="btn-ghost-sm" on:click={downloadOriginal} type="button">Download original</button>
+        <button class="btn-ghost-sm" on:click={acceptChain} type="button">Retry original</button>
         <button class="btn-ghost-sm" on:click={dismissChain} type="button">Dismiss</button>
       </div>
     </div>
   {/if}
+  {#if automaticText}
+    <div role="group" aria-label="Text editor mode">
+      <button type="button" aria-pressed={editorMode === 'automatic'} on:click={() => selectEditorMode('automatic')}>Automatic editor (up to 1 MiB)</button>
+      <button type="button" aria-pressed={editorMode === 'manual'} on:click={() => selectEditorMode('manual')}>Manual/file</button>
+    </div>
+  {/if}
+  {#if recoveryMessage && !recoveryFile}<p role="alert">{recoveryMessage}</p>{/if}
 
-  {#if gateState === 'pass'}
+  {#if unsupported}
+    <div class="runner-error" role="alert">
+      This tool does not have a supported runner.
+      {#if effectivePreloaded}
+        <p>Original file: {effectivePreloaded.name}</p>
+      {/if}
+    </div>
+  {:else if gateState === 'pass'}
     {#await runnerPromise}
       <div class="runner-loading" role="status" aria-live="polite">Loading…</div>
     {:then RunnerComponent}
-      <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} />
+      {#key mountGeneration}
+        <svelte:component this={RunnerComponent} {tool} preloadedFile={effectivePreloaded} {onPreloadAdmission} />
+      {/key}
     {:catch error}
       <div class="runner-error" role="alert">
         Failed to load the tool runner: {error.message}. Please refresh the page.

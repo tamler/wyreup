@@ -89,7 +89,8 @@ function filteredExecArgv(): string[] {
 
 export type SupervisorResult = WorkerResult & { stderr: string };
 
-export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
+export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise<SupervisorResult> {
+  if (signal?.aborted) return { ok: false, error: 'Tool request cancelled.', stage: 'run', stderr: '' };
   return new Promise((resolve) => {
     const child: ChildProcess = fork(WORKER_PATH, [], {
       silent: true,
@@ -104,23 +105,36 @@ export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
     });
 
     let settled = false;
+    let stopping = false;
     const finalize = (r: SupervisorResult) => {
       if (!settled) {
         settled = true;
+        if (killTimer) clearTimeout(killTimer);
+        signal?.removeEventListener('abort', onAbort);
         resolve(r);
       }
     };
 
     let killTimer: NodeJS.Timeout | undefined;
     let sigkillTimer: NodeJS.Timeout | undefined;
+    const stopChild = () => {
+      if (stopping) return;
+      stopping = true;
+      // This child belongs exclusively to this invocation. The worker's
+      // SIGTERM handler aborts cooperative work and prevents output commits.
+      child.kill('SIGTERM');
+      sigkillTimer = setTimeout(() => child.kill('SIGKILL'), KILL_GRACE_MS);
+    };
+    const onAbort = () => {
+      stopChild();
+      finalize({ ok: false, error: 'Tool request cancelled.', stage: 'run', stderr: stderrBuf });
+    };
     if (job.timeoutMs > 0) {
-      killTimer = setTimeout(() => {
-        child.kill('SIGTERM');
-        sigkillTimer = setTimeout(() => child.kill('SIGKILL'), KILL_GRACE_MS);
-      }, job.timeoutMs + 1000);
+      killTimer = setTimeout(stopChild, job.timeoutMs + 1000);
     }
 
     child.once('message', (msg) => {
+      if (stopping) return;
       const result = msg as WorkerResult;
       if (killTimer) clearTimeout(killTimer);
       if (sigkillTimer) clearTimeout(sigkillTimer);
@@ -155,6 +169,8 @@ export async function runInWorker(job: WorkerJob): Promise<SupervisorResult> {
       });
     });
 
-    child.send(job);
+    signal?.addEventListener('abort', onAbort, { once: true });
+    if (signal?.aborted) onAbort();
+    else child.send(job);
   });
 }

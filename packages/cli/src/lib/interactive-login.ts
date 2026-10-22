@@ -49,7 +49,7 @@ export async function validateApiKey(key: string): Promise<BalanceResponse | nul
 
   if (res.status === 401) {
     process.stderr.write(
-      'Key not accepted. Check that it isn’t revoked at https://wyreup.com/account.\n',
+      'Key not accepted. Request a new emailed key at https://wyreup.com/account; older keys require email verification.\n',
     );
     return null;
   }

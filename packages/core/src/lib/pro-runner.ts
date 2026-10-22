@@ -86,7 +86,7 @@ export async function runPro<TResult>(
       throw new Error(
         isBrowser && !ctx.apiKey
           ? 'Please sign in with your Wyreup API key to use PRO tools.'
-          : 'Your Wyreup API key was rejected. Re-run `wyreup login` or check WYREUP_API_KEY.',
+          : 'Your Wyreup API key was rejected. Request a new emailed key at https://wyreup.com/account, then re-run `wyreup login` or update WYREUP_API_KEY.',
       );
     }
     if (res.status === 402) {

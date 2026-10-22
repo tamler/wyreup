@@ -13,42 +13,41 @@ export interface RuntimeAdapter {
   /**
    * Create an OffscreenCanvas-compatible surface. In browsers, this returns
    * an OffscreenCanvas. In Node, it returns a @napi-rs/canvas equivalent.
-   * Wave 0: placeholder that throws NotImplementedError.
    */
-  createCanvas(width: number, height: number): unknown;
+  createCanvas(width: number, height: number): Promise<unknown>;
 
   /**
    * Decode a Blob into an ImageBitmap-compatible structure. In browsers,
    * this uses `createImageBitmap()`. In Node, this uses the canvas library's
-   * image loading. Wave 0: placeholder.
+   * image loading.
    */
   createImageFromBlob(blob: Blob): Promise<unknown>;
 }
 
 /**
- * Default adapter that always reports unavailable. Wave 0 uses this as a
- * placeholder. Wave 1 replaces it with proper browser.ts and node.ts
- * implementations wired via conditional exports.
+ * Runtime-neutral adapter backed by the same lazy canvas helpers the tools use.
  */
-class PlaceholderAdapter implements RuntimeAdapter {
+class DefaultRuntimeAdapter implements RuntimeAdapter {
   isAvailable(): boolean {
-    return false;
+    if (typeof process !== 'undefined' && typeof process.versions?.node === 'string') return true;
+    return typeof OffscreenCanvas !== 'undefined' && typeof createImageBitmap === 'function';
   }
 
-  createCanvas(_width: number, _height: number): unknown {
-    throw new Error('Runtime adapter not implemented in Wave 0');
+  createCanvas(width: number, height: number): Promise<unknown> {
+    return createCanvasSurface(width, height);
   }
 
-  createImageFromBlob(_blob: Blob): Promise<unknown> {
-    throw new Error('Runtime adapter not implemented in Wave 0');
+  createImageFromBlob(blob: Blob): Promise<unknown> {
+    return loadImage(blob);
   }
 }
+
+const defaultRuntimeAdapter = new DefaultRuntimeAdapter();
 
 /**
- * Get the current runtime adapter. Wave 0 returns a placeholder that
- * reports unavailable. Wave 1 will wire proper browser/node implementations
- * via conditional exports in package.json.
+ * Get the adapter for the active runtime.
  */
 export function getRuntimeAdapter(): RuntimeAdapter {
-  return new PlaceholderAdapter();
+  return defaultRuntimeAdapter;
 }
+import { createCanvas as createCanvasSurface, loadImage } from '../lib/canvas.js';

@@ -1,11 +1,13 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+import { fileMatchesMime } from '@wyreup/core/execution';
 
   export let accept: string[] = ['*/*'];
   export let multiple: boolean = false;
   export let label: string = 'Drop file or click to browse';
   export let files: File[] = [];
   export let error: string = '';
+  export let sizeLimit: number | undefined = undefined;
 
   const dispatch = createEventDispatcher<{ files: File[] }>();
 
@@ -40,11 +42,7 @@
   }
 
   function matchesMime(file: File): boolean {
-    if (accept.includes('*/*') || accept.includes('*')) return true;
-    return accept.some((pattern) => {
-      if (pattern.endsWith('/*')) return file.type.startsWith(pattern.slice(0, -1));
-      return file.type === pattern;
-    });
+    return fileMatchesMime(file, accept);
   }
 
   function handleDragOver(e: DragEvent) {
@@ -87,9 +85,22 @@
       error = `File type not accepted. Expected: ${types}`;
       return;
     }
+    const oversized = valid.find((file) => sizeLimit !== undefined && file.size > sizeLimit);
+    if (oversized) {
+      dispatch('files', []);
+      files = [];
+      error = `${oversized.name} is too large. Maximum: ${formatBytes(sizeLimit!)}.`;
+      return;
+    }
     error = '';
     files = multiple ? valid : [valid[0]!];
     dispatch('files', files);
+  }
+
+  function formatBytes(bytes: number): string {
+    if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+    if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${bytes} bytes`;
   }
 </script>
 

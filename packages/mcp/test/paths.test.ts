@@ -57,6 +57,21 @@ describe('assertPathAllowed', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('write-directory mode resolves an existing directory symlink', async () => {
+    const realDir = join(root, 'real-output');
+    const link = join(root, 'linked-output');
+    await mkdir(realDir);
+    await symlink(realDir, link);
+    const r = await assertPathAllowed(link, 'write-directory', [root]);
+    expect(r).toEqual({ ok: true, resolved: realDir });
+  });
+
+  it('write-directory mode permits a missing directory under a canonical parent', async () => {
+    const target = join(root, 'new-output');
+    const r = await assertPathAllowed(target, 'write-directory', [root]);
+    expect(r).toEqual({ ok: true, resolved: target });
+  });
+
   it('prefix check does not false-positive (root vs rootfoo)', async () => {
     const sibling = `${root}foo`;
     await mkdir(sibling, { recursive: true });

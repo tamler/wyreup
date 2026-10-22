@@ -1,0 +1,32 @@
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+import { numberParam, readGamepadSnapshot, type GamepadReport, type ToolModule } from '@wyreup/core/execution';
+  import type { SerializedTool } from './types';
+  import { createGamepadSession } from './gamepad-session';
+  export let tool:SerializedTool;
+  export let injectedTool:ToolModule<Record<string,unknown>>|undefined=undefined;
+  let deadZone=Number(tool.defaults.deadZone),active=false,status='Idle. Start to read exposed gamepads.',error='',report:GamepadReport|null=null;
+  let deadZoneDraft=String(tool.defaults.deadZone),parameterValid=true;
+  let generation=0,controller:AbortController|null=null,url:string|null=null,exporting=false;
+  let session:ReturnType<typeof createGamepadSession>|null=null;
+  function invalidateExport(){generation++;controller?.abort();controller=null;exporting=false;if(url)URL.revokeObjectURL(url);url=null;}
+  function validateDraft(){try{deadZone=numberParam({deadZone:deadZoneDraft.trim()?Number(deadZoneDraft):null},'deadZone',{min:0,max:0.95});parameterValid=true;return true;}catch(cause){parameterValid=false;error=cause instanceof Error?cause.message:'Invalid dead zone.';return false;}}
+  function start(){if(!validateDraft())return;invalidateExport();error='';session?.dispose();report=null;active=true;status='Reading local gamepads.';session=createGamepadSession({read:()=>readGamepadSnapshot(deadZone),publish:next=>{report=next;status=next.status==='no-device'?'No exposed device. Interact with a connected controller, then retry.':'Reading exposed device data; this is not a hardware pass.';},fail:cause=>error=cause instanceof Error?cause.message:'Gamepad reading failed.',stopped:reason=>{active=false;status=reason;},requestFrame:callback=>requestAnimationFrame(callback),cancelFrame:id=>cancelAnimationFrame(id),windowTarget:window,documentTarget:document,hidden:()=>document.visibilityState==='hidden'});session.start();}
+  function stop(){invalidateExport();session?.stop();active=false;}
+  function changed(event:Event){invalidateExport();deadZoneDraft=(event.currentTarget as HTMLInputElement).value;if(validateDraft()){error='';if(report)report={...report,deadZone};}else session?.stop('Stopped; correct the dead zone.');}
+  async function download(){if(!validateDraft())return;invalidateExport();error='';const own=generation,control=new AbortController();controller=control;exporting=true;try{const module=injectedTool??(await import('../../lib/core-execution')).createDefaultRegistry().toolsById.get(tool.id);if(own!==generation)return;if(!module)throw new Error('Tool unavailable.');const result=await module.run([],{deadZone},{signal:control.signal,executionId:crypto.randomUUID(),cache:new Map(),onProgress(){}});if(own!==generation)return;const artifacts=Array.isArray(result)?result:[result];if(artifacts.length!==1||artifacts[0]!.type!=='application/json')throw new Error('Expected one JSON report.');url=URL.createObjectURL(artifacts[0]!);const link=document.createElement('a');link.href=url;link.download='gamepad-report.json';link.click();}catch(cause){if(own===generation)error=cause instanceof Error?cause.message:'Export failed.';}finally{if(own===generation){exporting=false;controller=null;}}}
+  const standard=['Bottom face','Right face','Left face','Top face','Left shoulder','Right shoulder','Left trigger','Right trigger','Back/select','Start','Left stick','Right stick','D-pad up','D-pad down','D-pad left','D-pad right','Home'];
+  onDestroy(()=>{invalidateExport();session?.dispose();});
+</script>
+<div class="gamepad">
+  <p>Use a secure browser context. A browser-recognized controller interaction may be required before exposure. Readings stay local; no vibration or device permission request.</p>
+  <label>Visual dead zone<input aria-label="Visual dead zone" type="number" min="0" max="0.95" step="0.01" value={deadZoneDraft} on:input={changed}/></label>
+  <div class="actions"><button type="button" disabled={active||!parameterValid} on:click={start}>Start</button><button type="button" disabled={!active} on:click={stop}>Stop</button><button type="button" disabled={!parameterValid||exporting} on:click={download}>Export JSON</button></div>
+  <p>Start retries a stopped reading after a device or export error. No retry occurs until you activate Start.</p>
+  <p role="status">{status}</p>{#if error}<p role="alert">{error}</p>{/if}
+  {#if report}{#each report.devices as device}<section><h3>API slot {device.slot}; index {device.index}: {device.descriptor}</h3><p>Mapping: {device.mapping||'unmapped'}; connected: {String(device.connected)}; timestamp: {device.timestamp}</p><h4>Raw axes</h4><div class="axes">{#each device.axes as value,index}<label>Axis {index}: <strong>{value}</strong>{#if device.outOfNominal.axes.includes(index)} — outside nominal range{/if}<meter min="-1" max="1" value={Math.max(-1,Math.min(1,value))} aria-label={`Axis ${index} visual scale`}/><span>{Math.abs(value)<=deadZone?'Inside visual dead zone':'Outside visual dead zone'}</span></label>{/each}</div><p>Visual scales clip overshoot; exported raw values remain unchanged.</p><h4>Buttons</h4><div class="buttons">{#each device.buttons as button}<div class:pressed={button.pressed}><strong>Button {button.index}{device.mapping==='standard'&&standard[button.index]?`: ${standard[button.index]}`:''}</strong><span>Value {button.value}; pressed {String(button.pressed)}; touched {String(button.touched)}</span>{#if device.outOfNominal.buttons.includes(button.index)}<span>Outside nominal range</span>{/if}</div>{/each}</div></section>{/each}{/if}
+  <p>No exposed device is an observation, not a passed hardware test. Physical stick, trigger, button and disconnect testing still requires the actual controller.</p>
+</div>
+<style>
+  .gamepad{display:grid;gap:var(--space-3)}.axes,.buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:var(--space-2)}label,.buttons>div{display:grid;gap:var(--space-1)}.buttons>div{border:1px solid var(--border);padding:var(--space-2)}.pressed{background:var(--bg-raised);border-color:var(--accent-text)!important}meter,input{width:100%;box-sizing:border-box}.actions{display:flex;gap:var(--space-2);flex-wrap:wrap}button,input{padding:var(--space-2);font:inherit;background:var(--bg-raised);color:var(--text-primary);border:1px solid var(--border)}button:disabled{opacity:.6}button:focus-visible,input:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}h3{overflow-wrap:anywhere}
+</style>

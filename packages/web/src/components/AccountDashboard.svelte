@@ -9,6 +9,7 @@
     name: string;
     last_used: number | null;
     created_at: number;
+    email_bound: number;
   }
 
   interface RunEntry {
@@ -28,6 +29,7 @@
   let newKeyName = '';
   let newKeyBusy = false;
   let newKeyError = '';
+  let revokeError = '';
   let createdKey = '';
   let createdKeyCopied = false;
 
@@ -89,13 +91,22 @@
 
   async function revokeKey(kid: string) {
     if (!confirm('Revoke this key? CLI/MCP installs using it will stop working immediately.')) return;
-    const res = await fetch('/api/account/keys/revoke', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
-      credentials: 'same-origin',
-      body: JSON.stringify({ kid }),
-    });
-    if (res.ok) await fetchKeys();
+    revokeError = '';
+    try {
+      const res = await fetch('/api/account/keys/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ kid }),
+      });
+      if (!res.ok) {
+        revokeError = `Could not revoke this key (${res.status}). Please try again.`;
+        return;
+      }
+      await fetchKeys();
+    } catch {
+      revokeError = 'Could not reach the server. Please retry revoking this key.';
+    }
   }
 
   async function copyCreatedKey() {
@@ -204,7 +215,7 @@
           <li class="key-row">
             <div class="key-row__main">
               <span class="key-row__name">{k.name}</span>
-              <span class="key-row__meta">Last used: {ago(k.last_used)}</span>
+              <span class="key-row__meta">{k.email_bound === 1 ? `Last used: ${ago(k.last_used)}` : 'Inactive key — legacy or awaiting email delivery'}</span>
             </div>
             <button type="button" class="ghost" on:click={() => revokeKey(k.id)}>Revoke</button>
           </li>
@@ -212,6 +223,9 @@
       </ul>
     {/if}
 
+    {#if revokeError}
+      <p class="error" role="alert">{revokeError}</p>
+    {/if}
     <form class="new-key" on:submit|preventDefault={createKey}>
       <input
         type="text"

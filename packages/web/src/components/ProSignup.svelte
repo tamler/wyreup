@@ -1,13 +1,7 @@
 <script lang="ts">
   // ProSignup — inline signup for the /pro page.
   //
-  // Flow (lowest-friction path): enter email -> POST /api/account/create
-  // -> the server sets the __Host-wyreup_session cookie on the browser surface
-  // -> hydrateUser() populates $user -> you're signed in. The wk_live_ key
-  // is emailed for CLI/MCP use and shown once here for convenience.
-  //
-  // Returning CLI users (or anyone whose email already has an account)
-  // fall back to the "activate a key" path.
+  // Signup and recovery both require the key delivered to the owner's inbox.
 
   import { onMount } from 'svelte';
   import { user, authReady, hydrateUser, activate } from '../stores/user';
@@ -19,8 +13,6 @@
   let keyInput = '';
   let busy = false;
   let error = '';
-  let createdKey = '';
-  let keyCopied = false;
 
   onMount(() => {
     // If the visitor is already signed in, skip straight to the done state.
@@ -48,23 +40,17 @@
       });
       const data = (await res.json().catch(() => ({}))) as {
         status?: string;
-        rawKey?: string;
         error?: string;
       };
       if (!res.ok) {
         error = data.error || `Couldn't sign you up (${res.status})`;
         return;
       }
-      if (data.status === 'exists') {
-        screen = 'activate';
-        error =
-          'You already have an account. Check your inbox for your key, then paste it below.';
+      if (data.status !== 'check_email') {
+        error = 'Unexpected response. Please request your key again.';
         return;
       }
-      // status === 'created' — the session cookie is now set server-side.
-      createdKey = data.rawKey ?? '';
-      await hydrateUser();
-      screen = 'done';
+      screen = 'activate';
     } catch {
       error = 'Network error — please try again.';
     } finally {
@@ -92,15 +78,6 @@
     }
   }
 
-  async function copyKey() {
-    try {
-      await navigator.clipboard.writeText(createdKey);
-      keyCopied = true;
-      setTimeout(() => (keyCopied = false), 2000);
-    } catch {
-      /* clipboard blocked — the key is selectable manually */
-    }
-  }
 </script>
 
 <div class="signup" id="signup">
@@ -108,20 +85,7 @@
     <div class="done">
       <div class="done__check" aria-hidden="true">✓</div>
       <h3>You're in{$user ? `, ${$user.email}` : ''}.</h3>
-      {#if createdKey}
-        <p class="done__sub">
-          Your account is ready and you're signed in. Here's your API key —
-          you'll need it for the CLI and MCP. We've emailed it too.
-        </p>
-        <div class="keyrow">
-          <code class="key">{createdKey}</code>
-          <button type="button" class="btn-ghost" on:click={copyKey}>
-            {keyCopied ? 'Copied' : 'Copy'}
-          </button>
-        </div>
-      {:else}
-        <p class="done__sub">You're signed in. Pick a pack below to add credits.</p>
-      {/if}
+      <p class="done__sub">You're signed in. Pick a pack below to add credits.</p>
       <div class="done__cta">
         <a href="#pricing" class="btn-primary">Choose a credit pack</a>
         <a href="/account" class="btn-ghost">Go to your account</a>
@@ -147,12 +111,12 @@
       {#if error}<p class="error" role="alert">{error}</p>{/if}
     </form>
     <button type="button" class="switch" on:click={() => { screen = 'email'; error = ''; }}>
-      ← Back to sign up
+      Email another key
     </button>
   {:else}
     <h3>Create your account</h3>
     <p class="signup__sub">
-      One field. No password. You'll be signed in instantly — free tools
+      We'll email a key to verify your address. Free tools
       stay free, you only pay when you buy credits.
     </p>
     <form on:submit|preventDefault={submitEmail}>
@@ -289,23 +253,6 @@
     color: var(--text-on-accent, #000);
     font-size: 20px;
     margin-bottom: var(--space-3);
-  }
-  .keyrow {
-    display: flex;
-    gap: var(--space-2);
-    align-items: center;
-    margin-bottom: var(--space-4);
-  }
-  .key {
-    flex: 1;
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-2) var(--space-3);
-    color: var(--text-primary);
-    word-break: break-all;
   }
   .done__cta {
     display: flex;

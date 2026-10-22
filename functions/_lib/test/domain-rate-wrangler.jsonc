@@ -1,0 +1,9 @@
+{
+  "name": "wyreup-domain-rate-acceptance",
+  "compatibility_date": "2026-04-21",
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "domain-rate-isolated-test",
+    "database_id": "00000000-0000-4000-8000-000000000001"
+  }]
+}

@@ -722,6 +722,10 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
 
 ## Later (one-liners, no priority order)
 
+- **Phonon-2 — optional English ASR backend candidate, CLI/MCP first.** [Fermion's model card](https://huggingface.co/FermionResearch/Phonon-2) describes a compact 164 MB native package; the [ONNX conversion](https://huggingface.co/tiyuvta/Phonon-2-ONNX/raw/main/README.md) lists 614–662 MB quantized encoders plus decoder/preprocessor. Upstream reports 1.3–1.6 GB peak RAM in CPU ONNX Runtime tests on 82 short clips (≤35 s), not Wyreup or browser benchmarks. This conversion is not a 164 MB drop-in; browser fit remains unproven.
+
+  Before adoption, pin artifact revisions/provenance and check CC-BY-4.0 weight terms, NOTICE/attribution and runtime licence compatibility. Test ONNX Runtime browser operators (including exact4x2's MatMulNBits), memory/mobile fit, long-audio chunking/cancellation, offline use and accuracy against existing Whisper. Preserve multilingual Whisper. Backlog evaluation only: no new tool, weights, dependency, allowlist/precache change or current release blocker.
+
 - Multi-user / team surface (Pro tier add-on)
 - **Hosted HTTP API (Pro-only doorway, added 2026-05-26).** Additional
   surface alongside web/CLI/MCP. Caller hits

@@ -15,7 +15,7 @@ import {
   checkToolCapabilities,
   type Capabilities,
   type ToolRequires,
-} from '@wyreup/core';
+} from '@wyreup/core/execution';
 
 interface CapState {
   ready: boolean;

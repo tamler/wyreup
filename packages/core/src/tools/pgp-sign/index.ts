@@ -46,6 +46,7 @@ export const pgpSign: ToolModule<PgpSignParams> = {
     passphrase: {
       type: 'string',
       label: 'Passphrase',
+      secret: true,
       placeholder: 'Required if your key is protected',
       help: 'Leave empty if the key has no passphrase.',
     },

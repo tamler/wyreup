@@ -20,7 +20,7 @@ interface Props {
 
 const {
   title,
-  description = 'Wyreup — privacy-first file tools. Free tools run on your device, no signup needed.',
+  description = 'Wyreup — local file tools, calculations, public network lookups, and hosted PRO tools. Each tool explains what it sends.',
   ogTitle = title,
   ogDescription = description,
   surfaceMode = 'engineering',
@@ -101,7 +101,7 @@ const excludeFromSearch = noindex || !isIndexablePath(currentPath);
         executes. The Astro bundler turns this into a deferred module
         chunk; setModelCdn is small and synchronous, no UX cost. */}
     <script>
-      import { setModelCdn } from '@wyreup/core';
+import { setModelCdn } from '@wyreup/core/execution';
       setModelCdn('https://models.wyreup.com');
     </script>
 
@@ -943,7 +943,7 @@ const excludeFromSearch = noindex || !isIndexablePath(currentPath);
   // ── Header search: Fuse.js fuzzy search + CMD+K + navigation ──
   import { createToolSearch, searchTools } from '../lib/tool-search';
   import type { SearchableTool } from '../lib/tool-search';
-  import { detectCapabilities, checkToolCapabilities } from '@wyreup/core';
+import { detectCapabilities, checkToolCapabilities } from '@wyreup/core/execution';
 
   // Tool suggestions go to hello@wyreup.com — friendlier than a
   // GitHub Issues signup wall for non-technical users.

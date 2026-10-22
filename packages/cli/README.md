@@ -1,6 +1,6 @@
 # @wyreup/cli
 
-Wyreup CLI — privacy-first file tools from the shell. Same engine as [wyreup.com](https://wyreup.com), fully offline and scriptable.
+Wyreup CLI — privacy-first tools from the shell. Same engine as [wyreup.com](https://wyreup.com), with local processing, public network lookups, and optional hosted PRO tools.
 
 ## Install
 
@@ -47,10 +47,10 @@ wyreup merge-pdf a.pdf b.pdf c.pdf -o merged.pdf
 wyreup split-pdf book.pdf -O pages/
 
 # Generate a QR code (no input needed)
-wyreup qr "https://wyreup.com" -o qr.png
+wyreup qr --text "https://wyreup.com" -o qr.png
 
 # Hash a file (prints JSON to stdout)
-wyreup hash document.pdf --algorithm sha256
+wyreup hash document.pdf --algorithms '["SHA-256"]'
 
 # Strip EXIF metadata
 wyreup strip-exif photo.jpg -o clean.jpg
@@ -69,6 +69,7 @@ wyreup ocr scan.png -o text.txt
 | `-o, --output <path>` | Output file path (single-output tools) |
 | `-O, --output-dir <dir>` | Output directory (multi-output tools like split-pdf) |
 | `--param <key=value>` | Tool parameter override, repeatable |
+| `--params-json <path>` | One local regular UTF-8 JSON file, at most 1 MiB, without a BOM; links, devices and stdin files are refused |
 | `--input-format <mime>` | Override input MIME type (useful when piping) |
 | `--json` | Force JSON output to stdout |
 | `--verbose` | Print progress messages to stderr |
@@ -78,8 +79,53 @@ Per-tool named flags are also available for tools with a `paramSchema`:
 ```bash
 wyreup compress photo.jpg --quality 75 -o out.jpg
 wyreup convert image.png --format webp -o out.webp
-wyreup hash file.bin --algorithm sha512
+wyreup hash file.bin --algorithms '["SHA-512"]'
 ```
+
+Direct runs preserve declared parameter types: a cron minute `5` is a string,
+while a numeric field accepts a complete finite decimal, including fractions
+and exponents. Boolean flags take `true` or `false`; ambiguous string/number
+enum spellings require the JSON file. Precedence is tool defaults, JSON file,
+repeatable `--param` values in arrival order, then named flags. Omitted flags
+keep file values. Reviewed strict tools reject unknown keys; legacy tools keep
+their existing behavior. Core validators enforce active fields and row rules.
+
+```bash
+wyreup run cron-from-text --param mode=fields --param minute=5 \
+  --param currentDate=2026-01-01T00:00:00Z --param nextCount=1
+wyreup loan-calculator --param APR=0
+wyreup bank-statement-to-csv statement.pdf --params-json reviewed-bank.json -o statement.csv
+```
+
+The parameter file must be an object, with bounded inert JSON: depth at most
+20, at most 20,000 scalar values and 1 MiB serialized. It is not a URL or stdin.
+Bank mappings and review decisions are native JSON objects/arrays; `opening`,
+`closing` and `statementYear` may be explicitly `null`. Bank export still
+requires the actual mapping, explicit review decisions and acknowledgment.
+For Lorem Ipsum, the engine admits paragraphs through 1000 and sentences per
+paragraph through 100, including fractional counts such as 2.5; its loops then
+produce three paragraphs/sentences. `wordsPerSentence` remains a JSON array.
+
+Finance row fields and the four configuration generators instead accept **JSON
+strings containing row arrays**. Do not supply arrays to these string fields
+or encode their contents twice. For example, `robots-params.json` can contain:
+
+```json
+{"groupsJson":"[{\"userAgent\":\"*\",\"rule\":\"Disallow\",\"path\":\"/private\"}]","sitemapsJson":"[]"}
+```
+
+Run it with `wyreup robots-txt-generator --params-json robots-params.json`.
+`groupsJson` columns are `userAgent,rule,path` (`Allow`/`Disallow`, up to 1000
+rows); `sitemapsJson` has `url` (up to 20). CSP `directivesJson` has
+`directive,sources` (up to 10); hreflang `linksJson` has `language,url`; nginx
+`redirectsJson` has `source,destination,status` (301/302/307/308). Hreflang and
+nginx allow up to 1000 rows. Each string is bounded to 100,000 characters; the
+core checks exact columns, permitted values and URL/path rules. Shorthand
+`--help` describes the specific rules and finance rows, currencies and rates.
+
+Code Beautifier supports JavaScript, CSS, XML, SQL, JSON and HTML; TypeScript
+is unsupported. Output file extensions follow each actual output MIME.
+Web-only capture/session tools are unavailable on CLI.
 
 ## Chain tools
 
@@ -109,6 +155,10 @@ tool-id                        # run with defaults
 tool-id[key=val,key2=val2]     # run with param overrides
 tool1|tool2|tool3              # pipe output of each step to next
 ```
+
+Chain strings keep their existing simple coercion. Arrays, row JSON,
+comma-rich values and exact numeric-looking strings require a direct typed
+run; `--params-json` does not redesign the chain parser.
 
 ### Preview a chain before running it
 
@@ -229,19 +279,25 @@ Tools span image, PDF, audio, video, text, dev, geo, and other categories. Run `
 
 ## Privacy
 
-Everything runs locally on your machine. No files leave your device. No network calls during tool execution.
+Local file-processing tools keep their inputs on your machine. Setup may download packages or models; offline use depends on the tool and cached assets. Hosted PRO tools send their declared inputs for remote processing.
+
+Domain Registration Age is a free network lookup. The entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key or login is required; registration age may differ from first-ever use. `wyreup run domain-age-checker --param domain=example.com` uses the trusted `WYREUP_ORIGIN` (default `https://wyreup.com`), as do applicable chains. The normal egress lock still blocks direct registry requests.
+
+Public lookups use temporary rotating HMAC network counters and random short-lived reservation tokens. Shared networks can reach public limits together. Wyreup keeps no domain-query database; expiry cleanup occurs on later requests, and platform logs and backups retain their own history. Your shell history, saved chains, output files, or operator exports may retain the domain and result.
 
 ## Security & environment
 
 The CLI ships with defense-in-depth on every tool invocation. Defaults are conservative; tune as needed.
+
+With the fetch lock enabled, redirects are followed only for HTTP 301, 302, 303, 307 and 308, and only to the trusted `WYREUP_ORIGIN` or configured model origins. POST requests on 301/302 and methods other than GET/HEAD on 303 become GET requests with the body and body headers removed. A redirect that would retain a non-null request body, including on 307/308, is refused with `Redirect would replay a request body`. Body-free model downloads can follow redirects between allowed origins.
 
 ### Environment variables
 
 | Var | Default | Purpose |
 | --- | --- | --- |
 | `WYREUP_API_KEY` | — | Bearer token for Pro tools and account commands. Read via `wyreup login` and stored in `~/.wyreup/config.json`. |
-| `WYREUP_ORIGIN` | `https://wyreup.com` | Pro endpoint + auth origin. One of two permitted fetch destinations. |
-| `WYREUP_MODEL_CDN` | `https://models.wyreup.com` | Model weight CDN. `disabled` falls back to upstream CDNs and also disables the egress lock. |
+| `WYREUP_ORIGIN` | `https://wyreup.com` | Trusted public lookup, Pro endpoint, and auth origin, allowed alongside configured model origins by the fetch lock. |
+| `WYREUP_MODEL_CDN` | `https://models.wyreup.com` | Model weight mirror URL, or `disabled` to use configured upstream model origins with the same fetch-lock setting. |
 | `WYREUP_ALLOW_DISABLE_TIMEOUT` | — | `1` permits `--timeout 0` (disable). |
 | `WYREUP_DISABLE_EGRESS_LOCK` | — | `1` skips installing the `fetch` egress lock. |
 

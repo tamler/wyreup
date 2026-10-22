@@ -11,6 +11,7 @@ export interface AuthedUser {
   id: string;
   email: string;
   kid: string; // api_keys.id the caller is authenticated as
+  authSource: 'cookie' | 'bearer';
 }
 
 export async function resolveUser(request: Request, env: Env): Promise<AuthedUser | null> {
@@ -24,11 +25,11 @@ export async function resolveUser(request: Request, env: Env): Promise<AuthedUse
         `SELECT u.id AS uid, u.email
            FROM users u
            JOIN api_keys ak ON ak.user_id = u.id
-          WHERE u.id = ? AND ak.id = ? AND ak.revoked_at IS NULL`,
+          WHERE u.id = ? AND ak.id = ? AND ak.revoked_at IS NULL AND ak.email_bound = 1`,
       )
         .bind(payload.uid, payload.kid)
         .first<{ uid: string; email: string }>();
-      if (row) return { id: row.uid, email: row.email, kid: payload.kid };
+      if (row) return { id: row.uid, email: row.email, kid: payload.kid, authSource: 'cookie' };
     }
   }
 
@@ -42,7 +43,7 @@ export async function resolveUser(request: Request, env: Env): Promise<AuthedUse
     `SELECT ak.id AS kid, ak.user_id AS uid, u.email
        FROM api_keys ak
        JOIN users u ON u.id = ak.user_id
-      WHERE ak.key_hash = ? AND ak.revoked_at IS NULL`,
+      WHERE ak.key_hash = ? AND ak.revoked_at IS NULL AND ak.email_bound = 1`,
   )
     .bind(hash)
     .first<{ kid: string; uid: string; email: string }>();
@@ -55,7 +56,7 @@ export async function resolveUser(request: Request, env: Env): Promise<AuthedUse
     .run()
     .catch(() => {});
 
-  return { id: row.uid, email: row.email, kid: row.kid };
+  return { id: row.uid, email: row.email, kid: row.kid, authSource: 'bearer' };
 }
 
 export function unauthorized(): Response {
@@ -101,7 +102,7 @@ export function json(body: unknown, status = 200, extraHeaders: HeadersInit = {}
  */
 export function requireCsrfHeader(request: Request, user: AuthedUser): Response | null {
   // Bearer-authed callers (CLI/MCP) — cookie isn't in play, skip.
-  if (request.headers.get('Authorization')?.startsWith('Bearer ')) return null;
+  if (user.authSource === 'bearer') return null;
 
   const header = request.headers.get('X-Wyreup-CSRF');
   if (header !== '1') {
@@ -110,7 +111,6 @@ export function requireCsrfHeader(request: Request, user: AuthedUser): Response 
       403,
     );
   }
-  void user; // reserved for future per-user token; signature kept stable
   return null;
 }
 

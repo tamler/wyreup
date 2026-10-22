@@ -33,7 +33,7 @@ Key environment variables (production deployments should review):
 | Var | Used by | Purpose |
 | --- | --- | --- |
 | `WYREUP_API_KEY` | MCP, CLI | Bearer token. Read once at startup; never inherited by worker subprocesses (passed via IPC). |
-| `WYREUP_ALLOW_PATHS` | MCP | Colon-separated absolute path roots. Default: CWD + `os.tmpdir()`. `*` disables (not recommended). |
+| `WYREUP_ALLOW_PATHS` | MCP | Platform-delimited absolute path roots (`:` on POSIX, `;` on Windows). Default: CWD + `os.tmpdir()`. `*` disables (not recommended). |
 | `WYREUP_MAX_INPUT_BYTES` | MCP | Aggregate input size cap. Default 500 MB. |
 | `WYREUP_AUDIT_LOG` | MCP | Opt-in JSONL audit log path (file is created mode `0o600`). |
 | `WYREUP_AUDIT_REQUIRED=1` | MCP | Strict mode — audit write failure fails the call. |
@@ -156,3 +156,16 @@ For operators running `@wyreup/mcp` or `@wyreup/cli` in production:
 - [ ] Do NOT set `WYREUP_ALLOW_PATHS=*` in production
 - [ ] Treat `WYREUP_API_KEY` as a secret (file mode `0o600` in `~/.wyreup/config.json` for CLI, env var for MCP)
 - [ ] Audit log files have mode `0o600` on creation — preserve that mode in rotation
+
+Filesystem-backed MCP tools fail closed on native Windows because Node does not
+expose sufficient ACL and handle-relative path primitives for the documented
+local-attacker guarantee. Run the MCP server under WSL on Windows. On POSIX,
+processes running as the same uid are inside the local trust boundary.
+
+Every input/output directory and ancestor must disallow group/world writes,
+normally mode `0700` or `0755`. Sticky shared parents such as `/tmp` are allowed
+only when the relevant child belongs to the server uid. Denials include the
+offending path and octal mode. The path allowlist, including `*`, never disables
+this requirement. Umask `002` project trees, permissive Docker bind mounts,
+FAT/exFAT volumes, and default WSL `/mnt/c` mounts may not qualify; use a protected
+POSIX working directory (the WSL Linux filesystem on Windows).

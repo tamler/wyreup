@@ -6,10 +6,7 @@
 import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
 import { json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
-
-interface RevokeBody {
-  kid?: unknown;
-}
+import { readJsonObject, RequestBodyError } from '../../../_lib/request';
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
@@ -18,7 +15,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const csrfErr = requireCsrfHeader(request, user);
   if (csrfErr) return csrfErr;
 
-  const body = (await request.json().catch(() => ({}))) as RevokeBody;
+  let body: Record<string, unknown>;
+  try {
+    body = await readJsonObject(request, 4096);
+  } catch (error) {
+    if (error instanceof RequestBodyError) return json({ error: error.message }, error.status);
+    throw error;
+  }
   const kid = typeof body.kid === 'string' ? body.kid : '';
   if (!kid) return json({ error: 'kid required' }, 400);
 

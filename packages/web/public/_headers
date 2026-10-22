@@ -70,3 +70,9 @@
 
 /registerSW.js
   Cache-Control: public, max-age=0, must-revalidate
+
+/app-update
+  Cache-Control: no-store
+
+/app-update/
+  Cache-Control: no-store

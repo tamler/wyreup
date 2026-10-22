@@ -43,7 +43,7 @@ describe('MCP capability annotations [spec §#2]', () => {
     }
   });
 
-  it('openWorldHint matches cost === "credit"', async () => {
+  it('openWorldHint matches credit tools or the exact free domain lookup', async () => {
     const { createDefaultRegistry } = await import('@wyreup/core');
     const list = await listTools();
     const reg = createDefaultRegistry();
@@ -51,7 +51,9 @@ describe('MCP capability annotations [spec §#2]', () => {
       if (tool.name === 'wyreup_chain') continue;
       const t = reg.toolsById.get(tool.name);
       if (!t) continue;
-      expect(tool.annotations!['openWorldHint'], `tool=${tool.name}`).toBe(t.cost === 'credit');
+      expect(tool.annotations!['openWorldHint'], `tool=${tool.name}`).toBe(
+        t.cost === 'credit' || t.id === 'domain-age-checker',
+      );
     }
   });
 

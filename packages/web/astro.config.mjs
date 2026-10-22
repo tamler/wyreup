@@ -17,7 +17,7 @@ export default defineConfig({
         id: '/',
         name: 'Wyreup',
         short_name: 'Wyreup',
-        description: 'Privacy-first file tools. Everything runs in your browser.',
+        description: 'File tools and calculators. Check each tool for where it processes input and what it needs offline.',
         lang: 'en',
         dir: 'ltr',
         categories: ['productivity', 'utilities'],
@@ -109,8 +109,11 @@ export default defineConfig({
       },
       injectManifest: {
         // Precache core app shell only; large ML WASM/ONNX assets are fetched on demand.
-        globPatterns: ['**/*.{html,css,js,woff2,svg,png,ico,webmanifest}'],
-        globIgnores: ['**/*.wasm', '**/*.onnx'],
+        globPatterns: [
+          '**/*.{html,css,js,woff2,svg,png,ico,webmanifest}',
+          '**/squoosh_png_bg*.wasm',
+        ],
+        globIgnores: ['**/*.onnx', 'app-update/index.html', 'app-update.html'],
         // Raise the limit above the 25 MB ort-wasm file so the build doesn't error
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
       },
@@ -120,7 +123,86 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
   vite: {
-    plugins: [onnxAssets()],
+    plugins: [
+      onnxAssets(),
+      {
+        name: 'wyreup-client-utility-chunks',
+        apply: 'build',
+        configEnvironment(name, config) {
+          if (name !== 'client') return;
+          const build = config.build ??= {};
+          const options = build.rolldownOptions ??= build.rollupOptions ?? {};
+          const output = options.output ??= {};
+          if (Array.isArray(output))
+            throw new Error('Client utility chunking requires one output configuration.');
+          const groups = output.codeSplitting?.groups ?? [];
+          if (!Array.isArray(groups))
+            throw new Error('Client utility chunk groups must be an array.');
+          // Astro sets signatures before this environment hook; preserve its declared exports.
+          options.preserveEntrySignatures = 'allow-extension';
+          output.strictExecutionOrder = true;
+          output.codeSplitting = {
+            ...output.codeSplitting,
+            groups: [
+              {
+                test(moduleId) {
+                  const normalized = moduleId.replaceAll('\\', '/');
+                  const directory = new URL('../core/dist/browser/', import.meta.url).pathname;
+                  if (!normalized.startsWith(directory)) return false;
+                  const relative = normalized.slice(directory.length);
+                  return /^[^?#]+\.js$/.test(relative) &&
+                    !['file-worker.js', 'bank-pdf-worker.js'].includes(relative);
+                },
+                name(moduleId, ctx) {
+                  const info = ctx.getModuleInfo(moduleId);
+                  if (!info || !Array.isArray(info.exports) ||
+                      !info.exports.every(key => typeof key === 'string'))
+                    throw new Error('Core provider module information is unavailable.');
+                  const families = [
+                    ['planningTools', 'utility-planning'],
+                    ['buildingTools', 'utility-building'],
+                    ['hardwareTools', 'utility-hardware'],
+                    ['financeTools', 'utility-finance'],
+                    ['textDeveloperTools', 'utility-text-developer'],
+                  ].filter(([binding]) => info.exports.includes(binding));
+                  if (families.length > 1)
+                    throw new Error('Core utility providers must have separate module boundaries.');
+                  if (info.exports.includes('createDefaultRegistry')) {
+                    if (families.length !== 0)
+                      throw new Error('Core registry must be separate from utility providers.');
+                    return 'core-registry';
+                  }
+                  return families[0]?.[1] ?? null;
+                },
+                // Providers remain statically loaded; shared dependencies keep their own groups.
+                includeDependenciesRecursively: false,
+              },
+              // Keep third-party dependencies outside the two PDF package groups in the client.
+              ...groups.map(group =>
+                ['pdf-lib', 'pdf-lib-extended'].includes(group.name)
+                  ? { ...group, includeDependenciesRecursively: false }
+                  : group,
+              ),
+            ],
+          };
+        },
+      },
+    ],
+    worker: {
+      format: 'es',
+      rolldownOptions: {
+        external: [
+          '@resvg/resvg-js',
+          '@napi-rs/canvas',
+          'tesseract.js',
+          '@mediapipe/tasks-vision',
+          'canvas',
+          'sharp',
+          /^node:/,
+          /node_modules\/.*\.node$/,
+        ],
+      },
+    },
     environments: {
       prerender: {
         resolve: {
@@ -152,6 +234,53 @@ export default defineConfig({
             groups: [
               { name: 'pdf-lib', test: /\/node_modules\/pdf-lib\// },
               { name: 'pdf-lib-extended', test: /\/node_modules\/@cantoo\/pdf-lib\// },
+              {
+                test(moduleId) {
+                  const normalized = moduleId.replaceAll('\\', '/');
+                  const directory = new URL('../core/dist/browser/', import.meta.url).pathname;
+                  return normalized.startsWith(directory) &&
+                    /^chunk-[^/?#]+\.js$/.test(normalized.slice(directory.length));
+                },
+                name(moduleId, ctx) {
+                  const info = ctx.getModuleInfo(moduleId);
+                  if (!info || !Array.isArray(info.exports))
+                    throw new Error('Utility common module information is unavailable.');
+                  if (!['UtilityInputError', 'numberParam', 'stringParam'].every((key) => info.exports.includes(key)))
+                    return null;
+                  if (!Array.isArray(info.importedIds) || info.importedIds.length !== 0)
+                    throw new Error('Utility common input must have no static imports.');
+                  return 'utility-common';
+                },
+                includeDependenciesRecursively: true,
+              },
+            {
+              test(moduleId) {
+                const normalized = moduleId.replaceAll('\\', '/');
+                const directory = new URL('../core/dist/browser/', import.meta.url).pathname;
+                return normalized.startsWith(directory) &&
+                  /^chunk-[^/?#]+\.js$/.test(normalized.slice(directory.length));
+              },
+              name(moduleId, ctx) {
+                const info = ctx.getModuleInfo(moduleId);
+                if (!info || !Array.isArray(info.exports) ||
+                    !info.exports.every(key => typeof key === 'string'))
+                  throw new Error('Utility calculator shared module information is unavailable.');
+                const sets = [
+                  ['bmiCategory', 'cancelled', 'cookingBand', 'encoder', 'invalid', 'n', 'parseGradeWeight',
+                    'parsePlanningRows', 's', 'safeCsvCell', 'sampleUniqueIntegers', 'seatingCsv', 'secureUint32',
+                    'temporalDate', 'temporalInput', 'uniformInteger', 'validateContractParticulars', 'validatePlanningSnapshot'],
+                  ['N', 'W', 'buildingChoice', 'buildingCount', 'buildingError', 'buildingN', 'buildingNumber',
+                    'buildingResult', 'buildingRows', 'buildingSpecs', 'calculateConstructionEstimate', 'constructionSpecs',
+                    'cost', 'n', 'purchaseCeiling', 'validateBoardFootPieces', 'validateBuildingRows',
+                    'validateConstructionEstimate', 'validateGutterCandidates'],
+                  ['abort', 'validateGeneratorLoads'],
+                ];
+                return sets.some(keys => info.exports.length === keys.length &&
+                  new Set(info.exports).size === info.exports.length && keys.every(key => info.exports.includes(key)))
+                  ? 'utility-calculator-shared' : null;
+              },
+              includeDependenciesRecursively: true,
+            },
             ],
           },
         },
@@ -169,7 +298,9 @@ export default defineConfig({
       },
     },
     optimizeDeps: {
+      include: ['@wyreup/core > papaparse', '@wyreup/core > ag-psd'],
       exclude: [
+        '@jsquash/png',
         '@resvg/resvg-js',
         '@napi-rs/canvas',
         'tesseract.js',

@@ -1,4 +1,4 @@
-import { mimeMatches } from '@wyreup/core';
+import { mimeMatches } from '@wyreup/core/execution';
 import type { ToolbeltChainStep } from '../components/runners/toolbeltStorage';
 
 export type JobAction =

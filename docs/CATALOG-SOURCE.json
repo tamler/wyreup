@@ -1,0 +1,1166 @@
+{
+  "capturedOn": "2026-10-11",
+  "source": "https://www.normaltools.com/",
+  "originalInventorySha256": "5967eb278a205606fca85dd869b17825f0b6514462307a903ea2dd69772532d0",
+  "originalMappingSha256": "d798fc1901620cf550b1bde25d4cbf5aca335e7f6e791bff112d1c055e5c5e56",
+  "tools": [
+    {
+      "category": "text",
+      "slug": "word-counter",
+      "classification": "existing-equivalent",
+      "existingId": "word-counter"
+    },
+    {
+      "category": "text",
+      "slug": "number-to-words-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "text",
+      "slug": "character-counter",
+      "classification": "extension",
+      "existingId": "word-counter"
+    },
+    {
+      "category": "text",
+      "slug": "roman-numeral-converter",
+      "classification": "existing-equivalent",
+      "existingId": "roman-numeral"
+    },
+    {
+      "category": "text",
+      "slug": "markdown-preview",
+      "classification": "extension",
+      "existingId": "markdown-to-html"
+    },
+    {
+      "category": "text",
+      "slug": "case-converter",
+      "classification": "existing-equivalent",
+      "existingId": "case-converter"
+    },
+    {
+      "category": "text",
+      "slug": "readability-score-checker",
+      "classification": "existing-equivalent",
+      "existingId": "text-readability"
+    },
+    {
+      "category": "text",
+      "slug": "text-diff-checker",
+      "classification": "existing-equivalent",
+      "existingId": "text-diff"
+    },
+    {
+      "category": "text",
+      "slug": "lorem-ipsum-generator",
+      "classification": "existing-equivalent",
+      "existingId": "lorem-ipsum"
+    },
+    {
+      "category": "text",
+      "slug": "remove-duplicate-lines-online",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "text",
+      "slug": "slug-generator",
+      "classification": "existing-equivalent",
+      "existingId": "slug"
+    },
+    {
+      "category": "text",
+      "slug": "markdown-table-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "text",
+      "slug": "bulk-meta-description-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "json-formatter",
+      "classification": "extension",
+      "existingId": "json-formatter"
+    },
+    {
+      "category": "developer",
+      "slug": "password-generator",
+      "classification": "existing-equivalent",
+      "existingId": "password-generator"
+    },
+    {
+      "category": "developer",
+      "slug": "uuid-generator",
+      "classification": "existing-equivalent",
+      "existingId": "uuid-generator"
+    },
+    {
+      "category": "developer",
+      "slug": "base64-encoder",
+      "classification": "existing-equivalent",
+      "existingId": "base64"
+    },
+    {
+      "category": "developer",
+      "slug": "regex-tester",
+      "classification": "existing-equivalent",
+      "existingId": "regex-tester"
+    },
+    {
+      "category": "developer",
+      "slug": "binary-converter",
+      "classification": "extension",
+      "existingId": "number-base-converter"
+    },
+    {
+      "category": "developer",
+      "slug": "url-encoder",
+      "classification": "existing-equivalent",
+      "existingId": "url-encoder"
+    },
+    {
+      "category": "developer",
+      "slug": "sql-formatter",
+      "classification": "existing-equivalent",
+      "existingId": "sql-formatter"
+    },
+    {
+      "category": "developer",
+      "slug": "timestamp-converter",
+      "classification": "existing-equivalent",
+      "existingId": "timestamp-converter"
+    },
+    {
+      "category": "developer",
+      "slug": "hash-generator",
+      "classification": "existing-equivalent",
+      "existingId": "hash"
+    },
+    {
+      "category": "developer",
+      "slug": "jwt-decoder",
+      "classification": "existing-equivalent",
+      "existingId": "jwt-decoder"
+    },
+    {
+      "category": "developer",
+      "slug": "domain-age-checker",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "json-validator",
+      "classification": "extension",
+      "existingId": "json-formatter"
+    },
+    {
+      "category": "developer",
+      "slug": "xml-formatter",
+      "classification": "existing-equivalent",
+      "existingId": "xml-formatter"
+    },
+    {
+      "category": "developer",
+      "slug": "cron-expression-generator",
+      "classification": "extension",
+      "existingId": "cron-from-text"
+    },
+    {
+      "category": "developer",
+      "slug": "html-encoder",
+      "classification": "existing-equivalent",
+      "existingId": "text-escape"
+    },
+    {
+      "category": "developer",
+      "slug": "code-beautifier",
+      "classification": "extension",
+      "existingId": "json-formatter,css-formatter,html-formatter,xml-formatter,sql-formatter"
+    },
+    {
+      "category": "developer",
+      "slug": "json-to-csv-converter",
+      "classification": "existing-equivalent",
+      "existingId": "csv-json"
+    },
+    {
+      "category": "developer",
+      "slug": "csv-to-json-converter",
+      "classification": "existing-equivalent",
+      "existingId": "csv-json"
+    },
+    {
+      "category": "developer",
+      "slug": "html-minifier",
+      "classification": "existing-equivalent",
+      "existingId": "html-minify"
+    },
+    {
+      "category": "developer",
+      "slug": "css-minifier",
+      "classification": "existing-equivalent",
+      "existingId": "css-minify"
+    },
+    {
+      "category": "developer",
+      "slug": "javascript-minifier",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "yaml-validator",
+      "classification": "existing-equivalent",
+      "existingId": "yaml-validate"
+    },
+    {
+      "category": "developer",
+      "slug": "yaml-to-json-converter",
+      "classification": "existing-equivalent",
+      "existingId": "json-yaml"
+    },
+    {
+      "category": "developer",
+      "slug": "robots-txt-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "chmod-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "subnet-calculator",
+      "classification": "extension",
+      "existingId": "ip-subnet-calc"
+    },
+    {
+      "category": "developer",
+      "slug": "cidr-calculator",
+      "classification": "existing-equivalent",
+      "existingId": "ip-subnet-calc"
+    },
+    {
+      "category": "developer",
+      "slug": "utm-link-builder",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "csp-header-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "jsonpath-tester",
+      "classification": "existing-equivalent",
+      "existingId": "json-path"
+    },
+    {
+      "category": "developer",
+      "slug": "csv-delimiter-converter",
+      "classification": "extension",
+      "existingId": "csv-json"
+    },
+    {
+      "category": "developer",
+      "slug": "hreflang-tag-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "developer",
+      "slug": "nginx-redirect-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "design",
+      "slug": "qr-code-generator",
+      "classification": "existing-equivalent",
+      "existingId": "qr"
+    },
+    {
+      "category": "design",
+      "slug": "color-picker",
+      "classification": "extension",
+      "existingId": "color-converter"
+    },
+    {
+      "category": "design",
+      "slug": "favicon-generator",
+      "classification": "existing-equivalent",
+      "existingId": "favicon"
+    },
+    {
+      "category": "design",
+      "slug": "hex-to-rgb-converter",
+      "classification": "existing-equivalent",
+      "existingId": "color-converter"
+    },
+    {
+      "category": "design",
+      "slug": "css-gradient-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "design",
+      "slug": "aspect-ratio-calculator",
+      "classification": "extension",
+      "existingId": "resize"
+    },
+    {
+      "category": "design",
+      "slug": "color-palette-generator",
+      "classification": "existing-equivalent",
+      "existingId": "color-harmony"
+    },
+    {
+      "category": "design",
+      "slug": "px-to-rem-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "mortgage-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "loan-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "compound-interest-calculator",
+      "classification": "extension",
+      "existingId": "compound-interest"
+    },
+    {
+      "category": "money",
+      "slug": "tip-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "discount-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "sales-tax-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "amazon-fba-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "etsy-fee-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "ebay-fee-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "paypal-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "stripe-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "fuel-trip-cost-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "airbnb-host-payout-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "shopify-profit-margin-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "ev-charging-cost-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "youtube-rpm-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "patreon-earnings-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "fiverr-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "upwork-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "kdp-royalty-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "tiktok-shop-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "square-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "poshmark-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "depop-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "mercari-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "stockx-seller-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "shopify-break-even-roas-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "twitch-subscription-revenue-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "twitch-bits-to-usd-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "gumroad-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "kickstarter-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "printify-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "redbubble-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "teespring-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "amazon-handmade-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "grailed-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "reverb-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "discogs-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "whatnot-seller-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "ko-fi-fee-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "fourthwall-profit-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "money",
+      "slug": "recipe-cost-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "image-resizer",
+      "classification": "existing-equivalent",
+      "existingId": "resize"
+    },
+    {
+      "category": "files",
+      "slug": "image-compressor",
+      "classification": "existing-equivalent",
+      "existingId": "compress"
+    },
+    {
+      "category": "files",
+      "slug": "jpg-to-png-converter",
+      "classification": "existing-equivalent",
+      "existingId": "convert"
+    },
+    {
+      "category": "files",
+      "slug": "png-to-jpg-converter",
+      "classification": "existing-equivalent",
+      "existingId": "convert"
+    },
+    {
+      "category": "files",
+      "slug": "webp-to-jpg-converter",
+      "classification": "existing-equivalent",
+      "existingId": "convert"
+    },
+    {
+      "category": "files",
+      "slug": "pdf-merger",
+      "classification": "existing-equivalent",
+      "existingId": "merge-pdf"
+    },
+    {
+      "category": "files",
+      "slug": "pdf-splitter",
+      "classification": "existing-equivalent",
+      "existingId": "split-pdf"
+    },
+    {
+      "category": "files",
+      "slug": "image-cropper",
+      "classification": "existing-equivalent",
+      "existingId": "crop"
+    },
+    {
+      "category": "files",
+      "slug": "svg-to-png-converter",
+      "classification": "existing-equivalent",
+      "existingId": "svg-to-png"
+    },
+    {
+      "category": "files",
+      "slug": "image-to-base64-converter",
+      "classification": "extension",
+      "existingId": "base64"
+    },
+    {
+      "category": "files",
+      "slug": "csv-viewer",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "psd-to-png-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "mp3-to-midi-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "dwg-to-pdf-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "bank-statement-pdf-to-csv-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "files",
+      "slug": "stl-to-g-code-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "paint-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "concrete-bag-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "gravel-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "mulch-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "roof-pitch-rafter-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "tile-calculator-with-waste",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "drywall-sheet-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "fence-material-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "deck-material-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "paver-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "topsoil-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "sod-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "hvac-btu-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "insulation-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "asphalt-driveway-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "roofing-shingle-bundle-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "retaining-wall-block-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "pond-liner-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "french-drain-gravel-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "wallpaper-roll-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "board-foot-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "stair-stringer-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "stud-wall-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "pipe-volume-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "ramp-slope-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "gutter-size-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "ac-tonnage-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "building",
+      "slug": "construction-estimate-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "gamepad-tester",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "screen-ppi-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "touchscreen-dead-zone-tester",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "camera-shutter-count-checker",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "ohms-law-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "voltage-drop-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "wire-size-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "battery-runtime-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "tv-viewing-distance-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "projector-throw-distance-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "generator-wattage-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "solar-panel-output-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "led-resistor-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "ups-runtime-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "solar-battery-bank-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "hardware",
+      "slug": "speaker-box-volume-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "percentage-calculator",
+      "classification": "existing-equivalent",
+      "existingId": "percentage-calculator"
+    },
+    {
+      "category": "planning",
+      "slug": "bmi-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "age-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "unit-converter",
+      "classification": "existing-equivalent",
+      "existingId": "unit-converter"
+    },
+    {
+      "category": "planning",
+      "slug": "random-number-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "time-zone-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "date-difference-calculator",
+      "classification": "extension",
+      "existingId": "date-calculator"
+    },
+    {
+      "category": "planning",
+      "slug": "stopwatch",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "countdown-timer",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "calorie-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "gpa-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "grade-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "dice-roller",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "coin-flip",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "pool-volume-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "aquarium-volume-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "coffee-ratio-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "rice-water-ratio-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "turkey-thaw-time-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "meat-cooking-time-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "pizza-dough-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "sourdough-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "bread-hydration-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "cake-pan-size-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "yeast-converter",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "sewing-fabric-yardage-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "wedding-seating-chart-builder",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "photography-contract-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "shipping-dimensional-weight-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "pallet-loading-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "propane-usage-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "planning",
+      "slug": "cocktail-dilution-calculator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "names",
+      "slug": "podcast-name-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "names",
+      "slug": "band-name-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "names",
+      "slug": "clan-name-generator",
+      "classification": "new-task",
+      "existingId": null
+    },
+    {
+      "category": "names",
+      "slug": "dnd-name-generator",
+      "classification": "new-task",
+      "existingId": null
+    }
+  ]
+}

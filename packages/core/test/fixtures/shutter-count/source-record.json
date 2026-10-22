@@ -1,0 +1,15 @@
+{
+  "catalog": "https://raw.pixls.us/json/getrepository.php",
+  "record": 5227,
+  "row": [
+    "Nikon",
+    "D2H",
+    "12bit 12bit compressed (Lossy (type 1)) (3:2)",
+    4.11,
+    "color target",
+    "<a href='https://creativecommons.org/publicdomain/zero/1.0/' title='Creative Commons 0 - Public Domain' class='cc'>co</a>",
+    "2022-02-18",
+    "<a href='https://raw.pixls.us/getfile.php/5227/nice/Nikon - D2H - 12bit 12bit compressed (Lossy (type 1)) (3:2).NEF'>Nikon - D2H - 12bit 12bit compressed (Lossy (type 1)) (3:2).NEF</a><div class='checksumdata'><span title='sha256 Checksum'>155edb938f884ea7372ce98d4ff5f965c3e413b43b95bc9923da6e92082cf914</span>&nbsp;(3.09MB)</div>",
+    "<a target='_blank' href='https://raw.pixls.us/getfile.php/5227/exif/D2H_3957.NEF.exif.txt'>exifdata</a>"
+  ]
+}

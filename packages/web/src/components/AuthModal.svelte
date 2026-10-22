@@ -1,30 +1,33 @@
 <script lang="ts">
   // AuthModal — the global "enter your API key" surface. Two screens:
   //   - "activate": paste a key, hit Activate, server returns { email, balance }
-  //   - "create":   enter an email, server emails a key and (browser surface
-  //                 only) returns the rawKey once for the in-modal copy view
+  //   - "create": enter an email, then activate the key delivered to that inbox
   //
   // Mounted in BaseLayout via <AuthModal client:load /> so any component can
   // trigger it by dispatching `window.dispatchEvent(new Event('wyreup:auth-open'))`.
 
   import { onMount } from 'svelte';
-  import { activate, hydrateUser } from '../stores/user';
+  import { activate } from '../stores/user';
 
-  type Screen = 'closed' | 'activate' | 'create' | 'created';
+  type Screen = 'closed' | 'activate' | 'create';
 
   let screen: Screen = 'closed';
   let keyInput = '';
   let emailInput = '';
   let busy = false;
   let error = '';
-  let createdKey = '';
-  let createdKeyCopied = false;
+  let emailSent = false;
   let dialogEl: HTMLDivElement | null = null;
   let firstFocusEl: HTMLInputElement | null = null;
+  let previouslyFocused: HTMLElement | null = null;
+  let operationGeneration = 0;
 
   function open() {
     // Default to sign-up — the common case for someone hitting a PRO
     // tool without an account. Returning key-holders use the activate link.
+    previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    operationGeneration++;
+    busy = false;
     screen = 'create';
     error = '';
     keyInput = '';
@@ -33,21 +36,29 @@
   }
 
   function close() {
+    const restoreFocusTo = previouslyFocused;
+    operationGeneration++;
+    busy = false;
     screen = 'closed';
     error = '';
     keyInput = '';
     emailInput = '';
-    createdKey = '';
-    createdKeyCopied = false;
+    emailSent = false;
+    previouslyFocused = null;
+    setTimeout(() => restoreFocusTo?.focus(), 0);
   }
 
   function gotoCreate() {
+    operationGeneration++;
+    busy = false;
     screen = 'create';
     error = '';
     setTimeout(() => firstFocusEl?.focus(), 30);
   }
 
   function gotoActivate() {
+    operationGeneration++;
+    busy = false;
     screen = 'activate';
     error = '';
     setTimeout(() => firstFocusEl?.focus(), 30);
@@ -56,18 +67,28 @@
   async function onActivate() {
     error = '';
     busy = true;
-    const res = await activate(keyInput.trim());
-    busy = false;
-    if (res.ok) {
-      close();
-    } else {
-      error = res.error;
+    const generation = ++operationGeneration;
+    try {
+      const res = await activate(keyInput.trim());
+      if (generation !== operationGeneration) return;
+      if (res.ok) {
+        close();
+      } else {
+        error = res.error;
+      }
+    } catch {
+      if (generation === operationGeneration) {
+        error = 'Could not reach Wyreup. Check your connection and try again.';
+      }
+    } finally {
+      if (generation === operationGeneration) busy = false;
     }
   }
 
   async function onCreate() {
     error = '';
     busy = true;
+    const generation = ++operationGeneration;
     try {
       const res = await fetch('/api/account/create', {
         method: 'POST',
@@ -76,47 +97,56 @@
       });
       const data = (await res.json().catch(() => ({}))) as {
         status?: string;
-        rawKey?: string;
         error?: string;
       };
+      if (generation !== operationGeneration) return;
       if (!res.ok) {
         error = data.error || `Couldn't create account (${res.status})`;
         return;
       }
-      if (data.status === 'exists') {
-        screen = 'activate';
-        error = 'An account already exists for that email. Check your inbox for a notice, then paste your key below.';
+      if (data.status !== 'check_email') {
+        error = 'Unexpected response. Please try requesting your key again.';
         return;
       }
-      if (data.rawKey) {
-        // The server set the session cookie — the user is already signed
-        // in. Hydrate the store so the rest of the UI reflects it.
-        createdKey = data.rawKey;
-        await hydrateUser();
-        screen = 'created';
-        return;
-      }
-      // Browser path should always include rawKey; if not, fall through.
-      error = 'Account created — check your email for the key.';
+      emailSent = true;
       screen = 'activate';
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function copyKey() {
-    try {
-      await navigator.clipboard.writeText(createdKey);
-      createdKeyCopied = true;
-      setTimeout(() => (createdKeyCopied = false), 2000);
+      setTimeout(() => firstFocusEl?.focus(), 30);
     } catch {
-      /* clipboard blocked — user can still select manually */
+      if (generation === operationGeneration) {
+        error = 'Could not reach Wyreup. Check your connection and try again.';
+      }
+    } finally {
+      if (generation === operationGeneration) busy = false;
     }
   }
 
   function onKeyDown(e: KeyboardEvent) {
     if (screen === 'closed') return;
-    if (e.key === 'Escape') close();
+    if (e.key === 'Escape') {
+      close();
+      return;
+    }
+    if (e.key !== 'Tab' || !dialogEl) return;
+
+    const focusable = Array.from(
+      dialogEl.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]',
+      ),
+    ).filter((element) => element.tabIndex !== -1);
+    if (focusable.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusable[0]!;
+    const last = focusable.at(-1)!;
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !dialogEl.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !dialogEl.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   function onOpenEvent() {
@@ -151,7 +181,7 @@
       <button type="button" class="close" aria-label="Close" on:click={close}>×</button>
 
       {#if screen === 'activate'}
-        <h2 id="auth-modal-title">Enter your key</h2>
+        <h2 id="auth-modal-title">{emailSent ? 'Check your inbox' : 'Enter your key'}</h2>
         <p class="hint">Paste the <code>wk_live_…</code> key from your email to unlock PRO tools.</p>
 
         <form on:submit|preventDefault={onActivate}>
@@ -172,7 +202,7 @@
             <button type="submit" class="primary" disabled={busy || !keyInput.trim()}>
               {busy ? 'Activating…' : 'Activate'}
             </button>
-            <button type="button" class="link" on:click={gotoCreate}>Don't have one? Get one →</button>
+            <button type="button" class="link" on:click={gotoCreate}>Need a new key? Email one →</button>
           </div>
         </form>
       {:else if screen === 'create'}
@@ -200,21 +230,6 @@
             <button type="button" class="link" on:click={gotoActivate}>Already have one? Activate →</button>
           </div>
         </form>
-      {:else if screen === 'created'}
-        <h2 id="auth-modal-title">You're in</h2>
-        <p class="hint">
-          Your account is ready and you're signed in. Here's your API key
-          for the CLI and MCP — we've emailed it to you as well.
-        </p>
-        <div class="key-display" tabindex="0">{createdKey}</div>
-        <div class="row">
-          <button type="button" class="primary" on:click={copyKey}>
-            {createdKeyCopied ? 'Copied' : 'Copy key'}
-          </button>
-          <button type="button" class="secondary" on:click={close}>
-            Done
-          </button>
-        </div>
       {/if}
     </div>
   </div>
@@ -287,19 +302,6 @@
     outline-offset: 1px;
   }
 
-  .key-display {
-    width: 100%;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--text-primary);
-    word-break: break-all;
-    margin-bottom: var(--space-4);
-  }
-
   .error {
     color: var(--accent-text);
     font-size: var(--text-sm);
@@ -314,8 +316,7 @@
     flex-wrap: wrap;
   }
 
-  .primary,
-  .secondary {
+  .primary {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     padding: var(--space-2) var(--space-4);
@@ -335,13 +336,6 @@
   .primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-  .secondary {
-    background: var(--bg-elevated);
-    color: var(--text-primary);
-  }
-  .secondary:hover {
-    background: var(--bg-raised);
   }
 
   .link {

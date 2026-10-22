@@ -1,5 +1,7 @@
 export interface IpSubnetCalcParams {
   cidr?: string;
+  splitEnabled?: boolean;
+  splitPrefix?: number;
 }
 
 export interface IpSubnetResult {
@@ -16,4 +18,13 @@ export interface IpSubnetResult {
 
 export const defaultIpSubnetCalcParams: IpSubnetCalcParams = {
   cidr: '192.168.1.0/24',
+  splitEnabled: false,
+  splitPrefix: 26,
 };
+
+export interface IpSubnetSplitResult {
+  source: IpSubnetResult;
+  splitPrefix: number;
+  subnetCount: number;
+  subnets: IpSubnetResult[];
+}

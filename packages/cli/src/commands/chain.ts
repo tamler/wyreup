@@ -1,7 +1,7 @@
 import { readFile, mkdir } from 'node:fs/promises';
 import { basename, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createDefaultRegistry, runChain, parseChainString, serializeChain } from '@wyreup/core';
+import { createDefaultRegistry, runChain, parseChainString, serializeChain, toolRunsOnSurface } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
@@ -9,6 +9,7 @@ import { buildDryRun } from './chain-dryrun.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
 import { resolveTimeout } from '../lib/safety/timeout.js';
 import { printError } from '../lib/safety/print-error.js';
+import { resolveProOrigin } from '../lib/credentials.js';
 
 // ──── chain URL parser ────────────────────────────────────────────────────────
 
@@ -152,9 +153,14 @@ export async function executeChain(inputPaths: string[], opts: ChainOptions): Pr
   const registry = createDefaultRegistry();
   for (let i = 0; i < chain.length; i++) {
     const step = chain[i]!;
-    if (!registry.toolsById.has(step.toolId)) {
+    const tool = registry.toolsById.get(step.toolId);
+    if (!tool) {
       const allIds = Array.from(registry.toolsById.keys());
       process.stderr.write(`In step ${i + 1}: ` + formatSuggestion(step.toolId, allIds));
+      process.exit(1);
+    }
+    if (!toolRunsOnSurface(tool, 'cli')) {
+      process.stderr.write(`Tool "${tool.id}" is not available on CLI. Use its web page.\n`);
       process.exit(1);
     }
   }
@@ -208,7 +214,8 @@ export async function executeChain(inputPaths: string[], opts: ChainOptions): Pr
 
   // Build a wrapped context that saves intermediates per step
   const ac = new AbortController();
-  process.on('SIGINT', () => ac.abort());
+  const onSigint = () => ac.abort();
+  process.on('SIGINT', onSigint);
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   if (timeoutMs > 0) {
     timeoutHandle = setTimeout(
@@ -227,52 +234,43 @@ export async function executeChain(inputPaths: string[], opts: ChainOptions): Pr
     signal: ac.signal,
     cache: new Map(),
     executionId: randomUUID(),
+    proOrigin: resolveProOrigin(),
   };
 
-  // Run with intermediate saves if requested
   let outputs: Blob[];
 
-  if (saveDir) {
-    // Run step by step to capture intermediates
-    let current: File[] = inputFiles;
-    for (let i = 0; i < chain.length; i++) {
-      const step = chain[i]!;
-      const tool = registry.toolsById.get(step.toolId)!;
-      const params = { ...(tool.defaults as Record<string, unknown>), ...step.params };
-      const result = await tool.run(current, params, ctx);
-      const blobs = Array.isArray(result) ? result : [result];
-      // Save intermediates
-      for (let j = 0; j < blobs.length; j++) {
-        const blob = blobs[j]!;
-        const ext = extFromMime(blob.type);
-        const outPath = join(saveDir, `step-${i + 1}-${step.toolId}-${j}${ext}`);
-        const writeErr = await atomicPublish(
-          outPath,
-          new Uint8Array(await blob.arrayBuffer()),
-          opts.overwrite ?? false,
-        );
-        if (writeErr) throw new Error(writeErr);
-        if (opts.verbose) {
-          process.stderr.write(`Intermediate: ${outPath}\n`);
-        }
-      }
-      current = blobs.map((b, j) => {
-        const name = current[j]?.name ?? `step-${i}-${j}`;
-        return new File([b], name, { type: b.type });
-      });
-    }
-    outputs = current.map((f) => new Blob([f], { type: f.type }));
-  } else {
+  try {
     try {
-      outputs = await runChain(chain, inputFiles, ctx, registry);
+      outputs = await runChain(chain, inputFiles, ctx, registry, 0, {
+        onStepComplete: saveDir
+          ? async ({ index, step, outputs: stepOutputs }) => {
+              for (let j = 0; j < stepOutputs.length; j++) {
+                const blob = stepOutputs[j]!;
+                const ext = extFromMime(blob.type);
+                const outPath = join(
+                  saveDir,
+                  `step-${index + 1}-${step.toolId}-${j}${ext}`,
+                );
+                const writeErr = await atomicPublish(
+                  outPath,
+                  new Uint8Array(await blob.arrayBuffer()),
+                  opts.overwrite ?? false,
+                );
+                if (writeErr) throw new Error(writeErr);
+                if (opts.verbose) process.stderr.write(`Intermediate: ${outPath}\n`);
+              }
+            }
+          : undefined,
+      });
     } catch (err) {
-      await printError('Chain error', err);
+      const allFree = chain.every((step) => registry.toolsById.get(step.toolId)?.cost === 'free');
+      await printError('Chain error', err, allFree ? null : undefined);
       process.exit(1);
-    } finally {
-      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
     }
+  } finally {
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+    process.off('SIGINT', onSigint);
   }
-  if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
 
   if (outputs.length === 0) {
     process.stderr.write('Chain produced no output.\n');

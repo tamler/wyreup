@@ -1,10 +1,60 @@
 import { describe, it, expect, vi } from 'vitest';
-import { __readImageBytes, __isDisallowedHost, readImageRef, runPro } from './runners';
+import { __readImageBytes, readImageRef, runPro, prepareProRun } from './runners';
 import type { Env } from './env';
+import { PRICING } from './pricing';
 
 // A 1x1 PNG, base64.
 const TINY_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+describe('preparing Pro dispatch', () => {
+  it('prepares every priced runner without provider work', () => {
+    const env = aiEnv({ response: 'ok' });
+    for (const toolId of Object.keys(PRICING)) {
+      const dispatch = prepareProRun(
+        toolId,
+        {
+          text: 'text',
+          question: 'question',
+          prompt: 'prompt',
+          description: 'description',
+          target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'en',
+          image: `data:image/png;base64,${TINY_PNG}`,
+          imageBase64: TINY_PNG,
+          audioBase64: 'QUJD',
+        },
+        env,
+      );
+      expect(typeof dispatch, toolId).toBe('function');
+    }
+    expect(vi.spyOn(env.AI, 'run')).not.toHaveBeenCalled();
+  });
+  it('rejects malformed input before any provider work', () => {
+    const env = aiEnv({ response: 'ok' });
+    expect(() => prepareProRun('text-summarize-pro', {}, env)).toThrow();
+    expect(vi.spyOn(env.AI, 'run')).not.toHaveBeenCalled();
+  });
+  it('captures validated input without invoking a provider until dispatch', async () => {
+    const env = aiEnv({ response: 'summary' });
+    const input = { text: 'original' };
+    const dispatch = prepareProRun('text-summarize-pro', input, env);
+    input.text = '';
+    expect(vi.spyOn(env.AI, 'run')).not.toHaveBeenCalled();
+    await expect(dispatch()).resolves.toEqual({ summary: 'summary' });
+  });
+  it('rejects normalized mapped private addresses', () => {
+    expect(() => readImageRef({ image: 'https://[::ffff:127.0.0.1]/private' })).toThrow();
+  });
+  it.each([
+    ['text-to-speech-pro', { text: 'hello', language: 'XX' }],
+    ['image-generate-pro', { prompt: 'image', steps: 1.5 }],
+    ['text-translate-pro', { text: 'hello', target: 'x'.repeat(101) }],
+    ['transcribe-pro', { audioBase64: '!!!' }],
+    ['ocr-hq', { imageBase64: 'QUJD' }],
+  ])('rejects malformed runner-specific values for %s', (toolId, input) => {
+    expect(() => prepareProRun(toolId, input as Record<string, unknown>, aiEnv({}))).toThrow();
+  });
+});
 
 function aiEnv(result: unknown) {
   return { AI: { run: vi.fn().mockResolvedValue(result) } } as unknown as Env;
@@ -228,33 +278,28 @@ describe('pdf-q-and-a runner', () => {
 });
 
 describe('readImageRef SSRF validation', () => {
-  it('accepts a public https URL', () => {
-    expect(readImageRef({ image: 'https://example.com/cat.png' })).toBe(
-      'https://example.com/cat.png',
-    );
-  });
-
   it('accepts a data:image/ URL', () => {
     const data = `data:image/png;base64,${TINY_PNG}`;
     expect(readImageRef({ image: data })).toBe(data);
   });
 
   it('rejects an http:// URL', () => {
-    expect(() => readImageRef({ image: 'http://example.com/cat.png' })).toThrow('public host');
+    expect(() => readImageRef({ image: 'http://example.com/cat.png' })).toThrow('data URL');
   });
 
   it('rejects the cloud metadata IP', () => {
     expect(() => readImageRef({ image: 'https://169.254.169.254/latest/meta-data/' })).toThrow(
-      'public host',
+      'data URL',
     );
   });
 
   it('rejects https://localhost', () => {
-    expect(() => readImageRef({ image: 'https://localhost/x' })).toThrow('public host');
+    expect(() => readImageRef({ image: 'https://localhost/x' })).toThrow('data URL');
   });
 
-  it('blocks private and loopback hosts', () => {
+  it('rejects all externally fetched URLs including DNS and redirect paths', () => {
     for (const h of [
+      'example.com',
       'localhost',
       'host.local',
       '127.0.0.1',
@@ -270,13 +315,15 @@ describe('readImageRef SSRF validation', () => {
       'fc00::1',
       '::ffff:127.0.0.1',
     ]) {
-      expect(__isDisallowedHost(h)).toBe(true);
+      expect(() => readImageRef({ image: `https://${h}/image.png` })).toThrow('data URL');
     }
   });
 
-  it('allows public hosts', () => {
-    for (const h of ['example.com', '8.8.8.8', '1.1.1.1', '172.15.0.1', '172.32.0.1']) {
-      expect(__isDisallowedHost(h)).toBe(false);
-    }
+  it.each([
+    'data:image/svg+xml;base64,PHN2Zz4=',
+    'data:image/png;base64,YWJj',
+    'data:image/jpeg;base64,!!!',
+  ])('rejects invalid image upload %s', (image) => {
+    expect(() => readImageRef({ image })).toThrow();
   });
 });

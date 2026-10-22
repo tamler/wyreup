@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/mcp",
   "version": "1.0.3",
-  "description": "MCP server exposing Wyreup's privacy-first file tools to Claude Code, Claude Desktop, and any MCP-compatible agent.",
+  "description": "MCP server exposing Wyreup's local tools, public network lookups, and hosted PRO tools to MCP-compatible agents.",
   "keywords": [
     "wyreup",
     "mcp",
@@ -10,9 +10,7 @@
     "agent",
     "privacy",
     "image",
-    "pdf",
-    "offline",
-    "local"
+    "pdf"
   ],
   "license": "MIT",
   "homepage": "https://wyreup.com/mcp",

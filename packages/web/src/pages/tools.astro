@@ -4,7 +4,7 @@ import ToolFilter from '../components/ToolFilter.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 import SavedChainsSection from '../components/SavedChainsSection.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
-import { TOOL_PAGE_METADATA } from '../lib/seo';
+import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 const registry = createDefaultRegistry();
 
@@ -14,8 +14,11 @@ const tools = Array.from(registry.toolsById.values()).map((t) => ({
   name: t.name,
   category: t.category,
   categories: t.categories ?? [],
-  description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description,
-  keywords: t.keywords ?? [],
+  description: projectToolDiscoveryMetadata(t).description,
+  keywords: projectToolDiscoveryMetadata(t).keywords,
+  networkAccess: projectToolDiscoveryMetadata(t).networkAccess,
+  surfaces: t.surfaces,
+  inputMin: t.input.min,
   requiresWebgpu: t.requires?.webgpu,
   requires: t.requires
     ? { webgpu: t.requires.webgpu, minMemoryGB: t.requires.minMemoryGB }
@@ -146,9 +149,9 @@ function toolDisplayName(id: string): string {
 ---
 
 <BaseLayout
-  title="Image, PDF, audio & file tools — Wyreup"
-  description="Find tools to compress images, convert files, inspect PDFs, remove metadata and process audio or text. Free browser tools and clearly labeled hosted PRO options."
-  ogDescription="Browse image, PDF, audio, video, text, data and developer tools. Free tools execute on your device; optional hosted PRO tools explain their data flow."
+  title="Calculators, generators, developer & file tools — Wyreup"
+  description="Find calculators, generators, developer utilities, browser hardware tests and image, PDF, audio or file tools. Check each task's inputs and local or hosted processing."
+  ogDescription="Browse image, PDF, audio, video, text, data and developer tools. Check each tool's local, network or hosted processing requirements."
 >
   <div class="reserve-pwa-banner">
     <PwaOnboardBanner client:load />
@@ -156,7 +159,7 @@ function toolDisplayName(id: string): string {
   <section class="tools-page">
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title">Image, PDF and file tools</h1>
+        <h1 class="page-title">Calculators, generators, developer and file tools</h1>
       </div>
 
       <div class="reserve-saved-chains">

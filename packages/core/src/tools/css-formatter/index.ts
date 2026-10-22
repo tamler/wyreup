@@ -89,10 +89,15 @@ export const cssFormatter: ToolModule<CssFormatterParams> = {
     if (mode === 'minify') {
       result = minifyCss(text);
     } else {
-      const prettier = await import('prettier');
+      const [prettier, postcss] = await Promise.all([
+        import('prettier/standalone'),
+        import('prettier/plugins/postcss'),
+      ]);
+      if (ctx.signal.aborted) throw new Error('Aborted');
       try {
         result = await prettier.format(text, {
           parser: 'css',
+          plugins: [postcss],
           printWidth: params.printWidth ?? 80,
           tabWidth: params.tabWidth ?? 2,
         });
@@ -101,6 +106,7 @@ export const cssFormatter: ToolModule<CssFormatterParams> = {
       }
     }
 
+    if (ctx.signal.aborted) throw new Error('Aborted');
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([result], { type: 'text/css' })];
   },

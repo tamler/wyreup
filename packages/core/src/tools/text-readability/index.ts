@@ -1,5 +1,4 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
-import rs from 'text-readability';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface TextReadabilityParams {}
@@ -55,6 +54,9 @@ export const textReadability: ToolModule<TextReadabilityParams> = {
       throw new Error('Input text is empty.');
     }
 
+    if (ctx.signal.aborted) throw new Error('Aborted');
+
+    const { default: rs } = await import('text-readability');
     if (ctx.signal.aborted) throw new Error('Aborted');
 
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Computing scores' });

@@ -113,7 +113,7 @@
       await Promise.all(toDelete.map((r) => cache.delete(r)));
       // Also drop the in-memory pipeline that loaded these weights so a
       // subsequent run truly hits disk (which is now empty for them).
-      const { clearPipelineCache } = await import('@wyreup/core');
+      const { clearPipelineCache } = await import('../lib/core-execution');
       clearPipelineCache();
       broadcastChange();
     } finally {
@@ -142,7 +142,7 @@
     memoryClearing = true;
     memoryCleared = false;
     try {
-      const { clearPipelineCache } = await import('@wyreup/core');
+      const { clearPipelineCache } = await import('../lib/core-execution');
       clearPipelineCache();
       memoryCleared = true;
       broadcastChange();
@@ -178,7 +178,7 @@
         targets.map((name) => caches.delete(name).catch(() => false)),
       );
       const cachesCleared = results.filter(Boolean).length;
-      const { clearPipelineCache } = await import('@wyreup/core');
+      const { clearPipelineCache } = await import('../lib/core-execution');
       clearPipelineCache();
       await refresh();
       const freedMb = Math.max(0, Math.round((before - usageMb) * 10) / 10);

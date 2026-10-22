@@ -99,6 +99,8 @@ describe('worker supervisor timeout=0 [spec §#3]', () => {
         outputPath: join(tmp, 'out.jpg'),
         timeoutMs: 0,
         proOrigin: 'https://wyreup.com',
+        modelCdn: 'https://models.wyreup.com',
+        modelAllowedOrigins: ['https://models.wyreup.com'],
         allowedRoots: '*',
         allowOverwrite: true,
         maxBytes: 500 * 1024 * 1024,

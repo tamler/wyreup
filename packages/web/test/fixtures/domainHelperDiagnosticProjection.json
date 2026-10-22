@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "scope": "Prospective H4/H5 incomplete-record semantic projection. This is a proposed root-owned test oracle, not an existing or executed helper protocol.",
+  "recordProperty": "lifecycle",
+  "projectionKeys": ["schemaVersion", "status", "phase", "ownedRoot", "child", "writer"],
+  "common": {"schemaVersion": 1, "status": "incomplete", "phase": "functions-build"},
+  "ownedRootAuthority": "Exactly the owned working-tree path returned by the controlled mkdtemp boundary and used by the actual helper. Record that argument/result independently; do not read a private helper variable or invent the diagnostic path.",
+  "childKeys": ["pid", "closed", "exitCode", "signalCode"],
+  "writerKeys": ["endRequested", "finished"],
+  "variants": {
+    "H4": {"child": {"pid": 7001, "closed": true, "exitCode": 0, "signalCode": null}, "writer": {"endRequested": true, "finished": false}},
+    "H5": {"child": {"pid": 7001, "closed": false, "exitCode": null, "signalCode": null}, "writer": {"endRequested": true, "finished": true}}
+  },
+  "payloadAuthority": "Parse and retain complete actual JSON passed by the helper to each controlled writeFile. Compare this named lifecycle projection exactly, with no extra projection/nested keys. Preserve and record existing outer payload fields; this projection does not certify log completeness or authorize deleting evidence.",
+  "pathAuthority": "Existing failedLaunch path and the actual future reviewed AFTER terminal path come from the immutable source-keyed root expectation row. BEFORE terminal:null remains protocol absent. Exercise the public entry and freeze endpoint observations before reporting absent protocol; do not short-circuit a case before its actual deadline/stream/process result.",
+  "failedWriteAuthority": "For E_DWRITE variants retain the exact attempted native JSON and injected Error identity, then require the second terminal attempt with the same known incomplete state. No synthetic successful payload may replace a failed write.",
+  "limits": "Only helper H/P authoring is released. Suite callbacks, HTTP, SDK and real OS child operations remain outside scope. This proposed projection requires affected final source review alongside the future producer and tests; no runtime or diagnostic acceptance is claimed."
+}

@@ -3,7 +3,7 @@
  * a user assembles from the /tools catalog. Schema version 1.
  */
 
-import { createDefaultRegistry, validateChain, type Chain } from '@wyreup/core';
+import { createDefaultRegistry, validateChain, type Chain } from '@wyreup/core/execution';
 
 const TOOLBELT_KEY = 'wyreup:toolbelt:chains';
 const SCHEMA_VERSION = 1;

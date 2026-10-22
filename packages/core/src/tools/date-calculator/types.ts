@@ -7,6 +7,9 @@ export interface DateCalculatorParams {
   date2?: string; // ISO 8601 YYYY-MM-DD (for diff mode)
   amount?: number; // for add mode
   unit?: DateUnit; // for add mode
+  weekend?: number[];
+  holidays?: string[];
+  overflow?: 'constrain' | 'reject';
 }
 
 export const defaultDateCalculatorParams: DateCalculatorParams = {
@@ -15,4 +18,7 @@ export const defaultDateCalculatorParams: DateCalculatorParams = {
   date2: '2026-12-31',
   amount: 30,
   unit: 'days',
+  weekend: [6, 7],
+  holidays: [],
+  overflow: 'constrain',
 };

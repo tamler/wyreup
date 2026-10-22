@@ -46,6 +46,7 @@ export async function verifySessionCookie(
   cookie: string,
   secret: string,
 ): Promise<SessionPayload | null> {
+  if (cookie.length > 512) return null;
   const parts = cookie.split('.');
   if (parts.length !== 4) return null;
   const [uid, kid, expStr, mac] = parts;
@@ -53,7 +54,7 @@ export async function verifySessionCookie(
   const expected = await hmacSha256Hex(secret, body);
   if (!timingSafeEqualHex(mac, expected)) return null;
   const exp = Number(expStr);
-  if (!Number.isFinite(exp) || exp < Date.now()) return null;
+  if (!Number.isFinite(exp) || exp <= Date.now()) return null;
   return { uid, kid, exp };
 }
 
@@ -65,7 +66,13 @@ export function parseCookies(header: string | null): Record<string, string> {
     if (eq < 0) continue;
     const k = piece.slice(0, eq).trim();
     const v = piece.slice(eq + 1).trim();
-    if (k) out[k] = decodeURIComponent(v);
+    if (k) {
+      try {
+        out[k] = decodeURIComponent(v);
+      } catch {
+        // Ignore malformed cookies without blocking valid Bearer auth.
+      }
+    }
   }
   return out;
 }

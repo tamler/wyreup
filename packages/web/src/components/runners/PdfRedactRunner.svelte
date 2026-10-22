@@ -1,27 +1,50 @@
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
+  import type { PDFDocumentProxy, PDFDocumentLoadingTask, PDFPageProxy, RenderTask } from 'pdfjs-dist';
   import DropZone from './DropZone.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import type { PreloadAdmission, SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  onDestroy(releaseOwnedWakeLocks);
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
   type State = 'idle' | 'rendering' | 'editing' | 'running' | 'done' | 'error';
 
   interface DrawRect {
     /** 1-indexed page number. */
     page: number;
-    /** Canvas-space rectangle (px, top-left origin). */
+    /** Fractions of the rendered canvas, with a top-left origin. */
     canvasX: number;
     canvasY: number;
     canvasW: number;
     canvasH: number;
+    pdf: { page: number; x: number; y: number; width: number; height: number };
+  }
+
+  interface RenderedPage {
+    page: number;
+    generation: number;
+    renderGeneration: number;
+    pdf: PDFDocumentProxy;
+    canvas: HTMLCanvasElement;
+    viewport: ReturnType<PDFPageProxy['getViewport']>;
+    width: number;
+    height: number;
   }
 
   // Color presets — keep simple. Custom hex picker would be next iteration.
@@ -36,14 +59,22 @@
   let state: State = 'idle';
   let progress: ToolProgress = { stage: 'processing', percent: 0, message: '' };
   let errorMsg = '';
+  let previousCloseWarning = '';
 
-  let pdfDoc: unknown = null;
+  let pdfDoc: PDFDocumentProxy | null = null;
+  let loadingTask: PDFDocumentLoadingTask | null = null;
+  let renderTask: RenderTask | null = null;
+  let generation = 0;
+  let renderGeneration = 0;
+  let disposed = false;
+  let controller: AbortController | null = null;
+  let attemptedFile: File | null = null;
+  let seenPreload = preloadedFile;
+  let originalFile: File | null = preloadedFile;
+  const recoveryUrls = new Set<string>();
   let pageCount = 0;
   let currentPage = 1;
-  // Rendered viewport scale (canvas px / PDF pt). Filled per-render.
-  let viewportScale = 1.5;
-  let pageWidthPt = 0;
-  let pageHeightPt = 0;
+  let renderedPage: RenderedPage | null = null;
 
   let canvasEl: HTMLCanvasElement;
   let overlayEl: HTMLDivElement;
@@ -54,22 +85,27 @@
   let drawing = false;
   let dragStart: { x: number; y: number } | null = null;
   let dragCurrent: { x: number; y: number } | null = null;
+  let drawingPointer: { id: number; rendered: RenderedPage } | null = null;
 
   let resultBlob: Blob | null = null;
   let resultUrl: string | null = null;
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
+  $: if (preloadedFile && preloadedFile !== seenPreload) {
+    seenPreload = preloadedFile;
+    onFiles(new CustomEvent('files', { detail: [preloadedFile] }));
   }
 
-  $: if (files.length > 0 && !pdfDoc && state !== 'rendering') {
-    void loadPdf();
+  $: if (files[0] && files[0] !== attemptedFile) {
+    attemptedFile = files[0];
+    void loadPdf(files[0]);
   }
 
   $: pageRectangles = rectangles.filter((r) => r.page === currentPage);
 
   function onFiles(e: CustomEvent<File[]>) {
+    closePdf(); attemptedFile = null;
     files = e.detail;
+    originalFile = files[0] ?? originalFile;
     dropError = '';
     state = 'idle';
     pdfDoc = null;
@@ -83,13 +119,31 @@
     resultBlob = null;
   }
 
-  async function loadPdf() {
+  function cancelRender() {
+    cancelGesture();
+    renderedPage = null;
+    renderGeneration++;
+    const task = renderTask; renderTask = null;
+    task?.cancel();
+  }
+
+  function closePdf() {
+    generation++; controller?.abort(); controller = null; cancelRender();
+    const task = loadingTask; loadingTask = null; pdfDoc = null;
+    if (task) void task.destroy().catch(() => { if (!disposed) previousCloseWarning = 'Could not close the previous PDF reader.'; });
+  }
+
+  async function loadPdf(file: File) {
+    closePdf(); attemptedFile = file; originalFile = file;
+    const own = generation;
     state = 'rendering';
     errorMsg = '';
     try {
+      if (tool.input.sizeLimit !== undefined && file.size > tool.input.sizeLimit) throw new Error('PDF exceeds this tool\'s size limit.');
       const { getDocument, GlobalWorkerOptions } = await import(
         'pdfjs-dist/legacy/build/pdf.mjs'
       );
+      if (disposed || generation !== own || files[0] !== file) return;
       // Worker: use the bundled worker from pdfjs-dist via vite resolution.
       if (!GlobalWorkerOptions.workerSrc) {
         const workerUrl = (await import(
@@ -97,102 +151,130 @@
         )) as { default: string };
         GlobalWorkerOptions.workerSrc = workerUrl.default;
       }
-      const buffer = await files[0]!.arrayBuffer();
-      const pdf = await getDocument({ data: new Uint8Array(buffer) }).promise;
+      const buffer = await file.arrayBuffer();
+      if (disposed || generation !== own || files[0] !== file) return;
+      if (tool.input.sizeLimit !== undefined && buffer.byteLength > tool.input.sizeLimit) throw new Error('PDF exceeds this tool\'s size limit.');
+      const task = getDocument({ data: new Uint8Array(buffer) }); loadingTask = task;
+      const pdf = await task.promise;
+      if (disposed || generation !== own || files[0] !== file) return;
       pdfDoc = pdf;
       pageCount = pdf.numPages;
       currentPage = 1;
-      await tick();
-      if (!canvasEl) throw new Error('PDF preview canvas did not mount.');
-      await renderPage();
+      if (!await renderPage(own)) return;
+      if (disposed || generation !== own || files[0] !== file) return;
       state = 'editing';
+      if (file === preloadedFile) onPreloadAdmission?.({ file, status: 'admitted' });
     } catch (err) {
-      preloadedFile = null;
-      files = [];
-      pdfDoc = null;
-      pageCount = 0;
-      currentPage = 1;
-      rectangles = [];
-      pageWidthPt = 0;
-      pageHeightPt = 0;
-      state = 'error';
-      errorMsg = err instanceof Error ? err.message : String(err);
+      if (!disposed && generation === own && files[0] === file) {
+        state = 'error'; errorMsg = err instanceof Error ? err.message : String(err);
+        if (file === preloadedFile) onPreloadAdmission?.({ file, status: 'refused', message: errorMsg });
+      }
     }
   }
 
-  async function renderPage() {
-    if (!pdfDoc || !canvasEl) return;
-    const pdf = pdfDoc as {
-      getPage: (n: number) => Promise<{
-        getViewport: (opts: { scale: number }) => {
-          width: number;
-          height: number;
-        };
-        view: number[];
-        render: (opts: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => { promise: Promise<void> };
-      }>;
-    };
-    const page = await pdf.getPage(currentPage);
+  async function renderPage(own = generation): Promise<boolean> {
+    cancelRender(); const renderOwn = renderGeneration;
+    const pdf = pdfDoc; const requestedPage = currentPage;
+    if (!pdf) throw new Error('PDF reader unavailable.');
+    await tick();
+    if (disposed || generation !== own || renderGeneration !== renderOwn || pdfDoc !== pdf) return false;
+    const canvas = canvasEl;
+    if (!canvas) throw new Error('PDF editing canvas unavailable.');
+    const page = await pdf.getPage(requestedPage);
+    if (disposed || generation !== own || renderGeneration !== renderOwn || currentPage !== requestedPage) return false;
     const unscaled = page.getViewport({ scale: 1 });
+    if (!Number.isFinite(unscaled.width) || !Number.isFinite(unscaled.height) || unscaled.width <= 0 || unscaled.height <= 0) throw new Error('Invalid PDF page dimensions.');
     // Fit width to ~720 px; recompute scale so on different page sizes we
     // get a consistent on-screen size.
     const targetWidth = 720;
-    viewportScale = targetWidth / unscaled.width;
+    const viewportScale = targetWidth / unscaled.width;
     const viewport = page.getViewport({ scale: viewportScale });
-    canvasEl.width = viewport.width;
-    canvasEl.height = viewport.height;
-    const ctx = canvasEl.getContext('2d');
-    if (!ctx) throw new Error('Unable to create a 2D context for PDF preview.');
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    // Page dimensions in PDF points (view = [x0,y0,x1,y1]).
-    pageWidthPt = page.view[2]! - page.view[0]!;
-    pageHeightPt = page.view[3]! - page.view[1]!;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx || canvas.width < 1 || canvas.height < 1) throw new Error('PDF canvas could not be initialized.');
+    const task = page.render({ canvas, canvasContext: ctx, viewport }); renderTask = task;
+    try { await task.promise; }
+    catch (cause) {
+      if (disposed || generation !== own || renderGeneration !== renderOwn) return false;
+      throw cause;
+    }
+    if (disposed || generation !== own || renderGeneration !== renderOwn || currentPage !== requestedPage || canvasEl !== canvas) return false;
+    renderTask = null;
+    renderedPage = { page: requestedPage, generation: own, renderGeneration: renderOwn, pdf, canvas, viewport, width: canvas.width, height: canvas.height };
+    return true;
   }
 
   async function gotoPage(n: number) {
-    if (n < 1 || n > pageCount) return;
+    if (n < 1 || n > pageCount || state !== 'editing') return;
     currentPage = n;
-    await renderPage();
+    state = 'rendering'; const own = generation;
+    try { if (await renderPage(own) && generation === own && !disposed) state = 'editing'; }
+    catch (cause) { if (generation === own && !disposed) { state = 'error'; errorMsg = cause instanceof Error ? cause.message : 'Could not render this page.'; } }
   }
 
-  function relativePoint(e: MouseEvent | PointerEvent): { x: number; y: number } {
-    const rect = overlayEl.getBoundingClientRect();
+  function relativePoint(e: PointerEvent, rendered: RenderedPage): { x: number; y: number } | null {
+    const rect = rendered.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
     return {
-      x: Math.max(0, Math.min(rect.width, e.clientX - rect.left)),
-      y: Math.max(0, Math.min(rect.height, e.clientY - rect.top)),
+      x: Math.max(0, Math.min(rect.width, e.clientX - rect.left)) * rendered.width / rect.width,
+      y: Math.max(0, Math.min(rect.height, e.clientY - rect.top)) * rendered.height / rect.height,
     };
   }
 
+  function currentRender(rendered: RenderedPage): boolean {
+    return !disposed && state === 'editing' && renderedPage === rendered && generation === rendered.generation && renderGeneration === rendered.renderGeneration && currentPage === rendered.page && pdfDoc === rendered.pdf && canvasEl === rendered.canvas;
+  }
+
+  function cancelGesture(e?: PointerEvent) {
+    const pointer = drawingPointer;
+    if (e && pointer && e.pointerId !== pointer.id) return;
+    drawingPointer = null; drawing = false; dragStart = null; dragCurrent = null;
+    if (pointer && overlayEl?.hasPointerCapture(pointer.id)) overlayEl.releasePointerCapture(pointer.id);
+  }
+
   function onPointerDown(e: PointerEvent) {
-    if (e.button !== 0) return;
+    const rendered = renderedPage;
+    if (e.button !== 0 || drawingPointer || !rendered || !currentRender(rendered)) return;
+    const point = relativePoint(e, rendered);
+    if (!point) return;
     overlayEl.setPointerCapture(e.pointerId);
+    drawingPointer = { id: e.pointerId, rendered };
     drawing = true;
-    dragStart = relativePoint(e);
+    dragStart = point;
     dragCurrent = dragStart;
   }
 
   function onPointerMove(e: PointerEvent) {
-    if (!drawing || !dragStart) return;
-    dragCurrent = relativePoint(e);
+    const pointer = drawingPointer;
+    if (!pointer || pointer.id !== e.pointerId || !dragStart) return;
+    if (!currentRender(pointer.rendered)) { cancelGesture(); return; }
+    dragCurrent = relativePoint(e, pointer.rendered);
   }
 
   function onPointerUp(e: PointerEvent) {
-    if (!drawing || !dragStart || !dragCurrent) return;
-    overlayEl.releasePointerCapture(e.pointerId);
-    drawing = false;
+    const pointer = drawingPointer;
+    if (!pointer || pointer.id !== e.pointerId || !dragStart) return;
+    if (!currentRender(pointer.rendered)) { cancelGesture(); return; }
+    dragCurrent = relativePoint(e, pointer.rendered);
+    if (!dragCurrent) { cancelGesture(); return; }
     const x = Math.min(dragStart.x, dragCurrent.x);
     const y = Math.min(dragStart.y, dragCurrent.y);
     const w = Math.abs(dragCurrent.x - dragStart.x);
     const h = Math.abs(dragCurrent.y - dragStart.y);
     // Ignore tiny accidental clicks.
-    if (w >= 4 && h >= 4) {
+    const rendered = pointer.rendered;
+    const displayed = rendered.canvas.getBoundingClientRect();
+    if (w * displayed.width / rendered.width >= 4 && h * displayed.height / rendered.height >= 4) {
+      const a = rendered.viewport.convertToPdfPoint(x, y);
+      const b = rendered.viewport.convertToPdfPoint(x + w, y + h);
+      const pdf = { page: rendered.page, x: Math.min(a[0]!, b[0]!), y: Math.min(a[1]!, b[1]!), width: Math.abs(b[0]! - a[0]!), height: Math.abs(b[1]! - a[1]!) };
       rectangles = [
         ...rectangles,
-        { page: currentPage, canvasX: x, canvasY: y, canvasW: w, canvasH: h },
+        { page: rendered.page, canvasX: x / rendered.width, canvasY: y / rendered.height, canvasW: w / rendered.width, canvasH: h / rendered.height, pdf },
       ];
     }
-    dragStart = null;
-    dragCurrent = null;
+    cancelGesture();
   }
 
   function deleteRect(target: DrawRect) {
@@ -207,48 +289,34 @@
     rectangles = [];
   }
 
-  /**
-   * Convert a canvas-space rectangle (top-left origin, scaled) to a PDF
-   * rectangle (bottom-left origin, points).
-   */
-  function canvasToPdfRect(r: DrawRect): {
-    page: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } {
-    const widthPt = r.canvasW / viewportScale;
-    const heightPt = r.canvasH / viewportScale;
-    const xPt = r.canvasX / viewportScale;
-    // Y-flip: canvas origin top-left, PDF origin bottom-left.
-    const yPt = pageHeightPt - r.canvasY / viewportScale - heightPt;
-    return { page: r.page, x: xPt, y: yPt, width: widthPt, height: heightPt };
-  }
-
   async function run() {
-    if (rectangles.length === 0) return;
+    if (rectangles.length === 0 || state !== 'editing') return;
+    const own = generation; const input = files;
+    const abort = new AbortController(); controller = abort;
     state = 'running';
     errorMsg = '';
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
+      if (disposed || generation !== own) return;
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
       const preset = COLOR_PRESETS.find((p) => p.value === colorChoice) ?? COLOR_PRESETS[0]!;
 
-      const result = await toolModule.run(files, {
-        rectangles: rectangles.map(canvasToPdfRect),
+      const result = await toolModule.run(input, {
+        rectangles: rectangles.map(r => ({ ...r.pdf })),
         color: preset.rgb,
       }, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+        onProgress: (p) => { if (!disposed && generation === own) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
+      if (disposed || generation !== own) return;
 
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
@@ -260,15 +328,23 @@
       markToolUsed(tool.id);
       state = 'done';
     } catch (err) {
-      state = 'error';
-      errorMsg = err instanceof Error ? err.message : String(err);
+      if (!disposed && generation === own) { state = 'error'; errorMsg = err instanceof Error ? err.message : String(err); }
     } finally {
-      releaseWakeLock();
+      wake.release();
+      wakeOwners.delete(wake);
+      if (generation === own) controller = null;
     }
   }
 
   function reset() {
-    state = pdfDoc ? 'editing' : 'idle';
+    generation++; controller?.abort(); controller = null; cancelRender();
+    releaseOwnedWakeLocks();
+    state = pdfDoc ? 'rendering' : 'idle';
+    if (pdfDoc) {
+      const own = generation;
+      void renderPage(own).then((rendered) => { if (rendered && !disposed && generation === own) state = 'editing'; })
+        .catch((cause) => { if (!disposed && generation === own) { state = 'error'; errorMsg = cause instanceof Error ? cause.message : 'Could not render this page.'; } });
+    }
     errorMsg = '';
     if (resultUrl) {
       URL.revokeObjectURL(resultUrl);
@@ -276,6 +352,15 @@
     }
     resultBlob = null;
   }
+
+  function downloadOriginal() {
+    if (!originalFile) return;
+    const url = URL.createObjectURL(originalFile); recoveryUrls.add(url);
+    const link = document.createElement('a'); link.href = url; link.download = originalFile.name; link.click();
+  }
+  function retryOriginal() { if (originalFile) onFiles(new CustomEvent('files', { detail: [originalFile] })); }
+  function dismissOriginal() { originalFile = null; onFiles(new CustomEvent('files', { detail: [] })); }
+  onDestroy(() => { disposed = true; closePdf(); if (resultUrl) URL.revokeObjectURL(resultUrl); for (const url of recoveryUrls) URL.revokeObjectURL(url); recoveryUrls.clear(); });
 
   function download() {
     if (!resultUrl || !resultBlob) return;
@@ -288,10 +373,10 @@
   $: liveRect =
     drawing && dragStart && dragCurrent
       ? {
-          x: Math.min(dragStart.x, dragCurrent.x),
-          y: Math.min(dragStart.y, dragCurrent.y),
-          w: Math.abs(dragCurrent.x - dragStart.x),
-          h: Math.abs(dragCurrent.y - dragStart.y),
+          x: Math.min(dragStart.x, dragCurrent.x) / drawingPointer!.rendered.width,
+          y: Math.min(dragStart.y, dragCurrent.y) / drawingPointer!.rendered.height,
+          w: Math.abs(dragCurrent.x - dragStart.x) / drawingPointer!.rendered.width,
+          h: Math.abs(dragCurrent.y - dragStart.y) / drawingPointer!.rendered.height,
         }
       : null;
 
@@ -300,10 +385,13 @@
 </script>
 
 <div class="runner">
+  {#if previousCloseWarning}<p role="status">{previousCloseWarning}</p>{/if}
   <p>Visual cover only. Underlying text and images can remain recoverable. Compress PDF does not make this secure redaction. Do not use this output to securely remove confidential content.</p>
+  {#if originalFile}<p>Original PDF: {originalFile.name}.</p><div class="actions"><button type="button" class="btn-secondary" on:click={downloadOriginal}>Download original</button><button type="button" class="btn-secondary" on:click={retryOriginal}>Retry original</button><button type="button" class="btn-secondary" on:click={dismissOriginal}>Dismiss original</button></div>{/if}
   {#if state === 'idle' || files.length === 0}
     <DropZone
       accept={tool.input.accept}
+      sizeLimit={tool.input.sizeLimit}
       multiple={false}
       bind:files
       bind:error={dropError}
@@ -313,14 +401,15 @@
 
   {#if state === 'rendering'}
     <ProgressBar stage="processing" percent={50} message="Loading PDF" />
+    <button type="button" class="btn-secondary" on:click={() => { closePdf(); state = 'idle'; }}>Cancel PDF loading</button>
   {/if}
 
-  {#if state === 'editing' || state === 'running'}
+  {#if state === 'editing' || state === 'running' || (state === 'rendering' && pdfDoc)}
     <div class="redact-toolbar">
       <div class="page-nav">
-        <button class="btn-secondary" on:click={() => gotoPage(currentPage - 1)} disabled={currentPage <= 1} type="button" aria-label="Previous page">‹</button>
+        <button class="btn-secondary" on:click={() => gotoPage(currentPage - 1)} disabled={currentPage <= 1 || state !== 'editing'} type="button" aria-label="Previous page">‹</button>
         <span class="page-count">page {currentPage} / {pageCount}</span>
-        <button class="btn-secondary" on:click={() => gotoPage(currentPage + 1)} disabled={currentPage >= pageCount} type="button" aria-label="Next page">›</button>
+        <button class="btn-secondary" on:click={() => gotoPage(currentPage + 1)} disabled={currentPage >= pageCount || state !== 'editing'} type="button" aria-label="Next page">›</button>
       </div>
       <div class="color-picker" role="group" aria-label="Redaction color">
         <span class="color-label">color</span>
@@ -351,13 +440,14 @@
         on:pointerdown={onPointerDown}
         on:pointermove={onPointerMove}
         on:pointerup={onPointerUp}
-        on:pointercancel={onPointerUp}
+        on:pointercancel={cancelGesture}
+        on:lostpointercapture={cancelGesture}
       >
         {#each pageRectangles as r}
           <button
             class="rect-existing"
             type="button"
-            style="left:{r.canvasX}px; top:{r.canvasY}px; width:{r.canvasW}px; height:{r.canvasH}px; background: rgba({previewColor[0] * 255},{previewColor[1] * 255},{previewColor[2] * 255}, 0.85);"
+            style="left:{r.canvasX * 100}%; top:{r.canvasY * 100}%; width:{r.canvasW * 100}%; height:{r.canvasH * 100}%; background: rgba({previewColor[0] * 255},{previewColor[1] * 255},{previewColor[2] * 255}, 0.85);"
             aria-label="Delete redaction rectangle"
             on:click={() => deleteRect(r)}
             on:pointerdown|stopPropagation
@@ -366,7 +456,7 @@
         {#if liveRect}
           <div
             class="rect-live"
-            style="left:{liveRect.x}px; top:{liveRect.y}px; width:{liveRect.w}px; height:{liveRect.h}px; background: rgba({previewColor[0] * 255},{previewColor[1] * 255},{previewColor[2] * 255}, 0.5);"
+            style="left:{liveRect.x * 100}%; top:{liveRect.y * 100}%; width:{liveRect.w * 100}%; height:{liveRect.h * 100}%; background: rgba({previewColor[0] * 255},{previewColor[1] * 255},{previewColor[2] * 255}, 0.5);"
           ></div>
         {/if}
       </div>
@@ -377,7 +467,7 @@
     <p class="hint">Drag on the page to draw a redaction rectangle. Click an existing rectangle to delete it.</p>
 
     {#if state !== 'running'}
-      <button class="btn-primary" on:click={run} disabled={rectangles.length === 0} type="button">
+      <button class="btn-primary" on:click={run} disabled={rectangles.length === 0 || state !== 'editing'} type="button">
         Apply {rectangles.length} redaction{rectangles.length === 1 ? '' : 's'}
       </button>
     {/if}
@@ -393,7 +483,7 @@
       <div class="panel-divider"></div>
       <p class="error-msg">{errorMsg}</p>
       <div class="panel-divider"></div>
-      <button class="btn-secondary" on:click={reset} type="button">Try again</button>
+      <button class="btn-secondary" on:click={retryOriginal} type="button">Try again</button>
     </div>
   {/if}
 

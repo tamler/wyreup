@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
-  import type { ToolProgress } from '@wyreup/core';
+  import type { SerializedTool, PreloadAdmission } from './types';
+import { fileMatchesMime, type ToolProgress } from '@wyreup/core/execution';
 
   // image-similarity: thumbnails grid + pairwise score bars. Cosine
   // similarity is in [0..1]; the bar fills accordingly and the row is
@@ -14,6 +15,40 @@
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+
+  let disposed = false;
+  let generation = 0;
+  let controller: AbortController | null = null;
+  let activePreload: File | null = null;
+  let observedPreload: File | null = null;
+  const attemptedPreloads = new WeakSet<File>();
+  const ownedUrls = new Set<string>();
+  function ownedUrl(blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    ownedUrls.add(url);
+    return url;
+  }
+  function reportPreload(file: File | null, status: 'admitted' | 'refused') {
+    if (!disposed && file && file === preloadedFile && files.includes(file)) {
+      onPreloadAdmission?.(status === 'admitted' ? { file, status } : { file, status, message: 'The file input was not interpreted by this tool.' });
+    }
+  }
+  function invalidateRun() {
+    reportPreload(activePreload, 'refused');
+    activePreload = null;
+    generation++;
+    controller?.abort();
+    controller = null;
+    for (const url of ownedUrls) URL.revokeObjectURL(url);
+    ownedUrls.clear();
+  }
+  function stagePreload(file: File | null) {
+    const candidate = file && !attemptedPreloads.has(file) ? file : null;
+    if (candidate) attemptedPreloads.add(candidate);
+    onFiles(new CustomEvent<File[]>('files', { detail: candidate ? [candidate] : [] }));
+  }
+  onDestroy(() => { disposed = true; invalidateRun(); for (const url of thumbUrls) URL.revokeObjectURL(url); });
 
   interface Result {
     images: Array<{ filename: string; index: number }>;
@@ -21,7 +56,7 @@
     clusters?: number[][];
   }
 
-  let files: File[] = preloadedFile ? [preloadedFile] : [];
+  let files: File[] = [];
   let params: Record<string, unknown> = { ...tool.defaults };
   let dropError = '';
   type State = 'idle' | 'running' | 'done' | 'error';
@@ -32,7 +67,10 @@
   let resultBlob: Blob | null = null;
   let thumbUrls: string[] = [];
 
-  $: if (preloadedFile && files.length === 0) files = [preloadedFile];
+  $: if (preloadedFile !== observedPreload) {
+    observedPreload = preloadedFile;
+    stagePreload(preloadedFile);
+  }
   $: canRun = files.length >= tool.input.min && state !== 'running';
   $: threshold = typeof params.threshold === 'number' ? params.threshold : 0.85;
 
@@ -41,12 +79,28 @@
     thumbUrls = files.map((f) => URL.createObjectURL(f));
   }
 
+  function intakeError(file: File): string {
+    if (!fileMatchesMime(file, tool.input.accept)) return `File type not accepted. Expected: ${tool.input.accept.join(', ')}`;
+    if (tool.input.sizeLimit !== undefined && file.size > tool.input.sizeLimit) return `${file.name} exceeds this tool's size limit.`;
+    return '';
+  }
+
   function onFiles(e: CustomEvent<File[]>) {
-    files = e.detail;
-    dropError = '';
+    const refused = e.detail.find((file) => intakeError(file));
+    invalidateRun();
+    files = refused ? [] : e.detail;
+    dropError = refused ? intakeError(refused) : '';
     state = 'idle';
     result = null;
     resultBlob = null;
+    if (!disposed && refused && refused === preloadedFile) {
+      onPreloadAdmission?.({ file: refused, status: 'refused', message: dropError });
+    }
+  }
+
+  function parametersChanged(e: CustomEvent<Record<string, unknown>>) {
+    onFiles(new CustomEvent<File[]>('files', { detail: files }));
+    params = e.detail;
   }
 
   function handleAdditionalFiles() {
@@ -57,10 +111,15 @@
       input.accept = tool.input.accept.join(',');
     }
     input.onchange = () => {
+      if (disposed) return;
       const newFiles = Array.from(input.files ?? []);
       if (newFiles.length > 0) {
+        const refused = newFiles.find((file) => intakeError(file));
+        if (refused) { dropError = intakeError(refused); return; }
+        invalidateRun();
         const max = tool.input.max ?? Infinity;
         files = [...files, ...newFiles].slice(0, max);
+        dropError = '';
         state = 'idle';
         result = null;
         resultBlob = null;
@@ -70,6 +129,7 @@
   }
 
   function removeFile(i: number) {
+    invalidateRun();
     files = files.filter((_, idx) => idx !== i);
     state = 'idle';
     result = null;
@@ -78,35 +138,56 @@
 
   async function run() {
     if (!canRun) return;
+    invalidateRun();
+    const own = ++generation;
+    const abort = new AbortController();
+    controller = abort;
+    const ownTool = tool;
+    const ownId = tool.id;
+    const inputFiles = [...files];
+    const inputParams = { ...params };
+    activePreload = preloadedFile && inputFiles.includes(preloadedFile) ? preloadedFile : null;
+    const current = () => !disposed && generation === own && !abort.signal.aborted && tool === ownTool && tool.id === ownId;
     state = 'running';
     errorMsg = '';
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
+      if (!current()) return;
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error('Tool not found.');
-      const blobs = await toolModule.run(files, params, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+      const blobs = await toolModule.run(inputFiles, inputParams, {
+        onProgress: (p) => { if (current()) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
+      if (!current()) return;
       const blob = Array.isArray(blobs) ? blobs[0] : blobs;
       if (!blob) throw new Error('No output.');
+      const interpreted = JSON.parse(await blob.text()) as Result;
+      if (!current()) return;
       resultBlob = blob;
-      result = JSON.parse(await blob.text()) as Result;
+      result = interpreted;
       markToolUsed(tool.id);
       state = 'done';
+      reportPreload(activePreload, 'admitted');
+      activePreload = null;
     } catch (err) {
+      if (!current()) return;
+      reportPreload(activePreload, 'refused');
+      activePreload = null;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      if (generation === own) { controller = null; activePreload = null; }
     }
   }
 
   function downloadJson() {
     if (!resultBlob) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
+    a.href = ownedUrl(resultBlob);
     a.download = buildDownloadName(files[0]?.name, tool.id, 'json');
     a.click();
   }
@@ -125,7 +206,7 @@
 
 <div class="runner">
   {#if files.length === 0}
-    <DropZone accept={tool.input.accept} multiple={true} bind:files bind:error={dropError} on:files={onFiles} label="Drop 2+ images to compare" />
+    <DropZone accept={tool.input.accept} sizeLimit={tool.input.sizeLimit} multiple={true} bind:files bind:error={dropError} on:files={onFiles} label="Drop 2+ images to compare" />
   {:else}
     <div class="file-list">
       <div class="file-list__header">
@@ -145,7 +226,9 @@
     </div>
   {/if}
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  {#if files.length > 0 && dropError}<p role="alert">{dropError}</p>{/if}
+
+  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={parametersChanged} />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">

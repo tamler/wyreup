@@ -5,9 +5,9 @@ import ShareToolButton from '../../components/ShareToolButton.svelte';
 import ToolCapabilityBanner from '../../components/ToolCapabilityBanner.svelte';
 import ToolDownloadNotice from '../../components/ToolDownloadNotice.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
-import { SEO_CONTENT } from '../../lib/seo-content';
-import { canonicalPageUrl, TOOL_PAGE_METADATA } from '../../lib/seo';
-import { correctedToolSeoContent, SEARCH_GUIDES } from '../../lib/search-guides';
+import { canonicalPageUrl } from '../../lib/seo';
+import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata';
+import { SEARCH_GUIDES } from '../../lib/search-guides';
 import SearchGuide from '../../components/SearchGuide.astro';
 
 export async function getStaticPaths() {
@@ -15,9 +15,8 @@ export async function getStaticPaths() {
   const allTools = Array.from(registry.toolsById.values());
 
   return allTools.map((tool) => {
-    // Inline ToolModule.seoContent wins; otherwise fall back to the
-    // generated catalog backfill keyed by id.
-    const seoContent = correctedToolSeoContent(tool.id, tool.seoContent ?? SEO_CONTENT[tool.id]);
+    const metadata = projectToolDiscoveryMetadata(tool);
+    const seoContent = metadata.seoContent;
     // Related tools: same category (exclude self), limit 6
     const sameCategory = allTools
       .filter((t) => t.category === tool.category && t.id !== tool.id)
@@ -34,15 +33,15 @@ export async function getStaticPaths() {
       .slice(0, 3);
 
     const relatedTools = [
-      ...sameCategory.map((t) => ({ id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description })),
-      ...crossOutput.map((t) => ({ id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description })),
+      ...sameCategory.map((t) => ({ id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description })),
+      ...crossOutput.map((t) => ({ id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description })),
     ].slice(0, 8);
 
     // Resolve any `alsoTry` ids to real tool data so the link panel can render.
     const alsoTry = (seoContent?.alsoTry ?? [])
       .map((entry) => {
         const t = allTools.find((x) => x.id === entry.id);
-        return t ? { id: t.id, name: t.name, category: t.category, description: t.description, why: entry.why } : null;
+        return t ? { id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description, why: entry.why } : null;
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
 
@@ -53,10 +52,15 @@ export async function getStaticPaths() {
           id: tool.id,
           slug: tool.slug ?? tool.id,
           name: tool.name,
-          description: TOOL_PAGE_METADATA[tool.id]?.description ?? tool.description,
+          description: metadata.description,
           llmDescription: tool.llmDescription,
           category: tool.category,
-          keywords: tool.keywords ?? [],
+          keywords: metadata.keywords,
+          title: metadata.title,
+          heading: metadata.heading,
+          inputLabel: metadata.inputLabel,
+          outputLabel: metadata.outputLabel,
+          networkAccess: metadata.networkAccess,
           input: {
             accept: tool.input.accept,
             min: tool.input.min,
@@ -91,10 +95,9 @@ export async function getStaticPaths() {
 const { serializedTool, relatedTools, alsoTry } = Astro.props;
 const { name, description, category, keywords, seoContent } = serializedTool;
 
-const pageMetadata = TOOL_PAGE_METADATA[serializedTool.id];
-const heading = pageMetadata?.heading ?? name;
-const seoTitle = pageMetadata?.title ?? `${name} — Wyreup`;
-const seoDescription = pageMetadata?.description ?? description;
+const heading = serializedTool.heading;
+const seoTitle = serializedTool.title;
+const seoDescription = description;
 const guide = SEARCH_GUIDES[serializedTool.id];
 // Social metadata must match execution location like the privacy callout:
 // hosted PRO tools do send the input to Wyreup's backend.
@@ -106,13 +109,8 @@ const ogDescription =
 // Auto-generated content. Used for every tool page (whether or not
 // seoContent is present) — adds depth that one-line descriptions miss
 // and gives Google something to rank beyond the runner widget.
-const acceptList = serializedTool.input.accept ?? [];
-const acceptLabel = acceptList.length === 0
-  ? 'No file input — params only.'
-  : acceptList.length === 1
-    ? `Accepts: ${acceptList[0]}.`
-    : `Accepts: ${acceptList.slice(0, -1).join(', ')} or ${acceptList[acceptList.length - 1]}.`;
-const outputLabel = `Outputs: ${serializedTool.output.mime}${serializedTool.output.multiple ? ' (multiple)' : ''}.`;
+const acceptLabel = serializedTool.inputLabel;
+const outputLabel = serializedTool.outputLabel;
 const requiresWebgpu = serializedTool.requiresWebgpu;
 const memEstimate = serializedTool.memoryEstimate;
 const installGroup = serializedTool.installGroup;
@@ -244,7 +242,9 @@ const breadcrumbLd = {
           {serializedTool.cost && (
             <div class="tool-facts__row">
               <dt>Cost</dt>
-              <dd>{serializedTool.cost === 'free' ? 'Free, runs in your browser' : 'Credit-metered'}</dd>
+              <dd>{serializedTool.networkAccess === 'domain-registration'
+                ? 'Free network lookup'
+                : serializedTool.cost === 'free' ? 'Free, local processing' : 'Credit-metered'}</dd>
             </div>
           )}
           {memEstimate && (
@@ -270,7 +270,15 @@ const breadcrumbLd = {
         {/* Privacy callout on every page. MUST stay truthful per execution
             location: local tools never upload; credit-metered (hosted) tools
             send the input to Wyreup's backend, so say so plainly. */}
-        {serializedTool.cost === 'credit' ? (
+        {serializedTool.networkAccess === 'domain-registration' ? (
+          <div class="privacy-callout" role="note">
+            <strong>Privacy:</strong> The domain you enter is sent to Wyreup and
+            its public registration registry. Wyreup reads IANA's bootstrap
+            without sending IANA the queried domain. No account or API key is
+            required. A connection is required. Details in the{' '}
+            <a href="/legal/privacy">privacy policy</a>.
+          </div>
+        ) : serializedTool.cost === 'credit' ? (
           <div class="privacy-callout" role="note">
             <strong>Privacy:</strong> {name} is a hosted PRO tool: when you run
             it, your input is sent over TLS through Wyreup's edge to the model
@@ -281,7 +289,7 @@ const breadcrumbLd = {
           </div>
         ) : (
           <div class="privacy-callout" role="note">
-            <strong>Privacy:</strong> This free tool executes in your browser.
+            <strong>Privacy:</strong> This tool processes input locally in this browser.
             {guide && ' Its image processing keeps your selected photo on your device.'}
             {' '}Setup may download code, codecs or models. Network utilities can
             make requests as part of their task; free does not mean every tool

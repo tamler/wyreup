@@ -1,6 +1,6 @@
 # Wyreup search growth plan
 
-Updated 2026-10-08. Owner: the site operator. This is a manual operating plan; it does not enable tracking, scheduled jobs, outreach or a production release.
+Updated 2026-10-18. Owner: the site operator. This is a manual operating plan; it does not enable tracking, scheduled jobs or outreach. The authorized release remains subject to the project's release gates.
 
 ## Goal and boundaries
 
@@ -26,11 +26,32 @@ Normal redirects and canonical alternatives are expected exclusions. Do not try 
 
 The 404 sample included `/legal/pricing/`, `/privacy.html`, two `/tools-mock/` paths and `/cdn-cgi/l/email-protection`. Public checks on October 8 confirmed the pricing and legacy privacy paths still returned 404. The local fix adds exact permanent redirects to `/pro/` and `/legal/privacy/`; bogus mock and Cloudflare paths remain real 404s. The single soft 404 was `/chain/run/`, last crawled July 24; the local workspace indexing policy now excludes that application route with `noindex,follow`. Its live status will need checking after release. Full crawl-exclusion samples still need individual investigation. No blanket redirects.
 
+### October 18 refresh
+
+The verified property's Web report displayed the last 28 days compared with the previous 28 days, last updated 19 hours earlier. Exact calendar boundaries were not displayed; the chart accessibility label contained an invalid date, so no dates are inferred.
+
+| Metric | Last 28 days | Previous 28 days |
+| --- | --- | --- |
+| Clicks | 4 | 9 |
+| Impressions | 38 | 190 |
+| CTR | 10.5% | 4.7% |
+| Average position | 13.5 | 19.4 |
+
+The six visible query rows all had zero displayed clicks: `crossfade video` had 3 current impressions, `site:wyreup.com` 2, and `reevown`, `otpauth` and `face blurred out` 1 each; `rewrapper` had none. These disclosed rows do not account for every property click. The first ten of 115 page rows included the homepage (3 clicks/26 impressions), OCR (1/3), image similarity (1/2), face blur (0/5) and video crossfade (0/5). Page and property aggregation differ; do not sum the page rows into the property totals.
+
+Face-blur URL inspection now succeeds: URL on Google, page indexed, allowed fetch/indexing, matching canonical, last crawled October 10 at 10:58:03 PM by Googlebot smartphone. This checks one URL.
+
+The All known pages indexing report, last updated October 12, shows 190 indexed and 440 not indexed: 235 redirects, 11 proper canonical alternatives, 5 not found, 2 noindex, 1 soft 404, 141 crawled currently not indexed and 45 discovered currently not indexed. The first ten crawled examples include PGP decrypt, word counter and YAML validation. Investigate important task pages individually; the redirect, canonical and intentional noindex exclusions may be correct. These counts do not establish a penalty. Sitemap status is Success, submitted October 8, last read October 17, with 317 discovered pages. No indexing request, sitemap submission or settings change was made during this refresh.
+
+Public response checks confirm the live sitemap contains 317 URLs, including 15 category pages, MCP, CLI and the photo-location task. The photo-location task serves its descriptive title and matching trailing-slash canonical. These earlier SEO elements are live; this does not establish acceptance of the pending catalog and package release.
+
+The sample remains too small to establish demand, a ranking improvement or a cause for the decline in impressions. Keep the five existing priority clusters; treat OCR and crossfade as query leads to inspect, without adding near-duplicate routes. The next useful comparison starts after the changed pages are actually live and their deployment date is recorded.
+
 ## Query-to-page map
 
 Each cluster has one primary landing page. Supporting pages have a different useful role and link to the primary page. Keep the task pages and configurable tool pages independently useful and indexable; do not create aliases for slight keyword variations.
 
-| Priority | Query cluster and candidate searches | Primary landing page | Supporting page role | Evidence / next decision |
+| Priority | Query cluster and candidate searches | Primary landing page | Supporting page role | October 8 evidence / next decision |
 | --- | --- | --- | --- | --- |
 | First | Remove photo GPS / location / EXIF data | [/remove-photo-location-data/](https://wyreup.com/remove-photo-location-data/) | `/tools/strip-exif/` explains EXIF cleanup, formats and re-encoding; `/share-photo-safely/` combines cleanup and compression. | Strong privacy task fit. Search demand unknown; inspect indexing and task queries. |
 | First | Blur faces online / blur faces without uploading | [/tools/face-blur/](https://wyreup.com/tools/face-blur/) | `/tools/pixelate-region/` handles selected regions; metadata-removal task covers hidden fields. | 66 page impressions, zero clicks in observed report. Inspect queries, position, country and device before interpreting CTR. |
@@ -65,7 +86,7 @@ Canonical, Open Graph, Twitter and structured-data page URLs share a production-
 
 Five priority tool pages and three task pages receive visible instructions, supported inputs/outputs, practical examples, limitations and relevant links. Scoped titles/headings describe the actual task. The hand-maintained web copy overrides misleading generated statements without regenerating the entire catalog. Category and distribution copy distinguishes free local execution, asset downloads, network tasks and optional hosted PRO.
 
-These changes remain local until a separately authorized release. A built sitemap is not the live sitemap. After release, check the Cloudflare deploy conclusion and fetch the actual changed URLs and `/sitemap.xml`; then inspect priority URLs in Search Console. Submit or request reindexing only for content that is actually live. Retain the project release gates in `AGENTS.md`.
+Some earlier SEO changes are live, as recorded in the October 18 refresh. The pending integrated catalog and package changes still require the authorized release's checks. A built sitemap is not the live sitemap. After release, check the Cloudflare deploy conclusion and fetch the actual changed URLs and `/sitemap.xml`; then inspect priority URLs in Search Console. Submit or request reindexing only for content that is actually live. Retain the project release gates in `AGENTS.md`.
 
 Public npm registry lookup on October 8 found CLI `0.7.17` and MCP `0.7.16` with published tarballs, so “npm publish is imminent” was stale. This observation does not establish package/source parity or authorize publishing.
 

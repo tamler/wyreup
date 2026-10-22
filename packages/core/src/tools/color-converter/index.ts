@@ -36,13 +36,24 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
   defaults: {},
 
   async run(inputs: File[], _params: ColorConverterParams, ctx: ToolRunContext): Promise<Blob[]> {
+    const abort = () => {
+      if (ctx.signal.aborted) throw new Error('Aborted');
+    };
+    abort();
+    if (inputs.length !== 1 || !inputs[0])
+      throw new Error('Exactly one color text file is required');
+    if (inputs[0].size > 1024) throw new Error('Color input exceeds 1024 bytes');
     ctx.onProgress({ stage: 'loading-deps', percent: 0, message: 'Loading color library' });
 
     const { parse, formatHex, formatRgb, formatHsl, converter } = await import('culori');
+    abort();
 
     ctx.onProgress({ stage: 'processing', percent: 50, message: 'Converting color' });
 
-    const input = (await inputs[0]!.text()).trim();
+    const bytes = await inputs[0].slice(0, 1025).arrayBuffer();
+    abort();
+    if (bytes.byteLength > 1024) throw new Error('Color input exceeds 1024 bytes');
+    const input = new TextDecoder('utf-8', { fatal: true }).decode(bytes).trim();
 
     const parsed = parse(input);
 
@@ -58,7 +69,11 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
         oklchString: '',
         oklab: { l: 0, a: 0, b: 0 },
         valid: false,
+        alpha: null,
+        gamut: null,
+        opaquePickerHex: '',
       };
+      abort();
       ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
       return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
     }
@@ -82,6 +97,18 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
     const r = Math.round(num(rgbColor, 'r') * 255);
     const g = Math.round(num(rgbColor, 'g') * 255);
     const b = Math.round(num(rgbColor, 'b') * 255);
+    const alpha = typeof parsed.alpha === 'number' ? parsed.alpha : 1;
+    const gamut = ['r', 'g', 'b'].every((key) => {
+      const channel = num(rgbColor, key);
+      return channel >= -1e-7 && channel <= 1 + 1e-7;
+    })
+      ? 'srgb'
+      : 'outside-srgb';
+    const opaquePickerHex =
+      '#' +
+      [r, g, b]
+        .map((value) => Math.min(255, Math.max(0, value)).toString(16).padStart(2, '0'))
+        .join('');
 
     const hslH = round(num(hslColor, 'h'), 2);
     const hslS = round(num(hslColor, 's') * 100, 2);
@@ -94,24 +121,28 @@ export const colorConverter: ToolModule<ColorConverterParams> = {
     const result: ColorConverterResult = {
       input,
       hex: formatHex(parsed) ?? '',
-      rgb: { r, g, b },
+      rgb: { r, g, b, a: alpha },
       rgbString: formatRgb(parsed) ?? `rgb(${r}, ${g}, ${b})`,
-      hsl: { h: hslH, s: hslS, l: hslL },
+      hsl: { h: hslH, s: hslS, l: hslL, a: alpha },
       hslString: formatHsl(hslColor) ?? `hsl(${hslH}, ${hslS}%, ${hslL}%)`,
       oklch: {
         l: oklchL,
         c: oklchC,
         h: oklchH,
       },
-      oklchString: `oklch(${oklchL} ${oklchC} ${oklchH})`,
+      oklchString: `oklch(${oklchL} ${oklchC} ${oklchH}${alpha === 1 ? '' : ` / ${alpha}`})`,
       oklab: {
         l: round(num(oklabColor, 'l')),
         a: round(num(oklabColor, 'a')),
         b: round(num(oklabColor, 'b')),
       },
       valid: true,
+      alpha,
+      gamut,
+      opaquePickerHex,
     };
 
+    abort();
     ctx.onProgress({ stage: 'done', percent: 100, message: 'Done' });
     return [new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' })];
   },

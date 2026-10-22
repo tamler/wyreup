@@ -1,4 +1,5 @@
 import { createRegistry, type ToolRegistry } from './registry.js';
+import { assertToolInputs } from './lib/input-validation.js';
 import { CURATED_CHAIN_SUGGESTIONS } from './chain/curated-suggestions.js';
 import { compress } from './tools/compress/index.js';
 import { convert } from './tools/convert/index.js';
@@ -257,10 +258,10 @@ import { jsonMerge } from './tools/json-merge/index.js';
 import { csvTemplate } from './tools/csv-template/index.js';
 import { pdfSuspicious } from './tools/pdf-suspicious/index.js';
 import { regexVisualize } from './tools/regex-visualize/index.js';
-import { regexFromText } from './tools/regex-from-text/index.js';
-import { cronFromText } from './tools/cron-from-text/index.js';
+import { regexFromText } from './tools/regex-from-text/tool.js';
+import { cronFromText } from './tools/cron-from-text/tool.js';
 import { sqlFormatExplain } from './tools/sql-format-explain/index.js';
-import { regexExplain } from './tools/regex-explain/index.js';
+import { regexExplain } from './tools/regex-explain/tool.js';
 import { imageToAsciiArt } from './tools/image-to-ascii/index.js';
 import { promptInjectionDemo } from './tools/prompt-injection-demo/index.js';
 import { pdfExtractData } from './tools/pdf-extract-data/index.js';
@@ -277,6 +278,19 @@ import { imageGeneratePro } from './tools/image-generate-pro/index.js';
 import { jsonExtractPro } from './tools/json-extract-pro/index.js';
 import { translateIndicPro } from './tools/translate-indic-pro/index.js';
 import { csvSql } from './tools/csv-sql/index.js';
+import { financeTools } from './utilities/finance.js';
+import { planningTools } from './utilities/planning.js';
+import { nameTools } from './utilities/names.js';
+import { textDeveloperTools } from './utilities/text-developer.js';
+import { codeBeautifier } from './utilities/code-beautifier.js';
+import { aspectRatioCalculator } from './utilities/aspect-ratio.js';
+import { psdToPng, csvViewer } from './utilities/files.js';
+import { bankStatementToCsv } from './utilities/bank-module.js';
+import { stlToGcode } from './utilities/stl-module.js';
+import { mp3ToMidi } from './utilities/mp3-to-midi.js';
+import { domainAgeChecker } from './utilities/domain-age.js';
+import { buildingTools } from './utilities/building.js';
+import { hardwareTools } from './utilities/hardware.js';
 import type { ToolModule } from './types.js';
 
 /**
@@ -564,14 +578,40 @@ export const defaultTools: ToolModule<any>[] = [
   jsonExtractPro,
   translateIndicPro,
   csvSql,
+  ...financeTools,
+  ...planningTools,
+  ...nameTools,
+  ...textDeveloperTools,
+  codeBeautifier,
+  aspectRatioCalculator,
+  psdToPng,
+  csvViewer,
+  bankStatementToCsv,
+  stlToGcode,
+  mp3ToMidi,
+  domainAgeChecker,
+  ...buildingTools,
+  ...hardwareTools,
 ];
 
 export function createDefaultRegistry(): ToolRegistry {
+  const ids = new Set<string>();
+  for (const tool of defaultTools) {
+    if (ids.has(tool.id)) throw new Error(`Duplicate default tool ID: ${tool.id}`);
+    ids.add(tool.id);
+  }
   // Fill in curated next-step suggestions (phase-1 tool review) for tools
   // that don't declare their own. Copies, not mutations, so the tool
   // module singletons stay pristine for direct importers.
-  const tools = (defaultTools as ToolModule[]).map((t) => {
-    if (t.chainSuggestions?.length) return t;
+  const tools = (defaultTools as ToolModule[]).map((sourceTool) => {
+    const t = {
+      ...sourceTool,
+      async run(inputs, params, ctx) {
+        assertToolInputs(inputs, sourceTool.input);
+        return sourceTool.run(inputs, params, ctx);
+      },
+    } satisfies ToolModule;
+    if (t.chainSuggestions !== undefined) return t;
     const curated = CURATED_CHAIN_SUGGESTIONS[t.id];
     return curated?.length ? { ...t, chainSuggestions: [...curated] } : t;
   });

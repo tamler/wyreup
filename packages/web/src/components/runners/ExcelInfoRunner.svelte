@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import type { SerializedTool, PreloadAdmission } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
   // excel-info renders as a sheet-tab strip with a 5-row preview table
@@ -12,6 +13,41 @@
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+
+  let disposed = false;
+  let generation = 0;
+  let controller: AbortController | null = null;
+  let activePreload: File | null = null;
+  let observedPreload = preloadedFile;
+  const attemptedPreloads = new WeakSet<File>();
+  if (preloadedFile) attemptedPreloads.add(preloadedFile);
+  const ownedUrls = new Set<string>();
+  function ownedUrl(blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    ownedUrls.add(url);
+    return url;
+  }
+  function reportPreload(file: File | null, status: 'admitted' | 'refused') {
+    if (!disposed && file && file === preloadedFile && files.includes(file)) {
+      onPreloadAdmission?.(status === 'admitted' ? { file, status } : { file, status, message: 'The file input was not interpreted by this tool.' });
+    }
+  }
+  function invalidateRun() {
+    reportPreload(activePreload, 'refused');
+    activePreload = null;
+    generation++;
+    controller?.abort();
+    controller = null;
+    for (const url of ownedUrls) URL.revokeObjectURL(url);
+    ownedUrls.clear();
+  }
+  function stagePreload(file: File | null) {
+    const candidate = file && !attemptedPreloads.has(file) ? file : null;
+    if (candidate) attemptedPreloads.add(candidate);
+    onFiles(new CustomEvent<File[]>('files', { detail: candidate ? [candidate] : [] }));
+  }
+  onDestroy(() => { disposed = true; invalidateRun(); });
 
   interface SheetInfo {
     name: string;
@@ -37,7 +73,10 @@
   let resultBlob: Blob | null = null;
   let activeSheet = 0;
 
-  $: if (preloadedFile && files.length === 0) files = [preloadedFile];
+  $: if (preloadedFile !== observedPreload) {
+    observedPreload = preloadedFile;
+    stagePreload(preloadedFile);
+  }
   $: canRun = files.length >= 1 && state !== 'running';
   $: active = result?.perSheet[activeSheet] ?? null;
   $: previewMaxCols = active
@@ -68,6 +107,7 @@
   }
 
   function onFiles(e: CustomEvent<File[]>) {
+    invalidateRun();
     files = e.detail;
     dropError = '';
     state = 'idle';
@@ -78,39 +118,60 @@
 
   async function run() {
     if (!canRun) return;
+    invalidateRun();
+    const own = ++generation;
+    const abort = new AbortController();
+    controller = abort;
+    const ownTool = tool;
+    const ownId = tool.id;
+    const inputFiles = [...files];
+    activePreload = preloadedFile && inputFiles.includes(preloadedFile) ? preloadedFile : null;
+    const current = () => !disposed && generation === own && !abort.signal.aborted && tool === ownTool && tool.id === ownId;
     state = 'running';
     errorMsg = '';
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
+      if (!current()) return;
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
       const blobs = await toolModule.run(
-        files,
+        inputFiles,
         {},
         {
           onProgress: (p) => {
-            progress = p;
+            if (current()) progress = p;
           },
-          signal: new AbortController().signal,
+          signal: abort.signal,
           cache: new Map(),
           executionId: crypto.randomUUID(),
         },
       );
+      if (!current()) return;
       const blob = Array.isArray(blobs) ? blobs[0] : blobs;
       if (!blob) throw new Error('No output produced.');
+      const interpreted = JSON.parse(await blob.text()) as ExcelResult;
+      if (!current()) return;
       resultBlob = blob;
-      result = JSON.parse(await blob.text()) as ExcelResult;
+      result = interpreted;
       activeSheet = 0;
       markToolUsed(tool.id);
       state = 'done';
+      reportPreload(activePreload, 'admitted');
+      activePreload = null;
     } catch (err) {
+      if (!current()) return;
+      reportPreload(activePreload, 'refused');
+      activePreload = null;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      if (generation === own) { controller = null; activePreload = null; }
     }
   }
 
   function reset() {
+    invalidateRun();
     state = 'idle';
     errorMsg = '';
     result = null;
@@ -120,7 +181,7 @@
   function downloadJson() {
     if (!resultBlob) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
+    a.href = ownedUrl(resultBlob);
     a.download = buildDownloadName(files[0]?.name, tool.id, 'json');
     a.click();
   }
@@ -129,6 +190,7 @@
 <div class="runner">
   <DropZone
     accept={tool.input.accept}
+    sizeLimit={tool.input.sizeLimit}
     multiple={false}
     bind:files
     bind:error={dropError}

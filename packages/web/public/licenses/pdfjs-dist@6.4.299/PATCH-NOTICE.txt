@@ -1,0 +1,6 @@
+PDF.js 6.4.299 local modification
+
+Wyreup Contributors modified legacy/build/pdf.mjs to reject the operator-list read capability on worker errors even when a display-ready capability also exists. This prevents a failed operator-list request from remaining pending. The upstream API, Apache-2.0 license and Mozilla copyright notice are retained.
+
+Source patch: patches/pdfjs-dist@6.4.299.patch
+Patch SHA-256: e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3

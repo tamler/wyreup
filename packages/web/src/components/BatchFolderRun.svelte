@@ -1,4 +1,9 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+  import { user, authReady } from '../stores/user';
+  import { tryReserveMediaJob } from '../lib/mediaJobReservation';
+  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
   import ProgressBar from './runners/ProgressBar.svelte';
   import type { ToolProgress } from '@wyreup/core';
 
@@ -36,6 +41,11 @@
   let errorMsg = '';
   let zipUrl: string | null = null;
   let outputCount = 0;
+  let generation = 0;
+  let disposed = false;
+  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
+  $: if (pendingPaid) { resolvedSteps; matchingFiles; if (!pendingPaid.current()) pendingPaid = null; }
+  onDestroy(() => { disposed = true; generation++; if (zipUrl) URL.revokeObjectURL(zipUrl); });
 
   $: canRun = resolvedSteps.length > 0 && resolvedSteps.every((s) => s.valid);
 
@@ -74,7 +84,7 @@
       // Resolve the first step's accept list once. Lazy-imports the
       // registry rather than threading it through props.
       try {
-        const { createDefaultRegistry } = await import('@wyreup/core');
+        const { createDefaultRegistry } = await import('../lib/core-execution');
         const registry = createDefaultRegistry();
         const firstTool = registry.toolsById.get(resolvedSteps[0]!.toolId);
         firstStepAccept = firstTool?.input.accept ?? ['*/*'];
@@ -90,7 +100,17 @@
   }
 
   async function run() {
-    if (matchingFiles.length === 0) return;
+    if (!canRun || matchingFiles.length === 0 || state === 'running') return;
+    const files = [...matchingFiles];
+    const chain = structuredClone(resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params })));
+    const fingerprint = JSON.stringify(chain);
+    const attempt = ++generation;
+    const current = () => !disposed && attempt === generation && files.length === matchingFiles.length && files.every((file, index) => file === matchingFiles[index]) && fingerprint === JSON.stringify(resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params })));
+    const settleStale = () => {
+      if (disposed || attempt !== generation || current()) return;
+      if (pendingPaid?.current === current) pendingPaid = null;
+      if (state === 'running') state = pickedFiles.length > 0 ? 'review' : 'idle';
+    };
     state = 'running';
     processedCount = 0;
     failedCount = 0;
@@ -99,18 +119,44 @@
     if (zipUrl) { URL.revokeObjectURL(zipUrl); zipUrl = null; }
 
     try {
-      const { runChain, createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
+      if (!current()) return;
+      const paid = summarizePaidChain(chain, registry, files.length);
+      const account = get(user);
+      assertPaidAccount(paid, get(authReady), account);
+      if (paid.steps.length) {
+        state = 'review';
+        pendingPaid = { text: `${files.length} matched files; ${pickedFiles.length - files.length} excluded.\n${paidChainDisclosure(paid, files, account!.email)}`, current, confirm: async () => {
+          if (!current()) { settleStale(); return; }
+          const latest = summarizePaidChain(chain, registry, files.length), latestAccount = get(user);
+          assertPaidAccount(latest, get(authReady), latestAccount);
+          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
+          pendingPaid = null;
+          await execute();
+        } };
+        return;
+      }
+      await execute();
+
+      async function execute() {
+      if (!current()) { settleStale(); return; }
+      const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
+      if (!lease) { state = 'review'; errorMsg = 'Another media job is still running. Your files are retained. Retry after it settles; if it never settles, reload manually.'; return; }
+      state = 'running';
+      try {
+      const { runChain } = await import('../lib/core-execution');
+      if (!current()) return;
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
-      const chain = resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params }));
-
-      for (const file of matchingFiles) {
+      let committedOutputs = 0;
+      for (const [fileIndex, file] of files.entries()) {
+        if (!current()) return;
         progress = {
           stage: 'processing',
-          percent: Math.round((processedCount / matchingFiles.length) * 100),
-          message: `(${processedCount + 1}/${matchingFiles.length}) ${file.name}`,
+          percent: Math.round((processedCount / files.length) * 100),
+          message: `(${processedCount + 1}/${files.length}) ${file.name}`,
         };
 
         try {
@@ -127,18 +173,25 @@
           );
 
           const blobs = Array.isArray(result) ? result : [result];
-          const blob = blobs[0];
-          if (!blob) throw new Error('No output');
+          if (blobs.length === 0 || !blobs.every((blob) => blob instanceof Blob)) throw new Error('No complete output');
+          if (!current()) return;
 
-          const ext = blob.type.split('/')[1] ?? 'bin';
-          const baseName = file.name.replace(/\.[^.]+$/, '');
+          const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[\\/]/g, '_');
           // Always namespace into a Wyreup-output/ subfolder inside the
           // ZIP so a recipient unzipping into the source folder can't
           // accidentally clobber the originals.
-          const outName = `Wyreup-output/${baseName}.${ext}`;
-          zip.file(outName, blob);
+          for (const [outputIndex, blob] of blobs.entries()) {
+            const ext = blob.type.split('/')[1]?.split(/[;+]/)[0]?.replace(/[^a-zA-Z0-9.-]/g, '') || 'bin';
+            const legacyName = `Wyreup-output/${baseName}.${ext}`;
+            const outName = blobs.length === 1 && !zip.file(legacyName)
+              ? legacyName
+              : `Wyreup-output/input-${fileIndex + 1}/output-${outputIndex + 1}.${ext}`;
+            zip.file(outName, blob);
+            committedOutputs++;
+          }
           processedCount++;
         } catch (err) {
+          if (!current()) return;
           failedCount++;
           failedNames.push(file.name);
           // Log per-file error path/length only. Never log file bodies.
@@ -148,14 +201,27 @@
 
       progress = { stage: 'done', percent: 100, message: 'Compressing ZIP' };
       const zipBlob = await zip.generateAsync({ type: 'blob' });
+      if (!current()) return;
       if (zipUrl) URL.revokeObjectURL(zipUrl);
       zipUrl = URL.createObjectURL(zipBlob);
-      outputCount = processedCount;
+      outputCount = committedOutputs;
       state = 'done';
+      } catch (error) {
+        if (current()) { state = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
+      } finally { lease.release(); settleStale(); }
+      }
     } catch (err) {
+      if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
-    }
+    } finally { settleStale(); }
+  }
+
+  async function confirmPaid() {
+    const pending = pendingPaid;
+    if (!pending) return;
+    try { await pending.confirm(); }
+    catch (error) { if (pending.current()) { pendingPaid = null; state = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function downloadZip() {
@@ -167,6 +233,8 @@
   }
 
   function reset() {
+    generation++;
+    pendingPaid = null;
     state = 'idle';
     pickedFiles = [];
     matchingFiles = [];
@@ -190,6 +258,13 @@
   </summary>
 
   <div class="batch-body">
+    {#if pendingPaid}
+      <section role="dialog" aria-label="Confirm paid batch">
+        <p style="white-space: pre-wrap">{pendingPaid.text}</p>
+        <button type="button" on:click={confirmPaid}>Confirm paid batch</button>
+        <button type="button" on:click={() => { generation++; pendingPaid = null; state = 'review'; }}>Cancel paid batch</button>
+      </section>
+    {/if}
     {#if state === 'idle' || state === 'picking'}
       <p class="batch-help">
         Pick a folder; the chain runs on each compatible file. Outputs
@@ -200,6 +275,9 @@
       </button>
     {:else if state === 'review'}
       <div class="review">
+        {#if errorMsg}
+          <p class="batch-error__msg" role="alert">{errorMsg}</p>
+        {/if}
         <p class="review__line">
           <strong>{matchingFiles.length}</strong> of {pickedFiles.length} files match this chain
           {#if matchingFiles.length < pickedFiles.length}
@@ -225,7 +303,7 @@
     {:else if state === 'done'}
       <div class="batch-result">
         <p class="batch-result__line">
-          Processed <strong>{outputCount}</strong> file{outputCount === 1 ? '' : 's'}
+          Processed <strong>{processedCount}</strong> file{processedCount === 1 ? '' : 's'}; {outputCount} output{outputCount === 1 ? '' : 's'}
           {#if failedCount > 0}
             · <span class="batch-result__failed">{failedCount} failed</span>
           {/if}

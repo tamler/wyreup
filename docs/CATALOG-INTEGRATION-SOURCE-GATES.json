@@ -1,0 +1,3775 @@
+{
+  "schemaVersion": 1,
+  "authoritativeResolver": {
+    "actualFields": [
+      "plan6SourceGateBindings.ownerBindings",
+      "plan6SourceGateBindings.currentIntegratedSourceGate"
+    ],
+    "historyOnly": [
+      "requiredGateIds",
+      "priorNamedGateIds"
+    ],
+    "gateSources": "Existing audit.gateCatalog plus exact scoped newGateRecords below; canonical receipt names come from actual record, not oldalias",
+    "futureIntegratedGate": "Future integration-final-SOURCE must have actual matching receipt before VERIFIED; not a fabricated already-existing gate",
+    "drift": "Relevant owner identity and context drift separate; retain actual raw PASS/FAIL/scope/root disposition"
+  },
+  "historicalScopedRecords": [
+    {
+      "id": "building-hardware-source",
+      "guard": {
+        "path": "building-hardware-source-review-1-guard.json",
+        "bytes": 30051,
+        "sha256": "f362b4fce260113e3de2a290c3f7eec5d594c888ea63ca41e4660ecbef664513"
+      },
+      "rootDisposition": {
+        "path": "building-hardware-source-correction-1-final-disposition.md",
+        "bytes": 2240,
+        "sha256": "cba158eb38c7c0af8029c715922f829d85968627e1ab1992a2bf2f653b6c8095"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/building.ts",
+          "bytes": 52180,
+          "sha256": "a2075ed96ef17e397215d5514bec1a33c4b48bddc637ab8b1e99c8df1c7726d6",
+          "reviewedBytes": 52180,
+          "reviewedSha256": "a2075ed96ef17e397215d5514bec1a33c4b48bddc637ab8b1e99c8df1c7726d6",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/hardware.ts",
+          "bytes": 47492,
+          "sha256": "9b87e59cdc6613478ab520f02ac4a1e856797220161b6069e2b8b9ed2a4c7f1b",
+          "reviewedBytes": 47492,
+          "reviewedSha256": "9b87e59cdc6613478ab520f02ac4a1e856797220161b6069e2b8b9ed2a4c7f1b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building.test.ts",
+          "bytes": 11254,
+          "sha256": "f3b0a6268aaf811504b16c2f48c13f97644d21d8b3db8033c6928c4b9a7c2684",
+          "reviewedBytes": 11254,
+          "reviewedSha256": "f3b0a6268aaf811504b16c2f48c13f97644d21d8b3db8033c6928c4b9a7c2684",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/hardware.test.ts",
+          "bytes": 10708,
+          "sha256": "c01aecdcc2c16adc259f259ebb62f1774fb752157db3ceb0b2474c9858da0ba4",
+          "reviewedBytes": 10708,
+          "reviewedSha256": "c01aecdcc2c16adc259f259ebb62f1774fb752157db3ceb0b2474c9858da0ba4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/hardware-camera.test.ts",
+          "bytes": 5825,
+          "sha256": "6b7eb0c813b2495f34565ac44104815e5b854049a8fc34f97d98ba1dfac21466",
+          "reviewedBytes": 5825,
+          "reviewedSha256": "6b7eb0c813b2495f34565ac44104815e5b854049a8fc34f97d98ba1dfac21466",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building-construction.test.ts",
+          "bytes": 5978,
+          "sha256": "298c494f9a9bac08702d246baa6cef3ff3a530551ce625061189eca7aff27c6f",
+          "reviewedBytes": 5978,
+          "reviewedSha256": "298c494f9a9bac08702d246baa6cef3ff3a530551ce625061189eca7aff27c6f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building-source-regressions.test.ts",
+          "bytes": 2501,
+          "sha256": "70835638137d35ed5022e3a32f01d4a5fd790b1c74a2a6c27e4eb7594ab75078",
+          "reviewedBytes": 2501,
+          "reviewedSha256": "70835638137d35ed5022e3a32f01d4a5fd790b1c74a2a6c27e4eb7594ab75078",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building-hardware-contract.test.ts",
+          "bytes": 5053,
+          "sha256": "c0f4ad52f6b92ad6f34a97fc945c220b62cd8ae9b98f99cf655a195b5c2bef62",
+          "reviewedBytes": 5053,
+          "reviewedSha256": "c0f4ad52f6b92ad6f34a97fc945c220b62cd8ae9b98f99cf655a195b5c2bef62",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/BuildingRowsRunner.svelte",
+          "bytes": 10001,
+          "sha256": "95fc5bd3bb7c53abff2e4320ca9e4f04779c374a5d3ce28986c6e495ef231812",
+          "reviewedBytes": 10001,
+          "reviewedSha256": "95fc5bd3bb7c53abff2e4320ca9e4f04779c374a5d3ce28986c6e495ef231812",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/ConstructionEstimateRunner.svelte",
+          "bytes": 9926,
+          "sha256": "9afa236614e184c6804882ebbcad925774103a841d08bbb181020b7832cb2d65",
+          "reviewedBytes": 9926,
+          "reviewedSha256": "9afa236614e184c6804882ebbcad925774103a841d08bbb181020b7832cb2d65",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/GamepadRunner.svelte",
+          "bytes": 6490,
+          "sha256": "ce3be19734736787d2d3ce9a0bf19df5fc54020ec847d838bead6b863b51216d",
+          "reviewedBytes": 6490,
+          "reviewedSha256": "ce3be19734736787d2d3ce9a0bf19df5fc54020ec847d838bead6b863b51216d",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/TouchscreenRunner.svelte",
+          "bytes": 9125,
+          "sha256": "35bdb7071f8679344e7cee863b8713fe42cad38fec4af947e1ac25b2501ae3bc",
+          "reviewedBytes": 9125,
+          "reviewedSha256": "35bdb7071f8679344e7cee863b8713fe42cad38fec4af947e1ac25b2501ae3bc",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/buildingRowsState.ts",
+          "bytes": 4893,
+          "sha256": "a0abe3b06c36adcd77429e7f5b47f2c6e802d92cd8dc43f400e27fb6e60e5f6b",
+          "reviewedBytes": 4893,
+          "reviewedSha256": "a0abe3b06c36adcd77429e7f5b47f2c6e802d92cd8dc43f400e27fb6e60e5f6b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/gamepad-session.ts",
+          "bytes": 2288,
+          "sha256": "ed90bf7961db8b74c90c3cdd9160763fc51de1f247b649f5a9e423b56adbbfd8",
+          "reviewedBytes": 2288,
+          "reviewedSha256": "ed90bf7961db8b74c90c3cdd9160763fc51de1f247b649f5a9e423b56adbbfd8",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/touchscreen-session.ts",
+          "bytes": 3647,
+          "sha256": "b63acd1b9824e88c345dd6c2c114be85f94f603d5b8ed4211c3ca23a4a6c2f3a",
+          "reviewedBytes": 3647,
+          "reviewedSha256": "b63acd1b9824e88c345dd6c2c114be85f94f603d5b8ed4211c3ca23a4a6c2f3a",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/buildingRowsState.test.ts",
+          "bytes": 3272,
+          "sha256": "244153c6d69fb07792b8bb035003c354c5db5d380ffbfe28b54adfbc45269d58",
+          "reviewedBytes": 3272,
+          "reviewedSha256": "244153c6d69fb07792b8bb035003c354c5db5d380ffbfe28b54adfbc45269d58",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/gamepad-session.test.ts",
+          "bytes": 2523,
+          "sha256": "9111ffe6b02046a9bdc1f7bc23fa2411efc179753573ad8494d5dd48d7261fd9",
+          "reviewedBytes": 2523,
+          "reviewedSha256": "9111ffe6b02046a9bdc1f7bc23fa2411efc179753573ad8494d5dd48d7261fd9",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/touchscreen-session.test.ts",
+          "bytes": 4136,
+          "sha256": "9e2642cdc3266e903fe6ad9860f326bd5bff457958009cc9f229e4a7da9ef940",
+          "reviewedBytes": 4136,
+          "reviewedSha256": "9e2642cdc3266e903fe6ad9860f326bd5bff457958009cc9f229e4a7da9ef940",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/building-rows-runner.test.ts",
+          "bytes": 9966,
+          "sha256": "58c820081db5f8f45e77239bb456a0d69f059946a355b03df78195ea4941b83a",
+          "reviewedBytes": 9966,
+          "reviewedSha256": "58c820081db5f8f45e77239bb456a0d69f059946a355b03df78195ea4941b83a",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/construction-estimate.test.ts",
+          "bytes": 5846,
+          "sha256": "7b7cc33058a583d2e793fada54cd421236733ac79657e222fb59ad10e2840be4",
+          "reviewedBytes": 5846,
+          "reviewedSha256": "7b7cc33058a583d2e793fada54cd421236733ac79657e222fb59ad10e2840be4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/gamepad-runner.test.ts",
+          "bytes": 8553,
+          "sha256": "352e5974b7471070efdfcd8242225b48c59f46075ce1eed12fd627f46a5716e8",
+          "reviewedBytes": 8553,
+          "reviewedSha256": "352e5974b7471070efdfcd8242225b48c59f46075ce1eed12fd627f46a5716e8",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/touchscreen-runner.test.ts",
+          "bytes": 9843,
+          "sha256": "9e68c9403ced9798891a908d734d838cf0c42f12218a0f23e0c22b5a70451ee7",
+          "reviewedBytes": 9843,
+          "reviewedSha256": "9e68c9403ced9798891a908d734d838cf0c42f12218a0f23e0c22b5a70451ee7",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/building-readable-regressions.test.ts",
+          "bytes": 5886,
+          "sha256": "267fbf7c033986a6916e9150257fa285a69026f1a7e78f1682e83c6336fb7799",
+          "reviewedBytes": 5886,
+          "reviewedSha256": "267fbf7c033986a6916e9150257fa285a69026f1a7e78f1682e83c6336fb7799",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/BuildingHardwareHarness.svelte",
+          "bytes": 1963,
+          "sha256": "19d2a3d35f50b5859022f0e42ee633dc0f1a61f40c7b717d4318229d13115074",
+          "reviewedBytes": 1963,
+          "reviewedSha256": "19d2a3d35f50b5859022f0e42ee633dc0f1a61f40c7b717d4318229d13115074",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/shutter-count/README.md",
+          "bytes": 1355,
+          "sha256": "603c13e65344d1768b76850cc387b8fd6a55b8add69813682502bf001bbff931",
+          "reviewedBytes": 1355,
+          "reviewedSha256": "603c13e65344d1768b76850cc387b8fd6a55b8add69813682502bf001bbff931",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/shutter-count/source-record.json",
+          "bytes": 800,
+          "sha256": "5d3b1b4fc983d427f38385a100c2281db7a429b937217f98f9e0841936ba760d",
+          "reviewedBytes": 800,
+          "reviewedSha256": "5d3b1b4fc983d427f38385a100c2281db7a429b937217f98f9e0841936ba760d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/shutter-count/exiftool-oracle.json",
+          "bytes": 254,
+          "sha256": "3b20564ce66411d7a76d6b304faf12b7476d37d2fede64bb419efab1b08ab843",
+          "reviewedBytes": 254,
+          "reviewedSha256": "3b20564ce66411d7a76d6b304faf12b7476d37d2fede64bb419efab1b08ab843",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/index.ts",
+          "bytes": 40073,
+          "sha256": "6ea018494f92ac03ee27197aee17cec8785bd0c37de3586834d66cea138cc970",
+          "reviewedBytes": 40073,
+          "reviewedSha256": "6ea018494f92ac03ee27197aee17cec8785bd0c37de3586834d66cea138cc970",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/registry.ts",
+          "bytes": 5214,
+          "sha256": "83239b0aec0e7d47f5adc9a441b63bc83cf6d01819e28e9102604f1b53816603",
+          "reviewedBytes": 5214,
+          "reviewedSha256": "83239b0aec0e7d47f5adc9a441b63bc83cf6d01819e28e9102604f1b53816603",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/UtilityForm.svelte",
+          "bytes": 7227,
+          "sha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "reviewedBytes": 7227,
+          "reviewedSha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/utilityFormState.ts",
+          "bytes": 2853,
+          "sha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "reviewedBytes": 2853,
+          "reviewedSha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/jsonView.ts",
+          "bytes": 6706,
+          "sha256": "b9b40b68fdf6355338d9c66c59fb8e1dab8cd880a9520f0249a896649760135d",
+          "reviewedBytes": 6706,
+          "reviewedSha256": "b9b40b68fdf6355338d9c66c59fb8e1dab8cd880a9520f0249a896649760135d",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/FlatJsonResult.svelte",
+          "bytes": 8749,
+          "sha256": "7fd775c53024c98596a1a23902153fdddbff091ac356716c46f51d3c0bdff9a0",
+          "reviewedBytes": 8749,
+          "reviewedSha256": "7fd775c53024c98596a1a23902153fdddbff091ac356716c46f51d3c0bdff9a0",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/types.ts",
+          "bytes": 826,
+          "sha256": "22a11e7a2ec2e24c113d75d606394b74fedef7a92d12f7f38a3840d4439915f8",
+          "reviewedBytes": 826,
+          "reviewedSha256": "22a11e7a2ec2e24c113d75d606394b74fedef7a92d12f7f38a3840d4439915f8",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building-source-correction-1-regressions.test.ts",
+          "bytes": 5388,
+          "sha256": "44b326e1c11531bb44f853525f78122d1d1c51f7c6b510ad337c93684da07fbd",
+          "reviewedBytes": 5388,
+          "reviewedSha256": "44b326e1c11531bb44f853525f78122d1d1c51f7c6b510ad337c93684da07fbd",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/building-device-correction-1-regressions.test.ts",
+          "bytes": 7285,
+          "sha256": "94a186f9ca58eec01499ce2cacfbb520084d90211092daecd6089d59aeeec9fe",
+          "reviewedBytes": 7285,
+          "reviewedSha256": "94a186f9ca58eec01499ce2cacfbb520084d90211092daecd6089d59aeeec9fe",
+          "exact": true
+        },
+        {
+          "path": "packages/core/node_modules/@cantoo/pdf-lib/cjs/api/PDFPage.js",
+          "bytes": 65813,
+          "sha256": "14d394345aeb582d33e214ee0caa266c2a550f96051d8a9235482e01e4b6c33c",
+          "reviewedBytes": 65813,
+          "reviewedSha256": "14d394345aeb582d33e214ee0caa266c2a550f96051d8a9235482e01e4b6c33c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/node_modules/@cantoo/pdf-lib/cjs/api/PDFFont.js",
+          "bytes": 5248,
+          "sha256": "ccd22f5bbe95a475c036be2a3fd44b407f884f8ff72ea8e001477eec6c270113",
+          "reviewedBytes": 5248,
+          "reviewedSha256": "ccd22f5bbe95a475c036be2a3fd44b407f884f8ff72ea8e001477eec6c270113",
+          "exact": true
+        },
+        {
+          "path": "packages/web/package.json",
+          "bytes": 1322,
+          "sha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "reviewedBytes": 1322,
+          "reviewedSha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "exact": true
+        },
+        {
+          "path": "packages/web/tsconfig.json",
+          "bytes": 136,
+          "sha256": "9ad09697c8901496dac1ccab54efc95ab1647f3c98d4b1d206c74b7f52d2c083",
+          "reviewedBytes": 136,
+          "reviewedSha256": "9ad09697c8901496dac1ccab54efc95ab1647f3c98d4b1d206c74b7f52d2c083",
+          "exact": true
+        },
+        {
+          "path": "packages/core/tsconfig.json",
+          "bytes": 135,
+          "sha256": "09319d4a578565e86ce5eff1e1c06bc4c171328590dc7abd5e45206b44d95c87",
+          "reviewedBytes": 135,
+          "reviewedSha256": "09319d4a578565e86ce5eff1e1c06bc4c171328590dc7abd5e45206b44d95c87",
+          "exact": true
+        },
+        {
+          "path": "package.json",
+          "bytes": 2655,
+          "sha256": "0a5dd44141666dc4878b95f7b188264c0497c945540a72d1ad5d9b028b857552",
+          "reviewedBytes": 2655,
+          "reviewedSha256": "0a5dd44141666dc4878b95f7b188264c0497c945540a72d1ad5d9b028b857552",
+          "exact": true
+        },
+        {
+          "path": "pnpm-workspace.yaml",
+          "bytes": 39,
+          "sha256": "75f7304f82f7f5ba3bd87ee897ae87dcba21363b568c6a0c3135574195cb9ece",
+          "reviewedBytes": 39,
+          "reviewedSha256": "75f7304f82f7f5ba3bd87ee897ae87dcba21363b568c6a0c3135574195cb9ece",
+          "exact": true
+        },
+        {
+          "path": "pnpm-lock.yaml",
+          "bytes": 426956,
+          "sha256": "0bbe1703864c0bd298125613dcb6531311853380d11ac51b7bdaa3f1ecbe291a",
+          "reviewedBytes": 426956,
+          "reviewedSha256": "0bbe1703864c0bd298125613dcb6531311853380d11ac51b7bdaa3f1ecbe291a",
+          "exact": true
+        },
+        {
+          "path": "vitest.config.ts",
+          "bytes": 454,
+          "sha256": "7c5019489472c9fda7404a8a778a43f4013f18e2496ef845e9c079d915807c50",
+          "reviewedBytes": 454,
+          "reviewedSha256": "7c5019489472c9fda7404a8a778a43f4013f18e2496ef845e9c079d915807c50",
+          "exact": true
+        },
+        {
+          "path": "eslint.config.js",
+          "bytes": 2196,
+          "sha256": "1436183b730e953583b5913139a75e33bfc6a10a472ed89763e7a28f17da7922",
+          "reviewedBytes": 2196,
+          "reviewedSha256": "1436183b730e953583b5913139a75e33bfc6a10a472ed89763e7a28f17da7922",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/building-source-correction-1-owned.test.ts",
+          "bytes": 11717,
+          "sha256": "64520604340c0d6a38ae45360c6bf8caad6361b69aabe749c36c023c88ecc986",
+          "reviewedBytes": 11717,
+          "reviewedSha256": "64520604340c0d6a38ae45360c6bf8caad6361b69aabe749c36c023c88ecc986",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/building-source-correction-1-owned.test.ts",
+          "bytes": 10951,
+          "sha256": "7cd17a0dc76589f0154ecdf1cab19e89308228d95ef699a8ec5399a3c5494cc9",
+          "reviewedBytes": 10951,
+          "reviewedSha256": "7cd17a0dc76589f0154ecdf1cab19e89308228d95ef699a8ec5399a3c5494cc9",
+          "exact": true
+        },
+        {
+          "path": "packages/core/node_modules/@cantoo/pdf-lib/cjs/core/embedders/StandardFontEmbedder.js",
+          "bytes": 4281,
+          "sha256": "5453965a198da787a4767188587fcb1f6e49ac308b0d266f39bbf1dd2cdb7f64",
+          "reviewedBytes": 4281,
+          "reviewedSha256": "5453965a198da787a4767188587fcb1f6e49ac308b0d266f39bbf1dd2cdb7f64",
+          "exact": true
+        },
+        {
+          "path": "packages/core/node_modules/@cantoo/pdf-lib/cjs/api/operations.js",
+          "bytes": 23732,
+          "sha256": "dd58b8e494c1102638e6c0146099d733dde94888f7470f9396cb529d75509ec2",
+          "reviewedBytes": 23732,
+          "reviewedSha256": "dd58b8e494c1102638e6c0146099d733dde94888f7470f9396cb529d75509ec2",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "live-core-source",
+      "guard": {
+        "path": "live-core-source-correction-4-final-guard.json",
+        "bytes": 46556,
+        "sha256": "bbce1304059a80ce75af18d87fd450df54e89751d0558f184da221116674cab7"
+      },
+      "rootDisposition": {
+        "path": "live-core-source-correction-4-final-disposition.md",
+        "bytes": 3292,
+        "sha256": "cee12c1abceb536feb0d56fe3d3b2c589c8b26f8b0831167d67072b4b4e57a8e"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/tools/word-counter/index.ts",
+          "bytes": 7294,
+          "sha256": "069d343a6c4d2b8f0bd572315b4e62f0937ae88588698a5c227b6bb5633583ed",
+          "reviewedBytes": 7294,
+          "reviewedSha256": "069d343a6c4d2b8f0bd572315b4e62f0937ae88588698a5c227b6bb5633583ed",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/word-counter/types.ts",
+          "bytes": 648,
+          "sha256": "1afcb86b090e29c99791c7803f211a644b8a743e5bf1ed5c5362f904a723be55",
+          "reviewedBytes": 648,
+          "reviewedSha256": "1afcb86b090e29c99791c7803f211a644b8a743e5bf1ed5c5362f904a723be55",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/json-formatter/index.ts",
+          "bytes": 8863,
+          "sha256": "baad1a736aee784b4124d21aa9097a4ba3e331806c5b36e31a11570284c6b4bf",
+          "reviewedBytes": 8863,
+          "reviewedSha256": "baad1a736aee784b4124d21aa9097a4ba3e331806c5b36e31a11570284c6b4bf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/json-formatter/types.ts",
+          "bytes": 281,
+          "sha256": "5b6fc3caccf65b256208054c26f21a328fb9848f43d09ea49ed652a0cd41a524",
+          "reviewedBytes": 281,
+          "reviewedSha256": "5b6fc3caccf65b256208054c26f21a328fb9848f43d09ea49ed652a0cd41a524",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/json-path/index.ts",
+          "bytes": 20629,
+          "sha256": "8a46ed37869e25831745604b101825e106b36220cf36cbdaf8df63d2a4fa679e",
+          "reviewedBytes": 20629,
+          "reviewedSha256": "8a46ed37869e25831745604b101825e106b36220cf36cbdaf8df63d2a4fa679e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/ip-subnet-calc/index.ts",
+          "bytes": 6141,
+          "sha256": "b27078852f571c7534ccfb6a4280f7aa9c4ac040a814a1d66c95ec13eed40f48",
+          "reviewedBytes": 6141,
+          "reviewedSha256": "b27078852f571c7534ccfb6a4280f7aa9c4ac040a814a1d66c95ec13eed40f48",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/ip-subnet-calc/types.ts",
+          "bytes": 621,
+          "sha256": "69af5951a2f2898c17789209ad269bf642f48ba9713db45368cffd04faacfa0d",
+          "reviewedBytes": 621,
+          "reviewedSha256": "69af5951a2f2898c17789209ad269bf642f48ba9713db45368cffd04faacfa0d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/markdown-to-html/index.ts",
+          "bytes": 12284,
+          "sha256": "732990b03341cdb66cea160800546bff01b1e613664dc954cf29eeec44ec325e",
+          "reviewedBytes": 12284,
+          "reviewedSha256": "732990b03341cdb66cea160800546bff01b1e613664dc954cf29eeec44ec325e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/word-counter/word-counter-extension.test.ts",
+          "bytes": 2533,
+          "sha256": "c42de8d23d096fabc3e6001211ce59402f178af4aab0e0afe7011776d27b688c",
+          "reviewedBytes": 2533,
+          "reviewedSha256": "c42de8d23d096fabc3e6001211ce59402f178af4aab0e0afe7011776d27b688c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/json-formatter/json-formatter-extension.test.ts",
+          "bytes": 2003,
+          "sha256": "7f3caac8af394b2fede5d01d504614d6a8635b36ad768c9a2f6a58f502b69936",
+          "reviewedBytes": 2003,
+          "reviewedSha256": "7f3caac8af394b2fede5d01d504614d6a8635b36ad768c9a2f6a58f502b69936",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/json-formatter/json-formatter-budget-order.test.ts",
+          "bytes": 3123,
+          "sha256": "c587eb23479da9167addd71e0b397b724dc34e7eee4685ab76d67e4c68d9c157",
+          "reviewedBytes": 3123,
+          "reviewedSha256": "c587eb23479da9167addd71e0b397b724dc34e7eee4685ab76d67e4c68d9c157",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/json-path/json-path.test.ts",
+          "bytes": 13553,
+          "sha256": "c1c9e231c9bbc2276a4f0420953d6f438416f7d14584cbaf507436262106b3da",
+          "reviewedBytes": 13553,
+          "reviewedSha256": "c1c9e231c9bbc2276a4f0420953d6f438416f7d14584cbaf507436262106b3da",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/ip-subnet-calc/ip-subnet-split.test.ts",
+          "bytes": 2698,
+          "sha256": "8a3041ce77493d64c92b18f34447cfe794dcff7e0bdc76b2f8caa21013247a9a",
+          "reviewedBytes": 2698,
+          "reviewedSha256": "8a3041ce77493d64c92b18f34447cfe794dcff7e0bdc76b2f8caa21013247a9a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "packages/core/THIRD-PARTY-NOTICES.txt",
+          "bytes": 1334,
+          "sha256": "4f7cfb5a7bef8c40a72b0d687b22d5cf0fe6f1523309810cc20f37c4c73171c6",
+          "reviewedBytes": 1334,
+          "reviewedSha256": "4f7cfb5a7bef8c40a72b0d687b22d5cf0fe6f1523309810cc20f37c4c73171c6",
+          "exact": true
+        },
+        {
+          "path": "packages/web/public/licenses/entities-4.5.0.txt",
+          "bytes": 1334,
+          "sha256": "4f7cfb5a7bef8c40a72b0d687b22d5cf0fe6f1523309810cc20f37c4c73171c6",
+          "reviewedBytes": 1334,
+          "reviewedSha256": "4f7cfb5a7bef8c40a72b0d687b22d5cf0fe6f1523309810cc20f37c4c73171c6",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/live-source-correction-1-regressions.test.ts",
+          "bytes": 11597,
+          "sha256": "ba3d2e83262466646c93fc8695fa6068ce1dff46be133283df1fb4442893c0ae",
+          "reviewedBytes": 11597,
+          "reviewedSha256": "ba3d2e83262466646c93fc8695fa6068ce1dff46be133283df1fb4442893c0ae",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/live-core-source-correction-2-regressions.test.ts",
+          "bytes": 7068,
+          "sha256": "0dd77ae8789f145d9fdde64c779da2ec6d6811bca9af58488f67b2a877e55714",
+          "reviewedBytes": 7068,
+          "reviewedSha256": "0dd77ae8789f145d9fdde64c779da2ec6d6811bca9af58488f67b2a877e55714",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/word-counter/word-counter.test.ts",
+          "bytes": 3302,
+          "sha256": "dd56a191922556384752da91810d913b89b154b81fba19620f79869eb14cb209",
+          "reviewedBytes": 3302,
+          "reviewedSha256": "dd56a191922556384752da91810d913b89b154b81fba19620f79869eb14cb209",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/json-formatter/json-formatter.test.ts",
+          "bytes": 2839,
+          "sha256": "12f8fa20ab88b617e01e558eb14a4058a10e339b912789ada3c80f4d0f1537b3",
+          "reviewedBytes": 2839,
+          "reviewedSha256": "12f8fa20ab88b617e01e558eb14a4058a10e339b912789ada3c80f4d0f1537b3",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/ip-subnet-calc/ip-subnet-calc.test.ts",
+          "bytes": 3194,
+          "sha256": "febdd75c98acc15495e3b52c0e7389b34a07bc2255deb25f57686a59988cb8a9",
+          "reviewedBytes": 3194,
+          "reviewedSha256": "febdd75c98acc15495e3b52c0e7389b34a07bc2255deb25f57686a59988cb8a9",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/markdown-to-html/markdown-to-html.test.ts",
+          "bytes": 4425,
+          "sha256": "8dfc53a66d292e339ef071cd88311eb96e61b6c528328b0cf85ae314f68f0025",
+          "reviewedBytes": 4425,
+          "reviewedSha256": "8dfc53a66d292e339ef071cd88311eb96e61b6c528328b0cf85ae314f68f0025",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/markdown-to-html/types.ts",
+          "bytes": 235,
+          "sha256": "c8d17c83d07a7ecebb492fe6b82132cdd9d86881b6ed14734fb9c25cc38eddda",
+          "reviewedBytes": 235,
+          "reviewedSha256": "c8d17c83d07a7ecebb492fe6b82132cdd9d86881b6ed14734fb9c25cc38eddda",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/marked@15.0.12/node_modules/marked/lib/marked.esm.js",
+          "bytes": 71905,
+          "sha256": "29e25cdf1a06075c90e9885af06ddd23fb22a5424ed23a61dda986c73a8af641",
+          "reviewedBytes": 71905,
+          "reviewedSha256": "29e25cdf1a06075c90e9885af06ddd23fb22a5424ed23a61dda986c73a8af641",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/marked@15.0.12/node_modules/marked/lib/marked.d.ts",
+          "bytes": 20942,
+          "sha256": "2f9501a28443c63187a4a868f2e33807640191569144bc65c9127ed0a6ee9f3b",
+          "reviewedBytes": 20942,
+          "reviewedSha256": "2f9501a28443c63187a4a868f2e33807640191569144bc65c9127ed0a6ee9f3b",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/decode.js",
+          "bytes": 22611,
+          "sha256": "40dc92b31b1bcdebc537607db1ea05c6788586a2c6b128d54d2557a7d529aec6",
+          "reviewedBytes": 22611,
+          "reviewedSha256": "40dc92b31b1bcdebc537607db1ea05c6788586a2c6b128d54d2557a7d529aec6",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8277,
+          "reviewedSha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/text-developer.ts",
+          "bytes": 37143,
+          "sha256": "3553296bba3f5d2ff309a2074e7dda0b34ebe0c6296d24eb177b5fdd39cf9a23",
+          "reviewedBytes": 37143,
+          "reviewedSha256": "3553296bba3f5d2ff309a2074e7dda0b34ebe0c6296d24eb177b5fdd39cf9a23",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/live-core-source-correction-3-regressions.test.ts",
+          "bytes": 7950,
+          "sha256": "37f799474704090d522f3d21447462ae05242719374a631ccc3f9d49d4a3ad6f",
+          "reviewedBytes": 7950,
+          "reviewedSha256": "37f799474704090d522f3d21447462ae05242719374a631ccc3f9d49d4a3ad6f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/live-core-source-correction-3-budget.test.ts",
+          "bytes": 6929,
+          "sha256": "66b373b2194982c2cd2377d63f7079782e24abdae00d0a6b8290bf6ed5a16513",
+          "reviewedBytes": 6929,
+          "reviewedSha256": "66b373b2194982c2cd2377d63f7079782e24abdae00d0a6b8290bf6ed5a16513",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/marked@15.0.12/node_modules/marked/package.json",
+          "bytes": 3763,
+          "sha256": "f568906109ceacc114fabf9dabcb3782d3bc0f2e2a6b2b8c7edc6878e3c3215b",
+          "reviewedBytes": 3763,
+          "reviewedSha256": "f568906109ceacc114fabf9dabcb3782d3bc0f2e2a6b2b8c7edc6878e3c3215b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/live-text-runner.test.ts",
+          "bytes": 17151,
+          "sha256": "79871d35f8a8659fb80d2bc525a45ef5e0ee7c8aa90a0405a0c01b93851adb08",
+          "reviewedBytes": 17151,
+          "reviewedSha256": "79871d35f8a8659fb80d2bc525a45ef5e0ee7c8aa90a0405a0c01b93851adb08",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/liveTextState.test.ts",
+          "bytes": 8415,
+          "sha256": "0982c488868fbb330ab2a8fb417139921351d79b92499d19b01390a824ad1a89",
+          "reviewedBytes": 8415,
+          "reviewedSha256": "0982c488868fbb330ab2a8fb417139921351d79b92499d19b01390a824ad1a89",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/extension-ui-source-regressions.test.ts",
+          "bytes": 11301,
+          "sha256": "13db0da63532fc91567d6ee7054f5226fc485ea02aaa523d663731ef85f82544",
+          "reviewedBytes": 11301,
+          "reviewedSha256": "13db0da63532fc91567d6ee7054f5226fc485ea02aaa523d663731ef85f82544",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/extension-ui-correction-2-regressions.test.ts",
+          "bytes": 8081,
+          "sha256": "3f6c08725b8efbfeceb375a5a428d0c34ca123b2b33a95ccdf2c9be2e76a94b8",
+          "reviewedBytes": 8081,
+          "reviewedSha256": "3f6c08725b8efbfeceb375a5a428d0c34ca123b2b33a95ccdf2c9be2e76a94b8",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/LiveTextHarness.svelte",
+          "bytes": 4602,
+          "sha256": "1948c01b2aab1832a324eb6d065a86e7186b3d2031cbb2272f90f79f6053657d",
+          "reviewedBytes": 4602,
+          "reviewedSha256": "1948c01b2aab1832a324eb6d065a86e7186b3d2031cbb2272f90f79f6053657d",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/ColorHarness.svelte",
+          "bytes": 1542,
+          "sha256": "c9bc1d4cf659e5821d6369b21713bf4da622b3bcb69e6dece4c9c50a18ccf7d7",
+          "reviewedBytes": 1542,
+          "reviewedSha256": "c9bc1d4cf659e5821d6369b21713bf4da622b3bcb69e6dece4c9c50a18ccf7d7",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/TextResultHarness.svelte",
+          "bytes": 2883,
+          "sha256": "94f82a5596000e188b38dd32dc97c8977f58f78ae25b56d6d47751d3f3e89fd7",
+          "reviewedBytes": 2883,
+          "reviewedSha256": "94f82a5596000e188b38dd32dc97c8977f58f78ae25b56d6d47751d3f3e89fd7",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/LiveTextRunner.svelte",
+          "bytes": 8479,
+          "sha256": "a6c07fba632d3e8d6f224a2957ab646aea2e1269984675337c0ff611ac3ff680",
+          "reviewedBytes": 8479,
+          "reviewedSha256": "a6c07fba632d3e8d6f224a2957ab646aea2e1269984675337c0ff611ac3ff680",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/liveTextState.ts",
+          "bytes": 5508,
+          "sha256": "93dbf23ca937b6562ba351d481454a180fe895f08eec85d23b92dcfd1ec01b72",
+          "reviewedBytes": 5508,
+          "reviewedSha256": "93dbf23ca937b6562ba351d481454a180fe895f08eec85d23b92dcfd1ec01b72",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/JsonPathResults.svelte",
+          "bytes": 2427,
+          "sha256": "74f2f1eddd9db7ebfc48a0e79aeba09d76f068e59f6defacc8c0e99933e778d7",
+          "reviewedBytes": 2427,
+          "reviewedSha256": "74f2f1eddd9db7ebfc48a0e79aeba09d76f068e59f6defacc8c0e99933e778d7",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/SubnetResults.svelte",
+          "bytes": 2709,
+          "sha256": "508a344e421aa3f7503d5eb79745ed7745f964c2d53bb9581933cc126380c639",
+          "reviewedBytes": 2709,
+          "reviewedSha256": "508a344e421aa3f7503d5eb79745ed7745f964c2d53bb9581933cc126380c639",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/TextInputRunner.svelte",
+          "bytes": 18494,
+          "sha256": "9505d868fe47b94456843e60463cdb705d25b429175f5a2fd5913429356e9fa4",
+          "reviewedBytes": 18494,
+          "reviewedSha256": "9505d868fe47b94456843e60463cdb705d25b429175f5a2fd5913429356e9fa4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/TextResultRunner.svelte",
+          "bytes": 15792,
+          "sha256": "0fd29f2fbd260e4a84841b8921d05b88e9812d09b011f47bda22b70060895a13",
+          "reviewedBytes": 15792,
+          "reviewedSha256": "0fd29f2fbd260e4a84841b8921d05b88e9812d09b011f47bda22b70060895a13",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/ColorConverterRunner.svelte",
+          "bytes": 15720,
+          "sha256": "597259a0b96326a9ceb6e065b778992521d6ebb936050568919ed02853a7dbbe",
+          "reviewedBytes": 15720,
+          "reviewedSha256": "597259a0b96326a9ceb6e065b778992521d6ebb936050568919ed02853a7dbbe",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/UtilityForm.svelte",
+          "bytes": 7227,
+          "sha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "reviewedBytes": 7227,
+          "reviewedSha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/utilityFormState.ts",
+          "bytes": 2853,
+          "sha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "reviewedBytes": 2853,
+          "reviewedSha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/FlatJsonResult.svelte",
+          "bytes": 8749,
+          "sha256": "7fd775c53024c98596a1a23902153fdddbff091ac356716c46f51d3c0bdff9a0",
+          "reviewedBytes": 8749,
+          "reviewedSha256": "7fd775c53024c98596a1a23902153fdddbff091ac356716c46f51d3c0bdff9a0",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/types.ts",
+          "bytes": 826,
+          "sha256": "22a11e7a2ec2e24c113d75d606394b74fedef7a92d12f7f38a3840d4439915f8",
+          "reviewedBytes": 826,
+          "reviewedSha256": "22a11e7a2ec2e24c113d75d606394b74fedef7a92d12f7f38a3840d4439915f8",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/naming.ts",
+          "bytes": 942,
+          "sha256": "9c1b3acbd7d86282f70436dd27b6b5da50174b91305694e9a3be6090983667dd",
+          "reviewedBytes": 942,
+          "reviewedSha256": "9c1b3acbd7d86282f70436dd27b6b5da50174b91305694e9a3be6090983667dd",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/markdownTablePreview.ts",
+          "bytes": 1116,
+          "sha256": "f63bbcdaa134537de7c6055205f711c392dc89b3cfbbf1c630bb76117c5541be",
+          "reviewedBytes": 1116,
+          "reviewedSha256": "f63bbcdaa134537de7c6055205f711c392dc89b3cfbbf1c630bb76117c5541be",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/base64/index.ts",
+          "bytes": 7005,
+          "sha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "reviewedBytes": 7005,
+          "reviewedSha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/csv-json/index.ts",
+          "bytes": 9641,
+          "sha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "reviewedBytes": 9641,
+          "reviewedSha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/index.ts",
+          "bytes": 4935,
+          "sha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "reviewedBytes": 4935,
+          "reviewedSha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/types.ts",
+          "bytes": 632,
+          "sha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "reviewedBytes": 632,
+          "reviewedSha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/marked@15.0.12/node_modules/marked/lib/marked.cjs",
+          "bytes": 72991,
+          "sha256": "0a8051a2b02f5ef70b6e3e1f00baded1522cbbf48b975b6ac64a8f226a8a0965",
+          "reviewedBytes": 72991,
+          "reviewedSha256": "0a8051a2b02f5ef70b6e3e1f00baded1522cbbf48b975b6ac64a8f226a8a0965",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/decode_codepoint.js",
+          "bytes": 2312,
+          "sha256": "353d795ba2d5122db249498a1d04ec47271bf39facf732cf1c0e9c12c2f3fb83",
+          "reviewedBytes": 2312,
+          "reviewedSha256": "353d795ba2d5122db249498a1d04ec47271bf39facf732cf1c0e9c12c2f3fb83",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/generated/decode-data-html.js",
+          "bytes": 47822,
+          "sha256": "ab101d8fe05c8ab8d87260d073b839fe7db39a34d8dbb1a1f316585c9a393730",
+          "reviewedBytes": 47822,
+          "reviewedSha256": "ab101d8fe05c8ab8d87260d073b839fe7db39a34d8dbb1a1f316585c9a393730",
+          "exact": true
+        },
+        {
+          "path": "node_modules/.pnpm/entities@4.5.0/node_modules/entities/lib/generated/decode-data-xml.js",
+          "bytes": 377,
+          "sha256": "df2b60bce1de9276201f1a3e42a12c60553f812685c5fe190dc46489f4bcaccd",
+          "reviewedBytes": 377,
+          "reviewedSha256": "df2b60bce1de9276201f1a3e42a12c60553f812685c5fe190dc46489f4bcaccd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/live4-image-alt-cases.json",
+          "bytes": 12719,
+          "sha256": "f4cb0e4549d07533b7873e60e351c5d2802eb5378fad0b858169565d0bce7ad5",
+          "reviewedBytes": 12719,
+          "reviewedSha256": "f4cb0e4549d07533b7873e60e351c5d2802eb5378fad0b858169565d0bce7ad5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/live-core-source-correction-4-regressions.test.ts",
+          "bytes": 1587,
+          "sha256": "c899eeb8a9fe51dd2adea944bb956b17031e4d824e947fedeff2686201834652",
+          "reviewedBytes": 1587,
+          "reviewedSha256": "c899eeb8a9fe51dd2adea944bb956b17031e4d824e947fedeff2686201834652",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "foundation-source",
+      "guard": {
+        "path": "foundation-source-correction-4-context-refreshed-guard.json",
+        "bytes": 16516,
+        "sha256": "6fb62aefe41149fb9602d87dd4481566b0518eb624686851e2739d32fd0216e3"
+      },
+      "rootDisposition": {
+        "path": "foundation-source-correction-4-final-disposition.md",
+        "bytes": 1797,
+        "sha256": "699d91cfb9d83c734bc977e176fb9bed6116017b99c6b298729696786e628a15"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/common.test.ts",
+          "bytes": 11717,
+          "sha256": "889a51a8c2cba4041c0c77c9cfc3f3f7b19c51f4cf215c02848fc2999355d0b9",
+          "reviewedBytes": 11717,
+          "reviewedSha256": "889a51a8c2cba4041c0c77c9cfc3f3f7b19c51f4cf215c02848fc2999355d0b9",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/common-source-correction-3.test.ts",
+          "bytes": 8309,
+          "sha256": "72aed1a9e4e7e43469fa819abff8110d6d47efbd63460bf8aa15ff9f5eaeb0ea",
+          "reviewedBytes": 8309,
+          "reviewedSha256": "72aed1a9e4e7e43469fa819abff8110d6d47efbd63460bf8aa15ff9f5eaeb0ea",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/catalog-coverage.test.ts",
+          "bytes": 6237,
+          "sha256": "c043c261bad76afbe6e38c51f4aa39622d8f0a040218ad9cf720e3ec5ef5d08e",
+          "reviewedBytes": 6237,
+          "reviewedSha256": "c043c261bad76afbe6e38c51f4aa39622d8f0a040218ad9cf720e3ec5ef5d08e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/UtilityForm.svelte",
+          "bytes": 7227,
+          "sha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "reviewedBytes": 7227,
+          "reviewedSha256": "22135571a1c898036c32a680e3410298e4b3bc72d3c9b4aeeb3ba933b127fe5b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/UtilityRunner.svelte",
+          "bytes": 4596,
+          "sha256": "efe8bb19bcbd8a3ca40d7f19a538a5594a6314d6002c916b5784d84ed060a3dd",
+          "reviewedBytes": 4596,
+          "reviewedSha256": "efe8bb19bcbd8a3ca40d7f19a538a5594a6314d6002c916b5784d84ed060a3dd",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/utilityFormState.ts",
+          "bytes": 2853,
+          "sha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "reviewedBytes": 2853,
+          "reviewedSha256": "ad7c0e33b18101942a62d34e936e1f1d921f2cbeca7af554218154d061f5d033",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/utilityFormState.test.ts",
+          "bytes": 4534,
+          "sha256": "01898b7b3a1fcb8e7ebedc51030607b39a4f809b795c91e9ef53a57466133d8c",
+          "reviewedBytes": 4534,
+          "reviewedSha256": "01898b7b3a1fcb8e7ebedc51030607b39a4f809b795c91e9ef53a57466133d8c",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/UtilityHarness.svelte",
+          "bytes": 1829,
+          "sha256": "438687780f38b2604590656f3b7d56ceec1f78e35eead5e372c872a4257e7c85",
+          "reviewedBytes": 1829,
+          "reviewedSha256": "438687780f38b2604590656f3b7d56ceec1f78e35eead5e372c872a4257e7c85",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/utility-runner.test.ts",
+          "bytes": 4170,
+          "sha256": "683a5f2f0b75241d04633819c65eaf861b0534f97a68392189d0b69b0256e79b",
+          "reviewedBytes": 4170,
+          "reviewedSha256": "683a5f2f0b75241d04633819c65eaf861b0534f97a68392189d0b69b0256e79b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/utility-runner-lifecycle.test.ts",
+          "bytes": 4848,
+          "sha256": "b79c710afcb401cba242a6acf936c080dd093d6e73d43e162333eb74f409754b",
+          "reviewedBytes": 4848,
+          "reviewedSha256": "b79c710afcb401cba242a6acf936c080dd093d6e73d43e162333eb74f409754b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/utility-form-feedback.test.ts",
+          "bytes": 3206,
+          "sha256": "5399da40b7f7b95055bcc66f6d1c877aeff7f2813f6fa337eeba47ba4536d4ec",
+          "reviewedBytes": 3206,
+          "reviewedSha256": "5399da40b7f7b95055bcc66f6d1c877aeff7f2813f6fa337eeba47ba4536d4ec",
+          "exact": true
+        },
+        {
+          "path": "packages/cli/src/commands/init-tool.ts",
+          "bytes": 4173,
+          "sha256": "3f74156b5d0dbee4226429a4f7110ee12bf65966226269bb1790ac1a8d7a0319",
+          "reviewedBytes": 4173,
+          "reviewedSha256": "3f74156b5d0dbee4226429a4f7110ee12bf65966226269bb1790ac1a8d7a0319",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/all-tools-meta.test.ts",
+          "bytes": 7264,
+          "sha256": "11d6c1e6a5614b28a20101d5d8e4b4247004c0b09cc3f80de7e7ffdfd0f3930f",
+          "reviewedBytes": 7264,
+          "reviewedSha256": "11d6c1e6a5614b28a20101d5d8e4b4247004c0b09cc3f80de7e7ffdfd0f3930f",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/pages/category/[slug].astro",
+          "bytes": 24306,
+          "sha256": "5eaa0fe3e524beb5e8775161c9bbc4b34b86f159286b6eacf8bde65709966d71",
+          "reviewedBytes": 24306,
+          "reviewedSha256": "5eaa0fe3e524beb5e8775161c9bbc4b34b86f159286b6eacf8bde65709966d71",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/common-source-correction-4.test.ts",
+          "bytes": 4822,
+          "sha256": "4ae6753e62ab8199ddd2c499c8f15df712d015596613c41f6b573183f35338e6",
+          "reviewedBytes": 4822,
+          "reviewedSha256": "4ae6753e62ab8199ddd2c499c8f15df712d015596613c41f6b573183f35338e6",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8015,
+          "reviewedSha256": "d7a347aa02a537af95eefe64ce59a5b42176b10e24c6b489846b93560da50c19",
+          "exact": false
+        }
+      ],
+      "contextMismatches": [
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8015,
+          "reviewedSha256": "d7a347aa02a537af95eefe64ce59a5b42176b10e24c6b489846b93560da50c19",
+          "exact": false
+        }
+      ],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "cron-source",
+      "guard": {
+        "path": "cron-source-correction-4-context-refreshed-guard.json",
+        "bytes": 13543,
+        "sha256": "f6c40fc3bd989bf06462c42409dd9d85cab0e0dd88aaa25d41e2e675bad46b13"
+      },
+      "rootDisposition": {
+        "path": "cron-source-correction-4-final-disposition.md",
+        "bytes": 1907,
+        "sha256": "6f35cf6fd591ae62bda22b8bd3751081cfd892d4758d3c4f8af6683afef4d437"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/cron-from-text/index.ts",
+          "bytes": 24517,
+          "sha256": "00c824011c3b7538a3f8d9e8133b968a3d1d7f0422cb14d2394d689a56257e92",
+          "reviewedBytes": 24517,
+          "reviewedSha256": "00c824011c3b7538a3f8d9e8133b968a3d1d7f0422cb14d2394d689a56257e92",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/index.ts",
+          "bytes": 4935,
+          "sha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "reviewedBytes": 4935,
+          "reviewedSha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/types.ts",
+          "bytes": 632,
+          "sha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "reviewedBytes": 632,
+          "reviewedSha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/fields.test.ts",
+          "bytes": 4327,
+          "sha256": "0af87172d9e1c92c36cd06a83ee96f6f8c92fcf6c1cfae924b469d750baf5b9e",
+          "reviewedBytes": 4327,
+          "reviewedSha256": "0af87172d9e1c92c36cd06a83ee96f6f8c92fcf6c1cfae924b469d750baf5b9e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/cron-from-text.test.ts",
+          "bytes": 4652,
+          "sha256": "1d01cc6cfba906f53f8bafdf52c8470b39279cd7caf07446b548fe919aa25668",
+          "reviewedBytes": 4652,
+          "reviewedSha256": "1d01cc6cfba906f53f8bafdf52c8470b39279cd7caf07446b548fe919aa25668",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/color-converter/color-converter.test.ts",
+          "bytes": 2784,
+          "sha256": "0933e7a26a14a0eb030e6e334d34bb9f70fb81d2ced52c0f61ef60b76803688a",
+          "reviewedBytes": 2784,
+          "reviewedSha256": "0933e7a26a14a0eb030e6e334d34bb9f70fb81d2ced52c0f61ef60b76803688a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/color-alpha.test.ts",
+          "bytes": 1153,
+          "sha256": "bc255aaf7520b31c6ae7d58edf2c018b756d6cccbad4b94589987dd524245f23",
+          "reviewedBytes": 1153,
+          "reviewedSha256": "bc255aaf7520b31c6ae7d58edf2c018b756d6cccbad4b94589987dd524245f23",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-review-regressions.test.ts",
+          "bytes": 4784,
+          "sha256": "af3c6a1799749368a7ada21ec7b53ebe0bc058eda142763e2240003d3d46ecc8",
+          "reviewedBytes": 4784,
+          "reviewedSha256": "af3c6a1799749368a7ada21ec7b53ebe0bc058eda142763e2240003d3d46ecc8",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/color-converter/source-review-regressions.test.ts",
+          "bytes": 4654,
+          "sha256": "79b88cca786766d73e24f4fb92f5916bfcb3c9db3039b87dc62c2993b48630e7",
+          "reviewedBytes": 4654,
+          "reviewedSha256": "79b88cca786766d73e24f4fb92f5916bfcb3c9db3039b87dc62c2993b48630e7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-correction-2-regressions.test.ts",
+          "bytes": 3323,
+          "sha256": "6af92287221a0e29f873d2f724455d4db89d0611b52cf168b2655dc4f28cfa51",
+          "reviewedBytes": 3323,
+          "reviewedSha256": "6af92287221a0e29f873d2f724455d4db89d0611b52cf168b2655dc4f28cfa51",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-correction-3-regressions.test.ts",
+          "bytes": 5460,
+          "sha256": "5d0ec1a2616418a7b6adbf724ca9e9872ef94a0fbf51522115d887712a06833c",
+          "reviewedBytes": 5460,
+          "reviewedSha256": "5d0ec1a2616418a7b6adbf724ca9e9872ef94a0fbf51522115d887712a06833c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/interval-cardinality-regressions.test.ts",
+          "bytes": 659,
+          "sha256": "84b26f962f9581ba328b58e752b6e34ae8a26a1667070bc78c7d6a7bb9c67c3e",
+          "reviewedBytes": 659,
+          "reviewedSha256": "84b26f962f9581ba328b58e752b6e34ae8a26a1667070bc78c7d6a7bb9c67c3e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-correction-4-regressions.test.ts",
+          "bytes": 3340,
+          "sha256": "8a9b612e0d0e420074663a4305d85257bc74eb6cfee4a8d5ffd64e2805dcdc53",
+          "reviewedBytes": 3340,
+          "reviewedSha256": "8a9b612e0d0e420074663a4305d85257bc74eb6cfee4a8d5ffd64e2805dcdc53",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8015,
+          "reviewedSha256": "d7a347aa02a537af95eefe64ce59a5b42176b10e24c6b489846b93560da50c19",
+          "exact": false
+        }
+      ],
+      "contextMismatches": [
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8015,
+          "reviewedSha256": "d7a347aa02a537af95eefe64ce59a5b42176b10e24c6b489846b93560da50c19",
+          "exact": false
+        }
+      ],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "file-source:a",
+      "guard": {
+        "path": "file-source-correction-4-source-context-retry-a-guard.json",
+        "bytes": 44305,
+        "sha256": "55157bb8714cba869041bb93025347b69fc3ed64b7b8eff5dd5c1db181c34721"
+      },
+      "rootDisposition": {
+        "path": "file-source-correction-4-final-disposition.md",
+        "bytes": 5926,
+        "sha256": "ac0051f844199a5db24c333692794691fb74e638d2e799aaf92472a613eddba8"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/files.ts",
+          "bytes": 5506,
+          "sha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "reviewedBytes": 5506,
+          "reviewedSha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/csv-data.ts",
+          "bytes": 15990,
+          "sha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "reviewedBytes": 15990,
+          "reviewedSha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/psd-composite.ts",
+          "bytes": 8363,
+          "sha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "reviewedBytes": 8363,
+          "reviewedSha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-pitch.ts",
+          "bytes": 14902,
+          "sha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "reviewedBytes": 14902,
+          "reviewedSha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-audio.ts",
+          "bytes": 4719,
+          "sha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "reviewedBytes": 4719,
+          "reviewedSha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-job.ts",
+          "bytes": 3511,
+          "sha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "reviewedBytes": 3511,
+          "reviewedSha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/mp3-to-midi.ts",
+          "bytes": 2570,
+          "sha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "reviewedBytes": 2570,
+          "reviewedSha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-contours.ts",
+          "bytes": 40068,
+          "sha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "reviewedBytes": 40068,
+          "reviewedSha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-job.ts",
+          "bytes": 964,
+          "sha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "reviewedBytes": 964,
+          "reviewedSha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-module.ts",
+          "bytes": 2192,
+          "sha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "reviewedBytes": 2192,
+          "reviewedSha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-statement.ts",
+          "bytes": 44399,
+          "sha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "reviewedBytes": 44399,
+          "reviewedSha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-module.ts",
+          "bytes": 2585,
+          "sha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "reviewedBytes": 2585,
+          "reviewedSha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-job.ts",
+          "bytes": 1364,
+          "sha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "reviewedBytes": 1364,
+          "reviewedSha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf.ts",
+          "bytes": 1861,
+          "sha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "reviewedBytes": 1861,
+          "reviewedSha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-node.ts",
+          "bytes": 520,
+          "sha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "reviewedBytes": 520,
+          "reviewedSha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-platform.ts",
+          "bytes": 668,
+          "sha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "reviewedBytes": 668,
+          "reviewedSha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-worker.ts",
+          "bytes": 49,
+          "sha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "reviewedBytes": 49,
+          "reviewedSha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job.ts",
+          "bytes": 6622,
+          "sha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "reviewedBytes": 6622,
+          "reviewedSha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-node.ts",
+          "bytes": 1180,
+          "sha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "reviewedBytes": 1180,
+          "reviewedSha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-platform.ts",
+          "bytes": 1074,
+          "sha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "reviewedBytes": 1074,
+          "reviewedSha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker.ts",
+          "bytes": 5304,
+          "sha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "reviewedBytes": 5304,
+          "reviewedSha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-node.ts",
+          "bytes": 399,
+          "sha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "reviewedBytes": 399,
+          "reviewedSha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-browser.ts",
+          "bytes": 450,
+          "sha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "reviewedBytes": 450,
+          "reviewedSha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/canvas.ts",
+          "bytes": 5715,
+          "sha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "reviewedBytes": 5715,
+          "reviewedSha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/tsup.config.ts",
+          "bytes": 2115,
+          "sha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "reviewedBytes": 2115,
+          "reviewedSha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "patches/pdfjs-dist@6.4.299.patch",
+          "bytes": 879,
+          "sha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "reviewedBytes": 879,
+          "reviewedSha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "exact": true
+        },
+        {
+          "path": "tools/test/catalog-packaged-workers.test.mjs",
+          "bytes": 3613,
+          "sha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "reviewedBytes": 3613,
+          "reviewedSha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/BankStatementRunner.svelte",
+          "bytes": 19169,
+          "sha256": "2a3c99ef1f0fe520ab8f2838691814772d9adcf1d930804aff3c4253c769aaee",
+          "reviewedBytes": 19169,
+          "reviewedSha256": "2a3c99ef1f0fe520ab8f2838691814772d9adcf1d930804aff3c4253c769aaee",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/DropZone.svelte",
+          "bytes": 8439,
+          "sha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "reviewedBytes": 8439,
+          "reviewedSha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/bank-statement-runner.test.ts",
+          "bytes": 11535,
+          "sha256": "bdc091cc728c085316ec5a18976d24f513db68e3f1aa21138ce9520ac08385ef",
+          "reviewedBytes": 11535,
+          "reviewedSha256": "bdc091cc728c085316ec5a18976d24f513db68e3f1aa21138ce9520ac08385ef",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/bank-pdf-extraction.test.ts",
+          "bytes": 10890,
+          "sha256": "be8eb9122b01a06a7ed237dd52b43ea87f44983c93ff2dda557557888a0d3791",
+          "reviewedBytes": 10890,
+          "reviewedSha256": "be8eb9122b01a06a7ed237dd52b43ea87f44983c93ff2dda557557888a0d3791",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/bank-statement.test.ts",
+          "bytes": 17822,
+          "sha256": "16f3d9822d045bcb8e2aa53239c51489967bfb9362663d0412236e67b8460ac4",
+          "reviewedBytes": 17822,
+          "reviewedSha256": "16f3d9822d045bcb8e2aa53239c51489967bfb9362663d0412236e67b8460ac4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-job.test.ts",
+          "bytes": 5863,
+          "sha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "reviewedBytes": 5863,
+          "reviewedSha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/bank-expected-data.json",
+          "bytes": 2880,
+          "sha256": "a7e3f5ee5267d7adb8e5ac5983e58e505ed33491f5b40a51bb466a547df08114",
+          "reviewedBytes": 2880,
+          "reviewedSha256": "a7e3f5ee5267d7adb8e5ac5983e58e505ed33491f5b40a51bb466a547df08114",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/bank-fixtures.ts",
+          "bytes": 3737,
+          "sha256": "0afe527a2b659ee889611a82677fac4a2f868d820695b9d260e053026c674c62",
+          "reviewedBytes": 3737,
+          "reviewedSha256": "0afe527a2b659ee889611a82677fac4a2f868d820695b9d260e053026c674c62",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/bank-provenance.md",
+          "bytes": 2724,
+          "sha256": "eebb78799631c941daff841b59e3d816bfc3f27487b752a827f7f233e9852061",
+          "reviewedBytes": 2724,
+          "reviewedSha256": "eebb78799631c941daff841b59e3d816bfc3f27487b752a827f7f233e9852061",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-2-regressions.test.ts",
+          "bytes": 9113,
+          "sha256": "64906b998a4a7fc451e1b6eeec81f08d55f0c973123a3c683f56e81a537fa479",
+          "reviewedBytes": 9113,
+          "reviewedSha256": "64906b998a4a7fc451e1b6eeec81f08d55f0c973123a3c683f56e81a537fa479",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/codecs.ts",
+          "bytes": 4951,
+          "sha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "reviewedBytes": 4951,
+          "reviewedSha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8277,
+          "reviewedSha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/astro.config.mjs",
+          "bytes": 6362,
+          "sha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "reviewedBytes": 6362,
+          "reviewedSha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "exact": true
+        },
+        {
+          "path": "packages/web/package.json",
+          "bytes": 1322,
+          "sha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "reviewedBytes": 1322,
+          "reviewedSha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-3-regressions.test.ts",
+          "bytes": 7069,
+          "sha256": "c7dbcbb3a4ec690b943690011449025c0884e6e031da990333011b7fa510b385",
+          "reviewedBytes": 7069,
+          "reviewedSha256": "c7dbcbb3a4ec690b943690011449025c0884e6e031da990333011b7fa510b385",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/helpers/file4-annotation-fixtures.ts",
+          "bytes": 7873,
+          "sha256": "8a666f778464882001df8b0be6287cfaefbf9d73ee3fa1b7d212b410e77fd870",
+          "reviewedBytes": 7873,
+          "reviewedSha256": "8a666f778464882001df8b0be6287cfaefbf9d73ee3fa1b7d212b410e77fd870",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-4-regressions.test.ts",
+          "bytes": 31284,
+          "sha256": "24e83c07972e15bd319473b32c0c38720838603e022d12a84e00df7ad92fad31",
+          "reviewedBytes": 31284,
+          "reviewedSha256": "24e83c07972e15bd319473b32c0c38720838603e022d12a84e00df7ad92fad31",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/file-source-correction-4-regressions.test.ts",
+          "bytes": 11796,
+          "sha256": "db32f824547062beb0e1c152de222a84ac77af2d54d7b163aa2114934943803b",
+          "reviewedBytes": 11796,
+          "reviewedSha256": "db32f824547062beb0e1c152de222a84ac77af2d54d7b163aa2114934943803b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/BankHarness.svelte",
+          "bytes": 1153,
+          "sha256": "ae822ed329148ef9f463517fb7332658c0b3e6847ef822909249f9667279668c",
+          "reviewedBytes": 1153,
+          "reviewedSha256": "ae822ed329148ef9f463517fb7332658c0b3e6847ef822909249f9667279668c",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "file-source:c",
+      "guard": {
+        "path": "file-source-correction-4-source-context-retry-c-guard.json",
+        "bytes": 61802,
+        "sha256": "76e34365a64f6aa56f21dc79bc7f422a139cbba3a76c32dc9888062a176d0abc"
+      },
+      "rootDisposition": {
+        "path": "file-source-correction-4-final-disposition.md",
+        "bytes": 5926,
+        "sha256": "ac0051f844199a5db24c333692794691fb74e638d2e799aaf92472a613eddba8"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/files.ts",
+          "bytes": 5506,
+          "sha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "reviewedBytes": 5506,
+          "reviewedSha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/csv-data.ts",
+          "bytes": 15990,
+          "sha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "reviewedBytes": 15990,
+          "reviewedSha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/psd-composite.ts",
+          "bytes": 8363,
+          "sha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "reviewedBytes": 8363,
+          "reviewedSha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-pitch.ts",
+          "bytes": 14902,
+          "sha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "reviewedBytes": 14902,
+          "reviewedSha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-audio.ts",
+          "bytes": 4719,
+          "sha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "reviewedBytes": 4719,
+          "reviewedSha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-job.ts",
+          "bytes": 3511,
+          "sha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "reviewedBytes": 3511,
+          "reviewedSha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/mp3-to-midi.ts",
+          "bytes": 2570,
+          "sha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "reviewedBytes": 2570,
+          "reviewedSha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-contours.ts",
+          "bytes": 40068,
+          "sha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "reviewedBytes": 40068,
+          "reviewedSha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-job.ts",
+          "bytes": 964,
+          "sha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "reviewedBytes": 964,
+          "reviewedSha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-module.ts",
+          "bytes": 2192,
+          "sha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "reviewedBytes": 2192,
+          "reviewedSha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-statement.ts",
+          "bytes": 44399,
+          "sha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "reviewedBytes": 44399,
+          "reviewedSha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-module.ts",
+          "bytes": 2585,
+          "sha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "reviewedBytes": 2585,
+          "reviewedSha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-job.ts",
+          "bytes": 1364,
+          "sha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "reviewedBytes": 1364,
+          "reviewedSha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf.ts",
+          "bytes": 1861,
+          "sha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "reviewedBytes": 1861,
+          "reviewedSha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-node.ts",
+          "bytes": 520,
+          "sha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "reviewedBytes": 520,
+          "reviewedSha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-platform.ts",
+          "bytes": 668,
+          "sha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "reviewedBytes": 668,
+          "reviewedSha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-worker.ts",
+          "bytes": 49,
+          "sha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "reviewedBytes": 49,
+          "reviewedSha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job.ts",
+          "bytes": 6622,
+          "sha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "reviewedBytes": 6622,
+          "reviewedSha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-node.ts",
+          "bytes": 1180,
+          "sha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "reviewedBytes": 1180,
+          "reviewedSha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-platform.ts",
+          "bytes": 1074,
+          "sha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "reviewedBytes": 1074,
+          "reviewedSha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker.ts",
+          "bytes": 5304,
+          "sha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "reviewedBytes": 5304,
+          "reviewedSha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-node.ts",
+          "bytes": 399,
+          "sha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "reviewedBytes": 399,
+          "reviewedSha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-browser.ts",
+          "bytes": 450,
+          "sha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "reviewedBytes": 450,
+          "reviewedSha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/canvas.ts",
+          "bytes": 5715,
+          "sha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "reviewedBytes": 5715,
+          "reviewedSha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/tsup.config.ts",
+          "bytes": 2115,
+          "sha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "reviewedBytes": 2115,
+          "reviewedSha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "patches/pdfjs-dist@6.4.299.patch",
+          "bytes": 879,
+          "sha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "reviewedBytes": 879,
+          "reviewedSha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "exact": true
+        },
+        {
+          "path": "tools/test/catalog-packaged-workers.test.mjs",
+          "bytes": 3613,
+          "sha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "reviewedBytes": 3613,
+          "reviewedSha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/CsvViewerRunner.svelte",
+          "bytes": 10317,
+          "sha256": "c180e56343507e752863886369780d259dd1a77baf1eea3da22a22b9a6e454ce",
+          "reviewedBytes": 10317,
+          "reviewedSha256": "c180e56343507e752863886369780d259dd1a77baf1eea3da22a22b9a6e454ce",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/PsdPngRunner.svelte",
+          "bytes": 5360,
+          "sha256": "30be52934e85b8afec46a15899ae921a681940c38d8777781cb98350487a4840",
+          "reviewedBytes": 5360,
+          "reviewedSha256": "30be52934e85b8afec46a15899ae921a681940c38d8777781cb98350487a4840",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/MidiPitchRunner.svelte",
+          "bytes": 8271,
+          "sha256": "6c2bdfe338f5c09fec2ddef8d91d4c1914d69d14931917559c36c24cf1ddcc53",
+          "reviewedBytes": 8271,
+          "reviewedSha256": "6c2bdfe338f5c09fec2ddef8d91d4c1914d69d14931917559c36c24cf1ddcc53",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/DropZone.svelte",
+          "bytes": 8439,
+          "sha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "reviewedBytes": 8439,
+          "reviewedSha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/csv-viewer.test.ts",
+          "bytes": 7431,
+          "sha256": "025d968f293420e583113dfa6c6e670f562235bf7f988342b3ad5ae17023f9b4",
+          "reviewedBytes": 7431,
+          "reviewedSha256": "025d968f293420e583113dfa6c6e670f562235bf7f988342b3ad5ae17023f9b4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/psd-png-runner.test.ts",
+          "bytes": 3281,
+          "sha256": "e0b25cc56f71218d1962900fdd023740c639800870dc372c8d30d7983c89b2ad",
+          "reviewedBytes": 3281,
+          "reviewedSha256": "e0b25cc56f71218d1962900fdd023740c639800870dc372c8d30d7983c89b2ad",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/midi-pitch-runner.test.ts",
+          "bytes": 14455,
+          "sha256": "dc9b11a43c0e7c31accbc5fdafe651bb93055eb8d2290f068b9afea650648abe",
+          "reviewedBytes": 14455,
+          "reviewedSha256": "dc9b11a43c0e7c31accbc5fdafe651bb93055eb8d2290f068b9afea650648abe",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/csv-data.test.ts",
+          "bytes": 5985,
+          "sha256": "d620dfd53f98e9c38428df210e28154bbe12b1337efe74da921c8db1da56fa04",
+          "reviewedBytes": 5985,
+          "reviewedSha256": "d620dfd53f98e9c38428df210e28154bbe12b1337efe74da921c8db1da56fa04",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-job.test.ts",
+          "bytes": 5863,
+          "sha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "reviewedBytes": 5863,
+          "reviewedSha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/midi-audio.test.ts",
+          "bytes": 4435,
+          "sha256": "3913da7502dec337cb980378caae397499133015e2826567c64962102993d9f0",
+          "reviewedBytes": 4435,
+          "reviewedSha256": "3913da7502dec337cb980378caae397499133015e2826567c64962102993d9f0",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/midi-pitch-selection-seam.test.ts",
+          "bytes": 3655,
+          "sha256": "357c7f01f5b71ac65f52dbc90a99f45e73bdf77ccb09b3d20dc25b11c5f856c7",
+          "reviewedBytes": 3655,
+          "reviewedSha256": "357c7f01f5b71ac65f52dbc90a99f45e73bdf77ccb09b3d20dc25b11c5f856c7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/midi-pitch.test.ts",
+          "bytes": 6159,
+          "sha256": "85b805ed6fc20ed049e2371db5d468aadf458568c03feb8dee3b19d5a1700a70",
+          "reviewedBytes": 6159,
+          "reviewedSha256": "85b805ed6fc20ed049e2371db5d468aadf458568c03feb8dee3b19d5a1700a70",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/psd-composite.test.ts",
+          "bytes": 6979,
+          "sha256": "97aa773d18d399cadb90083377567ade13e1ac100bced8112c0fa01c566b76a8",
+          "reviewedBytes": 6979,
+          "reviewedSha256": "97aa773d18d399cadb90083377567ade13e1ac100bced8112c0fa01c566b76a8",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/mp3-provenance.md",
+          "bytes": 2611,
+          "sha256": "3ba076310a16113b519a4684cfdc732226910f1c4ef408efe55f4efa62054c00",
+          "reviewedBytes": 2611,
+          "reviewedSha256": "3ba076310a16113b519a4684cfdc732226910f1c4ef408efe55f4efa62054c00",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/csv-sample-bound.test.ts",
+          "bytes": 4113,
+          "sha256": "8883ba5576cb8afcf5807ea0f255a99925fd16a06097de3554044f7454eb0aa0",
+          "reviewedBytes": 4113,
+          "reviewedSha256": "8883ba5576cb8afcf5807ea0f255a99925fd16a06097de3554044f7454eb0aa0",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-ownership.test.ts",
+          "bytes": 5710,
+          "sha256": "556b0c165e94109925d8c8b5b0219a2c82a319c7c12f5b81348d6b516b4b440d",
+          "reviewedBytes": 5710,
+          "reviewedSha256": "556b0c165e94109925d8c8b5b0219a2c82a319c7c12f5b81348d6b516b4b440d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-2-regressions.test.ts",
+          "bytes": 9113,
+          "sha256": "64906b998a4a7fc451e1b6eeec81f08d55f0c973123a3c683f56e81a537fa479",
+          "reviewedBytes": 9113,
+          "reviewedSha256": "64906b998a4a7fc451e1b6eeec81f08d55f0c973123a3c683f56e81a537fa479",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/codecs.ts",
+          "bytes": 4951,
+          "sha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "reviewedBytes": 4951,
+          "reviewedSha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8277,
+          "reviewedSha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/astro.config.mjs",
+          "bytes": 6362,
+          "sha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "reviewedBytes": 6362,
+          "reviewedSha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "exact": true
+        },
+        {
+          "path": "packages/web/package.json",
+          "bytes": 1322,
+          "sha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "reviewedBytes": 1322,
+          "reviewedSha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "exact": true
+        },
+        {
+          "path": "packages/web/scripts/pwa.mjs",
+          "bytes": 4059,
+          "sha256": "cae28304b07d80db5e5ba02ed3e4f27b704163b3fa6e5dd00f878146983eb3e3",
+          "reviewedBytes": 4059,
+          "reviewedSha256": "cae28304b07d80db5e5ba02ed3e4f27b704163b3fa6e5dd00f878146983eb3e3",
+          "exact": true
+        },
+        {
+          "path": "packages/web/scripts/check-pwa.mjs",
+          "bytes": 7573,
+          "sha256": "7c7865ea155f101f40c2a3cc9674a4ed5cae0d818d0f265dcbf0fe76e83bea16",
+          "reviewedBytes": 7573,
+          "reviewedSha256": "7c7865ea155f101f40c2a3cc9674a4ed5cae0d818d0f265dcbf0fe76e83bea16",
+          "exact": true
+        },
+        {
+          "path": "packages/web/scripts/onnx-assets.mjs",
+          "bytes": 5780,
+          "sha256": "8a031e869a72c83e00c3408220dc99c79feb25aa9bc5f06a382c017051af9072",
+          "reviewedBytes": 5780,
+          "reviewedSha256": "8a031e869a72c83e00c3408220dc99c79feb25aa9bc5f06a382c017051af9072",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/sw.ts",
+          "bytes": 7652,
+          "sha256": "f35334397714091c2e065e04756379374e15a1d278c21aa0f08af0dfb435293e",
+          "reviewedBytes": 7652,
+          "reviewedSha256": "f35334397714091c2e065e04756379374e15a1d278c21aa0f08af0dfb435293e",
+          "exact": true
+        },
+        {
+          "path": "packages/web/public/_headers",
+          "bytes": 4307,
+          "sha256": "819dfe5aaf54d2f0f497f0f43b0cb59665144057636973a4090b8d7dcce9db79",
+          "reviewedBytes": 4307,
+          "reviewedSha256": "819dfe5aaf54d2f0f497f0f43b0cb59665144057636973a4090b8d7dcce9db79",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/helpers/file3-png-oracle.ts",
+          "bytes": 7054,
+          "sha256": "a6c2c8aca7b3122b10ed9b2aba2977abd6d99c914256f23e671421a3c09a74eb",
+          "reviewedBytes": 7054,
+          "reviewedSha256": "a6c2c8aca7b3122b10ed9b2aba2977abd6d99c914256f23e671421a3c09a74eb",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-3-regressions.test.ts",
+          "bytes": 7069,
+          "sha256": "c7dbcbb3a4ec690b943690011449025c0884e6e031da990333011b7fa510b385",
+          "reviewedBytes": 7069,
+          "reviewedSha256": "c7dbcbb3a4ec690b943690011449025c0884e6e031da990333011b7fa510b385",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/File3DropZoneHarness.svelte",
+          "bytes": 1042,
+          "sha256": "dd49c21c4febde1140057322ce20b8c503337d309f7394106f60ae1c890ec665",
+          "reviewedBytes": 1042,
+          "reviewedSha256": "dd49c21c4febde1140057322ce20b8c503337d309f7394106f60ae1c890ec665",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/file-source-correction-3-regressions.test.ts",
+          "bytes": 2597,
+          "sha256": "f4859553561433a8e88b2db46cdc2be67cdada7f4f20b341b5302419b7a2a4da",
+          "reviewedBytes": 2597,
+          "reviewedSha256": "f4859553561433a8e88b2db46cdc2be67cdada7f4f20b341b5302419b7a2a4da",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/file-source-correction-3-png.test.ts",
+          "bytes": 5489,
+          "sha256": "f3792a656b33efcd03b5744cac8f67a5884db8ea5b174fc3ede71a5a325b4f0b",
+          "reviewedBytes": 5489,
+          "reviewedSha256": "f3792a656b33efcd03b5744cac8f67a5884db8ea5b174fc3ede71a5a325b4f0b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/PsdHarness.svelte",
+          "bytes": 360,
+          "sha256": "4bdae83b2ada6c945e1b30361af7f071680768a9e9a05b98e9528cf72a4bd78c",
+          "reviewedBytes": 360,
+          "reviewedSha256": "4bdae83b2ada6c945e1b30361af7f071680768a9e9a05b98e9528cf72a4bd78c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/CsvHarness.svelte",
+          "bytes": 899,
+          "sha256": "05f5cdaf08e9a0f77158c09098c6746fd4f1302a332f5647952162bf8090761d",
+          "reviewedBytes": 899,
+          "reviewedSha256": "05f5cdaf08e9a0f77158c09098c6746fd4f1302a332f5647952162bf8090761d",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/MidiPitchHarness.svelte",
+          "bytes": 474,
+          "sha256": "55692a686a42b82c75a052b5221e83b3a82450cded41004b813083061c9677b1",
+          "reviewedBytes": 474,
+          "reviewedSha256": "55692a686a42b82c75a052b5221e83b3a82450cded41004b813083061c9677b1",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "file-source:d",
+      "guard": {
+        "path": "file-source-correction-4-source-context-retry-d-guard.json",
+        "bytes": 36078,
+        "sha256": "2d06dd69bd931887b42d643052a71a43cf8d656c68ea2b10c4d22d3038dbc4ed"
+      },
+      "rootDisposition": {
+        "path": "file-source-correction-4-final-disposition.md",
+        "bytes": 5926,
+        "sha256": "ac0051f844199a5db24c333692794691fb74e638d2e799aaf92472a613eddba8"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/files.ts",
+          "bytes": 5506,
+          "sha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "reviewedBytes": 5506,
+          "reviewedSha256": "bee0e9a77102c125fca3c637129e7a48bd3428a33c936c7f01112ff7fc29e2e0",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/csv-data.ts",
+          "bytes": 15990,
+          "sha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "reviewedBytes": 15990,
+          "reviewedSha256": "278165e861bd23bb05d1a6606bcb48dee5c53e643870cf9f5ad7faae08e4dd7d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/psd-composite.ts",
+          "bytes": 8363,
+          "sha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "reviewedBytes": 8363,
+          "reviewedSha256": "af2f3fc83cea5c5a4d81e46f860209bb4f093c8cbbc5d2bf8b98850f598acb2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-pitch.ts",
+          "bytes": 14902,
+          "sha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "reviewedBytes": 14902,
+          "reviewedSha256": "be1b077d6a68a956c05960a152f385524d2bb5d482a8e81a56512cea22e7fabd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-audio.ts",
+          "bytes": 4719,
+          "sha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "reviewedBytes": 4719,
+          "reviewedSha256": "b90fb151cdfcfab22ad02ee8cf57f51babdc56af0d3b3ac6ea95ce44fa02fa13",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/midi-job.ts",
+          "bytes": 3511,
+          "sha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "reviewedBytes": 3511,
+          "reviewedSha256": "8efd98bcaa07693f7ffc5e2b1396789d66c6cc0cd785b172f81b37b61f7cc981",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/mp3-to-midi.ts",
+          "bytes": 2570,
+          "sha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "reviewedBytes": 2570,
+          "reviewedSha256": "e9065a3e517b5fee224eb1b0f45ae998cea6041720f0efdc44b00a42b262c9a7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-contours.ts",
+          "bytes": 40068,
+          "sha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "reviewedBytes": 40068,
+          "reviewedSha256": "a7a8d25c24546ca40169f69e46669bdc6f34ba1cb17b4ededd7bb8c06cf018dd",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-job.ts",
+          "bytes": 964,
+          "sha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "reviewedBytes": 964,
+          "reviewedSha256": "dfc3a892f4572202517943ea664f5fb95452177df3487fde845e734139518eb4",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/stl-module.ts",
+          "bytes": 2192,
+          "sha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "reviewedBytes": 2192,
+          "reviewedSha256": "8afe05f8bf9f05c317937eead673480907e86bcc35a2f71d55280cb584ba5fa5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-statement.ts",
+          "bytes": 44399,
+          "sha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "reviewedBytes": 44399,
+          "reviewedSha256": "558bf92ce2ffbbd426c29b11e139fd348c70c29912a7d2273fc62bb30c958d05",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-module.ts",
+          "bytes": 2585,
+          "sha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "reviewedBytes": 2585,
+          "reviewedSha256": "3a58a8d1ae67e59af69abbdf9b79e71e57b654f500cb85b417cca49740ffbf8d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-job.ts",
+          "bytes": 1364,
+          "sha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "reviewedBytes": 1364,
+          "reviewedSha256": "150157d66ea41f5c2e6dc28cc827c02f6d2e5bb8666b446cee1d4e04fff306e1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf.ts",
+          "bytes": 1861,
+          "sha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "reviewedBytes": 1861,
+          "reviewedSha256": "c7b3ea3cb0147eaa5d519577d92ad0fb423460f9a78ebeadfbee0af829788560",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-node.ts",
+          "bytes": 520,
+          "sha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "reviewedBytes": 520,
+          "reviewedSha256": "a0b4f32fd23259532e12ad6cd9869a0f279860207596bb1c2d0291d38227183a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-platform.ts",
+          "bytes": 668,
+          "sha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "reviewedBytes": 668,
+          "reviewedSha256": "c0680e9bd984910bb33967e0543f39a4e7a5023abc222f3fbfea7f7cb850a6ca",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/bank-pdf-worker.ts",
+          "bytes": 49,
+          "sha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "reviewedBytes": 49,
+          "reviewedSha256": "742d982a3821d63a50f744af1af12c5fe4b6fa1f30fa3f33557084c6baa011f5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job.ts",
+          "bytes": 6622,
+          "sha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "reviewedBytes": 6622,
+          "reviewedSha256": "2984da6c0ebb6ca69ee3514b63b75e9d8b0ad4dbb4b04297954a420698d65b2f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-node.ts",
+          "bytes": 1180,
+          "sha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "reviewedBytes": 1180,
+          "reviewedSha256": "0804c5480fcdae6d260dae201c662c820e0ba6e9a8863bfb78c8020b3dfd3e4a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-job-platform.ts",
+          "bytes": 1074,
+          "sha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "reviewedBytes": 1074,
+          "reviewedSha256": "7e174dbc989f9178e7f6f7488244bd37cb569b2a9785f910d0f8d46d2311adf5",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker.ts",
+          "bytes": 5304,
+          "sha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "reviewedBytes": 5304,
+          "reviewedSha256": "9d7614be07b6edfac6480f1b9303ae2d8a937b3394c7ebff2706f5825d315bbf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-node.ts",
+          "bytes": 399,
+          "sha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "reviewedBytes": 399,
+          "reviewedSha256": "8ca428da560aa05e53234dc54e7e09ecd55cd4229f77c9fae681ab46347dd8fb",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/file-worker-browser.ts",
+          "bytes": 450,
+          "sha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "reviewedBytes": 450,
+          "reviewedSha256": "e658a4fbac4ffd434aac0ac56c4ae0202bea7cbff5e261577516fab8e2c9edc1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/canvas.ts",
+          "bytes": 5715,
+          "sha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "reviewedBytes": 5715,
+          "reviewedSha256": "628aebccc362f8c54a45ae01d62d0813c0bac4261c1d8d91bb4afac028c5df8e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/tsup.config.ts",
+          "bytes": 2115,
+          "sha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "reviewedBytes": 2115,
+          "reviewedSha256": "e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3617,
+          "reviewedSha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "exact": true
+        },
+        {
+          "path": "patches/pdfjs-dist@6.4.299.patch",
+          "bytes": 879,
+          "sha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "reviewedBytes": 879,
+          "reviewedSha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3",
+          "exact": true
+        },
+        {
+          "path": "tools/test/catalog-packaged-workers.test.mjs",
+          "bytes": 3613,
+          "sha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "reviewedBytes": 3613,
+          "reviewedSha256": "fa0de42955bd7dff5289600f7b82776ccd7f1fdf8f8a613673b5aea91f5e4208",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/StlContourRunner.svelte",
+          "bytes": 6629,
+          "sha256": "7b5bc6971e57f7a6f2c7e976f7f2c0d95d049ece3f4bd59c57e180007b2932d4",
+          "reviewedBytes": 6629,
+          "reviewedSha256": "7b5bc6971e57f7a6f2c7e976f7f2c0d95d049ece3f4bd59c57e180007b2932d4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/src/components/runners/DropZone.svelte",
+          "bytes": 8439,
+          "sha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "reviewedBytes": 8439,
+          "reviewedSha256": "f0b069ecf537065d822f0f48711c27589a36b54f7a78c7275bade9e51103b34f",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/stl-contour-runner.test.ts",
+          "bytes": 7058,
+          "sha256": "b374e6114178b98eba2349cb7413899ea48d41a4b44efb2344b3027dbe207b9c",
+          "reviewedBytes": 7058,
+          "reviewedSha256": "b374e6114178b98eba2349cb7413899ea48d41a4b44efb2344b3027dbe207b9c",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/browserHarness.ts",
+          "bytes": 3918,
+          "sha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "reviewedBytes": 3918,
+          "reviewedSha256": "0a61b63e4a1fe3760e015f45f40faf9b2c4f931092c5592d4a3b328183f23c56",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-job.test.ts",
+          "bytes": 5863,
+          "sha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "reviewedBytes": 5863,
+          "reviewedSha256": "fa0395536487cb9769972696d3dd6485e4896a79e66a2612d8ed3c5e2e5db0ec",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/stl-contours.test.ts",
+          "bytes": 14786,
+          "sha256": "6fa8cb21d46d85033808289a12f25567fa4eb2afb50c9da48b00c0644380ac26",
+          "reviewedBytes": 14786,
+          "reviewedSha256": "6fa8cb21d46d85033808289a12f25567fa4eb2afb50c9da48b00c0644380ac26",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/stl-fixtures.ts",
+          "bytes": 3017,
+          "sha256": "dabbba09f852de305fdae395247dd4f9d75adcd8811a0471d41f9753cf9e41d3",
+          "reviewedBytes": 3017,
+          "reviewedSha256": "dabbba09f852de305fdae395247dd4f9d75adcd8811a0471d41f9753cf9e41d3",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixtures/catalog-files/stl-provenance.md",
+          "bytes": 3364,
+          "sha256": "14ee05fe33a944da37049a27ae41eacb41d45433e525522b9249d8ef6a8dce1f",
+          "reviewedBytes": 3364,
+          "reviewedSha256": "14ee05fe33a944da37049a27ae41eacb41d45433e525522b9249d8ef6a8dce1f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/lib/codecs.ts",
+          "bytes": 4951,
+          "sha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "reviewedBytes": 4951,
+          "reviewedSha256": "960b5728b60ec6cb38413b7583264babb17866677c221beb9e39b2e4f9c97ede",
+          "exact": true
+        },
+        {
+          "path": "packages/core/README.md",
+          "bytes": 8277,
+          "sha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "reviewedBytes": 8277,
+          "reviewedSha256": "2cd8c51f252e155c89d1663d5c88997930ca0b2886366d3d4f5b61b922adc0e4",
+          "exact": true
+        },
+        {
+          "path": "packages/web/astro.config.mjs",
+          "bytes": 6362,
+          "sha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "reviewedBytes": 6362,
+          "reviewedSha256": "8cbec05d685b7aabda4393c32618e70ba9ea92a7e12ce4c7fc5b1e481f42f353",
+          "exact": true
+        },
+        {
+          "path": "packages/web/package.json",
+          "bytes": 1322,
+          "sha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "reviewedBytes": 1322,
+          "reviewedSha256": "4c9be76988f55f14da882baa3d01b01f9b3d1b37641c22e50d8d170884f45bf1",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 19061,
+          "reviewedSha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/helpers/file4-annotation-fixtures.ts",
+          "bytes": 7873,
+          "sha256": "8a666f778464882001df8b0be6287cfaefbf9d73ee3fa1b7d212b410e77fd870",
+          "reviewedBytes": 7873,
+          "reviewedSha256": "8a666f778464882001df8b0be6287cfaefbf9d73ee3fa1b7d212b410e77fd870",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/file-source-correction-4-regressions.test.ts",
+          "bytes": 31284,
+          "sha256": "24e83c07972e15bd319473b32c0c38720838603e022d12a84e00df7ad92fad31",
+          "reviewedBytes": 31284,
+          "reviewedSha256": "24e83c07972e15bd319473b32c0c38720838603e022d12a84e00df7ad92fad31",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/file-source-correction-4-regressions.test.ts",
+          "bytes": 11796,
+          "sha256": "db32f824547062beb0e1c152de222a84ac77af2d54d7b163aa2114934943803b",
+          "reviewedBytes": 11796,
+          "reviewedSha256": "db32f824547062beb0e1c152de222a84ac77af2d54d7b163aa2114934943803b",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/StlHarness.svelte",
+          "bytes": 403,
+          "sha256": "77b6c7b3742bf310c21c301576ec3d506db4c5f4410a7a350e10a0cea8e63795",
+          "reviewedBytes": 403,
+          "reviewedSha256": "77b6c7b3742bf310c21c301576ec3d506db4c5f4410a7a350e10a0cea8e63795",
+          "exact": true
+        },
+        {
+          "path": "packages/web/test/fixtures/utilityCore.ts",
+          "bytes": 3300,
+          "sha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "reviewedBytes": 3300,
+          "reviewedSha256": "4c875f7f0ca94c42aeb1ce3b59095a725500a418ad2b3659ed35ffd37a57d985",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [],
+      "scopeBoundary": "Existing root scoped acceptance only. Current matching owner files do not establish fresh runtime, public integration, or unchanged whole guard if context differs."
+    },
+    {
+      "id": "finance-source0",
+      "actualReviewedInput": {
+        "path": "finance-source-review-input-0.md",
+        "bytes": 284853,
+        "sha256": "b81f4bdb6c989d9b767857c63a13b8ac219d1933c9af0c9b1f1a06d7f40953af"
+      },
+      "raw": {
+        "path": "finance-source-review-0.json",
+        "bytes": 166438,
+        "sha256": "870d54779b3b3efec614ea45be4541d958bac92e61598b945449800d5f925832"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [],
+        "limitations": [
+          "Verdict is from the supplied plan, adjudication, source, and logs only. Nothing was re-executed and provider pages were not opened.",
+          "Root registry, dispatch, shared catalog/release, and the existing compound-interest extension were outside this source scope.",
+          "parseCsv is imported but not included. Quoted newlines and semicolon/pipe behavior are only as strong as that unread helper and the discount CSV browser check.",
+          "Mounted browser coverage is the harness on discount, loan, recipe, and Amazon FBA (4 tests). The other tools are covered by unit oracles and source trace, not mounted controls.",
+          "Logs show core tsc output, Astro 0 errors, 70 unit tests, and 4 browser tests. The web typecheck and lint logs are empty, so those two runs do not show an exit transcript.",
+          "Several plan narratives are implemented in source but have no direct assertion here: metric fuel purchases, Poshmark threshold-inclusive price 20, Upwork hourly gross-up, Ko-fi 5% membership, Stripe reverse to 200, and the mortgage-with-extras 124000/144000 cash totals."
+        ]
+      },
+      "modelUsage": {
+        "grok-4.7-build": {
+          "inputTokens": 102651,
+          "outputTokens": 79929,
+          "cacheReadInputTokens": 1152,
+          "cacheCreationInputTokens": 0,
+          "modelCalls": 1,
+          "costUSD": 0.23305368
+        }
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/finance.ts",
+          "bytes": 96156,
+          "sha256": "a21c62d56373561ad76005b915c04c903c03d572baf6a21acfc0b4f85a6d1a04",
+          "marker": "FILE packages/core/src/utilities/finance.ts\n",
+          "bodyOffset": 70225,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "packages/core/test/utilities/finance.test.ts",
+          "bytes": 32683,
+          "sha256": "94b353861bd8bef4d8da8360f2f1386413919cae0930ac29eac7210078ebabe2",
+          "marker": "FILE packages/core/test/utilities/finance.test.ts\n",
+          "bodyOffset": 166431,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        }
+      ],
+      "scopeBoundary": "41 finance owner source and full declared fixture table. Compound/shared-framework/registry/release excluded; current helper gates separately required. Raw model PASS is not a test run."
+    },
+    {
+      "id": "planning-source1",
+      "actualReviewedInput": {
+        "path": "planning-source-review-input-1.md",
+        "bytes": 229821,
+        "sha256": "ea461b7cc8ea6aa3a0bf6e63ed67b0ce4639f8ba1a40273b01b07406395939d3"
+      },
+      "raw": {
+        "path": "planning-source-review-1.json",
+        "bytes": 113095,
+        "sha256": "69b09ea89c6e93156adffadff23e89066482fa89167753cac62574446736fb5a"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [],
+        "limitations": [
+          "Read-only review of the supplied plan, adjudication, receipt, tests, and sources. Nothing was executed and no subagent was used.",
+          "The four prior findings were re-checked against this source and are closed: pause/snapshot/lap settle from one injected sample and the stopwatch cap pauses in that same settle; clock failure uses pauseAtLastSample and does not resample; Temporal RangeError is mapped through temporalInput; manufacturer rice presets return restMinutes null with an explicit note.",
+          "Supplied vitest and typecheck logs were not re-run and are not an implementation or release pass.",
+          "Root registry, dispatch, category mounting, date-calculator, lockfile, and release gates were outside this review.",
+          "UtilityForm, FlatJsonResult, and createUtility were not in the pasted sources. Enum and showWhen enforcement was inferred only from call sites plus the historical passing logs.",
+          "Host Intl time-zone data and real browser sleep or tab suspension were not exercised."
+        ]
+      },
+      "modelUsage": {
+        "grok-4.7-build": {
+          "inputTokens": 89960,
+          "outputTokens": 62927,
+          "cacheReadInputTokens": 1152,
+          "cacheCreationInputTokens": 0,
+          "modelCalls": 1,
+          "costUSD": 0.18973972
+        }
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/planning.ts",
+          "bytes": 59974,
+          "sha256": "5037a7a0788445f04cbb2d21a7bd9974404acedaa2a1ed7a0c4ef70cc8fae48c",
+          "marker": "## packages/core/src/utilities/planning.ts\n",
+          "bodyOffset": 61556,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "packages/core/test/utilities-planning.test.ts",
+          "bytes": 22065,
+          "sha256": "095354db5f7ebf0568303f29824eca4a4008182a6ce3fbecebaa68d73e6c9653",
+          "marker": "## packages/core/test/utilities-planning.test.ts\n",
+          "bodyOffset": 128914,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "packages/core/src/utilities/names.ts",
+          "bytes": 7327,
+          "sha256": "06337c5792e10006ed95275f467edc8b5c699833735df37a81c96ccad8647737",
+          "marker": "## packages/core/src/utilities/names.ts\n",
+          "bodyOffset": 121536,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "packages/core/test/utilities-names.test.ts",
+          "bytes": 3266,
+          "sha256": "dedf72ff14d753a5da0e1d052c10df45fc58ee763f69b2ee9553d2b9a1c356f9",
+          "marker": "## packages/core/test/utilities-names.test.ts\n",
+          "bodyOffset": 151023,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        }
+      ],
+      "scopeBoundary": "Broad full-input exact owner body matching only, not borrowed six-file correction guard. Common/forms/date/registry/lock/release excluded and separately bound."
+    },
+    {
+      "id": "calendar-compound-source0",
+      "guard": {
+        "path": "engine-date-compound-core-source-review-0-guard.json",
+        "bytes": 3317,
+        "sha256": "cd39808ba227681c264059d111732fb1e9bb5307243e6c281808967545a3cc64"
+      },
+      "raw": {
+        "path": "engine-date-compound-core-source-review-0.json",
+        "bytes": 104209,
+        "sha256": "56e8d5d0f9ce842114c2300d6b88543660b0b011efb5b32288c8fc31a0aca8f8"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [],
+        "limitations": "Read-only source review; tests, the polyfill, and Intl were not executed. Native logs are recorded evidence only. calendar-compound-before-0.log and compound-finite-rounding-probe-0.log are historical BEFORE results (old 2300 lump-sum deposit, missing calendar fields, naive month rollover, and JSON null from unguarded cent rounding) and are not current defects. Current round2 rejects a non-finite Math.round(n*100)/100, and that throw is inside the validation catch, so the probe inputs resolve to one application/json Blob of {valid:false,error:string} rather than a success object containing null. Manifest @js-temporal/polyfill 0.5.1 was taken as the recorded version; the tarball, ISC text, lockfile, and polyfill ecmascript.ts were not re-read. These engines call exported PlainDate only, so host IANA/Intl time-zone rules are not on the result path. Holiday matching assumes ISO PlainDate.toString() is canonical YYYY-MM-DD. Float oracles were checked from the source recurrence and closed forms (effective monthly rate, end vs beginning annuity) against the stated 1e-9 band, not by running vitest. createUtility, validateUtilityParams, validateSchema, and other factory APIs were not scored; cloneUtilityJson was reviewed only as the path both run() methods call. UI showWhen rendering, registry/dispatch, CLI/MCP, consumer/build/coverage/release, and empty __testFixtures.valid/weird are outside this verdict. Abort: an already-aborted signal rejects AbortError before the try; later checks exist on the business-day and month loops, but both run() bodies are synchronous, so a signal that flips only inside onProgress is not observed on the add or day-of-week paths, which have no second check."
+      },
+      "modelUsage": {
+        "grok-4.7-build": {
+          "inputTokens": 49047,
+          "outputTokens": 51742,
+          "cacheReadInputTokens": 2176,
+          "cacheCreationInputTokens": 0,
+          "modelCalls": 1,
+          "costUSD": 0.13927556
+        }
+      },
+      "rootDisposition": null,
+      "currentFiles": [
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false
+        },
+        {
+          "path": "packages/core/src/tools/date-calculator/index.ts",
+          "bytes": 9476,
+          "sha256": "3ded28c8e5741666c15d874ac0aaa7125ebb334080471e82319532d4dea41f24",
+          "reviewedBytes": 9476,
+          "reviewedSha256": "3ded28c8e5741666c15d874ac0aaa7125ebb334080471e82319532d4dea41f24",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/date-calculator/types.ts",
+          "bytes": 659,
+          "sha256": "7e35fa832fbbf0df0ef4a70cd92ed6a2567ffb930460e41221824a925b427e22",
+          "reviewedBytes": 659,
+          "reviewedSha256": "7e35fa832fbbf0df0ef4a70cd92ed6a2567ffb930460e41221824a925b427e22",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/compound-interest/index.ts",
+          "bytes": 7475,
+          "sha256": "14d261a80c0581074e1417188792fc8edf5de159933927fc65e0a73575549d3f",
+          "reviewedBytes": 7475,
+          "reviewedSha256": "14d261a80c0581074e1417188792fc8edf5de159933927fc65e0a73575549d3f",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/compound-interest/types.ts",
+          "bytes": 669,
+          "sha256": "46e8d31bae340cf0755be41540d85da5bd913a3962c2caf181e8eb4f138e67f2",
+          "reviewedBytes": 669,
+          "reviewedSha256": "46e8d31bae340cf0755be41540d85da5bd913a3962c2caf181e8eb4f138e67f2",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 17938,
+          "reviewedSha256": "8709a8ca83e1fb3342c3c2bef6c2defa71f5477a522c7cf4b8e46e039b39a80a",
+          "exact": false
+        },
+        {
+          "path": "packages/core/test/date-calculator-calendar.test.ts",
+          "bytes": 3442,
+          "sha256": "b9904ed27e821b5bc77a1954bda28ea137f95b6e4bfc959efcad5c4c883b1993",
+          "reviewedBytes": 3442,
+          "reviewedSha256": "b9904ed27e821b5bc77a1954bda28ea137f95b6e4bfc959efcad5c4c883b1993",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/compound-interest-extension.test.ts",
+          "bytes": 2481,
+          "sha256": "7b66a36d81951c68985ac871d6c626859297c2e9298416929b509674820afe3c",
+          "reviewedBytes": 2481,
+          "reviewedSha256": "7b66a36d81951c68985ac871d6c626859297c2e9298416929b509674820afe3c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/date-calculator/date-calculator.test.ts",
+          "bytes": 3133,
+          "sha256": "226a60899b46c07b2928dd41c69c37f5203f25c828c6bb8ac4dfc5f11ab64b1e",
+          "reviewedBytes": 3133,
+          "reviewedSha256": "226a60899b46c07b2928dd41c69c37f5203f25c828c6bb8ac4dfc5f11ab64b1e",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/tools/compound-interest/compound-interest.test.ts",
+          "bytes": 3419,
+          "sha256": "c54c3a3024cd58fa436a1a5f6481484743a909abca359e1dd8b770b3d74738ad",
+          "reviewedBytes": 3419,
+          "reviewedSha256": "c54c3a3024cd58fa436a1a5f6481484743a909abca359e1dd8b770b3d74738ad",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 17938,
+          "reviewedSha256": "8709a8ca83e1fb3342c3c2bef6c2defa71f5477a522c7cf4b8e46e039b39a80a",
+          "exact": false
+        }
+      ],
+      "scopeBoundary": "Specific raw verdict and exact owner bodies, with original limitations/context drift. No silent whole-guard refresh or unrun implementation acceptance."
+    },
+    {
+      "id": "text-developer-source3",
+      "guard": {
+        "path": "text-core-source-correction-3-guard.json",
+        "bytes": 7495,
+        "sha256": "e6ba77ef42706cc14cfd5bda309d53cbd7dc0152358e59e0144e9d3a00a90c4e"
+      },
+      "raw": {
+        "path": "text-core-source-correction-3-claude.json",
+        "bytes": 10242,
+        "sha256": "d4e30dd77a8ef4d7b1526386c4aa8361885f5cfa7f354ae77f0a916f81283471"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [
+          {
+            "severity": "low",
+            "evidence": "text-developer.ts parseTextRows auto branch: attempts with `quota` set also have `error` set, so the `!error` candidate filter drops them. The protected test 'accepts the sole good candidate even though the wrong delimiter hits its column quota' (`a;b;c,d` with maxColumns 2 returns the comma split) depends on this.",
+            "finding": "Auto mode can return a valid-looking table built with the wrong delimiter. Example: a 101-column semicolon file where every row has exactly one comma. The semicolon parse hits the column limit and is dropped, so the comma parse becomes the only candidate and is returned without any notice that the other delimiter was dropped for size. The correction3 plan approves this behavior, and the earlier code behaved the same way, so this is not a regression. Inputs that trigger it are contrived, but a status note when another attempt was dropped for size would be more honest. No change is required for this gate."
+          },
+          {
+            "severity": "info",
+            "evidence": "code-beautifier.ts checkJsonStructure: abort checks only run when `(cursor & 1023) === 0`, and inside strings the cursor moves `cursor += text[cursor] === '\\\\' ? 2 : 1`.",
+            "finding": "A long run of backslash escapes starting at an odd offset skips every multiple of 1024, so no abort check runs inside that string. This has no practical effect: the scan is synchronous, so the signal cannot change until control returns, and a check after the scan always runs. The plan disposition already says the mid-loop checks are not a real interruption point. Recorded so nobody later treats the 1024-step checks as a cancellation guarantee."
+          },
+          {
+            "severity": "info",
+            "evidence": "text-developer.ts fileTool.run: MIME and size checks, then `await file.arrayBuffer()` and UTF-8 decoding, then `validateUtilityParams(...)`.",
+            "finding": "Unknown or invalid parameters are rejected only after reading and decoding up to 5 MiB. Nothing breaks, because rejection still happens before the transform, and this order predates correction3. Validating parameters before reading would just be cheaper."
+          }
+        ],
+        "limitations": "I only read the pasted text: no tools, no runs, no file access. I could not confirm that the pasted source and tests match the files on disk, the SHA-256 hashes, or the logs. I assumed the 120-test/7-file run (EXIT0) and the 19-test mounted browser run are accurate and match this source.\n\nWhat I checked against the correction3 plan:\n- **JSON scan:** depth starts at 0 for the root and is checked before increment; primitives at depth 128 pass and depth 129 is rejected; 129 empty nested arrays pass and 130 are rejected. The count includes every value except object keys and stops at 100000, including duplicate and `__proto__` subtrees. Strings are skipped with escape handling, and a string is treated as a key only when the next non-whitespace character is `:`. The scan runs before the Prettier import, and the output comes from formatting the original text, so number spellings are not round-tripped.\n- **MIME:** both facades compare only the type before `;`, accept a blank type, reject an unknown type before reading, and require valid UTF-8 for all bytes.\n- **Delimiter quota:** the quota flag is set both inside the row callback and in the after-trailing-row check. Quota, ambiguity and the single-good-candidate case each produce a different result.\n\nI found no substantive reachable defect in this scope.\n\nAssumptions I made from general knowledge, not from evidence here:\n- Each installed browser engine parses deeply nested JSON without recursing.\n- Prettier's json-stringify parser accepts every input that strict `JSON.parse` accepts. The tests only cover representative cases.\n\nThe whole-core typecheck fails, and the only reported errors are in `building.test.ts` and `hardware.test.ts`, which import modules that don't exist yet. No errors were reported in the text, beautifier or aspect files, but that is not a whole-core typecheck pass. The empty lint log is taken as EXIT0.\n\nNot reviewed, per scope: the framework, registry, default dispatch, CLI/MCP, package consumers, bundle budgets, browser UI and release."
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 6959,
+          "cacheReadInputTokens": 1988,
+          "cacheCreationInputTokens": 94020,
+          "webSearchRequests": 0,
+          "costUSD": 0.8917456,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 5467,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "rootDisposition": null,
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/text-developer.ts",
+          "bytes": 37143,
+          "sha256": "3553296bba3f5d2ff309a2074e7dda0b34ebe0c6296d24eb177b5fdd39cf9a23",
+          "reviewedBytes": 37143,
+          "reviewedSha256": "3553296bba3f5d2ff309a2074e7dda0b34ebe0c6296d24eb177b5fdd39cf9a23",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/code-beautifier.ts",
+          "bytes": 6818,
+          "sha256": "eda768bf43c07dd54b71f7bd4c44309fd39d3cced93cd4dbd582dcc07166567d",
+          "reviewedBytes": 6818,
+          "reviewedSha256": "eda768bf43c07dd54b71f7bd4c44309fd39d3cced93cd4dbd582dcc07166567d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/aspect-ratio.ts",
+          "bytes": 4545,
+          "sha256": "ac88805fbdfb13d2904a83f0b597bdc406039235ce49995316c536fcbb72c228",
+          "reviewedBytes": 4545,
+          "reviewedSha256": "ac88805fbdfb13d2904a83f0b597bdc406039235ce49995316c536fcbb72c228",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/css-formatter/index.ts",
+          "bytes": 3193,
+          "sha256": "286cd5ee9753bfdb7bf3b7c6561b17e778870f8d4b5aeecea7d8a5e2477bd635",
+          "reviewedBytes": 3193,
+          "reviewedSha256": "286cd5ee9753bfdb7bf3b7c6561b17e778870f8d4b5aeecea7d8a5e2477bd635",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/html-formatter/index.ts",
+          "bytes": 3186,
+          "sha256": "024b1ed177865a0f58fcc3af2b66f9fea302bbbfcad17c4a8ab00538226fe194",
+          "reviewedBytes": 3186,
+          "reviewedSha256": "024b1ed177865a0f58fcc3af2b66f9fea302bbbfcad17c4a8ab00538226fe194",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/json-formatter/index.ts",
+          "bytes": 8863,
+          "sha256": "baad1a736aee784b4124d21aa9097a4ba3e331806c5b36e31a11570284c6b4bf",
+          "reviewedBytes": 6636,
+          "reviewedSha256": "09d31b0cf3f9fcdc6c0a65a9b2c6f904e5f173936335e59782f89bcbd1a52785",
+          "exact": false
+        },
+        {
+          "path": "packages/core/src/tools/xml-formatter/index.ts",
+          "bytes": 3536,
+          "sha256": "9b1aa086c5ce04d5e00bae8cc5326dcd32fc6c4c152a2f33d8c36578c68b8ffe",
+          "reviewedBytes": 3536,
+          "reviewedSha256": "9b1aa086c5ce04d5e00bae8cc5326dcd32fc6c4c152a2f33d8c36578c68b8ffe",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/tools/sql-formatter/index.ts",
+          "bytes": 2960,
+          "sha256": "8cf5cd53dbbd5407c5aa02294185121f9a9f66b3ffc0a5006cdc0b85eaf3f59d",
+          "reviewedBytes": 2960,
+          "reviewedSha256": "8cf5cd53dbbd5407c5aa02294185121f9a9f66b3ffc0a5006cdc0b85eaf3f59d",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/text-developer.test.ts",
+          "bytes": 19029,
+          "sha256": "d67150eb91385d1a51a36dd4658a698a6010803c3dbc8440a972172bdc59df0b",
+          "reviewedBytes": 19029,
+          "reviewedSha256": "d67150eb91385d1a51a36dd4658a698a6010803c3dbc8440a972172bdc59df0b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/aspect-ratio.test.ts",
+          "bytes": 1692,
+          "sha256": "0eb9d8fc60684beeeb8cfb8acbc7e806dc8ea5da30eac643c764b52aaa01cbda",
+          "reviewedBytes": 1692,
+          "reviewedSha256": "0eb9d8fc60684beeeb8cfb8acbc7e806dc8ea5da30eac643c764b52aaa01cbda",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/text-core-source-regressions.test.ts",
+          "bytes": 7440,
+          "sha256": "444e401da8b0641acb54dfe1daa8bf531fafa6a9849edf0597c18704a7025e3a",
+          "reviewedBytes": 7440,
+          "reviewedSha256": "444e401da8b0641acb54dfe1daa8bf531fafa6a9849edf0597c18704a7025e3a",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/text-core-source-correction-2-regressions.test.ts",
+          "bytes": 5050,
+          "sha256": "84b3dbba420ccce7d2398d728b154415c57e71ccc5678758e6fde50ad0f560e9",
+          "reviewedBytes": 5050,
+          "reviewedSha256": "84b3dbba420ccce7d2398d728b154415c57e71ccc5678758e6fde50ad0f560e9",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/csp-host-normalization-regressions.test.ts",
+          "bytes": 1437,
+          "sha256": "541bbf633721e83f983543b46a9f5ef7d7557bfc297bac6ac40115bf1ede3a9b",
+          "reviewedBytes": 1437,
+          "reviewedSha256": "541bbf633721e83f983543b46a9f5ef7d7557bfc297bac6ac40115bf1ede3a9b",
+          "exact": true
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 18681,
+          "reviewedSha256": "8262f4fc5c5c392fdeda298f5bc58767013901d31ee4d68030cf660cf500b0c5",
+          "exact": false
+        },
+        {
+          "path": "packages/core/test/utilities/code-beautifier.test.ts",
+          "bytes": 2162,
+          "sha256": "56dc8be8588bb9a25bee99eca951ca34ca27e913a229274b0dde4edc3869c667",
+          "reviewedBytes": 2162,
+          "reviewedSha256": "56dc8be8588bb9a25bee99eca951ca34ca27e913a229274b0dde4edc3869c667",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/utilities/text-core-source-correction-3-regressions.test.ts",
+          "bytes": 8862,
+          "sha256": "65ab9576b0faee634bbc5b956afd392a763c67b73849166a1366098860d697d1",
+          "reviewedBytes": 8862,
+          "reviewedSha256": "65ab9576b0faee634bbc5b956afd392a763c67b73849166a1366098860d697d1",
+          "exact": true
+        }
+      ],
+      "contextMismatches": [
+        {
+          "path": "packages/core/src/tools/json-formatter/index.ts",
+          "bytes": 8863,
+          "sha256": "baad1a736aee784b4124d21aa9097a4ba3e331806c5b36e31a11570284c6b4bf",
+          "reviewedBytes": 6636,
+          "reviewedSha256": "09d31b0cf3f9fcdc6c0a65a9b2c6f904e5f173936335e59782f89bcbd1a52785",
+          "exact": false
+        },
+        {
+          "path": "packages/core/src/utilities/common.ts",
+          "bytes": 19061,
+          "sha256": "fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7",
+          "reviewedBytes": 18681,
+          "reviewedSha256": "8262f4fc5c5c392fdeda298f5bc58767013901d31ee4d68030cf660cf500b0c5",
+          "exact": false
+        }
+      ],
+      "scopeBoundary": "Specific raw verdict and exact owner bodies, with original limitations/context drift. No silent whole-guard refresh or unrun implementation acceptance."
+    },
+    {
+      "id": "domain-source2-root-adjudicated",
+      "actualReviewedInput": {
+        "path": "domain-source-review-input-2.md",
+        "bytes": 491308,
+        "sha256": "e959ebd6a9a3000a7f350c2f349b4bd74b53a7a9183d9b74db2d36e031a1c9f2"
+      },
+      "raw": {
+        "path": "domain-source-review-2-transport-retry.json",
+        "bytes": 33481,
+        "sha256": "55aef349892d2558b88f42c0982014ba1604424bb883303489d83371aa5e66a2"
+      },
+      "structuredOutput": {
+        "pass": false,
+        "findings": [
+          {
+            "severity": "high",
+            "evidence": "functions/api/domain-age.ts returns json(result) with no retryAfter after lookupDomainRegistration; the only Retry-After writes are admission failures (lines setting headers from DomainAdmissionError.retryAfter). functions/_lib/rdap.ts calls onRateLimit only inside lookupDomainRegistration, and domain-age.ts invokes lookupDomainRegistration(canonical, controller.signal) with no onRateLimit argument. The registry branch parses Retry-After into that unused callback, then returns domainStatusResult(..., 'rate-limited', ...) and never puts the delta on the DomainRegistration or the HTTP response. packages/core/src/utilities/domain-age.ts capacityMessage() only reads the Wyreup response Retry-After header.",
+            "finding": "Registry Retry-After is still discarded before it reaches the client. A registry HTTP 429 with Retry-After: 12 becomes a public HTTP 200 status rate-limited body with null age and no Retry-After header. The tool then reports \"Try again later.\" instead of the bounded 12-second advisory. Admission 429/503 hints are unaffected. Protected server tests still accept HTTP 200 with null age, so this wiring was never required there; the new client regression stubs Retry-After on the Wyreup response and does not exercise this path."
+          }
+        ],
+        "limitations": "Source-only correction2 adjudication. Supplied logs were not re-executed. No deployment, default registry/worker, browser, or release acceptance. Initial FAIL5 and correction1 verdicts stand. The rejected Promise.race late-rejection allegation and the excluded eight-physical-socket guarantee were not refiled. One material retry-advisory wiring defect remains."
+      },
+      "modelUsage": {
+        "grok-4.7-build": {
+          "inputTokens": 50809,
+          "outputTokens": 14547,
+          "cacheReadInputTokens": 2176,
+          "cacheCreationInputTokens": 0,
+          "modelCalls": 1,
+          "costUSD": 0.06459592
+        }
+      },
+      "rootDisposition": {
+        "path": "domain-source-review-2-adjudication.md",
+        "bytes": 2366,
+        "sha256": "8e0ffa365255e3dab0d0604260909fc449db0179e4e4fcb641ede45b8ef2771c"
+      },
+      "currentFiles": [
+        {
+          "path": "packages/core/src/utilities/domain-age.ts",
+          "bytes": 8907,
+          "sha256": "4b2fa5064903b68b7447ed6f1a5011c7783459e77fa739aba3efb1d641639e04",
+          "marker": "## Source packages/core/src/utilities/domain-age.ts\n",
+          "bodyOffset": 37912,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "packages/core/src/lib/domain-registration.ts",
+          "bytes": 9144,
+          "sha256": "fa5804205e182f865938250f6d2868915874f5d0121e9bbaa5818e57f3ac7e39",
+          "marker": "## Source packages/core/src/lib/domain-registration.ts\n",
+          "bodyOffset": 28349,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "functions/api/domain-age.ts",
+          "bytes": 5709,
+          "sha256": "6e681b1f0cd9181f40e2d4c4cfb6702aeee9316f9d088520d8d0e183106b032d",
+          "marker": "## Source functions/api/domain-age.ts\n",
+          "bodyOffset": 93674,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "functions/_lib/rdap.ts",
+          "bytes": 9857,
+          "sha256": "3b3e12e8059a52073531b175e2420efe3cd59cc6abe099051c971f5d4b5ac583",
+          "marker": "## Source functions/_lib/rdap.ts\n",
+          "bodyOffset": 55922,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        },
+        {
+          "path": "functions/_lib/public-rate-limit.ts",
+          "bytes": 5130,
+          "sha256": "724d092091a17207ed635d042d677bcded50ab49c5af08900450b53a84a14718",
+          "marker": "## Source functions/_lib/public-rate-limit.ts\n",
+          "bodyOffset": 81658,
+          "completeCurrentBytesExactlyMatchReviewedInput": true
+        }
+      ],
+      "scopeBoundary": "Preserve actual model FAIL and root evidence-based rejection of its sole current-source retry-header claim. Source gate does not include genuine default-registry/Functions/browser/live acceptance."
+    },
+    {
+      "gateId": "engine-binary-csv-core-source-correction-2",
+      "raw": {
+        "path": "engine-binary-csv-core-source-correction-2-claude.json",
+        "bytes": 3655,
+        "sha256": "f79e371b3194ee93a3f9c6db23e53981aba8c57ccf0305cc28dae92c4c79c975"
+      },
+      "reviewedInput": {
+        "path": "engine-binary-csv-core-source-correction-2-input.md",
+        "bytes": 130382,
+        "sha256": "8a6c44dda27c4b1278866e969756f578c99cfbd52093ef283ffae8c718175ff2"
+      },
+      "historicalGuard": {
+        "path": "engine-binary-csv-core-source-correction-2-guard.json",
+        "bytes": 6909,
+        "sha256": "80d492d346fa13d8b5d3096ee62fef65e60f5b24431eb6d5b88471f0a3f2f37a"
+      },
+      "rootHistoricalDisposition": {
+        "path": "engine-source-correction-2-disposition.md",
+        "bytes": 1965,
+        "sha256": "e228541189fd7b1e8c64cac38ad025e2b59790fe0e8bf1b55d1b54aabdefda3c"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [],
+        "limitations": "Read-only review of only the supplied current number-base-converter, csv-json and base64 sources and tests; no code was run. Cron and color source changes in correction 2 were not supplied, so they are not reviewed here. The Papa 5.7.x line-break guessing, preview/truncation and unparse quoting behaviour was reasoned from my knowledge of the library and checked against the supplied passing logs (145/10 files; 34 protected; 17 before = 12 fail / 5 pass), not run. Known contract choices are not counted as defects: mixed physical newlines that differ from Papa's detected line break stay inside cells; the BOM is dropped in CSV mode by File.text/Papa; auto mode rejects '+0x10' as it did before; number-base keeps the approved '*/*' output MIME. Registry, default dispatch, CLI, MCP, full consumer, coverage and public release remain separate pending gates."
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 6210,
+          "cacheReadInputTokens": 1988,
+          "cacheCreationInputTokens": 58148,
+          "webSearchRequests": 0,
+          "costUSD": 0.5897896,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 4835,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "currentSourceParity": [
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 3906
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        },
+        {
+          "path": "packages/core/src/tools/number-base-converter/index.ts",
+          "bytes": 9332,
+          "sha256": "eabed9b14c61e0c218e5f94647391e2882cac66e4ff0a98a9831eac954e60f84",
+          "reviewedBytes": 9332,
+          "reviewedSha256": "eabed9b14c61e0c218e5f94647391e2882cac66e4ff0a98a9831eac954e60f84",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 21915
+        },
+        {
+          "path": "packages/core/src/tools/csv-json/index.ts",
+          "bytes": 9641,
+          "sha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "reviewedBytes": 9641,
+          "reviewedSha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 31309
+        },
+        {
+          "path": "packages/core/src/tools/base64/index.ts",
+          "bytes": 7005,
+          "sha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "reviewedBytes": 7005,
+          "reviewedSha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 41010
+        },
+        {
+          "path": "packages/core/src/tools/base64/types.ts",
+          "bytes": 523,
+          "sha256": "6b1b7cc5c78b581c5e245e612aac671592ec7506c08ed54a6814a9ffb75557b6",
+          "reviewedBytes": 523,
+          "reviewedSha256": "6b1b7cc5c78b581c5e245e612aac671592ec7506c08ed54a6814a9ffb75557b6",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 48075
+        },
+        {
+          "path": "packages/core/test/tools/number-base-converter/extensions.test.ts",
+          "bytes": 5273,
+          "sha256": "f1f182536a1aec91b91498b799c1e38efd8b10e7dd60e776fbb63c2e1db7b2c5",
+          "reviewedBytes": 5273,
+          "reviewedSha256": "f1f182536a1aec91b91498b799c1e38efd8b10e7dd60e776fbb63c2e1db7b2c5",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 48684
+        },
+        {
+          "path": "packages/core/test/tools/number-base-converter/number-base-converter.test.ts",
+          "bytes": 2668,
+          "sha256": "4ce34cbe20a30a60ffd401433e6dad61fe90b4d576150c13b8e1ab76e9e0d108",
+          "reviewedBytes": 2668,
+          "reviewedSha256": "4ce34cbe20a30a60ffd401433e6dad61fe90b4d576150c13b8e1ab76e9e0d108",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 54054
+        },
+        {
+          "path": "packages/core/test/tools/number-base-converter/sign-regression.test.ts",
+          "bytes": 609,
+          "sha256": "e6d7dafe58da1542fb8da84c657bf630dc250e26a4f6f3f79f5d8347c2c9c85a",
+          "reviewedBytes": 609,
+          "reviewedSha256": "e6d7dafe58da1542fb8da84c657bf630dc250e26a4f6f3f79f5d8347c2c9c85a",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 56813
+        },
+        {
+          "path": "packages/core/test/tools/csv-json/delimiter.test.ts",
+          "bytes": 3025,
+          "sha256": "57461289b04bd02ef02925d64c80df572eb917c2dcb58fd4c76aaa672146e84c",
+          "reviewedBytes": 3025,
+          "reviewedSha256": "57461289b04bd02ef02925d64c80df572eb917c2dcb58fd4c76aaa672146e84c",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 57494
+        },
+        {
+          "path": "packages/core/test/tools/csv-json/csv-json.test.ts",
+          "bytes": 2635,
+          "sha256": "9505b4cc43e5e10672fba75916065379212d66783cfedc1aa264bc6268ede4c8",
+          "reviewedBytes": 2635,
+          "reviewedSha256": "9505b4cc43e5e10672fba75916065379212d66783cfedc1aa264bc6268ede4c8",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 60590
+        },
+        {
+          "path": "packages/core/test/tools/base64/image-output.test.ts",
+          "bytes": 4012,
+          "sha256": "75b436d40650330ac32206e620a5cae7dcf2fb6db2783b22221eee5ed4c9273b",
+          "reviewedBytes": 4012,
+          "reviewedSha256": "75b436d40650330ac32206e620a5cae7dcf2fb6db2783b22221eee5ed4c9273b",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 63298
+        },
+        {
+          "path": "packages/core/test/tools/base64/base64.test.ts",
+          "bytes": 3319,
+          "sha256": "49f2e36e602158e13575faf33636721e3aca1ce74d398007ff60da8672a10482",
+          "reviewedBytes": 3319,
+          "reviewedSha256": "49f2e36e602158e13575faf33636721e3aca1ce74d398007ff60da8672a10482",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 67377
+        },
+        {
+          "path": "packages/core/test/tools/number-base-converter/source-review-regressions.test.ts",
+          "bytes": 4148,
+          "sha256": "57fe9f8a22808644343234b33cd97929410c8cf955201f19e396e6858690eb3e",
+          "reviewedBytes": 4148,
+          "reviewedSha256": "57fe9f8a22808644343234b33cd97929410c8cf955201f19e396e6858690eb3e",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 102525
+        },
+        {
+          "path": "packages/core/test/tools/csv-json/source-review-regressions.test.ts",
+          "bytes": 2242,
+          "sha256": "6edc01fc2230b0efb7a9584e1e8a62a927410c38506d6a47767094839dd00b38",
+          "reviewedBytes": 2242,
+          "reviewedSha256": "6edc01fc2230b0efb7a9584e1e8a62a927410c38506d6a47767094839dd00b38",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 106761
+        },
+        {
+          "path": "packages/web/test/manual-text-number-base.test.ts",
+          "bytes": 2046,
+          "sha256": "d3872e8bf60b2bfe628a6d8135f84573583203947b819e250b8381e2b54a9953",
+          "reviewedBytes": 2046,
+          "reviewedSha256": "d3872e8bf60b2bfe628a6d8135f84573583203947b819e250b8381e2b54a9953",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 109073
+        },
+        {
+          "path": "packages/core/test/tools/csv-json/source-correction-2-regressions.test.ts",
+          "bytes": 2037,
+          "sha256": "40865ba10bd33ddd7dcad6e66a879f1882e3d059ce80a40792344fcaae4c3309",
+          "reviewedBytes": 2037,
+          "reviewedSha256": "40865ba10bd33ddd7dcad6e66a879f1882e3d059ce80a40792344fcaae4c3309",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 128344
+        }
+      ],
+      "ownedPaths": [
+        "packages/core/src/tools/csv-json/index.ts",
+        "packages/core/src/tools/base64/index.ts",
+        "packages/core/src/tools/number-base-converter/index.ts"
+      ],
+      "ownedCurrentBodies": [
+        {
+          "path": "packages/core/src/tools/number-base-converter/index.ts",
+          "bytes": 9332,
+          "sha256": "eabed9b14c61e0c218e5f94647391e2882cac66e4ff0a98a9831eac954e60f84",
+          "reviewedBytes": 9332,
+          "reviewedSha256": "eabed9b14c61e0c218e5f94647391e2882cac66e4ff0a98a9831eac954e60f84",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 21915
+        },
+        {
+          "path": "packages/core/src/tools/csv-json/index.ts",
+          "bytes": 9641,
+          "sha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "reviewedBytes": 9641,
+          "reviewedSha256": "495972dc94887a43f3017808108991f7439c781614a15757c1f186dfd071f9de",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 31309
+        },
+        {
+          "path": "packages/core/src/tools/base64/index.ts",
+          "bytes": 7005,
+          "sha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "reviewedBytes": 7005,
+          "reviewedSha256": "69d98f93d48f86e10ea91f9872d44476a9d5a89a4215473e5944dd4cfe92cc48",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 41010
+        }
+      ],
+      "drift": [
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        }
+      ],
+      "status": "Historical scoped binary/CSV rawPASS with exact owner source/test identity and manifest context drift; registry/adapters/consumers/release excluded",
+      "integratedAcceptance": "FUTURE current integrated SOURCE remains required; neither hash parity nor raw model verdict is runtime acceptance"
+    },
+    {
+      "gateId": "engine-cron-color-core-source-correction-2",
+      "raw": {
+        "path": "engine-cron-color-core-source-correction-2-claude.json",
+        "bytes": 9951,
+        "sha256": "6b4c0d0da1faae66d8a15da54ba2686a58207a55161b33071ba69992ab1422ee"
+      },
+      "reviewedInput": {
+        "path": "engine-cron-color-core-source-correction-2-input.md",
+        "bytes": 113450,
+        "sha256": "3074e5555a1370fc314b737b42fc1c8221110dfe77c8c9125dd065898dde7902"
+      },
+      "historicalGuard": {
+        "path": "engine-cron-color-core-source-correction-2-guard.json",
+        "bytes": 5629,
+        "sha256": "21aef4c4c6175b0767834171d3a1c49895c9b1a82aa1ff0e42018cf8477316fe"
+      },
+      "rootHistoricalDisposition": {
+        "path": "engine-source-correction-2-disposition.md",
+        "bytes": 1965,
+        "sha256": "e228541189fd7b1e8c64cac38ad025e2b59790fe0e8bf1b55d1b54aabdefda3c"
+      },
+      "structuredOutput": {
+        "pass": false,
+        "findings": [
+          {
+            "severity": "high",
+            "evidence": "packages/core/src/tools/cron-from-text/index.ts: in generateCronFromText the ordinal check is `/\\b(?:first|last|\\d+(?:st|nd|rd|th))\\b/g` and parseEvery only recognizes `every\\s+(\\d+)\\s+<unit>` or `every\\s+(minute|hour|day|week|month)\\b`. intervalPhrases needs whitespace before the unit word, so the `day` inside `monday` does not count as an interval. Walking 'every other monday at 9am' through the code: parseTime gives 9:00, parseDaysOfWeek gives [1], dom is null, every is null (\"every other\" matches neither parseEvery pattern), there is one time phrase, no interval phrase, no month phrase, no ordinal ('other' is not in the pattern) and the 'at 9am' clock is valid. None of the no-match conditions fire, so the result is cron '0 9 * * 1', confidence 'high', explanation 'at 9:00 AM, on Monday'. The same happens for 'every second monday at 9am', 'every third friday at 9am', 'biweekly on monday at 9am' and 'fortnightly on friday at 6pm'.",
+            "finding": "Words that make a weekday schedule less frequent (other, second, third, biweekly, fortnightly) are silently dropped. The tool then returns a high-confidence weekly cron, which fires on every Monday instead of every other one. This is the same problem SOURCE0 finding 4 fixed for 'every 2 weeks' (now required to return no-match, as is '1st monday'), only spelled as words. A user who pastes the result gets twice as many runs as asked for, or more, with no warning. Fix: return no-match when spelled-out ordinals or every-other/second/biweekly/fortnightly wording appears without a recognized complete day-of-month phrase, and add these phrases to the protected regressions."
+          },
+          {
+            "severity": "medium",
+            "evidence": "packages/core/src/tools/cron-from-text/index.ts: numericClocks only checks numbers introduced by `at` (`/\\bat\\s+(\\d[\\d:]*...)/g`), and timePhrases skips bare numbers. When only a weekday or day-of-month is recognized, the defaults minute='*' and hour='*' remain and confidence stays 'high'. Walking 'every monday 9' through the code: time is null, dows=[1], dom is null, every is null ('monday' is not 'month'), and no no-match condition fires. The result is cron '* * * * 1', confidence 'high', explanation 'on Monday'. 'every weekday 9' gives '* * * * 1,2,3,4,5'. 'every day around 9' gives '0 0 * * *' (midnight, the 9 dropped).",
+            "finding": "A bare clock number not introduced by 'at' is still dropped, despite the correction2 statement that numeric clocks are no longer discarded. The resulting cron then runs every minute of the matched day (1440 runs) under a high-confidence label, and the explanation ('on Monday') never says 'every minute'. This is the dropped-clock defect from Claude FAIL2 in a form the 'at'-only fix does not cover. Fix: return no-match for any leftover number that is not part of a recognized time, interval or day-of-month phrase. Separately, either refuse a weekday or day-of-month that has no time, or lower its confidence and state 'every minute' in the explanation."
+          }
+        ],
+        "limitations": "Review used only the supplied source excerpts and native logs; nothing was run, and both findings come from tracing the code by hand. Structured cron fields mode (field bounds, explicit start instant, the fixed-offset timezone guard, strict:false day-of-month/day-of-week OR, the DST fixtures) and the color converter (direct-run gates, the bounded 1025-byte slice with strict UTF-8 decoding, alpha and gamut fields, numeric RGB intentionally left unclamped while hex/rgbString are display-clipped) showed no concrete current defect. Natural-language parsing is a heuristic, and there may be other phrasings beyond the two reported classes. Not covered here because they are separate pending gates: registry and default dispatch, CLI/MCP, full consumers and bundles, coverage, browser UI and color picker behavior, public release. Counters: this is the final allowed SOURCE correction2 review in the original initial-plus-2-source sequence, not a new initial review."
+      },
+      "modelUsage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 6728,
+          "cacheReadInputTokens": 1988,
+          "cacheCreationInputTokens": 49026,
+          "webSearchRequests": 0,
+          "costUSD": 0.5271736,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 5021,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "currentSourceParity": [
+        {
+          "path": "packages/core/src/types.ts",
+          "bytes": 14030,
+          "sha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "reviewedBytes": 14030,
+          "reviewedSha256": "628a9ae4c88ccfbe4a325c04e0087b2dfdd444294e841e026f634fba2973ecaf",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 2633
+        },
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        },
+        {
+          "path": "packages/core/src/tools/cron-from-text/index.ts",
+          "bytes": 24517,
+          "sha256": "00c824011c3b7538a3f8d9e8133b968a3d1d7f0422cb14d2394d689a56257e92",
+          "reviewedBytes": 21549,
+          "reviewedSha256": "a1fe7352ea40148313d19f8a574820c754a41410bd5c36dc7ab6bf330245e7c7",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/index.ts",
+          "bytes": 4935,
+          "sha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "reviewedBytes": 4935,
+          "reviewedSha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 42253
+        },
+        {
+          "path": "packages/core/src/tools/color-converter/types.ts",
+          "bytes": 632,
+          "sha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "reviewedBytes": 632,
+          "reviewedSha256": "8791751a95934eedbf692f47c3c79d412b717cce2ac87c4c0c1e8f3a724f49b9",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 47257
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/fields.test.ts",
+          "bytes": 4327,
+          "sha256": "0af87172d9e1c92c36cd06a83ee96f6f8c92fcf6c1cfae924b469d750baf5b9e",
+          "reviewedBytes": 4327,
+          "reviewedSha256": "0af87172d9e1c92c36cd06a83ee96f6f8c92fcf6c1cfae924b469d750baf5b9e",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 47964
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/cron-from-text.test.ts",
+          "bytes": 4652,
+          "sha256": "1d01cc6cfba906f53f8bafdf52c8470b39279cd7caf07446b548fe919aa25668",
+          "reviewedBytes": 4652,
+          "reviewedSha256": "1d01cc6cfba906f53f8bafdf52c8470b39279cd7caf07446b548fe919aa25668",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 52374
+        },
+        {
+          "path": "packages/core/test/tools/color-converter/color-converter.test.ts",
+          "bytes": 2784,
+          "sha256": "0933e7a26a14a0eb030e6e334d34bb9f70fb81d2ced52c0f61ef60b76803688a",
+          "reviewedBytes": 2784,
+          "reviewedSha256": "0933e7a26a14a0eb030e6e334d34bb9f70fb81d2ced52c0f61ef60b76803688a",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 57111
+        },
+        {
+          "path": "packages/core/test/utilities/color-alpha.test.ts",
+          "bytes": 1153,
+          "sha256": "bc255aaf7520b31c6ae7d58edf2c018b756d6cccbad4b94589987dd524245f23",
+          "reviewedBytes": 1153,
+          "reviewedSha256": "bc255aaf7520b31c6ae7d58edf2c018b756d6cccbad4b94589987dd524245f23",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 59964
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-review-regressions.test.ts",
+          "bytes": 4784,
+          "sha256": "af3c6a1799749368a7ada21ec7b53ebe0bc058eda142763e2240003d3d46ecc8",
+          "reviewedBytes": 4784,
+          "reviewedSha256": "af3c6a1799749368a7ada21ec7b53ebe0bc058eda142763e2240003d3d46ecc8",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 79883
+        },
+        {
+          "path": "packages/core/test/tools/color-converter/source-review-regressions.test.ts",
+          "bytes": 4654,
+          "sha256": "79b88cca786766d73e24f4fb92f5916bfcb3c9db3039b87dc62c2993b48630e7",
+          "reviewedBytes": 4654,
+          "reviewedSha256": "79b88cca786766d73e24f4fb92f5916bfcb3c9db3039b87dc62c2993b48630e7",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 84762
+        },
+        {
+          "path": "packages/core/test/tools/cron-from-text/source-correction-2-regressions.test.ts",
+          "bytes": 3323,
+          "sha256": "6af92287221a0e29f873d2f724455d4db89d0611b52cf168b2655dc4f28cfa51",
+          "reviewedBytes": 3323,
+          "reviewedSha256": "6af92287221a0e29f873d2f724455d4db89d0611b52cf168b2655dc4f28cfa51",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 110126
+        }
+      ],
+      "ownedPaths": [
+        "packages/core/src/tools/color-converter/index.ts"
+      ],
+      "ownedCurrentBodies": [
+        {
+          "path": "packages/core/src/tools/color-converter/index.ts",
+          "bytes": 4935,
+          "sha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "reviewedBytes": 4935,
+          "reviewedSha256": "84ed194f11155a0251147f00589a7a19c8207599cf61035840d8ddceb6bd1602",
+          "exact": true,
+          "exactFullCurrentBodyOffsetInReviewedInput": 42253
+        }
+      ],
+      "drift": [
+        {
+          "path": "packages/core/package.json",
+          "bytes": 3617,
+          "sha256": "3b08acac04e95413b3fdb7152c2594eaaba6dd094b85147dae20bf5bb9579e02",
+          "reviewedBytes": 3563,
+          "reviewedSha256": "ea173a014b41ec555997e28d825b127acd178b3e6305e7f001d846dc9422db9b",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        },
+        {
+          "path": "packages/core/src/tools/cron-from-text/index.ts",
+          "bytes": 24517,
+          "sha256": "00c824011c3b7538a3f8d9e8133b968a3d1d7f0422cb14d2394d689a56257e92",
+          "reviewedBytes": 21549,
+          "reviewedSha256": "a1fe7352ea40148313d19f8a574820c754a41410bd5c36dc7ab6bf330245e7c7",
+          "exact": false,
+          "exactFullCurrentBodyOffsetInReviewedInput": -1
+        }
+      ],
+      "status": "Historical color-specific coverage inside actual broader rawFAIL(two cron findings); exact color source/tests, changed cron/manifest context; NOT an accepted overallcolorPASS",
+      "integratedAcceptance": "FUTURE current integrated SOURCE remains required; neither hash parity nor raw model verdict is runtime acceptance"
+    },
+    {
+      "gateId": "planning-source1:UI-names-full-input",
+      "reviewedInput": {
+        "path": "planning-source-review-input-1.md",
+        "bytes": 229821,
+        "sha256": "ea461b7cc8ea6aa3a0bf6e63ed67b0ce4639f8ba1a40273b01b07406395939d3"
+      },
+      "raw": {
+        "path": "planning-source-review-1.json",
+        "bytes": 113095,
+        "sha256": "69b09ea89c6e93156adffadff23e89066482fa89167753cac62574446736fb5a"
+      },
+      "structuredOutput": {
+        "pass": true,
+        "findings": [],
+        "limitations": [
+          "Read-only review of the supplied plan, adjudication, receipt, tests, and sources. Nothing was executed and no subagent was used.",
+          "The four prior findings were re-checked against this source and are closed: pause/snapshot/lap settle from one injected sample and the stopwatch cap pauses in that same settle; clock failure uses pauseAtLastSample and does not resample; Temporal RangeError is mapped through temporalInput; manufacturer rice presets return restMinutes null with an explicit note.",
+          "Supplied vitest and typecheck logs were not re-run and are not an implementation or release pass.",
+          "Root registry, dispatch, category mounting, date-calculator, lockfile, and release gates were outside this review.",
+          "UtilityForm, FlatJsonResult, and createUtility were not in the pasted sources. Enum and showWhen enforcement was inferred only from call sites plus the historical passing logs.",
+          "Host Intl time-zone data and real browser sleep or tab suspension were not exercised."
+        ]
+      },
+      "currentExactUiBodyPins": [
+        {
+          "path": "packages/web/src/components/runners/NamesRunner.svelte",
+          "bytes": 5073,
+          "sha256": "7ad634d95bb5fc662b41660fd8871a24d6fb0160f232168081510318e122c0b6",
+          "exactFullBodyOffsetInReviewedInput": 194004
+        },
+        {
+          "path": "packages/web/test/names-runner.test.ts",
+          "bytes": 1702,
+          "sha256": "97d84d456e5a0b82b32b4dc8774ea680ba0515d459c99fd4365998dc78cb7944",
+          "exactFullBodyOffsetInReviewedInput": 221087
+        }
+      ],
+      "gateMethod": "Exact entire current body lookup in actual broad reviewed input, not borrowed six-file correction guard",
+      "limitations": "Shared common/date/registry/release excluded; names/planning reached helper gates retained; future production/defaultRegistry UI gate required"
+    }
+  ],
+  "currentIntegratedSourceGate": {
+    "id": "integration-final-SOURCE",
+    "status": "pending",
+    "acceptance": null
+  },
+  "history": [
+    {
+      "historicalEvidenceName": "integration-plan6-baseline-authority-catalog.json",
+      "bytes": 1231686,
+      "sha256": "d62cedc5aa21b0ce41c10ee0d8c9e89c593fcff84dd439b33c23e930a36f4665"
+    },
+    {
+      "historicalEvidenceName": "integration-plan6-oracle-audit.json",
+      "bytes": 2178438,
+      "sha256": "5e31d585bb94544b2cbc30dd5c0ae28ae2b8890305e3d8cc0dc32b99cdf119f7"
+    },
+    {
+      "historicalEvidenceName": "integration-plan6-strict-tool-policy.json",
+      "bytes": 1661594,
+      "sha256": "3d90a025b452e476a7e6e4462bac233afe94d48252171510784e5f309ee15b63"
+    },
+    {
+      "historicalEvidenceName": "integration-plan6-oracle-binding-overlay-v3.json",
+      "bytes": 949537,
+      "sha256": "dc8233ae19b619e05d296fc1c9673fb4aa9f1f0618b05dcebb73b46db885a46a"
+    }
+  ],
+  "limitation": "Historical raw PASS/FAIL, scope and drift retained; neither parity nor plan review is current integrated SOURCE acceptance."
+}

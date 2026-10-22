@@ -14,5 +14,5 @@
     "resolveJsonModule": true,
     "lib": ["ES2022", "WebWorker"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "../packages/core/src/lib/tr46.d.ts"]
 }

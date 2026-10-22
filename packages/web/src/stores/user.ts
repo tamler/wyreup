@@ -48,24 +48,38 @@ export async function activate(
   if (!rawKey.startsWith('wk_live_') && !rawKey.startsWith('wk_test_')) {
     return { ok: false, error: "That doesn't look like a Wyreup key." };
   }
-  const res = await fetch('/api/account/verify', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${rawKey}` },
-    credentials: 'same-origin',
-  });
+  let res: Response;
+  try {
+    res = await fetch('/api/account/verify', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${rawKey}` },
+      credentials: 'same-origin',
+    });
+  } catch {
+    return { ok: false, error: 'Could not reach Wyreup. Check your connection and try again.' };
+  }
   if (!res.ok) {
     // The server's 401 body is the bare "Unauthorized" — translate it for
     // the person staring at the modal.
     if (res.status === 401) {
       return {
         ok: false,
-        error: "That key didn't work. Check the wk_live_… key from your email, or get a new one below.",
+        error:
+          "That key didn't work. Older keys require email verification. Request a new emailed key below, then paste it here.",
       };
     }
     const detail = (await res.json().catch(() => ({}))) as { error?: string };
     return { ok: false, error: detail.error || `Key not accepted (${res.status})` };
   }
-  const data = (await res.json()) as AuthedUser;
+  let data: AuthedUser;
+  try {
+    data = (await res.json()) as AuthedUser;
+  } catch {
+    return { ok: false, error: 'Wyreup returned an invalid response. Please try again.' };
+  }
+  if (typeof data.email !== 'string' || typeof data.balance !== 'number') {
+    return { ok: false, error: 'Wyreup returned an invalid response. Please try again.' };
+  }
   user.set(data);
   apiKey.set(''); // transient — don't keep raw key in memory
   return { ok: true };

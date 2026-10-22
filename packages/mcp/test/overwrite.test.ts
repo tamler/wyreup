@@ -1,7 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { mkdtemp, writeFile, readFile, symlink, stat } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rename,
+  stat,
+  symlink,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { createWyreupMcpServer } from '../src/server.js';
 import { atomicPublish } from '../src/atomic-publish.js';
 
@@ -25,7 +36,7 @@ describe('atomic overwrite [spec §#4]', () => {
 
   beforeAll(() => {
     process.env['WYREUP_API_KEY'] = 'wk_test_ow';
-    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}:${tmpdir()}`;
+    process.env['WYREUP_ALLOW_PATHS'] = `${FIXTURES}${delimiter}${tmpdir()}`;
   });
   afterAll(() => {
     if (ORIG_KEY === undefined) delete process.env['WYREUP_API_KEY'];
@@ -83,9 +94,54 @@ describe('atomic overwrite [spec §#4]', () => {
 });
 
 describe('atomicPublish concurrent writes', () => {
+  it('publishes safely when the target is directly in the sticky shared temp directory', async () => {
+    if (process.platform === 'win32') return;
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-sticky-parent-')));
+    const shared = join(root, 'shared');
+    await mkdir(shared, { mode: 0o1777 });
+    await chmod(shared, 0o1777);
+    const target = join(shared, 'result.bin');
+    try {
+      expect(await atomicPublish(target, new Uint8Array([1, 2, 3]), false)).toBeNull();
+      expect(await readFile(target)).toEqual(Buffer.from([1, 2, 3]));
+    } finally {
+      await unlink(target).catch(() => {});
+    }
+  });
+
+  it('refuses a non-sticky output directory writable by another OS identity', async () => {
+    if (process.platform === 'win32') return;
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-unsafe-output-')));
+    const target = join(root, 'result.bin');
+    await chmod(root, 0o777);
+    try {
+      expect(await atomicPublish(target, new Uint8Array([1]), false)).toMatch(
+        /unsafe output directory/i,
+      );
+      await expect(readFile(target)).rejects.toThrow();
+    } finally {
+      await chmod(root, 0o700);
+    }
+  });
+
+  it('does not create missing directories below an unsafe existing ancestor', async () => {
+    if (process.platform === 'win32') return;
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-unsafe-ancestor-')));
+    const missingParent = join(root, 'missing', 'nested');
+    await chmod(root, 0o777);
+    try {
+      expect(
+        await atomicPublish(join(missingParent, 'result.bin'), new Uint8Array([1]), false),
+      ).toMatch(/unsafe output directory/i);
+      await expect(stat(join(root, 'missing'))).rejects.toThrow();
+    } finally {
+      await chmod(root, 0o700);
+    }
+  });
+
   it('two concurrent atomicPublish calls to the same target — exactly one wins, one fails', async () => {
     const { mkdtemp } = await import('node:fs/promises');
-    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-race-'));
+    const tmp = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-race-')));
     const target = join(tmp, 'race.bin');
     const [a, b] = await Promise.all([
       atomicPublish(target, new Uint8Array([1]), false),
@@ -96,12 +152,33 @@ describe('atomicPublish concurrent writes', () => {
     expect(wins).toBe(1);
     expect(losses).toBe(1);
   });
+
+  it('rejects a parent directory swapped to a symlink after validation', async () => {
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-parent-swap-')));
+    const trustedParent = join(root, 'trusted');
+    const movedParent = join(root, 'moved');
+    const outsideParent = join(root, 'outside');
+    await mkdir(trustedParent);
+    await mkdir(outsideParent);
+    const target = join(trustedParent, 'result.bin');
+
+    const error = await atomicPublish(target, new Uint8Array([1]), false, {
+      afterParentValidation: async () => {
+        await rename(trustedParent, movedParent);
+        await symlink(outsideParent, trustedParent);
+      },
+    });
+
+    expect(error).toMatch(/changed or symbolic parent/i);
+    await expect(readFile(join(outsideParent, 'result.bin'))).rejects.toThrow();
+    await expect(readFile(join(movedParent, 'result.bin'))).rejects.toThrow();
+  });
 });
 
 describe('atomicPublish file mode', () => {
   it('writes the published file with mode 0o600 (owner-only)', async () => {
     const { mkdtemp } = await import('node:fs/promises');
-    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-mode-'));
+    const tmp = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-mode-')));
     const target = join(tmp, 'mode.bin');
     const err = await atomicPublish(target, new Uint8Array([0xde, 0xad, 0xbe, 0xef]), false);
     expect(err).toBeNull();
@@ -111,7 +188,7 @@ describe('atomicPublish file mode', () => {
 
   it('preserves 0o600 across overwrite (tmp+rename path)', async () => {
     const { mkdtemp } = await import('node:fs/promises');
-    const tmp = await mkdtemp(join(tmpdir(), 'wymcp-mode-ow-'));
+    const tmp = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-mode-ow-')));
     const target = join(tmp, 'mode.bin');
     await writeFile(target, 'existing');
     const err = await atomicPublish(target, new Uint8Array([0x00]), true);

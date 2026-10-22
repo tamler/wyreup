@@ -1,0 +1,2047 @@
+{
+  "schemaVersion": 1,
+  "sourceSha256": "7eba81637f787b495498e3de69153fc30014ceb6da335653be27abf8b3f0147e",
+  "acceptedSource": "ca9b5e72e4db5169970fdd0d4afcd228beb6959b",
+  "tools": [
+    {
+      "sourceSlug": "word-counter",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "word-counter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "number-to-words-converter",
+      "sourceCategory": "text",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "character-counter",
+      "sourceCategory": "text",
+      "classification": "extension",
+      "wyreupIds": [
+        "word-counter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "roman-numeral-converter",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "roman-numeral"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "markdown-preview",
+      "sourceCategory": "text",
+      "classification": "extension",
+      "wyreupIds": [
+        "markdown-to-html"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "case-converter",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "case-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "readability-score-checker",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "text-readability"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "text-diff-checker",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "text-diff"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "lorem-ipsum-generator",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "lorem-ipsum"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "remove-duplicate-lines-online",
+      "sourceCategory": "text",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "slug-generator",
+      "sourceCategory": "text",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "slug"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "markdown-table-generator",
+      "sourceCategory": "text",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "bulk-meta-description-generator",
+      "sourceCategory": "text",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "json-formatter",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "json-formatter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "password-generator",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "password-generator"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "uuid-generator",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "uuid-generator"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "base64-encoder",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "base64"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "regex-tester",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "regex-tester"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "binary-converter",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "number-base-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "url-encoder",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "url-encoder"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "sql-formatter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "sql-formatter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "timestamp-converter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "timestamp-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "hash-generator",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "hash"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "jwt-decoder",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "jwt-decoder"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "domain-age-checker",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "json-validator",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "json-formatter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "xml-formatter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "xml-formatter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "cron-expression-generator",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "cron-from-text"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "html-encoder",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "text-escape"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "code-beautifier",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "json-formatter,css-formatter,html-formatter,xml-formatter,sql-formatter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "json-to-csv-converter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "csv-json"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "csv-to-json-converter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "csv-json"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "html-minifier",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "html-minify"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "css-minifier",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "css-minify"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "javascript-minifier",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "yaml-validator",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "yaml-validate"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "yaml-to-json-converter",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "json-yaml"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "robots-txt-generator",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "chmod-calculator",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "subnet-calculator",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "ip-subnet-calc"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "cidr-calculator",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "ip-subnet-calc"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "utm-link-builder",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "csp-header-generator",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "jsonpath-tester",
+      "sourceCategory": "developer",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "json-path"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "csv-delimiter-converter",
+      "sourceCategory": "developer",
+      "classification": "extension",
+      "wyreupIds": [
+        "csv-json"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "hreflang-tag-generator",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "nginx-redirect-generator",
+      "sourceCategory": "developer",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "qr-code-generator",
+      "sourceCategory": "design",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "qr"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "color-picker",
+      "sourceCategory": "design",
+      "classification": "extension",
+      "wyreupIds": [
+        "color-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "favicon-generator",
+      "sourceCategory": "design",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "favicon"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "hex-to-rgb-converter",
+      "sourceCategory": "design",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "color-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "css-gradient-generator",
+      "sourceCategory": "design",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "aspect-ratio-calculator",
+      "sourceCategory": "design",
+      "classification": "extension",
+      "wyreupIds": [
+        "resize"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "color-palette-generator",
+      "sourceCategory": "design",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "color-harmony"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "px-to-rem-converter",
+      "sourceCategory": "design",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "mortgage-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "loan-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "compound-interest-calculator",
+      "sourceCategory": "money",
+      "classification": "extension",
+      "wyreupIds": [
+        "compound-interest"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "tip-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "discount-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "sales-tax-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "amazon-fba-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "etsy-fee-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ebay-fee-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "paypal-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stripe-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "fuel-trip-cost-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "airbnb-host-payout-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "shopify-profit-margin-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ev-charging-cost-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "youtube-rpm-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "patreon-earnings-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "fiverr-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "upwork-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "kdp-royalty-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "tiktok-shop-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "square-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "poshmark-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "depop-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "mercari-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stockx-seller-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "shopify-break-even-roas-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "twitch-subscription-revenue-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "twitch-bits-to-usd-converter",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "gumroad-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "kickstarter-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "printify-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "redbubble-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "teespring-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "amazon-handmade-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "grailed-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "reverb-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "discogs-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "whatnot-seller-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ko-fi-fee-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "fourthwall-profit-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "recipe-cost-calculator",
+      "sourceCategory": "money",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "image-resizer",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "resize"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "image-compressor",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "compress"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "jpg-to-png-converter",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "convert"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "png-to-jpg-converter",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "convert"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "webp-to-jpg-converter",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "convert"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pdf-merger",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "merge-pdf"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pdf-splitter",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "split-pdf"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "image-cropper",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "crop"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "svg-to-png-converter",
+      "sourceCategory": "files",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "svg-to-png"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "image-to-base64-converter",
+      "sourceCategory": "files",
+      "classification": "extension",
+      "wyreupIds": [
+        "base64"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "csv-viewer",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "psd-to-png-converter",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "mp3-to-midi-converter",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "dwg-to-pdf-converter",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "bank-statement-pdf-to-csv-converter",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stl-to-g-code-converter",
+      "sourceCategory": "files",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "paint-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "concrete-bag-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "gravel-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "mulch-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "roof-pitch-rafter-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "tile-calculator-with-waste",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "drywall-sheet-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "fence-material-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "deck-material-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "paver-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "topsoil-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "sod-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "hvac-btu-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "insulation-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "asphalt-driveway-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "roofing-shingle-bundle-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "retaining-wall-block-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pond-liner-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "french-drain-gravel-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "wallpaper-roll-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "board-foot-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stair-stringer-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stud-wall-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pipe-volume-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ramp-slope-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "gutter-size-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ac-tonnage-calculator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "construction-estimate-generator",
+      "sourceCategory": "building",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "gamepad-tester",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "screen-ppi-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "touchscreen-dead-zone-tester",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "camera-shutter-count-checker",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ohms-law-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "voltage-drop-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "wire-size-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "battery-runtime-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "tv-viewing-distance-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "projector-throw-distance-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "generator-wattage-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "solar-panel-output-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "led-resistor-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "ups-runtime-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "solar-battery-bank-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "speaker-box-volume-calculator",
+      "sourceCategory": "hardware",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "percentage-calculator",
+      "sourceCategory": "planning",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "percentage-calculator"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "bmi-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "age-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "unit-converter",
+      "sourceCategory": "planning",
+      "classification": "existing-equivalent",
+      "wyreupIds": [
+        "unit-converter"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "random-number-generator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "time-zone-converter",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "date-difference-calculator",
+      "sourceCategory": "planning",
+      "classification": "extension",
+      "wyreupIds": [
+        "date-calculator"
+      ],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "stopwatch",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "countdown-timer",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "calorie-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "gpa-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "grade-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "dice-roller",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "coin-flip",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pool-volume-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "aquarium-volume-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "coffee-ratio-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "rice-water-ratio-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "turkey-thaw-time-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "meat-cooking-time-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pizza-dough-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "sourdough-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "bread-hydration-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "cake-pan-size-converter",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "yeast-converter",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "sewing-fabric-yardage-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "wedding-seating-chart-builder",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "photography-contract-generator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "shipping-dimensional-weight-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "pallet-loading-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "propane-usage-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "cocktail-dilution-calculator",
+      "sourceCategory": "planning",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "podcast-name-generator",
+      "sourceCategory": "names",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "band-name-generator",
+      "sourceCategory": "names",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "clan-name-generator",
+      "sourceCategory": "names",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    },
+    {
+      "sourceSlug": "dnd-name-generator",
+      "sourceCategory": "names",
+      "classification": "new-task",
+      "wyreupIds": [],
+      "engineIds": [],
+      "reviewGates": [],
+      "implementationStatus": "pending",
+      "checkEvidence": null
+    }
+  ]
+}

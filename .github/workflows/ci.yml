@@ -56,6 +56,23 @@ jobs:
       - run: pnpm --filter @wyreup/web check:pwa
       - run: pnpm --filter @wyreup/web check:remote-cache
       - run: pnpm --filter @wyreup/web check:pgp
+      - name: Packaged file worker tests
+        run: node --test tools/test/catalog-packaged-workers.test.mjs
+
+  catalog-production:
+    name: Catalog production browser and Functions
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wyreup/core... build
+      - run: pnpm exec playwright install chromium
+      - run: pnpm exec vitest run --config vitest.production.config.ts
 
   gdal-node-integration:
     # convert-geo's Node bridge uses a process.chdir() workaround for an
@@ -172,6 +189,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wyreup/core... build
       - run: node tools/check-runner-coverage.mjs
 
   doc-references:
@@ -179,6 +203,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wyreup/core... build
       - run: node tools/check-doc-references.mjs
 
   model-allowlist:

@@ -1,25 +1,14 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { observePwaUpdate, shouldShowPwaUpdate, type PwaUpdateStatus } from '../lib/pwaUpdate';
 
-  // Three lifecycle concerns bundled in one always-mounted component:
-  //
-  //   1. Request `navigator.storage.persist()` once. Promotes our SW
-  //      cache + IndexedDB from "best-effort" to "persistent" so iOS's
-  //      7-day inactivity rule and Chrome/Firefox storage pressure
-  //      don't silently evict cached ML models.
-  //   2. Show a "Wyreup updated — refresh?" toast when the service
-  //      worker activates a new version. Without it the user sees
-  //      stale content until next page load.
-  //   3. Show an offline indicator when `navigator.onLine === false`,
-  //      so users understand why an ML tool's first-time download
-  //      isn't working.
-
-  let updateAvailable = false;
+  let status: PwaUpdateStatus | null = null;
+  let dismissedWorker: ServiceWorker | null = null;
+  let showCheckStatus = false;
   let isOffline = false;
+  let observer: ReturnType<typeof observePwaUpdate> | null = null;
 
-  // Skip the toast for the *very first* SW activation (initial install).
-  // Only show it for subsequent updates.
-  let initialControllerSeen = false;
+  $: updateAvailable = shouldShowPwaUpdate(status, dismissedWorker);
 
   async function tryPersist() {
     try {
@@ -32,15 +21,16 @@
     }
   }
 
-  function refresh() {
-    window.location.reload();
-  }
-
   function dismissUpdate() {
-    updateAvailable = false;
+    if (status?.kind === 'waiting') dismissedWorker = status.worker;
+    showCheckStatus = false;
   }
 
-  let controllerHandler: (() => void) | null = null;
+  function check() {
+    showCheckStatus = true;
+    void observer?.check();
+  }
+
   let onlineHandler: (() => void) | null = null;
   let offlineHandler: (() => void) | null = null;
 
@@ -50,46 +40,31 @@
     offlineHandler = () => { isOffline = true; };
     window.addEventListener('online', onlineHandler);
     window.addEventListener('offline', offlineHandler);
-
     void tryPersist();
-
-    if ('serviceWorker' in navigator) {
-      initialControllerSeen = navigator.serviceWorker.controller !== null;
-      controllerHandler = () => {
-        if (!initialControllerSeen) {
-          // First activation — don't toast, just record.
-          initialControllerSeen = true;
-          return;
-        }
-        // A new SW took over. Tell the user.
-        updateAvailable = true;
-      };
-      navigator.serviceWorker.addEventListener('controllerchange', controllerHandler);
-    }
+    observer = observePwaUpdate((value) => { status = value; });
   });
 
   onDestroy(() => {
     if (onlineHandler) window.removeEventListener('online', onlineHandler);
     if (offlineHandler) window.removeEventListener('offline', offlineHandler);
-    if (controllerHandler && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.removeEventListener('controllerchange', controllerHandler);
-    }
+    observer?.dispose();
   });
 </script>
 
 {#if isOffline}
   <div class="pwa-banner pwa-banner--offline" role="status" aria-live="polite">
     <span class="pwa-banner__dot pwa-banner__dot--offline" aria-hidden="true"></span>
-    <span class="pwa-banner__msg">Offline. Cached tools still work; ML tools need internet on first use.</span>
+    <span class="pwa-banner__msg">Offline. Local tools can work when their required assets are available. Network lookups and hosted PRO tools need a connection; some local tools download assets on first use.</span>
   </div>
 {/if}
 
-{#if updateAvailable}
+{#if updateAvailable || showCheckStatus}
   <div class="pwa-toast" role="status" aria-live="polite">
-    <span class="pwa-toast__msg">A new version of Wyreup is available.</span>
+    <span class="pwa-toast__msg">{status?.message}</span>
     <div class="pwa-toast__actions">
-      <button class="pwa-toast__btn pwa-toast__btn--primary" on:click={refresh} type="button">Refresh</button>
+      <button class="pwa-toast__btn pwa-toast__btn--primary" on:click={check} disabled={status?.checking} type="button">Check for update</button>
       <button class="pwa-toast__btn" on:click={dismissUpdate} type="button" aria-label="Dismiss update notification">Later</button>
+      <a class="pwa-toast__btn" href="/app-update/" target="_blank" rel="noopener">Update instructions</a>
     </div>
   </div>
 {/if}
@@ -159,9 +134,13 @@
     display: flex;
     gap: var(--space-2);
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .pwa-toast__btn {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
     height: 28px;
     padding: 0 var(--space-3);
     background: transparent;

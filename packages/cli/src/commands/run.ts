@@ -2,7 +2,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Command } from 'commander';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
 import type { ToolModule, ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
@@ -11,6 +11,7 @@ import { interactiveLogin } from '../lib/interactive-login.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
 import { resolveTimeout } from '../lib/safety/timeout.js';
 import { printError } from '../lib/safety/print-error.js';
+import { mergeToolParams, readToolParamsJson, toolParamHelp } from '../lib/tool-params.js';
 
 // ──── shared context builder ──────────────────────────────────────────────────
 
@@ -125,35 +126,14 @@ async function writeOutputs(
   if (writeErr) throw new Error(writeErr);
 }
 
-// ──── param parsing ───────────────────────────────────────────────────────────
-
-function coerce(value: string): unknown {
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  const n = Number(value);
-  if (!Number.isNaN(n) && value.trim() !== '') return n;
-  return value;
-}
-
-function parseKeyValuePairs(pairs: string[]): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const pair of pairs) {
-    const eq = pair.indexOf('=');
-    if (eq === -1) {
-      process.stderr.write(`Warning: ignoring malformed --param "${pair}" (expected key=value)\n`);
-      continue;
-    }
-    result[pair.slice(0, eq).trim()] = coerce(pair.slice(eq + 1));
-  }
-  return result;
-}
-
 // ──── core runner ─────────────────────────────────────────────────────────────
 
 export interface RunOptions {
   output?: string;
   outputDir?: string;
   param?: string[];
+  paramsJson?: string;
+  namedFlags?: Record<string, unknown>;
   inputFormat?: string;
   json?: boolean;
   verbose?: boolean;
@@ -170,6 +150,10 @@ export async function executeTool(
   const tool = registry.toolsById.get(toolId);
   if (!tool) {
     process.stderr.write(formatSuggestion(toolId, Array.from(registry.toolsById.keys())));
+    process.exit(1);
+  }
+  if (!toolRunsOnSurface(tool, 'cli')) {
+    process.stderr.write(`Tool "${tool.id}" is not available on CLI. Use its web page.\n`);
     process.exit(1);
   }
 
@@ -197,7 +181,7 @@ export async function executeTool(
   // and silently fails. Order: env/file lookup → maybe prompt → then
   // read tool input.
   let apiKey: string | undefined;
-  let proOrigin: string | undefined;
+  const proOrigin = resolveProOrigin();
   if (tool.cost === 'credit') {
     let key = await readApiKey();
     if (!key) {
@@ -228,31 +212,7 @@ export async function executeTool(
       process.exit(1);
     }
     apiKey = key;
-    proOrigin = resolveProOrigin();
   }
-
-  // Collect input files — stdin is safe to drain now that any Pro
-  // login prompt has already completed.
-  let inputFiles: File[];
-
-  if (isStdinMode && tool.input.min > 0) {
-    if (!opts.inputFormat) {
-      process.stderr.write(
-        `Reading from stdin — use --input-format <mime> to specify the MIME type.\n`,
-      );
-      // Use a generic fallback
-    }
-    const mime = opts.inputFormat ?? 'application/octet-stream';
-    inputFiles = [await readStdin(mime)];
-  } else if (inputPaths.length > 0 && inputPaths[0] !== '-') {
-    inputFiles = await readInputFiles(inputPaths, opts.inputFormat);
-  } else {
-    inputFiles = [];
-  }
-
-  // Collect params: start with tool defaults, overlay --param flags, then per-tool flags
-  const paramOverrides = parseKeyValuePairs(opts.param ?? []);
-  const params = { ...(tool.defaults as Record<string, unknown>), ...paramOverrides };
 
   const timeoutResult = resolveTimeout(opts.timeout);
   if (!timeoutResult.ok) {
@@ -262,7 +222,8 @@ export async function executeTool(
   const { ms: timeoutMs } = timeoutResult;
 
   const ac = new AbortController();
-  process.on('SIGINT', () => ac.abort());
+  const interrupt = () => ac.abort();
+  process.on('SIGINT', interrupt);
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   if (timeoutMs > 0) {
     timeoutHandle = setTimeout(
@@ -280,12 +241,26 @@ export async function executeTool(
 
   let result: Blob | Blob[];
   try {
+    const json = opts.paramsJson ? await readToolParamsJson(opts.paramsJson, ac.signal) : {};
+    const params = mergeToolParams(tool, json, opts.param ?? [], opts.namedFlags ?? {});
+    // Pro login has completed; parameter admission precedes payload reads.
+    let inputFiles: File[];
+    if (isStdinMode && tool.input.min > 0) {
+      if (!opts.inputFormat)
+        process.stderr.write(
+          'Reading from stdin — use --input-format <mime> to specify the MIME type.\n',
+        );
+      inputFiles = [await readStdin(opts.inputFormat ?? 'application/octet-stream')];
+    } else if (inputPaths.length > 0 && inputPaths[0] !== '-') {
+      inputFiles = await readInputFiles(inputPaths, opts.inputFormat);
+    } else inputFiles = [];
     result = await tool.run(inputFiles, params, ctx);
   } catch (err) {
-    await printError(`Error running ${toolId}`, err);
+    await printError(`Error running ${toolId}`, err, tool.cost === 'free' ? null : apiKey);
     process.exit(1);
   } finally {
     if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+    process.removeListener('SIGINT', interrupt);
   }
 
   const outputs = Array.isArray(result) ? result : [result];
@@ -322,12 +297,7 @@ export function addToolOptions(cmd: Command, tool: ToolModule): void {
   for (const [key, schema] of Object.entries(tool.paramSchema)) {
     if (!schema || typeof schema !== 'object') continue;
     const flagName = `--${key} <value>`;
-    const s = schema as { label?: unknown; help?: unknown };
-    const label = typeof s.label === 'string' ? s.label : '';
-    const helpText = typeof s.help === 'string' ? s.help : '';
-    const combined = (label ? `${label}. ` : '') + helpText;
-
-    cmd.option(flagName, combined || key);
+    cmd.option(flagName, toolParamHelp(tool, key));
   }
 }
 

@@ -1,9 +1,14 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { createDefaultRegistry, toolRunsOnSurface, runChain, parseChainString } from '@wyreup/core';
-import { readFile, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import {
+  createDefaultRegistry,
+  toolRunsOnSurface,
+  runChain,
+  parseChainString,
+  setModelCdn,
+} from '@wyreup/core';
+import { basename, delimiter, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { atomicPublish } from './atomic-publish.js';
 import { resolveAllowedRoots, assertPathAllowed } from './paths.js';
@@ -12,6 +17,12 @@ import { isIdempotent } from './idempotency.js';
 import { tmpdir } from 'node:os';
 import { runInWorker } from './supervisor.js';
 import { sanitize } from './sanitize.js';
+import { admitToolParams, projectToolParamsSchema } from './param-schema.js';
+import type { ToolModule } from '@wyreup/core';
+import { setEgressAllowedOrigins } from './egress.js';
+import { resolveModelCdn } from './runtime-config.js';
+import { MCP_VERSION } from './version.js';
+import { readCanonicalFileBounded } from './bounded-file-read.js';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
 //
@@ -79,6 +90,11 @@ const EXT_TO_MIME: Record<string, string> = {
   bmp: 'image/bmp',
   svg: 'image/svg+xml',
   ico: 'image/x-icon',
+  tif: 'image/tiff',
+  tiff: 'image/tiff',
+  nef: 'image/tiff',
+  psd: 'image/vnd.adobe.photoshop',
+  stl: 'model/stl',
   pdf: 'application/pdf',
   txt: 'text/plain',
   html: 'text/html',
@@ -86,6 +102,11 @@ const EXT_TO_MIME: Record<string, string> = {
   md: 'text/markdown',
   json: 'application/json',
   csv: 'text/csv',
+  tsv: 'text/tab-separated-values',
+  xml: 'application/xml',
+  css: 'text/css',
+  js: 'text/javascript',
+  sql: 'application/sql',
   wav: 'audio/wav',
   mp3: 'audio/mpeg',
   mp4: 'video/mp4',
@@ -99,12 +120,21 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/bmp': '.bmp',
   'image/svg+xml': '.svg',
   'image/x-icon': '.ico',
+  'image/tiff': '.tiff',
+  'image/vnd.adobe.photoshop': '.psd',
+  'model/stl': '.stl',
   'application/pdf': '.pdf',
   'text/plain': '.txt',
   'text/html': '.html',
   'text/markdown': '.md',
   'application/json': '.json',
   'text/csv': '.csv',
+  'text/tab-separated-values': '.tsv',
+  'application/xml': '.xml',
+  'text/css': '.css',
+  'text/javascript': '.js',
+  'application/javascript': '.js',
+  'application/sql': '.sql',
   'audio/wav': '.wav',
   'audio/mpeg': '.mp3',
   'video/mp4': '.mp4',
@@ -121,46 +151,7 @@ function extFromMime(mime: string): string {
 
 // ──── Schema builder ──────────────────────────────────────────────────────────
 
-function inferParamType(value: unknown): Record<string, unknown> {
-  if (value === null || value === undefined) return { type: 'null' };
-  if (Array.isArray(value)) {
-    if (value.length === 0) return { type: 'array', items: {} };
-    return { type: 'array', items: inferParamType(value[0]) };
-  }
-  switch (typeof value) {
-    case 'boolean':
-      return { type: 'boolean' };
-    case 'number':
-      return { type: 'number' };
-    case 'string':
-      return { type: 'string' };
-    case 'object': {
-      const properties: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-        properties[k] = inferParamType(v);
-      }
-      return { type: 'object', properties };
-    }
-    default:
-      return {};
-  }
-}
-
-function buildParamsSchema(defaults: unknown): Record<string, unknown> {
-  if (!defaults || typeof defaults !== 'object' || Array.isArray(defaults)) {
-    return { type: 'object', additionalProperties: true };
-  }
-  const properties: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(defaults as Record<string, unknown>)) {
-    properties[key] = inferParamType(val);
-  }
-  return { type: 'object', properties, additionalProperties: true };
-}
-
-function buildMcpInputSchema(tool: {
-  defaults: unknown;
-  output: { multiple?: boolean };
-}): Record<string, unknown> {
+function buildMcpInputSchema(tool: ToolModule): Record<string, unknown> {
   const isMultiOutput = tool.output.multiple === true;
   const properties: Record<string, unknown> = {
     input_paths: {
@@ -169,8 +160,7 @@ function buildMcpInputSchema(tool: {
       description: 'Absolute paths to input files on disk.',
     },
     params: {
-      ...buildParamsSchema(tool.defaults),
-      description: 'Tool-specific parameters. Uses defaults if omitted.',
+      ...projectToolParamsSchema(tool),
     },
     timeout_ms: {
       type: 'number',
@@ -204,9 +194,12 @@ function buildMcpInputSchema(tool: {
 // ──── Server factory ──────────────────────────────────────────────────────────
 
 export async function createWyreupMcpServer(): Promise<Server> {
-  const registry = createDefaultRegistry();
   const proApiKey = resolveProApiKey();
   const proOrigin = resolveProOrigin();
+  const modelCdn = resolveModelCdn();
+  setModelCdn(modelCdn.base);
+  setEgressAllowedOrigins([proOrigin, ...modelCdn.allowedOrigins]);
+  const registry = createDefaultRegistry();
 
   const maxBytes = resolveMaxBytes();
 
@@ -214,7 +207,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
     process.env['WYREUP_ALLOW_PATHS']
       ? process.env['WYREUP_ALLOW_PATHS'] === '*'
         ? '*'
-        : process.env['WYREUP_ALLOW_PATHS'].split(':').filter(Boolean)
+        : process.env['WYREUP_ALLOW_PATHS'].split(delimiter).filter(Boolean)
       : [process.cwd(), tmpdir()],
   );
 
@@ -246,7 +239,10 @@ export async function createWyreupMcpServer(): Promise<Server> {
     .filter((t) => toolRunsOnSurface(t, 'mcp'))
     .filter((t) => proApiKey || t.cost !== 'credit');
 
-  const server = new Server({ name: 'wyreup', version: '0.1.0' }, { capabilities: { tools: {} } });
+  const server = new Server(
+    { name: 'wyreup', version: MCP_VERSION },
+    { capabilities: { tools: {} } },
+  );
 
   // The `wyreup_chain` meta-tool lets agents run a multi-step chain
   // in a single call instead of orchestrating each tool individually.
@@ -356,71 +352,69 @@ export async function createWyreupMcpServer(): Promise<Server> {
     inputs: string[],
     outputPath: string | undefined,
     outputDir: string | undefined,
-  ): Promise<string | null> {
+  ): Promise<
+    | { ok: true; inputPaths: string[]; outputPath?: string; outputDir?: string }
+    | { ok: false; error: string }
+  > {
+    const resolvedInputs: string[] = [];
     for (const p of inputs) {
       const r = await assertPathAllowed(p, 'read', allowedRoots);
-      if (!r.ok) return r.error;
+      if (!r.ok) return r;
+      resolvedInputs.push(r.resolved);
     }
+    let resolvedOutputPath: string | undefined;
     if (outputPath) {
       const r = await assertPathAllowed(outputPath, 'write', allowedRoots);
-      if (!r.ok) return r.error;
+      if (!r.ok) return r;
+      resolvedOutputPath = r.resolved;
     }
+    let resolvedOutputDir: string | undefined;
     if (outputDir) {
-      const r = await assertPathAllowed(outputDir, 'write', allowedRoots);
-      if (!r.ok) return r.error;
+      const r = await assertPathAllowed(outputDir, 'write-directory', allowedRoots);
+      if (!r.ok) return r;
+      resolvedOutputDir = r.resolved;
     }
-    return null;
-  }
-
-  async function assertInputSize(paths: string[]): Promise<string | null> {
-    let total = 0;
-    for (const p of paths) {
-      try {
-        const s = await stat(p);
-        total += s.size;
-      } catch {
-        /* missing file is caught later in read */
-      }
-    }
-    if (total > maxBytes) {
-      return `Input size ${(total / 1024 / 1024).toFixed(1)} MB exceeds limit ${(maxBytes / 1024 / 1024).toFixed(0)} MB. Raise WYREUP_MAX_INPUT_BYTES if intentional.`;
-    }
-    return null;
+    return {
+      ok: true,
+      inputPaths: resolvedInputs,
+      outputPath: resolvedOutputPath,
+      outputDir: resolvedOutputDir,
+    };
   }
 
   // Read an absolute path into a File. On any I/O error (missing file,
   // permission denied, EISDIR, etc.) returns a structured error message
   // instead of throwing — the LLM sees a clear path to retry.
-  async function safeReadFile(
-    filePath: string,
-  ): Promise<{ ok: true; file: File } | { ok: false; error: string }> {
-    try {
-      const data = await readFile(filePath);
-      return {
-        ok: true,
-        file: new File([data], basename(filePath), {
-          type: inferMimeFromPath(filePath),
-        }),
-      };
-    } catch (err) {
-      const code = (err as NodeJS.ErrnoException).code;
-      const msg = err instanceof Error ? err.message : String(err);
-      if (code === 'ENOENT') return { ok: false, error: `File not found: ${filePath}` };
-      if (code === 'EACCES') return { ok: false, error: `Permission denied reading ${filePath}` };
-      if (code === 'EISDIR')
-        return { ok: false, error: `Expected a file, got a directory: ${filePath}` };
-      return { ok: false, error: `Could not read ${filePath}: ${msg}` };
-    }
-  }
-
   async function safeReadAllInputs(
     paths: string[],
   ): Promise<{ ok: true; files: File[] } | { ok: false; error: string }> {
     const files: File[] = [];
+    let totalBytes = 0;
     for (const p of paths) {
-      const r = await safeReadFile(p);
-      if (!r.ok) return r;
-      files.push(r.file);
+      try {
+        const data = await readCanonicalFileBounded(p, maxBytes - totalBytes);
+        totalBytes += data.byteLength;
+        files.push(
+          new File([data], basename(p), {
+            type: inferMimeFromPath(p),
+          }),
+        );
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (code === 'ENOENT') return { ok: false, error: `File not found: ${p}` };
+        if (code === 'EACCES') return { ok: false, error: `Permission denied reading ${p}` };
+        if (code === 'EISDIR') {
+          return { ok: false, error: `Expected a file, got a directory: ${p}` };
+        }
+        if (err instanceof RangeError) {
+          return {
+            ok: false,
+            error: `Input size exceeds limit ${(maxBytes / 1024 / 1024).toFixed(0)} MB. Raise WYREUP_MAX_INPUT_BYTES if intentional.`,
+          };
+        }
+        return { ok: false, error: `Could not read ${p}: ${msg}` };
+      }
     }
     return { ok: true, files };
   }
@@ -429,9 +423,10 @@ export async function createWyreupMcpServer(): Promise<Server> {
   // Uses AbortSignal.timeout (Node 17.3+) so we don't have to wire setTimeout
   // ourselves. The reason on the abort signal is a DOMException with name
   // 'TimeoutError'; downstream tools see ctx.signal.aborted === true.
-  function makeTimeoutSignal(timeoutMs: number | undefined): AbortSignal {
-    if (!timeoutMs || timeoutMs <= 0) return new AbortController().signal;
-    return AbortSignal.timeout(timeoutMs);
+  function makeTimeoutSignal(timeoutMs: number | undefined, clientSignal?: AbortSignal): AbortSignal {
+    if (!timeoutMs || timeoutMs <= 0) return clientSignal ?? new AbortController().signal;
+    const timeout = AbortSignal.timeout(timeoutMs);
+    return clientSignal ? AbortSignal.any([clientSignal, timeout]) : timeout;
   }
 
   // Handler signature requires Promise return; no internal await needed.
@@ -444,7 +439,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           readOnlyHint: false,
           destructiveHint: false,
           idempotentHint: false, // defensive worst case across the chain
-          openWorldHint: true, // chain may include Pro steps
+          openWorldHint: true, // chain may include network or Pro steps
         },
       },
       ...tools.map((tool) => ({
@@ -455,13 +450,14 @@ export async function createWyreupMcpServer(): Promise<Server> {
           readOnlyHint: false,
           destructiveHint: false,
           idempotentHint: isIdempotent(tool.id),
-          openWorldHint: tool.cost === 'credit',
+          openWorldHint: tool.cost === 'credit' || tool.id === 'domain-age-checker',
         },
       })),
     ],
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
+    if (extra.signal?.aborted) return errorResult('Tool request cancelled.');
     const { name, arguments: args } = request.params;
 
     // Meta-tool: run a chain in one shot.
@@ -506,13 +502,10 @@ export async function createWyreupMcpServer(): Promise<Server> {
           }
         }
 
-        const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
-        if (pathErr) return errorResult(pathErr);
+        const validatedPaths = await validatePaths(inputPaths, outputPath, outputDir);
+        if (!validatedPaths.ok) return errorResult(validatedPaths.error);
 
-        const sizeErr = await assertInputSize(inputPaths);
-        if (sizeErr) return errorResult(sizeErr);
-
-        const readResult = await safeReadAllInputs(inputPaths);
+        const readResult = await safeReadAllInputs(validatedPaths.inputPaths);
         if (!readResult.ok) return errorResult(readResult.error);
         const inputFiles = readResult.files;
 
@@ -534,7 +527,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         // tool.run logic; we only add the size gate between steps.
         const ctx = {
           onProgress: () => {},
-          signal: makeTimeoutSignal(effectiveTimeout),
+          signal: makeTimeoutSignal(effectiveTimeout, extra.signal),
           cache: new Map<string, unknown>(),
           executionId: randomUUID(),
           apiKey: proApiKey,
@@ -548,6 +541,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         try {
           for (let i = 0; i < chain.length; i++) {
             stepOutputs = await runChain([chain[i]!], stepInputs, ctx, registry);
+            ctx.signal.throwIfAborted();
 
             const stepBytes = totalBlobBytes(stepOutputs);
             if (stepBytes > stepCap) {
@@ -587,26 +581,28 @@ export async function createWyreupMcpServer(): Promise<Server> {
         const outputs = stepOutputs;
         const writtenPaths: string[] = [];
 
-        if (outputs.length === 1 && outputPath) {
+        if (outputs.length === 1 && validatedPaths.outputPath) {
           const writeErr = await atomicPublish(
-            outputPath,
+            validatedPaths.outputPath,
             new Uint8Array(await outputs[0]!.arrayBuffer()),
             allowOverwrite,
+            {}, ctx.signal,
           );
           if (writeErr) return errorResult(writeErr);
-          writtenPaths.push(outputPath);
-        } else if (outputDir) {
+          writtenPaths.push(validatedPaths.outputPath);
+        } else if (validatedPaths.outputDir) {
           // Use the final step's tool ID in the filename so multi-output
           // chains stay traceable: the user/agent can see which tool produced
           // each artifact rather than getting opaque "chain-0", "chain-1".
           const finalToolId = chain[chain.length - 1]!.toolId;
           for (let i = 0; i < outputs.length; i++) {
             const ext = extFromMime(outputs[i]!.type);
-            const outPath = join(outputDir, `${finalToolId}-${i}${ext}`);
+            const outPath = join(validatedPaths.outputDir, `${finalToolId}-${i}${ext}`);
             const writeErr = await atomicPublish(
               outPath,
               new Uint8Array(await outputs[i]!.arrayBuffer()),
               allowOverwrite,
+              {}, ctx.signal,
             );
             if (writeErr) return errorResult(writeErr);
             writtenPaths.push(outPath);
@@ -651,7 +647,13 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
     const outputPath = rawArgs['output_path'] as string | undefined;
     const outputDir = rawArgs['output_dir'] as string | undefined;
-    const params = (rawArgs['params'] as Record<string, unknown> | undefined) ?? tool.defaults;
+    let params: Record<string, unknown>;
+    try {
+      params = admitToolParams(tool, rawArgs['params'] === undefined ? {} : rawArgs['params']);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Invalid tool parameters.';
+      return errorResult(`Tool "${tool.id}" parameters refused: ${message}`);
+    }
 
     const timeoutCheck = resolveTimeout(rawArgs['timeout_ms']);
     if (!timeoutCheck.ok) return errorResult(timeoutCheck.error);
@@ -660,17 +662,15 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const allowOverwrite = rawArgs['allow_overwrite'] === true;
 
     return withAudit(name, inputPaths, outputPath, async () => {
-      const pathErr = await validatePaths(inputPaths, outputPath, outputDir);
-      if (pathErr) return errorResult(pathErr);
-
-      const sizeErr = await assertInputSize(inputPaths);
-      if (sizeErr) return errorResult(sizeErr);
+      const validatedPaths = await validatePaths(inputPaths, outputPath, outputDir);
+      if (!validatedPaths.ok) return errorResult(validatedPaths.error);
 
       const disableIsolation = process.env['WYREUP_DISABLE_WORKER_ISOLATION'] === '1';
 
       if (disableIsolation) {
+        const signal = makeTimeoutSignal(timeoutMs, extra.signal);
         // Legacy in-process path for debugging. The worker path is the default.
-        const readResult = await safeReadAllInputs(inputPaths);
+        const readResult = await safeReadAllInputs(validatedPaths.inputPaths);
         if (!readResult.ok) return errorResult(readResult.error);
         const inputFiles = readResult.files;
 
@@ -678,7 +678,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         try {
           toolResult = await tool.run(inputFiles, params, {
             onProgress: () => {},
-            signal: makeTimeoutSignal(timeoutMs),
+            signal,
             cache: new Map(),
             executionId: randomUUID(),
             apiKey: proApiKey,
@@ -689,25 +689,28 @@ export async function createWyreupMcpServer(): Promise<Server> {
           return errorResult(`Tool "${tool.id}" failed: ${msg}`);
         }
 
+        if (signal.aborted) return errorResult('Tool request cancelled or timed out.');
         const outputs = Array.isArray(toolResult) ? toolResult : [toolResult];
         const writtenPaths: string[] = [];
 
-        if (outputs.length === 1 && outputPath) {
+        if (outputs.length === 1 && validatedPaths.outputPath) {
           const writeErr = await atomicPublish(
-            outputPath,
+            validatedPaths.outputPath,
             new Uint8Array(await outputs[0]!.arrayBuffer()),
             allowOverwrite,
+            {}, signal,
           );
           if (writeErr) return errorResult(writeErr);
-          writtenPaths.push(outputPath);
-        } else if (outputDir) {
+          writtenPaths.push(validatedPaths.outputPath);
+        } else if (validatedPaths.outputDir) {
           for (let i = 0; i < outputs.length; i++) {
             const ext = extFromMime(outputs[i]!.type);
-            const outPath = join(outputDir, `${tool.id}-${i}${ext}`);
+            const outPath = join(validatedPaths.outputDir, `${tool.id}-${i}${ext}`);
             const writeErr = await atomicPublish(
               outPath,
               new Uint8Array(await outputs[i]!.arrayBuffer()),
               allowOverwrite,
+              {}, signal,
             );
             if (writeErr) return errorResult(writeErr);
             writtenPaths.push(outPath);
@@ -737,16 +740,18 @@ export async function createWyreupMcpServer(): Promise<Server> {
       const workerResult = await runInWorker({
         toolId: tool.id,
         inputPaths,
-        params: params as Record<string, unknown>,
+        params,
         outputPath,
         outputDir,
         timeoutMs,
         proApiKey: tool.cost === 'credit' ? proApiKey : undefined,
         proOrigin,
+        modelCdn: modelCdn.base,
+        modelAllowedOrigins: modelCdn.allowedOrigins,
         allowedRoots,
         allowOverwrite,
         maxBytes,
-      });
+      }, extra.signal);
 
       if (!workerResult.ok) {
         return errorResult(sanitize(workerResult.error, proApiKey));

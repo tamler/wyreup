@@ -1,16 +1,31 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import { tryReserveMediaJob } from '../../lib/mediaJobReservation';
+  import type { SerializedTool, PreloadAdmission } from './types';
+  import { hasBrowserFileImport } from '../../lib/file-tool-candidates';
   import type { ToolProgress } from '@wyreup/core';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  let generation = 0;
+  let disposed = false;
+  onDestroy(() => { disposed = true; generation++; releaseOwnedWakeLocks(); if (resultUrl) URL.revokeObjectURL(resultUrl); });
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
   let files: File[] = preloadedFile ? [preloadedFile] : [];
   let params: Record<string, unknown> = { ...tool.defaults };
@@ -24,13 +39,13 @@
   let resultUrl: string | null = null;
   let resultSize = 0;
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
-  }
+  let priorPreload = preloadedFile;
+  $: if (preloadedFile !== priorPreload) { priorPreload = preloadedFile; reset(); files = preloadedFile ? [preloadedFile] : []; }
 
   $: canRun = files.length >= tool.input.min && state !== 'running';
 
   function onFiles(e: CustomEvent<File[]>) {
+    generation++;
     files = e.detail;
     dropError = '';
     state = 'idle';
@@ -40,18 +55,32 @@
 
   async function run() {
     if (!canRun) return;
+    const lease = tryReserveMediaJob([tool.id]);
+    if (!lease) {
+      state = 'error';
+      errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.';
+      return;
+    }
+    const attempt = ++generation;
+    const capturedFiles = [...files];
+    const capturedParams = { ...params };
+    const capturedToolId = tool.id;
+    const imported = preloadedFile;
+    const admission = onPreloadAdmission;
+    const current = () => !disposed && attempt === generation && tool.id === capturedToolId && preloadedFile === imported && capturedFiles.length === files.length && capturedFiles.every((file, index) => file === files[index]) && JSON.stringify(params) === JSON.stringify(capturedParams);
     state = 'running';
     errorMsg = '';
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run(files, params, {
-        onProgress: (p) => { progress = p; },
+      const result = await toolModule.run(capturedFiles, capturedParams, {
+        onProgress: (p) => { if (current()) progress = p; },
         signal: new AbortController().signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
@@ -60,6 +89,7 @@
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
+      if (!current()) return;
 
       resultBlob = blob;
       resultSize = blob.size;
@@ -67,15 +97,22 @@
       resultUrl = URL.createObjectURL(blob);
       markToolUsed(tool.id);
       state = 'done';
+      if (imported && capturedFiles.includes(imported) && hasBrowserFileImport(tool) && tool.input.max !== 0) admission?.({ file: imported, status: 'admitted' });
     } catch (err) {
+      if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+      if (imported && capturedFiles.includes(imported) && hasBrowserFileImport(tool) && tool.input.max !== 0) admission?.({ file: imported, status: 'refused', message: errorMsg });
     } finally {
-      releaseWakeLock();
+      lease.release();
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    generation++;
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     resultBlob = null;
@@ -129,6 +166,7 @@
   {#if files.length === 0}
     <DropZone
       accept={tool.input.accept}
+      sizeLimit={tool.input.sizeLimit}
       multiple={true}
       bind:files
       bind:error={dropError}
@@ -151,7 +189,7 @@
     </div>
   {/if}
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; reset(); }} />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">

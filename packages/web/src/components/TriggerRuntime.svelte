@@ -17,7 +17,11 @@
   //    the chain happened to succeed).
 
   import { onMount, onDestroy } from 'svelte';
-  import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core';
+  import { get } from 'svelte/store';
+  import { user, authReady } from '../stores/user';
+  import { tryReserveMediaJob } from '../lib/mediaJobReservation';
+  import { summarizePaidChain, assertPaidAccount } from '../lib/chainPaidConsent';
+import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core/execution';
   import TriggerPreviewSheet from './TriggerPreviewSheet.svelte';
   import { getAllRules, getFires, recordFire, updateRule } from './runners/triggerStorage';
   import { getChain, type ToolbeltChain } from './runners/toolbeltStorage';
@@ -32,13 +36,18 @@
   let toast: { kind: 'info' | 'success' | 'error'; text: string } | null = null;
 
   let registry: ReturnType<typeof createDefaultRegistry> | null = null;
+  let disposed = false;
+  const downloadUrls = new Set<string>();
+  const timers = new Set<ReturnType<typeof setTimeout>>();
 
   function showToast(kind: 'info' | 'success' | 'error', text: string, ttlMs = 4000) {
     toast = { kind, text };
     if (ttlMs > 0) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         toast = null;
+        timers.delete(timer);
       }, ttlMs);
+      timers.add(timer);
     }
   }
 
@@ -123,40 +132,59 @@
     rule: TriggerRule,
     chain: Chain,
     chainName: string,
+    paidConsent: { fingerprint: string; accountEmail: string | null } | null = null,
   ) {
+    const capturedChain = structuredClone(chain);
+    const lease = tryReserveMediaJob(capturedChain.map((step) => step.toolId));
+    if (!lease) {
+      pendingFile = file; pendingRule = rule; pendingChain = capturedChain; pendingChainName = chainName;
+      showToast('error', 'Another media job is still running. Original retained; choose Run again after it settles. If it never settles, reload manually.', 8000);
+      return;
+    }
     // G7: record the fire BEFORE running. The rate limit applies to
     // confirmed intent, not chain-success.
-    recordFire(rule.id);
-
-    showToast('info', `Running "${chainName}" on ${file.name}…`, 0);
     try {
       if (!registry) registry = createDefaultRegistry();
+      const paid = summarizePaidChain(capturedChain, registry);
+      const account = get(user);
+      assertPaidAccount(paid, get(authReady), account);
+      if (paid.steps.length && (!paidConsent || paidConsent.fingerprint !== JSON.stringify(paid) || paidConsent.accountEmail !== account?.email)) throw new Error('Confirm the current paid steps and account for this file before running.');
+      if (disposed) return;
+      recordFire(rule.id);
+      showToast('info', `Running "${chainName}" on ${file.name}…`, 0);
       const ctx = {
         onProgress: () => {},
         signal: new AbortController().signal,
         cache: new Map<string, unknown>(),
         executionId: crypto.randomUUID(),
       };
-      const outputs = await runChain(chain, [file], ctx, registry);
+      const outputs = await runChain(capturedChain, [file], ctx, registry);
+      if (disposed) return;
       // G6: download each output via a synthetic anchor click so the
       // browser's save-as flow is the user-visible step.
       outputs.forEach((blob, i) => downloadBlob(blob, suggestOutputName(file.name, chainName, i, outputs.length)));
       showToast('success', `Done. ${outputs.length} file${outputs.length === 1 ? '' : 's'} downloaded.`);
     } catch (err) {
+      if (disposed) return;
       const msg = err instanceof Error ? err.message : String(err);
       showToast('error', `Chain failed: ${msg}`, 8000);
+      pendingFile = file; pendingRule = rule; pendingChain = capturedChain; pendingChainName = chainName;
+    } finally {
+      lease.release();
     }
   }
 
   function downloadBlob(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
+    downloadUrls.add(url);
     const a = document.createElement('a');
     a.href = url;
     a.download = name;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2_000);
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); timers.delete(timer); }, 2_000);
+    timers.add(timer);
   }
 
   function suggestOutputName(inputName: string, chainName: string, idx: number, total: number): string {
@@ -167,8 +195,9 @@
     return `${base}__${safeChain}${tail}`;
   }
 
-  function handleRun(event: CustomEvent<{ dontAskAgain: boolean }>) {
+  function handleRun(event: CustomEvent<{ dontAskAgain: boolean; file: File; chainFingerprint: string; paidFingerprint: string; accountEmail: string | null }>) {
     if (!pendingFile || !pendingRule || !pendingChain) return;
+    if (event.detail.file !== pendingFile || event.detail.chainFingerprint !== JSON.stringify(pendingChain)) return;
     const { dontAskAgain } = event.detail;
     const file = pendingFile;
     const rule = pendingRule;
@@ -185,7 +214,7 @@
     pendingFile = null;
     pendingRule = null;
     pendingChain = null;
-    void executeChain(file, rule, chain, chainName);
+    void executeChain(file, rule, chain, chainName, { fingerprint: event.detail.paidFingerprint, accountEmail: event.detail.accountEmail });
   }
 
   function handleSkip() {
@@ -208,6 +237,9 @@
   });
 
   onDestroy(() => {
+    disposed = true;
+    for (const url of downloadUrls) URL.revokeObjectURL(url);
+    for (const timer of timers) clearTimeout(timer);
     if (typeof document === 'undefined') return;
     document.removeEventListener('wyreup:filedrop', handleDrop as EventListener);
   });

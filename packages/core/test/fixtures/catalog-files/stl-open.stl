@@ -1,0 +1,9 @@
+solid original_open_triangle
+facet normal 0 0 0
+outer loop
+vertex 0 0 0
+vertex 10 0 0
+vertex 0 10 10
+endloop
+endfacet
+endsolid original_open_triangle

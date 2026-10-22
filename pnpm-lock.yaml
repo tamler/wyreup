@@ -15,6 +15,9 @@ patchedDependencies:
   astro@7.3.7:
     hash: 5001093e803a3efb213f4408eba6b708cf24bd1711f6459c9a7b8374a6acf286
     path: patches/astro@7.3.7.patch
+  pdfjs-dist@6.4.299:
+    hash: e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3
+    path: patches/pdfjs-dist@6.4.299.patch
 
 importers:
 
@@ -44,6 +47,9 @@ importers:
       eslint-config-prettier:
         specifier: ^10.1.8
         version: 10.1.8(eslint@10.12.0)
+      parse5:
+        specifier: 8.0.0
+        version: 8.0.0
       playwright:
         specifier: ^1.64.0
         version: 1.64.0
@@ -151,11 +157,14 @@ importers:
       '@ffmpeg/util':
         specifier: ^0.12.2
         version: 0.12.2
+      '@js-temporal/polyfill':
+        specifier: 0.5.1
+        version: 0.5.1
       '@jsquash/jpeg':
         specifier: ^1.6.0
         version: 1.6.0
       '@jsquash/png':
-        specifier: ^3.1.1
+        specifier: 3.1.1
         version: 3.1.1
       '@jsquash/webp':
         specifier: ^1.5.0
@@ -202,6 +211,9 @@ importers:
       '@xmldom/xmldom':
         specifier: ^0.9.12
         version: 0.9.12
+      ag-psd:
+        specifier: 31.0.3
+        version: 31.0.3
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -220,6 +232,9 @@ importers:
       diff:
         specifier: ^8.0.4
         version: 8.0.4
+      entities:
+        specifier: 4.5.0
+        version: 4.5.0
       fast-xml-parser:
         specifier: ^5.11.2
         version: 5.11.2
@@ -275,8 +290,8 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       pdfjs-dist:
-        specifier: ^6.4.299
-        version: 6.4.299
+        specifier: 6.4.299
+        version: 6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3)
       pixelmatch:
         specifier: ^7.2.0
         version: 7.2.0
@@ -304,12 +319,18 @@ importers:
       svgo:
         specifier: ^3.3.5
         version: 3.3.5
+      terser:
+        specifier: 5.51.2
+        version: 5.51.2
       tesseract.js:
         specifier: ^7.0.0
         version: 7.0.0
       text-readability:
         specifier: ^1.1.1
         version: 1.1.1
+      tr46:
+        specifier: 6.0.0
+        version: 6.0.0
       turndown:
         specifier: ^7.2.4
         version: 7.2.4
@@ -466,7 +487,7 @@ importers:
         version: 3.10.2
       pdfjs-dist:
         specifier: ^6.4.299
-        version: 6.4.299
+        version: 6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3)
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10
@@ -1995,6 +2016,10 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
+  '@js-temporal/polyfill@0.5.1':
+    resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
+    engines: {node: '>=12'}
+
   '@jsquash/jpeg@1.6.0':
     resolution: {integrity: sha512-zwN46Awh1VM6gXlIcALwb5WzqK5H2e6+Awcs1QP8AvS8ohsK/sbE4esvmH4jhlhW7+CgiUUww66vg0aTnlSIMA==}
 
@@ -3066,6 +3091,9 @@ packages:
     resolution: {integrity: sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ==}
     engines: {node: '>=14.0'}
 
+  ag-psd@31.0.3:
+    resolution: {integrity: sha512-THDYK+WK1F5GOH4G0l4wkQRc0Cyq5tnxIwBezACKwa6idKygphnGgMISr4lmW6n0Q89ceoqpdPZQF3Y7TL1pgg==}
+
   ajv-draft-04@1.0.0:
     resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
     peerDependencies:
@@ -3748,6 +3776,10 @@ packages:
 
   entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
+    engines: {node: '>=0.12'}
+
+  entities@6.0.1:
+    resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
 
   error-stack-parser-es@1.0.5:
@@ -4477,6 +4509,9 @@ packages:
   jsbarcode@3.12.3:
     resolution: {integrity: sha512-CuHU9hC6dPsHF5oVFMo8NW76uQVjH4L22CsP4hW+dNnGywJHC/B0ThA1CTDVLnxKLrrpYdicBLnd2xsgTfRnvg==}
 
+  jsbi@4.3.2:
+    resolution: {integrity: sha512-9fqMSQbhJykSeii05nxKl4m6Eqn2P6rOlYiS+C5Dr/HPIU/7yZxu5qzbs40tgaFORiw2Amd0mirjxatXYMkIew==}
+
   jsesc@3.1.0:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
     engines: {node: '>=6'}
@@ -5010,6 +5045,9 @@ packages:
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
 
+  pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+
   pako@2.2.0:
     resolution: {integrity: sha512-zJq6RP/5q+TO2OpFV3FHzlPnFjmkb7Nc99a5SNjJE+uu/PkpChs+NIZSSzbBoD+6kjiISXjfYdwj1ZRQ81dz/w==}
 
@@ -5018,6 +5056,9 @@ packages:
 
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
+
+  parse5@8.0.0:
+    resolution: {integrity: sha512-9m4m5GSgXjL4AjumKzq1Fgfp3Z8rsvjRNbnkVwfu2ImRqE5D0LnY2QfDen18FSY9C573YU5XxSapdHZTZ2WolA==}
 
   parsedbf@2.0.0:
     resolution: {integrity: sha512-WNjKn/cwgGBkXqQLif+2VMEahcRHkBRU0/RfBWZ7Vj7snRNNW63yW1mVuuHRDyXTRxuGCzAHHBcr/Fn+U/bXjQ==}
@@ -5784,6 +5825,10 @@ packages:
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
+  tr46@6.0.0:
+    resolution: {integrity: sha512-bLVMLPtstlZ4iMQHpFHTR7GAGj2jxi8Dg0s2h2MafAE4uSWF98FC/3MomU51iQAMf8/qDUbKWf5GxuvvVcXEhw==}
+    engines: {node: '>=20'}
 
   tree-kill@1.2.2:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
@@ -7998,6 +8043,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@js-temporal/polyfill@0.5.1':
+    dependencies:
+      jsbi: 4.3.2
+
   '@jsquash/jpeg@1.6.0': {}
 
   '@jsquash/png@3.1.1': {}
@@ -8989,6 +9038,11 @@ snapshots:
 
   adm-zip@0.6.1: {}
 
+  ag-psd@31.0.3:
+    dependencies:
+      base64-js: 1.5.1
+      pako: 2.1.0
+
   ajv-draft-04@1.0.0(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
@@ -9714,6 +9768,8 @@ snapshots:
   encodeurl@2.0.0: {}
 
   entities@4.5.0: {}
+
+  entities@6.0.1: {}
 
   error-stack-parser-es@1.0.5: {}
 
@@ -10596,6 +10652,8 @@ snapshots:
 
   jsbarcode@3.12.3: {}
 
+  jsbi@4.3.2: {}
+
   jsesc@3.1.0: {}
 
   json-schema-traverse@0.4.1: {}
@@ -11090,6 +11148,8 @@ snapshots:
 
   pako@1.0.11: {}
 
+  pako@2.1.0: {}
+
   pako@2.2.0: {}
 
   papaparse@5.7.0: {}
@@ -11098,6 +11158,10 @@ snapshots:
     dependencies:
       dot-case: 3.0.4
       tslib: 2.8.1
+
+  parse5@8.0.0:
+    dependencies:
+      entities: 6.0.1
 
   parsedbf@2.0.0: {}
 
@@ -11141,7 +11205,7 @@ snapshots:
       pako: 1.0.11
       tslib: 1.14.1
 
-  pdfjs-dist@6.4.299:
+  pdfjs-dist@6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3):
     optionalDependencies:
       '@napi-rs/canvas': 1.0.10
 
@@ -12075,6 +12139,10 @@ snapshots:
   toidentifier@1.0.1: {}
 
   tr46@0.0.3: {}
+
+  tr46@6.0.0:
+    dependencies:
+      punycode: 2.3.1
 
   tree-kill@1.2.2: {}
 

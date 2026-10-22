@@ -151,7 +151,7 @@ Open [wyreup.com](https://wyreup.com) and install as a PWA. On mobile, share any
 | Package | Description |
 |---|---|
 | `packages/core` | Tool library (`@wyreup/core`) — framework-free, dual browser/Node build |
-| `packages/web` | Astro 4 static site — wyreup.com, fully static, PWA |
+| `packages/web` | Astro 7 + Svelte 5 static site — wyreup.com, fully static, PWA |
 | `packages/cli` | `wyreup` CLI (`@wyreup/cli`) |
 | `packages/mcp` | MCP server (`@wyreup/mcp`) |
 | `functions/` | Cloudflare Pages Functions for the PRO tier — auth, credits, admin, hosted-model dispatch. Only loaded for `/api/*` routes; doesn't ship to npm. |
@@ -168,7 +168,7 @@ See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 
 ## Development
 
-Prerequisites: Node >= 20, pnpm 9.
+Prerequisites: Node >= 22.13.0, pnpm 10.34.5.
 
 ```bash
 pnpm install

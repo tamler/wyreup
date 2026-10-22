@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import './lib/safety/install-egress.js';
+import { startupError } from './lib/safety/install-egress.js';
 import { Command } from 'commander';
 import { createReadStream } from 'node:fs';
 import { listCommand } from './commands/list.js';
@@ -14,16 +14,16 @@ import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
 import { balanceCommand } from './commands/balance.js';
 import { createDefaultRegistry, setModelCdn, toolRunsOnSurface } from '@wyreup/core';
+import { resolveModelCdn } from './lib/safety/runtime-config.js';
 
 // Route every AI-model fetch through models.wyreup.com (R2-backed,
 // first-party origin). Override with WYREUP_MODEL_CDN=disabled to fall
 // back to upstream CDNs (escape hatch for testing or if R2 is down).
-const cdnOverride = process.env.WYREUP_MODEL_CDN;
-if (cdnOverride === 'disabled') {
-  setModelCdn(null);
-} else {
-  setModelCdn(cdnOverride && cdnOverride.length > 0 ? cdnOverride : 'https://models.wyreup.com');
+if (startupError) {
+  console.error(`wyreup: ${startupError}`);
+  process.exit(1);
 }
+setModelCdn(resolveModelCdn().base);
 
 // Read version from package.json at runtime so it never drifts.
 import { createRequire } from 'node:module';
@@ -133,6 +133,7 @@ const runCmd = program
     [] as string[],
   )
   .option('--input-format <mime>', 'Override input MIME type (useful when piping)')
+  .option('--params-json <path>', 'Local UTF-8 parameter object (1 MiB, no BOM); flags override it')
   .option('--json', 'Force JSON output to stdout')
   .option('--verbose', 'Print progress to stderr')
   .option('--overwrite', 'Overwrite existing output files (default: refuse)')
@@ -146,6 +147,7 @@ const runCmd = program
       output: opts['output'] as string | undefined,
       outputDir: opts['outputDir'] as string | undefined,
       param: opts['param'] as string[],
+      paramsJson: opts['paramsJson'] as string | undefined,
       inputFormat: opts['inputFormat'] as string | undefined,
       json: opts['json'] as boolean | undefined,
       verbose: opts['verbose'] as boolean | undefined,
@@ -355,6 +357,10 @@ if (firstArg && !firstArg.startsWith('-') && !BUILTIN_COMMANDS.has(firstArg)) {
         [] as string[],
       )
       .option('--input-format <mime>', 'Override input MIME type')
+      .option(
+        '--params-json <path>',
+        'Local UTF-8 parameter object (1 MiB, no BOM); flags override it',
+      )
       .option('--json', 'Force JSON output to stdout')
       .option('--verbose', 'Print progress to stderr')
       .option('--overwrite', 'Overwrite existing output files (default: refuse)')
@@ -373,6 +379,7 @@ if (firstArg && !firstArg.startsWith('-') && !BUILTIN_COMMANDS.has(firstArg)) {
         output: opts['output'] as string | undefined,
         outputDir: opts['outputDir'] as string | undefined,
         param: paramList,
+        paramsJson: opts['paramsJson'] as string | undefined,
         inputFormat: opts['inputFormat'] as string | undefined,
         json: opts['json'] as boolean | undefined,
         verbose: opts['verbose'] as boolean | undefined,

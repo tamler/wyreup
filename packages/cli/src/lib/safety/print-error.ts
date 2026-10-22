@@ -8,14 +8,22 @@
 import { sanitize } from './sanitize.js';
 import { readApiKey } from '../credentials.js';
 
-export async function printError(prefix: string, err: unknown): Promise<void> {
+// A caller that has positively resolved a free invocation passes null;
+// an existing known key is redacted without another credential lookup.
+export async function printError(
+  prefix: string,
+  err: unknown,
+  knownKey?: string | null,
+): Promise<void> {
   const raw = err instanceof Error ? err.message : String(err);
-  let key: string | undefined;
-  try {
-    const k = await readApiKey();
-    key = k ?? undefined;
-  } catch {
-    /* credentials unreadable — proceed without key for redaction */
+  let key = knownKey ?? undefined;
+  if (knownKey === undefined) {
+    try {
+      const k = await readApiKey();
+      key = k ?? undefined;
+    } catch {
+      /* credentials unreadable — proceed without key for redaction */
+    }
   }
   process.stderr.write(`${prefix}: ${sanitize(raw, key)}\n`);
 }

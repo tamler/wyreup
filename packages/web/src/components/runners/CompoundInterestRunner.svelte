@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
+  import type { CompoundInterestParams, ToolModule } from '@wyreup/core';
   import ChainSection from './ChainSection.svelte';
   import type { SerializedTool } from './types';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
-  void preloadedFile; // finance tools take no file input
+  export let injectedTool: ToolModule<CompoundInterestParams> | undefined = undefined;
+  export let showChain = true;
+  void preloadedFile;
 
-  // Currency formatting — currency selector is a future add (USD-only v1)
   const fmt = new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: 'USD',
@@ -17,104 +20,215 @@
     currency: 'USD',
     maximumFractionDigits: 2,
   });
-
   function fmtN(n: number): string {
     return Math.abs(n) >= 1000 ? fmt.format(n) : fmtDec.format(n);
   }
-
   const FREQ_OPTIONS = [
-    { value: 12,  label: 'Monthly' },
+    { value: 1, label: 'Annually' },
+    { value: 2, label: 'Semiannually' },
+    { value: 4, label: 'Quarterly' },
+    { value: 12, label: 'Monthly' },
+    { value: 52, label: 'Weekly' },
     { value: 365, label: 'Daily' },
-    { value: 1,   label: 'Annually' },
-    { value: 4,   label: 'Quarterly' },
   ];
-
-  // Params (live, debounced)
-  let principal = 10000;
-  let annualRate = 7;
-  let years = 10;
+  let principal: number | undefined = 10000;
+  let annualRate: number | undefined = 7;
+  let years: number | undefined = 10;
   let compoundingPerYear = 12;
-  let monthlyContribution = 0;
+  let monthlyContribution: number | undefined = 0;
+  let inflationRate: number | undefined = 0;
+  let contributionTiming: 'end' | 'beginning' = 'end';
 
-  // Result
-  interface YearRow { year: number; balance: number; contributionTotal: number; interestTotal: number; }
+  interface YearRow {
+    year: number;
+    balance: number;
+    contributionTotal: number;
+    interestTotal: number;
+    realBalance: number;
+  }
   interface Result {
     valid: boolean;
     finalBalance: number;
+    realFinalBalance: number;
     totalContributions: number;
     totalInterest: number;
     yearlyBreakdown: YearRow[];
+    assumptions: string;
     error?: string;
   }
-
   let result: Result | null = null;
   let resultBlob: Blob | null = null;
   let tableOpen = false;
   let copied = false;
+  let error = '';
+  let copyError = '';
+  let running = false;
+  let generation = 0;
+  let controller: AbortController | null = null;
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let copyTimer: ReturnType<typeof setTimeout> | null = null;
+  const urls = new Set<string>();
 
-  function scheduleRun() {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(runCalc, 100);
+  function clearUrls() {
+    for (const url of urls) URL.revokeObjectURL(url);
+    urls.clear();
   }
-
+  function cancel() {
+    generation++;
+    if (debounceTimer) clearTimeout(debounceTimer);
+    if (copyTimer) clearTimeout(copyTimer);
+    debounceTimer = null;
+    copyTimer = null;
+    controller?.abort();
+    controller = null;
+    running = false;
+    copied = false;
+    clearUrls();
+  }
+  function scheduleRun() {
+    cancel();
+    result = null;
+    resultBlob = null;
+    error = '';
+    copyError = '';
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      void runCalc();
+    }, 100);
+  }
+  function currentParams(): CompoundInterestParams {
+    if (
+      [principal, annualRate, years, monthlyContribution, inflationRate].some(
+        (value) => typeof value !== 'number' || !Number.isFinite(value),
+      )
+    ) {
+      throw new Error('Enter a finite number in every numeric field; blank fields are not zero.');
+    }
+    return {
+      principal: principal!,
+      annualRate: annualRate!,
+      years: years!,
+      compoundingPerYear,
+      monthlyContribution: monthlyContribution!,
+      inflationRate: inflationRate!,
+      contributionTiming,
+    };
+  }
   async function runCalc() {
+    const ownGeneration = generation;
+    const ownController = new AbortController();
+    controller = ownController;
+    running = true;
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
-      const registry = createDefaultRegistry();
-      const toolModule = registry.toolsById.get('compound-interest');
-      if (!toolModule) return;
-
-      const blobs = await toolModule.run([], {
-        principal,
-        annualRate,
-        years,
-        compoundingPerYear,
-        monthlyContribution,
-      }, {
+      const params = currentParams();
+      const module =
+        injectedTool ??
+        (await import('../../lib/core-execution')).createDefaultRegistry().toolsById.get('compound-interest');
+      if (!module) throw new Error('Compound-interest calculator is unavailable.');
+      if (ownGeneration !== generation) return;
+      const outputs = await module.run([], params, {
         onProgress: () => {},
-        signal: new AbortController().signal,
+        signal: ownController.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
-
-      const blob = Array.isArray(blobs) ? blobs[0] : blobs;
-      if (!blob) return;
-      resultBlob = blob;
-      result = JSON.parse(await blob.text()) as Result;
-    } catch { /* ignore */ }
+      if (ownGeneration !== generation) return;
+      const blob = Array.isArray(outputs) ? outputs[0] : outputs;
+      if (!blob || blob.type !== 'application/json')
+        throw new Error('Compound-interest calculator returned an invalid result.');
+      const parsed = JSON.parse(await blob.text()) as Result;
+      if (ownGeneration !== generation) return;
+      if (typeof parsed.valid !== 'boolean')
+        throw new Error('Compound-interest calculator returned an invalid result.');
+      result = parsed;
+      resultBlob = parsed.valid ? blob : null;
+    } catch (cause) {
+      if (ownGeneration === generation)
+        error = cause instanceof Error ? cause.message : 'Compound-interest calculation failed.';
+    } finally {
+      if (ownGeneration === generation) {
+        running = false;
+        controller = null;
+      }
+    }
   }
-
-  // Run on mount
-  scheduleRun();
-
-  $: (principal, annualRate, years, compoundingPerYear, monthlyContribution), scheduleRun();
-
   async function copyJson() {
+    const blob = resultBlob;
+    const ownGeneration = generation;
+    if (!blob) return;
+    copyError = '';
+    try {
+      const text = await blob.text();
+      if (ownGeneration !== generation) return;
+      await navigator.clipboard.writeText(text);
+      if (ownGeneration !== generation) return;
+      copied = true;
+      copyTimer = setTimeout(() => {
+        copied = false;
+        copyTimer = null;
+      }, 1500);
+    } catch (cause) {
+      if (ownGeneration === generation)
+        copyError = cause instanceof Error ? cause.message : 'Copy failed.';
+    }
+  }
+  function downloadJson() {
     if (!resultBlob) return;
     try {
-      await navigator.clipboard.writeText(await resultBlob.text());
-      copied = true;
-      setTimeout(() => { copied = false; }, 1500);
-    } catch { /* ignore */ }
+      clearUrls();
+      const url = URL.createObjectURL(resultBlob);
+      urls.add(url);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'compound-interest-result.json';
+      link.click();
+    } catch (cause) {
+      clearUrls();
+      error = cause instanceof Error ? cause.message : 'JSON download failed.';
+    }
   }
+  $: ((principal,
+  annualRate,
+  years,
+  compoundingPerYear,
+  monthlyContribution,
+  inflationRate,
+  contributionTiming),
+    scheduleRun());
+  onDestroy(cancel);
 
   // SVG chart helpers
   const CHART_W = 560;
   const CHART_H = 220;
   const PAD = { top: 16, right: 16, bottom: 32, left: 64 };
 
-  function chartCoords(data: YearRow[]): { contribPath: string; totalPath: string; gridY: number[]; gridX: number[]; maxY: number; } {
+  function chartCoords(data: YearRow[]): {
+    contribPath: string;
+    totalPath: string;
+    gridY: number[];
+    gridX: number[];
+    maxY: number;
+  } {
     if (!data.length) return { contribPath: '', totalPath: '', gridY: [], gridX: [], maxY: 0 };
-    const maxY = Math.max(...data.map(d => d.balance));
+    const maxY = Math.max(1, ...data.map((d) => d.balance));
     const plotW = CHART_W - PAD.left - PAD.right;
     const plotH = CHART_H - PAD.top - PAD.bottom;
 
-    function xOf(i: number) { return PAD.left + (i / (data.length - 1 || 1)) * plotW; }
-    function yOf(v: number) { return PAD.top + plotH - (v / maxY) * plotH; }
+    function xOf(i: number) {
+      return PAD.left + (i / (data.length - 1 || 1)) * plotW;
+    }
+    function yOf(v: number) {
+      return PAD.top + plotH - (v / maxY) * plotH;
+    }
 
-    const totalPath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(d.balance).toFixed(1)}`).join(' ');
-    const contribPath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(d.contributionTotal).toFixed(1)}`).join(' ');
+    const totalPath = data
+      .map((d, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(d.balance).toFixed(1)}`)
+      .join(' ');
+    const contribPath = data
+      .map(
+        (d, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(d.contributionTotal).toFixed(1)}`,
+      )
+      .join(' ');
 
     // Grid lines: up to 5 Y gridlines at nice intervals
     const yStep = niceStep(maxY, 5);
@@ -130,7 +244,7 @@
     const raw = max / steps;
     const mag = Math.pow(10, Math.floor(Math.log10(raw)));
     const norm = raw / mag;
-    let nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+    const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
     return nice * mag;
   }
 
@@ -145,9 +259,9 @@
   }
 
   function shortFmt(v: number): string {
-    if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-    if (v >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
-    return `$${v.toFixed(0)}`;
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+    return `${v.toFixed(0)}`;
   }
 </script>
 
@@ -170,46 +284,42 @@
             class="num-input"
             type="number"
             min="0"
+            max="1000000000000"
             step="100"
             bind:value={principal}
-            on:input={scheduleRun}
           />
         </div>
       </div>
 
       <div class="field">
-        <label class="field-label" for="ci-rate">Annual rate — <span class="field-value">{annualRate.toFixed(1)}%</span></label>
+        <label class="field-label" for="ci-rate">Annual nominal return (%)</label>
         <input
           id="ci-rate"
-          class="range-input"
-          type="range"
+          class="num-input"
+          type="number"
           min="0"
-          max="30"
+          max="1000"
           step="0.1"
           bind:value={annualRate}
-          on:input={scheduleRun}
         />
-        <div class="range-bounds"><span>0%</span><span>30%</span></div>
       </div>
 
       <div class="field">
-        <label class="field-label" for="ci-years">Years — <span class="field-value">{years}</span></label>
+        <label class="field-label" for="ci-years">Years</label>
         <input
           id="ci-years"
-          class="range-input"
-          type="range"
+          class="num-input"
+          type="number"
           min="1"
-          max="50"
+          max="100"
           step="1"
           bind:value={years}
-          on:input={scheduleRun}
         />
-        <div class="range-bounds"><span>1</span><span>50</span></div>
       </div>
 
       <div class="field">
         <label class="field-label" for="ci-freq">Compounding frequency</label>
-        <select id="ci-freq" class="select-input" bind:value={compoundingPerYear} on:change={scheduleRun}>
+        <select id="ci-freq" class="select-input" bind:value={compoundingPerYear}>
           {#each FREQ_OPTIONS as opt}
             <option value={opt.value}>{opt.label}</option>
           {/each}
@@ -225,12 +335,15 @@
             class="num-input"
             type="number"
             min="0"
+            max="1000000000"
             step="50"
             bind:value={monthlyContribution}
-            on:input={scheduleRun}
           />
         </div>
       </div>
+      <div class="field"><label class="field-label" for="ci-inflation">Annual inflation (%)</label><input id="ci-inflation" class="num-input" type="number" min="-99.999999" max="1000" step="any" bind:value={inflationRate} /></div>
+      <div class="field"><label class="field-label" for="ci-timing">Monthly contribution timing</label><select id="ci-timing" class="select-input" bind:value={contributionTiming}><option value="end">End of month</option><option value="beginning">Beginning of month</option></select></div>
+      <p>USD display; no currency conversion. Contributions use the equivalent effective monthly rate for all compounding frequencies. Returns and inflation are fixed assumptions, not a forecast.</p>
     </div>
 
     <!-- Results -->
@@ -239,8 +352,8 @@
         <!-- Summary cards -->
         <div class="cards-row">
           <div class="card card--accent">
-            <span class="card-label">Final balance</span>
-            <span class="card-value card-value--accent">{fmtN(result.finalBalance)}</span>
+            <span class="card-label">Nominal final balance</span>
+            <span class="card-value card-value--accent" data-result="nominal">{fmtN(result.finalBalance)}</span>
           </div>
           <div class="card">
             <span class="card-label">Total contributions</span>
@@ -251,6 +364,8 @@
             <span class="card-value card-value--accent">{fmtN(result.totalInterest)}</span>
           </div>
         </div>
+        <div class="card"><span class="card-label">Inflation-adjusted final balance</span><span class="card-value" data-result="real">{fmtN(result.realFinalBalance)}</span></div>
+        <p>{result.assumptions}</p>
 
         <!-- Growth chart -->
         {#if result.yearlyBreakdown.length > 1}
@@ -345,6 +460,7 @@
                   <th class="th th--r">Balance</th>
                   <th class="th th--r">Contributions</th>
                   <th class="th th--r">Interest</th>
+                  <th class="th th--r">Inflation-adjusted balance</th>
                 </tr>
               </thead>
               <tbody>
@@ -354,6 +470,7 @@
                     <td class="td td--r td--accent">{fmtN(row.balance)}</td>
                     <td class="td td--r">{fmtN(row.contributionTotal)}</td>
                     <td class="td td--r">{fmtN(row.interestTotal)}</td>
+                    <td class="td td--r">{fmtN(row.realBalance)}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -366,9 +483,10 @@
           <button class="btn-ghost" type="button" on:click={copyJson}>
             {copied ? 'Copied' : 'Copy JSON'}
           </button>
+          <button class="btn-ghost" type="button" on:click={downloadJson}>Download JSON</button>
         </div>
 
-        {#if resultBlob}
+        {#if resultBlob && showChain}
           <ChainSection {resultBlob} sourceToolId={tool.id} resultName="compound-interest-result.json" />
         {/if}
       </div>
@@ -380,6 +498,9 @@
       </div>
     {/if}
   </div>
+  {#if running}<p role="status">Calculating</p>{/if}
+  {#if error}<p role="alert">{error}</p>{/if}
+  {#if copyError}<p role="alert">{copyError}</p>{/if}
 </div>
 
 <style>
@@ -423,10 +544,6 @@
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
-  .field-value {
-    color: var(--accent-text);
-    font-weight: 500;
-  }
 
   .input-wrap {
     display: flex;
@@ -461,19 +578,6 @@
   .num-input:focus { outline: none; }
   .input-wrap:focus-within { border-color: var(--accent-hover); }
 
-  .range-input {
-    width: 100%;
-    accent-color: var(--accent);
-    cursor: pointer;
-    height: 16px;
-  }
-  .range-bounds {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-subtle);
-  }
 
   .select-input {
     height: 32px;

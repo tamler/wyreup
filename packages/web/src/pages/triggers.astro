@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Triggers — Wyreup"
-  description="How Wyreup's trigger rules work and the safety model that backs them. Preview-before-run is always on. Free tools never upload."
+  description="How Wyreup's trigger rules work and the safety model that backs them. Preview-before-run is always on; network tools disclose what they send."
 >
   <section class="triggers-page">
     <div class="container">
@@ -17,7 +17,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <header class="page-header">
         <h1 class="page-title">Triggers</h1>
         <p class="page-subhead">
-          Drop a file; if a rule matches, Wyreup proposes its chain. You confirm, it runs. Free tools never upload. Auto-run is never on by default.
+          Drop a file; if a rule matches, Wyreup proposes its chain. You confirm, it runs. Local file tools process on your device; network tools disclose what they send. Auto-run is never on by default.
         </p>
       </header>
 
@@ -68,9 +68,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             Before the preview sheet renders Run, Wyreup scans the file for prompt-injection patterns (homoglyphs, invisible characters, control codes) and shows the verdict above Run. High-severity files require an extra confirmation click.
           </dd>
 
-          <dt>No network egress</dt>
+          <dt>Review network access before running</dt>
           <dd>
-            Tools that would make network calls (e.g. webhook-replay's send mode) are excluded from auto-run. Free tools in a chain run entirely on your device; hosted PRO steps are always labeled and never auto-run silently.
+            Review the tools and their disclosures before confirming a chain. Local steps process on your device; network lookups and hosted PRO steps require a connection. Domain Registration Age is a free network tool that sends the entered domain to Wyreup and its registration registry. Auto-run is never on by default.
           </dd>
 
           <dt>Output collisions are reported</dt>
@@ -101,7 +101,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <ul>
           <li>Run a chain without you seeing the file metadata and chain summary first.</li>
           <li>Trick Wyreup into running a tool that doesn't ship with it.</li>
-          <li>Exfiltrate a chain's output — outputs are downloaded via the browser's standard save-as flow; no server path is constructed.</li>
+          <li>Silently choose an output destination: outputs use the browser's download flow. Network tools send their disclosed inputs to the services named in their tool descriptions.</li>
           <li>Auto-confirm a rule on your behalf based on usage frequency.</li>
         </ul>
       </section>

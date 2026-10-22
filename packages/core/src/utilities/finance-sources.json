@@ -1,0 +1,70 @@
+{
+  "checkedOn": "2026-10-11",
+  "sources": {
+    "amazon-fba-profit-calculator": ["https://sell.amazon.com/pricing"],
+    "etsy-fee-profit-calculator": ["https://www.etsy.com/legal/fees/"],
+    "ebay-fee-profit-calculator": [
+      "https://www.ebay.com/help/selling/fees-credits-invoices/store-selling-fees-managed-payments-sellers?id=4809"
+    ],
+    "paypal-fee-calculator": ["https://www.paypal.com/us/business/paypal-business-fees"],
+    "stripe-fee-calculator": ["https://stripe.com/pricing"],
+    "square-fee-calculator": ["https://squareup.com/us/en/payments/our-fees"],
+    "airbnb-host-payout-calculator": ["https://www.airbnb.com/help/article/1857"],
+    "shopify-profit-margin-calculator": [
+      "https://help.shopify.com/en/manual/your-account/manage-billing/billing-charges/types-of-charges/third-party-charges/third-party-transaction-fees"
+    ],
+    "youtube-rpm-calculator": ["https://support.google.com/youtube/answer/9314357?hl=en"],
+    "patreon-earnings-calculator": [
+      "https://support.patreon.com/hc/en-gb/articles/11111747095181-Creator-fees-overview"
+    ],
+    "fiverr-fee-calculator": [
+      "https://help.fiverr.com/hc/en-us/articles/34069565843985-How-Fiverr-works-for-freelancers"
+    ],
+    "upwork-fee-calculator": [
+      "https://support.upwork.com/hc/en-us/articles/211062538-Learn-about-the-Freelancer-Service-Fee"
+    ],
+    "kdp-royalty-calculator": [
+      "https://kdp.amazon.com/en_US/help/topic/G200634500",
+      "https://kdp.amazon.com/en_US/help/topic/GQ8UH9SN83UFNVKR"
+    ],
+    "tiktok-shop-fee-calculator": [
+      "https://seller-us.tiktok.com/university/essay?knowledge_id=5982454398175018"
+    ],
+    "poshmark-fee-calculator": ["https://support.poshmark.com/s/article/297755057?language=en_US"],
+    "depop-fee-calculator": [
+      "https://depophelp.zendesk.com/hc/en-gb/articles/360001791127-Seller-fees-and-charges"
+    ],
+    "mercari-profit-calculator": ["https://www.mercari.com/us/help_center/article/169/"],
+    "stockx-seller-fee-calculator": [
+      "https://stockx.com/help/en-GB/articles/What-are-StockXs-fees-for-sellers"
+    ],
+    "twitch-subscription-revenue-calculator": ["https://www.twitch.tv/p/en/partners/"],
+    "twitch-bits-to-usd-converter": ["https://www.twitch.tv/p/en/partners/"],
+    "gumroad-fee-calculator": ["https://gumroad.com/help/article/66-gumroads-fees"],
+    "kickstarter-fee-calculator": ["https://www.kickstarter.com/help/fees"],
+    "printify-profit-calculator": [
+      "https://help.printify.com/hc/en-us/articles/4483626302609-How-will-Printify-charge-me"
+    ],
+    "redbubble-profit-calculator": [
+      "https://help.redbubble.com/hc/en-us/articles/202270799-How-is-my-payment-calculated"
+    ],
+    "teespring-profit-calculator": [
+      "https://kb.spri.ng/creators/articles/how-much-products-cost.html"
+    ],
+    "amazon-handmade-fee-calculator": ["https://sell.amazon.com/programs/handmade?lang=en-US"],
+    "grailed-fee-calculator": [
+      "https://support.grailed.com/hc/en-us/articles/30282580172045-What-are-the-fees"
+    ],
+    "reverb-fee-calculator": [
+      "https://help.reverb.com/hc/en-gb/articles/40917652290843-What-fees-will-I-pay-for-selling-on-Reverb"
+    ],
+    "discogs-fee-calculator": [
+      "https://support.discogs.com/hc/en-us/articles/360007521674-What-Are-The-Fees-For-Selling-On-Discogs"
+    ],
+    "whatnot-seller-fee-calculator": ["https://www.whatnot.com/seller/fees"],
+    "ko-fi-fee-calculator": [
+      "https://help.ko-fi.com/hc/en-us/articles/360002506494-Does-Ko-fi-take-a-fee"
+    ],
+    "fourthwall-profit-calculator": ["https://fourthwall.com/pricing/"]
+  }
+}

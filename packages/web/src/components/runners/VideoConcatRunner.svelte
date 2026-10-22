@@ -1,12 +1,14 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import { tryReserveMediaJob } from '../../lib/mediaJobReservation';
+  import type { SerializedTool, PreloadAdmission } from './types';
   import type { ToolProgress } from '@wyreup/core';
 
   // video-concat needs ordered inputs — it joins clips end-to-end and the
@@ -14,8 +16,20 @@
   // reorder. This runner adds thumbnails and up/down buttons so the user
   // can sequence the clips before joining.
 
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  let generation = 0;
+  let disposed = false;
+  onDestroy(() => { disposed = true; generation++; releaseOwnedWakeLocks(); if (resultUrl) URL.revokeObjectURL(resultUrl); for (const clip of clips) URL.revokeObjectURL(clip.url); });
+
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
   interface Clip {
     id: string;
@@ -49,11 +63,17 @@
 
   // Bridge an incoming preloaded file (chain hand-off) into the clip list
   // exactly once. Subsequent file additions go through the dropzone.
-  $: if (preloadedFile && clips.length === 0) {
-    void addFiles([preloadedFile]);
+  let priorPreload: File | null = null;
+  $: if (preloadedFile !== priorPreload) {
+    priorPreload = preloadedFile;
+    reset();
+    for (const clip of clips) URL.revokeObjectURL(clip.url);
+    clips = [];
+    if (preloadedFile) void addFiles([preloadedFile]);
   }
 
   async function addFiles(incoming: File[]) {
+    const attempt = ++generation;
     const max = tool.input.max ?? 20;
     const room = max - clips.length;
     if (room <= 0) return;
@@ -65,6 +85,11 @@
     for (const file of accepted) {
       const url = URL.createObjectURL(file);
       const meta = await loadMeta(url);
+      if (disposed || attempt !== generation) {
+        URL.revokeObjectURL(url);
+        for (const clip of newClips) URL.revokeObjectURL(clip.url);
+        return;
+      }
       newClips.push({
         id: crypto.randomUUID(),
         file,
@@ -135,6 +160,7 @@
   }
 
   function moveUp(i: number) {
+    generation++;
     if (i <= 0) return;
     const next = clips.slice();
     const item = next[i];
@@ -146,6 +172,7 @@
   }
 
   function moveDown(i: number) {
+    generation++;
     if (i >= clips.length - 1) return;
     const next = clips.slice();
     const item = next[i];
@@ -157,6 +184,7 @@
   }
 
   function remove(i: number) {
+    generation++;
     const removed = clips[i];
     clips = clips.filter((_, idx) => idx !== i);
     if (removed) URL.revokeObjectURL(removed.url);
@@ -177,21 +205,34 @@
 
   async function run() {
     if (!canRun) return;
+    const lease = tryReserveMediaJob([tool.id]);
+    if (!lease) {
+      state = 'error';
+      errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.';
+      return;
+    }
+    const attempt = ++generation;
+    const orderedFiles = clips.map((clip) => clip.file);
+    const capturedParams = { ...params };
+    const capturedToolId = tool.id;
+    const imported = preloadedFile;
+    const admission = onPreloadAdmission;
+    const current = () => !disposed && attempt === generation && tool.id === capturedToolId && preloadedFile === imported && orderedFiles.length === clips.length && orderedFiles.every((file, index) => file === clips[index]?.file) && JSON.stringify(params) === JSON.stringify(capturedParams);
     state = 'running';
     errorMsg = '';
     totalInputSize = clips.reduce((s, c) => s + c.file.size, 0);
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const orderedFiles = clips.map((c) => c.file);
-      const result = await toolModule.run(orderedFiles, params, {
+      const result = await toolModule.run(orderedFiles, capturedParams, {
         onProgress: (p) => {
-          progress = p;
+          if (current()) progress = p;
         },
         signal: new AbortController().signal,
         cache: new Map(),
@@ -201,6 +242,7 @@
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
+      if (!current()) return;
 
       resultBlob = blob;
       resultSize = blob.size;
@@ -208,15 +250,22 @@
       resultUrl = URL.createObjectURL(blob);
       markToolUsed(tool.id);
       state = 'done';
+      if (imported && orderedFiles.includes(imported)) admission?.({ file: imported, status: 'admitted' });
     } catch (err) {
+      if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+      if (imported && orderedFiles.includes(imported)) admission?.({ file: imported, status: 'refused', message: errorMsg });
     } finally {
-      releaseWakeLock();
+      lease.release();
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    generation++;
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     if (resultUrl) {
@@ -239,6 +288,7 @@
   {#if clips.length < (tool.input.max ?? 20)}
     <DropZone
       accept={tool.input.accept}
+      sizeLimit={tool.input.sizeLimit}
       multiple={true}
       files={[]}
       bind:error={dropError}
@@ -305,6 +355,7 @@
       bind:params
       on:change={(e) => {
         params = e.detail;
+        reset();
       }}
     />
   {/if}

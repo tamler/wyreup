@@ -1,5 +1,7 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import type { DateCalculatorParams, DateUnit } from './types.js';
+import type { Temporal } from '@js-temporal/polyfill';
+import { cloneUtilityJson } from '../../utilities/common.js';
 
 export type { DateCalculatorParams, DateCalcMode, DateUnit } from './types.js';
 export { defaultDateCalculatorParams } from './types.js';
@@ -7,48 +9,33 @@ export { defaultDateCalculatorParams } from './types.js';
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-function parseDate(s: string): Date | null {
-  if (!ISO_RE.test(s)) return null;
-  const d = new Date(`${s}T00:00:00Z`);
-  if (isNaN(d.getTime())) return null;
-  return d;
-}
-
-function diffDays(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / 86400000);
-}
-
-function addToDate(d: Date, amount: number, unit: DateUnit): Date {
-  // Work on a plain object to avoid timezone drift
-  const y = d.getUTCFullYear();
-  const m = d.getUTCMonth(); // 0-indexed
-  const day = d.getUTCDate();
-
-  switch (unit) {
-    case 'days':
-      return new Date(Date.UTC(y, m, day + amount));
-    case 'weeks':
-      return new Date(Date.UTC(y, m, day + amount * 7));
-    case 'months':
-      return new Date(Date.UTC(y, m + amount, day));
-    case 'years':
-      return new Date(Date.UTC(y + amount, m, day));
-    default:
-      throw new Error(`Unknown unit: ${String(unit)}`);
+function parseDate(s: string, temporal: typeof Temporal): Temporal.PlainDate | null {
+  if (typeof s !== 'string' || !ISO_RE.test(s)) return null;
+  try {
+    const d = temporal.PlainDate.from(s, { overflow: 'reject' });
+    return d.year >= 1900 && d.year <= 2100 ? d : null;
+  } catch {
+    return null;
   }
 }
 
-function isoFormat(d: Date): string {
-  return d.toISOString().slice(0, 10);
+function diffDays(a: Temporal.PlainDate, b: Temporal.PlainDate): number {
+  return a.until(b, { largestUnit: 'days' }).days;
 }
 
-function breakdownDiff(days: number): { years: number; months: number; days: number } {
-  const absDays = Math.abs(days);
-  const years = Math.floor(absDays / 365);
-  const rem = absDays - years * 365;
-  const months = Math.floor(rem / 30);
-  const remDays = rem - months * 30;
-  return { years, months, days: remDays };
+function addToDate(
+  d: Temporal.PlainDate,
+  amount: number,
+  unit: DateUnit,
+  overflow: 'constrain' | 'reject',
+): Temporal.PlainDate {
+  const limits = { days: 73050, weeks: 10435, months: 2400, years: 200 };
+  if (!Object.hasOwn(limits, unit) || !Number.isInteger(amount) || Math.abs(amount) > limits[unit])
+    throw new Error('Use a bounded whole-number calendar amount and supported unit.');
+  const result = d.add({ [unit]: amount }, { overflow });
+  if (result.year < 1900 || result.year > 2100)
+    throw new Error('Result date must be between 1900 and 2100.');
+  return result;
 }
 
 export const dateCalculator: ToolModule<DateCalculatorParams> = {
@@ -68,7 +55,16 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
   cost: 'free',
   memoryEstimate: 'low',
 
-  defaults: { mode: 'diff', date1: '2026-01-01', date2: '2026-12-31', amount: 30, unit: 'days' },
+  defaults: {
+    mode: 'diff',
+    date1: '2026-01-01',
+    date2: '2026-12-31',
+    amount: 30,
+    unit: 'days',
+    weekend: [6, 7],
+    holidays: [],
+    overflow: 'constrain',
+  },
 
   paramSchema: {
     mode: {
@@ -109,31 +105,119 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
       ],
       showWhen: { field: 'mode', equals: 'add' },
     },
+    weekend: {
+      type: 'array',
+      itemType: 'number',
+      label: 'Weekend ISO weekdays',
+      help: 'Monday is 1; Sunday is 7. Empty means no weekends.',
+      showWhen: { field: 'mode', equals: 'diff' },
+    },
+    holidays: {
+      type: 'array',
+      itemType: 'string',
+      label: 'Holiday dates',
+      help: 'Unique YYYY-MM-DD dates; holidays on weekends are not deducted twice.',
+      showWhen: { field: 'mode', equals: 'diff' },
+    },
+    overflow: {
+      type: 'enum',
+      label: 'Month-end behavior',
+      options: [
+        { value: 'constrain', label: 'Constrain to last valid day' },
+        { value: 'reject', label: 'Reject an invalid day' },
+      ],
+      showWhen: { field: 'mode', equals: 'add' },
+    },
   },
 
   async run(_inputs: File[], params: DateCalculatorParams, ctx: ToolRunContext): Promise<Blob[]> {
+    if (ctx.signal.aborted) throw new DOMException('Date calculation cancelled.', 'AbortError');
     ctx.onProgress({ stage: 'processing', percent: 0, message: 'Calculating date' });
 
     let result: Record<string, unknown>;
 
     try {
+      const { Temporal } = await import('@js-temporal/polyfill');
+      if (ctx.signal.aborted) throw new DOMException('Date calculation cancelled.', 'AbortError');
+      params = cloneUtilityJson(params) as unknown as DateCalculatorParams;
+      if (
+        !params ||
+        typeof params !== 'object' ||
+        Array.isArray(params) ||
+        Object.keys(params).some(
+          (key) =>
+            ![
+              'mode',
+              'date1',
+              'date2',
+              'amount',
+              'unit',
+              'weekend',
+              'holidays',
+              'overflow',
+            ].includes(key),
+        )
+      )
+        throw new Error('Unknown or invalid date parameters.');
       const { mode, date1, date2, amount, unit } = params;
+      const weekend = params.weekend ?? [6, 7],
+        holidays = params.holidays ?? [],
+        overflow = params.overflow ?? 'constrain';
+      if (
+        !Array.isArray(weekend) ||
+        weekend.length > 7 ||
+        new Set(weekend).size !== weekend.length ||
+        weekend.some((day) => !Number.isInteger(day) || day < 1 || day > 7)
+      )
+        throw new Error('Weekend weekdays must be unique ISO numbers from 1 to 7.');
+      if (
+        !Array.isArray(holidays) ||
+        holidays.length > 366 ||
+        new Set(holidays).size !== holidays.length ||
+        holidays.some((day) => !parseDate(day, Temporal))
+      )
+        throw new Error('Use at most 366 unique valid holiday dates.');
+      if (overflow !== 'constrain' && overflow !== 'reject')
+        throw new Error('Choose constrain or reject for calendar overflow.');
 
       if (mode === 'diff') {
         if (!date1) throw new Error('"date1" is required for diff mode');
         if (!date2) throw new Error('"date2" is required for diff mode');
-        const d1 = parseDate(date1);
-        const d2 = parseDate(date2);
+        const d1 = parseDate(date1, Temporal);
+        const d2 = parseDate(date2, Temporal);
         if (!d1) throw new Error(`Invalid date format for date1: "${date1}". Use YYYY-MM-DD.`);
         if (!d2) throw new Error(`Invalid date format for date2: "${date2}". Use YYYY-MM-DD.`);
         const days = diffDays(d1, d2);
-        const breakdown = breakdownDiff(days);
+        const distance = d1.until(d2, { largestUnit: 'years' });
+        const breakdown = { years: distance.years, months: distance.months, days: distance.days };
+        const earlier = days < 0 ? d2 : d1,
+          later = days < 0 ? d1 : d2;
+        const excluded = new Set(holidays);
+        let businessDays = 0;
+        for (
+          let day = earlier, count = 0;
+          Temporal.PlainDate.compare(day, later) < 0;
+          day = day.add({ days: 1 }), count++
+        ) {
+          if (count % 1024 === 0 && ctx.signal.aborted)
+            throw new DOMException('Date calculation cancelled.', 'AbortError');
+          if (!weekend.includes(day.dayOfWeek) && !excluded.has(day.toString())) businessDays++;
+        }
+        businessDays *= days < 0 ? -1 : 1;
         result = {
           valid: true,
           mode,
           date1,
           date2,
           totalDays: days,
+          totalWeeks: days / 7,
+          totalHours: days * 24,
+          businessDays,
+          assumptions: {
+            weekend,
+            holidays,
+            range: 'Half-open [earlier, later); date-only hours use 24 hours per day.',
+          },
           breakdown,
           formatted: `${Math.abs(days)} days (${breakdown.years}y ${breakdown.months}mo ${breakdown.days}d)`,
         };
@@ -141,23 +225,24 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
         if (!date1) throw new Error('"date1" is required for add mode');
         if (amount === undefined) throw new Error('"amount" is required for add mode');
         if (!unit) throw new Error('"unit" is required for add mode');
-        const d1 = parseDate(date1);
+        const d1 = parseDate(date1, Temporal);
         if (!d1) throw new Error(`Invalid date format for date1: "${date1}". Use YYYY-MM-DD.`);
-        const resultDate = addToDate(d1, amount, unit);
+        const resultDate = addToDate(d1, amount, unit, overflow);
         result = {
           valid: true,
           mode,
           date1,
           amount,
           unit,
-          result: isoFormat(resultDate),
-          formatted: `${date1} + ${amount} ${unit} = ${isoFormat(resultDate)}`,
+          result: resultDate.toString(),
+          overflow,
+          formatted: `${date1} + ${amount} ${unit} = ${resultDate.toString()}`,
         };
       } else if (mode === 'day-of-week') {
         if (!date1) throw new Error('"date1" is required for day-of-week mode');
-        const d1 = parseDate(date1);
+        const d1 = parseDate(date1, Temporal);
         if (!d1) throw new Error(`Invalid date format for date1: "${date1}". Use YYYY-MM-DD.`);
-        const dayIndex = d1.getUTCDay();
+        const dayIndex = d1.dayOfWeek % 7;
         result = {
           valid: true,
           mode,
@@ -170,6 +255,7 @@ export const dateCalculator: ToolModule<DateCalculatorParams> = {
         throw new Error(`Unknown mode: ${String(mode)}`);
       }
     } catch (err) {
+      if (ctx.signal.aborted) throw new DOMException('Date calculation cancelled.', 'AbortError');
       result = { valid: false, error: err instanceof Error ? err.message : String(err) };
     }
 

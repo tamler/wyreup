@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { dropStore } from '../stores/drop';
-  import { stashChainFile } from './runners/chainStorage';
-  import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
+  import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
+  import { setTrailHandover } from './runners/hopTrail';
+  import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
+import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
 
   // Live three-step walkthrough. Replaces the static "01 Drop / 02 Pick /
   // 03 Download" copy with a working flow:
@@ -19,9 +22,15 @@
   let pickedToolId: string | null = null;
   let registry: ReturnType<typeof createDefaultRegistry> | null = null;
   let registryLoading = false;
+  let handoffError = '';
+  let handingOff = false;
+  let disposed = false;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
+  onDestroy(() => { disposed = true; for (const url of downloadUrls) URL.revokeObjectURL(url); for (const timer of downloadTimers) clearTimeout(timer); });
 
   $: file = $dropStore?.file ?? null;
-  $: compatibleTools = $dropStore?.compatibleTools ?? [];
+  $: compatibleTools = file ? fileToolCandidates($dropStore?.compatibleTools ?? [], file) : [];
   // Reset the picked tool whenever a new file is dropped (otherwise the
   // previous selection sticks even if it's now incompatible).
   $: if (file) {
@@ -46,7 +55,7 @@
   async function processFile(f: File) {
     await ensureRegistry();
     if (!registry) return;
-    const tools = registry.toolsForFiles([f]);
+    const tools = fileToolCandidates(registry.tools, f);
     dropStore.set({
       file: f,
       mime: f.type || 'application/octet-stream',
@@ -82,17 +91,36 @@
   }
 
   async function run() {
-    if (!file || !pickedTool) return;
-    await stashChainFile(file, { autoAccept: true });
-    window.location.href = `/tools/${pickedTool.id}`;
+    if (!file || !pickedTool || handingOff || !acceptsBrowserFile(pickedTool, file)) return;
+    const captured = file, target = pickedTool.id;
+    handingOff = true; handoffError = '';
+    const result = await stashChainHandover(captured, { autoAccept: true, targetToolId: target });
+    if (disposed || file !== captured || pickedTool?.id !== target) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      if (!cleared && !disposed) handoffError = 'Shared storage could not confirm deleting this handover token. Original retained.';
+      handingOff = false; return;
+    }
+    if (!result.stored || !setTrailHandover([], result.token, target)) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      handoffError = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
+      handingOff = false; return;
+    }
+    window.location.href = `/tools/${target}`;
+  }
+
+  function downloadOriginal() {
+    if (!file) return;
+    const url = URL.createObjectURL(file); downloadUrls.add(url);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = file.name; anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 
   function fmtName(t: ToolModule): string {
     return t.name;
   }
 
-  $: previewTools = compatibleTools.slice(0, 6);
-  $: extraCount = Math.max(0, compatibleTools.length - previewTools.length);
+  $: previewTools = compatibleTools;
 </script>
 
 <div class="how-row">
@@ -123,7 +151,7 @@
         Try a different file
       </button>
     {:else}
-      <p class="how-card__body">Drop any file here — or click to pick one. It stays on this device.</p>
+      <p class="how-card__body">Drop a file here — or click to pick one. Local tools process here; review each tool's disclosure before sending input.</p>
     {/if}
   </div>
 
@@ -154,9 +182,6 @@
             aria-selected={pickedToolId === t.id}
           >{fmtName(t)}</button>
         {/each}
-        {#if extraCount > 0}
-          <a class="how-card__more" href="/tools" aria-label="See all compatible tools">+{extraCount} more</a>
-        {/if}
       </div>
     {/if}
   </div>
@@ -181,11 +206,15 @@
     <button
       class="how-card__run"
       on:click={run}
-      disabled={!pickedTool}
+      disabled={!pickedTool || handingOff}
       type="button"
     >
       {pickedTool ? `Run ${pickedTool.name} →` : 'Run'}
     </button>
+    {#if handoffError}
+      <p role="alert">{handoffError}</p>
+      <button type="button" on:click={downloadOriginal}>Download original</button>
+    {/if}
   </div>
 </div>
 

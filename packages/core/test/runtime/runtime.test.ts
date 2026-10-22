@@ -15,4 +15,16 @@ describe('runtime adapter', () => {
     const available = adapter.isAvailable();
     expect(typeof available).toBe('boolean');
   });
+
+  it('creates a usable canvas in Node', async () => {
+    const canvas = (await getRuntimeAdapter().createCanvas(3, 2)) as {
+      width: number;
+      height: number;
+      getContext(type: '2d'): unknown;
+    };
+
+    expect(canvas.width).toBe(3);
+    expect(canvas.height).toBe(2);
+    expect(canvas.getContext('2d')).toBeTruthy();
+  });
 });

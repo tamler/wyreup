@@ -2,6 +2,7 @@
  * Tests for the `run` command — executeTool() and helpers.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type * as Core from '@wyreup/core';
 
 // ──── fs/promises mock ────────────────────────────────────────────────────────
 
@@ -109,7 +110,8 @@ const mockToolsById = new Map([
   ['split-pdf', TOOL_SPLIT],
 ]);
 
-vi.mock('@wyreup/core', () => ({
+vi.mock('@wyreup/core', async (importOriginal) => ({
+  ...await importOriginal<typeof Core>(),
   createDefaultRegistry: () => ({
     tools: [TOOL_HASH, TOOL_COMPRESS, TOOL_SPLIT],
     toolsById: mockToolsById,
@@ -176,6 +178,7 @@ function makeImageBlob(): Blob {
 
 describe('executeTool — hash (JSON output)', () => {
   it('prints JSON to stdout when no -o given', async () => {
+    const initialSigintListeners = process.listenerCount('SIGINT');
     mockReadFile.mockResolvedValue(Buffer.from('hello'));
     mockHashRun.mockResolvedValue(makeJsonBlob({ sha256: 'abc' }));
 
@@ -184,6 +187,7 @@ describe('executeTool — hash (JSON output)', () => {
     const output = stdoutOutput.map((b) => b.toString()).join('');
     expect(output).toContain('"sha256"');
     expect(exitCode).toBeUndefined();
+    expect(process.listenerCount('SIGINT')).toBe(initialSigintListeners);
   });
 
   it('writes output to -o path when provided', async () => {

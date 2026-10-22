@@ -43,6 +43,13 @@ const MODEL_IDS: Record<WhisperModel, string> = {
   small: 'Xenova/whisper-small',
 };
 
+export const WHISPER_DTYPE = {
+  // Transformers.js registers the Seq2Seq encoder session as `model`,
+  // although the underlying file is encoder_model_quantized.onnx.
+  model: 'q8',
+  decoder_model_merged: 'fp32',
+} as const;
+
 const TRANSCRIBE_BUDGET: ToolBudget = { maxDuration: 14_400 };
 
 const ACCEPTED_MIME_TYPES = [
@@ -226,10 +233,7 @@ export const transcribe: ToolModule<TranscribeParams> = {
     // merge needs fp32 to avoid the bad path. Same setting works for
     // tiny / base / small variants.
     const pipe = (await getPipeline(ctx, 'automatic-speech-recognition', modelId, {
-      dtype: {
-        encoder_model: 'q8',
-        decoder_model_merged: 'fp32',
-      },
+      dtype: WHISPER_DTYPE,
     })) as (
       audio: Float32Array,
       options?: Record<string, unknown>,

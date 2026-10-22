@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { get } from 'svelte/store';
+  import { user, authReady } from '../stores/user';
+  import { tryReserveMediaJob } from '../lib/mediaJobReservation';
+  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
   import DropZone from './runners/DropZone.svelte';
   import ParamsForm from './runners/ParamsForm.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
@@ -7,7 +11,7 @@
   import { saveChain } from './runners/toolbeltStorage';
   import { upsertRule, nextOrder } from './runners/triggerStorage';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
-  import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core';
+import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
   import type { ToolProgress, ParamFieldSchema, ToolRequires } from '@wyreup/core';
   import { createToolSearch, searchTools } from '../lib/tool-search';
 
@@ -71,6 +75,16 @@
 
   let resultBlob: Blob | null = null;
   let resultUrl: string | null = null;
+  let resultBlobs: Blob[] = [];
+  const additionalResultUrls = new Set<string>();
+
+  function clearResults() {
+    resultBlobs = [];
+    resultBlob = null;
+    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+    for (const url of additionalResultUrls) URL.revokeObjectURL(url);
+    additionalResultUrls.clear();
+  }
 
   let shareConfirm = false;
   let shareTimer: ReturnType<typeof setTimeout> | null = null;
@@ -81,6 +95,11 @@
   // Post-run inline save prompt
   let showEndOfRunPrompt = false;
   let endOfRunSaved = false;
+  let generation = 0;
+  let disposed = false;
+  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
+  $: if (pendingPaid) { inputFile; chainSpec; if (!pendingPaid.current()) pendingPaid = null; }
+  onDestroy(() => { disposed = true; generation++; clearResults(); if (saveTimer) clearTimeout(saveTimer); if (shareTimer) clearTimeout(shareTimer); });
 
   // Trigger-register state (G2: any rule registered here lands with
   // confirmed=false — the user explicitly opts in to the preview-skip
@@ -356,11 +375,13 @@
   }
 
   function addStep() {
+    reset();
     steps = [...steps, { toolId: '', params: {}, expanded: false }];
     stepStatuses = [...stepStatuses, 'pending'];
   }
 
   function removeStep(idx: number) {
+    reset();
     closePicker(idx);
     steps = steps.filter((_, i) => i !== idx);
     stepStatuses = stepStatuses.filter((_, i) => i !== idx);
@@ -368,6 +389,7 @@
 
   function moveUp(idx: number) {
     if (idx === 0) return;
+    reset();
     closePicker(idx);
     const arr = [...steps];
     [arr[idx - 1], arr[idx]] = [arr[idx]!, arr[idx - 1]!];
@@ -376,6 +398,7 @@
 
   function moveDown(idx: number) {
     if (idx === steps.length - 1) return;
+    reset();
     closePicker(idx);
     const arr = [...steps];
     [arr[idx], arr[idx + 1]] = [arr[idx + 1]!, arr[idx]!];
@@ -383,6 +406,7 @@
   }
 
   function selectTool(idx: number, toolId: string) {
+    reset();
     const s = [...steps];
     s[idx] = { ...s[idx]!, toolId, params: getDefaults(toolId), expanded: false };
     steps = s;
@@ -390,6 +414,7 @@
   }
 
   function updateParams(idx: number, params: Record<string, unknown>) {
+    reset();
     const s = [...steps];
     s[idx] = { ...s[idx]!, params };
     steps = s;
@@ -435,7 +460,7 @@
   });
 
   onMount(() => {
-    void import('@wyreup/core').then(({ createDefaultRegistry }) => {
+    void import('../lib/core-execution').then(({ createDefaultRegistry }) => {
       const registry = createDefaultRegistry();
       toolMetadata = new Map(Array.from(registry.toolsById.values()).map((tool) => [
         tool.id,
@@ -448,28 +473,58 @@
 
   async function run() {
     if (!canRun || !inputFile) return;
+    const capturedFile = inputFile;
+    const chain = structuredClone(chainSpec);
+    const fingerprint = JSON.stringify(chain);
+    const attempt = ++generation;
+    const current = () => !disposed && attempt === generation && inputFile === capturedFile && JSON.stringify(chainSpec) === fingerprint;
     runState = 'running';
     errorMsg = '';
-    resultBlob = null;
+    clearResults();
     showEndOfRunPrompt = false;
     endOfRunSaved = false;
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
     stepStatuses = validSteps.map(() => 'pending' as const);
 
     try {
-      const { runChain, createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
+      if (!current()) return;
+      const paid = summarizePaidChain(chain, registry);
+      const account = get(user);
+      assertPaidAccount(paid, get(authReady), account);
+      if (paid.steps.length) {
+        runState = 'idle';
+        pendingPaid = { text: paidChainDisclosure(paid, [capturedFile], account!.email), current, confirm: async () => {
+          if (!current()) { pendingPaid = null; return; }
+          const latest = summarizePaidChain(chain, registry), latestAccount = get(user);
+          assertPaidAccount(latest, get(authReady), latestAccount);
+          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
+          pendingPaid = null;
+          await execute();
+        } };
+        return;
+      }
+      await execute();
+
+      async function execute() {
+      if (!current()) return;
+      const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
+      if (!lease) { runState = 'error'; errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.'; return; }
+      runState = 'running';
+      try {
+      const { runChain } = await import('../lib/core-execution');
+      if (!current()) return;
       const ac = new AbortController();
       const cache = new Map<string, unknown>();
 
       let currentStepIdx = 0;
-      const chain = chainSpec;
-
       const result = await runChain(
         chain,
-        [inputFile],
+        [capturedFile],
         {
           onProgress: (p) => {
+            if (!current()) return;
             progress = p;
             const s = [...stepStatuses];
             s[currentStepIdx] = 'running';
@@ -484,23 +539,37 @@
 
       // Mark each step done sequentially after the run completes
       // (runChain is synchronous per-step so we mark all done)
+      if (!current()) return;
       stepStatuses = validSteps.map(() => 'done' as const);
 
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
-      if (!blob) throw new Error('No output produced.');
+      if (!blob || !blobs.every((value) => value instanceof Blob)) throw new Error('No complete output produced.');
 
       resultBlob = blob;
       if (resultUrl) URL.revokeObjectURL(resultUrl);
       resultUrl = URL.createObjectURL(blob);
+      resultBlobs = [...blobs];
       runState = 'done';
       // Auto-show save prompt after successful run
       saveName = validSteps.map((s) => s.toolId).join('-');
       showEndOfRunPrompt = true;
+      } catch (error) {
+        if (current()) { runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
+      } finally { lease.release(); }
+      }
     } catch (err) {
+      if (!current()) return;
       runState = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
+  }
+
+  async function confirmPaid() {
+    const pending = pendingPaid;
+    if (!pending) return;
+    try { await pending.confirm(); }
+    catch (error) { if (pending.current()) { pendingPaid = null; runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function confirmEndOfRunSave() {
@@ -524,10 +593,11 @@
   }
 
   function reset() {
+    generation++;
+    pendingPaid = null;
     runState = 'idle';
     errorMsg = '';
-    resultBlob = null;
-    if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+    clearResults();
   }
 
   function download() {
@@ -537,6 +607,17 @@
     const ext = resultBlob.type.split('/')[1] ?? 'bin';
     a.download = `chain-result.${ext}`;
     a.click();
+  }
+
+  function downloadOutput(index: number) {
+    const blob = resultBlobs[index];
+    if (!blob || runState !== 'done') return;
+    const url = URL.createObjectURL(blob);
+    additionalResultUrls.add(url);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `chain-output-${index + 1}.${blob.type.split('/')[1] ?? 'bin'}`;
+    anchor.click();
   }
 
   function shareChain() {
@@ -579,6 +660,13 @@
 </script>
 
 <div class="chain-builder">
+  {#if pendingPaid}
+    <section role="dialog" aria-label="Confirm paid chain">
+      <p style="white-space: pre-wrap">{pendingPaid.text}</p>
+      <button type="button" on:click={confirmPaid}>Confirm paid chain</button>
+      <button type="button" on:click={reset}>Cancel paid chain</button>
+    </section>
+  {/if}
   <!-- Drop zone at top -->
   <DropZone
     accept={['*/*']}
@@ -857,6 +945,9 @@
         <div class="panel-divider"></div>
         <div class="result-actions">
           <button class="btn-primary" type="button" on:click={download}>Download result</button>
+          {#each resultBlobs.slice(1) as blob, index}
+            <button class="btn-secondary" type="button" on:click={() => downloadOutput(index + 1)}>Download output {index + 2}</button>
+          {/each}
           <button class="btn-secondary" type="button" on:click={openSaveDialog}>Save to Chains</button>
         </div>
       </div>

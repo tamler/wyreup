@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
@@ -6,11 +7,14 @@
   import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
-  import type { ToolProgress } from '@wyreup/core';
+  import type { SerializedTool, PreloadAdmission } from './types';
+  import type { ToolModule, ToolProgress } from '@wyreup/core';
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
+  export let injectedTool: ToolModule<Record<string, unknown>> | null = null;
+  export let showChain = true;
 
   const requiresFile = tool.input.min > 0;
 
@@ -25,13 +29,36 @@
   let resultText = '';
   let resultMime = '';
   let resultBlob: Blob | null = null;
+  let previewLimited = false;
+  let decodedDownloadOnly = false;
+  let forcePlainText = false;
+  let resultExtension = 'txt';
+  let controller: AbortController | null = null;
+  let generation = 0;
+  const urls = new Set<string>();
+  let copied = false;
+  let copyNotice = '';
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastPreloaded = preloadedFile;
+  let disposed = false;
+  let activePreload: File | null = null;
+  const attemptedPreloads = new WeakSet<File>();
+  if (preloadedFile) attemptedPreloads.add(preloadedFile);
+  function reportPreload(file: File | null, status: 'admitted' | 'refused') {
+    if (!disposed && file && file === preloadedFile && files.includes(file)) {
+      onPreloadAdmission?.(status === 'admitted' ? { file, status } : { file, status, message: 'The file input was not interpreted by this tool.' });
+    }
+  }
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
+  $: if (preloadedFile !== lastPreloaded) {
+    lastPreloaded = preloadedFile;
+    invalidate();
+    files = preloadedFile && !attemptedPreloads.has(preloadedFile) ? [preloadedFile] : [];
+    if (preloadedFile) attemptedPreloads.add(preloadedFile);
   }
 
   $: canRun = (requiresFile ? files.length >= tool.input.min : true) && state !== 'running';
-  $: isHtml = resultMime === 'text/html';
+  $: isHtml = resultMime === 'text/html' && !forcePlainText;
   // Tool output is user-derived (file content / typed params). When the
   // tool emits text/html we render it with {@html}, so anything
   // <script>-shaped from a hostile input would otherwise run with
@@ -40,28 +67,79 @@
   $: safeHtml = isHtml ? DOMPurify.sanitize(resultText) : '';
 
   function onFiles(e: CustomEvent<File[]>) {
+    invalidate();
     files = e.detail;
     dropError = '';
+  }
+
+  function stopSpeech() {
+    if (utterance) {
+      utterance.onend = null;
+      utterance.onerror = null;
+      if (speaking) window.speechSynthesis.cancel();
+      utterance = null;
+    }
+    speaking = false;
+  }
+
+  function invalidate() {
+    reportPreload(activePreload, 'refused');
+    activePreload = null;
+    generation++;
+    controller?.abort();
+    controller = null;
     state = 'idle';
+    errorMsg = '';
     resultText = '';
+    resultMime = '';
     resultBlob = null;
+    previewLimited = false;
+    decodedDownloadOnly = false;
+    forcePlainText = false;
+    copied = false;
+    copyNotice = '';
+    clearTimeout(copyTimer);
+    stopSpeech();
+    for (const url of urls) URL.revokeObjectURL(url);
+    urls.clear();
+  }
+
+  function parametersChanged(e: CustomEvent<Record<string, unknown>>) {
+    invalidate();
+    params = e.detail;
   }
 
   async function run() {
     if (!canRun) return;
+    invalidate();
+    const own = ++generation;
+    const abort = new AbortController();
+    controller = abort;
+    const inputFiles = [...files];
+    const ownTool = tool;
+    const ownId = tool.id;
+    const ownInjected = injectedTool;
+    activePreload = preloadedFile && inputFiles.includes(preloadedFile) ? preloadedFile : null;
+    const current = () => !disposed && own === generation && !abort.signal.aborted && tool === ownTool && tool.id === ownId && injectedTool === ownInjected;
+    const inputParams = { ...params };
+    if (tool.id === 'base64' && inputParams.mode === 'decode') delete inputParams.encodeOutput;
     state = 'running';
+    progress = { stage: 'processing', percent: 0, message: '' };
     errorMsg = '';
     resultText = '';
 
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
-      const registry = createDefaultRegistry();
-      const toolModule = registry.toolsById.get(tool.id);
+      let toolModule = injectedTool;
+      if (!toolModule) {
+        const { createDefaultRegistry } = await import('../../lib/core-execution');
+        toolModule = createDefaultRegistry().toolsById.get(tool.id) ?? null;
+      }
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
+      if (!current()) return;
 
-      const result = await toolModule.run(files, params, {
-        onProgress: (p) => { progress = p; },
-        signal: new AbortController().signal,
+      const result = await toolModule.run(inputFiles, inputParams, {
+        onProgress: (p) => { if (current()) progress = p; },
+        signal: abort.signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
       });
@@ -69,39 +147,66 @@
       const blobs = Array.isArray(result) ? result : [result];
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
+      if (!current()) return;
+      const imageOutput = tool.id === 'base64' && inputParams.mode === 'encode' &&
+        (inputParams.encodeOutput === 'data-url' || inputParams.encodeOutput === 'css-url');
+      const decodedOutput = tool.id === 'base64' && inputParams.mode === 'decode';
+      let limited = (imageOutput || decodedOutput) && blob.size > 256 * 1024;
+      let text = '';
+      if (decodedOutput && !limited) {
+        try { text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(await blob.arrayBuffer()); }
+        catch { limited = true; }
+      } else if (!limited) text = await blob.text();
+      if (!current()) return;
 
       resultBlob = blob;
       resultMime = blob.type;
-      resultText = await blob.text();
+      resultText = text;
+      previewLimited = limited;
+      decodedDownloadOnly = decodedOutput && limited;
+      forcePlainText = decodedOutput;
+      resultExtension = tool.id === 'base64' && inputParams.mode === 'decode' ? 'bin' :
+        tool.id === 'csv-json' && inputParams.direction === 'csv-to-csv' ? 'csv' :
+        blob.type.includes('html') ? 'html' : 'txt';
       markToolUsed(tool.id);
       state = 'done';
+      reportPreload(activePreload, 'admitted');
+      activePreload = null;
     } catch (err) {
+      if (!current()) return;
+      reportPreload(activePreload, 'refused');
+      activePreload = null;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+    } finally {
+      if (own === generation) { controller = null; activePreload = null; }
     }
   }
 
   function reset() {
-    state = 'idle';
-    errorMsg = '';
-    resultText = '';
-    resultBlob = null;
+    invalidate();
   }
 
-  let copied = false;
-
   async function copyResult() {
+    if (!resultBlob || previewLimited) return;
+    const own = generation;
     try {
       await navigator.clipboard.writeText(resultText);
+      if (own !== generation) return;
       copied = true;
-      setTimeout(() => { copied = false; }, 1500);
-    } catch { /* ignore */ }
+      copyNotice = '';
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => { if (own === generation) copied = false; }, 1500);
+    } catch {
+      if (own === generation) copyNotice = 'Copy unavailable. Download the result instead.';
+    }
   }
 
   // Tier-0 TTS via Web Speech API (Wave Q). OS-provided voices,
   // no download, playback-only.
   let speakSupported = false;
   let speaking = false;
+  let utterance: SpeechSynthesisUtterance | null = null;
 
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     speakSupported = true;
@@ -111,31 +216,37 @@
     if (!speakSupported || !text) return;
     const synth = window.speechSynthesis;
     if (speaking) {
-      synth.cancel();
-      speaking = false;
+      stopSpeech();
       return;
     }
     const utt = new SpeechSynthesisUtterance(text);
-    utt.onend = () => { speaking = false; };
-    utt.onerror = () => { speaking = false; };
+    utterance = utt;
+    utt.onend = () => { if (utterance === utt) { speaking = false; utterance = null; } };
+    utt.onerror = () => { if (utterance === utt) { speaking = false; utterance = null; } };
     synth.speak(utt);
     speaking = true;
   }
 
   function download() {
     if (!resultBlob) return;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
-    const ext = resultMime.includes('html') ? 'html' : 'txt';
-    a.download = buildDownloadName(files[0]?.name, tool.id, ext);
-    a.click();
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(resultBlob);
+      urls.add(a.href);
+      a.download = buildDownloadName(files[0]?.name, tool.id, resultExtension);
+      a.click();
+    } catch {
+      copyNotice = 'Download unavailable. Try again.';
+    }
   }
+  onDestroy(() => { disposed = true; invalidate(); });
 </script>
 
 <div class="runner">
   {#if requiresFile}
     <DropZone
       accept={tool.input.accept}
+      sizeLimit={tool.input.sizeLimit}
       multiple={false}
       bind:files
       bind:error={dropError}
@@ -143,7 +254,9 @@
     />
   {/if}
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <form on:submit|preventDefault on:input={invalidate} on:change={invalidate}>
+    <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={parametersChanged} />
+  </form>
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">
@@ -153,6 +266,7 @@
 
   {#if state === 'running'}
     <ProgressBar stage={progress.stage} percent={progress.percent} message={progress.message} />
+    <button class="btn-secondary" on:click={reset} type="button">Cancel</button>
   {/if}
 
   {#if state === 'error'}
@@ -165,17 +279,17 @@
     </div>
   {/if}
 
-  {#if state === 'done' && resultText}
+  {#if state === 'done' && resultBlob}
     <div class="result-panel brackets">
       <div class="brackets-inner" aria-hidden="true"></div>
       <div class="result-panel__inner">
         <div class="panel-header">
           <span class="panel-label">Result</span>
           <div class="result-actions">
-            <button class="btn-secondary" on:click={copyResult} type="button">
+            {#if !previewLimited}<button class="btn-secondary" on:click={copyResult} type="button">
               {copied ? 'Copied' : 'Copy'}
-            </button>
-            {#if speakSupported && !isHtml}
+            </button>{/if}
+            {#if speakSupported && !isHtml && !previewLimited && resultText}
               <button class="btn-secondary" on:click={() => speak(resultText)} type="button" aria-label={speaking ? 'Stop speaking' : 'Speak this text aloud'}>
                 {speaking ? 'Stop' : 'Speak'}
               </button>
@@ -185,7 +299,10 @@
         </div>
         <div class="panel-divider"></div>
 
-        {#if isHtml}
+        {#if copyNotice}<p role="status">{copyNotice}</p>{/if}
+        {#if previewLimited}
+          <p role="status">{decodedDownloadOnly ? 'Decoded output is binary or exceeds the 256 KiB text preview limit.' : 'Inline preview and copy are limited to 256 KiB of encoded image text.'} The complete {resultBlob.size.toLocaleString()} byte result is available through Download.</p>
+        {:else if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
             {@html safeHtml}
           </div>
@@ -204,11 +321,11 @@
           {/if}
         {/if}
 
-        {#if resultBlob}
+        {#if showChain && resultBlob}
           <ChainSection
             resultBlob={resultBlob}
             sourceToolId={tool.id}
-            resultName={buildDownloadName(files[0]?.name, tool.id, resultMime.includes('html') ? 'html' : 'txt')}
+            resultName={buildDownloadName(files[0]?.name, tool.id, resultExtension)}
           />
         {/if}
       </div>

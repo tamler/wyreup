@@ -1,18 +1,40 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { ParamFieldSchema } from '@wyreup/core';
+  import {
+    buildInitialParams,
+    buildParamEntries,
+    initialValueForSchema,
+  } from './paramsForm';
 
   export let defaults: Record<string, unknown> = {};
   export let params: Record<string, unknown> = {};
   export let paramSchema: Record<string, ParamFieldSchema> | undefined = undefined;
 
   const dispatch = createEventDispatcher<{ change: Record<string, unknown> }>();
+  let numericArrayDrafts: Record<string, {
+    schema: Extract<ParamFieldSchema, { type: 'array' }>;
+    value: unknown;
+    defaultValue: unknown;
+    raw: string;
+  }> = {};
 
-  // Initialize params from defaults
+  // Initialize defaults plus schema-only fields (password/passphrase fields
+  // are intentionally omitted from defaults so secrets are never prefilled).
   $: {
-    if (Object.keys(params).length === 0 && Object.keys(defaults).length > 0) {
-      params = { ...defaults };
+    const initial = buildInitialParams(defaults, paramSchema);
+    if (Object.keys(initial).some((key) => !(key in params))) {
+      params = { ...initial, ...params };
     }
+  }
+
+  $: {
+    const retained = Object.fromEntries(Object.entries(numericArrayDrafts).filter(([key, draft]) => {
+      const schema = paramSchema?.[key];
+      return schema?.type === 'array' && schema.itemType === 'number' && schema === draft.schema &&
+        params[key] === draft.value && defaults[key] === draft.defaultValue;
+    }));
+    if (Object.keys(retained).length !== Object.keys(numericArrayDrafts).length) numericArrayDrafts = retained;
   }
 
   function inferType(key: string, value: unknown): 'boolean' | 'number' | 'string' | 'json' {
@@ -34,7 +56,7 @@
 
   function handleNumber(key: string, e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    handleChange(key, isNaN(v) ? defaults[key] : v);
+    handleChange(key, isNaN(v) ? fallbackValue(key) : v);
   }
 
   function handleString(key: string, e: Event) {
@@ -54,8 +76,11 @@
 
   function handleSelect(key: string, e: Event) {
     const v = (e.target as HTMLSelectElement).value;
-    const def = defaults[key];
-    const newValue: unknown = typeof def === 'number' ? parseFloat(v) : v;
+    const schema = paramSchema?.[key];
+    if (schema?.type !== 'enum' || !/^(0|[1-9]\d*)$/.test(v)) return;
+    const option = effectiveOptions(schema, params, defaults)[Number(v)];
+    if (!option) return;
+    const newValue: unknown = option.value;
     let next: Record<string, unknown> = { ...params, [key]: newValue };
 
     // Cascading enums: if any other field's options depend on `key`, and
@@ -71,7 +96,7 @@
           otherSchema.optionsFrom.map[String(newValue)] ?? otherSchema.options;
         const currentOther = next[otherKey] ?? defaults[otherKey];
         const stillValid = newOpts.some(
-          (o) => String(o.value) === String(currentOther),
+          (o) => o.value === currentOther,
         );
         if (!stillValid && newOpts.length > 0) {
           next = { ...next, [otherKey]: newOpts[0]!.value };
@@ -99,30 +124,50 @@
 
   function handleRange(key: string, e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    handleChange(key, isNaN(v) ? defaults[key] : v);
+    handleChange(key, isNaN(v) ? fallbackValue(key) : v);
   }
 
   function handleMultiEnum(key: string, option: string, e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
-    const current = (params[key] ?? defaults[key]) as string[];
+    const value = params[key] ?? defaults[key];
+    const current = Array.isArray(value) ? value : [];
     const next = checked
       ? [...current.filter((v) => v !== option), option]
       : current.filter((v) => v !== option);
     handleChange(key, next);
   }
 
-  function handleArrayInput(key: string, schema: { itemType: 'string' | 'number' }, e: Event) {
+  function handleArrayInput(key: string, schema: Extract<ParamFieldSchema, { type: 'array' }>, e: Event) {
     const raw = (e.target as HTMLInputElement).value;
-    const parts = raw.split(',').map((s) => s.trim()).filter((s) => s !== '');
-    const parsed = schema.itemType === 'number'
-      ? parts.map((s) => parseFloat(s)).filter((n) => !isNaN(n))
-      : parts;
+    let parsed: unknown[];
+    if (schema.itemType === 'number') {
+      try {
+        const parts = raw.trim() ? raw.split(',').map((item) => item.trim()) : [];
+        if (parts.some((item) => item === '' || !Number.isFinite(Number(item))))
+          throw new Error('Enter a comma-separated list of numbers.');
+        parsed = parts.map(Number);
+      } catch {
+        numericArrayDrafts = { ...numericArrayDrafts, [key]: { schema, value: params[key], defaultValue: defaults[key], raw } };
+        return;
+      }
+      const nextDrafts = { ...numericArrayDrafts };
+      delete nextDrafts[key];
+      numericArrayDrafts = nextDrafts;
+    } else {
+      parsed = raw.split(',').map((s) => s.trim()).filter((s) => s !== '');
+    }
     handleChange(key, parsed);
   }
 
   let jsonErrors: Record<string, string> = {};
 
-  $: entries = Object.entries(defaults);
+  $: entries = buildParamEntries(defaults, paramSchema);
+
+  function fallbackValue(key: string): unknown {
+    if (key in defaults) return defaults[key];
+    const schema = paramSchema?.[key];
+    return schema ? initialValueForSchema(schema) : undefined;
+  }
 
   function getFieldId(key: string) {
     return `param-${key}`;
@@ -176,8 +221,8 @@
                 aria-describedby={schema.help ? helpId : undefined}
                 on:change={(e) => handleSelect(key, e)}
               >
-                {#each opts as opt}
-                  <option value={String(opt.value)} selected={String(current) === String(opt.value)}>{opt.label}</option>
+                {#each opts as opt, index}
+                  <option value={String(index)} selected={current === opt.value}>{opt.label}</option>
                 {/each}
               </select>
 
@@ -261,7 +306,8 @@
               <input
                 id={fieldId}
                 class="param-input"
-                type="text"
+                type={schema.secret ? 'password' : 'text'}
+                autocomplete={schema.secret ? 'off' : undefined}
                 value={String(current)}
                 placeholder={schema.placeholder ?? ''}
                 aria-describedby={schema.help ? helpId : undefined}
@@ -273,11 +319,15 @@
                 id={fieldId}
                 class="param-input"
                 type="text"
-                value={arrayToString(current)}
+                value={numericArrayDrafts[key]?.raw ?? arrayToString(current)}
                 placeholder={schema.placeholder ?? 'comma-separated values'}
-                aria-describedby={schema.help ? helpId : undefined}
+                aria-invalid={numericArrayDrafts[key] ? 'true' : undefined}
+                aria-describedby={[schema.help ? helpId : '', numericArrayDrafts[key] ? `${fieldId}-error` : ''].filter(Boolean).join(' ') || undefined}
                 on:change={(e) => handleArrayInput(key, schema, e)}
               />
+              {#if numericArrayDrafts[key]}
+                <span id={`${fieldId}-error`} class="param-json-error">Enter a comma-separated list of finite numbers.</span>
+              {/if}
 
             {:else if schema?.type === 'json'}
               <textarea

@@ -76,6 +76,37 @@ describe('registry', () => {
     expect(compatible).not.toContain(mergePdf);
   });
 
+  it('uses the filename when browsers omit a file MIME type', () => {
+    const file = new File([], 'scan.pdf', { type: '' });
+    expect(registry.toolsForFiles([file])).not.toContain(compress);
+    expect(createRegistry([mergePdf]).toolsForFiles([file, file])).toContain(mergePdf);
+  });
+
+  it('does not suggest tools for files over their declared size limit', () => {
+    const limited = makeTool({
+      id: 'limited',
+      input: { accept: ['image/*'], min: 1, max: 1, sizeLimit: 2 },
+    });
+    const file = new File(['abc'], 'x.png', { type: 'image/png' });
+    expect(createRegistry([limited]).toolsForFiles([file])).toEqual([]);
+  });
+
+  it('admits declared suffixes with a vendor MIME while retaining count and size limits', () => {
+    const camera = makeTool({ input: { accept: ['.nef'], min: 1, max: 1, sizeLimit: 2 } });
+    const file = new File(['ab'], 'camera.NEF', { type: 'image/x-nikon-nef' });
+    const cameraRegistry = createRegistry([camera]);
+    expect(cameraRegistry.toolsForFiles([file])).toEqual([camera]);
+    expect(cameraRegistry.toolsForFiles([file, file])).toEqual([]);
+    expect(cameraRegistry.toolsForFiles([new File(['abc'], file.name, { type: file.type })])).toEqual([]);
+  });
+
+  it('keeps zero-input tools available without accepting unrelated files', () => {
+    const capture = makeTool({ input: { accept: [], min: 0, max: 0 } });
+    const captureRegistry = createRegistry([capture]);
+    expect(captureRegistry.toolsForFiles([])).toEqual([capture]);
+    expect(captureRegistry.toolsForFiles([new File([], 'camera.NEF')])).toEqual([]);
+  });
+
   it('finds tools compatible with multiple PDFs (respects min count)', () => {
     const pdf1 = new File([], 'a.pdf', { type: 'application/pdf' });
     const pdf2 = new File([], 'b.pdf', { type: 'application/pdf' });
@@ -128,6 +159,12 @@ describe('couldFlowTo', () => {
   it('flows when consumer accepts the universal wildcard', () => {
     expect(couldFlowTo('image/*', ['*/*'])).toBe(true);
     expect(couldFlowTo('application/geo+json', ['*'])).toBe(true);
+  });
+
+  it.each(['*', '*/*'])('flows from universal producer %s to narrow consumers', (producer) => {
+    expect(couldFlowTo(producer, ['text/plain'])).toBe(true);
+    expect(couldFlowTo(producer, ['application/json'])).toBe(true);
+    expect(couldFlowTo(producer, [])).toBe(false);
   });
 
   it('does not flow across families even when both use wildcards', () => {

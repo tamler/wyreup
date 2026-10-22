@@ -127,7 +127,8 @@ CREATE TABLE api_keys (
   name        TEXT NOT NULL,          -- "Browser", "MacBook CLI", "Cursor MCP"
   last_used   INTEGER,
   created_at  INTEGER NOT NULL,
-  revoked_at  INTEGER                 -- NULL = active
+  revoked_at  INTEGER,                -- NULL = not revoked
+  email_bound INTEGER NOT NULL DEFAULT 0 -- 1 = email-delivered or trusted descendant
 );
 
 -- Credit ledger (append-only, never update rows)
@@ -191,35 +192,28 @@ Append-only ledger = auditable history, trivial refunds, no balance drift bugs.
 ```
 User: clicks "Get API Key" (header or PRO tool gate)
   → Modal: "Enter your email"
-  → POST /api/account/create  { email, surface: 'browser' | 'cli' }
+  → POST /api/account/create with Content-Type: application/json { email }
       Server:
         1. Rate limit: per email (5/day) AND per IP (10/day). Reject with 429 otherwise.
-        2. If email exists:
-             a. Do NOT issue a new key. Do NOT touch the existing user row.
-             b. Send a "someone tried to create an account with your email" notice
-                (links to /account for key management, no key in the email).
-             c. Return { status: 'exists' } — same response shape as new-user path
-                to avoid leaking which emails are registered.
-        3. If new:
-             a. INSERT into users
-             b. Generate raw key: 32 random bytes (crypto.getRandomValues) → hex → prefix
-             c. INSERT into api_keys { key_hash: sha256(raw), name: 'Default', user_id }
-             d. Send welcome email with the raw key (Resend / MailChannels)
-             e. surface === 'browser': return { status: 'created', rawKey, keyPreview }
-                surface === 'cli':     return { status: 'created', keyPreview }  (no rawKey)
-      Email body (new user):
+        2. Normalize email and reuse or create its canonical user row.
+        3. Generate a 32-byte random key and store its hash with email_bound = 0.
+        4. Send the raw key only to that inbox through ZeptoMail.
+        5. On successful delivery submission, set email_bound = 1.
+           On failure, delete this provisional key and return generic 502.
+        6. Return { status: 'check_email' } for both signup and recovery.
+           Never return a raw key, key preview, or session cookie.
+      Email body:
         "Your Wyreup API key: wk_live_[full key]
          Save this — we don't store it and can't show it again.
          Paste it at wyreup.com/account to activate PRO."
-  → Browser: shows the key once in a "Copy your key" modal (also points user to email).
-  → CLI:     "Check your email — your key is waiting."
+  → Browser / CLI: "Check your email", then paste the delivered key to sign in.
 ```
 
-The raw key is shown **at most twice**: once in the browser create-modal (if the request originated there), and once in the welcome email. After the modal closes and the email is sent, the raw value is unrecoverable. CLI / MCP creation flows do not return the raw key in the response — email is the only channel — so a stolen request log can't leak it.
+Signup and recovery disclose the raw key only through email. The server stores its SHA-256 hash. An authenticated user can create additional device keys, shown once in their authenticated account page; these inherit trusted email provenance atomically and are subject to the active-key cap.
 
-If lost, user generates a new key from `/account` (old one is revoked).
+If lost, request another emailed key from `/account`. Recovery preserves existing keys and account credits; the authenticated owner can revoke individual keys.
 
-**Why the existing-email branch never issues a new key:** the email field is not verified at submission time. Letting a stranger POST `victim@example.com` and trigger a new live key for that account would be account hijack via inbox spam. Key rotation must happen from `/account` while authenticated.
+Possession of the emailed secret proves mailbox access. Merely requesting a key never authenticates the requester. Migration 0006 disables every legacy key and session, including descendant keys, while preserving accounts and ledger history. Verify production mail delivery before applying that migration. Mail failures still consume admission slots to bound repeated requests during outages.
 
 ---
 
@@ -239,7 +233,7 @@ async function resolveUser(request: Request, env: Env): Promise<User | null> {
         SELECT u.id, u.email
         FROM users u
         JOIN api_keys ak ON ak.user_id = u.id
-        WHERE u.id = ? AND ak.id = ? AND ak.revoked_at IS NULL
+        WHERE u.id = ? AND ak.id = ? AND ak.revoked_at IS NULL AND ak.email_bound = 1
       `).bind(payload.uid, payload.kid).first();
       if (row) return { id: row.id, email: row.email };
     }
@@ -255,7 +249,7 @@ async function resolveUser(request: Request, env: Env): Promise<User | null> {
     SELECT ak.user_id, ak.id AS kid, u.email
     FROM api_keys ak
     JOIN users u ON u.id = ak.user_id
-    WHERE ak.key_hash = ? AND ak.revoked_at IS NULL
+    WHERE ak.key_hash = ? AND ak.revoked_at IS NULL AND ak.email_bound = 1
   `).bind(hash).first();
 
   if (!row) return null;
@@ -602,7 +596,7 @@ Sections:
 | 1 | Create D1 database via `wrangler d1 create wyreup-prod`, apply schema (incl. `UNIQUE idx_credit_ls_order`) |
 | 2 | Add `[[d1_databases]]` binding to `wrangler.toml` (Pages project) |
 | 3 | Crypto helpers (§18): `sha256hex`, `hmacSha256Hex`, `timingSafeEqualHex`, session sign/verify |
-| 4 | `/api/account/create` — rate limit (per email + per IP) → user row → generate key → send email; existing-email path sends notice only |
+| 4 | `/api/account/create` — atomic per-email/IP admission → canonical user → provisional key → email-only signup or recovery → bind key after delivery submission |
 | 5 | `/api/account/verify` — resolve key → set signed `wyreup_session` cookie → return `{ email, balance }` |
 | 6 | `/api/account/signout` — clear cookie |
 | 7 | `resolveUser()` accepting both cookie and `Authorization: Bearer` paths |
@@ -634,8 +628,8 @@ Sections:
 ## 17. Security Checklist
 
 - [ ] Raw API key never stored — only SHA-256 hash in D1
-- [ ] Raw key shown at most once in the browser create-modal (browser surface only) and delivered once via email; never returned to CLI/MCP create flows; never logged
-- [ ] Existing-email account creation never issues a new key (notice email only)
+- [ ] Signup/recovery key delivered only by email; never returned to any requesting client or logged. Authenticated device keys are shown once to their owner.
+- [ ] Existing-email account creation sends a new recovery key only by email, retaining existing keys and credits
 - [ ] Webhook signature verified with HMAC-SHA256 in **constant time** before any DB write
 - [ ] `UNIQUE INDEX idx_credit_ls_order` + `INSERT OR IGNORE` enforces webhook idempotency at the DB layer
 - [ ] Credit reservation is atomic (SQL guard subquery) — no TOCTOU between balance check and spend

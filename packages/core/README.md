@@ -1,6 +1,10 @@
 # @wyreup/core
 
-Privacy-first, browser-native tool library. Tools for images, PDFs, audio, and text — every operation runs on-device using WebAssembly and browser-native APIs. Nothing uploads.
+Privacy-first tools for images, PDFs, audio, text, and calculations. Local processing tools use your device. Public network lookups and hosted PRO tools disclose what they send before execution.
+
+Domain Registration Age is a free network tool: the entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key is required. Registration age may differ from first-ever use. Node callers use the trusted `ctx.proOrigin` (default `https://wyreup.com`); browser callers use the current site origin. This tool needs a connection.
+
+Wyreup keeps no domain-query database. Public lookups use temporary rotating HMAC network counters and random short-lived reservation tokens for shared capacity limits. Shared networks can reach those limits together. Expired records are pruned on later requests; platform logs and backups have their own retention. Your caller, assistant provider, local operator, or exported results may retain inputs and outputs.
 
 ## Install
 
@@ -101,6 +105,58 @@ Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 - `dist/node/index.js` — for Node and CLI environments
 
 Your bundler resolves the right one automatically via the `exports` map.
+
+PNG encoding loads the bundled jSquash codec and its WASM asset. Browser workers
+have their own build graph. For Vite 8, use ES workers, exclude the Node-only
+adapters from both build graphs and dependency optimization, and explicitly
+optimize the worker's nested CommonJS dependencies. This configuration was
+checked with a fresh packed installation in development and production preview:
+
+```js
+import { defineConfig } from 'vite';
+
+const nodeOnly = [
+  '@resvg/resvg-js', '@napi-rs/canvas', 'tesseract.js',
+  '@mediapipe/tasks-vision', 'canvas', 'sharp',
+];
+const external = [...nodeOnly, /^node:/, /\.node$/];
+
+export default defineConfig({
+  worker: { format: 'es', rolldownOptions: { external } },
+  optimizeDeps: {
+    exclude: ['@jsquash/png', ...nodeOnly],
+    include: ['@wyreup/core > papaparse', '@wyreup/core > ag-psd'],
+  },
+  build: { rolldownOptions: { external } },
+});
+```
+
+The Node-only branches are not executed in the browser. The nested dependency
+notation resolves dependencies from the installed core package, including
+installations with pnpm's strict dependency layout.
+For offline operation, cache the emitted worker, codec chunks and
+`squoosh_png_bg*.wasm` asset before disconnecting. Node consumers resolve the
+codec from their installed dependencies. The PDF API and worker versions are
+pinned together; overriding the PDF dependency can break that pairing.
+
+## Markdown producer limits
+
+Markdown input admission is limited to 10 MiB. Before rendering, a conservative HTML bound
+must fit both 50 MiB and 64 times the input bytes (with a minimum allowance of
+1 MiB). The token tree is limited to 100,000 token, table-cell and list-item
+visits, parser nesting of 128 levels, and 128 MiB of charged string-scan units.
+Admission does not guarantee conversion: any document shape, including a literal
+paragraph, can exceed these bounds or native parser capacity below the input limit.
+Catchable `RangeError` failures at the synchronous lexer and parser call boundaries
+become an explicit capacity refusal. This does not classify every runtime capacity
+failure or uncatchable exhaustion, or guarantee a conversion threshold. Repeated
+reference targets still pay for every rendered occurrence. URL safety decisions
+use a per-conversion cache limited to 256 entries and 1 MiB of retained keys.
+
+The nesting limit applies after the native lexer and does not protect the lexer's
+stack. Native synchronous lexer/parser calls cannot be forcibly cancelled. Raw
+HTML remains inert text, and unsafe URL schemes remain neutralized. The browser's
+separate 1 MiB preview limit does not change the producer output allowance.
 
 ## More
 

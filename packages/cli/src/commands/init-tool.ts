@@ -15,6 +15,14 @@ const CATEGORIES = [
   'audio',
   'dev',
   'finance',
+  'media',
+  'archive',
+  'text',
+  'geo',
+  'building',
+  'hardware',
+  'planning',
+  'design',
 ] as const;
 
 const MEMORY_OPTIONS = ['low', 'medium', 'high'] as const;

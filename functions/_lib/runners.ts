@@ -1,7 +1,8 @@
 // Hosted-model dispatchers for PRO tools.
 //
-// One async function per PRO tool ID. `runPro` selects the right one by
-// toolId. Each runner is responsible for shaping the input it receives
+// One preparation function per PRO tool ID. Each validates before returning
+// an async dispatch closure. `prepareProRun` performs no provider work.
+// Each runner is responsible for shaping the input it receives
 // from the client, calling its provider (Workers AI for text/audio; the
 // providers/image-models.ts wrapper for images), and returning a
 // JSON-serializable result.
@@ -9,9 +10,7 @@
 // Conventions:
 //   - Throw on any failure — the caller (api/tools/pro/run.ts) catches
 //     and triggers the credit refund.
-//   - Return plain JSON: text outputs as strings, image outputs as
-//     { url: string } pointing at a temporary signed URL (provider-hosted),
-//     not base64 — keeps the response small.
+//   - Return plain JSON; image providers return contentType/base64 inline.
 //   - The client `input` is untrusted. Validate shape before calling.
 
 import type { Env } from './env';
@@ -46,14 +45,24 @@ export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
 
 export async function runPro(toolId: string, input: RunnerInput, env: Env): Promise<RunnerOutput> {
-  const runner = RUNNERS[toolId];
+  return prepareProRun(toolId, input, env)();
+}
+
+export type PreparedProRun = () => Promise<RunnerOutput>;
+
+export function prepareProRun(toolId: string, input: RunnerInput, env: Env): PreparedProRun {
+  if (!input || typeof input !== 'object' || Array.isArray(input))
+    throw new Error('Input object required');
+  const runner = Object.prototype.hasOwnProperty.call(RUNNERS, toolId)
+    ? RUNNERS[toolId]
+    : undefined;
   if (!runner) {
     throw new Error(`No hosted runner registered for tool '${toolId}'`);
   }
   return runner(input, env);
 }
 
-type Runner = (input: RunnerInput, env: Env) => Promise<RunnerOutput>;
+type Runner = (input: RunnerInput, env: Env) => PreparedProRun;
 
 const RUNNERS: Record<string, Runner> = {
   'transcribe-pro': transcribePro,
@@ -93,220 +102,232 @@ const RUNNERS: Record<string, Runner> = {
 // Workers AI — transcription
 // ────────────────────────────────────────────────────────────────────────
 
-interface TranscribeInput {
-  /** base64-encoded audio bytes (mp3/wav/m4a). */
-  audioBase64?: string;
-  /** Optional language hint (ISO 639-1). */
-  language?: string;
-}
-
 // 25 MB — same as the client-side input.sizeLimit on transcribe-pro. Caps
 // the per-run inference cost so a malicious caller can't bypass the
 // client check and burn margin with a 10-hour file for 5 credits.
 const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
 
-async function transcribePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
-  const input = raw as TranscribeInput;
+function transcribePro(raw: RunnerInput, env: Env): PreparedProRun {
+  const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
-  return runTranscribe(env, { bytes, language: input.language });
+  return () => runTranscribe(env, { bytes, language });
 }
 
 // ────────────────────────────────────────────────────────────────────────
 // Text tools — go through the swappable text-model wrapper
 // ────────────────────────────────────────────────────────────────────────
 
-async function summarizePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function summarizePro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const out = await chat(
-    env,
-    'You summarize text. Return a tight 3-5 sentence summary. No preamble, no "Here is the summary" — just the summary itself.',
-    text,
-  );
-  return { summary: out };
+  return async () => {
+    const out = await chat(
+      env,
+      'You summarize text. Return a tight 3-5 sentence summary. No preamble, no "Here is the summary" — just the summary itself.',
+      text,
+    );
+    return { summary: out };
+  };
 }
 
-async function translatePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function translatePro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const target =
-    typeof (raw as Record<string, unknown>).target === 'string'
-      ? ((raw as Record<string, unknown>).target as string)
-      : 'English';
-  const out = await chat(
-    env,
-    `You are a translator. Translate the user message into ${target}. Return ONLY the translation. No commentary, no original text, no quotation marks.`,
-    text,
-  );
-  return { translation: out, target };
+  const target = readOptionalText(raw, 'target', 'English', 100);
+  return async () => {
+    const out = await chat(
+      env,
+      `You are a translator. Translate the user message into ${target}. Return ONLY the translation. No commentary, no original text, no quotation marks.`,
+      text,
+    );
+    return { translation: out, target };
+  };
 }
 
-async function sentimentPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function sentimentPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const out = await chat(
-    env,
-    'Classify the sentiment of the user message. Respond with EXACTLY one word: positive, negative, or neutral. No punctuation, no explanation.',
-    text,
-  );
-  const label = out.toLowerCase().replace(/[^a-z]/g, '');
-  const known = ['positive', 'negative', 'neutral'].includes(label) ? label : 'neutral';
-  return { sentiment: known };
+  return async () => {
+    const out = await chat(
+      env,
+      'Classify the sentiment of the user message. Respond with EXACTLY one word: positive, negative, or neutral. No punctuation, no explanation.',
+      text,
+    );
+    const label = out.toLowerCase().replace(/[^a-z]/g, '');
+    const known = ['positive', 'negative', 'neutral'].includes(label) ? label : 'neutral';
+    return { sentiment: known };
+  };
 }
 
-async function nerPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function nerPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const out = await chat(
-    env,
-    `Extract named entities from the user message. Reply with JSON only, no preamble. Schema:
+  return async () => {
+    const out = await chat(
+      env,
+      `Extract named entities from the user message. Reply with JSON only, no preamble. Schema:
 {"entities":[{"text":"...","type":"PERSON|ORG|LOCATION|DATE|MONEY|OTHER"}]}`,
-    text,
-  );
-  const parsed = tryParseJson(out);
-  if (!parsed || !Array.isArray((parsed as { entities?: unknown }).entities)) {
-    throw new Error('NER model returned unparseable output');
-  }
-  return parsed;
+      text,
+    );
+    const parsed = tryParseJson(out);
+    if (!parsed || !Array.isArray((parsed as { entities?: unknown }).entities)) {
+      throw new Error('NER model returned unparseable output');
+    }
+    return parsed;
+  };
 }
 
-async function redactPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function redactPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const out = await chat(
-    env,
-    `Redact PII from the user message. Replace any names, emails, phone numbers, addresses, SSN, or credit-card-like numbers with [REDACTED]. Return ONLY the redacted text — no preamble, no JSON.`,
-    text,
-  );
-  return { redacted: out };
+  return async () => {
+    const out = await chat(
+      env,
+      `Redact PII from the user message. Replace any names, emails, phone numbers, addresses, SSN, or credit-card-like numbers with [REDACTED]. Return ONLY the redacted text — no preamble, no JSON.`,
+      text,
+    );
+    return { redacted: out };
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────
 // Image tools — go through the swappable provider wrapper
 // ────────────────────────────────────────────────────────────────────────
 
-async function bgRemovePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function bgRemovePro(raw: RunnerInput, env: Env): PreparedProRun {
   const imageUrl = readImageRef(raw);
-  return runBgRemove({ image: imageUrl }, env);
+  return () => runBgRemove({ image: imageUrl }, env);
 }
 
-async function upscalePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function upscalePro(raw: RunnerInput, env: Env): PreparedProRun {
   const imageUrl = readImageRef(raw);
-  const scale = (raw as Record<string, unknown>).scale === 4 ? 4 : 2;
-  return runUpscale({ image: imageUrl, scale }, env);
+  if (raw.scale !== undefined && raw.scale !== 2 && raw.scale !== 4)
+    throw new Error('scale must be 2 or 4');
+  const scale = raw.scale === 4 ? 4 : 2;
+  return () => runUpscale({ image: imageUrl, scale }, env);
 }
 
 // ────────────────────────────────────────────────────────────────────────
 // Vision tools — Workers AI vision model via the vision-models wrapper
 // ────────────────────────────────────────────────────────────────────────
 
-async function analyzeChart(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function analyzeChart(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const analysis = await visionPrompt(
-    env,
-    image,
-    'This image is a chart, graph, or diagram. Identify the chart type, then summarize the data and the main trend or takeaway in plain text. List key data points if readable. Return ONLY the analysis.',
-  );
-  return { analysis };
+  return async () => {
+    const analysis = await visionPrompt(
+      env,
+      image,
+      'This image is a chart, graph, or diagram. Identify the chart type, then summarize the data and the main trend or takeaway in plain text. List key data points if readable. Return ONLY the analysis.',
+    );
+    return { analysis };
+  };
 }
 
-async function imageDescribe(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function imageDescribe(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const description = await visionPrompt(
-    env,
-    image,
-    'Describe this image in 1-3 clear sentences suitable as alt-text. Be factual and concise. Return ONLY the description.',
-  );
-  return { description };
+  return async () => {
+    const description = await visionPrompt(
+      env,
+      image,
+      'Describe this image in 1-3 clear sentences suitable as alt-text. Be factual and concise. Return ONLY the description.',
+    );
+    return { description };
+  };
 }
 
-async function imageQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function imageQandA(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
   const question = readText(raw, 'question');
-  const answer = await visionPrompt(
-    env,
-    image,
-    `Answer this question about the image based only on what is visible. Question: ${question}\nReturn ONLY the answer.`,
-  );
-  return { answer };
+  return async () => {
+    const answer = await visionPrompt(
+      env,
+      image,
+      `Answer this question about the image based only on what is visible. Question: ${question}\nReturn ONLY the answer.`,
+    );
+    return { answer };
+  };
 }
 
-async function readHandwriting(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function readHandwriting(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const text = await visionPrompt(
-    env,
-    image,
-    'This image contains handwritten text. Transcribe the handwriting as accurately as possible, preserving line breaks. If a word is illegible, write [illegible]. Return ONLY the transcription.',
-  );
-  return { text };
+  return async () => {
+    const text = await visionPrompt(
+      env,
+      image,
+      'This image contains handwritten text. Transcribe the handwriting as accurately as possible, preserving line breaks. If a word is illegible, write [illegible]. Return ONLY the transcription.',
+    );
+    return { text };
+  };
 }
 
-async function detectObjectsPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function detectObjectsPro(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const found = await detectObjects(env, image);
-  // Highest-confidence first; round scores for a clean UI / chainable JSON.
-  const objects = found
-    .slice()
-    .sort((a, b) => b.score - a.score)
-    .map((o) => ({
-      label: o.label,
-      score: Math.round(o.score * 1000) / 1000,
-      box: o.box,
-    }));
-  return { objects, count: objects.length };
+  return async () => {
+    const found = await detectObjects(env, image);
+    // Highest-confidence first; round scores for a clean UI / chainable JSON.
+    const objects = found
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .map((o) => ({
+        label: o.label,
+        score: Math.round(o.score * 1000) / 1000,
+        box: o.box,
+      }));
+    return { objects, count: objects.length };
+  };
 }
 
-async function ocrHq(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function ocrHq(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const text = await visionPrompt(
-    env,
-    image,
-    'Extract all text from this image exactly as it appears, preserving line breaks and reading order. Return ONLY the extracted text — no commentary, no description.',
-  );
-  return { text };
+  return async () => {
+    const text = await visionPrompt(
+      env,
+      image,
+      'Extract all text from this image exactly as it appears, preserving line breaks and reading order. Return ONLY the extracted text — no commentary, no description.',
+    );
+    return { text };
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────
 // Chain tools — combine more than one model in a single runner
 // ────────────────────────────────────────────────────────────────────────
 
-async function translateImage(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function translateImage(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
-  const rawTarget = (raw as Record<string, unknown>).target;
-  const target =
-    typeof rawTarget === 'string' && rawTarget.trim().length > 0 ? rawTarget.trim() : 'English';
-
-  const sourceText = await visionPrompt(
-    env,
-    image,
-    'Extract all text from this image exactly as it appears. Return ONLY the text.',
-  );
-  if (sourceText.trim().length === 0) {
-    throw new Error('No text found in the image to translate');
-  }
-  const translation = await chat(
-    env,
-    `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
-    sourceText,
-  );
-  return { sourceText, translation, target };
+  const target = readOptionalText(raw, 'target', 'English', 100);
+  return async () => {
+    const sourceText = await visionPrompt(
+      env,
+      image,
+      'Extract all text from this image exactly as it appears. Return ONLY the text.',
+    );
+    if (sourceText.trim().length === 0) {
+      throw new Error('No text found in the image to translate');
+    }
+    const translation = await chat(
+      env,
+      `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
+      sourceText,
+    );
+    return { sourceText, translation, target };
+  };
 }
 
-async function transcribeAndTranslate(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
-  const input = raw as TranscribeInput;
+function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
+  const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
-  const rawTarget = (raw as Record<string, unknown>).target;
-  const target =
-    typeof rawTarget === 'string' && rawTarget.trim().length > 0 ? rawTarget.trim() : 'English';
-
-  const { text: transcript } = await runTranscribe(env, {
-    bytes,
-    language: input.language,
-  });
-  if (transcript.trim().length === 0) {
-    throw new Error('No speech found in the audio to translate');
-  }
-  const translation = await chat(
-    env,
-    `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
-    transcript,
-  );
-  return { transcript, translation, target };
+  const target = readOptionalText(raw, 'target', 'English', 100);
+  return async () => {
+    const { text: transcript } = await runTranscribe(env, {
+      bytes,
+      language,
+    });
+    if (transcript.trim().length === 0) {
+      throw new Error('No speech found in the audio to translate');
+    }
+    const translation = await chat(
+      env,
+      `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
+      transcript,
+    );
+    return { transcript, translation, target };
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -314,52 +335,56 @@ async function transcribeAndTranslate(raw: RunnerInput, env: Env): Promise<Runne
 // (regex-from-text, cron-from-text) when they return confidence: no-match.
 // ────────────────────────────────────────────────────────────────────────
 
-async function regexFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function regexFromTextPro(raw: RunnerInput, env: Env): PreparedProRun {
   const description = readText(raw, 'description');
-  const out = await chat(
-    env,
-    'You generate JavaScript regular expressions from natural-language descriptions. ' +
-      'Reply with ONLY a JSON object — no markdown, no preamble — of the form ' +
-      '{"pattern":"...","flags":"...","explanation":"..."}. "pattern" is the regex body ' +
-      'with no enclosing slashes. "flags" is the flag string (e.g. "g", "gi"), or "" if none. ' +
-      '"explanation" is one plain sentence.',
-    description,
-  );
-  const parsed = tryParseJson(out) as {
-    pattern?: unknown;
-    flags?: unknown;
-    explanation?: unknown;
-  } | null;
-  if (!parsed || typeof parsed.pattern !== 'string') {
-    throw new Error('Regex model returned unparseable output');
-  }
-  const pattern = parsed.pattern;
-  const flags = typeof parsed.flags === 'string' ? parsed.flags : '';
-  return {
-    pattern,
-    flags,
-    fullRegex: `/${pattern}/${flags}`,
-    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+  return async () => {
+    const out = await chat(
+      env,
+      'You generate JavaScript regular expressions from natural-language descriptions. ' +
+        'Reply with ONLY a JSON object — no markdown, no preamble — of the form ' +
+        '{"pattern":"...","flags":"...","explanation":"..."}. "pattern" is the regex body ' +
+        'with no enclosing slashes. "flags" is the flag string (e.g. "g", "gi"), or "" if none. ' +
+        '"explanation" is one plain sentence.',
+      description,
+    );
+    const parsed = tryParseJson(out) as {
+      pattern?: unknown;
+      flags?: unknown;
+      explanation?: unknown;
+    } | null;
+    if (!parsed || typeof parsed.pattern !== 'string') {
+      throw new Error('Regex model returned unparseable output');
+    }
+    const pattern = parsed.pattern;
+    const flags = typeof parsed.flags === 'string' ? parsed.flags : '';
+    return {
+      pattern,
+      flags,
+      fullRegex: `/${pattern}/${flags}`,
+      explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+    };
   };
 }
 
-async function cronFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function cronFromTextPro(raw: RunnerInput, env: Env): PreparedProRun {
   const description = readText(raw, 'description');
-  const out = await chat(
-    env,
-    'You convert natural-language schedule descriptions into standard 5-field cron ' +
-      'expressions (minute hour day-of-month month day-of-week). Reply with ONLY a JSON ' +
-      'object — no markdown, no preamble — of the form {"cron":"...","explanation":"..."}. ' +
-      '"cron" is the 5-field expression. "explanation" is one plain sentence.',
-    description,
-  );
-  const parsed = tryParseJson(out) as { cron?: unknown; explanation?: unknown } | null;
-  if (!parsed || typeof parsed.cron !== 'string') {
-    throw new Error('Cron model returned unparseable output');
-  }
-  return {
-    cron: parsed.cron,
-    explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+  return async () => {
+    const out = await chat(
+      env,
+      'You convert natural-language schedule descriptions into standard 5-field cron ' +
+        'expressions (minute hour day-of-month month day-of-week). Reply with ONLY a JSON ' +
+        'object — no markdown, no preamble — of the form {"cron":"...","explanation":"..."}. ' +
+        '"cron" is the 5-field expression. "explanation" is one plain sentence.',
+      description,
+    );
+    const parsed = tryParseJson(out) as { cron?: unknown; explanation?: unknown } | null;
+    if (!parsed || typeof parsed.cron !== 'string') {
+      throw new Error('Cron model returned unparseable output');
+    }
+    return {
+      cron: parsed.cron,
+      explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+    };
   };
 }
 
@@ -367,44 +392,49 @@ async function cronFromTextPro(raw: RunnerInput, env: Env): Promise<RunnerOutput
 // Document tools — LLM over text the client extracted from a PDF
 // ────────────────────────────────────────────────────────────────────────
 
-async function pdfSummarize(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function pdfSummarize(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const summary = await chat(
-    env,
-    'You summarize documents. Return a tight, well-structured summary in ' +
-      '4-8 sentences covering the key points and conclusions. No preamble — ' +
-      'just the summary itself.',
-    text,
-  );
-  return { summary };
+  return async () => {
+    const summary = await chat(
+      env,
+      'You summarize documents. Return a tight, well-structured summary in ' +
+        '4-8 sentences covering the key points and conclusions. No preamble — ' +
+        'just the summary itself.',
+      text,
+    );
+    return { summary };
+  };
 }
 
-async function pdfQandA(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function pdfQandA(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
-  const answer = await chat(
-    env,
-    'You answer questions about a document. Use ONLY the information in the ' +
-      'document below. If the answer is not in the document, say so plainly. ' +
-      'Return only the answer — no preamble.',
-    `Document:\n${text}\n\nQuestion: ${question}`,
-  );
-  return { answer };
+  return async () => {
+    const answer = await chat(
+      env,
+      'You answer questions about a document. Use ONLY the information in the ' +
+        'document below. If the answer is not in the document, say so plainly. ' +
+        'Return only the answer — no preamble.',
+      `Document:\n${text}\n\nQuestion: ${question}`,
+    );
+    return { answer };
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────
 // Wave 1 — Workers AI expansion (2026-05-22)
 // ────────────────────────────────────────────────────────────────────────
 
-async function textToSpeechPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function textToSpeechPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   if (text.length > TTS_MAX_CHARS) {
     throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
   }
-  const langRaw = (raw as Record<string, unknown>).language;
-  const language: TtsLang =
-    typeof langRaw === 'string' && /^[A-Z]{2}$/.test(langRaw) ? (langRaw as TtsLang) : 'EN';
-  return synthesize(env, { text, language });
+  const langRaw = readOptionalText(raw, 'language', 'EN', 2);
+  if (!['EN', 'ES', 'FR', 'ZH', 'JP', 'KR'].includes(langRaw!))
+    throw new Error('Unsupported TTS language');
+  const language = langRaw as TtsLang;
+  return () => synthesize(env, { text, language });
 }
 
 // Llama Guard 3 has its own trained safety template — passing a custom
@@ -412,46 +442,49 @@ async function textToSpeechPro(raw: RunnerInput, env: Env): Promise<RunnerOutput
 // built-in template produce the canonical "safe" or "unsafe\nS1,S2,..."
 // classification. Then throw on empty/unrecognized output so the caller
 // refunds the credit instead of returning a silent false-negative.
-async function contentSafetyPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function contentSafetyPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const res = (await withTimeout(
-    env.AI.run(MODEL_GUARD, {
-      messages: [{ role: 'user', content: text }],
-      max_tokens: MAX_TOKENS.classification,
-    }),
-    INFERENCE_TIMEOUTS.text,
-    'llama-guard',
-  )) as { response?: string };
-  const out = typeof res?.response === 'string' ? res.response.trim() : '';
-  if (!out) {
-    throw new Error('Safety classifier returned no output');
-  }
-  const lines = out
-    .toLowerCase()
-    .split(/\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const first = lines[0];
-  if (first !== 'safe' && first !== 'unsafe') {
-    throw new Error('Safety classifier returned unrecognized output');
-  }
-  const safe = first === 'safe';
-  const categories = safe
-    ? []
-    : (lines[1] ?? '')
-        .split(/[,\s]+/)
-        .map((s) => s.toUpperCase())
-        .filter((s) => /^S\d+$/.test(s));
-  return { safe, categories, raw: out };
+  return async () => {
+    const res = (await withTimeout(
+      env.AI.run(MODEL_GUARD, {
+        messages: [{ role: 'user', content: text }],
+        max_tokens: MAX_TOKENS.classification,
+      }),
+      INFERENCE_TIMEOUTS.text,
+      'llama-guard',
+    )) as { response?: string };
+    const out = typeof res?.response === 'string' ? res.response.trim() : '';
+    if (!out) {
+      throw new Error('Safety classifier returned no output');
+    }
+    const lines = out
+      .toLowerCase()
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const first = lines[0];
+    if (first !== 'safe' && first !== 'unsafe') {
+      throw new Error('Safety classifier returned unrecognized output');
+    }
+    const safe = first === 'safe';
+    const categories = safe
+      ? []
+      : (lines[1] ?? '')
+          .split(/[,\s]+/)
+          .map((s) => s.toUpperCase())
+          .filter((s) => /^S\d+$/.test(s));
+    return { safe, categories, raw: out };
+  };
 }
 
-async function translateManyPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function translateManyPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const target = readText(raw, 'target');
-  const sourceRaw = (raw as Record<string, unknown>).source;
-  const source = typeof sourceRaw === 'string' && sourceRaw.length > 0 ? sourceRaw : 'en';
-  const result = await runTranslateMany(env, { text, source, target });
-  return { ...result, source, target };
+  const target = readLanguage(raw, 'target');
+  const source = readOptionalText(raw, 'source', 'en', 100);
+  return async () => {
+    const result = await runTranslateMany(env, { text, source, target });
+    return { ...result, source, target };
+  };
 }
 
 const MAX_DOC_CHARS = 120_000;
@@ -470,8 +503,7 @@ export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_C
       (match) => match.index !== 0,
     );
     const preferred = paragraphBreaks.at(-1);
-    let splitAt =
-      preferred?.index === undefined ? -1 : preferred.index + preferred[0].length;
+    let splitAt = preferred?.index === undefined ? -1 : preferred.index + preferred[0].length;
     if (splitAt === -1) {
       // No paragraph break in the window: prefer the last whitespace so we
       // never cut a word in half — unless that would emit a chunk with no
@@ -495,7 +527,7 @@ export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_C
   return chunks;
 }
 
-async function translateDocumentPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
   const textRaw = (raw as Record<string, unknown>).text;
   if (typeof textRaw !== 'string' || textRaw.trim().length === 0) {
     throw new Error("'text' (non-empty string) is required");
@@ -504,122 +536,136 @@ async function translateDocumentPro(raw: RunnerInput, env: Env): Promise<RunnerO
     throw new Error('Document exceeds the 40-page limit (120,000 characters maximum).');
   }
 
-  const target = readText(raw, 'target').trim();
-  const sourceRaw = (raw as Record<string, unknown>).source;
-  const source = typeof sourceRaw === 'string' && sourceRaw.trim() ? sourceRaw.trim() : 'en';
+  const target = readLanguage(raw, 'target');
+  const source = readOptionalText(raw, 'source', 'en', 100);
   const chunks = __chunkDocumentText(textRaw);
-  // Aggregate deadline: the char cap already bounds this to <=30 model
-  // calls, but a slow provider must not stack thirty 30s timeouts.
-  const DOC_RUN_DEADLINE_MS = 100_000;
-  const startedAt = Date.now();
-  const translations: string[] = [];
-  for (const chunk of chunks) {
-    if (Date.now() - startedAt > DOC_RUN_DEADLINE_MS) {
-      throw new Error(
-        'Translation is taking too long for this document — try a shorter document or split it.',
-      );
+  return async () => {
+    // Aggregate deadline: the char cap already bounds this to <=30 model
+    // calls, but a slow provider must not stack thirty 30s timeouts.
+    const DOC_RUN_DEADLINE_MS = 100_000;
+    const startedAt = Date.now();
+    const translations: string[] = [];
+    for (const chunk of chunks) {
+      if (Date.now() - startedAt > DOC_RUN_DEADLINE_MS) {
+        throw new Error(
+          'Translation is taking too long for this document — try a shorter document or split it.',
+        );
+      }
+      const result = await runTranslateMany(env, { text: chunk, source, target });
+      translations.push(result.translation);
     }
-    const result = await runTranslateMany(env, { text: chunk, source, target });
-    translations.push(result.translation);
-  }
 
-  return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
+    return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
+  };
 }
 
 // DeepSeek R1 emits a <think>...</think> reasoning trace before the final
 // answer. We return both so callers can show or hide the reasoning.
-async function deepAnalysisPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
-  const out = await chatWith(
-    env,
-    MODEL_DEEPSEEK,
-    'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
-    `Document:\n${text}\n\nQuestion: ${question}`,
-    { maxTokens: MAX_TOKENS.reasoning },
-  );
-  const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
-  const reasoning = thinkMatch?.[1]?.trim() ?? '';
-  // R1 sometimes returns its full answer inside the <think> block and
-  // nothing after the closing tag. Fall back to the reasoning so the
-  // user gets a usable answer; only throw if the whole output is empty.
-  let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-  if (!answer) answer = reasoning;
-  if (!answer) {
-    throw new Error('Analysis model returned no answer');
-  }
-  return { answer, reasoning };
+  return async () => {
+    const out = await chatWith(
+      env,
+      MODEL_DEEPSEEK,
+      'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
+      `Document:\n${text}\n\nQuestion: ${question}`,
+      { maxTokens: MAX_TOKENS.reasoning },
+    );
+    const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
+    const reasoning = thinkMatch?.[1]?.trim() ?? '';
+    // R1 sometimes returns its full answer inside the <think> block and
+    // nothing after the closing tag. Fall back to the reasoning so the
+    // user gets a usable answer; only throw if the whole output is empty.
+    let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
+    if (!answer) answer = reasoning;
+    if (!answer) {
+      throw new Error('Analysis model returned no answer');
+    }
+    return { answer, reasoning };
+  };
 }
 
-async function fixGrammarPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const corrected = await chatWith(
-    env,
-    MODEL_LLAMA_SMALL,
-    'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
-    text,
-  );
-  return { corrected };
+  return async () => {
+    const corrected = await chatWith(
+      env,
+      MODEL_LLAMA_SMALL,
+      'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
+      text,
+    );
+    return { corrected };
+  };
 }
 
-async function rewriteTonePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function rewriteTonePro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const toneRaw = (raw as Record<string, unknown>).tone;
-  const tone =
-    typeof toneRaw === 'string' &&
-    ['formal', 'casual', 'kid-friendly', 'concise', 'professional', 'friendly'].includes(toneRaw)
-      ? toneRaw
-      : 'professional';
-  const rewritten = await chatWith(
-    env,
-    MODEL_GLM_FLASH,
-    `Rewrite the user message in a ${tone} tone. Preserve the meaning. Return ONLY the rewritten text — no preamble, no quotes.`,
-    text,
-  );
-  return { rewritten, tone };
+  const tone = readOptionalText(raw, 'tone', 'professional', 32);
+  if (!['formal', 'casual', 'kid-friendly', 'concise', 'professional', 'friendly'].includes(tone!))
+    throw new Error('Unsupported tone');
+  return async () => {
+    const rewritten = await chatWith(
+      env,
+      MODEL_GLM_FLASH,
+      `Rewrite the user message in a ${tone} tone. Preserve the meaning. Return ONLY the rewritten text — no preamble, no quotes.`,
+      text,
+    );
+    return { rewritten, tone };
+  };
 }
 
-async function chatLongPdfPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function chatLongPdfPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
-  const answer = await chatWith(
-    env,
-    MODEL_SCOUT,
-    'You answer questions about long documents. Use ONLY the document below. If the answer is not present, say so plainly. Return only the answer.',
-    `Document:\n${text}\n\nQuestion: ${question}`,
-    { maxTokens: MAX_TOKENS.reasoning },
-  );
-  return { answer };
+  return async () => {
+    const answer = await chatWith(
+      env,
+      MODEL_SCOUT,
+      'You answer questions about long documents. Use ONLY the document below. If the answer is not present, say so plainly. Return only the answer.',
+      `Document:\n${text}\n\nQuestion: ${question}`,
+      { maxTokens: MAX_TOKENS.reasoning },
+    );
+    return { answer };
+  };
 }
 
-async function imageGeneratePro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function imageGeneratePro(raw: RunnerInput, env: Env): PreparedProRun {
   const prompt = readText(raw, 'prompt');
   const stepsRaw = (raw as Record<string, unknown>).steps;
-  const steps = typeof stepsRaw === 'number' && Number.isFinite(stepsRaw) ? stepsRaw : 4;
-  return generateImage(env, { prompt, steps });
+  if (
+    stepsRaw !== undefined &&
+    (typeof stepsRaw !== 'number' || !Number.isInteger(stepsRaw) || stepsRaw < 1 || stepsRaw > 8)
+  )
+    throw new Error('steps must be an integer from 1 to 8');
+  const steps = typeof stepsRaw === 'number' ? stepsRaw : 4;
+  return () => generateImage(env, { prompt, steps });
 }
 
-async function jsonExtractPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function jsonExtractPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  const schemaRaw = (raw as Record<string, unknown>).schema;
-  const schemaHint =
-    typeof schemaRaw === 'string' && schemaRaw.trim().length > 0
-      ? schemaRaw.trim()
-      : 'Pick the most descriptive fields you can find. Use snake_case keys.';
-  const out = await chatWith(
-    env,
-    MODEL_SCOUT,
-    'You extract structured data from text. Reply with ONLY a valid JSON object — no markdown, no preamble, no explanation. If a field is not present, omit it rather than guessing.',
-    `Schema hint: ${schemaHint}\n\nText:\n${text}`,
+  const schemaHint = readOptionalText(
+    raw,
+    'schema',
+    'Pick the most descriptive fields you can find. Use snake_case keys.',
+    100_000,
   );
-  const parsed = tryParseJson(out);
-  if (!parsed || typeof parsed !== 'object') {
-    throw new Error('Extraction model returned unparseable JSON');
-  }
-  return { data: parsed };
+  return async () => {
+    const out = await chatWith(
+      env,
+      MODEL_SCOUT,
+      'You extract structured data from text. Reply with ONLY a valid JSON object — no markdown, no preamble, no explanation. If a field is not present, omit it rather than guessing.',
+      `Schema hint: ${schemaHint}\n\nText:\n${text}`,
+    );
+    const parsed = tryParseJson(out);
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Extraction model returned unparseable JSON');
+    }
+    return { data: parsed };
+  };
 }
 
-async function translateIndicPro(raw: RunnerInput, env: Env): Promise<RunnerOutput> {
+function translateIndicPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const targetRaw = (raw as Record<string, unknown>).target;
   const allowed: IndicLang[] = [
@@ -635,12 +681,16 @@ async function translateIndicPro(raw: RunnerInput, env: Env): Promise<RunnerOutp
     'urd_Arab',
     'asm_Beng',
   ];
-  const target: IndicLang =
-    typeof targetRaw === 'string' && allowed.includes(targetRaw as IndicLang)
-      ? (targetRaw as IndicLang)
-      : 'hin_Deva';
-  const result = await runTranslateIndic(env, { text, target });
-  return { ...result, target };
+  if (
+    targetRaw !== undefined &&
+    (typeof targetRaw !== 'string' || !allowed.includes(targetRaw as IndicLang))
+  )
+    throw new Error('Unsupported Indic language');
+  const target = (targetRaw ?? 'hin_Deva') as IndicLang;
+  return async () => {
+    const result = await runTranslateIndic(env, { text, target });
+    return { ...result, target };
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -658,67 +708,49 @@ function readText(raw: RunnerInput, field: string): string {
   return v;
 }
 
-// Block hostnames that resolve to private/loopback/link-local/reserved
-// ranges, defeating SSRF against internal services and the cloud metadata
-// endpoint. The image provider fetches this URL server-side, so a bare
-// startsWith('http') check would let a caller reach http://169.254.169.254
-// etc. Exported as __isDisallowedHost for unit testing only.
-export function __isDisallowedHost(hostname: string): boolean {
-  let h = hostname.toLowerCase();
-  // Strip IPv6 brackets if present.
-  if (h.startsWith('[') && h.endsWith(']')) h = h.slice(1, -1);
-
-  if (h === 'localhost' || h.endsWith('.local')) return true;
-
-  // IPv4-mapped IPv6 (::ffff:127.0.0.1) — unwrap to the embedded IPv4.
-  const mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i.exec(h);
-  if (mapped) h = mapped[1];
-
-  // IPv6 loopback / link-local / unique-local.
-  if (h === '::1') return true;
-  if (h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb'))
-    return true; // fe80::/10
-  if (h.startsWith('fc') || h.startsWith('fd')) return true; // fc00::/7
-
-  // IPv4 literal ranges.
-  const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
-  if (m) {
-    const o = m.slice(1).map(Number);
-    if (o.some((n) => n > 255)) return true;
-    const [a, b] = o;
-    if (a === 127) return true; // 127.0.0.0/8 loopback
-    if (a === 10) return true; // 10.0.0.0/8
-    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
-    if (a === 192 && b === 168) return true; // 192.168.0.0/16
-    if (a === 169 && b === 254) return true; // 169.254.0.0/16 link-local + metadata
-    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 CGNAT
-    if (a === 0) return true; // 0.0.0.0/8
-  }
-  return false;
+function readOptionalText(
+  raw: RunnerInput,
+  field: string,
+  fallback: string | undefined,
+  maxChars: number,
+): string | undefined {
+  const value = raw[field];
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' || !value.trim() || value.length > maxChars)
+    throw new Error(`Invalid '${field}'`);
+  return value.trim();
 }
 
-// Exported as __readImageRef for unit testing only.
+function readLanguage(raw: RunnerInput, field: string): string {
+  const value = readText(raw, field).trim();
+  if (value.length > 100) throw new Error(`Invalid '${field}'`);
+  return value;
+}
+
+// Uploaded bytes only: arbitrary URLs cannot be made safe by hostname checks
+// because DNS resolution and redirects happen inside the upstream provider.
 export function readImageRef(raw: RunnerInput): string {
-  // Accept either a public https URL or a data:image/ URL. data: URLs keep
-  // the bytes client-side; URLs are fetched server-side by the image
-  // provider, so they must be https to a public host (see __isDisallowedHost).
   const v = (raw as Record<string, unknown>).image;
-  if (typeof v === 'string' && v.startsWith('data:image/')) {
-    return v;
-  }
-  if (typeof v === 'string' && v.startsWith('https://')) {
-    let url: URL;
-    try {
-      url = new URL(v);
-    } catch {
-      throw new Error("'image' must be an https URL to a public host or a data: URL");
-    }
-    if (url.protocol !== 'https:' || __isDisallowedHost(url.hostname)) {
-      throw new Error("'image' must be an https URL to a public host or a data: URL");
-    }
-    return v;
-  }
-  throw new Error("'image' must be an https URL to a public host or a data: URL");
+  if (typeof v !== 'string' || v.length > Math.ceil(IMAGE_MAX_BYTES / 3) * 4 + 32)
+    throw new Error('Image must be a PNG, JPEG, or WebP data URL up to 10 MB');
+  const prefix = /^data:image\/(png|jpeg|webp);base64,/.exec(v);
+  if (!prefix) throw new Error('Image must be a PNG, JPEG, or WebP data URL');
+  const bytes = decodeBoundedBase64(v.slice(prefix[0].length), IMAGE_MAX_BYTES, 'Image');
+  if (imageFormat(bytes) !== prefix[1])
+    throw new Error('Image bytes do not match the declared format');
+  return v;
+}
+
+function imageFormat(bytes: Uint8Array): 'png' | 'jpeg' | 'webp' | null {
+  if ([137, 80, 78, 71, 13, 10, 26, 10].every((b, i) => bytes[i] === b)) return 'png';
+  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return 'jpeg';
+  if (
+    bytes.length >= 12 &&
+    String.fromCharCode(...bytes.subarray(0, 4)) === 'RIFF' &&
+    String.fromCharCode(...bytes.subarray(8, 12)) === 'WEBP'
+  )
+    return 'webp';
+  return null;
 }
 
 function tryParseJson(s: string): unknown {
@@ -748,10 +780,11 @@ export function __readImageBytes(raw: RunnerInput): Uint8Array {
   if (v.length > Math.ceil(IMAGE_MAX_BYTES * 1.4)) {
     throw new Error(`Image exceeds ${IMAGE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
-  const bytes = base64ToUint8Array(v);
+  const bytes = decodeBoundedBase64(v.replace(/^data:[^;]+;base64,/, ''), IMAGE_MAX_BYTES, 'Image');
   if (bytes.length > IMAGE_MAX_BYTES) {
     throw new Error(`Image exceeds ${IMAGE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
+  if (!imageFormat(bytes)) throw new Error('Image must contain PNG, JPEG, or WebP bytes');
   return bytes;
 }
 
@@ -767,17 +800,29 @@ export function __readAudioBytes(raw: RunnerInput): Uint8Array {
   if (v.length > Math.ceil(TRANSCRIBE_MAX_BYTES * 1.4)) {
     throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
-  const bytes = base64ToUint8Array(v);
+  const bytes = decodeBoundedBase64(
+    v.replace(/^data:[^;]+;base64,/, ''),
+    TRANSCRIBE_MAX_BYTES,
+    'Audio',
+  );
   if (bytes.length > TRANSCRIBE_MAX_BYTES) {
     throw new Error(`Audio exceeds ${TRANSCRIBE_MAX_BYTES / 1024 / 1024} MB cap`);
   }
   return bytes;
 }
 
-function base64ToUint8Array(b64: string): Uint8Array {
-  // Strip data: prefix if present.
-  const cleaned = b64.replace(/^data:[^;]+;base64,/, '');
-  const binary = atob(cleaned);
+function decodeBoundedBase64(b64: string, maxBytes: number, label: string): Uint8Array {
+  if (!b64 || b64.length > Math.ceil(maxBytes / 3) * 4)
+    throw new Error(`${label} exceeds size cap or is empty`);
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) throw new Error(`Invalid ${label} base64`);
+  let binary: string;
+  try {
+    binary = atob(b64);
+  } catch {
+    throw new Error(`Invalid ${label} base64`);
+  }
+  if (!binary.length || binary.length > maxBytes)
+    throw new Error(`${label} exceeds size cap or is empty`);
   const out = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
   return out;

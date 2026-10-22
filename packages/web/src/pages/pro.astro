@@ -41,14 +41,6 @@ const why = [
   title="Wyreup PRO — hosted-AI tools, pay only for what you run"
   description={`For when the result has to be right: hosted-AI tools for hard scans, noisy audio, natural translation, and long documents. Sign up free in one step. Packs from $${starterPack.usd}, or $${MONTHLY.usdPerMonth}/mo.`}
 >
-  <script is:inline>
-    // Aggregate, cookieless page counter — no identifiers, best-effort.
-    try {
-      navigator.sendBeacon('/api/metrics/hit', JSON.stringify({ kind: 'pro-page-view' }));
-    } catch {
-      /* metrics are best-effort */
-    }
-  </script>
   <article class="pro">
     <!-- Hero: copy left, signup right — mirrors the homepage hero -->
     <section class="pro-hero">
@@ -258,12 +250,13 @@ const why = [
   .hero-jump {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
     width: max-content;
   }
   .hero-jump:hover {
-    color: var(--accent-hover);
+    color: var(--text-primary);
+    text-decoration: underline;
   }
   .hero-signup {
     position: sticky;
@@ -336,7 +329,10 @@ const why = [
   }
   .pack--featured .pack__note,
   .pack--monthly .pack__note {
-    color: var(--accent);
+    color: var(--accent-text);
+  }
+  .pack--monthly .pack__note {
+    color: var(--text-primary);
   }
   .pack__credits {
     font-family: var(--font-mono);
@@ -388,7 +384,7 @@ const why = [
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--accent-text);
     margin: 0 0 var(--space-3);
     padding-bottom: var(--space-2);
     border-bottom: 1px solid var(--border-subtle);
@@ -438,7 +434,7 @@ const why = [
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     font-weight: 700;
-    color: var(--accent);
+    color: var(--accent-text);
     letter-spacing: 0.08em;
     margin-bottom: var(--space-3);
   }

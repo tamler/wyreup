@@ -1,0 +1,19 @@
+---
+import ProductionCatalogHarness from '../../../test/fixtures/ProductionCatalogHarness.svelte';
+import '../../styles/fonts.css';
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import '../../styles/motifs.css';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Production catalog controlled acceptance</title>
+  </head>
+  <body>
+    <ProductionCatalogHarness client:load />
+  </body>
+</html>

@@ -1,12 +1,20 @@
 import type { ToolRunContext } from '../types.js';
 import type { ToolRegistry } from '../registry.js';
-import { mimeMatches } from '../registry.js';
 import type { Chain, ChainStep } from './types.js';
 import { ChainError } from './errors.js';
+import { validateToolInputs } from '../lib/input-validation.js';
 
 // Re-export for ergonomics.
 export { ChainError };
 export type { Chain, ChainStep };
+
+export interface ChainRunHooks {
+  onStepComplete?(event: {
+    index: number;
+    step: ChainStep;
+    outputs: readonly File[];
+  }): void | Promise<void>;
+}
 
 /**
  * Hard cap on chain nesting depth. Prevents runaway recursion (user chains
@@ -30,6 +38,7 @@ export async function runChain(
   ctx: ToolRunContext,
   registry: ToolRegistry,
   depth = 0,
+  hooks: ChainRunHooks = {},
 ): Promise<Blob[]> {
   if (depth >= MAX_CHAIN_DEPTH) {
     throw new ChainError(`Maximum chain depth ${MAX_CHAIN_DEPTH} exceeded`, depth);
@@ -53,30 +62,60 @@ export async function runChain(
       throw new ChainError(`Unknown tool: ${step.toolId}`, i);
     }
 
-    // Type compatibility check: every input file must match one of the tool's accepted MIME patterns.
-    // Skip if tool accepts min:0 and we have no inputs (e.g. qr generator).
-    if (currentInputs.length > 0) {
-      for (const file of currentInputs) {
-        const accepted = tool.input.accept.some((p) => mimeMatches(file.type, p));
-        if (!accepted) {
-          throw new ChainError(
-            `Step ${i + 1} (${tool.id}) expects ${tool.input.accept.join(', ')} but got ${currentInputs.map((f) => f.type).join(', ')}`,
-            i,
-          );
-        }
-      }
+    if (currentInputs.length < tool.input.min) {
+      throw new ChainError(
+        `Step ${i + 1} (${tool.id}) expects at least ${tool.input.min} file${tool.input.min === 1 ? '' : 's'} but got ${currentInputs.length}`,
+        i,
+      );
+    }
+
+    // A one-file consumer can safely fan out across a producer's multiple
+    // outputs. Higher-cardinality tools have semantic grouping requirements
+    // (pairs, ordered sequences, etc.), so reject overflow instead of guessing.
+    const shouldFanOut = tool.input.max === 1 && currentInputs.length > 1;
+    if (shouldFanOut && tool.cost === 'credit') {
+      throw new ChainError(
+        `Step ${i + 1} (${tool.id}) would run a paid tool ${currentInputs.length} times. Run each file explicitly so every charge is intentional.`,
+        i,
+      );
+    }
+    if (tool.input.max !== undefined && currentInputs.length > tool.input.max && !shouldFanOut) {
+      throw new ChainError(
+        `Step ${i + 1} (${tool.id}) accepts at most ${tool.input.max} file${tool.input.max === 1 ? '' : 's'} but got ${currentInputs.length}`,
+        i,
+      );
     }
 
     const params = { ...(tool.defaults as Record<string, unknown>), ...step.params };
 
-    const result = await tool.run(currentInputs, params, ctx);
-    const blobs: Blob[] = Array.isArray(result) ? result : [result];
+    const batches = shouldFanOut ? currentInputs.map((file) => [file]) : [currentInputs];
+    const nextInputs: File[] = [];
 
-    // Wrap blobs as File objects for the next step, preserving input filenames where possible.
-    currentInputs = blobs.map((blob, j) => {
-      const name = currentInputs[j]?.name ?? `step-${i}-${j}`;
-      return new File([blob], name, { type: blob.type });
-    });
+    for (const batch of batches) {
+      if (ctx.signal.aborted) {
+        throw new ChainError('Aborted', i);
+      }
+      const validationError = validateToolInputs(batch, tool.input);
+      if (validationError) {
+        throw new ChainError(`Step ${i + 1} (${tool.id}) ${validationError}`, i);
+      }
+      const result = await tool.run(batch, params, ctx);
+      const blobs: Blob[] = Array.isArray(result) ? result : [result];
+
+      // Wrap blobs as File objects for the next step, preserving filenames
+      // within each invocation where possible.
+      for (let j = 0; j < blobs.length; j++) {
+        const blob = blobs[j]!;
+        const name =
+          batch[j]?.name ??
+          (j === 0 ? batch[0]?.name : undefined) ??
+          `step-${i}-${nextInputs.length}`;
+        nextInputs.push(new File([blob], name, { type: blob.type }));
+      }
+    }
+
+    currentInputs = nextInputs;
+    await hooks.onStepComplete?.({ index: i, step, outputs: currentInputs });
   }
 
   // Return the raw blobs from the last step (not the File wrappers).

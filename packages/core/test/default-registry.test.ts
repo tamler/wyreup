@@ -2,6 +2,26 @@ import { describe, it, expect } from 'vitest';
 import { createDefaultRegistry } from '../src/default-registry.js';
 
 describe('default registry', () => {
+  it('enforces a tool input size limit before invoking the implementation', async () => {
+    const registry = createDefaultRegistry();
+    const tool = registry.toolsById.get('color-converter');
+    expect(tool).toBeDefined();
+
+    const oversized = new File(['x'.repeat(1025)], 'color.txt', { type: 'text/plain' });
+    await expect(
+      tool!.run(
+        [oversized],
+        {},
+        {
+          signal: new AbortController().signal,
+          cache: new Map(),
+          executionId: 'input-validation-test',
+          onProgress: () => undefined,
+        },
+      ),
+    ).rejects.toThrow('too large');
+  });
+
   it('includes compress', () => {
     const registry = createDefaultRegistry();
     expect(registry.toolsById.get('compress')).toBeDefined();

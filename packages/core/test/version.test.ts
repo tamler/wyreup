@@ -28,6 +28,7 @@ describe('WYREUP_CORE_VERSION', () => {
 
     const configs = (await import('../tsup.config.js')).default as Array<{
       define?: Record<string, string>;
+      clean?: boolean;
     }>;
 
     expect(configs.length).toBeGreaterThan(0);
@@ -35,6 +36,7 @@ describe('WYREUP_CORE_VERSION', () => {
       // Every build output must carry the version, not just one of them —
       // the browser and node bundles are published from the same package.
       expect(config.define?.__WYREUP_CORE_VERSION__).toBe(JSON.stringify(pkg.version));
+      expect(config.clean).toBe(true);
     }
   });
 });

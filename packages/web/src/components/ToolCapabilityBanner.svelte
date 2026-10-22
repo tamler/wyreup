@@ -1,6 +1,6 @@
 <script lang="ts">
   import { capabilities } from '../stores/capabilities';
-  import { checkToolCapabilities, type ToolRequires } from '@wyreup/core';
+import { checkToolCapabilities, type ToolRequires } from '@wyreup/core/execution';
 
   // Per-tool capability notice. Shown above the runner when the device
   // can't run this tool. Direct URLs always render the page (so chain

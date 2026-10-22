@@ -82,6 +82,18 @@ async function analyzeText(file: File): Promise<PreflightResult> {
   return projectResult(result, 'text-suspicious');
 }
 
+export async function withLoadingTaskCleanup<TDocument, TResult>(
+  loadingTask: { promise: Promise<TDocument>; destroy(): Promise<void> },
+  useDocument: (document: TDocument) => Promise<TResult>,
+): Promise<TResult> {
+  try {
+    const document = await loadingTask.promise;
+    return await useDocument(document);
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
 async function analyzePdf(file: File): Promise<PreflightResult> {
   // pdf-suspicious is heavy (pdfjs worker). For the pre-flight we use
   // a streamlined version: extract text via pdfjs, then reuse the same
@@ -98,17 +110,24 @@ async function analyzePdf(file: File): Promise<PreflightResult> {
     }
   }
   const buf = await file.arrayBuffer();
-  const pdf = await getDocument({ data: new Uint8Array(buf) }).promise;
-  const parts: string[] = [];
-  // Cap at 20 pages — pre-flight, not full scan.
-  const pageLimit = Math.min(pdf.numPages, 20);
-  for (let i = 1; i <= pageLimit; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    parts.push(content.items.map((it) => ('str' in it ? (it.str ?? '') : '')).join(' '));
-  }
-  const result = analyzeSuspicious(parts.join('\n\n'), {});
-  return projectResult(result, 'pdf-suspicious');
+  const loadingTask = getDocument({ data: new Uint8Array(buf) });
+  return withLoadingTaskCleanup(loadingTask, async (pdf) => {
+    const parts: string[] = [];
+    // Pre-flight is intentionally bounded. A partial scan must never be
+    // projected as clean: callers rely on that distinction before enabling
+    // an automatic trigger.
+    const pageLimit = Math.min(pdf.numPages, 20);
+    for (let i = 1; i <= pageLimit; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      parts.push(content.items.map((it) => ('str' in it ? (it.str ?? '') : '')).join(' '));
+    }
+    const result = analyzeSuspicious(parts.join('\n\n'), {});
+    if (pdf.numPages > pageLimit && result.verdict === 'clean') {
+      return { verdict: 'unanalysed', findings: [], toolUsed: 'pdf-suspicious' };
+    }
+    return projectResult(result, 'pdf-suspicious');
+  });
 }
 
 function projectResult(r: TextSuspiciousResult, toolUsed: string): PreflightResult {

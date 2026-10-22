@@ -1,13 +1,23 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import FlatJsonResult from './FlatJsonResult.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
   import type { SerializedTool } from './types';
   import type { ToolProgress } from '@wyreup/core';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  onDestroy(releaseOwnedWakeLocks);
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
@@ -36,9 +46,10 @@
     resultBlob = null;
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
@@ -74,11 +85,13 @@
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     } finally {
-      releaseWakeLock();
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     resultText = '';

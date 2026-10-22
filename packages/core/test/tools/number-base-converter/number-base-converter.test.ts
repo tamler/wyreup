@@ -31,8 +31,8 @@ describe('number-base-converter — metadata', () => {
     expect(numberBaseConverter.category).toBe('dev');
   });
 
-  it('outputs application/json', () => {
-    expect(numberBaseConverter.output.mime).toBe('application/json');
+  it('declares mode-specific output types through a MIME pattern', () => {
+    expect(numberBaseConverter.output.mime).toBe('*/*');
   });
 });
 

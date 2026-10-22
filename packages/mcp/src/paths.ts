@@ -32,19 +32,28 @@ export async function resolveAllowedRoots(
 
 export async function assertPathAllowed(
   p: string,
-  intent: 'read' | 'write',
+  intent: 'read' | 'write' | 'write-directory',
   allowed: AllowedRoots,
 ): Promise<ValidationResult> {
-  if (allowed === '*') {
-    if (!isAbsolute(p)) return { ok: false, error: `Path must be absolute: ${p}` };
-    return { ok: true, resolved: p };
-  }
   if (!isAbsolute(p)) return { ok: false, error: `Path must be absolute: ${p}` };
 
   let resolved: string;
   try {
     if (intent === 'read') {
       resolved = await realpath(p);
+    } else if (intent === 'write-directory') {
+      try {
+        // Existing output directories may themselves be symlinks, so resolve
+        // the directory rather than only its parent.
+        resolved = await realpath(p);
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+        // A missing output directory is valid: atomicPublish creates it. Its
+        // existing parent still needs canonical validation.
+        const parent = await realpath(dirname(p));
+        const base = p.slice(dirname(p).length);
+        resolved = `${parent}${base}`;
+      }
     } else {
       const parent = await realpath(dirname(p));
       const base = p.slice(dirname(p).length);
@@ -54,6 +63,8 @@ export async function assertPathAllowed(
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: `Cannot resolve path ${p}: ${msg}` };
   }
+
+  if (allowed === '*') return { ok: true, resolved };
 
   for (const root of allowed) {
     if (resolved === root || resolved.startsWith(root + sep)) {

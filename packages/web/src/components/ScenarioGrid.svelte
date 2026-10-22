@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { dropStore } from '../stores/drop';
-  import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
+import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
   import { jobsForMime, type Job } from '../data/jobs';
   import { displayName } from '../data/display-names';
   import { encodeChainSteps } from './runners/chainUrl';
+  import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
+  import { clearTrail, setTrailHandover } from './runners/hopTrail';
+  import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
 
   // Static scenario data — shown when no file is dropped
   interface Scenario {
@@ -31,6 +35,13 @@
 
   const defaultIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
   const registryToolsById = createDefaultRegistry().toolsById;
+  let handoffError = '';
+  let handingOff = false;
+  let disposed = false;
+  let original: File | null = null;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
+  onDestroy(() => { disposed = true; for (const url of downloadUrls) URL.revokeObjectURL(url); for (const timer of downloadTimers) clearTimeout(timer); });
 
   const scenarios: Scenario[] = [
     { label: 'Compress a photo for email', slug: 'compress', category: 'optimize', icon: categoryIcons.optimize },
@@ -97,14 +108,48 @@
 
   function groupLabel(tool: ToolModule): string | undefined {
     if (tool.cost === 'credit') return 'Improve with AI';
-    return outcomeGroups.find((group) => group.categories.includes(tool.category))?.label;
+    return outcomeGroups.find((group) => group.categories.includes(tool.category))?.label ?? 'Understand';
+  }
+
+  async function handOff(event: MouseEvent, action: Job['action']) {
+    if (!drop || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (handingOff) return;
+    const captured = drop.file;
+    const firstId = action.kind === 'tool' ? action.toolId : action.steps[0]?.toolId;
+    const first = firstId ? registryToolsById.get(firstId) : undefined;
+    original = captured; handoffError = '';
+    if (!first || !acceptsBrowserFile(first, captured) || (action.kind === 'chain' && action.steps.some((step) => !registryToolsById.has(step.toolId)))) { handoffError = 'This action cannot import the original. It was retained.'; return; }
+    handingOff = true;
+    const result = await stashChainHandover(captured, action.kind === 'tool' ? { autoAccept: true, targetToolId: first.id } : { autoAccept: false });
+    if (disposed || drop?.file !== captured) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      if (!cleared && !disposed) handoffError = 'Shared storage could not confirm deleting this handover token. Original retained.';
+      handingOff = false; return;
+    }
+    if (!result.stored || (action.kind === 'tool' && !setTrailHandover([], result.token, first.id))) {
+      const cleared = !result.stored || await clearChainHandover(result.token);
+      handoffError = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
+      handingOff = false; return;
+    }
+    if (action.kind === 'chain') clearTrail();
+    window.location.href = action.kind === 'tool' ? `/tools/${first.id}` : `/chain/run?steps=${encodeURIComponent(encodeChainSteps(action.steps))}`;
+  }
+
+  function downloadOriginal() {
+    if (!original) return;
+    const url = URL.createObjectURL(original); downloadUrls.add(url);
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = original.name; anchor.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 
   $: drop = $dropStore;
   // A job is only recommendable when the tool that receives the dropped file
   // actually accepts it — acceptMimes wildcards (image/*) are broader than
   // some action tools' concrete accept lists (e.g. compress rejects HEIC).
-  $: compatibleIds = drop ? new Set(drop.compatibleTools.map((t) => t.id)) : new Set<string>();
+  $: candidates = drop ? fileToolCandidates(drop.compatibleTools, drop.file) : [];
+  $: compatibleIds = new Set(candidates.map((t) => t.id));
   $: recommendedJobs = drop
     ? jobsForMime(drop.mime)
         .filter((job) =>
@@ -117,11 +162,15 @@
   $: groupedTools = drop
     ? outcomeGroups.map((group) => ({
         ...group,
-        tools: drop.compatibleTools.filter((tool) => groupLabel(tool) === group.label),
+        tools: candidates.filter((tool) => groupLabel(tool) === group.label),
       }))
     : [];
 </script>
 
+{#if handoffError}
+  <p role="alert">{handoffError}</p>
+  <button type="button" on:click={downloadOriginal}>Download original</button>
+{/if}
 {#if drop}
   <!-- Compatible tools view -->
   <div class="scenarios-heading-row">
@@ -150,6 +199,7 @@
           {#each recommendedJobs as job, i}
             <a
               href={jobHref(job)}
+              on:click={(event) => handOff(event, job.action)}
               class="scenario-card"
               style="--stagger-delay: {i * 50}ms"
               aria-label={job.title}
@@ -171,9 +221,10 @@
         <section class="outcome-group" aria-labelledby={`outcome-${group.label.replaceAll(' ', '-').toLowerCase()}`}>
           <h3 id={`outcome-${group.label.replaceAll(' ', '-').toLowerCase()}`} class="outcome-heading">{group.label}</h3>
           <div class="scenarios-bento">
-            {#each group.tools.slice(0, 6) as tool, i}
+            {#each group.tools as tool, i}
               <a
                 href={`/tools/${tool.id}`}
+                on:click={(event) => handOff(event, { kind: 'tool', toolId: tool.id })}
                 class="scenario-card"
                 style="--stagger-delay: {i * 50}ms"
                 aria-label={displayName(tool.id, tool.name)}
@@ -187,12 +238,6 @@
               </a>
             {/each}
           </div>
-          {#if group.tools.length > 6}
-            <p class="more-tools">
-              + {group.tools.length - 6} more —
-              <a href="/tools" class="more-tools__link">browse all tools</a>
-            </p>
-          {/if}
         </section>
       {/if}
     {/each}

@@ -1,0 +1,108 @@
+%PDF-1.4
+%Original Wyreup coordinate fixture, vector landmarks only
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 6 /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 300] /CropBox [0 0 400 300] /Rotate 0 /Resources << >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 84 >>
+stream
+q
+1 1 1 rg 0 0 400 300 re f
+0 0 1 rg 350 255 25 20 re f
+0 1 0 rg 40 50 80 60 re f
+Q
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [20 30 420 330] /CropBox [20 30 420 330] /Rotate 0 /Resources << >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 86 >>
+stream
+q
+1 1 1 rg 20 30 400 300 re f
+0 0 1 rg 370 285 25 20 re f
+0 1 0 rg 60 80 80 60 re f
+Q
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [20 30 420 330] /CropBox [20 30 420 330] /Rotate 90 /Resources << >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 86 >>
+stream
+q
+1 1 1 rg 20 30 400 300 re f
+0 0 1 rg 370 285 25 20 re f
+0 1 0 rg 60 80 80 60 re f
+Q
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [20 30 420 330] /CropBox [20 30 420 330] /Rotate 180 /Resources << >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 86 >>
+stream
+q
+1 1 1 rg 20 30 400 300 re f
+0 0 1 rg 370 285 25 20 re f
+0 1 0 rg 60 80 80 60 re f
+Q
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [20 30 420 330] /CropBox [20 30 420 330] /Rotate 270 /Resources << >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 86 >>
+stream
+q
+1 1 1 rg 20 30 400 300 re f
+0 0 1 rg 370 285 25 20 re f
+0 1 0 rg 60 80 80 60 re f
+Q
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [-10 15 490 215] /CropBox [-10 15 490 215] /Rotate 0 /Resources << >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 87 >>
+stream
+q
+1 1 1 rg -10 15 500 200 re f
+0 0 1 rg 440 170 25 20 re f
+0 1 0 rg 30 55 80 60 re f
+Q
+endstream
+endobj
+xref
+0 15
+0000000000 65535 f 
+0000000068 00000 n 
+0000000117 00000 n 
+0000000206 00000 n 
+0000000343 00000 n 
+0000000476 00000 n 
+0000000617 00000 n 
+0000000752 00000 n 
+0000000894 00000 n 
+0000001029 00000 n 
+0000001173 00000 n 
+0000001309 00000 n 
+0000001454 00000 n 
+0000001590 00000 n 
+0000001735 00000 n 
+trailer
+<< /Size 15 /Root 1 0 R >>
+startxref
+1872
+%%EOF

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-05-25';
+const lastUpdated = '2026-10-11';
 ---
 
 <BaseLayout
@@ -15,11 +15,10 @@ const lastUpdated = '2026-05-25';
 
     <h2>The short version</h2>
     <p>
-      <strong>Free tools run entirely on your device.</strong> When you
-      use a free tool in the browser or via the CLI / MCP, Wyreup is
-      not involved at runtime — your files, parameters, and outputs
-      never reach our infrastructure. No accounts, no cookies, no
-      analytics, no telemetry.
+      <strong>Local file tools process on your device.</strong> Network
+      lookups and hosted PRO tools explain what they send before you run
+      them. A tool's price does not determine where it processes data.
+      We use no analytics or tracking cookies.
     </p>
     <p>
       <strong>PRO tools forward your input to a third-party
@@ -43,8 +42,34 @@ const lastUpdated = '2026-05-25';
 
     <h2>What we collect</h2>
 
-    <h3>For free tools</h3>
-    <p><strong>Nothing.</strong> Free tools never reach our backend.</p>
+    <h3>Local tools and free public lookups</h3>
+    <p>Local file tools keep their file processing on your device. Setup
+      downloads and cached assets depend on the tool.</p>
+    <p>The free Domain Registration Age lookup sends the entered domain
+      to Wyreup. Wyreup reads the fixed public IANA bootstrap without
+      sending IANA the queried domain, then sends the domain to its
+      registration registry. No API key is required. Registration age
+      may describe the current registration rather than first-ever use.
+      Wyreup returns only minimized registration dates, ages, status,
+      and source information, without registrant contact details.</p>
+    <p>Public lookup admission stores temporary rotating HMAC network
+      counters and random short-lived reservation tokens in our existing
+      database. Counter digests rotate each database minute; tokens are
+      random invocation reservations with a 30-second expiry. There is
+      no raw IP or domain-query database for these lookups. The trusted
+      connection IP is used transiently to calculate the counter digest.
+      Shared networks can reach the six-admissions-per-minute network
+      limit together. Global admission is limited to 60 per minute and
+      eight outstanding reservations; minute boundaries can admit two
+      adjacent windows' allowances. These limits do not guarantee fair
+      scheduling or immunity to overload.</p>
+    <p>Expired counters and tokens are pruned on later valid requests,
+      not by a guaranteed physical deletion timer. Platform logs and
+      backups have their own retention. No domain-query history or new
+      analytics is added by this lookup. Local shell history, MCP audit
+      metadata, assistant-provider records, saved chains, output files,
+      and operator exports can retain requests or results independently.
+      The lookup does not erase those records.</p>
 
     <h3>For PRO accounts</h3>
     <ul>
@@ -172,8 +197,11 @@ const lastUpdated = '2026-05-25';
       the <a href="/legal/terms">Terms of Service</a>.
     </p>
     <p>
-      Free tools are not affected — they run entirely on your device
-      and never touch Cloudflare's network or any third-party model.
+      Local file processing stays on your device. The free domain lookup
+      passes through Wyreup's Cloudflare edge to its public registration
+      registry; the domain can cross borders. The registry source is shown
+      in the result. Network lookups require a connection and do not have
+      an on-device-only processing guarantee.
     </p>
 
     <h2>Changes</h2>

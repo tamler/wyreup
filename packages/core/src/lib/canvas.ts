@@ -9,6 +9,7 @@
  */
 
 import type * as NapiCanvas from '@napi-rs/canvas';
+import { getCodec } from './codecs.js';
 
 // Minimal structural types. Both OffscreenCanvas and @napi-rs/canvas's Canvas
 // satisfy these shapes at runtime.
@@ -42,6 +43,11 @@ export interface CanvasContext2DLike {
   translate(x: number, y: number): void;
   rotate(radians: number): void;
   clearRect(x: number, y: number, w: number, h: number): void;
+  putImageData(
+    imageData: { width: number; height: number; data: Uint8ClampedArray },
+    dx: number,
+    dy: number,
+  ): void;
 }
 
 export interface ImageLike {
@@ -111,4 +117,61 @@ export async function canvasToBlob(
       convertToBlob(options: { type: string; quality?: number }): Promise<Blob>;
     }
   ).convertToBlob({ type: mime, quality });
+}
+
+function ownedRgba(data: Uint8ClampedArray): data is Uint8ClampedArray<ArrayBuffer> {
+  return (
+    data.buffer instanceof ArrayBuffer &&
+    !(data.buffer as ArrayBuffer & { resizable?: boolean }).resizable
+  );
+}
+
+export async function rgbaToPng(
+  width: number,
+  height: number,
+  data: Uint8ClampedArray,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width < 1 ||
+    height < 1 ||
+    width > 8192 ||
+    height > 8192 ||
+    width * height > 16000000 ||
+    !(data instanceof Uint8ClampedArray) ||
+    data.length !== width * height * 4
+  )
+    throw new Error('Invalid bounded RGBA image.');
+  if (signal?.aborted) throw new Error('Image encoding cancelled.');
+  if (!ownedRgba(data)) throw new Error('RGBA image requires an owned ArrayBuffer.');
+  // The codec consumes the entire buffer; give subviews their own buffer.
+  // Encode straight RGBA rather than losing low-alpha RGB through a canvas.
+  const rgba =
+    data.byteOffset === 0 && data.byteLength === data.buffer.byteLength
+      ? data
+      : new Uint8ClampedArray(data);
+  const codec = await getCodec('png');
+  if (signal?.aborted) throw new Error('Image encoding cancelled.');
+  if (data.length !== width * height * 4 || rgba.length !== width * height * 4)
+    throw new Error('RGBA image buffer was detached.');
+  const encoded = await codec.encode({ data: rgba, width, height }, { bitDepth: 8 });
+  if (signal?.aborted) throw new Error('Image encoding cancelled.');
+  if (!(encoded instanceof ArrayBuffer) || encoded.byteLength < 33)
+    throw new Error('Invalid PNG output.');
+  if (encoded.byteLength > 96 * 1024 * 1024) throw new Error('PNG output exceeds 96 MiB.');
+  const bytes = new Uint8Array(encoded);
+  const header = new DataView(encoded);
+  if (
+    ![137, 80, 78, 71, 13, 10, 26, 10].every((byte, index) => bytes[index] === byte) ||
+    header.getUint32(8) !== 13 ||
+    header.getUint32(12) !== 0x49484452 ||
+    header.getUint32(16) !== width ||
+    header.getUint32(20) !== height ||
+    bytes[24] !== 8 ||
+    ![0, 2, 4, 6].includes(bytes[25]!)
+  )
+    throw new Error('PNG header does not match the RGBA image.');
+  return new Blob([bytes], { type: 'image/png' });
 }

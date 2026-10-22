@@ -8,11 +8,11 @@ import InstallCard from '../components/InstallCard.svelte';
 import { createDefaultRegistry } from '@wyreup/core';
 import { PACKS, MONTHLY } from '../data/pricing';
 import { displayName } from '../data/display-names';
-import { TOOL_PAGE_METADATA } from '../lib/seo';
+import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
-const localCount = allTools.filter((t) => t.cost !== 'credit').length;
+const localCount = allTools.filter((t) => t.cost !== 'credit' && !projectToolDiscoveryMetadata(t).networkAccess).length;
 const starterPack = PACKS[0]!;
 
 // Hand-curated popular tools (Deliverable 5)
@@ -25,13 +25,13 @@ const popularTools = popularToolIds.map((id) => {
         `Either rename in packages/web/src/pages/index.astro or remove from popularToolIds.`,
     );
   }
-  return { id: t.id, name: t.name, category: t.category, description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description };
+  return { id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description };
 });
 ---
 
 <BaseLayout
-  title="Wyreup — Free image, PDF & file tools for your browser"
-  description="Compress images, convert HEIC to JPG, remove photo metadata and work with PDFs. Free tools execute on your device; optional hosted PRO tools explain what they send."
+  title="Wyreup — Calculators, generators, developer & file tools"
+  description="Calculate, generate, inspect hardware or work with images, PDFs, audio and data. Local tools keep inputs on your device; network lookups and hosted PRO disclose what they send."
   surfaceMode="welcome"
 >
   <script is:inline>
@@ -50,9 +50,9 @@ const popularTools = popularToolIds.map((id) => {
     <div class="container hero__container">
       <!-- Left: value prop -->
       <div class="hero__copy">
-        <h1 class="hero__headline">Drop a file. <span class="hero__headline-accent">Get it ready for whatever comes next.</span></h1>
+        <h1 class="hero__headline">Calculate. Generate. <span class="hero__headline-accent">Work with your files.</span></h1>
         <p class="hero__body">
-          Compress, convert, clean up, extract, understand, protect, share. Drop a file and see what you can do with it. Free tools run on your device; paid PRO tools tell you before anything is sent to a remote computer.
+          Use calculators, generators, developer helpers and hardware tests, or drop a file to compress, convert, inspect and edit it. Local tools keep inputs on your device; network lookups and hosted PRO tools explain what they send before you run them.
         </p>
         <HeroSearch client:load />
         <div class="hero__actions">
@@ -207,7 +207,7 @@ const popularTools = popularToolIds.map((id) => {
           <div class="anywhere-card__inner">
             <div class="anywhere-card__channel">AI agents</div>
             <div class="anywhere-card__headline">Works with agents — Claude, Codex, Hermes, OpenClaw, and more</div>
-            <p class="anywhere-card__body">Free tools keep files on your machine.</p>
+            <p class="anywhere-card__body">Local file tools run on your machine. Network lookups disclose what they send.</p>
           </div>
         </a>
         <InstallCard client:load />
@@ -222,7 +222,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="privacy-block">
         <h2 id="privacy-heading" class="privacy-block__title">Private by default. No tradeoff.</h2>
         <p class="privacy-block__body">
-          No analytics. No tracking cookies. Free tools run entirely on your device. PRO tools that run on our servers send your file over a secure connection, return the result, and keep nothing beyond a record of the run. Wyreup is open source — anyone can check how it works.
+          No analytics. No tracking cookies. Local file tools process on your device. The free Domain Registration Age lookup sends your domain to Wyreup and its public registration registry. Hosted PRO tools explain their remote processing before you run them. See our privacy policy for temporary public-lookup counters, reservation tokens, and platform retention. Wyreup is open source — anyone can check how it works.
         </p>
         <a
           href="https://github.com/tamler/wyreup"

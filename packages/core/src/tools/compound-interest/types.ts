@@ -4,6 +4,8 @@ export interface CompoundInterestParams {
   years: number;
   compoundingPerYear?: number; // default 12
   monthlyContribution?: number; // default 0
+  inflationRate?: number;
+  contributionTiming?: 'end' | 'beginning';
 }
 
 export interface YearlyBreakdownRow {
@@ -11,6 +13,7 @@ export interface YearlyBreakdownRow {
   balance: number;
   contributionTotal: number;
   interestTotal: number;
+  realBalance: number;
 }
 
 export const defaultCompoundInterestParams: CompoundInterestParams = {
@@ -19,4 +22,6 @@ export const defaultCompoundInterestParams: CompoundInterestParams = {
   years: 10,
   compoundingPerYear: 12,
   monthlyContribution: 0,
+  inflationRate: 0,
+  contributionTiming: 'end',
 };

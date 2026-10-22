@@ -1,0 +1,24 @@
+diff --git a/legacy/build/pdf.mjs b/legacy/build/pdf.mjs
+--- a/legacy/build/pdf.mjs
++++ b/legacy/build/pdf.mjs
+@@ -22476,6 +22476,9 @@
+         if (this._transport.destroyed) {
+           return;
+         }
++        if (intentState.opListReadCapability) {
++          intentState.opListReadCapability.reject(reason);
++        }
+         if (intentState.operatorList) {
+           intentState.operatorList.lastChunk = true;
+           for (const internalRenderTask of intentState.renderTasks) {
+@@ -22487,9 +22490,7 @@
+         }
+         if (intentState.displayReadyCapability) {
+           intentState.displayReadyCapability.reject(reason);
+-        } else if (intentState.opListReadCapability) {
+-          intentState.opListReadCapability.reject(reason);
+-        } else {
++        } else if (!intentState.opListReadCapability) {
+           throw reason;
+         }
+       });

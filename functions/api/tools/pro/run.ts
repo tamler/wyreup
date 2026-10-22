@@ -1,29 +1,22 @@
 // POST /api/tools/pro/run
 // Reserve-then-refund pattern — see docs/pro-auth-spec.md §10.
 //
-// Flow: resolve user → check rate limit → atomic reserve (conditional
-// INSERT keyed off SUM(amount) >= cost) → dispatch to runPro() →
+// Flow: resolve user → validate/prepare → atomic admission/reserve → dispatch →
 // on throw, idempotent refund row → otherwise log to run_history.
 // Every write is append-only; the ledger never mutates a prior row.
 
 import type { Env } from '../../../_lib/env';
 import type { PagesFunction } from '../../../_lib/types';
-import { getBalance, json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
+import { json, requireCsrfHeader, resolveUser, unauthorized } from '../../../_lib/auth';
 import { nanoid } from '../../../_lib/crypto';
-import { enforceLimits } from '../../../_lib/limits';
+import { reserveProCredits } from '../../../_lib/limits';
 import { priceFor } from '../../../_lib/pricing';
-import { runPro } from '../../../_lib/runners';
-
-interface RunBody {
-  toolId?: unknown;
-  input?: unknown;
-}
+import { prepareProRun, type PreparedProRun } from '../../../_lib/runners';
+import { readJsonObject, RequestBodyError } from '../../../_lib/request';
 
 // Largest legitimate input is a 25 MB audio file (~33.3 MB once base64-
 // encoded); 36 MB leaves headroom for the JSON envelope. Rejecting early
-// on Content-Length avoids buffering a huge body before the per-runner
-// size caps would catch it. Absent header (chunked encoding) falls
-// through — the per-runner caps remain the definitive guard.
+// while streaming also covers missing or misleading Content-Length.
 const MAX_BODY_BYTES = 36 * 1024 * 1024;
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -33,24 +26,29 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const csrfErr = requireCsrfHeader(request, user);
   if (csrfErr) return csrfErr;
 
-  const contentLength = Number(request.headers.get('Content-Length') ?? '0');
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-    return json({ error: 'Request body too large' }, 413);
+  let body: Record<string, unknown>;
+  try {
+    body = await readJsonObject(request, MAX_BODY_BYTES);
+  } catch (error) {
+    if (error instanceof RequestBodyError) return json({ error: error.message }, error.status);
+    throw error;
   }
-
-  const body = (await request.json().catch(() => ({}))) as RunBody;
   const toolId = typeof body.toolId === 'string' ? body.toolId : '';
-  const input = (body.input ?? {}) as Record<string, unknown>;
+  if (!body.input || typeof body.input !== 'object' || Array.isArray(body.input))
+    return json({ error: 'Input object required' }, 400);
+  const input = body.input as Record<string, unknown>;
 
   const creditCost = priceFor(toolId);
   if (creditCost == null) return json({ error: 'Not a PRO tool' }, 400);
 
-  // 0. Cost-control guards: emergency kill switch + account-wide daily
-  //    spend cap (see functions/_lib/limits.ts). Runs before the orphan
-  //    sweep and rate limit so a tripped switch / blown cap costs us at
-  //    most one or two D1 reads, no model dispatch.
-  const limitResp = await enforceLimits(env, user, creditCost);
-  if (limitResp) return limitResp;
+  // Local validation must never reserve/refund credits: malformed input
+  // otherwise consumes the gross platform cap without any provider work.
+  let dispatch: PreparedProRun;
+  try {
+    dispatch = prepareProRun(toolId, input, env);
+  } catch {
+    return json({ error: 'Invalid tool input' }, 400);
+  }
 
   // 0a. Sweep orphan spend rows from prior mid-handler crashes. A `spend`
   // row with no matching run_history (success) and no matching refund
@@ -76,7 +74,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await env.DB.prepare(
       `INSERT OR IGNORE INTO credit_events
          (id, user_id, kind, amount, tool_id, refund_of, note, created_at)
-       VALUES (?, ?, 'refund', ?, ?, ?, ?, ?)`,
+       SELECT ?, ?, 'refund', ?, ?, ?, ?, ?
+       WHERE NOT EXISTS (SELECT 1 FROM run_history WHERE spend_event_id = ?)
+         AND NOT EXISTS (SELECT 1 FROM credit_events WHERE refund_of = ?)`,
     )
       .bind(
         `evt_${nanoid(16)}`,
@@ -86,53 +86,30 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         orphan.spend_id,
         `Auto-refund for orphan spend ${orphan.spend_id}`,
         Date.now(),
+        orphan.spend_id,
+        orphan.spend_id,
       )
       .run();
   }
 
-  // 0b. Per-account rate limit. Stops a stolen key from draining a balance
-  // in the time it takes the legitimate owner to notice and revoke.
-  // 30 PRO runs in any 60-second window is well above human use but still
-  // bounds the worst-case loss to ~150 credits / minute (= $15 at our
-  // top-tier rate).
-  const recent = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM credit_events
-       WHERE user_id = ? AND kind = 'spend' AND created_at >= ?`,
-  )
-    .bind(user.id, Date.now() - 60_000)
-    .first<{ n: number }>();
-  if ((recent?.n ?? 0) >= 30) {
-    return json({ error: 'Rate limit: too many PRO runs in the last minute' }, 429);
-  }
-
-  // 1. Reserve credits atomically. The INSERT only runs if the current
-  //    ledger sum is sufficient. D1 serializes writes per-DB, so concurrent
-  //    requests at the boundary are safe — only one will satisfy the WHERE.
+  // 1. Reserve under one write lock with every spend/rate/settings predicate.
   const spendId = `evt_${nanoid(16)}`;
   const now = Date.now();
-  const reserved = await env.DB.prepare(
-    `INSERT INTO credit_events (id, user_id, kind, amount, tool_id, note, created_at)
-     SELECT ?, ?, 'spend', ?, ?, ?, ?
-     WHERE (
-       SELECT COALESCE(SUM(amount), 0)
-         FROM credit_events
-        WHERE user_id = ?
-     ) >= ?`,
-  )
-    .bind(spendId, user.id, -creditCost, toolId, `Ran ${toolId}`, now, user.id, creditCost)
-    .run();
-
-  if ((reserved.meta.changes ?? 0) !== 1) {
-    const balance = await getBalance(user.id, env);
-    return json({ error: 'Insufficient credits', balance }, 402);
-  }
+  const denied = await reserveProCredits(env, {
+    userId: user.id,
+    cost: creditCost,
+    toolId,
+    spendId,
+    now,
+  });
+  if (denied) return denied;
 
   // 2. Run the hosted model. On failure, refund idempotently. The
   //    refund_of column links the refund to its originating spend so the
   //    orphan sweep above can tell handled failures from real crashes.
   let result: unknown;
   try {
-    result = await runPro(toolId, input, env);
+    result = await dispatch();
   } catch (err) {
     await env.DB.prepare(
       `INSERT OR IGNORE INTO credit_events

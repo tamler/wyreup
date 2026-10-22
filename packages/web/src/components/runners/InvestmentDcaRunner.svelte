@@ -85,7 +85,7 @@
     if (prices.length === 0) return;
 
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get('investment-dca');
       if (!toolModule) return;

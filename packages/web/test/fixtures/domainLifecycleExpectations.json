@@ -1,0 +1,459 @@
+{
+  "schemaVersion": 1,
+  "revisions": [
+    {
+      "revisionId": "before-original",
+      "helperSha256": "0791bc3e465ad3849f1b7ced47de920b49b6b39fe0a2e1892881a93b40cff9a4",
+      "suiteSha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649",
+      "sourcePins": [
+        { "path": "domainFunctionsHarness.mjs", "bytes": 27614, "sha256": "0791bc3e465ad3849f1b7ced47de920b49b6b39fe0a2e1892881a93b40cff9a4" },
+        { "path": "domain-functions-integration.test.ts", "bytes": 11097, "sha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649" },
+        { "path": "domainFunctionsHarness.d.mts", "bytes": 1392, "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83" },
+        { "path": "productionBrowserHarness.ts", "bytes": 20608, "sha256": "b53cb910d40cbd17446aebd313842c14c967dd5f7568e411e6f80ca2db3d3bf3" }
+      ],
+      "nodeMinimumMajor": 22,
+      "childArgvForbidden": "--host-child",
+      "helperBoundaryFactories": [
+        { "key": "node:fs", "marker": "helperFs" },
+        { "key": "node:child_process", "marker": "helperChildren" },
+        { "key": "node:module", "marker": "helperModule" }
+      ],
+      "suiteBoundaryFactories": [
+        { "key": "vitest", "marker": "suiteVitest" },
+        { "key": "playwright", "marker": "suiteBrowser" },
+        { "key": "./productionBrowserHarness", "marker": "suiteFixture" },
+        { "key": "./domainFunctionsHarness.mjs", "marker": "suiteHost" },
+        { "key": "node:fs/promises", "marker": "suiteFs" },
+        { "key": "node:os", "marker": "suiteOs" }
+      ],
+      "probeBoundaryFactory": { "key": "vitest", "marker": "suiteVitest" },
+      "expectedProbeExports": ["afterAll", "beforeAll", "it"],
+      "registrations": {
+        "beforeAll": { "count": 1, "timeout": 240000 },
+        "afterAll": { "count": 1, "timeout": 15000 },
+        "tests": [
+          { "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact", "timeout": 60000 },
+          { "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers", "timeout": 60000 },
+          { "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact", "timeout": 60000 },
+          { "name": "reports provider-error from the actual handler and refuses a successful client artifact", "timeout": 60000 },
+          { "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute", "timeout": 60000 },
+          { "name": "fails closed with missing-secret on the actual binding boundary", "timeout": 180000 },
+          { "name": "fails closed with missing-database on the actual binding boundary", "timeout": 180000 },
+          { "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work", "timeout": 60000 }
+        ]
+      },
+      "controlledExportAllowLists": {
+        "helperFs": ["createWriteStream", "promises"],
+        "helperChildren": ["fork", "spawn"],
+        "helperModule": ["createRequire"],
+        "suiteVitest": ["afterAll", "beforeAll", "expect", "it"],
+        "suiteBrowser": ["chromium"],
+        "suiteFixture": ["buildProductionCatalogFixture"],
+        "suiteHost": ["startDomainFunctionsHost"],
+        "suiteFs": ["mkdtemp", "readFile", "writeFile"],
+        "suiteOs": ["tmpdir"]
+      },
+      "helperPromisesMembers": ["copyFile", "mkdir", "mkdtemp", "readFile", "readdir", "realpath", "symlink", "writeFile"],
+      "helperRequireResultMembers": ["resolve"],
+      "controlledObjectMembers": {
+        "chromium": ["launch"],
+        "fixture": ["close", "distDir", "manifest"],
+        "browser": ["close", "newContext"],
+        "host": ["close", "inspect", "resetAdmission", "setProviderScenario", "url"]
+      },
+      "diagnosticRecords": { "failedLaunch": "failed-launch.json", "terminal": null }
+    },
+    {
+      "revisionId": "after-parent-lifecycle-0",
+      "helperSha256": "9eb1681601b41d38d20144e4f1b5d75a819fcd0f7c1402f7c523bc1b5f6432ce",
+      "suiteSha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649",
+      "sourcePins": [
+        {
+          "path": "domainFunctionsHarness.mjs",
+          "bytes": 36479,
+          "sha256": "9eb1681601b41d38d20144e4f1b5d75a819fcd0f7c1402f7c523bc1b5f6432ce"
+        },
+        {
+          "path": "domain-functions-integration.test.ts",
+          "bytes": 11097,
+          "sha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649"
+        },
+        {
+          "path": "domainFunctionsHarness.d.mts",
+          "bytes": 1392,
+          "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83"
+        },
+        {
+          "path": "productionBrowserHarness.ts",
+          "bytes": 20608,
+          "sha256": "b53cb910d40cbd17446aebd313842c14c967dd5f7568e411e6f80ca2db3d3bf3"
+        }
+      ],
+      "nodeMinimumMajor": 22,
+      "childArgvForbidden": "--host-child",
+      "helperBoundaryFactories": [
+        {
+          "key": "node:fs",
+          "marker": "helperFs"
+        },
+        {
+          "key": "node:child_process",
+          "marker": "helperChildren"
+        },
+        {
+          "key": "node:module",
+          "marker": "helperModule"
+        }
+      ],
+      "suiteBoundaryFactories": [
+        {
+          "key": "vitest",
+          "marker": "suiteVitest"
+        },
+        {
+          "key": "playwright",
+          "marker": "suiteBrowser"
+        },
+        {
+          "key": "./productionBrowserHarness",
+          "marker": "suiteFixture"
+        },
+        {
+          "key": "./domainFunctionsHarness.mjs",
+          "marker": "suiteHost"
+        },
+        {
+          "key": "node:fs/promises",
+          "marker": "suiteFs"
+        },
+        {
+          "key": "node:os",
+          "marker": "suiteOs"
+        }
+      ],
+      "probeBoundaryFactory": {
+        "key": "vitest",
+        "marker": "suiteVitest"
+      },
+      "expectedProbeExports": [
+        "afterAll",
+        "beforeAll",
+        "it"
+      ],
+      "registrations": {
+        "beforeAll": {
+          "count": 1,
+          "timeout": 240000
+        },
+        "afterAll": {
+          "count": 1,
+          "timeout": 15000
+        },
+        "tests": [
+          {
+            "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-error from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute",
+            "timeout": 60000
+          },
+          {
+            "name": "fails closed with missing-secret on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "fails closed with missing-database on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work",
+            "timeout": 60000
+          }
+        ]
+      },
+      "controlledExportAllowLists": {
+        "helperFs": [
+          "createWriteStream",
+          "promises"
+        ],
+        "helperChildren": [
+          "fork",
+          "spawn"
+        ],
+        "helperModule": [
+          "createRequire"
+        ],
+        "suiteVitest": [
+          "afterAll",
+          "beforeAll",
+          "expect",
+          "it"
+        ],
+        "suiteBrowser": [
+          "chromium"
+        ],
+        "suiteFixture": [
+          "buildProductionCatalogFixture"
+        ],
+        "suiteHost": [
+          "startDomainFunctionsHost"
+        ],
+        "suiteFs": [
+          "mkdtemp",
+          "readFile",
+          "writeFile"
+        ],
+        "suiteOs": [
+          "tmpdir"
+        ]
+      },
+      "helperPromisesMembers": [
+        "copyFile",
+        "mkdir",
+        "mkdtemp",
+        "readFile",
+        "readdir",
+        "realpath",
+        "symlink",
+        "writeFile"
+      ],
+      "helperRequireResultMembers": [
+        "resolve"
+      ],
+      "controlledObjectMembers": {
+        "chromium": [
+          "launch"
+        ],
+        "fixture": [
+          "close",
+          "distDir",
+          "manifest"
+        ],
+        "browser": [
+          "close",
+          "newContext"
+        ],
+        "host": [
+          "close",
+          "inspect",
+          "resetAdmission",
+          "setProviderScenario",
+          "url"
+        ]
+      },
+      "diagnosticRecords": {
+        "failedLaunch": "failed-launch.json",
+        "terminal": "manifest.json"
+      }
+    },
+    {
+      "revisionId": "after-source0-followup-0",
+      "helperSha256": "a7b9d7dc893616e9551a57e8cd3828dddb600b13472a9abf06a775ae72ed0769",
+      "suiteSha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649",
+      "sourcePins": [
+        {
+          "path": "domainFunctionsHarness.mjs",
+          "bytes": 39862,
+          "sha256": "a7b9d7dc893616e9551a57e8cd3828dddb600b13472a9abf06a775ae72ed0769"
+        },
+        {
+          "path": "domain-functions-integration.test.ts",
+          "bytes": 11097,
+          "sha256": "3e6a7b2f5e56b026ccc12d03f38b7ea048a299238138b8cd15139e49c2678649"
+        },
+        {
+          "path": "domainFunctionsHarness.d.mts",
+          "bytes": 1392,
+          "sha256": "ab970de77a852c0013dded5633d3cd9f0ed154fa9c4e7e147ca07f439a954e83"
+        },
+        {
+          "path": "productionBrowserHarness.ts",
+          "bytes": 31370,
+          "sha256": "16baf4c86a949009a90132b3e2ecff7d723ad3ea55ba4ef425f187312fc14477"
+        }
+      ],
+      "nodeMinimumMajor": 22,
+      "childArgvForbidden": "--host-child",
+      "helperBoundaryFactories": [
+        {
+          "key": "node:fs",
+          "marker": "helperFs"
+        },
+        {
+          "key": "node:child_process",
+          "marker": "helperChildren"
+        },
+        {
+          "key": "node:module",
+          "marker": "helperModule"
+        }
+      ],
+      "suiteBoundaryFactories": [
+        {
+          "key": "vitest",
+          "marker": "suiteVitest"
+        },
+        {
+          "key": "playwright",
+          "marker": "suiteBrowser"
+        },
+        {
+          "key": "./productionBrowserHarness",
+          "marker": "suiteFixture"
+        },
+        {
+          "key": "./domainFunctionsHarness.mjs",
+          "marker": "suiteHost"
+        },
+        {
+          "key": "node:fs/promises",
+          "marker": "suiteFs"
+        },
+        {
+          "key": "node:os",
+          "marker": "suiteOs"
+        }
+      ],
+      "probeBoundaryFactory": {
+        "key": "vitest",
+        "marker": "suiteVitest"
+      },
+      "expectedProbeExports": [
+        "afterAll",
+        "beforeAll",
+        "it"
+      ],
+      "registrations": {
+        "beforeAll": {
+          "count": 1,
+          "timeout": 240000
+        },
+        "afterAll": {
+          "count": 1,
+          "timeout": 15000
+        },
+        "tests": [
+          {
+            "name": "uses the real page, same-origin POST, native D1 admission and a reopened complete known registration artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "refuses an offline warm-page run without API, provider or counter work, then explicitly recovers",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-rate-limited from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "reports provider-error from the actual handler and refuses a successful client artifact",
+            "timeout": 60000
+          },
+          {
+            "name": "admits six real browser requests and rejects the seventh in the same measured D1 minute",
+            "timeout": 60000
+          },
+          {
+            "name": "fails closed with missing-secret on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "fails closed with missing-database on the actual binding boundary",
+            "timeout": 180000
+          },
+          {
+            "name": "rejects a native foreign-origin form POST before body parsing, admission or provider work",
+            "timeout": 60000
+          }
+        ]
+      },
+      "controlledExportAllowLists": {
+        "helperFs": [
+          "createWriteStream",
+          "promises"
+        ],
+        "helperChildren": [
+          "fork",
+          "spawn"
+        ],
+        "helperModule": [
+          "createRequire"
+        ],
+        "suiteVitest": [
+          "afterAll",
+          "beforeAll",
+          "expect",
+          "it"
+        ],
+        "suiteBrowser": [
+          "chromium"
+        ],
+        "suiteFixture": [
+          "buildProductionCatalogFixture"
+        ],
+        "suiteHost": [
+          "startDomainFunctionsHost"
+        ],
+        "suiteFs": [
+          "mkdtemp",
+          "readFile",
+          "writeFile"
+        ],
+        "suiteOs": [
+          "tmpdir"
+        ]
+      },
+      "helperPromisesMembers": [
+        "copyFile",
+        "mkdir",
+        "mkdtemp",
+        "readFile",
+        "readdir",
+        "realpath",
+        "symlink",
+        "writeFile"
+      ],
+      "helperRequireResultMembers": [
+        "resolve"
+      ],
+      "controlledObjectMembers": {
+        "chromium": [
+          "launch"
+        ],
+        "fixture": [
+          "close",
+          "distDir",
+          "manifest"
+        ],
+        "browser": [
+          "close",
+          "newContext"
+        ],
+        "host": [
+          "close",
+          "inspect",
+          "resetAdmission",
+          "setProviderScenario",
+          "url"
+        ]
+      },
+      "diagnosticRecords": {
+        "failedLaunch": "failed-launch.json",
+        "terminal": "manifest.json"
+      }
+    }
+  ]
+}

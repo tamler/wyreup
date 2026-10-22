@@ -157,6 +157,7 @@ export const passwordStrength: ToolModule<PasswordStrengthParams> = {
     password: {
       type: 'string',
       label: 'password',
+      secret: true,
       help: 'Typed locally, never uploaded. The form should mask it.',
       placeholder: 'enter a password to check',
     },

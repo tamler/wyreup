@@ -44,6 +44,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
+    "parse5": "8.0.0",
     "playwright": "^1.64.0",
     "prettier": "^3.9.9",
     "tar": "^7.5.22",
@@ -60,7 +61,8 @@
       "tsup>esbuild": "^0.28.2"
     },
     "patchedDependencies": {
-      "astro@7.3.7": "patches/astro@7.3.7.patch"
+      "astro@7.3.7": "patches/astro@7.3.7.patch",
+      "pdfjs-dist@6.4.299": "patches/pdfjs-dist@6.4.299.patch"
     },
     "onlyBuiltDependencies": [
       "esbuild",

@@ -1,10 +1,10 @@
 // Bundle size check: enforce per-file gzipped size budget.
 //
 // Default budget is tight (150 KB gzipped) so per-page entry chunks stay
-// fast. A handful of vendor lazy-chunks legitimately exceed that — each is
-// loaded only when a specific tool runs, behind a dynamic import — so we
-// give them their own budget with a documented reason. New entries here
-// require justification in the comment.
+// fast. A handful of vendor chunks legitimately exceed that, so we give
+// them their own budget with a documented reason. Tool-scoped execution
+// does not guarantee invocation-only downloads: current PWA precache also
+// stores some chunks. New entries here require justification in the comment.
 
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, basename } from 'node:path';
@@ -18,10 +18,10 @@ const DEFAULT_BUDGET_KB = 150;
 /**
  * Per-file budget overrides. Filename matches by basename startsWith
  * (Astro emits hashed names like `gpt-4o.D_UW28gY.js`). Each entry is a
- * line of "this big lib is loaded only when X tool runs" justification.
+ * line documenting its tool-scoped use and relevant loading behavior.
  *
- * If a user is on a slow connection, these only download when the tool
- * is invoked — not on first paint of the homepage.
+ * These are execution/use profiles, not an invocation-only download
+ * guarantee; the current PWA precache also stores some chunks.
  */
 const VENDOR_BUDGETS_KB = [
   // gpt-tokenizer's BPE vocabulary for GPT-4o; lazy-loaded by token-count.
@@ -35,6 +35,7 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'pdf-lib-extended.', budgetKb: 250, why: '@cantoo/pdf-lib; PDF tools only' },
   // pdfjs-dist worker; loaded by every PDF tool but as a Web Worker.
   { prefix: 'pdf.worker.', budgetKb: 600, why: 'pdfjs Web Worker; PDF tools only' },
+  { prefix: 'bank-pdf-worker-', budgetKb: 600, why: 'pdfjs-dist 6.4.299 dedicated bank PDF worker; execution is tool-scoped; current PWA precache also stores this chunk' },
   // pdfjs main chunk; loaded by PDF render tools.
   { prefix: 'pdf.', budgetKb: 500, why: 'pdfjs core; PDF tools only' },
   // SVGO; loaded by svg-optimizer.
@@ -63,8 +64,9 @@ const VENDOR_BUDGETS_KB = [
   { prefix: 'main.', budgetKb: 500, why: 'app entry; ROADMAP tech debt #5 to shrink' },
   // Astro tool runner top-level chunk.
   { prefix: 'ToolRunner.', budgetKb: 500, why: 'shared runner shell; same as main' },
-  // Astro 7 emits the shared core tool registry separately from the runner.
-  { prefix: 'browser.', budgetKb: 250, why: '@wyreup/core registry; runner-loaded' },
+  // The static core registry has separate utility-provider modules, each under the default cap.
+  // Retarget the existing registry profile; browser/execution keep the default budget.
+  { prefix: 'core-registry.', budgetKb: 250, why: '@wyreup/core registry; static providers separate; runner-loaded' },
   // html-minifier-terser is the bulk of the html-minify tool; lazy-loaded.
   { prefix: 'htmlminifier.', budgetKb: 200, why: 'html-minifier-terser; html-minify tool only' },
   // clean-css for css-minify; lazy-loaded.

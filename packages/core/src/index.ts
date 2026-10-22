@@ -26,6 +26,23 @@ export type {
 } from './types.js';
 
 export {
+  createUtility,
+  UtilityInputError,
+  cloneUtilityJson,
+  numberParam,
+  stringParam,
+  validateUtilityParams,
+  utilityFieldVisible,
+  utilityFieldOptions,
+  utilityDependencyOrder,
+  type UtilityParams,
+  type UtilityResult,
+  type UtilityDefinition,
+  type UtilityErrorCode,
+  type JsonValue,
+} from './utilities/common.js';
+
+export {
   runChain,
   MAX_CHAIN_DEPTH,
   ChainError,
@@ -76,6 +93,13 @@ export {
 export { getRuntimeAdapter, type RuntimeAdapter } from './runtime/types.js';
 
 export { detectFormat, getCodec, type ImageFormat, type Codec } from './lib/codecs.js';
+export {
+  inferMimeFromFilename,
+  effectiveFileMime,
+  fileMatchesMime,
+  validateToolInputs,
+  assertToolInputs,
+} from './lib/input-validation.js';
 export { clearPipelineCache } from './lib/transformers.js';
 export { parseRangeSpec } from './lib/pdf-ranges.js';
 export {
@@ -179,6 +203,7 @@ export { favicon, type FaviconParams, defaultFaviconParams } from './tools/favic
 export { pdfToImage, type PdfToImageParams } from './tools/pdf-to-image/index.js';
 export {
   jsonFormatter,
+  formatJsonText,
   type JsonFormatterParams,
   defaultJsonFormatterParams,
 } from './tools/json-formatter/index.js';
@@ -206,6 +231,7 @@ export {
 export { textDiff, type TextDiffParams, defaultTextDiffParams } from './tools/text-diff/index.js';
 export {
   wordCounter,
+  countWordText,
   type WordCounterParams,
   defaultWordCounterParams,
 } from './tools/word-counter/index.js';
@@ -388,20 +414,72 @@ export {
   type ColorHarmonyResult,
 } from './tools/color-harmony/index.js';
 export { csvJson, type CsvJsonParams, defaultCsvJsonParams } from './tools/csv-json/index.js';
-export { imageCollage, type ImageCollageParams, defaultImageCollageParams } from './tools/image-collage/index.js';
-export { pixelateRegion, type PixelateRegionParams, defaultPixelateRegionParams } from './tools/pixelate-region/index.js';
+export {
+  imageCollage,
+  type ImageCollageParams,
+  defaultImageCollageParams,
+} from './tools/image-collage/index.js';
+export {
+  pixelateRegion,
+  type PixelateRegionParams,
+  defaultPixelateRegionParams,
+} from './tools/pixelate-region/index.js';
 export { icsToCsv, type IcsToCsvParams, defaultIcsToCsvParams } from './tools/ics-to-csv/index.js';
-export { x509Decode, type X509DecodeParams, defaultX509DecodeParams } from './tools/x509-decode/index.js';
-export { heicToJpg, type HeicToJpgParams, defaultHeicToJpgParams } from './tools/heic-to-jpg/index.js';
-export { compressImageToSize, type CompressImageToSizeParams, defaultCompressImageToSizeParams } from './tools/compress-image-to-size/index.js';
-export { mergeAudio, type MergeAudioParams, defaultMergeAudioParams } from './tools/merge-audio/index.js';
-export { audioSpeed, type AudioSpeedParams, defaultAudioSpeedParams } from './tools/audio-speed/index.js';
-export { imagesToGif, type ImagesToGifParams, defaultImagesToGifParams } from './tools/images-to-gif/index.js';
-export { epubToText, type EpubToTextParams, defaultEpubToTextParams } from './tools/epub-to-text/index.js';
-export { harSanitize, type HarSanitizeParams, defaultHarSanitizeParams } from './tools/har-sanitize/index.js';
+export {
+  x509Decode,
+  type X509DecodeParams,
+  defaultX509DecodeParams,
+} from './tools/x509-decode/index.js';
+export {
+  heicToJpg,
+  type HeicToJpgParams,
+  defaultHeicToJpgParams,
+} from './tools/heic-to-jpg/index.js';
+export {
+  compressImageToSize,
+  type CompressImageToSizeParams,
+  defaultCompressImageToSizeParams,
+} from './tools/compress-image-to-size/index.js';
+export {
+  mergeAudio,
+  type MergeAudioParams,
+  defaultMergeAudioParams,
+} from './tools/merge-audio/index.js';
+export {
+  audioSpeed,
+  type AudioSpeedParams,
+  defaultAudioSpeedParams,
+} from './tools/audio-speed/index.js';
+export {
+  imagesToGif,
+  type ImagesToGifParams,
+  defaultImagesToGifParams,
+} from './tools/images-to-gif/index.js';
+export {
+  epubToText,
+  type EpubToTextParams,
+  defaultEpubToTextParams,
+} from './tools/epub-to-text/index.js';
+export {
+  harSanitize,
+  type HarSanitizeParams,
+  defaultHarSanitizeParams,
+} from './tools/har-sanitize/index.js';
 export { vcfToCsv, type VcfToCsvParams, defaultVcfToCsvParams } from './tools/vcf-to-csv/index.js';
-export { tomlConvert, type TomlConvertParams, defaultTomlConvertParams } from './tools/toml-convert/index.js';
-export { ipSubnetCalc, type IpSubnetCalcParams, defaultIpSubnetCalcParams } from './tools/ip-subnet-calc/index.js';
+export {
+  tomlConvert,
+  type TomlConvertParams,
+  defaultTomlConvertParams,
+} from './tools/toml-convert/index.js';
+export {
+  ipSubnetCalc,
+  calculateSubnet,
+  splitIpv4Subnet,
+  type IpSubnetCalcParams,
+  type IpSubnetResult,
+  type IpSubnetSplitResult,
+  defaultIpSubnetCalcParams,
+} from './tools/ip-subnet-calc/index.js';
 export {
   caseConverter,
   type CaseConverterParams,
@@ -1350,3 +1428,131 @@ export { defaultTools, createDefaultRegistry } from './default-registry.js';
 export { runDefaultChain } from './chain/run-default.js';
 
 export { parseChainString, serializeChain } from './chain/parse-chain-string.js';
+
+export {
+  planningTools,
+  parsePlanningRows,
+  parseGradeWeight,
+  validateContractParticulars,
+  validatePlanningSnapshot,
+  safeCsvCell,
+  seatingCsv,
+  type PlanningRowsKind,
+  type PlanningRow,
+  type StopwatchSnapshot,
+  type CountdownSnapshot,
+  type SeatingPlan,
+  type PlanningSnapshot,
+} from './utilities/planning.js';
+export { nameTools } from './utilities/names.js';
+export { financeTools, financeSourcesForTool } from './utilities/finance.js';
+export { domainAgeChecker, trustedDomainApiOrigin } from './utilities/domain-age.js';
+export {
+  textDeveloperTools,
+  parseTextRows,
+  robotsText,
+  cspHeader,
+  hreflangTags,
+  nginxRedirects,
+} from './utilities/text-developer.js';
+export { assertUnicode } from './utilities/text-developer.js';
+export { bankStatementToCsv } from './utilities/bank-module.js';
+export { runBankFileJob, type BankFileJob } from './utilities/bank-job.js';
+export {
+  bankDefaults,
+  validateBankParams,
+  reviewBankStatement,
+  exportBankStatement,
+  type BankDocument,
+  type BankParams,
+  type BankMapping,
+  type BankLineDecision,
+  type BankReview,
+} from './utilities/bank-statement.js';
+export { stlToGcode } from './utilities/stl-module.js';
+export { runStlFileJob } from './utilities/stl-job.js';
+export {
+  validateStlParams,
+  STL_LIMITS,
+  type StlJobResult,
+  type StlContourReport,
+} from './utilities/stl-contours.js';
+export { mp3ToMidi, analyzeMp3File } from './utilities/mp3-to-midi.js';
+export {
+  decodeMp3Mono,
+  createMp3Decoder,
+  type Mp3Decoder,
+  type PitchAudioContext,
+} from './utilities/midi-audio.js';
+export { runPitchFileJob, validatePitchReport } from './utilities/midi-job.js';
+export {
+  defaultPitchParams,
+  pitchSchema,
+  validatePitchParams,
+  analyzeMonoPitch,
+  preflightMp3,
+  encodePitchMidi,
+  selectPitchNotes,
+  type PitchNote,
+  type PitchReport,
+} from './utilities/midi-pitch.js';
+export {
+  codeBeautifier,
+  beautifyCode,
+  type BeautifierLanguage,
+} from './utilities/code-beautifier.js';
+export { aspectRatioCalculator, calculateAspectRatio } from './utilities/aspect-ratio.js';
+export { csvViewer, psdToPng } from './utilities/files.js';
+export {
+  runCsvFileJob,
+  runPsdFileJob,
+  validatePsdPngResult,
+  type OwnedFileWorker,
+  type CsvFileJob,
+  type PsdFileJob,
+  type PsdPngResult,
+} from './utilities/file-job.js';
+export {
+  parseCsv,
+  editCsvCell,
+  exportCsv,
+  selectCsvRows,
+  validateCsvTable,
+  type CsvDelimiter,
+  type CsvTable,
+  type CsvRow,
+  type CsvColumn,
+  type CsvSelection,
+} from './utilities/csv-data.js';
+export {
+  buildingTools,
+  validateBoardFootPieces,
+  validateGutterCandidates,
+  validateConstructionEstimate,
+  calculateConstructionEstimate,
+  constructionEstimateGenerator,
+  type BoardFootPiece,
+  type GutterCandidate,
+  type ConstructionEstimateParams,
+  type ValidatedConstructionEstimate,
+  type ConstructionEstimateResult,
+} from './utilities/building.js';
+export {
+  hardwareTools,
+  gamepadTester,
+  touchscreenTester,
+  cameraShutterCountChecker,
+  validateGeneratorLoads,
+  readGamepadSnapshot,
+  touchscreenCellIndex,
+  summarizeTouchscreenSession,
+  type GeneratorLoad,
+  type GamepadSource,
+  type GamepadReport,
+  type GamepadDeviceSnapshot,
+  type GamepadButtonSnapshot,
+  type TouchscreenRect,
+  type TouchscreenSample,
+  type TouchscreenSession,
+  type TouchscreenReport,
+} from './utilities/hardware.js';

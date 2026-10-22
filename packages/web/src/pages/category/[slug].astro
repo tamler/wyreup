@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { createDefaultRegistry } from '@wyreup/core';
-import { TOOL_PAGE_METADATA } from '../../lib/seo';
+import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -89,9 +89,9 @@ Metadata removal and face blur do not guarantee anonymity. Review visible clues,
     },
     create: {
       displayName: 'Create',
-      h1: 'QR code, password and file generation tools',
-      sub: 'QR codes, UUIDs, passwords, lorem ipsum.',
-      description: 'Generate QR codes, passwords, UUIDs, favicons, barcodes and other outputs. Choose the matching tool and check its input requirements.',
+      h1: 'Code, name and file generation tools',
+      sub: 'Names, developer configuration, QR codes, passwords and files.',
+      description: 'Generate names, developer configuration, QR codes, passwords, UUIDs, favicons and other outputs. Check each generator’s input requirements.',
       intro: `Generate a QR code for a URL or contact card. Create a secure random password. Produce a UUID for a database record. Build a favicon set from an image. Generate a barcode for a product label. Produce lorem ipsum placeholder text. Create a slug for a URL.
 
 Generation tools create outputs from text, settings or a source file. Check the selected tool's formats and execution requirements.`,
@@ -127,7 +127,7 @@ Text tools use different models and algorithms. Compare the selected tool's capa
       displayName: 'Dev',
       h1: 'Developer text and data tools',
       sub: 'Format JSON, decode JWTs, diff text, count words.',
-      description: 'Format JSON, YAML, SQL, CSS, and HTML. Convert data formats. Decode tokens and parse cron expressions.',
+      description: 'Format code and data, generate robots.txt or security headers, decode tokens, inspect cron expressions and check public domain registration data.',
       intro: `Format a minified JSON payload for reading. Convert CSV to JSON for an API call. Decode a JWT to inspect its claims. Parse a cron expression to verify its schedule. Format SQL before committing it. Convert between number bases. Escape and unescape strings. Count tokens in a prompt before sending it to an LLM.
 
 Developer utility tools handle the small-but-frequent text transformation tasks that slow down workflows when you have to search for a tool each time.`,
@@ -135,8 +135,8 @@ Developer utility tools handle the small-but-frequent text transformation tasks 
     finance: {
       displayName: 'Finance',
       h1: 'Financial calculator tools',
-      sub: 'Compound interest, dollar-cost averaging, percentages, dates.',
-      description: 'Calculate compound interest, model DCA investment strategies, and run financial projections in your browser.',
+      sub: 'Interest, loans, payment fees and financial estimates.',
+      description: 'Estimate interest, loan payments, provider fees and financial quantities with your own rates and assumptions. Calculations run locally.',
       intro: `Calculate how a lump sum grows under compound interest over time. Model a dollar-cost averaging investment plan across different contribution schedules. Run financial projections with different rate assumptions. All computation runs locally — no financial data leaves your device.
 
 Financial calculators are a common daily-use tool for investors and planners. These cover the core quantitative cases without requiring a spreadsheet or a financial platform account.`,
@@ -149,6 +149,34 @@ Financial calculators are a common daily-use tool for investors and planners. Th
       intro: `Create a ZIP archive from multiple files for a single download or email attachment. Extract the contents of a ZIP without installing software. Inspect a ZIP to see its file list and metadata before extracting. Archive tools are the last step before sharing a batch of files and the first step when receiving one.
 
 All archive operations run in-browser using compression APIs. No files are sent to an external server.`,
+    },
+    building: {
+      displayName: 'Building',
+      h1: 'Building materials and project calculator tools',
+      sub: 'Estimate quantities, dimensions and project costs.',
+      description: 'Calculate material quantities and project estimates with explicit dimensions, units and waste allowances.',
+      intro: 'Enter your project dimensions and check the calculation assumptions. Material estimates help prepare a purchase list; confirm product coverage, actual site measurements and project requirements before ordering.',
+    },
+    hardware: {
+      displayName: 'Hardware',
+      h1: 'Hardware calculator and browser test tools',
+      sub: 'Components, electrical estimates and device input tests.',
+      description: 'Calculate component values and electrical estimates, or inspect supported browser device inputs. Each tool shows its assumptions and limits.',
+      intro: 'Compare component values, estimate electrical quantities or inspect an input device through supported browser APIs. Check the selected tool for units, supported hardware and the meaning of its results.',
+    },
+    planning: {
+      displayName: 'Planning',
+      h1: 'Everyday planning tools, calculators and organizers',
+      sub: 'Dates, recipes, timers, grades and seating.',
+      description: 'Plan dates, recipes, grades and seating, or use browser timers. Review the units, reference rules and limits for each task.',
+      intro: 'Choose a tool for the calculation or plan you need. Enter your own assumptions, inspect the result and save a copy when useful. Browser timers and organizers show their operating limits on the tool page.',
+    },
+    design: {
+      displayName: 'Design',
+      h1: 'Color and layout utility tools',
+      sub: 'Prepare colors, gradients and layout measurements.',
+      description: 'Work with colors, CSS gradients and layout units using explicit conversion settings.',
+      intro: 'Prepare CSS values and compare layout measurements. Check generated values in your intended browser and design context before using them.',
     },
     geo: {
       displayName: 'Geo',
@@ -173,9 +201,16 @@ The focused tools handle KML to GeoJSON, GPX to KML, Shapefile to GeoJSON and CS
       intro: `These tools handle common ${cat} tasks directly in your browser.`,
     };
     const hasHostedTools = catTools.some((tool) => tool.cost === 'credit');
-    const executionNote = hasHostedTools
-      ? 'This category includes free browser tools and hosted PRO tools. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup.'
-      : 'These free tools execute in your browser. Setup can download code, codecs or models; network-related tasks can make requests. Check each tool for requirements and offline availability.';
+    const hasNetworkTools = catTools.some(
+      (tool) => projectToolDiscoveryMetadata(tool).networkAccess === 'domain-registration',
+    );
+    const executionNote = hasNetworkTools
+      ? hasHostedTools
+        ? 'This category includes network lookups and hosted PRO tools. Network lookups require a connection. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup. Check each tool for its data flow and offline requirements.'
+        : 'This category includes network lookups that require a connection. Check each tool for where it processes input and what it needs offline. Local tools may download required assets.'
+      : hasHostedTools
+        ? 'This category includes free browser tools and hosted PRO tools. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup.'
+        : 'Check each tool for where it processes input and what it needs offline. Local tools may download required assets; network lookups require a connection.';
 
     // Related categories: pick up to 4 others that share tools with similar output mimes
     const catMimes = new Set(catTools.map((t) => t.output?.mime));
@@ -203,7 +238,7 @@ The focused tools handle KML to GeoJSON, GPX to KML, Shapefile to GeoJSON and CS
           id: t.id,
           name: t.name,
           category: t.category,
-          description: TOOL_PAGE_METADATA[t.id]?.description ?? t.description,
+          description: projectToolDiscoveryMetadata(t).description,
         })),
         relatedCats,
         allCategories: categories,
@@ -249,12 +284,11 @@ const introParas = intro.split('\n\n').filter(Boolean);
       </div>
 
       <!-- Tool grid -->
-      <div class="tool-grid" role="list">
+      <div class="tool-grid">
         {catTools.map((tool, i) => (
           <a
             href={`/tools/${tool.id}`}
             class="tool-card"
-            role="listitem"
             aria-label={`${tool.name} — ${tool.category}`}
             style={`--stagger-delay: ${i * 40}ms`}
           >

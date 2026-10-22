@@ -1,17 +1,34 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import DropZone from './DropZone.svelte';
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
   import FlatJsonResult from './FlatJsonResult.svelte';
   import { buildDownloadName } from './naming';
-  import { acquireWakeLock, releaseWakeLock } from '../../lib/wakeLock';
+  import { holdWakeLock } from '../../lib/wakeLock';
   import { markToolUsed } from '../../lib/toolUsage';
-  import type { SerializedTool } from './types';
+  import { tryReserveMediaJob } from '../../lib/mediaJobReservation';
+  import type { SerializedTool, PreloadAdmission } from './types';
+  import { hasBrowserFileImport } from '../../lib/file-tool-candidates';
   import type { ToolProgress } from '@wyreup/core';
+
+  const wakeOwners = new Set<ReturnType<typeof holdWakeLock>>();
+
+  function releaseOwnedWakeLocks() {
+    for (const owner of wakeOwners) owner.release();
+    wakeOwners.clear();
+  }
+
+  let generation = 0;
+  let disposed = false;
+  const downloadUrls = new Set<string>();
+  const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
+  onDestroy(() => { disposed = true; generation++; releaseOwnedWakeLocks(); for (const url of downloadUrls) URL.revokeObjectURL(url); for (const timer of downloadTimers) clearTimeout(timer); });
 
   export let tool: SerializedTool;
   export let preloadedFile: File | null = null;
+  export let onPreloadAdmission: ((result: PreloadAdmission) => void) | undefined = undefined;
 
   // For JSON tools that may not require file input
   const requiresFile = tool.input.min > 0;
@@ -45,13 +62,13 @@
     }
   })();
 
-  $: if (preloadedFile && files.length === 0) {
-    files = [preloadedFile];
-  }
+  let priorPreload = preloadedFile;
+  $: if (preloadedFile !== priorPreload) { priorPreload = preloadedFile; reset(); files = preloadedFile ? [preloadedFile] : []; }
 
   $: canRun = (requiresFile ? files.length >= tool.input.min : true) && state !== 'running';
 
   function onFiles(e: CustomEvent<File[]>) {
+    generation++;
     files = e.detail;
     dropError = '';
     state = 'idle';
@@ -61,19 +78,33 @@
 
   async function run() {
     if (!canRun) return;
+    const lease = tryReserveMediaJob([tool.id]);
+    if (!lease) {
+      state = 'error';
+      errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.';
+      return;
+    }
+    const attempt = ++generation;
+    const capturedFiles = [...files];
+    const capturedParams = { ...params };
+    const capturedToolId = tool.id;
+    const imported = preloadedFile;
+    const admission = onPreloadAdmission;
+    const current = () => !disposed && attempt === generation && tool.id === capturedToolId && preloadedFile === imported && capturedFiles.length === files.length && capturedFiles.every((file, index) => file === files[index]) && JSON.stringify(params) === JSON.stringify(capturedParams);
     state = 'running';
     errorMsg = '';
     resultJson = '';
 
-    void acquireWakeLock();
+    const wake = holdWakeLock();
+    wakeOwners.add(wake);
     try {
-      const { createDefaultRegistry } = await import('@wyreup/core');
+      const { createDefaultRegistry } = await import('../../lib/core-execution');
       const registry = createDefaultRegistry();
       const toolModule = registry.toolsById.get(tool.id);
       if (!toolModule) throw new Error(`Tool "${tool.id}" not found in registry.`);
 
-      const result = await toolModule.run(files, params, {
-        onProgress: (p) => { progress = p; },
+      const result = await toolModule.run(capturedFiles, capturedParams, {
+        onProgress: (p) => { if (current()) progress = p; },
         signal: new AbortController().signal,
         cache: new Map(),
         executionId: crypto.randomUUID(),
@@ -83,8 +114,9 @@
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
 
-      resultBlob = blob;
       const text = await blob.text();
+      if (!current()) return;
+      resultBlob = blob;
       try {
         resultJson = JSON.stringify(JSON.parse(text), null, 2);
       } catch {
@@ -92,15 +124,22 @@
       }
       markToolUsed(tool.id);
       state = 'done';
+      if (imported && capturedFiles.includes(imported) && hasBrowserFileImport(tool) && tool.input.max !== 0) admission?.({ file: imported, status: 'admitted' });
     } catch (err) {
+      if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
+      if (imported && capturedFiles.includes(imported) && hasBrowserFileImport(tool) && tool.input.max !== 0) admission?.({ file: imported, status: 'refused', message: errorMsg });
     } finally {
-      releaseWakeLock();
+      lease.release();
+      wake.release();
+      wakeOwners.delete(wake);
     }
   }
 
   function reset() {
+    generation++;
+    releaseOwnedWakeLocks();
     state = 'idle';
     errorMsg = '';
     resultJson = '';
@@ -118,9 +157,13 @@
   function download() {
     if (!resultBlob) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(resultBlob);
+    const url = URL.createObjectURL(resultBlob);
+    downloadUrls.add(url);
+    a.href = url;
     a.download = buildDownloadName(files[0]?.name, tool.id, 'json');
     a.click();
+    const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
+    downloadTimers.add(timer);
   }
 
   let copied = false;
@@ -130,6 +173,7 @@
   {#if requiresFile}
     <DropZone
       accept={tool.input.accept}
+      sizeLimit={tool.input.sizeLimit}
       multiple={tool.input.max !== 1}
       bind:files
       bind:error={dropError}
@@ -137,7 +181,7 @@
     />
   {/if}
 
-  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; }} />
+  <ParamsForm defaults={tool.defaults} paramSchema={tool.paramSchema} bind:params on:change={(e) => { params = e.detail; reset(); }} />
 
   {#if state !== 'running'}
     <button class="btn-primary" on:click={run} disabled={!canRun} type="button">

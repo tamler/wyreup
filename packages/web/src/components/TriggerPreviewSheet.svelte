@@ -11,7 +11,9 @@
   // which owns the chain executor + rule store.
 
   import { onMount, createEventDispatcher } from 'svelte';
-  import {
+  import { user, authReady } from '../stores/user';
+  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure, type PaidChainSummary } from '../lib/chainPaidConsent';
+import {
     readFileHeader,
     runPreflight,
     createDefaultRegistry,
@@ -21,7 +23,7 @@
     type TriggerRule,
     type Chain,
     type ChainValidationResult,
-  } from '@wyreup/core';
+  } from '@wyreup/core/execution';
 
   export let file: File;
   export let rule: TriggerRule;
@@ -33,10 +35,11 @@
   // before letting the user click Run. Imported / corrupted / stale
   // chains that reference unknown tool IDs are blocked here.
   const registry = createDefaultRegistry();
-  const validation: ChainValidationResult = validateChain(chain, registry);
+  let validation: ChainValidationResult;
+  $: validation = validateChain(chain, registry);
 
   const dispatch = createEventDispatcher<{
-    run: { dontAskAgain: boolean };
+    run: { dontAskAgain: boolean; file: File; chainFingerprint: string; paidFingerprint: string; accountEmail: string | null };
     skip: void;
     disable: void;
   }>();
@@ -44,29 +47,59 @@
   let preflight: PreflightResult | null = null;
   let header: FileHeader | null = null;
   let preflightLoading = true;
+  let preflightFailed = false;
   let dontAskAgain = preconfirmed;
   let runAnywayUnlocked = false;
+  let mounted = false;
+  let generation = 0;
+  let paid: PaidChainSummary | null = null;
+  let paidError = '';
+  let paidConfirmed = false;
+  let consentFile = file;
+  let consentAccount = $user;
+  $: if (file !== consentFile || $user !== consentAccount) {
+    consentFile = file; consentAccount = $user; paidConfirmed = false;
+  }
+  $: {
+    paidConfirmed = false;
+    try { paid = summarizePaidChain(chain, registry); paidError = ''; }
+    catch (error) { paid = null; paidError = error instanceof Error ? error.message : String(error); }
+  }
+  $: accountError = (() => { if (!paid) return paidError; try { assertPaidAccount(paid, $authReady, $user); return ''; } catch (error) { return error instanceof Error ? error.message : String(error); } })();
 
-  onMount(async () => {
+  onMount(() => { mounted = true; return () => { mounted = false; generation++; }; });
+  $: if (mounted) void preparePreview(file, chain);
+  async function preparePreview(capturedFile: File, capturedChain: Chain) {
+    const attempt = ++generation;
+    const current = () => mounted && attempt === generation && file === capturedFile && chain === capturedChain;
+    paidConfirmed = false;
+    runAnywayUnlocked = false;
+    preflightLoading = true;
+    preflightFailed = false;
+    header = null;
+    preflight = null;
     // Read header synchronously-ish so the user has something to verify
     // against the declared MIME even before pre-flight completes.
-    header = await readFileHeader(file).catch(() => ({ hex: '', signatureLabel: null }));
+    const nextHeader = await readFileHeader(capturedFile).catch(() => ({ hex: '', signatureLabel: null }));
+    if (!current()) return;
+    header = nextHeader;
     try {
-      preflight = await runPreflight(file);
+      const next = await runPreflight(capturedFile);
+      if (current()) preflight = next;
     } catch (err) {
+      if (!current()) return;
       preflight = {
-        verdict: 'clean',
+        verdict: 'unanalysed',
         findings: [],
         toolUsed: null,
       };
-      // Failure to pre-flight is not a security failure — the user
-      // still gets the metadata + the file header + the chain summary,
-      // and they decide. Surfacing the error would just be noise.
+      preflightFailed = true;
+      // The user may still choose a manual run after this unanalysed result.
       console.warn('[trigger preview] pre-flight skipped:', err);
     } finally {
-      preflightLoading = false;
+      if (current()) preflightLoading = false;
     }
-  });
+  }
 
   function fmtSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
@@ -77,12 +110,13 @@
   function handleRun() {
     // Spoof gate — Run must never fire on an invalid chain. The button
     // is also disabled in the markup, but defense in depth.
-    if (!validation.ok) return;
+    if (preflightLoading || !validation.ok) return;
+    if (!paid || paidError || accountError || (paid.steps.length > 0 && !paidConfirmed)) return;
     if (preflight?.verdict === 'high' && !runAnywayUnlocked) {
       runAnywayUnlocked = true;
       return;
     }
-    dispatch('run', { dontAskAgain });
+    dispatch('run', { dontAskAgain, file, chainFingerprint: JSON.stringify(chain), paidFingerprint: JSON.stringify(paid), accountEmail: $user?.email ?? null });
   }
 
   function handleSkip() {
@@ -158,6 +192,8 @@
       <p class="sheet__label">Pre-flight check</p>
       {#if preflightLoading}
         <p class="sheet__sub">Scanning…</p>
+      {:else if preflightFailed}
+        <p class="sheet__sub">Not analysed — the pre-flight check could not complete. You can still choose to run this chain manually.</p>
       {:else if !preflight || preflight.toolUsed === null}
         <p class="sheet__sub">Not analysed — no suspicious-content checker covers this file type.</p>
       {:else if preflight.verdict === 'clean'}
@@ -174,6 +210,15 @@
       {/if}
     </section>
 
+    {#if paidError || accountError}
+      <p class="sheet__warn" role="alert">{paidError || accountError}</p>
+    {:else if paid && paid.steps.length > 0 && $user}
+      <section class="sheet__section">
+        <p>{paidChainDisclosure(paid, [file], $user.email)}</p>
+        <label><input type="checkbox" bind:checked={paidConfirmed} /> I confirm these paid steps for this file and account.</label>
+      </section>
+    {/if}
+
     <label class="sheet__remember">
       <input type="checkbox" bind:checked={dontAskAgain} />
       <span>Don't ask for this rule again</span>
@@ -186,11 +231,11 @@
       {#if !validation.ok}
         <button type="button" class="btn-primary" disabled>Run (chain invalid)</button>
       {:else if preflight?.verdict === 'high' && !runAnywayUnlocked}
-        <button type="button" class="btn-danger" on:click={handleRun}>
+        <button type="button" class="btn-danger" on:click={handleRun} disabled={preflightLoading}>
           Acknowledge severity to enable Run
         </button>
       {:else}
-        <button type="button" class="btn-primary" on:click={handleRun}>Run</button>
+        <button type="button" class="btn-primary" on:click={handleRun} disabled={preflightLoading || !!paidError || !!accountError || !paid || (paid.steps.length > 0 && !paidConfirmed)}>Run</button>
       {/if}
       <button type="button" class="btn-secondary" on:click={handleSkip}>Skip</button>
       <button type="button" class="btn-secondary btn-secondary--quiet" on:click={handleDisable}>

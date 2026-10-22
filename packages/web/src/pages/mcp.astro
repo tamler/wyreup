@@ -13,7 +13,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="dist-hero" aria-labelledby="mcp-heading">
         <h1 id="mcp-heading" class="dist-hero__title">MCP file tools for AI agents.</h1>
         <p class="dist-hero__sub">
-          Give an MCP-compatible assistant tools for images, PDFs, OCR and other file tasks. Free tools execute on your machine; optional hosted PRO tools use your API key.
+          Give an MCP-compatible assistant tools for images, PDFs, OCR and other file tasks. Local file tools execute on your machine; network lookups disclose their destinations, and optional hosted PRO tools use your API key.
         </p>
       </section>
 
@@ -34,6 +34,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           for remote processing. Your assistant provider may also receive tool requests and
           results according to its own settings — local file processing does not make the entire
           agent conversation private.
+          Domain Registration Age is a free network lookup: the entered domain is sent to Wyreup,
+          which reads the public IANA bootstrap without sending IANA the queried domain, then
+          sends the domain to its registration registry. No API key is required; registration
+          age may differ from first-ever use. Shared public capacity limits apply. Your assistant,
+          local operator audit records, saved results, and exports have their own retention.
           Learn more at <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer" class="inline-link">modelcontextprotocol.io</a>.
         </p>
       </section>

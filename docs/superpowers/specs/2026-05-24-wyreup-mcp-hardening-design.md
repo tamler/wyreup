@@ -155,7 +155,11 @@ allow_overwrite: {
 
 Multi-output (`output_dir`): same pattern per file. Tmp suffix includes a monotonic sequence so concurrent outputs from one worker don't collide.
 
-**Cross-platform note:** `fs.link` for atomic exclusive create works on macOS, Linux, and NTFS. Documented as macOS/Linux-first; Windows-NTFS works but is not covered by CI.
+**Cross-platform note:** `fs.link` exists on NTFS, but Node does not expose the
+Windows ACL and handle-relative primitives required to verify the complete
+ancestor chain against another local identity. Filesystem-backed MCP calls
+therefore fail closed on native Windows; Windows operators must use WSL. macOS
+and Linux are the verified native platforms.
 
 ### #5 Size caps
 

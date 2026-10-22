@@ -3,18 +3,29 @@
 // Catches drift like "wyreup foo-tool" examples after a tool is renamed,
 // or stale @wyreup/skill references after the npm packages were retired.
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const toolsDir = join(root, 'packages/core/src/tools');
-
-const validToolIds = new Set(
-  readdirSync(toolsDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name),
-);
+const builtEntry = join(root, 'packages/core/dist/node/index.js');
+let validToolIds;
+try {
+  if (!existsSync(builtEntry)) throw new Error('Missing built core.');
+  const core = await import(pathToFileURL(builtEntry).href);
+  const tools = core.createDefaultRegistry().tools;
+  if (!Array.isArray(tools) || tools.length === 0) throw new Error('Invalid built registry.');
+  const ids = tools.map((tool) => tool?.id);
+  if (ids.some((id) => typeof id !== 'string' || id.trim().length === 0))
+    throw new Error('Invalid built registry IDs.');
+  validToolIds = new Set(ids);
+  if (validToolIds.size !== ids.length) throw new Error('Duplicate built registry IDs.');
+} catch {
+  console.error(
+    'doc references: cannot load valid built registry metadata. Build @wyreup/core first: pnpm --filter @wyreup/core... build',
+  );
+  process.exit(1);
+}
 
 // Packages retired 2026-05-01. Anyone still pointing at these is leading
 // users to npm tarballs that exist but should not be installed.

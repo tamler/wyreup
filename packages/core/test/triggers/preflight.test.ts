@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { runPreflight, readFileHeader } from '../../src/triggers/preflight.js';
+import { vi } from 'vitest';
+import {
+  runPreflight,
+  readFileHeader,
+  withLoadingTaskCleanup,
+} from '../../src/triggers/preflight.js';
 
 describe('runPreflight — text inputs', () => {
   it('returns clean for benign English text', async () => {
@@ -65,6 +70,42 @@ describe('runPreflight — size cap', () => {
     // Distinct from a genuinely-scanned-clean verdict.
     expect(r.verdict).toBe('unanalysed');
     expect(r.verdict).not.toBe('clean');
+  });
+});
+
+describe('runPreflight — PDF coverage', () => {
+  it('destroys the loading task when PDF loading rejects', async () => {
+    const destroy = vi.fn(() => Promise.resolve());
+    const loadingTask = {
+      promise: Promise.reject(new Error('password required')),
+      destroy,
+    };
+
+    await expect(withLoadingTaskCleanup(loadingTask, () => Promise.resolve('unused'))).rejects.toThrow(
+      /password required/,
+    );
+    expect(destroy).toHaveBeenCalledOnce();
+  });
+
+  it('never labels a partially scanned PDF clean', async () => {
+    const { PDFDocument, StandardFonts } = await import('pdf-lib');
+    const pdf = await PDFDocument.create();
+    const font = await pdf.embedFont(StandardFonts.Helvetica);
+    for (let i = 1; i <= 21; i++) {
+      const page = pdf.addPage([200, 200]);
+      page.drawText(`Benign page ${i}`, { x: 20, y: 100, font, size: 12 });
+    }
+    const bytes = await pdf.save();
+    const file = new File(
+      [bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer],
+      'long.pdf',
+      { type: 'application/pdf' },
+    );
+
+    const result = await runPreflight(file);
+
+    expect(result.verdict).toBe('unanalysed');
+    expect(result.toolUsed).toBe('pdf-suspicious');
   });
 });
 

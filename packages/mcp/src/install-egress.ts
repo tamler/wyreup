@@ -4,8 +4,16 @@
 // WYREUP_DISABLE_EGRESS_LOCK=1 disables the lock entirely.
 
 import { installEgressLock } from './egress.js';
+import { resolveModelCdn } from './runtime-config.js';
 
 const ORIGIN = process.env['WYREUP_ORIGIN']?.replace(/\/+$/, '') ?? 'https://wyreup.com';
-if (process.env['WYREUP_DISABLE_EGRESS_LOCK'] !== '1') {
-  installEgressLock(ORIGIN);
+export let startupError: string | undefined;
+try {
+  const modelCdn = resolveModelCdn();
+  if (process.env['WYREUP_DISABLE_EGRESS_LOCK'] !== '1') {
+    installEgressLock([ORIGIN, ...modelCdn.allowedOrigins]);
+  }
+} catch (error) {
+  installEgressLock([]);
+  startupError = `Invalid WYREUP_MODEL_CDN or WYREUP_ORIGIN configuration: ${error instanceof Error ? error.message : 'Invalid URL'}`;
 }

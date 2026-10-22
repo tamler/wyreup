@@ -218,7 +218,7 @@ async function runInteractive(opts: {
       })),
       initialValue: 'combined',
     });
-    if (p.isCancel(picked)) {
+    if (typeof picked === 'symbol') {
       p.cancel('Cancelled.');
       process.exit(0);
     }
@@ -242,7 +242,7 @@ async function runInteractive(opts: {
       ],
       initialValue: 'project',
     });
-    if (p.isCancel(picked)) {
+    if (typeof picked === 'symbol') {
       p.cancel('Cancelled.');
       process.exit(0);
     }
