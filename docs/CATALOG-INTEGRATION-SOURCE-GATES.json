@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authoritativeResolver": {
     "actualFields": [
-      "plan6SourceGateBindings.ownerBindings",
-      "plan6SourceGateBindings.currentIntegratedSourceGate"
+      "engine.sourceGateBindings.ownerBindings",
+      "gates.currentIntegratedSourceGate",
+      "engine.requiredGateIds"
     ],
     "historyOnly": [
-      "requiredGateIds",
       "priorNamedGateIds"
     ],
     "gateSources": "Existing audit.gateCatalog plus exact scoped newGateRecords below; canonical receipt names come from actual record, not oldalias",
@@ -3771,5 +3771,5 @@
       "sha256": "dc8233ae19b619e05d296fc1c9673fb4aa9f1f0618b05dcebb73b46db885a46a"
     }
   ],
-  "limitation": "Historical raw PASS/FAIL, scope and drift retained; neither parity nor plan review is current integrated SOURCE acceptance."
+  "limitation": "Historical raw PASS/FAIL, scope and drift retained; neither parity nor plan review is current integrated SOURCE acceptance. Within historicalScopedRecords, currentFiles, exact, currentSourceParity and ownedCurrentBodies are capture-time fields only: they describe the retained capture, not present-candidate source parity or acceptance. No historical record is repinned or promoted by these labels."
 }

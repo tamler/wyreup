@@ -163,10 +163,6 @@ describe('mounted bank PDF review and reopened CSV', () => {
       await page.getByLabel('Spreadsheet-safe text', { exact: true }).check();
       const safe = await download(page);
       expect(safe[1].amount).toBe("'-12.34");
-      await page.screenshot({
-        path: '/private/tmp/wyreup-catalog-evidence/bank-statement-mobile.png',
-        fullPage: true,
-      });
     } finally {
       await page.close();
     }

@@ -8,6 +8,42 @@ const TINY_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 describe('preparing Pro dispatch', () => {
+  it.each(['', ' \t\n '])('uses the default JSON extraction hint for a blank client schema %j', async schema => {
+    const env = aiEnv({ response: '{"sender":"a","total":1}' });
+    const run = vi.spyOn(env.AI, 'run');
+    // Mirrors defaultJsonExtractProParams and the payload sent by its public runner.
+    await expect(runPro('json-extract-pro', { text: 'Receipt A', schema, fileName: 'receipt.txt' }, env))
+      .resolves.toEqual({ data: { sender: 'a', total: 1 } });
+    expect(run).toHaveBeenCalledTimes(1);
+    const call = run.mock.calls[0];
+    expect(call[0]).toBe('@cf/meta/llama-4-scout-17b-16e-instruct');
+    const payload = call[1] as { messages: { role: unknown; content: unknown }[] };
+    expect(payload.messages.some(message =>
+      message.role === 'user' && typeof message.content === 'string' &&
+      message.content.includes('Schema hint: Pick the most descriptive fields you can find. Use snake_case keys.'),
+    )).toBe(true);
+  });
+  it.each([
+    ['text-translate-pro', { text: 'hello', target: '' }],
+    ['translate-many-pro', { text: 'hello', source: ' ', target: 'es' }],
+  ])('prepares %s with a blank optional language without provider work', (toolId, input) => {
+    const env = aiEnv({});
+    const run = vi.spyOn(env.AI, 'run');
+    expect(typeof prepareProRun(toolId, input, env)).toBe('function');
+    expect(run).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['json-extract-pro', { text: 'receipt', schema: null }],
+    ['json-extract-pro', { text: 'receipt', schema: 123 }],
+    ['text-translate-pro', { text: 'hello', target: [] }],
+    ['text-translate-pro', { text: 'hello', target: ' '.repeat(101) }],
+    ['translate-many-pro', { text: 'hello', source: 'en', target: '' }],
+  ])('still rejects malformed or required values for %s before provider work', (toolId, input) => {
+    const env = aiEnv({});
+    const run = vi.spyOn(env.AI, 'run');
+    expect(() => prepareProRun(toolId, input, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
   it('prepares every priced runner without provider work', () => {
     const env = aiEnv({ response: 'ok' });
     for (const toolId of Object.keys(PRICING)) {

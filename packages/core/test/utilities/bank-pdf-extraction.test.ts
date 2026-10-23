@@ -1,5 +1,7 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { readFile, writeFile } from 'node:fs/promises';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   extractBankStatement,
   reviewBankStatement,
@@ -21,13 +23,20 @@ vi.mock(
 );
 let runBankFileJob: typeof sourceRunBankFileJob;
 let bankStatementToCsv: typeof sourceBankStatementToCsv;
+let evidenceDirectory: string | undefined;
+let evidencePath: string;
 beforeAll(async () => {
+  evidenceDirectory = await mkdtemp(join(tmpdir(), 'wyreup-bank-pdf-'));
+  evidencePath = join(evidenceDirectory, 'unknown-image-operators-result.json');
   const native = (await import(new URL('../../dist/node/index.js', import.meta.url).href)) as {
     runBankFileJob: typeof sourceRunBankFileJob;
     bankStatementToCsv: typeof sourceBankStatementToCsv;
   };
   runBankFileJob = native.runBankFileJob;
   bankStatementToCsv = native.bankStatementToCsv;
+});
+afterAll(async () => {
+  if (evidenceDirectory) await rm(evidenceDirectory, { recursive: true, force: true });
 });
 function decisions(document: BankDocument): BankParams {
   return {
@@ -62,7 +71,7 @@ describe('actual independent PDF extraction', () => {
       try {
         const operators = await page.getOperatorList({ annotationMode: 0 });
         await writeFile(
-          '/private/tmp/wyreup-catalog-evidence/bank-unknown-image-operators-result.json',
+          evidencePath,
           JSON.stringify({
             resolved: true,
             fnArray: operators.fnArray,
@@ -71,7 +80,7 @@ describe('actual independent PDF extraction', () => {
         );
       } catch (error) {
         await writeFile(
-          '/private/tmp/wyreup-catalog-evidence/bank-unknown-image-operators-result.json',
+          evidencePath,
           JSON.stringify({
             resolved: false,
             error: error instanceof Error ? error.message : String(error),

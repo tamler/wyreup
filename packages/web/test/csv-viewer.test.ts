@@ -64,7 +64,6 @@ describe('mounted CSV viewer editing and exports', () => {
       if (!path) throw new Error('Edited CSV download missing.');
       const reopened = parseCsv(await readFile(path), { delimiter: 'comma', hasHeader: true });
       expect(reopened.rows[1].cells).toEqual(['<img src=x onerror=alert(1)>', '2']);
-      await page.screenshot({ path: '/private/tmp/wyreup-catalog-evidence/csv-viewer-mobile.png', fullPage: true });
       expect(errors).toEqual([]);
     } finally { await page.close(); }
   }, 30000);

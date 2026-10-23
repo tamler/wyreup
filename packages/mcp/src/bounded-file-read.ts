@@ -13,7 +13,7 @@ export async function readCanonicalFileBounded(
   const protection = await checkDirectoryProtection(dirname(path));
   if (protection.error) throw new Error(`Refusing unsafe input directory: ${protection.error}`);
 
-  const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  const handle = await open(path, constants.O_RDONLY | constants.O_NONBLOCK | constants.O_NOFOLLOW);
   try {
     const [canonicalAfterOpen, fileStat, pathStat] = await Promise.all([
       realpath(path),

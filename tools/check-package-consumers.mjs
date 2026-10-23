@@ -18,6 +18,7 @@ const npmCli = await resolveNpmCli();
 const pnpmCli = process.env.npm_execpath;
 assert(pnpmCli?.includes('pnpm'), 'Run this check through pnpm check:consumers');
 const scratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
+console.log(`Packed consumer scratch: ${scratch}`);
 const entries = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
 let origin;
 const server = createServer((request, response) => {
@@ -62,20 +63,30 @@ const managerOptions = {
 };
 
 async function run(cli, args, cwd, ignoreScripts = false) {
+  const verboseInstall = cli === npmCli && args[0] === 'install';
+  const commandArgs = verboseInstall ? [...args, '--loglevel=verbose', '--timing'] : args;
   try {
-    return await exec(process.execPath, [cli, ...args], {
+    const pending = exec(process.execPath, [cli, ...commandArgs], {
       ...managerOptions,
       timeout: process.platform === 'win32' && ['install', 'update'].includes(args[0]) ? 600_000 : managerOptions.timeout,
       ...(ignoreScripts ? { env: { ...managerOptions.env, npm_config_ignore_scripts: 'true' } } : {}),
       cwd,
     });
+    if (verboseInstall) {
+      pending.child.stdout?.on('data', (chunk) => process.stdout.write(chunk));
+      pending.child.stderr?.on('data', (chunk) => process.stderr.write(chunk));
+    }
+    return await pending;
   } catch (error) {
-    process.stderr.write(error.stdout ?? '');
-    process.stderr.write(error.stderr ?? '');
+    if (!verboseInstall) {
+      process.stderr.write(error.stdout ?? '');
+      process.stderr.write(error.stderr ?? '');
+    }
     throw error;
   }
 }
 
+let succeeded = false;
 try {
   const npmVersion = (await run(npmCli, ['--version'], root)).stdout.trim();
   assertNpmMajor(npmVersion, process.env.WYREUP_EXPECTED_NPM_MAJOR);
@@ -86,6 +97,7 @@ try {
       for (const artifact of artifacts) {
         for (const withPeer of artifact.name === '@wyreup/core' ? [false, true] : [false]) {
           const directory = await mkdtemp(path.join(scratch, `${manager}-`));
+          console.log(`Consumer case: manager=${manager} package=${artifact.name} peer=${withPeer ? 'explicit' : 'default'} scripts=${ignoreScripts ? 'disabled' : 'normal'} directory=${directory}`);
           const dependencies = { [artifact.name]: artifact.version };
           if (withPeer) dependencies['@huggingface/transformers'] = '^4.3.1';
           const migration = withPeer && ignoreScripts;
@@ -166,7 +178,9 @@ try {
       }
     }
   }
+  succeeded = true;
 } finally {
   await new Promise((resolve) => server.close(resolve));
-  await rm(scratch, { recursive: true, force: true });
+  if (succeeded) await rm(scratch, { recursive: true, force: true });
+  else process.stderr.write(`Consumer check failed; owned scratch retained at ${scratch}\nNpm verbose/timing logs: ${path.join(scratch, 'npm-cache', '_logs')}\n`);
 }

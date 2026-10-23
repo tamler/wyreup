@@ -716,9 +716,9 @@ function readOptionalText(
 ): string | undefined {
   const value = raw[field];
   if (value === undefined) return fallback;
-  if (typeof value !== 'string' || !value.trim() || value.length > maxChars)
+  if (typeof value !== 'string' || value.length > maxChars)
     throw new Error(`Invalid '${field}'`);
-  return value.trim();
+  return value.trim() || fallback;
 }
 
 function readLanguage(raw: RunnerInput, field: string): string {

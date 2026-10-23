@@ -1,10 +1,59 @@
 import { describe, expect, it } from 'vitest';
-import { chmod, mkdtemp, realpath, rename, symlink, unlink, writeFile } from 'node:fs/promises';
+import { execFile, type ExecFileException } from 'node:child_process';
+import { chmod, mkdtemp, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+import { build } from 'esbuild';
 import { readCanonicalFileBounded } from '../src/bounded-file-read.js';
 
 describe('bounded canonical file reads', () => {
+  it('refuses an owned FIFO without waiting for a writer', async () => {
+    if (process.platform === 'win32') return;
+    const root = await realpath(await mkdtemp(join(tmpdir(), 'wymcp-fifo-read-')));
+    try {
+      const bundle = await build({
+        entryPoints: [fileURLToPath(new URL('../src/bounded-file-read.ts', import.meta.url))],
+        bundle: true,
+        platform: 'node',
+        format: 'esm',
+        write: false,
+      });
+      const reader = `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0]!.text).toString('base64')}`;
+      const program = `
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readCanonicalFileBounded } from ${JSON.stringify(reader)};
+execFileSync('mkfifo', [process.argv[1]], { timeout: 1000, killSignal: 'SIGTERM' });
+console.log('FIFO_READY');
+await assert.rejects(readCanonicalFileBounded(process.argv[1], 16), /Expected a regular file/);
+console.log('FIFO_REGULAR_FILE_REFUSED');
+`;
+      const pending = promisify(execFile)(
+        process.execPath,
+        ['--input-type=module', '-e', program, join(root, 'input.fifo')],
+        { timeout: 4000, killSignal: 'SIGTERM', maxBuffer: 64 * 1024 },
+      );
+      pending.child.stdin?.end();
+      const result = await pending.catch((error: unknown) => {
+        const detail = error as ExecFileException & { stdout?: string; stderr?: string };
+        console.error('FIFO child failure', {
+          stdout: detail.stdout,
+          stderr: detail.stderr,
+          killed: detail.killed,
+          signal: detail.signal,
+          code: detail.code,
+        });
+        throw error;
+      });
+      expect(result.stdout).toBe('FIFO_READY\nFIFO_REGULAR_FILE_REFUSED\n');
+      expect(result.stderr).toBe('');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 15000);
+
   it('reads an owned file directly from the sticky shared temp directory', async () => {
     if (process.platform === 'win32') return;
     const input = join(tmpdir(), `wymcp-sticky-read-${process.pid}-${Date.now()}.bin`);

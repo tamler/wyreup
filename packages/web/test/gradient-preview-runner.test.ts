@@ -70,7 +70,6 @@ it('actual advanced CSS alpha survives angle/stop changes and opaque picker sync
       'rgba(0, 0, 255, 0.25)',
     );
     expect(requests).toEqual([]);
-    await page.screenshot({ path: '/private/tmp/wyreup-catalog-evidence/gradient-desktop.png' });
   } finally {
     await page.close();
   }
@@ -106,7 +105,6 @@ it('explicit picker edit replaces only one color, preserves other alpha, support
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    await page.screenshot({ path: '/private/tmp/wyreup-catalog-evidence/gradient-mobile.png' });
   } finally {
     await page.close();
   }

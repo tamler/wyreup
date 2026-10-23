@@ -44,9 +44,10 @@ const MODEL_IDS: Record<WhisperModel, string> = {
 };
 
 export const WHISPER_DTYPE = {
-  // Transformers.js registers the Seq2Seq encoder session as `model`,
-  // although the underlying file is encoder_model_quantized.onnx.
+  // Transformers.js 4.3.1 uses the session key for file discovery and the
+  // physical filename for runtime dtype selection. Pin both encoder names.
   model: 'q8',
+  encoder_model: 'q8',
   decoder_model_merged: 'fp32',
 } as const;
 
