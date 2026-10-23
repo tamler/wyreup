@@ -121,9 +121,14 @@ describe('LIVE3 native producer budget boundaries', () => {
   );
 
   it('refuses token visits before native rendering, independently of the HTML allowance', async () => {
-    const text = '[x](/)'.repeat(50001);
+    const text = 'plain\n\n'.repeat(33334);
     const parser = vi.spyOn(Marked.prototype, 'parser');
-    await expect(convert(text)).rejects.toMatchObject({ code: 'budget' });
+    await expect(convert(text)).rejects.toMatchObject({
+      name: 'UtilityInputError',
+      field: '$input',
+      code: 'budget',
+      message: '$input: Markdown exceeds 100000 token/cell/list-item visits.',
+    });
     expect(parser).not.toHaveBeenCalled();
   }, 30000);
 

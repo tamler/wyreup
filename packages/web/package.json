@@ -22,7 +22,7 @@
     "@astrojs/sitemap": "^3.7.4",
     "@wyreup/core": "workspace:*",
     "astro": "7.3.7",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "fuse.js": "^7.5.0",
     "jszip": "^3.10.2",
     "pdfjs-dist": "^6.4.299"
@@ -35,7 +35,7 @@
     "svelte": "^5.57.2",
     "typescript": "^5.9.3",
     "vite": "^8.3.4",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "workbox-build": "^7.4.1",
     "workbox-expiration": "^7.4.1",
     "workbox-precaching": "^7.4.1",
