@@ -87,8 +87,8 @@ async function pageFor(id: string, extras: { delayedRead?: boolean; failRead?: b
     },
     { ...(await inputFor(id)), ...extras },
   );
-  await page.goto(`${harness.url}?id=${id}`, { waitUntil: 'domcontentloaded', timeout: 3000 });
   try {
+    await page.goto(`${harness.url}?id=${id}`, { waitUntil: 'domcontentloaded', timeout: 3000 });
     await page.getByRole('button', { name: 'Unmount legacy runner' }).waitFor({ timeout: 1500 });
   } catch (error) {
     await page.close();

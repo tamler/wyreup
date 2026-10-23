@@ -9,7 +9,7 @@
     "dev": "astro dev",
     "build": "node scripts/copy-skills.mjs && astro build",
     "preview": "astro preview",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --maxWorkers=1",
     "lint": "eslint src",
     "check:pwa": "node scripts/check-pwa.mjs",
     "check:remote-cache": "node --test scripts/check-remote-cache.mjs",
