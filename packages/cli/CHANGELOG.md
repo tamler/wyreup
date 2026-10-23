@@ -1,5 +1,26 @@
 # @wyreup/cli
 
+## 1.1.0
+
+### Minor Changes
+
+- ffd0fd0: Add calculators, developer helpers, planning tools and local file converters to the default catalog. Extend text, date, color and data tools with bounded validation and cancellation. Support typed CLI parameters and MCP schemas, and disclose the public domain-registration lookup. Include dedicated local file workers and their PDF.js license and patch notices. Add the browser execution entry while preserving the root API and shared runtime state.
+
+  The MCP major release makes the tightened filesystem contract explicit: filesystem tools require macOS, Linux, or WSL and protected directories; native Windows fails closed.
+
+### Patch Changes
+
+- ffd0fd0: Preserve every file through one-input chain steps, enforce declared input limits, harden PDF processing, correct AI model pipeline selection, keep CLI watch and fallback egress lifecycle safe, and make MCP worker execution validate its paths, sizes, version, and model CDN egress. Filesystem-backed MCP calls now require macOS, Linux, or WSL and fail closed on native Windows, where Node cannot verify the required ACL and handle-relative path guarantees.
+
+  PDF compression reports a processing error when every attempted supported image fails to decode or encode. It still preserves the original when successful re-encoding does not reduce size, and skips unsupported image encodings.
+
+  Blank optional fields in hosted Pro requests use their documented defaults, including the JSON extraction schema hint. Invalid types and oversized fields remain rejected before provider work.
+
+  MCP file reads reject named pipes without blocking while retaining regular-file, ownership, symlink, and inode checks.
+- Updated dependencies [ffd0fd0]
+- Updated dependencies [ffd0fd0]
+  - @wyreup/core@2.1.0
+
 ## 1.0.3
 
 ### Patch Changes

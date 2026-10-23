@@ -12,6 +12,16 @@ export async function createBankPdfEnvironment(): Promise<BankPdfEnvironment> {
   const { getDocument, PDFWorker, GlobalWorkerOptions, OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const owned = createBankPdfWorker({ PDFWorker, GlobalWorkerOptions });
   const worker = owned.worker;
+  try {
+    await worker.promise;
+  } catch (error) {
+    try {
+      owned.destroy();
+    } catch (cleanupError) {
+      throw new AggregateError([error, cleanupError], 'PDF worker initialization and cleanup failed.');
+    }
+    throw error;
+  }
   let destroyed = false;
   return {
     open(bytes) {

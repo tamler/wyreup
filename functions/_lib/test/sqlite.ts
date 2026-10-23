@@ -18,10 +18,30 @@ export async function createSqliteTestDb(): Promise<{
 }> {
   const directory = await mkdtemp(join(tmpdir(), 'wyreup-sqlite-'));
   const filename = join(directory, 'test.sqlite');
-  const execute = (sql: string): Promise<string> =>
-    new Promise((resolve, reject) => {
+  const pending = new Set<Promise<void>>();
+  let closing: Promise<void> | undefined;
+  const close = (): Promise<void> => {
+    closing ??= (async () => {
+      await Promise.all(pending);
+      await rm(directory, { recursive: true, force: true });
+    })();
+    return closing;
+  };
+  const execute = (sql: string): Promise<string> => {
+    if (closing) return Promise.reject(new Error('SQLite test database is closing or closed'));
+    return new Promise((resolve, reject) => {
       const child = spawn('sqlite3', ['-bail', '-json', filename], {
         stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const closed = new Promise<void>((resolveClose) => {
+        child.once('close', () => resolveClose());
+        child.once('error', () => {
+          if (child.pid === undefined) resolveClose();
+        });
+      });
+      pending.add(closed);
+      void closed.then(() => {
+        pending.delete(closed);
       });
       let output = '';
       let errors = '';
@@ -36,6 +56,7 @@ export async function createSqliteTestDb(): Promise<{
       child.stdin.on('error', reject);
       child.stdin.end(`.timeout 10000\n.explain off\nPRAGMA foreign_keys=ON;\n${sql}\n`);
     });
+  };
 
   class Statement implements D1PreparedStatement {
     constructor(
@@ -103,7 +124,7 @@ export async function createSqliteTestDb(): Promise<{
       await execute(await readFile(new URL(name, migrations), 'utf8'));
     }
   } catch (error) {
-    await rm(directory, { recursive: true, force: true });
+    await close();
     throw error;
   }
   return {
@@ -111,6 +132,6 @@ export async function createSqliteTestDb(): Promise<{
     exec: async (sql) => {
       await execute(sql);
     },
-    close: () => rm(directory, { recursive: true, force: true }),
+    close,
   };
 }

@@ -13,16 +13,19 @@ describe('mounted live timer controls and real exports', () => {
       await page.clock.install(); await page.goto(`${harness.url}?id=stopwatch`);
       await page.getByRole('button', { name: 'Start', exact: true }).click();
       await page.clock.fastForward(100);
-      const before = await page.getByLabel('Elapsed time').textContent();
-      await page.evaluate(() => {
+      const before = await page.evaluate((trigger) => {
+        const outputs = document.querySelectorAll('output[aria-label="Elapsed time"]');
+        if (outputs.length !== 1) throw new Error('Expected exactly one elapsed time output.');
+        const before = outputs[0].textContent;
         Object.assign(window, { failedTimerReads: 0 });
         Object.defineProperty(performance, 'now', { configurable: true, value: () => {
           const probe = window as unknown as { failedTimerReads: number };
           probe.failedTimerReads++; return NaN;
         } });
-      });
-      if (trigger === 'visibility') await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-      else await page.clock.fastForward(20);
+        if (trigger === 'visibility') document.dispatchEvent(new Event('visibilitychange'));
+        return before;
+      }, trigger);
+      if (trigger === 'frame') await page.clock.fastForward(20);
       expect(await page.getByRole('alert').count()).toBe(1);
       expect(await page.getByRole('alert').textContent()).toContain('finite monotonic clock');
       expect(await page.getByText('State: paused', { exact: true }).count()).toBe(1);
