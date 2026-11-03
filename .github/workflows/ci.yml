@@ -171,8 +171,18 @@ jobs:
           path: artifacts/
       - run: pnpm release:verify
       - run: pnpm check:consumers
+        id: packed-consumers
         env:
           WYREUP_EXPECTED_NPM_MAJOR: ${{ matrix.runtime.npm }}
+      - uses: actions/upload-artifact@v7
+        if: ${{ always() && steps.packed-consumers.outputs.migration-evidence != '' }}
+        with:
+          name: consumer-migration-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.os }}-node-${{ matrix.runtime.node }}-npm-${{ matrix.runtime.npm }}
+          path: |
+            ${{ steps.packed-consumers.outputs.migration-evidence }}/migration-npm.json
+            ${{ steps.packed-consumers.outputs.migration-evidence }}/migration-pnpm.json
+            ${{ steps.packed-consumers.outputs.migration-evidence }}/run-manifest.json
+          if-no-files-found: error
 
   isolation-check:
     name: Isolation check
