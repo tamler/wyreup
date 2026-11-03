@@ -499,26 +499,135 @@ describe('independent actual local D1 endpoint admission/release', () => {
   });
   it('admits six real same-network calls, deletes owned leases and rejects the seventh before provider work', async () => {
     const fetcher = provider();
-    for (let attempt = 0; attempt < 6; attempt++) {
-      const call = context(request(), db);
-      await security(await onRequest(call.value), 200);
-      await call.settle();
+    type NativeClock = { now_seconds: number; window_start: number };
+    const startedAt = performance.now();
+    const statuses: number[] = [];
+    let startClock: NativeClock | undefined;
+    let endClock: NativeClock | undefined;
+    let finalClockAttempted = false;
+    let counterCount: number | undefined;
+    let counterCounts: number[] | undefined;
+    let leaseCount: number | undefined;
+    let failed = false;
+    let firstFailure: unknown;
+    const retainFailure = (reason: unknown) => {
+      if (!failed) {
+        failed = true;
+        firstFailure = reason;
+      }
+    };
+    const readClock = async (): Promise<NativeClock> => {
+      const clock = await db
+        .prepare('SELECT unixepoch() AS now_seconds, (unixepoch() / 60) * 60 AS window_start')
+        .first<NativeClock>();
+      if (
+        !clock ||
+        !Number.isSafeInteger(clock.now_seconds) ||
+        !Number.isSafeInteger(clock.window_start) ||
+        clock.now_seconds < 0 ||
+        clock.window_start !== Math.floor(clock.now_seconds / 60) * 60
+      )
+        throw new Error('Native D1 clock shape is invalid.');
+      return { now_seconds: clock.now_seconds, window_start: clock.window_start };
+    };
+    const diagnostic = () =>
+      process.stdout.write(
+        `domain-native-admission ${JSON.stringify({
+          startClock,
+          endClock,
+          elapsedMs: Math.round(performance.now() - startedAt),
+          statuses,
+          providerCallCount: fetcher.mock.calls.length,
+          counterCount,
+          counterCounts,
+          leaseCount,
+        })}\n`,
+      );
+    try {
+      const gateDeadline = performance.now() + 11000;
+      let gateTimer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_resolve, reject) => {
+        gateTimer = setTimeout(
+          () => reject(new Error('Native D1 admission-start gate exceeded eleven seconds.')),
+          11000,
+        );
+      });
+      const gate = (async () => {
+        let clock = await readClock();
+        if (performance.now() >= gateDeadline)
+          throw new Error('Native D1 admission-start gate exceeded eleven seconds.');
+        const remaining = clock.window_start + 60 - clock.now_seconds;
+        if (remaining < 10) {
+          await new Promise<void>((resolve) => setTimeout(resolve, remaining * 1000));
+          clock = await readClock();
+        }
+        if (performance.now() >= gateDeadline)
+          throw new Error('Native D1 admission-start gate exceeded eleven seconds.');
+        if (clock.window_start + 60 - clock.now_seconds < 10)
+          throw new Error('Native D1 admission-start gate has fewer than ten seconds remaining.');
+        return clock;
+      })();
+      try {
+        startClock = await Promise.race([gate, timeout]);
+      } finally {
+        clearTimeout(gateTimer);
+      }
+      const startWindow = startClock.window_start;
+      diagnostic();
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const call = context(request(), db);
+        const response = await onRequest(call.value);
+        statuses.push(response.status);
+        diagnostic();
+        await security(response, 200);
+        await call.settle();
+      }
+      expect(fetcher).toHaveBeenCalledTimes(7);
+      const before = fetcher.mock.calls.length;
+      const response = await onRequest(context(request(), db).value);
+      statuses.push(response.status);
+      finalClockAttempted = true;
+      endClock = await readClock();
+      diagnostic();
+      expect(
+        endClock.window_start,
+        'A crossed native D1 minute cannot establish same-minute admission.',
+      ).toBe(startWindow);
+      await security(response, 429);
+      expect(fetcher).toHaveBeenCalledTimes(before);
+      expect(Number(response.headers.get('Retry-After'))).toBeGreaterThanOrEqual(1);
+      expect(Number(response.headers.get('Retry-After'))).toBeLessThanOrEqual(60);
+      const leases = (await db.prepare('SELECT * FROM public_api_inflight_leases').all()).results;
+      leaseCount = leases?.length;
+      expect(leases).toEqual([]);
+      const counters = (await db.prepare('SELECT * FROM public_api_rate_windows').all()).results;
+      counterCount = counters?.length;
+      counterCounts = counters?.slice(0, 10).map((row) => (row as { count: number }).count);
+      expect(counters).toHaveLength(2);
+      expect(counters?.every((row) => (row as { count: number }).count === 6)).toBe(true);
+      expect(
+        counters?.every((row) => (row as { window_start: number }).window_start === startWindow),
+      ).toBe(true);
+      expect(JSON.stringify(counters)).not.toMatch(
+        /example\.com|198\.51\.100|SYNTHETIC_SESSION_SECRET_CANARY/,
+      );
+    } catch (reason) {
+      retainFailure(reason);
+    } finally {
+      if (startClock && !finalClockAttempted) {
+        try {
+          endClock = await readClock();
+        } catch (reason) {
+          retainFailure(reason);
+        }
+      }
+      // A Vitest deadline can precede finally; settled-request progress is emitted above.
+      try {
+        diagnostic();
+      } catch (reason) {
+        retainFailure(reason);
+      }
     }
-    expect(fetcher).toHaveBeenCalledTimes(7);
-    const before = fetcher.mock.calls.length;
-    const response = await onRequest(context(request(), db).value);
-    await security(response, 429);
-    expect(fetcher).toHaveBeenCalledTimes(before);
-    expect(Number(response.headers.get('Retry-After'))).toBeGreaterThanOrEqual(1);
-    expect(Number(response.headers.get('Retry-After'))).toBeLessThanOrEqual(60);
-    expect((await db.prepare('SELECT * FROM public_api_inflight_leases').all()).results).toEqual(
-      [],
-    );
-    const counters = (await db.prepare('SELECT * FROM public_api_rate_windows').all()).results;
-    expect(counters).toHaveLength(2);
-    expect(counters?.every((row) => (row as { count: number }).count === 6)).toBe(true);
-    expect(JSON.stringify(counters)).not.toMatch(
-      /example\.com|198\.51\.100|SYNTHETIC_SESSION_SECRET_CANARY/,
-    );
+    if (failed) throw firstFailure;
   }, 30000);
 });

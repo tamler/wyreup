@@ -26,19 +26,33 @@ function pins(row: Record<string, unknown>): SourcePin[] {
 function inputs() {
   const historical = document('domainLifecycleExpectations.json');
   const current = document('domainLifecycleCurrentExpectations.json');
-  const matches = current.value.revisions.filter(row => row.revisionId === 'after-source3-suite-lifecycle-178');
+  const matches = current.value.revisions.filter(row => row.revisionId === 'after-source4-provider-capture-480a8c9');
   const row = matches[0];
   if (matches.length !== 1 || !row) throw new Error('Expected exactly one approved current row.');
   return { historical, current, row, sources: pins(row) };
 }
 const digest = (value: Uint8Array | string) => createHash('sha256').update(value).digest('hex');
 
+it('selects the actual canonical four-source files with unique qualification and suite revision IDs', () => {
+  const historical = document('domainLifecycleExpectations.json');
+  const current = document('domainLifecycleCurrentExpectations.json');
+  const suite = document('domainSuiteLifecycleExpectations.json');
+  const revisionIds = [...historical.value.revisions, ...current.value.revisions, ...suite.value.revisions].map(row => row.revisionId);
+  expect(revisionIds.every(id => typeof id === 'string' && id.length > 0)).toBe(true);
+  expect(new Set(revisionIds).size).toBe(revisionIds.length);
+  const sources = ['domainFunctionsHarness.mjs', 'domain-functions-integration.test.ts', 'domainFunctionsHarness.d.mts', 'productionBrowserHarness.ts'].map(path => {
+    const bytes = readFileSync(new URL(path, import.meta.url));
+    return { path, bytes: bytes.length, sha256: digest(bytes) };
+  });
+  expect(selectQualificationRevision(sources, historical.value, current.value).revisionId).toBe('after-source4-provider-capture-480a8c9');
+});
+
 it('selects the exact approved current four-source tuple while preserving all historical bytes and row digests', () => {
   const { historical, current, row, sources } = inputs();
   const beforeRows = historical.value.revisions.map(item => digest(JSON.stringify(item)));
   expect(digest(historical.bytes)).toBe('afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734');
-  expect(digest(current.bytes)).toBe('af2413e836aa92e693fe2d69d7bb22d88aacb92bc0b665d43a915bbdc30054f5');
-  expect(current.value.revisions).toHaveLength(3);
+  expect(digest(current.bytes)).toBe('d5999ea0da2c5b52c640e40bbeffcaa850d487686e674e9b9e01dfb6a4e17809');
+  expect(current.value.revisions).toHaveLength(4);
   const oldRows = current.value.revisions.filter(item => item.revisionId === 'after-source0-followup-browser-binding-0');
   expect(oldRows).toHaveLength(1);
   const oldRow = oldRows[0];
