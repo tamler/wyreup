@@ -80,7 +80,8 @@
     },
     "patchedDependencies": {
       "astro@7.3.7": "patches/astro@7.3.7.patch",
-      "pdfjs-dist@6.4.299": "patches/pdfjs-dist@6.4.299.patch"
+      "pdfjs-dist@6.4.299": "patches/pdfjs-dist@6.4.299.patch",
+      "glob@14.0.2": "patches/glob@14.0.2.patch"
     },
     "onlyBuiltDependencies": [
       "esbuild",

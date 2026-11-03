@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
+import { createRequire, isBuiltin } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -151,6 +151,19 @@ if (target === '@wyreup/exceljs') {
   excelEntry = require.resolve(target);
 }
 if (excelRequire) {
+  const vendor = path.dirname(excelEntry);
+  const manifest = JSON.parse(await readFile(path.join(vendor, '..', 'package.json'), 'utf8'));
+  assert.equal(manifest.dependencies.archiver, undefined);
+  assert.equal(manifest.dependencies.glob, undefined);
+  const graph = JSON.parse(await readFile(path.join(vendor, 'NODE-DEPENDENCIES.json'), 'utf8'));
+  assert.deepEqual(graph.inputs.filter(input => /\.min\.[cm]?js$/i.test(input.path)), []);
+  for (const [name, version] of [['archiver', '7.0.1'], ['glob', '14.0.2'], ['minimatch', '11.0.1']]) {
+    assert.deepEqual(graph.packages.filter(item => item.name === name).map(item => item.version), [version]);
+  }
+  const meta = JSON.parse(await readFile(path.join(vendor, 'NODE-METAFILE.json'), 'utf8'));
+  for (const output of Object.values(meta.outputs)) {
+    assert(output.imports.every(imported => imported.external && isBuiltin(imported.path)), 'Archive bundle has an external runtime package');
+  }
   const ExcelJS = excelRequire(excelEntry);
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Smoke');

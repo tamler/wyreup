@@ -31,6 +31,9 @@ patchedDependencies:
   astro@7.3.7:
     hash: 5001093e803a3efb213f4408eba6b708cf24bd1711f6459c9a7b8374a6acf286
     path: patches/astro@7.3.7.patch
+  glob@14.0.2:
+    hash: 0fe7c4344be49ce06b51aaf130f68a01bef68c4f6ca03e2b110c644a221c3cbf
+    path: patches/glob@14.0.2.patch
   pdfjs-dist@6.4.299:
     hash: e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3
     path: patches/pdfjs-dist@6.4.299.patch
@@ -9031,7 +9034,7 @@ snapshots:
 
   archiver-utils@5.0.2:
     dependencies:
-      glob: 14.0.2
+      glob: 14.0.2(patch_hash=0fe7c4344be49ce06b51aaf130f68a01bef68c4f6ca03e2b110c644a221c3cbf)
       graceful-fs: 4.2.11
       is-stream: 2.0.1
       lazystream: 1.0.1
@@ -10206,7 +10209,7 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
-  glob@14.0.2:
+  glob@14.0.2(patch_hash=0fe7c4344be49ce06b51aaf130f68a01bef68c4f6ca03e2b110c644a221c3cbf):
     dependencies:
       minimatch: 11.0.1
       minipass: 7.1.3
@@ -12586,7 +12589,7 @@ snapshots:
       eta: 4.6.0
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0
-      glob: 14.0.2
+      glob: 14.0.2(patch_hash=0fe7c4344be49ce06b51aaf130f68a01bef68c4f6ca03e2b110c644a221c3cbf)
       pretty-bytes: 5.6.0
       rollup: 4.64.2
       source-map: 0.8.0

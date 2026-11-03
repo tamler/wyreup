@@ -14,3 +14,5 @@ vendor/NODE-METAFILE.json and vendor/NODE-THIRD-PARTY-NOTICES.txt.
 Consumer package-manager audits do not inspect this bundled code. A raw-zero
 consumer audit is not a bundled-code security result; the full workspace audit
 covers the exact bundled build dependencies, whose lock membership is verified.
+The repository's glob 14.0.2 manifest patch selects its published unbundled
+entries so the matcher and filesystem dependencies appear as individual inputs.

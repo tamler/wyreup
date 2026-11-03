@@ -1,0 +1,29 @@
+diff --git a/package.json b/package.json
+index a2dd2cbb9d549951b034f843145c658c040160ae..0e0f5f5abddeebc9bfc494b4e9619733344621f8 100644
+--- a/package.json
++++ b/package.json
+@@ -21,8 +21,8 @@
+       }
+     }
+   },
+-  "main": "./dist/commonjs/index.min.js",
+-  "module": "./dist/esm/index.min.js",
++  "main": "./dist/commonjs/index.js",
++  "module": "./dist/esm/index.js",
+   "types": "./dist/commonjs/index.d.ts",
+   "exports": {
+     "./package.json": "./package.json",
+@@ -39,11 +39,11 @@
+     ".": {
+       "import": {
+         "types": "./dist/esm/index.d.ts",
+-        "default": "./dist/esm/index.min.js"
++        "default": "./dist/esm/index.js"
+       },
+       "require": {
+         "types": "./dist/commonjs/index.d.ts",
+-        "default": "./dist/commonjs/index.min.js"
++        "default": "./dist/commonjs/index.js"
+       }
+     }
+   },

@@ -6,6 +6,7 @@ const { join, dirname, resolve } = require('node:path');
 const { once } = require('node:events');
 const { Readable } = require('node:stream');
 const { execFileSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
 const JSZip = require('jszip');
 const archiveFactory = require('../vendor/dist/node-archive.cjs');
 const packageRoot = resolve(__dirname, '..');
@@ -95,6 +96,10 @@ test('archive errors and finalization refusal remain observable through the fact
 test('Node provenance names fixed packages and ships their full license texts', async () => {
   const graph = JSON.parse(await readFile(join(packageRoot, 'vendor/NODE-DEPENDENCIES.json'), 'utf8'));
   assert.equal(graph.target, 'node22.13');
+  assert.deepEqual(graph.inputs.filter(item => /\.min\.[cm]?js$/.test(item.path)), []);
+  for (const name of ['minipass', 'path-scurry', 'lru-cache']) {
+    assert.equal(graph.packages.filter(item => item.name === name).length, 1);
+  }
   for (const [name, version] of [['archiver', '7.0.1'], ['glob', '14.0.2'], ['minimatch', '11.0.1']]) {
     assert.deepEqual(graph.packages.filter(item => item.name === name).map(item => item.version), [version]);
   }
@@ -110,6 +115,7 @@ test('Node provenance names fixed packages and ships their full license texts', 
   assert.match(notices, /Permission is hereby granted/);
   const manifest = require('../package.json');
   assert.equal(manifest.dependencies.archiver, undefined);
+  assert.equal(manifest.dependencies.glob, undefined);
   assert.equal(manifest.devDependencies.archiver, '7.0.1');
 });
 
@@ -124,6 +130,7 @@ test('read-only verifier refuses output, input, manifest, license and lock drift
       'packages/exceljs/src/browser-globals.mjs', 'packages/exceljs/src/browser-crypto.cjs',
       'packages/exceljs/src/browser-fs.cjs', 'packages/exceljs/src/browser-entry.mjs',
       'packages/exceljs/licenses/saxes-5.0.1.txt', 'packages/exceljs/src/node-archive.cjs',
+      'patches/glob@14.0.2.patch',
       ...browser.inputs.map(item => item.path), ...browser.packages.map(item => item.manifest),
       ...node.inputs.map(item => item.path), ...node.packages.map(item => item.manifest),
       ...node.packages.flatMap(item => item.licenses.map(license => license.path)),
@@ -149,6 +156,22 @@ test('read-only verifier refuses output, input, manifest, license and lock drift
       await writeFile(path, change(before));
       assert.throws(verify, /changed|differs|absent/);
       await writeFile(path, before);
+    }
+    const graphPath = join(fixture, 'packages/exceljs/vendor/NODE-DEPENDENCIES.json');
+    const inventoryPath = join(fixture, 'packages/exceljs/vendor/BUILD-MANIFEST.json');
+    const graphBytes = await readFile(graphPath);
+    const inventoryBytes = await readFile(inventoryPath);
+    for (const extension of ['js', 'cjs', 'mjs']) {
+      const graph = JSON.parse(graphBytes);
+      graph.inputs[0].path = `node_modules/owned-fixture/index.min.${extension}`;
+      const bytes = Buffer.from(JSON.stringify(graph, null, 2) + '\n');
+      await writeFile(graphPath, bytes);
+      const inventory = JSON.parse(inventoryBytes);
+      inventory.files['NODE-DEPENDENCIES.json'] = createHash('sha256').update(bytes).digest('hex');
+      await writeFile(inventoryPath, JSON.stringify(inventory, null, 2) + '\n');
+      assert.throws(verify, /Minified Node input lacks embedded-package provenance/);
+      await writeFile(graphPath, graphBytes);
+      await writeFile(inventoryPath, inventoryBytes);
     }
   } finally {
     await rm(fixture, { recursive: true, force: true });

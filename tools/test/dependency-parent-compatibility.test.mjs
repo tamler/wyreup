@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
@@ -20,7 +21,6 @@ const rollupRequire = createRequire(workboxRequire.resolve('@trickfilm400/rollup
 const ejsRequire = createRequire(rollupRequire.resolve('ejs'));
 const jakeRequire = createRequire(ejsRequire.resolve('jake'));
 const filelistRequire = createRequire(jakeRequire.resolve('filelist'));
-const globRequire = createRequire(utilityRequire.resolve('glob'));
 const paths = ['a.js', 'b.ts', 'notes.txt', '.hidden.js', 'nested/a.js', 'nested/deeper/c.js', 'nested/skip.js', 'ignore/no.js'];
 const selected = ['.hidden.js', 'a.js', 'b.ts', 'nested/a.js', 'nested/deeper/c.js'];
 let directory;
@@ -51,7 +51,7 @@ afterAll(async () => { if (directory) await rm(directory, { recursive: true, for
 for (const [name, resolver] of [
   ['readdir-glob', readdirRequire], ['filelist', filelistRequire],
   ['@eslint/config-array', configRequire], ['typescript-estree', estreeRequire],
-  ['eslint', eslintRequire], ['glob', globRequire],
+  ['eslint', eslintRequire],
 ]) {
   it(`${name} resolves the fixed matcher and retains named, class, dot and negation APIs`, async () => {
     expect(await version(resolver, 'minimatch')).toBe('11.0.1');
@@ -66,6 +66,46 @@ for (const [name, resolver] of [
     expect(paths.filter(path => compiled.match(path))).toEqual(['nested/a.js', 'nested/deeper/c.js', 'nested/skip.js']);
     expect(matcher.minimatch('nested/deeper/c.js', '**/*.{js,ts}')).toBe(true);
     expect(matcher.minimatch('notes.txt', '**/*.{js,ts}')).toBe(false);
+  });
+}
+
+for (const [name, resolver] of [['archiver-utils', utilityRequire], ['workbox-build', workboxRequire]]) {
+  it(`${name} loads glob's actual fixed matcher through the unbundled CommonJS entry`, () => {
+    const parent = resolver.resolve(name);
+    const output = execFileSync(process.execPath, ['-e', `
+      const { createRequire } = require('node:module');
+      const fs = require('node:fs');
+      const parent = createRequire(process.argv[1]);
+      const entry = fs.realpathSync(parent.resolve('glob'));
+      const raw = fs.realpathSync(parent.resolve('glob/raw'));
+      parent('glob');
+      const globRequire = createRequire(entry);
+      const matcher = fs.realpathSync(globRequire.resolve('minimatch'));
+      const seen = new Set();
+      function reaches(module) {
+        if (!module || seen.has(module.id)) return false;
+        seen.add(module.id);
+        return module.filename === matcher || module.children.some(reaches);
+      }
+      const manifest = JSON.parse(fs.readFileSync(globRequire.resolve('minimatch/package.json'), 'utf8'));
+      console.log(JSON.stringify({ entry, raw, matcherVersion: manifest.version, loadedByGlob: reaches(require.cache[entry]) }));
+    `, parent], { encoding: 'utf8' });
+    const result = JSON.parse(output);
+    expect(result).toEqual({ entry: result.raw, raw: result.raw, matcherVersion: '11.0.1', loadedByGlob: true });
+  });
+
+  it(`${name} selects the published unbundled ESM entry too`, () => {
+    const directory = dirname(resolver.resolve('glob/package.json'));
+    const output = execFileSync(process.execPath, ['--input-type=module', '-e', `
+      const entry = import.meta.resolve('glob');
+      const raw = import.meta.resolve('glob/raw');
+      const module = await import('glob');
+      const unbundled = await import('glob/raw');
+      console.log(JSON.stringify({ entry, raw, same: module.globSync === unbundled.globSync }));
+    `], { cwd: directory, encoding: 'utf8' });
+    const result = JSON.parse(output);
+    expect(result.entry).toBe(result.raw);
+    expect(result.same).toBe(true);
   });
 }
 

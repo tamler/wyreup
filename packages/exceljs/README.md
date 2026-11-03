@@ -25,3 +25,6 @@ Consumer package-manager audits do not inspect bundled dependency code. Their
 raw-zero result covers installed package dependencies, not the bundled Archiver,
 glob or minimatch code. The full workspace audit covers those build dependencies;
 both that audit and the generated provenance must be checked for future updates.
+The pinned glob manifest patch selects its published unbundled entries; the Node
+build refuses minified input filenames rather than silently omitting their
+embedded dependency identities from the graph.

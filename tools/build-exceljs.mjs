@@ -23,7 +23,7 @@ const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const recipeFiles = ['tools/build-exceljs.mjs', 'packages/exceljs/UPSTREAM.json', 'packages/exceljs/NOTICE',
   'packages/exceljs/src/browser-globals.mjs', 'packages/exceljs/src/browser-crypto.cjs', 'packages/exceljs/src/browser-fs.cjs',
   'packages/exceljs/licenses/saxes-5.0.1.txt', 'packages/exceljs/src/browser-entry.mjs',
-  'packages/exceljs/src/node-archive.cjs'];
+  'packages/exceljs/src/node-archive.cjs', 'patches/glob@14.0.2.patch'];
 const recipeHash = createHash('sha256');
 for (const file of recipeFiles) recipeHash.update(file).update(await readFile(join(root, file)));
 const ownManifest = JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8'));
@@ -56,7 +56,7 @@ function validateNodePackages(packages, lock) {
       throw new Error(`Bundled Node dependency excludes Node 22.13.0: ${dependency.name}@${dependency.version}`);
     }
   }
-  for (const [name, version] of [['archiver', '7.0.1'], ['glob', '14.0.2'], ['minimatch', '11.0.1']]) {
+  for (const [name, version] of [['archiver', '7.0.1'], ['glob', '14.0.2'], ['minimatch', '11.0.1'], ['lru-cache', '11.5.3']]) {
     const identities = packages.filter(dependency => dependency.name === name);
     if (identities.length !== 1 || identities[0].version !== version) {
       throw new Error(`Expected one bundled ${name}@${version} identity`);
@@ -64,8 +64,17 @@ function validateNodePackages(packages, lock) {
   }
 }
 
+function refuseMinifiedNodeInputs(paths) {
+  for (const path of paths) {
+    if (/\.min\.[cm]?js$/i.test(path)) {
+      throw new Error(`Minified Node input lacks embedded-package provenance: ${path}`);
+    }
+  }
+}
+
 async function verifyNodeGraph(directory) {
   const graph = JSON.parse(await readFile(join(directory, 'NODE-DEPENDENCIES.json'), 'utf8'));
+  refuseMinifiedNodeInputs(graph.inputs.map(input => input.path));
   const lock = loadYaml(await readFile(join(root, 'pnpm-lock.yaml'), 'utf8'));
   validateNodePackages(graph.packages, lock);
   for (const input of graph.inputs) {
@@ -92,6 +101,7 @@ async function verifyNodeGraph(directory) {
     if (!dependency.licenses.length) throw new Error(`Node dependency license missing: ${dependency.name}`);
   }
   const meta = JSON.parse(await readFile(join(directory, 'NODE-METAFILE.json'), 'utf8'));
+  refuseMinifiedNodeInputs(Object.keys(meta.inputs));
   for (const output of Object.values(meta.outputs)) {
     for (const imported of output.imports) {
       if (!imported.external || !isBuiltin(imported.path)) {
@@ -231,8 +241,17 @@ try {
     absWorkingDir: root, entryPoints: [join(packageDir, 'src/node-archive.cjs')], outfile: nodeOutfile,
     bundle: true, format: 'cjs', platform: 'node', target: 'node22.13', metafile: true,
     legalComments: 'inline', logLevel: 'silent',
+    plugins: [{ name: 'raw-node-lru-cache', setup(builder) {
+      builder.onResolve({ filter: /^lru-cache$/ }, args => {
+        if (args.kind !== 'require-call') {
+          throw new Error(`Expected a CommonJS Node lru-cache importer: ${args.importer}`);
+        }
+        return { path: createRequire(args.importer).resolve('lru-cache/raw') };
+      });
+    } }],
   });
   if (nodeResult.warnings.length) throw new Error(`Node archive build warnings: ${JSON.stringify(nodeResult.warnings)}`);
+  refuseMinifiedNodeInputs(Object.keys(nodeResult.metafile.inputs));
   for (const output of Object.values(nodeResult.metafile.outputs)) {
     for (const imported of output.imports) {
       if (!imported.external || !isBuiltin(imported.path)) throw new Error(`Unexpected Node artifact external: ${imported.path}`);
