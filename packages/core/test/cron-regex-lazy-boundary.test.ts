@@ -294,4 +294,3 @@ async function collect(mode: 'BEFORE' | 'AFTER') {
 }
 it.skipIf(collectorMode !== 'BEFORE')('bundle compatibility BEFORE fixed9 public vectors metadata and raw outputs', async () => { await collect('BEFORE'); });
 it.skipIf(collectorMode !== 'AFTER')('bundle compatibility AFTER fixed9 exact original comparison', async () => { await collect('AFTER'); });
-it('bundle genuine original root barrel defaultTools identity', async () => { await genuine(); });

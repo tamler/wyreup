@@ -1,7 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { createDefaultRegistry } from '../src/default-registry.js';
+import { createDefaultRegistry, defaultTools } from '../src/default-registry.js';
+import * as root from '../src/index.js';
+import * as cron from '../src/tools/cron-from-text/index.js';
+import * as regex from '../src/tools/regex-from-text/index.js';
+import * as explain from '../src/tools/regex-explain/index.js';
 
 describe('default registry', () => {
+  it('bundle genuine original root barrel defaultTools identity', () => {
+    const registry = createDefaultRegistry();
+    const entries = [
+      {
+        id: 'cron-from-text',
+        name: 'cronFromText',
+        helperName: 'generateCronFromText',
+        tool: cron.cronFromText,
+        helper: cron.generateCronFromText,
+      },
+      {
+        id: 'regex-from-text',
+        name: 'regexFromText',
+        helperName: 'generateRegexFromText',
+        tool: regex.regexFromText,
+        helper: regex.generateRegexFromText,
+      },
+      {
+        id: 'regex-explain',
+        name: 'regexExplain',
+        helperName: 'explainRegex',
+        tool: explain.regexExplain,
+        helper: explain.explainRegex,
+      },
+    ] as const;
+    for (const entry of entries) {
+      expect(root[entry.name]).toBe(entry.tool);
+      expect(root[entry.helperName]).toBe(entry.helper);
+      expect(defaultTools.find((tool) => tool.id === entry.id)).toBe(entry.tool);
+      const registered = registry.toolsById.get(entry.id);
+      expect(registered).toBeDefined();
+      for (const key of Object.keys(entry.tool).filter((key) => key !== 'run')) {
+        expect(Reflect.get(registered as object, key)).toEqual(Reflect.get(entry.tool, key));
+      }
+      expect(typeof registered?.run).toBe('function');
+    }
+  });
+
   it('enforces a tool input size limit before invoking the implementation', async () => {
     const registry = createDefaultRegistry();
     const tool = registry.toolsById.get('color-converter');

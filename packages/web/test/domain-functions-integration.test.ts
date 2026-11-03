@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { chromium, type Browser, type Page, type Request } from 'playwright';
+import { chromium, type Browser, type Frame, type Page, type Request, type Response } from 'playwright';
 import { createServer } from 'node:http';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -193,16 +193,125 @@ for (const scenario of ['provider-rate-limited', 'provider-error'] as const) {
     await host!.resetAdmission();
     await host!.setProviderScenario(scenario);
     const lookup = await openLookup();
+    const matchesDomainPost = (request: Request) => {
+      const url = new URL(request.url());
+      return url.origin === host!.url && url.pathname === '/api/domain-age' && request.method() === 'POST';
+    };
+    const boundedError = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason)).slice(0, 2000);
+    let failed = false;
+    let firstFailure: unknown;
+    const retainFailure = (reason: unknown) => {
+      if (!failed) { failed = true; firstFailure = reason; }
+    };
+    let apiRequestCount = 0;
+    let documentNavigationRequestCount = 0;
+    let frameNavigationCount = 0;
+    const documentNavigationRequests: { url: string; method: string }[] = [];
+    const frameURLs: string[] = [];
+    const onRequest = (request: Request) => {
+      if (matchesDomainPost(request)) apiRequestCount++;
+      if (request.isNavigationRequest() && request.resourceType() === 'document' && request.frame() === lookup.page.mainFrame()) {
+        documentNavigationRequestCount++;
+        if (documentNavigationRequests.length < 20) documentNavigationRequests.push({ url: request.url().slice(0, 500), method: request.method().slice(0, 20) });
+      }
+    };
+    const onFrameNavigated = (frame: Frame) => {
+      if (frame !== lookup.page.mainFrame()) return;
+      frameNavigationCount++;
+      if (frameURLs.length < 20) frameURLs.push(frame.url().slice(0, 500));
+    };
+    let capturedResponse: Response | undefined;
+    let responseMetadata: { status: number; resourceType: string; fromServiceWorker: boolean; isNavigationRequest: boolean } | undefined;
+    let bodyStatus: string | undefined;
+    let bodyOutcome = 'not-started';
+    let bodyError: string | undefined;
+    let captureOutcome = 'pending';
+    let captureError: string | undefined;
+    let clickOutcome = 'pending';
+    let clickError: string | undefined;
+    const cleanupErrors: { operation: string; error: string }[] = [];
+    const captureFailure = (reason: unknown): never => {
+      captureOutcome = 'rejected';
+      captureError = boundedError(reason);
+      retainFailure(reason);
+      throw reason;
+    };
     try {
-      const response = await calculate(lookup.page);
+      lookup.page.on('request', onRequest);
+      lookup.page.on('framenavigated', onFrameNavigated);
+      const capture = lookup.page.waitForResponse((response) => matchesDomainPost(response.request())).then(async (response) => {
+        capturedResponse = response;
+        const request = response.request();
+        responseMetadata = {
+          status: response.status(), resourceType: request.resourceType(),
+          fromServiceWorker: response.fromServiceWorker(), isNavigationRequest: request.isNavigationRequest(),
+        };
+        bodyOutcome = 'pending';
+        try {
+          const body = await response.body();
+          bodyOutcome = 'fulfilled';
+          return body;
+        } catch (reason) {
+          bodyOutcome = 'rejected';
+          bodyError = boundedError(reason);
+          return captureFailure(reason);
+        }
+      }, captureFailure).then((result) => {
+        captureOutcome = 'fulfilled';
+        return result;
+      }, captureFailure);
+      const click = lookup.page.getByRole('button', { name: 'Calculate', exact: true }).click().then(() => {
+        clickOutcome = 'fulfilled';
+      }, (reason) => {
+        clickOutcome = 'rejected';
+        clickError = boundedError(reason);
+        retainFailure(reason);
+        throw reason;
+      });
+      const [captureResult] = await Promise.allSettled([capture, click]);
+      if (failed) throw firstFailure;
+      if (captureResult.status === 'rejected') throw captureResult.reason;
+      const response = capturedResponse!;
+      const body = captureResult.value;
+      const data = JSON.parse(body.toString('utf8')) as { status: string };
+      bodyStatus = typeof data.status === 'string' ? data.status.slice(0, 100) : undefined;
       expect(response.status()).toBe(200);
-      const data = await response.json() as { status: string };
       expect(data.status).toBe(scenario === 'provider-rate-limited' ? 'rate-limited' : 'provider-error');
       if (scenario === 'provider-rate-limited') expect(response.headers()['retry-after']).toBe('7');
       await expect.poll(async () => lookup.page.getByRole('alert').count()).toBeGreaterThan(0);
       expect(await lookup.page.getByRole('button', { name: 'Download JSON', exact: true }).count()).toBe(0);
       expect((await host!.inspect()).leaseCount).toBe(0);
-    } finally { await lookup.close(); await host!.setProviderScenario('ok'); }
+      expect(response.request().isNavigationRequest()).toBe(false);
+      expect(apiRequestCount).toBe(1);
+      expect(documentNavigationRequestCount).toBe(0);
+    } catch (reason) {
+      retainFailure(reason);
+    } finally {
+      lookup.page.off('request', onRequest);
+      lookup.page.off('framenavigated', onFrameNavigated);
+      try { await lookup.close(); } catch (reason) {
+        cleanupErrors.push({ operation: 'close lookup', error: boundedError(reason) });
+        retainFailure(reason);
+      }
+      try { await host!.setProviderScenario('ok'); } catch (reason) {
+        cleanupErrors.push({ operation: 'reset provider scenario', error: boundedError(reason) });
+        retainFailure(reason);
+      }
+      const diagnostic = {
+        scenario, response: responseMetadata, bodyStatus, bodyOutcome, bodyError,
+        captureOutcome, captureError, clickOutcome, clickError, apiRequestCount,
+        documentNavigationRequestCount, documentNavigationRequests,
+        omittedDocumentNavigationRequests: Math.max(0, documentNavigationRequestCount - documentNavigationRequests.length),
+        frameNavigationCount, frameURLs,
+        omittedFrameURLs: Math.max(0, frameNavigationCount - frameURLs.length),
+        failure: failed ? boundedError(firstFailure) : undefined, cleanupErrors,
+      };
+      try { process.stdout.write(`domain-provider-capture ${JSON.stringify(diagnostic)}\n`); } catch (reason) { retainFailure(reason); }
+      try {
+        await writeFile(join(evidenceDir, `domain-${scenario}-capture.json`), JSON.stringify(diagnostic, null, 2));
+      } catch (reason) { retainFailure(reason); }
+    }
+    if (failed) throw firstFailure;
   }, 60000);
 }
 
