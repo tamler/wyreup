@@ -98,17 +98,37 @@ Open work, in priority order:
 
 ## Dependency hygiene
 
-- CI blocks on both production and complete dependency audits at every severity.
-  No advisory exclusions or soft failures are permitted.
+- CI blocks on production and complete dependency audit findings at every severity,
+  except the exact formally rejected record described below. Raw scanner output,
+  stderr and exit status are retained separately from the policy result.
+  No broad advisory exclusions, severity thresholds or registry-error bypasses
+  are permitted. Project auditConfig and muted findings fail the check.
 - Dependabot proposes weekly grouped updates; security and parser libraries
   require compatibility checks alongside the audit.
 - Workspace overrides affect repository installations only. Published package
   safety is checked by installing actual release tarballs into isolated npm and
   pnpm projects without consumer overrides. Normal and disabled install scripts
   are covered, with full audits and a walk of nested dependency versions.
+  Those consumer audits do not inspect bundled code. The maintained ExcelJS
+  Node archive bundle records its complete input, package, manifest and license
+  graph; build verification requires those exact versions in the workspace lock,
+  and the complete workspace audit covers them before release. A clean consumer
+  audit alone does not establish that bundled code is free of advisories.
 - Runtime releases require Node 22.13 or a supported newer release. OpenPGP 6
   keeps standard version-4 keys compatible but rejects legacy version-5 keys by
   default; see the package READMEs for migration guidance.
+
+The sole rejected-record disposition is `GHSA-gcqx-w48m-w2h4` /
+`CVE-2026-93753` for `deepmerge@4.3.1`. The
+[official CVE record](https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/93xxx/CVE-2026-93753.json)
+was rejected by VulnCheck on November 2, 2026 because it does not describe a
+security vulnerability, while the package advisory feed still reports it.
+`tools/check-dependency-audit.mjs` retains the raw report and checks the exact
+GHSA, CVE, package, version, severity and affected range. It also verifies the
+official record live whenever that disposition would allow a pass. A changed or
+unavailable authority record, malformed report, subprocess failure or any other
+advisory blocks release. A policy pass with a raw nonzero audit remains explicitly
+reported as such. Fresh public-package consumer audits still require raw zero.
 
 ## AI dependencies and existing consumer locks
 

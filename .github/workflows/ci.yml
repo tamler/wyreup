@@ -52,6 +52,9 @@ jobs:
       # dispatched test reports "Tool worker crashed (exit=1, signal=null)".
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y sqlite3
+      - run: pnpm test:functions
+      - run: pnpm exec vitest run tools/test/dependency-parent-compatibility.test.mjs
       - run: pnpm test
       - run: pnpm --filter @wyreup/web check:pwa
       - run: pnpm --filter @wyreup/web check:remote-cache
@@ -287,7 +290,8 @@ jobs:
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
-    # All severities and both production and development dependencies block.
+    # All live advisories block. The policy retains raw scanner results and
+    # verifies the sole formally rejected CVE against its live authority.
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -296,5 +300,17 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --prod
-      - run: pnpm audit
+      - run: pnpm exec vitest run tools/test/check-dependency-audit.test.mjs
+      - name: Audit production dependencies
+        if: always()
+        run: node tools/check-dependency-audit.mjs --prod --evidence-dir "${{ runner.temp }}/wyreup-dependency-audit"
+      - name: Audit complete dependency graph
+        if: always()
+        run: node tools/check-dependency-audit.mjs --evidence-dir "${{ runner.temp }}/wyreup-dependency-audit"
+      - name: Retain raw dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-audit
+          path: ${{ runner.temp }}/wyreup-dependency-audit/
+          if-no-files-found: error

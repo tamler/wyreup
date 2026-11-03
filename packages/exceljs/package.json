@@ -38,7 +38,6 @@
     "test": "node --test test/*.test.cjs"
   },
   "dependencies": {
-    "archiver": "^7.0.1",
     "dayjs": "^1.11.23",
     "fast-csv": "^4.3.6",
     "jszip": "^3.10.2",
@@ -48,6 +47,7 @@
     "unzipper": "^0.12.5"
   },
   "devDependencies": {
+    "archiver": "7.0.1",
     "buffer": "6.0.3",
     "core-js": "3.50.0",
     "create-hash": "1.2.0",

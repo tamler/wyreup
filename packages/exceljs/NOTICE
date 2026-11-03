@@ -7,3 +7,10 @@ required by the upgraded archiver dependency used for streaming XLSX output.
 The browser bundle's constituent package versions and license texts appear in
 vendor/THIRD-PARTY-NOTICES.txt and vendor/BROWSER-DEPENDENCIES.json.
 The streaming workbook reader uses unzipper's native async iterator to preserve all file-backed archive entries with the updated unzipper dependency.
+The Node streaming workbook writer uses a bundled Archiver 7.0.1 factory with
+glob 14.0.2 and minimatch 11.0.1. Its complete package/input/manifest/license
+provenance and license texts are in vendor/NODE-DEPENDENCIES.json,
+vendor/NODE-METAFILE.json and vendor/NODE-THIRD-PARTY-NOTICES.txt.
+Consumer package-manager audits do not inspect this bundled code. A raw-zero
+consumer audit is not a bundled-code security result; the full workspace audit
+covers the exact bundled build dependencies, whose lock membership is verified.

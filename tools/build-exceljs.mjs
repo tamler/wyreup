@@ -1,13 +1,20 @@
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
+import { createRequire, isBuiltin } from 'node:module';
 import { readFile, writeFile, readdir, mkdir, mkdtemp, rm, rename, copyFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { build } from 'esbuild';
 import { x as extract } from 'tar';
+import { load as loadYaml } from 'js-yaml';
+import { satisfies } from 'semver';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const arguments_ = process.argv.slice(2);
+const fixture = arguments_.length === 3 && arguments_[0] === '--verify' && arguments_[1] === '--fixture-root';
+if (arguments_.length && !fixture && !(arguments_.length === 1 && arguments_[0] === '--verify')) {
+  throw new Error('Expected no arguments, --verify, or read-only --verify --fixture-root <directory>');
+}
+const root = fixture ? resolve(arguments_[2]) : resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packageDir = join(root, 'packages/exceljs');
 const vendor = join(packageDir, 'vendor');
 const require = createRequire(join(packageDir, 'package.json'));
@@ -15,7 +22,8 @@ const upstream = JSON.parse(await readFile(join(packageDir, 'UPSTREAM.json'), 'u
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const recipeFiles = ['tools/build-exceljs.mjs', 'packages/exceljs/UPSTREAM.json', 'packages/exceljs/NOTICE',
   'packages/exceljs/src/browser-globals.mjs', 'packages/exceljs/src/browser-crypto.cjs', 'packages/exceljs/src/browser-fs.cjs',
-  'packages/exceljs/licenses/saxes-5.0.1.txt', 'packages/exceljs/src/browser-entry.mjs'];
+  'packages/exceljs/licenses/saxes-5.0.1.txt', 'packages/exceljs/src/browser-entry.mjs',
+  'packages/exceljs/src/node-archive.cjs'];
 const recipeHash = createHash('sha256');
 for (const file of recipeFiles) recipeHash.update(file).update(await readFile(join(root, file)));
 const ownManifest = JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8'));
@@ -39,6 +47,63 @@ async function inventory(directory) {
   return Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)));
 }
 
+function validateNodePackages(packages, lock) {
+  for (const dependency of packages) {
+    if (!Object.hasOwn(lock.packages ?? {}, `${dependency.name}@${dependency.version}`)) {
+      throw new Error(`Bundled Node dependency absent from workspace lock: ${dependency.name}@${dependency.version}`);
+    }
+    if (dependency.engines?.node && !satisfies('22.13.0', dependency.engines.node)) {
+      throw new Error(`Bundled Node dependency excludes Node 22.13.0: ${dependency.name}@${dependency.version}`);
+    }
+  }
+  for (const [name, version] of [['archiver', '7.0.1'], ['glob', '14.0.2'], ['minimatch', '11.0.1']]) {
+    const identities = packages.filter(dependency => dependency.name === name);
+    if (identities.length !== 1 || identities[0].version !== version) {
+      throw new Error(`Expected one bundled ${name}@${version} identity`);
+    }
+  }
+}
+
+async function verifyNodeGraph(directory) {
+  const graph = JSON.parse(await readFile(join(directory, 'NODE-DEPENDENCIES.json'), 'utf8'));
+  const lock = loadYaml(await readFile(join(root, 'pnpm-lock.yaml'), 'utf8'));
+  validateNodePackages(graph.packages, lock);
+  for (const input of graph.inputs) {
+    const file = resolve(root, input.path);
+    if (!file.startsWith(root + '/') || digest(await readFile(file)) !== input.sha256) {
+      throw new Error(`Node dependency input changed: ${input.path}`);
+    }
+  }
+  for (const dependency of graph.packages) {
+    const manifest = resolve(root, dependency.manifest);
+    if (!manifest.startsWith(root + '/')) throw new Error('Node manifest escapes workspace');
+    const bytes = await readFile(manifest);
+    const installed = JSON.parse(bytes);
+    if (digest(bytes) !== dependency.manifestSha256 || installed.name !== dependency.name ||
+        installed.version !== dependency.version || JSON.stringify(installed.engines) !== JSON.stringify(dependency.engines)) {
+      throw new Error(`Node dependency manifest changed: ${dependency.name}`);
+    }
+    for (const license of dependency.licenses) {
+      const file = resolve(root, license.path);
+      if (!file.startsWith(root + '/') || digest(await readFile(file)) !== license.sha256) {
+        throw new Error(`Node dependency license changed: ${dependency.name}`);
+      }
+    }
+    if (!dependency.licenses.length) throw new Error(`Node dependency license missing: ${dependency.name}`);
+  }
+  const meta = JSON.parse(await readFile(join(directory, 'NODE-METAFILE.json'), 'utf8'));
+  for (const output of Object.values(meta.outputs)) {
+    for (const imported of output.imports) {
+      if (!imported.external || !isBuiltin(imported.path)) {
+        throw new Error(`Unexpected Node artifact external: ${imported.path}`);
+      }
+    }
+  }
+  for (const [file, sha256] of Object.entries(graph.outputs)) {
+    if (digest(await readFile(join(directory, file))) !== sha256) throw new Error(`Node output changed: ${file}`);
+  }
+}
+
 async function verify() {
   const manifest = JSON.parse(await readFile(join(vendor, 'BUILD-MANIFEST.json'), 'utf8'));
   if (manifest.recipe !== recipe || JSON.stringify(manifest.upstream) !== JSON.stringify(upstream)) {
@@ -59,6 +124,11 @@ async function verify() {
     if (installed.name !== dependency.name || installed.version !== dependency.version) {
       throw new Error(`Browser dependency changed: ${dependency.name}`);
     }
+  }
+  await verifyNodeGraph(vendor);
+  const writer = await readFile(join(vendor, 'lib/stream/xlsx/workbook-writer.js'), 'utf8');
+  if (!writer.includes("const Archiver = require('../../../dist/node-archive.cjs');") || /require\(['"]archiver['"]\)/.test(writer)) {
+    throw new Error('Streaming workbook writer must use the shipped Node archive');
   }
 }
 
@@ -141,12 +211,92 @@ try {
   await writeFile(readerFile, readerBefore.replace(readerNeedle, 'for await (const entry of zip)'));
   execFileSync(process.execPath, ['--check', readerFile]);
 
+  const writerFile = join(staged, 'lib/stream/xlsx/workbook-writer.js');
+  const writerBefore = await readFile(writerFile, 'utf8');
+  const writerNeedle = "const Archiver = require('archiver');";
+  if (writerBefore.split(writerNeedle).length !== 2) throw new Error('Excel Archiver import preimage changed');
+  await writeFile(writerFile, writerBefore.replace(writerNeedle,
+    "const Archiver = require('../../../dist/node-archive.cjs');"));
+  execFileSync(process.execPath, ['--check', writerFile]);
+
   const sourceFiles = await inventory(staged);
   for (const file of Object.keys(sourceFiles).filter(file => file.endsWith('.js'))) {
     const source = await readFile(join(staged, file), 'utf8');
     if (/require\(['"]uuid['"]\)/.test(source)) throw new Error(`Unexpected remaining UUID import: ${file}`);
+    if (/require\(['"]archiver['"]\)/.test(source)) throw new Error(`Unexpected remaining Archiver import: ${file}`);
   }
   await mkdir(join(staged, 'dist'), { recursive: true });
+  const nodeOutfile = join(staged, 'dist/node-archive.cjs');
+  const nodeResult = await build({
+    absWorkingDir: root, entryPoints: [join(packageDir, 'src/node-archive.cjs')], outfile: nodeOutfile,
+    bundle: true, format: 'cjs', platform: 'node', target: 'node22.13', metafile: true,
+    legalComments: 'inline', logLevel: 'silent',
+  });
+  if (nodeResult.warnings.length) throw new Error(`Node archive build warnings: ${JSON.stringify(nodeResult.warnings)}`);
+  for (const output of Object.values(nodeResult.metafile.outputs)) {
+    for (const imported of output.imports) {
+      if (!imported.external || !isBuiltin(imported.path)) throw new Error(`Unexpected Node artifact external: ${imported.path}`);
+    }
+  }
+  execFileSync(process.execPath, ['--check', nodeOutfile]);
+  const nodePackages = new Map();
+  const nodeInputs = [];
+  for (const input of Object.keys(nodeResult.metafile.inputs)) {
+    const file = resolve(root, input);
+    if (!file.startsWith(root + '/')) throw new Error(`Unexpected Node input path: ${input}`);
+    nodeInputs.push({ path: relative(root, file).replaceAll('\\', '/'), sha256: digest(await readFile(file)) });
+    if (!input.includes('node_modules/')) continue;
+    let directory = dirname(file);
+    while (directory !== root) {
+      const manifestPath = join(directory, 'package.json');
+      const bytes = await readFile(manifestPath).catch(error => {
+        if (error.code === 'ENOENT') return null;
+        throw error;
+      });
+      const manifest = bytes && JSON.parse(bytes);
+      if (manifest?.name && manifest.version) {
+        nodePackages.set(`${manifest.name}@${manifest.version}`, { name: manifest.name, version: manifest.version,
+          manifest: relative(root, manifestPath).replaceAll('\\', '/'), manifestSha256: digest(bytes),
+          license: manifest.license, ...(manifest.engines ? { engines: manifest.engines } : {}), directory });
+        break;
+      }
+      const parent = dirname(directory);
+      if (parent === directory) throw new Error(`No package provenance for ${input}`);
+      directory = parent;
+    }
+  }
+  const nodeNotices = [await readFile(join(packageDir, 'NOTICE'), 'utf8')];
+  const nodeDependencies = [];
+  for (const dependency of [...nodePackages.values()].sort((a, b) => a.name.localeCompare(b.name))) {
+    const licenseFiles = (await readdir(dependency.directory)).filter(file => /^(licen[sc]e|copying|notice)([._-]|$)/i.test(file));
+    const licenses = [];
+    nodeNotices.push(`\n--- ${dependency.name}@${dependency.version} (${JSON.stringify(dependency.license)}) ---\n`);
+    if (!licenseFiles.length) {
+      const file = join(dependency.directory, 'README.md');
+      const bytes = await readFile(file);
+      const text = bytes.toString().match(/(?:^|\n)#+ License\s*\n([\s\S]+)/i)?.[1];
+      if (!text || !text.includes('Permission is hereby granted')) throw new Error(`Missing complete Node license: ${dependency.name}`);
+      licenses.push({ path: relative(root, file).replaceAll('\\', '/'), sha256: digest(bytes) });
+      nodeNotices.push(text);
+    }
+    for (const name of licenseFiles) {
+      const file = join(dependency.directory, name);
+      const bytes = await readFile(file);
+      licenses.push({ path: relative(root, file).replaceAll('\\', '/'), sha256: digest(bytes) });
+      nodeNotices.push(bytes.toString());
+    }
+    const { directory: _directory, ...record } = dependency;
+    nodeDependencies.push({ ...record, licenses });
+  }
+  validateNodePackages(nodeDependencies, loadYaml(await readFile(join(root, 'pnpm-lock.yaml'), 'utf8')));
+  nodeInputs.sort((a, b) => a.path.localeCompare(b.path));
+  const nodeMeta = JSON.parse(JSON.stringify(nodeResult.metafile).replaceAll('\\\\', '/')
+    .replaceAll(relative(root, staged).replaceAll('\\', '/'), 'vendor').replaceAll(`${root.replaceAll('\\', '/')}/`, ''));
+  await writeFile(join(staged, 'NODE-METAFILE.json'), JSON.stringify(nodeMeta, null, 2) + '\n');
+  await writeFile(join(staged, 'NODE-DEPENDENCIES.json'), JSON.stringify({ target: 'node22.13', packages: nodeDependencies,
+    inputs: nodeInputs, outputs: { 'dist/node-archive.cjs': digest(await readFile(nodeOutfile)) } }, null, 2) + '\n');
+  await writeFile(join(staged, 'NODE-THIRD-PARTY-NOTICES.txt'), nodeNotices.join('\n'));
+
   const outfile = join(staged, 'dist/exceljs.browser.mjs');
   const result = await build({
     absWorkingDir: root,
@@ -163,6 +313,7 @@ try {
       crypto: join(packageDir, 'src/browser-crypto.cjs'),
     },
   });
+  if (result.warnings.length) throw new Error(`Browser build warnings: ${JSON.stringify(result.warnings)}`);
   execFileSync(process.execPath, ['--check', outfile]);
 
   const packages = new Map();

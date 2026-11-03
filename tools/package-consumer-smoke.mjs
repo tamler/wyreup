@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
@@ -167,6 +168,33 @@ if (excelRequire) {
   await restored.xlsx.load(bytes);
   assert.equal(restored.getWorksheet('Smoke').getCell('A1').value, 'secure workbook');
   assert.equal(restored.getWorksheet('Smoke').sheetProtection.sheet, true);
+  const streamingDirectory = await mkdtemp(path.join(tmpdir(), 'wyreup-packed-excel-'));
+  try {
+    const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6HsAAAAASUVORK5CYII=', 'base64');
+    const imageFile = path.join(streamingDirectory, 'pixel.png');
+    const workbookFile = path.join(streamingDirectory, 'stream.xlsx');
+    await writeFile(imageFile, image);
+    const writer = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: workbookFile, useSharedStrings: true });
+    const streamed = writer.addWorksheet('Queued');
+    streamed.addBackgroundImage(writer.addImage({ filename: imageFile, extension: 'png' }));
+    streamed.addRow(['Label', 'Value']).commit();
+    streamed.addRow(['first queued row', 17]).commit();
+    streamed.addRow(['second queued row', 29]).commit();
+    streamed.commit();
+    await writer.commit();
+    const saved = await readFile(workbookFile);
+    const zip = await excelRequire('jszip').loadAsync(saved);
+    const imageEntries = Object.values(zip.files).filter(entry => entry.name.startsWith('xl/media/') && !entry.dir);
+    assert.equal(imageEntries.length, 1, 'Packed streaming writer lost its filename-backed image');
+    assert.deepEqual(await imageEntries[0].async('nodebuffer'), image);
+    const reloaded = new ExcelJS.Workbook();
+    await reloaded.xlsx.readFile(workbookFile);
+    assert.deepEqual(reloaded.getWorksheet('Queued').getSheetValues().slice(1).map(row => row.slice(1)),
+      [['Label', 'Value'], ['first queued row', 17], ['second queued row', 29]]);
+    assert.equal(reloaded.model.media.length, 1);
+  } finally {
+    await rm(streamingDirectory, { recursive: true, force: true });
+  }
   if (core) {
     const tool = core.createDefaultRegistry().toolsById.get('json-to-excel');
     const rows = [{ label: 'secure workbook', count: 3 }, { label: 'second row', count: 7 }];

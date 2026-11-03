@@ -17,8 +17,21 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - run: pnpm audit --prod
-      - run: pnpm audit
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec vitest run tools/test/check-dependency-audit.test.mjs
+      - name: Audit production dependencies
+        if: always()
+        run: node tools/check-dependency-audit.mjs --prod --evidence-dir "${{ runner.temp }}/wyreup-dependency-audit"
+      - name: Audit complete dependency graph
+        if: always()
+        run: node tools/check-dependency-audit.mjs --evidence-dir "${{ runner.temp }}/wyreup-dependency-audit"
+      - name: Retain raw dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: scheduled-dependency-audit
+          path: ${{ runner.temp }}/wyreup-dependency-audit/
+          if-no-files-found: error
       - name: Review upstream runtime and maintained library dependencies
         if: always()
         run: |
