@@ -1730,18 +1730,35 @@ export async function protectedGroupA31Fixtures(root, oracles) {
       : directSymbol ? `packages/core/src/tools/${engineId}/index.ts` : 'packages/core/src/utilities/text-developer.ts';
     const specifier = directSymbol === 'csvViewer' ? './utilities/files.js'
       : directSymbol ? `./tools/${engineId}/index.js` : './utilities/text-developer.js';
-    const module = await source(modulePath);
+    let module = await source(modulePath);
     const publicExport = namedEdge(index.ast, symbol, specifier, true);
-    const registryImport = namedEdge(registry.ast, symbol, specifier, false);
+    const registryImport = namedEdge(registry.ast, symbol,
+      engineId === 'cron-from-text' ? './tools/cron-from-text/tool.js' : specifier, false);
     const registryMember = membership(symbol, !directSymbol);
     let declaration, sourceOutputMime, factoryBindings = [], extraSources = [];
+    if (engineId === 'cron-from-text') {
+      const barrel = module;
+      factoryBindings.push({ name: 'publicToolReexport', ...namedEdge(barrel.ast, symbol, './tool.js', true) });
+      extraSources.push(barrel, await source('packages/core/src/tools/cron-from-text/generate.ts'));
+      module = await source('packages/core/src/tools/cron-from-text/tool.ts');
+    }
     if (directSymbol) {
       declaration = named(module.ast, directSymbol);
       const object = unwrap(declaration.initializer);
       if (!ts.isObjectLiteralExpression(object) || literal(member(object, 'id').initializer) !== engineId
         || !ts.isMethodDeclaration(member(object, 'run'))) fail('Group A31 literal public ToolModule id/run refused.');
       sourceOutputMime = literal(member(unwrap(member(object, 'output').initializer), 'mime').initializer);
-      factoryBindings = ['defaults', 'run'].map((key) => ({ member: key, ...span(member(object, key), module.ast) }));
+      factoryBindings.push(...['defaults', 'run'].map((key) => ({ member: key, ...span(member(object, key), module.ast) })));
+      if (engineId === 'cron-from-text') {
+        const run = member(object, 'run');
+        for (const specifier of ['./generate.js', 'cron-parser']) {
+          const imports = nodes(run, (node) => ts.isCallExpression(node)
+            && node.expression.kind === ts.SyntaxKind.ImportKeyword && node.arguments.length === 1
+            && ts.isStringLiteral(node.arguments[0]) && node.arguments[0].text === specifier);
+          if (imports.length !== 1) fail('Group A31 unique literal cron generator/parser import refused.');
+          factoryBindings.push({ name: specifier, ...span(imports[0], module.ast) });
+        }
+      }
       const defaultTypes = module.ast.statements.filter((node) => ts.isExportDeclaration(node)
         && node.moduleSpecifier?.text === './types.js');
       if (defaultTypes.length) extraSources.push(await source(modulePath.replace(/index\.ts$/, 'types.ts')));
@@ -1813,13 +1830,41 @@ export async function protectedGroupA31Fixtures(root, oracles) {
       const nodeConfig = nodeConfigs[0];
       if (literal(member(nodeConfig, 'outDir').initializer) !== 'dist/node'
         || !isDeepStrictEqual(literal(member(nodeConfig, 'format').initializer), ['esm', 'cjs'])
-        || literal(member(unwrap(member(nodeConfig, 'entry').initializer), "'file-worker'").initializer) !== 'src/utilities/file-worker-node.ts')
+        || !isDeepStrictEqual(literal(member(nodeConfig, 'entry').initializer), {
+          index: 'src/index.ts', execution: 'src/execution.ts', 'file-worker': 'src/utilities/file-worker-node.ts',
+        }))
         fail('Group A31 exact Node entry/worker recipe refused.');
       const recipeText = nodeConfig.getText(csv[13].ast);
-      if (!recipeText.includes("name: 'node-file-worker-adapter'")
-        || !recipeText.includes("build.onResolve({ filter: /^\\.\\/file-job-platform\\.js$/ }, () => ({")
-        || !recipeText.includes("new URL('./src/utilities/file-job-node.ts', import.meta.url)"))
+      const redirects = nodes(nodeConfig, (node) => ts.isCallExpression(node)
+        && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === 'onResolve');
+      if (redirects.length !== 2 || !recipeText.includes("name: 'node-file-worker-adapter'"))
         fail('Group A31 exact Node platform onResolve recipe refused.');
+      const expectedRedirects = new Map([
+        ['/^\\.\\/file-job-platform\\.js$/', './src/utilities/file-job-node.ts'],
+        ['/^\\.\\/bank-pdf-platform\\.js$/', './src/utilities/bank-pdf-node.ts'],
+      ]);
+      for (const redirect of redirects) {
+        if (!id(redirect.expression.expression, 'build') || redirect.arguments.length !== 2)
+          fail('Group A31 exact Node platform onResolve recipe refused.');
+        const options = unwrap(redirect.arguments[0]), callback = unwrap(redirect.arguments[1]);
+        if (!ts.isObjectLiteralExpression(options) || options.properties.length !== 1
+          || !ts.isArrowFunction(callback) || callback.parameters.length)
+          fail('Group A31 exact Node platform onResolve recipe refused.');
+        const filter = member(options, 'filter').initializer, result = unwrap(callback.body);
+        if (!ts.isRegularExpressionLiteral(filter) || !expectedRedirects.has(filter.text)
+          || !ts.isObjectLiteralExpression(result) || result.properties.length !== 1)
+          fail('Group A31 exact Node platform onResolve recipe refused.');
+        const pathCall = unwrap(member(result, 'path').initializer);
+        if (!ts.isCallExpression(pathCall) || !id(pathCall.expression, 'fileURLToPath') || pathCall.arguments.length !== 1)
+          fail('Group A31 exact Node platform onResolve recipe refused.');
+        const url = unwrap(pathCall.arguments[0]);
+        if (!ts.isNewExpression(url) || !id(url.expression, 'URL') || url.arguments?.length !== 2
+          || !ts.isStringLiteral(url.arguments[0]) || url.arguments[0].text !== expectedRedirects.get(filter.text)
+          || url.arguments[1].getText(csv[13].ast) !== 'import.meta.url')
+          fail('Group A31 exact Node platform onResolve recipe refused.');
+        expectedRedirects.delete(filter.text);
+      }
+      if (expectedRedirects.size) fail('Group A31 exact Node platform onResolve recipe refused.');
       const workerText = csv[10].bytes.toString('utf8');
       if (!workerText.includes("new URL('./file-worker.js', import.meta.url)")) fail('Group A31 exact Node worker target refused.');
       record.csvNodeImportBinding = {
@@ -1896,8 +1941,29 @@ export async function protectedGroupBCFixtures(root, oracles) {
   if (sha(JSON.stringify(oracles.sourceCaseCatalog)) !== '4b8de77304d87a98fb4e99950d1a26eabaf20c7d5863682cedd643458abccf71'
     || sha(JSON.stringify(oracles.declaredFixtureCatalog)) !== '1341ca083c65d21af34b1189dfc670e67f60a5efa8c29bb3eed78a5be2d2a87e')
     fail('Group BC cannot alter historical902/81 authorities.');
-  // Fixed accepted INITIAL source inputs; these are not runtime output goldens.
-  const publicPins = {"packages/core/src/utilities/aspect-ratio.ts":{"bytes":4545,"sha256":"ac88805fbdfb13d2904a83f0b597bdc406039235ce49995316c536fcbb72c228"},"packages/core/src/utilities/common.ts":{"bytes":19061,"sha256":"fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7"},"packages/core/src/tools/lorem-ipsum/index.ts":{"bytes":4653,"sha256":"444251966259167217a006a3682152024871d4a70b0a07e48a9ccd03eafa003d"},"packages/core/src/tools/lorem-ipsum/types.ts":{"bytes":529,"sha256":"cb6bb02f0e9ee6c1f0227aeab67473a501ff242409a8693dd487f464456df56c"},"packages/core/src/tools/password-generator/index.ts":{"bytes":4928,"sha256":"da5e3df44383ac9ef71f58db11bac989a33bfc10c99663e7b32308e083308749"},"packages/core/src/tools/password-generator/types.ts":{"bytes":743,"sha256":"924d00cec12d83e30b01580ce9f41b63689ddda1efc39b1556ea334a0a849555"},"packages/core/src/tools/uuid-generator/index.ts":{"bytes":2136,"sha256":"1bc3d3abd4a67c80d070fd7d0d7ec9911e7e9caa91f511c0257296798ead88f4"},"packages/core/src/tools/uuid-generator/types.ts":{"bytes":284,"sha256":"9edeed016aa41e903fe9f160559c5abcc15471426fa198138715b498e54ab9a4"},"packages/core/src/default-registry.ts":{"bytes":24261,"sha256":"2af3a59fdaba1d5d2f77efae6c489a354e5fa9fc15c988669411e1ef518e699b"},"packages/core/src/registry.ts":{"bytes":4762,"sha256":"23252910de7ab95b1c398186167bdee17b0b227289d86c440f3134a4b3569b0a"},"packages/core/src/types.ts":{"bytes":14110,"sha256":"639295da62e0cd209aa86e46a501aec87aa97069ffa0944b45ef367f33f59b54"},"packages/core/src/utilities/planning.ts":{"bytes":59974,"sha256":"5037a7a0788445f04cbb2d21a7bd9974404acedaa2a1ed7a0c4ef70cc8fae48c"},"packages/core/src/utilities/hardware.ts":{"bytes":47492,"sha256":"9b87e59cdc6613478ab520f02ac4a1e856797220161b6069e2b8b9ed2a4c7f1b"},"packages/core/src/utilities/building.ts":{"bytes":52180,"sha256":"a2075ed96ef17e397215d5514bec1a33c4b48bddc637ab8b1e99c8df1c7726d6"},"packages/core/src/index.ts":{"bytes":40470,"sha256":"1e375d672360591ddba3eb3aa3ff63fd74a2eee3e29ff7ab02f60c76080b5727"}};
+  // Fixed current source inputs for pending identity only; these are not runtime output goldens or SOURCE acceptance.
+  const publicPins = {
+    'packages/core/src/utilities/aspect-ratio.ts': { bytes: 4545, sha256: 'ac88805fbdfb13d2904a83f0b597bdc406039235ce49995316c536fcbb72c228' },
+    'packages/core/src/utilities/common.ts': { bytes: 19061, sha256: 'fda910defff6b56dc22e7be8f18f9a91ea62971f3bedc1300e730c874c0257b7' },
+    'packages/core/src/tools/lorem-ipsum/index.ts': { bytes: 4653, sha256: '444251966259167217a006a3682152024871d4a70b0a07e48a9ccd03eafa003d' },
+    'packages/core/src/tools/lorem-ipsum/types.ts': { bytes: 529, sha256: 'cb6bb02f0e9ee6c1f0227aeab67473a501ff242409a8693dd487f464456df56c' },
+    'packages/core/src/tools/password-generator/index.ts': { bytes: 4928, sha256: 'da5e3df44383ac9ef71f58db11bac989a33bfc10c99663e7b32308e083308749' },
+    'packages/core/src/tools/password-generator/types.ts': { bytes: 743, sha256: '924d00cec12d83e30b01580ce9f41b63689ddda1efc39b1556ea334a0a849555' },
+    'packages/core/src/tools/uuid-generator/index.ts': { bytes: 2136, sha256: '1bc3d3abd4a67c80d070fd7d0d7ec9911e7e9caa91f511c0257296798ead88f4' },
+    'packages/core/src/tools/uuid-generator/types.ts': { bytes: 284, sha256: '9edeed016aa41e903fe9f160559c5abcc15471426fa198138715b498e54ab9a4' },
+    'packages/core/src/default-registry.ts': { bytes: 24258, sha256: 'e3c9bdf67178740d2127c53cfdf8231a87d09fc7da20d2f3970d78db667655a0' },
+    'packages/core/src/registry.ts': { bytes: 4762, sha256: '23252910de7ab95b1c398186167bdee17b0b227289d86c440f3134a4b3569b0a' },
+    'packages/core/src/types.ts': { bytes: 14110, sha256: '639295da62e0cd209aa86e46a501aec87aa97069ffa0944b45ef367f33f59b54' },
+    'packages/core/src/utilities/planning.ts': { bytes: 20850, sha256: '54bf919a5d83769446e8e0e691a71c1f02570953eb4aa7c2aab7e4571c5db63e' },
+    'packages/core/src/utilities/hardware.ts': { bytes: 35947, sha256: '04df623d812c8ed97b5eb184e175acd09a16f8aa1b5509f779b25624c651cfa2' },
+    'packages/core/src/utilities/building.ts': { bytes: 22356, sha256: 'fbfcd4f38b190dec99578a178fe5654a07ac7b86be2cd1a71db59cf830fa0940' },
+    'packages/core/src/index.ts': { bytes: 40470, sha256: '1e375d672360591ddba3eb3aa3ff63fd74a2eee3e29ff7ab02f60c76080b5727' },
+    'packages/core/src/utilities/planning-shared.ts': { bytes: 16560, sha256: '40be265b84e6006d28873fad4cd783ce56bba959d8a09142d7c0eafd28c295fa' },
+    'packages/core/src/utilities/planning-calculations.ts': { bytes: 25255, sha256: 'fbc14e2c6348f06972fa59a9bc218b7709344a0b57966a0152c0a8df7e77432c' },
+    'packages/core/src/utilities/hardware-shared.ts': { bytes: 1067, sha256: '58f3dad3f85d3574bacb0bf2b1863752f28cabdc0537fdeed5be00f970b90854' },
+    'packages/core/src/utilities/hardware-calculations.ts': { bytes: 12377, sha256: '7b619ca9408689382acb1ad222a480287ec8e89c3cc010576d4a3ca5ad9bbd87' },
+    'packages/core/src/utilities/building-shared.ts': { bytes: 13984, sha256: '338c3a7bd81c7b9a8da9bcab2aecf8262ae5e8dcf9fb59121fe3c3ba755784a4' },
+  };
   const definitions = [
     ['aspect-ratio-calculator', 'aspectRatioCalculator', null, 358, 'json-fields', { width: '1920', height: '1080' }, { expected: { ratio: '16:9' } }, '037a70843f08c4065407b3e3ba9fd818264a60030ef63b61d22d32b75a36d139'],
     ['tv-viewing-distance-calculator', 'hardwareTools', 'tv', 77, 'bc-tv-original-geometry', { diagonalIn: 5, aspectWidth: 4, aspectHeight: 3, horizontalFovDeg: 90 }, { exactFields: { widthIn: 4, heightIn: 3, referenceDistanceIn: 4.5 }, onlyNumericComparison: { field: 'geometricFovDistanceIn', expected: 2, relativeTolerance: 1e-9, inclusive: true } }, '002b0a8f028db45b93ee955aa325517b2b2874f4ee9fa9b9653057e2df1b68a0'],
@@ -2100,14 +2166,53 @@ export async function protectedGroupBCFixtures(root, oracles) {
       if (!ts.isCallExpression(factoryCall) || !id(factoryCall.expression, factoryName) || literal(factoryCall.arguments[0]) !== engineId) fail('Group BC actual literal engine id/factory refused.');
       factoryBindings.push({ name: factoryName, ...span(named(module.ast, factoryName), module.ast) });
       defaultBindings.push(span(factoryCall.arguments[3], module.ast));
+      const family = symbol === 'hardwareTools' ? 'hardware' : 'planning';
+      const dispatchName = symbol === 'hardwareTools' ? 'calculateHardware' : 'calculatePlanning';
+      const factory = named(module.ast, factoryName);
+      const dynamic = nodes(factory, (node) => ts.isVariableDeclaration(node)
+        && ts.isObjectBindingPattern(node.name) && node.name.elements.length === 1
+        && !node.name.elements[0].propertyName && id(node.name.elements[0].name, dispatchName)
+        && node.initializer && ts.isAwaitExpression(node.initializer)
+        && ts.isCallExpression(node.initializer.expression)
+        && node.initializer.expression.expression.kind === ts.SyntaxKind.ImportKeyword
+        && node.initializer.expression.arguments.length === 1
+        && ts.isStringLiteral(node.initializer.expression.arguments[0])
+        && node.initializer.expression.arguments[0].text === `./${family}-calculations.js`);
+      const calls = nodes(factory, (node) => ts.isCallExpression(node) && id(node.expression, dispatchName));
+      if (dynamic.length !== 1 || calls.length !== 1 || calls[0].arguments.length !== 3
+        || !['id', 'p', 'ctx'].every((name, index) => id(calls[0].arguments[index], name)))
+        fail('Group BC unique literal calculator import/delegation required.');
+      const calculations = await source(`packages/core/src/utilities/${family}-calculations.ts`);
+      const dispatcher = named(calculations.ast, dispatchName);
+      sameTemplate(dispatcher.getText(calculations.ast), `export function ${dispatchName}(id: string, p: UtilityParams, ctx: ToolRunContext): UtilityResult | Promise<UtilityResult> {
+        if (!Object.hasOwn(calculations, id)) throw new UtilityInputError('$tool', 'unknown', 'Unknown ${family} calculator.');
+        return calculations[id]!(p, ctx);
+      }`);
+      const table = unwrap(named(calculations.ast, 'calculations').initializer);
+      if (!ts.isObjectLiteralExpression(table)) fail('Group BC literal calculation table required.');
+      const callbacks = table.properties.filter((node) => ts.isPropertyAssignment(node)
+        && ts.isStringLiteralLike(node.name) && node.name.text === engineId && ts.isArrowFunction(unwrap(node.initializer)));
+      if (callbacks.length !== 1) fail('Group BC unique actual calculator callback required.');
+      factoryBindings.push({ name: 'calculationImport', ...span(dynamic[0], module.ast) },
+        { name: 'calculationCall', ...span(calls[0], module.ast) },
+        { name: dispatchName, ...span(dispatcher, calculations.ast) },
+        { name: 'calculationCallback', ...span(callbacks[0], calculations.ast) });
       if (symbol === 'hardwareTools') {
-        const building = await source('packages/core/src/utilities/building.ts');
-        factoryBindings.push({ name: 'buildingUtilityImport', ...namedEdge(module.ast, 'buildingUtility', './building.js', false) });
-        factoryBindings.push({ name: 'createUtilityImport', ...namedEdge(building.ast, 'createUtility', './common.js', false) });
-        for (const name of ['buildingUtility', 'buildingSpecs', 'buildingResult']) factoryBindings.push({ name, ...span(named(building.ast, name), building.ast) });
+        const building = await source('packages/core/src/utilities/building-shared.ts');
+        for (const name of ['buildingChoice', 'buildingN', 'buildingNumber', 'buildingResult', 'buildingRows', 'buildingSpecs'])
+          factoryBindings.push({ name: name + 'Import', ...namedEdge(module.ast, name, './building-shared.js', false) });
+        factoryBindings.push({ name: 'abortImport', ...namedEdge(module.ast, 'abort', './hardware-shared.js', false) });
+        factoryBindings.push({ name: 'buildingCountImport', ...namedEdge(calculations.ast, 'buildingCount', './building-shared.js', false) });
+        factoryBindings.push({ name: 'createUtilityImport', ...namedEdge(module.ast, 'createUtility', './common.js', false) });
+        for (const name of ['buildingSpecs', 'buildingResult']) factoryBindings.push({ name, ...span(named(building.ast, name), building.ast) });
       } else {
         factoryBindings.push({ name: 'createUtilityImport', ...namedEdge(module.ast, 'createUtility', './common.js', false) });
-        for (const name of ['secureUint32', 'uniformInteger', 'sampleUniqueIntegers']) factoryBindings.push({ name, ...span(named(module.ast, name), module.ast) });
+        const shared = await source('packages/core/src/utilities/planning-shared.ts');
+        for (const name of ['secureUint32', 'uniformInteger', 'sampleUniqueIntegers']) {
+          factoryBindings.push({ name: name + 'Reexport', ...namedEdge(module.ast, name, './planning-shared.js', true) },
+            { name: name + 'Import', ...namedEdge(calculations.ast, name, './planning-shared.js', false) },
+            { name, ...span(named(shared.ast, name), shared.ast) });
+        }
       }
       sourceMime = utilityMime;
     } else if (engineId === 'aspect-ratio-calculator') {
@@ -3431,7 +3536,7 @@ async function derivedBrowserRoles(root, build, engineId, runId) {
     'packages/web/astro.config.mjs', 'packages/web/src/sw.ts', 'packages/web/scripts/pwa.mjs',
     'packages/web/scripts/copy-skills.mjs', 'packages/web/test/fixtures/ProductionCatalogHarness.svelte',
     'packages/web/test/fixtures/ProductionCatalogRoute.astro.txt', 'packages/web/public/_headers'];
-  const roles = [], visited = new Set(), core = new Map();
+  const roles = [], visited = new Set(), core = new Map(), coreSelections = new Map();
   while (queue.length) {
     const file = queue.shift();
     if (visited.has(file)) continue;
@@ -3444,12 +3549,19 @@ async function derivedBrowserRoles(root, build, engineId, runId) {
     if (file.endsWith('.txt') || file.endsWith('/_headers')) continue;
     for (const item of await bindingImports(root, file, parsers, [variant], [...knownVariants])) {
       if (item.module.startsWith('.')) queue.push(await localBindingModule(root, file, item.module));
-      else if (item.module === '@wyreup/core') {
+      else if (item.module === '@wyreup/core' || item.module === '@wyreup/core/execution') {
+        const selection = item.module === '@wyreup/core' ? '.' : './execution';
+        const sourceEntry = selection === '.' ? 'packages/core/src/index.ts' : 'packages/core/src/execution.ts';
         if (!item.typeOnly && item.names.length === 0) fail('Browser binding source parser refusal');
         for (const name of item.names) {
           if (name === '*') fail('Browser binding source parser refusal');
-          for (const role of await selectedCoreEdge(root, 'packages/core/src/index.ts', name, parsers, runId, new Set(), item.typeOnly))
-            core.set(`${role.logicalPath}:${role.kind}:${role.edge?.requestedName ?? ''}`, role);
+          for (const role of await selectedCoreEdge(root, sourceEntry, name, parsers, runId, new Set(), item.typeOnly)) {
+            const key = `${selection}:${role.logicalPath}:${role.kind}:${role.edge?.requestedName ?? ''}`;
+            if (!core.has(key)) {
+              core.set(key, role);
+              coreSelections.set(role, selection);
+            }
+          }
         }
       } else if (!item.module.startsWith('node:') && !item.module.startsWith('astro:')) {
         const ownerName = item.module.startsWith('@') ? item.module.split('/').slice(0, 2).join('/') : item.module.split('/')[0];
@@ -3471,7 +3583,40 @@ async function derivedBrowserRoles(root, build, engineId, runId) {
     roles.push({ kind: 'named-preparation-output', captureClass: 'preparation-output', logicalPath,
       bytes: sourceBytes.length, sha256: sha(sourceBytes), sourceRelationship: source });
   }
-  return [...roles, ...core.values()];
+  return { roles: [...roles, ...core.values()], coreSelections };
+}
+
+function executionBindingAssociations(build, stageA, convention) {
+  const message = 'Browser binding core environment-map mismatch';
+  const metadata = JSON.parse(stageA.packageBytes.toString('utf8'));
+  if (!isDeepStrictEqual(metadata.exports?.['./execution'], {
+    types: './dist/browser/execution.d.ts', browser: './dist/browser/execution.js',
+    node: './dist/node/execution.js', default: './dist/browser/execution.js',
+  })) fail(message);
+  const ownedCore = convention.resolve(build.cwd, '../core');
+  const owners = build.dependencyIdentities?.filter(owner => owner.name === '@wyreup/core');
+  if (owners?.length !== 1 || owners[0].packageRoot !== ownedCore || owners[0].version !== metadata.version ||
+      owners[0].packageJson?.path !== convention.join(ownedCore, 'package.json') ||
+      owners[0].packageJson.bytes !== stageA.proof.packageManifest.bytes ||
+      owners[0].packageJson.sha256 !== stageA.proof.packageManifest.sha256) fail(message);
+  function copied(logicalPath, expected) {
+    const matches = build.preparedInputs?.filter(item => item.path === logicalPath);
+    if (matches?.length !== 1 || matches[0].bytes !== expected.bytes || matches[0].sha256 !== expected.sha256)
+      fail(message);
+  }
+  copied('packages/core/package.json', stageA.proof.packageManifest);
+  const associations = new Map();
+  for (const [environment, namespace] of [['client', 'browser'], ['prerender', 'node']]) {
+    const entry = `${namespace}/execution.js`, map = `${entry}.map`;
+    for (const target of [entry, map]) {
+      const outputs = stageA.proof.outputs.filter(item => item.path === target);
+      if (outputs.length !== 1 || outputs[0].bytes <= 0) fail(message);
+      copied(`packages/core/dist/${target}`, outputs[0]);
+    }
+    // Declared package/archived compiler context; probeCore observes only the public index.
+    associations.set(environment, { entry, map });
+  }
+  return associations;
 }
 
 export async function checkBrowserProductionBinding(root, producer, manifest, engine) {
@@ -3591,10 +3736,15 @@ export async function checkBrowserProductionBinding(root, producer, manifest, en
       binding.templateBinding.marker !== '__WYREUP_BINDING_OPTIONS_JSON__' || commandHelperPins.length !== 1 ||
       !isDeepStrictEqual(commandHelperPins[0], currentHelperPin) || !isDeepStrictEqual(helperSourcePin, currentHelperPin))
     fail('Browser binding generated-config template mismatch');
-  const roles = await derivedBrowserRoles(root, build, engine.id, runId);
+  const { roles, coreSelections } = await derivedBrowserRoles(root, build, engine.id, runId);
   const ts = createRequire(import.meta.url)('typescript');
+  const selectedAssociations = new Map([['.', associations]]);
+  if ([...coreSelections.values()].includes('./execution'))
+    selectedAssociations.set('./execution', executionBindingAssociations(build, stageA, convention));
   const mapContexts = new Map();
-  for (const [environment, association] of associations) {
+  for (const [selection, entryAssociations] of selectedAssociations) {
+    const environmentContexts = new Map();
+    for (const [environment, association] of entryAssociations) {
     const queue = [association.entry], visited = new Set(), candidates = [];
     const namespace = association.entry.split('/')[0] + '/';
     while (queue.length) {
@@ -3624,7 +3774,9 @@ export async function checkBrowserProductionBinding(root, producer, manifest, en
       }
     }
     // Compiler static context only: no Vite consumption or nested-worker graph claim.
-    mapContexts.set(environment, candidates);
+      environmentContexts.set(environment, candidates);
+    }
+    mapContexts.set(selection, environmentContexts);
   }
   for (const role of roles) {
     if (role.captureClass === 'selected-named-export-edge') {
@@ -3636,10 +3788,14 @@ export async function checkBrowserProductionBinding(root, producer, manifest, en
     if (role.captureClass === 'selected-core-runtime') {
       const input = stageA.proof.sourceInputs.find((item) => item.path === role.logicalPath);
       if (!input || input.bytes !== role.bytes || input.sha256 !== role.sha256) fail('Browser binding core source association mismatch');
+      const selection = coreSelections.get(role);
+      const entryAssociations = selectedAssociations.get(selection);
+      const environmentContexts = mapContexts.get(selection);
+      if (!entryAssociations || !environmentContexts) fail('Browser binding core source association mismatch');
       const environmentAssociations = [];
-      for (const [environment, association] of associations) {
+      for (const [environment, association] of entryAssociations) {
         const matches = [];
-        for (const { mapPath, map } of mapContexts.get(environment)) {
+        for (const { mapPath, map } of environmentContexts.get(environment)) {
           if (map.version !== 3 || !Array.isArray(map.sources))
             fail('Browser binding core source association mismatch');
           if (map.sources.length === 0 && !Object.hasOwn(map, 'sourcesContent')) continue;
@@ -3715,6 +3871,32 @@ export async function checkBrowserProductionBinding(root, producer, manifest, en
   return { mode: BROWSER_BINDING_MODE, runId, derivedRoles: roles, proofPin: stageA.proofPin,
     claimLimits: bindingClaims, fullMidiSourceQualification: 'held', rowPromotion: 'pending' };
 }
+function jsonSafe(value, active = new Set()) {
+  const refusal = 'Continued epoch exact823 ledger/original mapping differs.';
+  const plain = (item) => item !== null && typeof item === 'object' && Object.getPrototypeOf(item) === Object.prototype;
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
+  if (typeof value === 'number' && Number.isFinite(value)) return;
+  if ((!plain(value) && !Array.isArray(value)) || active.has(value)) fail(refusal);
+  active.add(value);
+  const names = Reflect.ownKeys(value);
+  if (Array.isArray(value)) {
+    if (Object.getPrototypeOf(value) !== Array.prototype || names.length !== value.length + 1 ||
+        !names.includes('length')) fail(refusal);
+    for (let i = 0; i < value.length; i++) {
+      const item = Object.getOwnPropertyDescriptor(value, String(i));
+      if (!item || !Object.hasOwn(item, 'value')) fail(refusal);
+      jsonSafe(item.value, active);
+    }
+  } else {
+    for (const name of names) {
+      const item = Object.getOwnPropertyDescriptor(value, name);
+      if (typeof name !== 'string' || !Object.hasOwn(item, 'value')) fail(refusal);
+      jsonSafe(item.value, active);
+    }
+  }
+  active.delete(value);
+}
+
 function validateContinuedEpochMapping(mapping) {
   const refusal = 'Continued epoch exact823 ledger/original mapping differs.';
   const plain = (value) => value !== null && typeof value === 'object' &&
@@ -3722,29 +3904,6 @@ function validateContinuedEpochMapping(mapping) {
   const keys = (value, names) => plain(value) &&
     isDeepStrictEqual(Reflect.ownKeys(value).sort(), [...names].sort()) &&
     names.every((name) => Object.hasOwn(Object.getOwnPropertyDescriptor(value, name), 'value'));
-  function jsonSafe(value, active = new Set()) {
-    if (value === null || typeof value === 'string' || typeof value === 'boolean') return;
-    if (typeof value === 'number' && Number.isFinite(value)) return;
-    if ((!plain(value) && !Array.isArray(value)) || active.has(value)) fail(refusal);
-    active.add(value);
-    const names = Reflect.ownKeys(value);
-    if (Array.isArray(value)) {
-      if (Object.getPrototypeOf(value) !== Array.prototype || names.length !== value.length + 1 ||
-          !names.includes('length')) fail(refusal);
-      for (let i = 0; i < value.length; i++) {
-        const item = Object.getOwnPropertyDescriptor(value, String(i));
-        if (!item || !Object.hasOwn(item, 'value')) fail(refusal);
-        jsonSafe(item.value, active);
-      }
-    } else {
-      for (const name of names) {
-        const item = Object.getOwnPropertyDescriptor(value, name);
-        if (typeof name !== 'string' || !Object.hasOwn(item, 'value')) fail(refusal);
-        jsonSafe(item.value, active);
-      }
-    }
-    active.delete(value);
-  }
   jsonSafe(mapping);
   if (mapping.releaseIntegrationEpoch?.id !== 'release-integration-176-continued' ||
       !Array.isArray(mapping.pendingSourceRecaptures) || mapping.pendingSourceRecaptures.length !== 5)
@@ -3791,6 +3950,63 @@ function validateContinuedEpochMapping(mapping) {
   if (sha(JSON.stringify(historical)) !== 'a6d991ebf5aaa3c0f12bda6cca8874e4663dacc1d8a525ef88cb5837ab019bb0')
     fail(refusal);
 }
+
+const APPROVED_SOURCE_RECAPTURE_COUNT = 663;
+const APPROVED_SOURCE_RECAPTURE_SHA256 = '06ecfb6bdebd8f41136ce55a09662d820b84d30fcee62f385918a3fadcd9c803';
+
+export function projectCatalogCurrentSourceEpoch(mapping) {
+  jsonSafe(mapping);
+  const refusal = 'Continued epoch exact823 ledger/original mapping differs.';
+  const plain = (value) => value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
+  const keys = (value, names) => plain(value) && isDeepStrictEqual(Reflect.ownKeys(value).sort(), [...names].sort());
+  const pin = (value) => keys(value, ['path', 'bytes', 'sha256']) && typeof value.path === 'string'
+    && Number.isSafeInteger(value.bytes) && value.bytes > 0 && typeof value.sha256 === 'string' && /^[a-f0-9]{64}$/.test(value.sha256);
+  if (!plain(mapping)) fail(refusal);
+  if (!Object.hasOwn(mapping, 'finalEpoch')) {
+    const historical = structuredClone(mapping);
+    validateContinuedEpochMapping(historical);
+    return historical;
+  }
+  const epoch = mapping.finalEpoch;
+  if (!keys(epoch, ['schemaVersion', 'sourceRecaptures']) || epoch.schemaVersion !== 1
+    || !Array.isArray(epoch.sourceRecaptures) || epoch.sourceRecaptures.length !== APPROVED_SOURCE_RECAPTURE_COUNT
+    || sha(JSON.stringify(epoch.sourceRecaptures)) !== APPROVED_SOURCE_RECAPTURE_SHA256) fail(refusal);
+  const fields = new Set();
+  const selected = (value, field) => {
+    const parts = field.split('.'), key = parts.pop();
+    for (const part of parts) {
+      if (!value || typeof value !== 'object' || !Object.hasOwn(value, part)) fail(refusal);
+      value = value[part];
+    }
+    if (!value || typeof value !== 'object' || !Object.hasOwn(value, key)) fail(refusal);
+    return [value, key];
+  };
+  for (const entry of epoch.sourceRecaptures) {
+    if (!keys(entry, ['rowNumber', 'engineId', 'field', 'prior', 'current', 'disposition'])
+      || typeof entry.field !== 'string' || fields.has(entry.field)
+      || entry.disposition !== 'Pending current source identity only; historical authority, owner receipts, observations and statuses unchanged.') fail(refusal);
+    const match = /^rows\.(0|[1-9]\d*)\.engines\.(0|[1-9]\d*)\.(sourceBinding\.pins|requiredSourceClosure|sourceBinding\.tree|sourceGateBindings\.currentIntegratedSourceGate\.currentSource)$/.exec(entry.field);
+    if (!match || !Array.isArray(mapping.rows)) fail(refusal);
+    const row = mapping.rows[Number(match[1])], engine = row?.engines?.[Number(match[2])];
+    if (!row || !engine || entry.rowNumber !== row.rowNumber || entry.engineId !== engine.id) fail(refusal);
+    const field = match[3];
+    const valid = field === 'sourceBinding.tree' ? (value) => typeof value === 'string'
+      : field === 'sourceGateBindings.currentIntegratedSourceGate.currentSource' ? pin
+        : (value) => Array.isArray(value) && value.length > 0 && value.every(pin);
+    if (!valid(entry.prior) || !valid(entry.current)) fail(refusal);
+    fields.add(entry.field);
+    const [value, key] = selected(mapping, entry.field);
+    if (!isDeepStrictEqual(value[key], entry.current) || JSON.stringify(value[key]) !== JSON.stringify(entry.current)) fail(refusal);
+  }
+  const historical = structuredClone(mapping);
+  delete historical.finalEpoch;
+  for (const entry of [...epoch.sourceRecaptures].reverse()) {
+    const [value, key] = selected(historical, entry.field);
+    value[key] = structuredClone(entry.prior);
+  }
+  validateContinuedEpochMapping(historical);
+  return historical;
+}
 export async function validateCatalogEvidence({
   root,
   mapping,
@@ -3822,6 +4038,12 @@ export async function validateCatalogEvidence({
   }
   await validateGroupA31Catalog(root, oracles);
   await validateGroupBCCatalog(root, oracles);
+  const retainedOracles = structuredClone(oracles);
+  delete retainedOracles.groupA31FixtureAuthorities;
+  delete retainedOracles.groupBCFixtureAuthorities;
+  retainedOracles.executableFixtures = retainedOracles.executableFixtures.slice(0, 191);
+  if (sha(JSON.stringify(retainedOracles)) !== '6880eb38c8f3ed666cd75c9da3f3b5be44acb5d6f3e12563d309ed3cdc3783b7')
+    fail('Retained original catalog oracle authority differs.');
   if (!registry) {
     const core = await import(
       pathToFileURL(path.join(root, 'packages/core/dist/node/index.js')).href
@@ -3954,7 +4176,7 @@ export async function validateCatalogEvidence({
     }
   }
   if (engineReferences !== 196) fail('Original196 engine references must remain.');
-  validateContinuedEpochMapping(mapping);
+  projectCatalogCurrentSourceEpoch(mapping);
   if (requireVerified && verifiedRows !== 193)
     fail(`${193 - verifiedRows} pending/unresolved rows; catalog release evidence incomplete.`);
   return {

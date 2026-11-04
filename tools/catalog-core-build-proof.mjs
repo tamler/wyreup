@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const EXCLUDED = new Set(['node_modules', 'dist', '.turbo', '.tsup', '.cache', '.vite', '.vite-temp', '.astro']);
-const CONFIG_SHA = 'e49a67e2fdc256cd7e02efa6b750bffcdbf4b59779d6e53f4bd9364499a8691b';
+const CONFIG_SHA = '3171d8a8befe386767657f919a88311d75098aa1a7e51660fe2ab50ec9213b6c';
 const inside = (root, file) => file === root || file.startsWith(root + path.sep);
 const order = (a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -20,6 +20,26 @@ const GENERATED_WRAPPER_BINDINGS = new Map([
   ['packages/core/src/lib/excel.ts', ['addAOAToSheet', 'addObjectsToSheet', 'addWorksheet', 'getSheet', 'newWorkbook', 'readWorkbook', 'sheetNames', 'sheetToAOA', 'sheetToCsv', 'sheetToObjects', 'writeWorkbookBuffer']],
   ['packages/core/src/lib/pdf-ranges.ts', ['parseRangeSpec']],
 ]);
+const GENERATED_ENTRY_SOURCES = new Map([
+  ['browser/execution.js', 'packages/core/src/execution.ts'],
+  ['node/execution.js', 'packages/core/src/execution.ts'],
+  ...['planning', 'building', 'hardware', 'finance', 'text-developer'].map(name => ['browser/utility-' + name + '.js', 'packages/core/src/utilities/' + name + '.ts']),
+]);
+const GENERATED_LAZY_SOURCES = new Map([
+  ['generateCronFromText', 'packages/core/src/tools/cron-from-text/generate.ts'],
+  ['generateRegexFromText', 'packages/core/src/tools/regex-from-text/generate.ts'],
+  ['explainRegex', 'packages/core/src/tools/regex-explain/explain.ts'],
+]);
+const GENERATED_EXPORT_SOURCES = new Set([
+  'execution.ts', 'utilities/planning.ts', 'utilities/building.ts', 'triggers/index.ts',
+  'tools/cron-from-text/generate.ts', 'tools/regex-from-text/generate.ts', 'tools/regex-explain/explain.ts',
+  'utilities/mp3-to-midi.ts', 'utilities/text-developer.ts', 'utilities/bank-statement.ts', 'utilities/building-shared.ts',
+  'lib/capabilities.ts', 'lib/transformers.ts', 'utilities/common.ts', 'registry.ts', 'lib/input-validation.ts',
+  'default-registry.ts', 'utilities/midi-audio.ts', 'triggers/types.ts', 'triggers/match.ts', 'triggers/storage.ts',
+  'triggers/preflight.ts', 'utilities/csv-data.ts', 'utilities/midi-pitch.ts', 'utilities/finance.ts',
+  'utilities/planning-shared.ts', 'utilities/hardware.ts', 'utilities/hardware-shared.ts', 'utilities/bank-job.ts',
+  'chain/engine.ts', 'utilities/file-job.ts', 'utilities/stl-job.ts', 'lib/model-cdn.ts', 'utilities/stl-contours.ts', 'chain/validate.ts',
+].map(name => 'packages/core/src/' + name));
 const GENERATED_RELATION_LIMITS = {
   codeSourceRelationValidated: false,
   mappingCoverageValidated: false,
@@ -405,13 +425,23 @@ function recipe(ts, bytes, packageBytes) {
     };
   });
   assert.deepEqual(configurations.map((config) => config.platform), ['browser', 'node']);
+  assert.deepEqual(configurations, [
+    { platform: 'browser', outDir: 'dist/browser', entries: [
+      { name: 'index', input: 'src/index.ts' }, { name: 'execution', input: 'src/execution.ts' },
+      ...['planning', 'building', 'hardware', 'finance', 'text-developer'].map(name => ({ name: 'utility-' + name, input: 'src/utilities/' + name + '.ts' })),
+      { name: 'file-worker', input: 'src/utilities/file-worker-browser.ts' }, { name: 'bank-pdf-worker', input: 'src/utilities/bank-pdf-worker.ts' },
+    ], formats: ['esm'] },
+    { platform: 'node', outDir: 'dist/node', entries: [
+      { name: 'index', input: 'src/index.ts' }, { name: 'execution', input: 'src/execution.ts' }, { name: 'file-worker', input: 'src/utilities/file-worker-node.ts' },
+    ], formats: ['esm', 'cjs'] },
+  ], 'Unreviewed compiler entry/format matrix.');
   const required = configurations.flatMap((config) => config.entries.flatMap((entry) => config.formats.flatMap((format) => {
     const base = `${config.platform}/${entry.name}`;
     assert(format === 'esm' || format === 'cjs');
     const extension = format === 'esm' ? '.js' : '.cjs';
     return [base + extension, base + extension + '.map', base + (format === 'esm' ? '.d.ts' : '.d.cts')];
   })));
-  assert.equal(required.length, 21);
+  assert.equal(required.length, 45);
   return { configurations, required: required.sort(), packageMetadata };
 }
 
@@ -709,6 +739,214 @@ async function mapRelationships(ownedRoot, outputs, specification, dependencies,
     assert(bindings.every((name) => functions.get(name) === 1) && new Set(bindings).size === bindings.length, message);
     return bindings.sort();
   }
+  const exportSources = new Map();
+  async function selectedExportSource(logicalSource, message) {
+    check(dependencies.deadlineAt);
+    assert(GENERATED_EXPORT_SOURCES.has(logicalSource), message);
+    if (exportSources.has(logicalSource)) return exportSources.get(logicalSource);
+    const selected = sourceInputs.filter(input => input.path === logicalSource);
+    assert(selected.length === 1, message);
+    const input = selected[0];
+    assert.deepEqual(await pin(path.join(originalRoot, logicalSource), logicalSource, dependencies.deadlineAt), input, message);
+    const copiedInput = await pin(path.join(ownedRoot, logicalSource), undefined, dependencies.deadlineAt);
+    assert(copiedInput.bytes === input.bytes && copiedInput.sha256 === input.sha256, message);
+    const text = await phase(dependencies.deadlineAt, () => readFile(copiedInput.path, 'utf8'));
+    const source = parsed(logicalSource, text, message);
+    const ts = dependencies.ts;
+    const declarations = new Map();
+    const exported = new Map();
+    function addExport(name, value) {
+      assert(!exported.has(name), message);
+      exported.set(name, value);
+    }
+    function declare(name, eligible) {
+      if (!name || !ts.isIdentifier(name)) return;
+      const found = declarations.get(name.text) ?? [];
+      found.push(eligible);
+      declarations.set(name.text, found);
+    }
+    for (const statement of source.statements) {
+      const publicStatement = statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+      assert(!publicStatement || !statement.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword), message);
+      if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) continue;
+      if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
+        declare(statement.name, ts.isClassDeclaration(statement) || Boolean(statement.body));
+        if (publicStatement) {
+          assert(statement.name && ts.isIdentifier(statement.name), message);
+          addExport(statement.name.text, { local: statement.name.text });
+        }
+      } else if (ts.isVariableStatement(statement)) {
+        for (const declaration of statement.declarationList.declarations) {
+          const eligible = Boolean(statement.declarationList.flags & ts.NodeFlags.Const) && Boolean(declaration.initializer);
+          declare(declaration.name, eligible);
+          if (publicStatement) {
+            assert(eligible && ts.isIdentifier(declaration.name), message);
+            addExport(declaration.name.text, { local: declaration.name.text });
+          }
+        }
+      } else if (ts.isExportDeclaration(statement)) {
+        if (statement.isTypeOnly) continue;
+        assert(statement.exportClause && ts.isNamedExports(statement.exportClause) && !statement.attributes, message);
+        let specifier;
+        if (statement.moduleSpecifier) {
+          assert(ts.isStringLiteral(statement.moduleSpecifier), message);
+          specifier = statement.moduleSpecifier.text;
+          assert(specifier.startsWith('.') && specifier.endsWith('.js') && !/[\\\0?#]/.test(specifier), message);
+        }
+        for (const element of statement.exportClause.elements) {
+          if (element.isTypeOnly) continue;
+          assert(!element.propertyName && ts.isIdentifier(element.name), message);
+          addExport(element.name.text, specifier ? { specifier } : { local: element.name.text });
+        }
+      } else if (ts.isExportAssignment(statement) || publicStatement) assert.fail(message);
+    }
+    const result = { input, copiedInput, text, declarations, exported };
+    exportSources.set(logicalSource, result);
+    return result;
+  }
+  async function selectedExportOwner(logicalSource, name, message, visited = new Set()) {
+    check(dependencies.deadlineAt);
+    const key = logicalSource + ':' + name;
+    assert(!visited.has(key) && visited.size < GENERATED_EXPORT_SOURCES.size, message);
+    visited.add(key);
+    const source = await selectedExportSource(logicalSource, message);
+    const binding = source.exported.get(name);
+    assert(binding, message);
+    const current = { input: source.input, copiedInput: source.copiedInput, name };
+    if (binding.specifier) {
+      const resolved = await resolveLocal(path.resolve(path.dirname(source.copiedInput.path), binding.specifier));
+      const next = path.relative(ownedRoot, resolved).split(path.sep).join('/');
+      assert(inside(path.join(ownedRoot, 'packages/core/src'), resolved) && GENERATED_EXPORT_SOURCES.has(next), message);
+      const owner = await selectedExportOwner(next, name, message, visited);
+      return { ...owner, chain: [current, ...owner.chain] };
+    }
+    const declarations = source.declarations.get(binding.local);
+    assert(declarations?.length === 1 && declarations[0] === true, message);
+    return { input: source.input, copiedInput: source.copiedInput, chain: [current] };
+  }
+  const targetExports = new Map();
+  function localTargetExports(output, message) {
+    if (targetExports.has(output)) return targetExports.get(output);
+    const source = parsed(output, texts.get(output), message);
+    const ts = dependencies.ts;
+    const declarations = new Map();
+    const exported = new Map();
+    function declaration(name) {
+      if (name && ts.isIdentifier(name)) declarations.set(name.text, (declarations.get(name.text) ?? 0) + 1);
+    }
+    for (const statement of source.statements) {
+      if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
+        if (ts.isClassDeclaration(statement) || statement.body) declaration(statement.name);
+      } else if (ts.isVariableStatement(statement)) {
+        for (const entry of statement.declarationList.declarations) if (entry.initializer) declaration(entry.name);
+      } else if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+        for (const element of statement.exportClause.elements) {
+          const found = exported.get(element.name.text) ?? [];
+          found.push(!statement.isTypeOnly && !element.isTypeOnly && !statement.moduleSpecifier && !statement.attributes && !element.propertyName && ts.isIdentifier(element.name));
+          exported.set(element.name.text, found);
+        }
+      }
+    }
+    const result = { declarations, exported };
+    targetExports.set(output, result);
+    return result;
+  }
+  function rootGraph(root, message) {
+    const graphs = derived.graphs.filter(graph => graph.platform + ':' + graph.entry === root);
+    assert(graphs.length === 1, message);
+    return graphs[0];
+  }
+  function targetEligibleForRoots(target, roots, message) {
+    for (const root of roots) {
+      assert(target.roots.has(root), message);
+      const graph = rootGraph(root, message);
+      for (const relationship of target.sourceRelationships) {
+        if (relationship.input) assert(graph.files.includes(relationship.input.path), message);
+        else assert(relationship.candidates?.some(candidate => graph.files.includes(candidate.module.path)), message);
+      }
+    }
+  }
+  async function currentEntry(candidate, logicalSource) {
+    const { item, roots, body } = candidate;
+    const ts = dependencies.ts;
+    const serializationError = 'Generated entry stub serialization refused: ' + item.path;
+    const bindingError = 'Generated entry stub bindings refused: ' + item.path;
+    const sourceError = 'Generated entry stub source refused: ' + item.path;
+    const source = parsed(item.path, body, serializationError);
+    const parts = [];
+    const groups = [];
+    const imports = [];
+    const allNames = new Set();
+    const allTargets = new Set();
+    function target(specifier) {
+      assert(/^\.\/[A-Za-z0-9_-]+\.js$/.test(specifier), serializationError);
+      const name = path.posix.join(path.posix.dirname(item.path), specifier);
+      assert(names.has(name) && !allTargets.has(name), serializationError);
+      allTargets.add(name);
+      return name;
+    }
+    for (const statement of source.statements) {
+      if (ts.isExportDeclaration(statement)) {
+        assert(!statement.isTypeOnly && statement.exportClause && ts.isNamedExports(statement.exportClause) && statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier) && !statement.attributes, serializationError);
+        const bindings = statement.exportClause.elements.map(element => {
+          assert(!element.isTypeOnly && !element.propertyName && ts.isIdentifier(element.name) && element.name.text !== 'default', serializationError);
+          assert(!allNames.has(element.name.text), serializationError);
+          allNames.add(element.name.text);
+          return element.name.text;
+        });
+        assert(bindings.length > 0, serializationError);
+        assert.deepEqual(bindings, [...bindings].sort(), serializationError);
+        groups.push({ bindings, output: target(statement.moduleSpecifier.text) });
+        parts.push("export { " + bindings.join(', ') + " } from '" + statement.moduleSpecifier.text + "';");
+      } else {
+        assert(ts.isImportDeclaration(statement) && !statement.importClause && ts.isStringLiteral(statement.moduleSpecifier) && !statement.attributes, serializationError);
+        imports.push(target(statement.moduleSpecifier.text));
+        parts.push("import '" + statement.moduleSpecifier.text + "';");
+      }
+    }
+    assert(groups.length > 0 && imports.length > 0 && helpers.has(imports.at(-1)) && ts.isImportDeclaration(source.statements.at(-1)), serializationError);
+    assert.equal(body, parts.join('\n'), serializationError);
+    const selected = await selectedExportSource(logicalSource, sourceError);
+    const expected = [...selected.exported.keys()].sort();
+    const bindings = [...allNames].sort();
+    assert(expected.length > 0, sourceError);
+    assert.deepEqual(bindings, expected, bindingError);
+    if (!GENERATED_ENTRY_SOURCES.has(item.path)) assert(bindings.length === 1 && GENERATED_LAZY_SOURCES.get(bindings[0]) === logicalSource, sourceError);
+    for (const root of roots) assert(rootGraph(root, sourceError).files.includes(selected.copiedInput.path), sourceError);
+    const bindingOwners = [];
+    const targets = [];
+    for (const group of groups) {
+      const target = validated.get(group.output);
+      assert(target && group.output.endsWith('.js'), sourceError);
+      targetEligibleForRoots(target, roots, sourceError);
+      const declarations = localTargetExports(group.output, bindingError);
+      for (const name of group.bindings) {
+        assert.deepEqual(declarations.exported.get(name), [true], bindingError);
+        assert.equal(declarations.declarations.get(name), 1, bindingError);
+        const owner = await selectedExportOwner(logicalSource, name, sourceError);
+        for (const root of roots) for (const step of owner.chain) assert(rootGraph(root, sourceError).files.includes(step.copiedInput.path), sourceError);
+        const relationships = target.sourceRelationships.filter(relationship => relationship.input?.path === owner.copiedInput.path);
+        assert(relationships.length === 1, sourceError);
+        const relationship = relationships[0];
+        assert.deepEqual(relationship.input, owner.copiedInput, sourceError);
+        assert.equal(target.rawMap.sourcesContent[relationship.sourceIndex], (await selectedExportSource(owner.input.path, sourceError)).text, sourceError);
+        bindingOwners.push({ name, output: group.output, sourceIndex: relationship.sourceIndex, ...owner });
+      }
+      targets.push({ output: group.output, outputPin: await pin(path.join(outputRoot, group.output), undefined, dependencies.deadlineAt), map: target.map, bindings: group.bindings, sourceIndexes: target.sourceRelationships.map(relationship => relationship.sourceIndex) });
+    }
+    for (const output of imports) {
+      const helper = helpers.get(output);
+      if (helper) {
+        for (const root of roots) assert(helper.eligibleEntries.includes(root), sourceError);
+      } else {
+        const target = validated.get(output);
+        assert(target, sourceError);
+        targetEligibleForRoots(target, roots, sourceError);
+      }
+    }
+    await generatedSdk(item.path);
+    generatedOutputs.push({ output: item.path, outputPin: await pin(path.join(outputRoot, item.path), undefined, dependencies.deadlineAt), map: candidate.map, descriptor: 'rollup4642-current-entry-reexport-v1', eligibleEntries: [...roots].sort(), classification: 'finite linker-only named-export/source-owner/map co-occurrence; emitted-code/source relation and mapping coverage UNVALIDATED; runtime consumption UNPROVEN', ...GENERATED_RELATION_LIMITS, bindings, targets, bindingOwners, input: selected.input, copiedInput: selected.copiedInput });
+  }
   for (const item of js) {
     check(dependencies.deadlineAt);
     const roots = rootsByOutput.get(item.path);
@@ -778,6 +1016,7 @@ async function mapRelationships(ownedRoot, outputs, specification, dependencies,
   for (const candidate of generated) {
     check(dependencies.deadlineAt);
     const { item, roots, body } = candidate;
+    if (GENERATED_ENTRY_SOURCES.has(item.path)) { wrappers.push(candidate); continue; }
     const source = parsed(item.path, body, 'Generated wrapper serialization refused: ' + item.path);
     const first = source.statements[0];
     const looksLikeHelper = first && dependencies.ts.isVariableStatement(first) && first.declarationList.declarations.some((declaration) => dependencies.ts.isIdentifier(declaration.name) && declaration.name.text === '__require');
@@ -796,6 +1035,10 @@ async function mapRelationships(ownedRoot, outputs, specification, dependencies,
     const bindingError = 'Generated wrapper target bindings refused: ' + item.path;
     const sourceError = 'Generated wrapper eligible source refused: ' + item.path;
     const source = parsed(item.path, body, serializationError);
+    const selectedNames = source.statements.filter(statement => ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause))
+      .flatMap(statement => statement.exportClause.elements.map(element => element.name.text));
+    const currentSource = GENERATED_ENTRY_SOURCES.get(item.path) ?? (selectedNames.length === 1 ? GENERATED_LAZY_SOURCES.get(selectedNames[0]) : undefined);
+    if (currentSource) { await currentEntry(candidate, currentSource); continue; }
     assert(source.statements.length === 2, serializationError);
     const [exported, imported] = source.statements;
     assert(ts.isExportDeclaration(exported) && !exported.isTypeOnly && exported.exportClause && ts.isNamedExports(exported.exportClause) && exported.moduleSpecifier && ts.isStringLiteral(exported.moduleSpecifier) && !exported.attributes, serializationError);
@@ -832,9 +1075,9 @@ async function mapRelationships(ownedRoot, outputs, specification, dependencies,
     assert.equal(inputBody, target.rawMap.sourcesContent[0], sourceError);
     assert.deepEqual([...roots].sort(), [...target.roots].sort(), sourceError);
     for (const root of roots) {
-      assert(root === item.path.split('/')[0] + ':index' && helper.eligibleEntries.includes(root), sourceError);
+      assert(helper.eligibleEntries.includes(root), sourceError);
       const config = specification.configurations.find((config) => config.platform === item.path.split('/')[0]);
-      assert(config?.entries.some((entry) => entry.name === 'index'), sourceError);
+      assert(config?.entries.some((entry) => config.platform + ':' + entry.name === root), sourceError);
       const graph = derived.graphs.filter((graph) => graph.platform + ':' + graph.entry === root);
       assert(graph.length === 1 && graph[0].files.includes(copiedInput.path), sourceError);
     }

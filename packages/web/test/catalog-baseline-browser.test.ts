@@ -115,6 +115,7 @@ beforeAll(async () => {
         webDir: fileURLToPath(new URL('..', import.meta.url)),
         evidenceDir,
         deadlineAt: started + 230000,
+        observeBinding: { runId: run, observationDir: join(evidenceDir, `binding-${run}`) },
       });
       resolvedBuild = {
         mode: 'owned-production-build',

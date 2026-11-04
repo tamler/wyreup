@@ -228,11 +228,14 @@ test('actual protected fixture shape rejects history inside a fixture while pres
   const mapping = JSON.parse(await fs.readFile(path.join(root, 'docs/CATALOG-INTEGRATION-MAPPING.json'), 'utf8'));
   const fixtures = await protectedBrowserFixtures(root);
   assert.equal(fixtures.length, 6);
-  for (const fixture of fixtures) {
+  for (const [offset, fixture] of fixtures.entries()) {
+    const authority = oracles.executableFixtures[102 + offset];
+    assert.equal(authority.key, fixture.key);
     const engine = mapping.rows.flatMap((row) => row.engines).find((item) => item.id === fixture.engineId);
     const clone = { ...oracles, browserFixtureSourceHistory: [{ unitOnly: true, note: 'top-level only; grants no history waiver' }] };
-    await boundFixtureOracle(root, fixture, clone, engine);
-    await assert.rejects(boundFixtureOracle(root, { ...fixture, browserFixtureSourceHistory: [] }, clone, engine), /Browser fixture differs/);
+    await boundFixtureOracle(root, authority, clone, engine);
+    await assert.rejects(boundFixtureOracle(root, { ...authority, browserFixtureSourceHistory: [] }, clone, engine),
+      /Browser fixture must equal its complete sealed authority at the fixed index\./);
   }
 });
 

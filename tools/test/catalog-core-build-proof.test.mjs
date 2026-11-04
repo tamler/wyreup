@@ -75,6 +75,11 @@ async function fixture({ localRollup = false, misleadingCoreRollup = false, adap
   }
   const source = adapter ? "export { worker } from './utilities/file-job.js';\n" : opaque ? "import 'pdfjs-dist/legacy/build/pdf.mjs';\nexport const value = 1;\n" : literal ? "export const future = () => import('./literal.js');\n" : runtime ? 'export const future = (name) => import(name);\n' : 'export const value = 1;\n';
   await write(path.join(root, 'packages/core/src/index.ts'), source);
+  // CURRENT45 adds six source inputs and seven entry/format output sets.
+  await write(path.join(root, 'packages/core/src/execution.ts'), 'export const unitOnly = true;\n');
+  for (const name of ['planning', 'building', 'hardware', 'finance', 'text-developer']) {
+    await write(path.join(root, 'packages/core/src/utilities', name + '.ts'), 'export const unitOnly = true;\n');
+  }
   if (literal) await write(path.join(root, 'packages/core/src/literal.ts'), 'export const literal = 123;\n');
   await write(path.join(root, 'packages/core/src/utilities/file-worker-browser.ts'), 'export const worker = 1;\n');
   await write(path.join(root, 'packages/core/src/utilities/file-worker-node.ts'), 'export const worker = 2;\n');
@@ -101,7 +106,7 @@ async function fixture({ localRollup = false, misleadingCoreRollup = false, adap
 }
 async function outputFiles(value, { extras = false, wrongAdapter = false, dynamic = false, outputSpace = false, opaqueContent, literalSource = false, runtime = false } = {}) {
   const { session } = value;
-  const variants = [['browser', ['index', 'file-worker', 'bank-pdf-worker'], ['.js']], ['node', ['index', 'file-worker'], ['.js', '.cjs']]];
+  const variants = [['browser', ['index', 'execution', 'utility-planning', 'utility-building', 'utility-hardware', 'utility-finance', 'utility-text-developer', 'file-worker', 'bank-pdf-worker'], ['.js']], ['node', ['index', 'execution', 'file-worker'], ['.js', '.cjs']]];
   for (const [platform, entries, extensions] of variants) for (const name of entries) for (const extension of extensions) {
     const filename = `${platform}/${name}${extension}`;
     const file = path.join(session.cwd, 'dist', filename);
@@ -110,7 +115,10 @@ async function outputFiles(value, { extras = false, wrongAdapter = false, dynami
     if (dynamic && platform === 'browser' && name === 'index') body += "import('./UNIT-chunk.js');\n";
     if (dynamic && platform === 'browser' && name === 'bank-pdf-worker') body += "import('./UNIT-chunk.js');\n";
     await write(file, body + `//# sourceMappingURL=${name}${extension}.map\n`);
-    const input = name === 'index' ? wrongAdapter && platform === 'node' ? 'src/utilities/file-job-platform.ts' : 'src/index.ts' : `src/utilities/${name === 'file-worker' ? 'file-worker-' + platform : 'bank-pdf-worker'}.ts`;
+    const input = name === 'index' ? wrongAdapter && platform === 'node' ? 'src/utilities/file-job-platform.ts' : 'src/index.ts'
+      : name === 'execution' ? 'src/execution.ts'
+        : name.startsWith('utility-') ? 'src/utilities/' + name.slice('utility-'.length) + '.ts'
+          : `src/utilities/${name === 'file-worker' ? 'file-worker-' + platform : 'bank-pdf-worker'}.ts`;
     const inputPath = path.join(session.cwd, input);
     await metadata(file + '.map', { version: 3, sources: [path.relative(path.dirname(file), inputPath).split(path.sep).join('/')], sourcesContent: [await readFile(inputPath, 'utf8')], names: [], mappings: '' });
     await write(path.join(session.cwd, 'dist', platform, name + (extension === '.cjs' ? '.d.cts' : '.d.ts')), 'export declare const unitOnly: boolean;\n');
@@ -310,7 +318,7 @@ test('UNIT-ONLY session derives owned argv/env/strict owners and reader-compatib
     const result = await value.session.commit(lifecycle);
     const parsed = await readCoordinatedCoreProof(value.root, 'UNIT-only');
     assert.deepEqual(parsed.proof, result.proof);
-    assert.equal(result.proof.outputs.length, 23);
+    assert.equal(result.proof.outputs.length, 47);
     assert(result.proof.outputs.some((item) => item.path === 'browser/UNIT-chunk.js.map'));
     assert(result.proof.sourceInputs.every((item, index, all) => !index || all[index - 1].path < item.path));
     const readme = result.proof.sourceInputs.findIndex((item) => item.path === 'packages/core/README.md');
@@ -351,13 +359,31 @@ test('UNIT-ONLY handcrafted, wrong command and mutated lifecycle observations ca
   } finally { await value.cleanup(); }
 });
 
-test('UNIT-ONLY exit0 with each of the actual21 mandatory output members missing refuses', async () => {
+test('UNIT-ONLY exit0 with each of the CURRENT45 mandatory output members missing refuses', async () => {
   const value = await fixture();
   try {
     await outputFiles(value);
     const lifecycle = await completed(value.session);
     assert.equal(lifecycle.outcome.exitCode, 0);
-    const required = ['browser/bank-pdf-worker.js', 'browser/bank-pdf-worker.js.map', 'browser/bank-pdf-worker.d.ts', 'browser/file-worker.js', 'browser/file-worker.js.map', 'browser/file-worker.d.ts', 'browser/index.js', 'browser/index.js.map', 'browser/index.d.ts', 'node/file-worker.js', 'node/file-worker.js.map', 'node/file-worker.d.ts', 'node/file-worker.cjs', 'node/file-worker.cjs.map', 'node/file-worker.d.cts', 'node/index.js', 'node/index.js.map', 'node/index.d.ts', 'node/index.cjs', 'node/index.cjs.map', 'node/index.d.cts'];
+    const required = [
+      'browser/bank-pdf-worker.js', 'browser/bank-pdf-worker.js.map', 'browser/bank-pdf-worker.d.ts',
+      'browser/file-worker.js', 'browser/file-worker.js.map', 'browser/file-worker.d.ts',
+      'browser/index.js', 'browser/index.js.map', 'browser/index.d.ts',
+      'browser/execution.js', 'browser/execution.js.map', 'browser/execution.d.ts',
+      'browser/utility-planning.js', 'browser/utility-planning.js.map', 'browser/utility-planning.d.ts',
+      'browser/utility-building.js', 'browser/utility-building.js.map', 'browser/utility-building.d.ts',
+      'browser/utility-hardware.js', 'browser/utility-hardware.js.map', 'browser/utility-hardware.d.ts',
+      'browser/utility-finance.js', 'browser/utility-finance.js.map', 'browser/utility-finance.d.ts',
+      'browser/utility-text-developer.js', 'browser/utility-text-developer.js.map', 'browser/utility-text-developer.d.ts',
+      'node/file-worker.js', 'node/file-worker.js.map', 'node/file-worker.d.ts',
+      'node/file-worker.cjs', 'node/file-worker.cjs.map', 'node/file-worker.d.cts',
+      'node/index.js', 'node/index.js.map', 'node/index.d.ts',
+      'node/index.cjs', 'node/index.cjs.map', 'node/index.d.cts',
+      'node/execution.js', 'node/execution.js.map', 'node/execution.d.ts',
+      'node/execution.cjs', 'node/execution.cjs.map', 'node/execution.d.cts',
+    ];
+    assert.equal(required.length, 45);
+    assert.equal(new Set(required).size, 45);
     for (const missing of required) {
       const file = path.join(value.session.cwd, 'dist', missing);
       const original = await readFile(file);
@@ -821,7 +847,7 @@ test('UNIT-ONLY PLAN4 generated helper and both wrappers bind exact private iden
     }
     const reopened = await readCoordinatedCoreProof(value.root, 'UNIT-generated-plan4');
     assert.deepEqual(reopened.proof, committed.proof);
-    assert.equal(committed.proof.outputs.length, 41);
+    assert.equal(committed.proof.outputs.length, 65);
   } finally { await value.cleanup(); }
 });
 test('UNIT-ONLY PLAN4 normal physical and opaque relationship predicates retain honest false flags', async () => {
@@ -1014,5 +1040,382 @@ test('UNIT-ONLY PLAN4 zero-source CJS is held instead of admitted as an ESM gene
     await plan4ReplaceJs(file, 'exports.UNIT_ONLY_GENERATED = true;' + plan4Footer('index.cjs'));
     await writeFile(file + '.map', plan4Map('index.cjs'));
     await plan4Refuses(value, await completed(value.session), /^Generated map namespace refused: node\/index\.cjs/);
+  } finally { await value.cleanup(); }
+});
+
+// CURRENT45 desired controls are authored before the producer correction.
+// Literal source/export/output fixtures are not a transpiler or genuine build proof.
+const current45Cases = [
+  { entry: 'execution', source: 'src/execution.ts', owner: 'src/utilities/common.ts', platforms: ['browser', 'node'], names: [
+    'DEFAULT_RATE_LIMIT', 'STL_LIMITS', 'TRIGGER_KIT_VERSION', 'UtilityInputError', 'analyzeMp3File', 'assertUnicode', 'bankDefaults', 'calculateConstructionEstimate', 'checkToolCapabilities', 'clearPipelineCache', 'cloneUtilityJson', 'couldFlowTo', 'createDefaultRegistry', 'createMp3Decoder', 'cspHeader', 'detectCapabilities', 'editCsvCell', 'encodePitchMidi', 'exportBankStatement', 'exportCsv', 'fileMatchesMime', 'financeSourcesForTool', 'hreflangTags', 'matchRule', 'mimeMatches', 'nginxRedirects', 'numberParam', 'parseCsv', 'parseGradeWeight', 'parsePlanningRows', 'parseTextRows', 'parseTriggerKit', 'pruneFires', 'readFileHeader', 'readGamepadSnapshot', 'reviewBankStatement', 'robotsText', 'runBankFileJob', 'runChain', 'runCsvFileJob', 'runPreflight', 'runStlFileJob', 'safeCsvCell', 'selectCsvRows', 'selectPitchNotes', 'serializeTriggerKit', 'setModelCdn', 'strippedForImport', 'summarizeTouchscreenSession', 'touchscreenCellIndex', 'updateTriggerRule', 'utilityDependencyOrder', 'utilityFieldOptions', 'utilityFieldVisible', 'validateBankParams', 'validateBoardFootPieces', 'validateChain', 'validateConstructionEstimate', 'validateContractParticulars', 'validateGeneratorLoads', 'validateGutterCandidates', 'validatePitchParams', 'validatePlanningSnapshot', 'validateStlParams', 'validateUtilityParams',
+  ] },
+  { entry: 'utility-planning', source: 'src/utilities/planning.ts', platforms: ['browser'], names: ['bmiCategory', 'cookingBand', 'countdownTool', 'parseGradeWeight', 'parsePlanningRows', 'planningTools', 'safeCsvCell', 'sampleUniqueIntegers', 'seatingCsv', 'seatingTool', 'secureUint32', 'stopwatchTool', 'uniformInteger', 'validateContractParticulars', 'validatePlanningSnapshot'] },
+  { entry: 'utility-building', source: 'src/utilities/building.ts', platforms: ['browser'], names: ['BUILDING_UNITS', 'buildingChoice', 'buildingCount', 'buildingError', 'buildingN', 'buildingNumber', 'buildingResult', 'buildingRows', 'buildingSpecs', 'buildingTools', 'buildingUtility', 'calculateConstructionEstimate', 'constructionEstimateGenerator', 'purchaseCeiling', 'validateBoardFootPieces', 'validateBuildingRows', 'validateConstructionEstimate', 'validateGutterCandidates'] },
+  { entry: 'utility-hardware', source: 'src/utilities/hardware.ts', platforms: ['browser'], names: ['cameraShutterCountChecker', 'gamepadTester', 'hardwareTools', 'readGamepadSnapshot', 'summarizeTouchscreenSession', 'touchscreenCellIndex', 'touchscreenTester', 'validateGeneratorLoads'] },
+  { entry: 'utility-finance', source: 'src/utilities/finance.ts', platforms: ['browser'], names: ['financeSourcesForTool', 'financeTools'] },
+  { entry: 'utility-text-developer', source: 'src/utilities/text-developer.ts', platforms: ['browser'], names: ['assertUnicode', 'bulkMetaDescriptions', 'chmodResult', 'cspHeader', 'cssGradient', 'decimalParts', 'escapeHtml', 'hreflangTags', 'markdownTable', 'nginxRedirects', 'numberToWords', 'parseTextRows', 'pxRem', 'removeDuplicateLines', 'robotsText', 'textDeveloperTools', 'utmLink'] },
+  { entry: 'C45-cron', source: 'src/tools/cron-from-text/generate.ts', platforms: ['browser', 'node'], names: ['generateCronFromText'], lazy: true },
+  { entry: 'C45-regex', source: 'src/tools/regex-from-text/generate.ts', platforms: ['browser', 'node'], names: ['generateRegexFromText'], lazy: true },
+  { entry: 'C45-explain', source: 'src/tools/regex-explain/explain.ts', platforms: ['browser', 'node'], names: ['explainRegex'], lazy: true },
+];
+const current45Constants = new Set(['DEFAULT_RATE_LIMIT', 'STL_LIMITS', 'TRIGGER_KIT_VERSION', 'bankDefaults', 'BUILDING_UNITS', 'constructionEstimateGenerator', 'countdownTool', 'seatingTool', 'stopwatchTool', 'cameraShutterCountChecker', 'gamepadTester', 'touchscreenTester']);
+function current45Declarations(names, exported) {
+  return names.map(name => (exported ? 'export ' : '') + (name === 'UtilityInputError'
+    ? 'class UtilityInputError extends Error {}'
+    : current45Constants.has(name) || name.endsWith('Tools')
+      ? 'const ' + name + ' = [];'
+      : 'function ' + name + '() { return "UNIT_ONLY_NOT_TRANSPILE_EQUIVALENCE"; }')).join('\n') + '\n';
+}
+async function current45Fixture({ sourceVariant } = {}) {
+  const base = await plan4Fixture();
+  try {
+    const core = path.join(base.root, 'packages/core');
+    await write(path.join(core, 'src/lib/model-cdn.ts'), 'export const unitOnlyEffects = true;\n');
+    await write(path.join(core, 'src/utilities/finance-sources.json'), '{"UNIT_ONLY":"second map source"}');
+    for (const item of current45Cases) {
+      let body = item.entry === 'execution'
+        ? "export { " + item.names.join(', ') + " } from './utilities/common.js';\nexport type * from './index.js';\n"
+        : current45Declarations(item.names, true);
+      if (item.entry === 'utility-finance') body = "import data from './finance-sources.json' with { type: 'json' };\n" + body;
+      body = "import " + JSON.stringify(path.posix.relative(path.posix.dirname(item.source), 'src/lib/model-cdn.js').replace(/^(?!\.)/, './')) + ';\n' + body;
+      if (sourceVariant && item.entry === 'execution') body = sourceVariant(body);
+      const file = path.join(core, item.source);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, body);
+    }
+    await write(path.join(core, 'src/utilities/common.ts'), current45Declarations(current45Cases[0].names, true)
+      + current45Cases.filter(item => item.lazy).map(item => "import '../" + item.source.slice(4, -3) + ".js';").join('\n') + '\n');
+    const originalIndex = await readFile(path.join(core, 'src/index.ts'), 'utf8');
+    await writeFile(path.join(core, 'src/index.ts'), originalIndex + current45Cases.map(item => "import './" + item.source.slice(4, -3) + ".js';").join('\n') + '\n');
+    const session = await createCoreBuildProof({ root: base.root, runId: 'UNIT-current45', deadlineAt: Date.now() + 180000 });
+    const before = JSON.parse(await readFile(path.join(session.runDirectory, 'build-evidence/input-before.json')));
+    return { ...base, session, before };
+  } catch (error) { await base.cleanup(); throw error; }
+}
+async function current45Outputs(value) {
+  await plan4Outputs(value);
+  const records = [];
+  for (const item of current45Cases) for (const platform of item.platforms) {
+    const directory = path.join(value.session.cwd, 'dist', platform);
+    const source = path.join(value.session.cwd, item.owner ?? item.source);
+    const groups = item.names.length === 1 ? [item.names] : [item.names.slice(0, Math.ceil(item.names.length / 2)), item.names.slice(Math.ceil(item.names.length / 2))];
+    const targets = [];
+    for (let index = 0; index < groups.length; index++) {
+      const target = 'C45-' + item.entry + '-target' + index + '.js';
+      const imports = item.entry === 'execution' && index === 0 ? current45Cases.filter(candidate => candidate.lazy).map(candidate => "import './" + candidate.entry + ".js';\n").join('') : '';
+      await plan4WriteJs(path.join(directory, target), current45Declarations(groups[index], false) + imports + 'export { ' + groups[index].join(', ') + ' };\n//# sourceMappingURL=' + target + '.map\n');
+      const sources = [source];
+      if (item.entry === 'utility-finance') sources.push(path.join(value.session.cwd, 'src/utilities/finance-sources.json'));
+      await metadata(path.join(directory, target + '.map'), { version: 3, sources: sources.map(file => path.relative(directory, file).split(path.sep).join('/')), sourcesContent: await Promise.all(sources.map(file => readFile(file, 'utf8'))), names: [], mappings: '' });
+      targets.push({ output: platform + '/' + target, names: groups[index] });
+    }
+    const filename = item.entry + '.js';
+    const body = targets.map(target => "export { " + target.names.join(', ') + " } from './" + path.posix.basename(target.output) + "';").join('\n') + "\nimport './C45-effects.js';\nimport './Z-runtime.js';" + plan4Footer(filename);
+    const file = path.join(directory, filename);
+    if (item.lazy) await plan4WriteJs(file, body);
+    else await plan4ReplaceJs(file, body);
+    if (item.lazy) await write(file + '.map', plan4Map(filename));
+    else await writeFile(file + '.map', plan4Map(filename));
+    records.push({ ...item, platform, output: platform + '/' + filename, file, body, targets, physicalSource: source });
+  }
+  for (const platform of ['browser', 'node']) {
+    const directory = path.join(value.session.cwd, 'dist', platform);
+    const effect = path.join(directory, 'C45-effects.js');
+    const input = path.join(value.session.cwd, 'src/lib/model-cdn.ts');
+    await plan4WriteJs(effect, 'export const unitOnlyEffects = true;\n//# sourceMappingURL=C45-effects.js.map\n');
+    await metadata(effect + '.map', { version: 3, sources: [path.relative(directory, input).split(path.sep).join('/')], sourcesContent: [await readFile(input, 'utf8')], names: [], mappings: '' });
+    const index = path.join(directory, 'index.js');
+    const old = await readFile(index, 'utf8');
+    const imports = records.filter(item => item.platform === platform).map(item => "import './" + path.posix.basename(item.output) + "';\n").join('');
+    await plan4ReplaceJs(index, imports + old);
+  }
+  return records;
+}
+
+test('UNIT-ONLY CURRENT45 literal matrix and finite pure entry/lazy classes retain source and target joins', async () => {
+  const value = await current45Fixture();
+  try {
+    assert.deepEqual(current45Cases.map(item => item.names.length), [65, 15, 18, 8, 2, 17, 1, 1, 1]);
+    const records = await current45Outputs(value);
+    assert.equal(records.length, 13);
+    const expected = new Map();
+    for (const item of records) {
+      expected.set(item.output, await plan4Pin(item.file));
+      expected.set(item.output + '.map', await plan4Pin(item.file + '.map'));
+      for (const target of item.targets) {
+        expected.set(target.output, await plan4Pin(path.join(value.session.cwd, 'dist', target.output)));
+        expected.set(target.output + '.map', await plan4Pin(path.join(value.session.cwd, 'dist', target.output + '.map')));
+      }
+    }
+    await value.session.commit(await completed(value.session));
+    const ledger = JSON.parse(await readFile(path.join(value.session.runDirectory, 'build-evidence/compiled-map-input-ledger.json')));
+    assert.equal(ledger.generatedOutputs.length, 19);
+    for (const item of records) {
+      const actual = ledger.generatedOutputs.find(record => record.output === item.output);
+      assert(actual, 'Each literal new stub must be classified rather than omitted.');
+      assert.equal(actual.descriptor, 'rollup4642-current-entry-reexport-v1');
+      assert.deepEqual(actual.bindings, item.names);
+      assert.equal(actual.outputPin.sha256, expected.get(item.output).sha256);
+      assert.deepEqual(actual.map, expected.get(item.output + '.map'));
+      assert.equal(actual.input.path, 'packages/core/' + item.source);
+      assert.deepEqual(actual.input, value.before.sourceInputs.find(pin => pin.path === actual.input.path));
+      assert.equal(actual.bindingOwners.length, item.names.length);
+      for (const name of item.names) {
+        const owners = actual.bindingOwners.filter(owner => owner.name === name);
+        assert.equal(owners.length, 1);
+        const owner = owners[0];
+        assert.equal(owner.input.path, 'packages/core/' + (item.owner ?? item.source));
+        assert.deepEqual(owner.input, value.before.sourceInputs.find(pin => pin.path === owner.input.path));
+        assert.equal(owner.sourceIndex, 0);
+        assert(item.targets.some(target => target.output === owner.output && target.names.includes(name)));
+        const target = actual.targets.find(target => target.output === owner.output);
+        assert(target);
+        assert.equal(target.outputPin.sha256, expected.get(owner.output).sha256);
+        assert.deepEqual(target.map, expected.get(owner.output + '.map'));
+      }
+      assert(actual.eligibleEntries.includes(item.platform + ':index'));
+      if (!item.lazy) assert(actual.eligibleEntries.includes(item.platform + ':' + item.entry));
+      else assert(actual.eligibleEntries.includes(item.platform + ':execution'));
+      plan4FalseFlags(actual);
+    }
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY CURRENT45 new-class executable default star alias import and canonical residue refuse', async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/execution.js');
+    const variants = [
+      ['globalThis.UNIT_ONLY_EXTRA_CALL?.();\n' + item.body, false],
+      [item.body.replace('export { DEFAULT_RATE_LIMIT,', 'export { DEFAULT_RATE_LIMIT as default,'), false],
+      [item.body.replace(/export \{[^\n]+\} from/, 'export * from'), false],
+      [item.body.replace('DEFAULT_RATE_LIMIT,', 'DEFAULT_RATE_LIMIT as changed,'), false],
+      [item.body.replace("import './C45-effects.js';", "import { unitOnlyEffects } from './C45-effects.js';"), false],
+      [item.body.replace('export { ', 'export  { '), false],
+      [item.body + '\n', false, /^Generated helper executable refused: browser\/execution\.js$/],
+      [item.body.replace('DEFAULT_RATE_LIMIT,', 'DEFAULT_RATE_LIMIT, DEFAULT_RATE_LIMIT,'), true],
+    ];
+    const lifecycle = await completed(value.session);
+    for (const [body, malformed, expected = /^Generated entry stub .*refused: browser\/execution\.js/] of variants) {
+      await plan4ReplaceJs(item.file, body, malformed);
+      await plan4Refuses(value, lifecycle, expected);
+    }
+    await plan4ReplaceJs(item.file, item.body);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY CURRENT45 missing invented and nonlocal selected target bindings refuse', async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/utility-finance.js');
+    const target = path.join(value.session.cwd, 'dist', item.targets[0].output);
+    const original = await readFile(target, 'utf8');
+    const lifecycle = await completed(value.session);
+    for (const body of [
+      original.replace('export { financeSourcesForTool };', 'export { financeSourcesForTool as changed };'),
+      original.replace('function financeSourcesForTool() { return "UNIT_ONLY_NOT_TRANSPILE_EQUIVALENCE"; }', "import { financeSourcesForTool } from './C45-effects.js';"),
+    ]) {
+      await plan4ReplaceJs(target, body);
+      await plan4Refuses(value, lifecycle, /^Generated entry stub .*refused: browser\/utility-finance\.js/);
+    }
+    await plan4ReplaceJs(target, original);
+    const missingExport = item.body.replace(/^export \{[^\n]+\n/, '').replace("import './C45-effects.js';",
+      "import './C45-effects.js';\nimport './" + path.posix.basename(item.targets[0].output) + "';");
+    for (const body of [item.body.replace('financeSourcesForTool', 'inventedFinanceName'), missingExport]) {
+      await plan4ReplaceJs(item.file, body);
+      await plan4Refuses(value, lifecycle, /^Generated entry stub .*refused: browser\/utility-finance\.js/);
+    }
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY CURRENT45 changed and null selected source content never supplies a named owner', async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/utility-finance.js');
+    const file = path.join(value.session.cwd, 'dist', item.targets[0].output + '.map');
+    const original = await readFile(file, 'utf8');
+    const lifecycle = await completed(value.session);
+    for (const content of ['UNIT_ONLY_WRONG_OWNER_CONTENT', null]) {
+      const map = JSON.parse(original); map.sourcesContent[0] = content;
+      await writeFile(file, JSON.stringify(map));
+      await plan4Refuses(value, lifecycle, content === null ? /^Generated entry stub .*refused:/ : /Copied map source content mismatch/);
+    }
+  } finally { await value.cleanup(); }
+});
+
+for (const variant of ['default', 'star', 'alias', 'duplicate', 'foreign', 'cycle']) test('UNIT-ONLY CURRENT45 selected source export refusal: ' + variant, async () => {
+  const sourceVariant = body => {
+    if (variant === 'default') return body + 'export default 1;\n';
+    if (variant === 'star') return body.replace(/export \{[^\n]+\} from/, 'export * from');
+    if (variant === 'alias') return body.replace('DEFAULT_RATE_LIMIT,', 'DEFAULT_RATE_LIMIT as renamed,');
+    if (variant === 'duplicate') return body.replace('DEFAULT_RATE_LIMIT,', 'DEFAULT_RATE_LIMIT, DEFAULT_RATE_LIMIT,');
+    if (variant === 'foreign') return body.replace("from './utilities/common.js'", "from '@wyreup/exceljs'") + "import './utilities/common.js';\n";
+    return body.replace("from './utilities/common.js'", "from './execution.js'") + "import './utilities/common.js';\n";
+  };
+  const value = await current45Fixture({ sourceVariant });
+  try {
+    await current45Outputs(value);
+    await plan4Refuses(value, await completed(value.session), /^Generated entry stub .*refused: (?:browser|node)\/execution\.js/);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY CURRENT45 a worker cannot borrow entry ownership or a side-effect source from another root', async () => {
+  const value = await current45Fixture();
+  try {
+    await current45Outputs(value);
+    const worker = path.join(value.session.cwd, 'dist/browser/file-worker.js');
+    const original = await readFile(worker, 'utf8');
+    await plan4ReplaceJs(worker, "import './utility-finance.js';\n" + original);
+    await plan4Refuses(value, await completed(value.session), /^Generated entry stub .*refused: browser\/utility-finance\.js/);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY CURRENT45 noncanonical map and foreign zero-map helper remain refused', async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/execution.js');
+    const lifecycle = await completed(value.session);
+    await writeFile(item.file + '.map', plan4Map('execution.js') + '\n');
+    await plan4Refuses(value, lifecycle, /^Zero-source map canonical bytes refused: browser\/execution\.js/);
+    await writeFile(item.file + '.map', plan4Map('execution.js'));
+    await plan4WriteJs(path.join(value.session.cwd, 'dist/browser/C45-foreign-helper.js'), 'export const UNIT_ONLY_FOREIGN_HELPER = true;' + plan4Footer('C45-foreign-helper.js'));
+    await write(path.join(value.session.cwd, 'dist/browser/C45-foreign-helper.js.map'), plan4Map('C45-foreign-helper.js'));
+    await plan4ReplaceJs(item.file, item.body.replace("import './Z-runtime.js';", "import './C45-foreign-helper.js';"));
+    await plan4Refuses(value, lifecycle, /Generated (?:entry stub .*refused: browser\/execution\.js|wrapper serialization refused: browser\/C45-foreign-helper\.js)/);
+  } finally { await value.cleanup(); }
+});
+
+for (const extraWorkerTarget of [false, true]) test('UNIT-ONLY CURRENT45 old wrappers keep exact shared root equality: extraWorkerTarget=' + extraWorkerTarget, async () => {
+  const base = await plan4Fixture();
+  try {
+    await writeFile(path.join(base.root, 'packages/core/src/execution.ts'), "import './lib/excel.js';\nimport './lib/pdf-ranges.js';\nexport const unitOnly = true;\n");
+    const session = await createCoreBuildProof({ root: base.root, runId: 'UNIT-current45-old-shared', deadlineAt: Date.now() + 180000 });
+    const value = { ...base, session };
+    await plan4Outputs(value);
+    for (const platform of ['browser', 'node']) {
+      await plan4ReplaceJs(path.join(session.cwd, 'dist', platform, 'execution.js'), "export const unitOnly = true;\nimport './A-excel.js';\nimport './B-ranges.js';\n//# sourceMappingURL=execution.js.map\n");
+    }
+    if (extraWorkerTarget) {
+      const worker = path.join(session.cwd, 'dist/browser/file-worker.js');
+      await plan4ReplaceJs(worker, "export const unitOnly = true;\nimport './Z-range-target.js';\n//# sourceMappingURL=file-worker.js.map\n");
+      await plan4Refuses(value, await completed(session), /^Generated wrapper eligible source refused: browser\/B-ranges\.js/);
+    } else {
+      await session.commit(await completed(session));
+      const ledger = JSON.parse(await readFile(path.join(session.runDirectory, 'build-evidence/compiled-map-input-ledger.json')));
+      for (const platform of ['browser', 'node']) for (const name of ['A-excel.js', 'B-ranges.js']) {
+        const wrapper = ledger.generatedOutputs.find(record => record.output === platform + '/' + name);
+        assert.deepEqual(wrapper.eligibleEntries, [platform + ':execution', platform + ':index']);
+        assert.equal(wrapper.descriptor, 'rollup4642-two-source-reexport-v1');
+        plan4FalseFlags(wrapper);
+      }
+    }
+  } finally { await base.cleanup(); }
+});
+
+for (const scope of ['export target', 'bare import target']) test('UNIT-ONLY SOURCE-REVIEW A per-root physical source refusal: ' + scope, async () => {
+  const value = await current45Fixture();
+  try {
+    await current45Outputs(value);
+    const directory = path.join(value.session.cwd, 'dist/browser');
+    const filename = scope === 'export target' ? 'C45-utility-finance-target0.js.map' : 'C45-effects.js.map';
+    const file = path.join(directory, filename);
+    const map = JSON.parse(await readFile(file, 'utf8'));
+    const input = path.join(value.session.cwd, 'src/index.ts');
+    map.sources.push(path.relative(directory, input).split(path.sep).join('/'));
+    map.sourcesContent.push(await readFile(input, 'utf8'));
+    await writeFile(file, JSON.stringify(map));
+    const exact = scope === 'export target'
+      ? /^Generated entry stub source refused: browser\/utility-finance\.js$/
+      : /^Generated entry stub source refused: browser\/C45-cron\.js$/;
+    await plan4Refuses(value, await completed(value.session), exact);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY SOURCE-REVIEW A last import must be the actual validated helper', async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/execution.js');
+    const changed = item.body.replace("\nimport './Z-runtime.js';", '');
+    assert.notEqual(changed, item.body);
+    await plan4ReplaceJs(item.file, changed);
+    await plan4Refuses(value, await completed(value.session), /^Generated entry stub serialization refused: browser\/execution\.js$/);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY SOURCE-REVIEW A same-name target export cannot borrow a different terminal source owner', async () => {
+  const value = await current45Fixture();
+  try {
+    await current45Outputs(value);
+    const directory = path.join(value.session.cwd, 'dist/browser');
+    const file = path.join(directory, 'C45-utility-planning-target0.js.map');
+    const map = JSON.parse(await readFile(file, 'utf8'));
+    const wrongOwner = path.join(value.session.cwd, 'src/lib/model-cdn.ts');
+    map.sources[0] = path.relative(directory, wrongOwner).split(path.sep).join('/');
+    map.sourcesContent[0] = await readFile(wrongOwner, 'utf8');
+    await writeFile(file, JSON.stringify(map));
+    await plan4Refuses(value, await completed(value.session), /^Generated entry stub source refused: browser\/utility-planning\.js$/);
+  } finally { await value.cleanup(); }
+});
+
+test('UNIT-ONLY SOURCE-REVIEW A duplicate local target declarations cannot supply one named binding', async () => {
+  const value = await current45Fixture();
+  try {
+    await current45Outputs(value);
+    const file = path.join(value.session.cwd, 'dist/browser/C45-utility-finance-target0.js');
+    await plan4ReplaceJs(file, 'var financeSourcesForTool = 1;\nvar financeSourcesForTool = 2;\nexport { financeSourcesForTool };\n//# sourceMappingURL=C45-utility-finance-target0.js.map\n');
+    await plan4Refuses(value, await completed(value.session), (error) => {
+      assert.equal(error.code, 'ERR_ASSERTION');
+      assert.equal(error.message.split('\n')[0], 'Generated entry stub bindings refused: browser/utility-finance.js');
+      assert.equal(error.actual, 2);
+      assert.equal(error.expected, 1);
+      return true;
+    });
+  } finally { await value.cleanup(); }
+});
+
+for (const form of ['export type', 'inline type', 'namespace', 'attributes', 'wrong root', 'cross namespace']) test('UNIT-ONLY SOURCE-REVIEW A finite stub form refusal: ' + form, async () => {
+  const value = await current45Fixture();
+  try {
+    const records = await current45Outputs(value);
+    const item = records.find(record => record.output === 'browser/execution.js');
+    const firstLine = item.body.split('\n')[0];
+    const firstTarget = path.posix.basename(item.targets[0].output);
+    let changed;
+    let malformed = false;
+    let exact = /^Generated entry stub serialization refused: browser\/execution\.js$/;
+    if (form === 'export type') {
+      changed = item.body.replace('export { ', 'export type { ').replace("import './Z-runtime.js';", "import './" + firstTarget + "';\nimport './Z-runtime.js';");
+      malformed = true;
+    } else if (form === 'inline type') {
+      changed = item.body.replace('export { DEFAULT_RATE_LIMIT,', 'export { type DEFAULT_RATE_LIMIT,');
+      malformed = true;
+    } else if (form === 'namespace') {
+      changed = item.body.replace(firstLine, "export * as named from './" + firstTarget + "';");
+    } else if (form === 'attributes') {
+      changed = item.body.replace(firstLine, firstLine.replace(/';$/, "' with { type: 'json' };"));
+    } else if (form === 'wrong root') {
+      const finance = records.find(record => record.output === 'browser/utility-finance.js');
+      const retainedTargets = item.targets.map(target => "import './" + path.posix.basename(target.output) + "';").join('\n');
+      changed = finance.body.slice(0, -plan4Footer('utility-finance.js').length)
+        .replace("import './Z-runtime.js';", retainedTargets + "\nimport './Z-runtime.js';") + plan4Footer('execution.js');
+      exact = /^Generated entry stub bindings refused: browser\/execution\.js$/;
+    } else {
+      changed = item.body.replace("'./" + firstTarget + "'", "'../node/" + firstTarget + "'");
+      exact = /^Wrong\/unaccountable output namespace edge: node\/C45-execution-target0\.js$/;
+    }
+    assert.notEqual(changed, item.body);
+    await plan4ReplaceJs(item.file, changed, malformed);
+    await plan4Refuses(value, await completed(value.session), form === 'wrong root' ? (error) => {
+      assert.equal(error.code, 'ERR_ASSERTION');
+      assert.equal(error.message.split('\n')[0], 'Generated entry stub bindings refused: browser/execution.js');
+      assert.deepEqual(error.actual, ['financeSourcesForTool', 'financeTools']);
+      assert.deepEqual(error.expected, current45Cases[0].names);
+      return true;
+    } : exact);
   } finally { await value.cleanup(); }
 });

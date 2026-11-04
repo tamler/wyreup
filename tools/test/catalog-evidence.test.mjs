@@ -1343,7 +1343,8 @@ test('continued epoch exact823 ledger and historical mapping reverse reject ever
   const original = documents(), entry = original.mapping.pendingSourceRecaptures[4];
   assert.equal(entry.changes.length, 823);
   assert.equal(sha(JSON.stringify(entry.changes)), 'd57b94c7326bac555e2aa324ac99c9b90aeb04381c9677fbe2d33fc12765b9c3');
-  const historical = structuredClone(original.mapping);
+  const { projectCatalogCurrentSourceEpoch } = await checker();
+  const historical = projectCatalogCurrentSourceEpoch(original.mapping);
   historical.pendingSourceRecaptures.pop();
   for (const row of [...entry.changes].reverse()) {
     const parts = row.field.split('.'), key = parts.pop();
@@ -1536,4 +1537,295 @@ test('continued epoch actual receipt consumers reject manifest and bridge defect
     assert.equal(sha(JSON.stringify(data.oracles.executableFixtures.slice(0, 181))),
       '2486316ec7eaa544fec64ad64c13797b190320d5a7e9c3899a7644e96e43765f');
   });
+});
+
+test('current source epoch restores the exact pre-final mapping and refuses consistent forward forgeries', async () => {
+  const { projectCatalogCurrentSourceEpoch: project } = await checker();
+  assert.equal(typeof project, 'function', 'Current-source projection is required.');
+  const original = documents().mapping;
+  assert.ok(original.finalEpoch?.sourceRecaptures.length > 0);
+  const before = JSON.stringify(original);
+  const projected = project(original);
+  assert.equal(sha(JSON.stringify(projected)), 'ac3d240e5e04b93cb5971436bd4348bd8c5b50d2fbcda2c8ba8052ea62f258cc');
+  assert.equal(JSON.stringify(original), before);
+  assert.equal(projected.rows.length, 193);
+  assert.equal(projected.rows.flatMap(row => row.engines).length, 196);
+  assert.ok(original.rows.every(row => row.status === 'pending'));
+  const eventFor = (mapping, suffix) => {
+    const entry = mapping.finalEpoch.sourceRecaptures.find(event => event.field.endsWith(suffix));
+    assert.ok(entry, `A real current-source ${suffix} recapture is required.`);
+    return entry;
+  };
+  const replaceCurrent = (mapping, entry, value) => {
+    const parts = entry.field.split('.'), key = parts.pop();
+    const parent = parts.reduce((object, part) => object[part], mapping);
+    entry.current = structuredClone(value);
+    parent[key] = structuredClone(value);
+  };
+  const foreignPin = (mapping, entry) => {
+    const covered = new Set((Array.isArray(entry.current) ? entry.current : [entry.current]).map(pin => pin.path));
+    const pin = mapping.rows.flatMap(row => row.engines).flatMap(engine => engine.sourceBinding.pins).find(pin => !covered.has(pin.path));
+    assert.ok(pin, 'An independently valid other source pin is required.');
+    return structuredClone(pin);
+  };
+  for (const [suffix, forge] of [
+    ['sourceBinding.tree', (_mapping, entry) => entry.current + ' forged current tree'],
+    ['requiredSourceClosure', (_mapping, entry) => entry.current.slice(1)],
+    ['currentIntegratedSourceGate.currentSource', (mapping, entry) => foreignPin(mapping, entry)],
+    ['sourceBinding.pins', (_mapping, entry) => entry.current.slice(0, 1)],
+    ['sourceBinding.pins', (mapping, entry) => [foreignPin(mapping, entry), ...entry.current.slice(1)]],
+  ]) {
+    const mapping = structuredClone(original), entry = eventFor(mapping, suffix);
+    replaceCurrent(mapping, entry, forge(mapping, entry));
+    assert.throws(() => project(mapping), /Continued epoch exact823/);
+  }
+  for (const mutate of [
+    mapping => {
+      const entry = mapping.finalEpoch.sourceRecaptures.shift();
+      const parts = entry.field.split('.'), key = parts.pop();
+      parts.reduce((object, part) => object[part], mapping)[key] = structuredClone(entry.prior);
+    },
+    mapping => { mapping.finalEpoch.sourceRecaptures.reverse(); },
+    mapping => { mapping.finalEpoch.sourceRecaptures.push(structuredClone(mapping.finalEpoch.sourceRecaptures[0])); },
+    mapping => { mapping.finalEpoch.verificationChanges = []; },
+  ]) {
+    const mapping = structuredClone(original); mutate(mapping);
+    assert.throws(() => project(mapping), /Continued epoch exact823/);
+  }
+});
+
+test('current source epoch checks raw descriptors before cloning with and without an epoch', async () => {
+  const { projectCatalogCurrentSourceEpoch: project } = await checker();
+  assert.equal(typeof project, 'function', 'Raw current-source projection guard is required.');
+  for (const withEpoch of [false, true]) {
+    const mapping = documents().mapping;
+    if (!withEpoch) delete mapping.finalEpoch;
+    let calls = 0;
+    Object.defineProperty(mapping, 'rejectedAccessor', { enumerable: true, get() { calls++; return 1; } });
+    assert.throws(() => project(mapping), /Continued epoch exact823/);
+    assert.equal(calls, 0);
+    const symbols = documents().mapping;
+    if (!withEpoch) delete symbols.finalEpoch;
+    symbols[Symbol('unrecorded')] = true;
+    assert.throws(() => project(symbols), /Continued epoch exact823/);
+  }
+});
+
+test('current cron split source retains its unique public and registry value bridges and lazy generator/parser', async () => {
+  const { protectedGroupA31Fixtures } = await checker();
+  const catalog = documents().oracles;
+  await withGroupA31SourceCopy(catalog.groupA31FixtureAuthorities, async (directory) => {
+    const candidates = await protectedGroupA31Fixtures(directory, catalog);
+    const cron = candidates.find((row) => row.engineId === 'cron-from-text');
+    assert(cron.authorityPins.some((pin) => pin.path === 'packages/core/src/tools/cron-from-text/tool.ts'));
+    assert(cron.authorityPins.some((pin) => pin.path === 'packages/core/src/tools/cron-from-text/generate.ts'));
+    for (const [relative, before, after] of [
+      ['packages/core/src/tools/cron-from-text/index.ts', "export { cronFromText, defaultCronFromTextParams } from './tool.js';", "export { defaultCronFromTextParams } from './tool.js';"],
+      ['packages/core/src/tools/cron-from-text/index.ts', "export { cronFromText, defaultCronFromTextParams } from './tool.js';", "export type { cronFromText, defaultCronFromTextParams } from './tool.js';"],
+      ['packages/core/src/tools/cron-from-text/index.ts', "export { cronFromText, defaultCronFromTextParams } from './tool.js';", "export { type cronFromText, defaultCronFromTextParams } from './tool.js';"],
+      ['packages/core/src/tools/cron-from-text/index.ts', "export { cronFromText, defaultCronFromTextParams } from './tool.js';", "export { cronFromText, defaultCronFromTextParams } from './other.js';"],
+      ['packages/core/src/tools/cron-from-text/index.ts', "export { cronFromText, defaultCronFromTextParams } from './tool.js';", "export { cronFromText, defaultCronFromTextParams } from './tool.js';\nexport { cronFromText } from './tool.js';"],
+      ['packages/core/src/default-registry.ts', "import { cronFromText } from './tools/cron-from-text/tool.js';", "import { cronFromText } from './tools/cron-from-text/index.js';"],
+      ['packages/core/src/default-registry.ts', "import { cronFromText } from './tools/cron-from-text/tool.js';", "import type { cronFromText } from './tools/cron-from-text/tool.js';"],
+      ['packages/core/src/default-registry.ts', '\n  cronFromText,', ''],
+      ['packages/core/src/tools/cron-from-text/tool.ts', "await import('./generate.js')", "await import('./different-generator.js')"],
+      ['packages/core/src/tools/cron-from-text/tool.ts', "await import('./generate.js')", "(await import('./generate.js'), await import('./generate.js'))"],
+      ['packages/core/src/tools/cron-from-text/tool.ts', "await import('cron-parser')", "await import('different-parser')"],
+    ]) {
+      const file = path.join(directory, relative), original = fs.readFileSync(file, 'utf8');
+      assert.equal(original.split(before).length, 2, `${relative}: ${before}`);
+      try {
+        fs.writeFileSync(file, original.replace(before, after));
+        await assert.rejects(protectedGroupA31Fixtures(directory, catalog), /Group A31/);
+      } finally { fs.writeFileSync(file, original); }
+    }
+  });
+});
+
+test('current CSV Node recipe requires the real execution entry and both platform redirects', async () => {
+  const { protectedGroupA31Fixtures } = await checker();
+  const catalog = documents().oracles;
+  await withGroupA31SourceCopy(catalog.groupA31FixtureAuthorities, async (directory) => {
+    const file = path.join(directory, 'packages/core/tsup.config.ts'), original = fs.readFileSync(file, 'utf8');
+    assert.equal((await protectedGroupA31Fixtures(directory, catalog)).length, 31);
+    for (const [before, after] of [
+      ["execution: 'src/execution.ts',", "execution: 'src/index.ts',"],
+      ["new URL('./src/utilities/bank-pdf-node.ts', import.meta.url)", "new URL('./src/utilities/bank-pdf-platform.ts', import.meta.url)"],
+      ['/^\\.\\/bank-pdf-platform\\.js$/', '/^\\.\\/different-platform\\.js$/'],
+    ]) {
+      assert(original.includes(before));
+      try {
+        fs.writeFileSync(file, original.replaceAll(before, after));
+        await assert.rejects(protectedGroupA31Fixtures(directory, catalog), /Group A31/);
+      } finally { fs.writeFileSync(file, original); }
+    }
+  });
+});
+
+test('retained oracle digest refuses extra data after preserving historical source-family refusal precedence', async () => {
+  const original = documents();
+  const changed = structuredClone(original);
+  changed.oracles.unreviewedRetainedAuthority = 'not an accepted historical field';
+  await assert.rejects(validate(changed), /Retained original catalog oracle authority differs/);
+  for (const name of ['sourceCaseCatalog', 'declaredFixtureCatalog']) {
+    const wrong = structuredClone(changed);
+    wrong.oracles[name][0] = { ...wrong.oracles[name][0], unreviewedHistoricalField: true };
+    await assert.rejects(validate(wrong), /^Error: Supplemental authority cannot alter historical902\/81 arrays\.$/);
+  }
+});
+
+test('revision1 TV provenance binds the actual hardware common factory without a runtime buildingUtility', async () => {
+  const { protectedGroupBCFixtures } = await checker();
+  const rows = await protectedGroupBCFixtures(root, documents().oracles);
+  const tv = rows.find((row) => row.engineId === 'tv-viewing-distance-calculator');
+  const bindings = tv.sourceCaseBinding.factoryBindings;
+  assert.equal(bindings.filter((row) => row.name === 'buildingUtility').length, 0);
+  const commonEdge = bindings.filter((row) => row.name === 'createUtilityImport');
+  assert.equal(commonEdge.length, 1);
+  const hardware = fs.readFileSync(path.join(root, 'packages/core/src/utilities/hardware.ts'), 'utf8');
+  assert(hardware.includes(commonEdge[0].expression));
+  assert.match(commonEdge[0].expression, /createUtility/);
+  assert.match(commonEdge[0].expression, /from '\.\/common\.js'/);
+  assert(bindings.some((row) => row.name === 'buildingSpecs'));
+  assert(bindings.some((row) => row.name === 'buildingResult'));
+});
+
+test('revision1 current mapping pin key order cannot differ from the locked journal', async () => {
+  const { projectCatalogCurrentSourceEpoch: project } = await checker();
+  const mapping = documents().mapping;
+  const entry = mapping.finalEpoch.sourceRecaptures.find((row) => row.field.endsWith('.sourceBinding.pins'));
+  assert(entry);
+  const parts = entry.field.split('.'), key = parts.pop();
+  const parent = parts.reduce((value, part) => value[part], mapping);
+  const pin = parent[key][0];
+  parent[key][0] = { sha256: pin.sha256, bytes: pin.bytes, path: pin.path };
+  assert.deepEqual(parent[key], entry.current);
+  assert.notEqual(JSON.stringify(parent[key]), JSON.stringify(entry.current));
+  assert.throws(() => project(mapping), /Continued epoch exact823/);
+});
+
+test('revision1 CSV platform filters cannot exchange their adapter targets', async () => {
+  const { protectedGroupA31Fixtures } = await checker();
+  const catalog = documents().oracles;
+  await withGroupA31SourceCopy(catalog.groupA31FixtureAuthorities, async (directory) => {
+    const file = path.join(directory, 'packages/core/tsup.config.ts'), original = fs.readFileSync(file, 'utf8');
+    const fileJob = "new URL('./src/utilities/file-job-node.ts', import.meta.url)";
+    const bankPdf = "new URL('./src/utilities/bank-pdf-node.ts', import.meta.url)";
+    assert.equal(original.split(fileJob).length, 2);
+    assert.equal(original.split(bankPdf).length, 2);
+    const swapped = original.replace(/new URL\('\.\/src\/utilities\/(?:file-job-node|bank-pdf-node)\.ts', import\.meta\.url\)/g,
+      (value) => value === fileJob ? bankPdf : fileJob);
+    assert.notEqual(swapped, original);
+    fs.writeFileSync(file, swapped);
+    await assert.rejects(protectedGroupA31Fixtures(directory, catalog), /Group A31/);
+  });
+});
+
+test('revision1 BC helper mutations are refused by immutable whole-file pins before AST recognition', async () => {
+  const { protectedGroupBCFixtures } = await checker();
+  const catalog = documents().oracles;
+  await withGroupA31SourceCopy(catalog.groupBCFixtureAuthorities, async (directory) => {
+    assert.equal((await protectedGroupBCFixtures(directory, catalog)).length, 8);
+    for (const [relative, needle, specifier, dynamic] of [
+      ['packages/core/src/utilities/planning.ts', 'const { calculatePlanning } =', './planning-calculations.js', true],
+      ['packages/core/src/utilities/hardware.ts', 'const { calculateHardware } =', './hardware-calculations.js', true],
+      ['packages/core/src/utilities/planning.ts', 'export { secureUint32,', './planning-shared.js', false],
+      ['packages/core/src/utilities/planning-calculations.ts', 'import { bmiCategory,', './planning-shared.js', false],
+      ['packages/core/src/utilities/hardware.ts', 'import { buildingChoice,', './building-shared.js', false],
+      ['packages/core/src/utilities/hardware.ts', "import { abort } from", './hardware-shared.js', false],
+      ['packages/core/src/utilities/hardware-calculations.ts', 'import { buildingCount,', './building-shared.js', false],
+      ['packages/core/src/utilities/hardware.ts', 'import { cloneUtilityJson,', './common.js', false],
+    ]) {
+      const file = path.join(directory, relative), original = fs.readFileSync(file, 'utf8');
+      const matches = original.split('\n').filter((line) => line.includes(needle));
+      assert.equal(matches.length, 1, relative + ': ' + needle);
+      const before = matches[0];
+      assert(before.includes(`'${specifier}'`));
+      for (const replacement of [
+        '',
+        before + '\n' + before,
+        dynamic ? `type UnusedCalculation = typeof import('${specifier}');`
+          : before.replace(/\b(import|export) \{/, '$1 type {'),
+        before.replace(`'${specifier}'`, "'./wrong-helper.js'"),
+      ]) {
+        assert.notEqual(replacement, before);
+        try {
+          fs.writeFileSync(file, original.replace(before, replacement));
+          await assert.rejects(protectedGroupBCFixtures(directory, catalog),
+            (error) => error.message === 'Group BC accepted public/default/factory source changed: ' + relative);
+        } finally { fs.writeFileSync(file, original); }
+      }
+    }
+  });
+});
+
+test('revision1 retained extra cannot precede actual A31 and BC family or sibling refusals', async () => {
+  const original = documents();
+  for (const [family, offset] of [['groupA31FixtureAuthorities', 191], ['groupBCFixtureAuthorities', 222]]) {
+    for (const sibling of [false, true]) {
+      const changed = structuredClone(original);
+      changed.oracles.unreviewedRetainedAuthority = 'must not hide the earlier family refusal';
+      const record = sibling ? changed.oracles.executableFixtures[offset] : changed.oracles[family][0];
+      record.params.unreviewedParameter = true;
+      await assert.rejects(validate(changed), (error) =>
+        error.message === 'Group A31 / Group BC strict230 complete ordered family refused: ' + family);
+    }
+  }
+});
+
+test('revision1 forward journal refuses remaining entry forgeries and unjournaled current mismatches', async () => {
+  const { projectCatalogCurrentSourceEpoch: project } = await checker();
+  const original = documents().mapping;
+  const set = (mapping, field, value) => {
+    const parts = field.split('.'), key = parts.pop();
+    parts.reduce((parent, part) => parent[part], mapping)[key] = value;
+  };
+  for (const mutate of [
+    (mapping) => { delete mapping.finalEpoch.sourceRecaptures[0].prior; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].prior[0].bytes++; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].unknown = true; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].field = 'rows.999.engines.0.sourceBinding.pins'; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].current = 'wrong whole-array type'; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].rowNumber++; },
+    (mapping) => { mapping.finalEpoch.sourceRecaptures[0].engineId += '-foreign-owner'; },
+    (mapping) => {
+      const entries = mapping.finalEpoch.sourceRecaptures;
+      const other = entries.find((entry) => entry.field.endsWith('.sourceBinding.pins') && entry.engineId !== entries[0].engineId);
+      assert(other);
+      entries[0].field = other.field;
+      entries[0].rowNumber = other.rowNumber;
+      entries[0].engineId = other.engineId;
+      entries[0].current = structuredClone(other.current);
+    },
+    (mapping) => {
+      const entry = mapping.finalEpoch.sourceRecaptures.find((row) => row.field.endsWith('.sourceBinding.tree'));
+      assert(entry);
+      set(mapping, entry.field, entry.current + ' unjournaled value');
+    },
+  ]) {
+    const mapping = structuredClone(original);
+    mutate(mapping);
+    const retained = JSON.stringify(mapping);
+    assert.throws(() => project(mapping), /Continued epoch exact823/);
+    assert.equal(JSON.stringify(mapping), retained);
+  }
+});
+
+test('revision1 unrelated status verification and additions remain intact and production refuses them', async () => {
+  const { projectCatalogCurrentSourceEpoch: project } = await checker();
+  const original = documents();
+  await validate(original);
+  for (const mutate of [
+    (mapping) => { mapping.rows[0].status = 'verified'; },
+    (mapping) => { mapping.rows[0].engines[0].verification = { unreviewedAcceptance: true }; },
+    (mapping) => { mapping.rows[0].engines.push(structuredClone(mapping.rows[0].engines[0])); },
+  ]) {
+    const changed = structuredClone(original);
+    mutate(changed.mapping);
+    const retained = JSON.stringify(changed.mapping);
+    assert.throws(() => project(changed.mapping), /Continued epoch exact823/);
+    assert.equal(JSON.stringify(changed.mapping), retained);
+    await assert.rejects(validate(changed));
+    assert.equal(JSON.stringify(changed.mapping), retained);
+  }
 });

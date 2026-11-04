@@ -151,7 +151,7 @@ export default defineConfig({
                   if (!normalized.startsWith(directory)) return false;
                   const relative = normalized.slice(directory.length);
                   return /^[^?#]+\.js$/.test(relative) &&
-                    !['file-worker.js', 'bank-pdf-worker.js'].includes(relative);
+                    !['index.js', 'file-worker.js', 'bank-pdf-worker.js'].includes(relative);
                 },
                 name(moduleId, ctx) {
                   const info = ctx.getModuleInfo(moduleId);
