@@ -77,7 +77,7 @@ wk_test_<64 hex chars>   ← sandbox / dev
 
 | Surface | How the key is used |
 |---------|--------------------|
-| **Browser** | User pastes key once. Server exchanges it for a signed `wyreup_session` cookie (24h TTL). Raw key never written to `localStorage`. Re-paste on cookie expiry; password manager autofill handles repeat visits. See §7. |
+| **Browser** | User pastes key once. Server exchanges it for a signed `__Host-wyreup_session` cookie (24h TTL). Raw key never written to `localStorage`. Re-paste on cookie expiry; password manager autofill handles repeat visits. See §7. |
 | **CLI** | `wyreup auth set <key>` — saved to `~/.wyreup/credentials` or OS keychain. Sent as `Authorization: Bearer wk_live_...` on every request. |
 | **MCP** | `WYREUP_API_KEY=wk_live_...` env var in MCP config. Same header. |
 
@@ -219,12 +219,12 @@ Possession of the emailed secret proves mailbox access. Merely requesting a key 
 
 ## 6. Key Resolution (Server)
 
-Every authenticated API route runs this. It accepts an `Authorization: Bearer` header (CLI/MCP path) or the `wyreup_session` cookie set by `/api/account/verify` (browser path).
+Every authenticated API route runs this. It accepts an `Authorization: Bearer` header (CLI/MCP path) or the `__Host-wyreup_session` cookie set by `/api/account/verify` (browser path).
 
 ```ts
 async function resolveUser(request: Request, env: Env): Promise<User | null> {
   // 1. Cookie path (browser)
-  const cookie = parseCookies(request.headers.get('Cookie'))['wyreup_session'];
+  const cookie = parseCookies(request.headers.get('Cookie'))['__Host-wyreup_session'];
   if (cookie) {
     const payload = await verifySessionCookie(cookie, env.SESSION_SECRET);
     if (payload) {
@@ -287,9 +287,10 @@ The raw key is too valuable to keep in `localStorage`, but forcing re-entry on e
 - On `[Activate]`: POST `/api/account/verify` with `Authorization: Bearer wk_live_...`
   - Server resolves the key, then sets a cookie:
     ```
-    Set-Cookie: wyreup_session=<uid>.<kid>.<exp>.<hmac>;
-                Domain=wyreup.com; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400
+    Set-Cookie: __Host-wyreup_session=<uid>.<kid>.<exp>.<hmac>;
+                Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=86400
     ```
+    The cookie is restricted to the issuing host; it has no `Domain` attribute.
     Format and sign/verify helpers in §18. `SameSite=Lax` (not `Strict`) so the cookie survives the top-level redirect back from `lemonsqueezy.com` after checkout; `Lax` still blocks third-party iframe/image/CORS use, which is what we need here.
   - Response body: `{ email, balance }`
 - Subsequent PRO API calls succeed with **either** the cookie **or** an `Authorization` header. The cookie path is what the browser uses by default; CLI/MCP still send the header.
@@ -330,7 +331,7 @@ New key flow: name it → generate → shown once in a modal → copy and close.
 When a user tries to run a PRO tool in the browser:
 
 1. `ToolRunner.svelte` checks `tool.cost === 'credit'`
-2. Not signed in (no `wyreup_session` cookie / no `$user`) → show `<AuthModal>` ("Enter your API key")
+2. Not signed in (no `__Host-wyreup_session` cookie / no `$user`) → show `<AuthModal>` ("Enter your API key")
 3. Signed in, balance = 0 → show `<BuyCreditsSheet>`
 4. Signed in, balance ≥ `creditCost` → POST `/api/tools/pro/run`
 5. The server deducts atomically and returns the result. The client never POSTs a separate "spend" call — there is no `/api/credits/spend` endpoint. On 402 the client re-checks balance (server may have raced) and reopens `<BuyCreditsSheet>` if still short.
@@ -518,7 +519,7 @@ export async function POST({ request, env }) {
 ### Environment Variables (CF Pages secrets — never in code)
 
 ```
-SESSION_SECRET=          # HMAC key for wyreup_session cookie (≥32 random bytes)
+SESSION_SECRET=          # HMAC key for __Host-wyreup_session cookie (≥32 random bytes)
 
 LS_API_KEY=              # Lemon Squeezy API key
 LS_WEBHOOK_SECRET=       # Webhook signing secret
@@ -597,7 +598,7 @@ Sections:
 | 2 | Add `[[d1_databases]]` binding to `wrangler.toml` (Pages project) |
 | 3 | Crypto helpers (§18): `sha256hex`, `hmacSha256Hex`, `timingSafeEqualHex`, session sign/verify |
 | 4 | `/api/account/create` — atomic per-email/IP admission → canonical user → provisional key → email-only signup or recovery → bind key after delivery submission |
-| 5 | `/api/account/verify` — resolve key → set signed `wyreup_session` cookie → return `{ email, balance }` |
+| 5 | `/api/account/verify` — resolve key → set signed `__Host-wyreup_session` cookie → return `{ email, balance }` |
 | 6 | `/api/account/signout` — clear cookie |
 | 7 | `resolveUser()` accepting both cookie and `Authorization: Bearer` paths |
 | 8 | `AuthModal.svelte` + `$apiKey` (transient) / `$user` Svelte stores |
