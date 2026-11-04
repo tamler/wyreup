@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { copyFile, lstat, mkdir, mkdtemp, open, realpath, rm, symlink, writeFile } from 'node:fs/promises';
+import { copyFile, lstat, mkdir, mkdtemp, open, realpath, rename, rm, symlink, utimes, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -43,52 +43,178 @@ function sameFile(before, after) {
   return before.dev === after.dev && before.ino === after.ino && before.size === after.size && before.mtimeMs === after.mtimeMs && after.isFile();
 }
 
-async function ownedFile(owner, relative, maximum, retain = true) {
-  const owned = await realpath(owner);
-  const target = path.resolve(owned, relative);
-  assert(contained(owned, target), 'Evidence input escaped its owned root');
-  const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
-  if (!before) return { status: 'ABSENT', complete: true, bytes: 0 };
-  assert(before.isFile() && !before.isSymbolicLink(), `Evidence input is not a regular file: ${relative}`);
-  assert(contained(owned, await realpath(target)), 'Evidence input resolved outside its owned root');
-  if (before.size > maximum) return { status: 'OVER_LIMIT', complete: false, bytes: before.size, maximum };
-  const handle = await open(target, 'r');
+function writtenFileMatches(identity, observed, size) {
+  return identity.dev === observed.dev && identity.ino === observed.ino && identity.isFile() && observed.isFile()
+    && !observed.isSymbolicLink() && observed.size === size;
+}
+
+function evidenceDiagnostic(context) {
+  try {
+    const stats = Object.fromEntries(Object.entries(context.stats).map(([key, value]) => [key, value ? {
+      dev: Number.isFinite(value.dev) ? value.dev : null, ino: Number.isFinite(value.ino) ? value.ino : null,
+      size: Number.isFinite(value.size) ? value.size : null, mtimeMs: Number.isFinite(value.mtimeMs) ? value.mtimeMs : null,
+      regular: value.isFile(), link: value.isSymbolicLink(),
+    } : null]));
+    const encoded = JSON.stringify({ output: context.output, operation: context.operation, phase: context.phase,
+      close: context.close, secondary: context.secondary ?? false, absent: context.absent ?? false,
+      overLimit: context.overLimit ?? false, stats, checks: context.checks });
+    if (Buffer.byteLength(encoded) <= 4096) return encoded;
+  } catch {}
+  return '{"operation":"evidence-io","diagnostic":"UNAVAILABLE_OR_OVER_LIMIT"}';
+}
+
+function emitEvidenceDiagnostic(context) {
+  try { process.stderr.write(`Evidence I/O failure: ${evidenceDiagnostic(context)}\n`); } catch {}
+}
+
+function evidenceGuard(context, condition, message) {
+  if (!context) { assert(condition, message); return; }
+  if (context) context.checks[context.phase] = Boolean(condition);
+  if (condition) return;
+  const error = new Error(message);
+  if (context) {
+    try { error.message += `; ${evidenceDiagnostic(context)}`; } catch {}
+  }
+  throw error;
+}
+
+function matchesEvidence(actual, bytes) {
+  return actual.status === 'COMPLETE' && actual.sha256 === sha256(bytes);
+}
+
+async function closeEvidenceHandle(handle, context, primary) {
+  let closeError;
+  context.phase = 'close';
+  try { await handle.close(); context.close = 'SUCCEEDED'; }
+  catch (error) {
+    closeError = error;
+    context.close = 'FAILED';
+    context.secondary = Boolean(primary);
+    emitEvidenceDiagnostic(context);
+  }
+  if (primary) throw primary;
+  if (closeError) throw closeError;
+}
+
+async function ownedFile(owner, relative, maximum, retain = true, expected) {
+  const context = expected ? { output: path.basename(relative), operation: 'readback', phase: 'owner-realpath', close: 'NOT_OPENED', stats: { expected }, checks: {} } : null;
+  let handle;
+  let primary;
   let bytes;
   try {
-    assert(sameFile(before, await handle.stat()), 'Evidence input changed before reading');
+    const owned = await realpath(owner);
+    const target = path.resolve(owned, relative);
+    if (context) context.phase = 'owned-path';
+    evidenceGuard(context, contained(owned, target), 'Evidence input escaped its owned root');
+    if (context) context.phase = 'before-lstat';
+    const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
+    if (context) { context.stats.before = before; context.absent = !before; }
+    if (!before) {
+      evidenceGuard(context, !expected, 'Expected evidence readback is absent');
+      return { status: 'ABSENT', complete: true, bytes: 0 };
+    }
+    if (context) context.phase = 'before-type';
+    evidenceGuard(context, before.isFile() && !before.isSymbolicLink(), 'Evidence input is not a nonlink regular file');
+    if (context) context.phase = 'before-realpath';
+    evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence input resolved outside its owned root');
+    if (expected) {
+      context.phase = 'expected-path-join';
+      evidenceGuard(context, sameFile(expected, before), 'Evidence readback differs from its closed writer');
+    }
+    if (context) { context.phase = 'size-bound'; context.overLimit = before.size > maximum; }
+    if (before.size > maximum) {
+      evidenceGuard(context, !expected, 'Expected evidence readback exceeds its bound');
+      return { status: 'OVER_LIMIT', complete: false, bytes: before.size, maximum };
+    }
+    if (context) context.phase = 'open';
+    handle = await open(target, 'r');
+    if (context) { context.close = 'OPEN'; context.phase = 'opened-stat'; }
+    const opened = await handle.stat();
+    if (context) { context.stats.opened = opened; context.phase = 'path-fd-join'; }
+    evidenceGuard(context, sameFile(before, opened), 'Evidence input changed before reading');
     const buffer = Buffer.alloc(before.size + 1);
     let length = 0;
+    if (context) context.phase = 'read';
     while (length < buffer.length) {
       const read = await handle.read(buffer, length, buffer.length - length, length);
       if (read.bytesRead === 0) break;
       length += read.bytesRead;
     }
-    assert.equal(length, before.size, 'Evidence input size changed while reading');
-    assert(sameFile(before, await handle.stat()) && sameFile(before, await lstat(target)), 'Evidence input changed while reading');
-    assert(contained(owned, await realpath(target)), 'Evidence input ownership changed');
+    if (context) context.phase = 'read-eof';
+    evidenceGuard(context, length === before.size, 'Evidence input size changed while reading');
+    if (context) context.phase = 'after-fd-stat';
+    const afterFd = await handle.stat();
+    if (context) { context.stats.afterFd = afterFd; context.phase = 'after-fd-join'; }
+    evidenceGuard(context, sameFile(before, afterFd), 'Evidence input FD changed while reading');
+    if (context) context.phase = 'after-path-lstat';
+    const afterPath = await lstat(target);
+    if (context) { context.stats.afterPath = afterPath; context.phase = 'after-path-join'; }
+    evidenceGuard(context, sameFile(before, afterPath) && !afterPath.isSymbolicLink(), 'Evidence input path changed while reading');
+    if (context) context.phase = 'after-realpath';
+    evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence input ownership changed');
     bytes = buffer.subarray(0, length);
-  } finally { await handle.close(); }
+  } catch (error) {
+    primary = error;
+    if (context) emitEvidenceDiagnostic(context);
+  }
+  if (handle) {
+    if (context) await closeEvidenceHandle(handle, context, primary);
+    else await handle.close();
+  }
+  if (primary) throw primary;
   return { status: 'COMPLETE', complete: true, bytes: bytes.length, sha256: sha256(bytes), ...(retain ? { raw: bytes.toString('utf8') } : {}) };
 }
 
 async function ownedWrite(owner, name, bytes) {
   assert(receiptNames.includes(name) || name === 'run-manifest.json', 'Unexpected evidence output');
-  const owned = await realpath(owner);
-  const target = path.join(owned, name);
-  const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
-  if (before) {
-    assert(before.isFile() && !before.isSymbolicLink(), 'Evidence output is not a regular file');
-    assert(contained(owned, await realpath(target)), 'Evidence output escaped its owned root');
-  }
-  const handle = await open(target, before ? 'r+' : 'wx');
+  const context = { output: name, operation: 'write', phase: 'owner-realpath', close: 'NOT_OPENED', stats: {}, checks: {} };
+  let owned;
+  let target;
+  let handle;
+  let primary;
+  let written;
   try {
-    if (before) assert(sameFile(before, await handle.stat()), 'Evidence output changed before writing');
+    owned = await realpath(owner);
+    target = path.join(owned, name);
+    context.phase = 'before-lstat';
+    const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
+    context.stats.before = before;
+    if (before) {
+      context.phase = 'before-type';
+      evidenceGuard(context, before.isFile() && !before.isSymbolicLink(), 'Evidence output is not a nonlink regular file');
+      context.phase = 'before-realpath';
+      evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence output escaped its owned root');
+    }
+    context.phase = 'open';
+    handle = await open(target, before ? 'r+' : 'wx');
+    context.close = 'OPEN';
+    context.phase = 'opened-stat';
+    const opened = await handle.stat();
+    context.stats.opened = opened;
+    context.phase = 'before-fd-join';
+    evidenceGuard(context, before ? sameFile(before, opened) : opened.isFile(), 'Evidence output changed before writing');
+    context.phase = 'write';
     await handle.writeFile(bytes);
+    context.phase = 'truncate';
     await handle.truncate(bytes.length);
-    const after = await handle.stat();
-    assert(after.isFile() && after.size === bytes.length && sameFile(after, await lstat(target)), 'Evidence output changed while writing');
-    assert(contained(owned, await realpath(target)), 'Evidence output ownership changed');
-  } finally { await handle.close(); }
+    context.phase = 'written-stat';
+    written = await handle.stat();
+    context.stats.written = written;
+    context.phase = 'written-identity-size';
+    evidenceGuard(context, writtenFileMatches(opened, written, bytes.length), 'Evidence output FD changed while writing');
+  } catch (error) { primary = error; emitEvidenceDiagnostic(context); }
+  if (handle) await closeEvidenceHandle(handle, context, primary);
+  if (primary) throw primary;
+  try {
+    context.phase = 'post-close-lstat';
+    const postClose = await lstat(target);
+    context.stats.postClose = postClose;
+    context.phase = 'post-close-identity-size';
+    evidenceGuard(context, writtenFileMatches(written, postClose, bytes.length), 'Evidence output path differs from its closed writer');
+    context.phase = 'post-close-realpath';
+    evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence output ownership changed');
+    return postClose;
+  } catch (error) { emitEvidenceDiagnostic(context); throw error; }
 }
 
 function describeError(error) {
@@ -451,18 +577,106 @@ async function selfControls(scratch) {
   const encodedFailureManifestBytes = Buffer.byteLength(JSON.stringify(failureManifest, null, 2));
   assert(encodedFailureManifestBytes <= limits.manifest, 'Encoded self-control failure exceeds manifest bound');
   assert.equal(failureManifest.selfControls.error.messageEvidence.complete, false);
+  const writtenMetadata = { dev: 1, ino: 2, size: 8, mtimeMs: 10, isFile: () => true, isSymbolicLink: () => false };
+  const closedMetadata = { ...writtenMetadata, mtimeMs: 11 };
+  assert(writtenFileMatches(writtenMetadata, closedMetadata, 8), 'Write transition must allow changed mtime before the post-close baseline');
+  assert(!sameFile(writtenMetadata, closedMetadata), 'Stable reads must still refuse changed mtime');
+  for (const changed of [
+    { ...writtenMetadata, dev: 3 }, { ...writtenMetadata, ino: 3 }, { ...writtenMetadata, size: 9 },
+    { ...writtenMetadata, isFile: () => false }, { ...writtenMetadata, isSymbolicLink: () => true },
+  ]) assert(!writtenFileMatches(writtenMetadata, changed, 8), 'Writer identity/type/size predicate accepted a mutation');
+  assert.equal(evidence.normalize(lexicalScratch), '<scratch>');
+  const ioName = 'migration-npm.json';
+  const longBytes = Buffer.from('12345678');
+  const freshBaseline = await ownedWrite(directory, ioName, longBytes);
+  const freshRead = await ownedFile(directory, ioName, limits.policy, true, freshBaseline);
+  assert(matchesEvidence(freshRead, longBytes));
+  assert(!matchesEvidence(freshRead, Buffer.from('87654321')), 'Intended SHA256 predicate accepted different same-length content');
+  assert.deepEqual(Object.keys(freshRead).sort(), ['bytes', 'complete', 'raw', 'sha256', 'status']);
+  const shortBytes = Buffer.from('abc');
+  const shortBaseline = await ownedWrite(directory, ioName, shortBytes);
+  assert.equal(shortBaseline.ino, freshBaseline.ino);
+  const shortRead = await ownedFile(directory, ioName, limits.policy, true, shortBaseline);
+  assert(matchesEvidence(shortRead, shortBytes));
+  assert.equal(shortRead.raw, 'abc');
+  assert.equal(shortRead.bytes, 3);
+  await assert.rejects(ownedFile(directory, ioName, 2, true, shortBaseline), /exceeds its bound/);
+  await assert.rejects(ownedFile(directory, 'absent-readback', limits.policy, true, shortBaseline), /is absent/);
+  await assert.rejects(ownedFile(path.join(directory, 'absent-owner'), ioName, limits.policy, true, shortBaseline), error => error.code === 'ENOENT');
+  const absentPrefix = 'Expected evidence readback is absent; ';
+  const malformedPathRefusal = (error, platform = process.platform) => {
+    if (platform !== 'win32') return error.code === 'ENOTDIR';
+    if (error.code !== undefined || typeof error.message !== 'string' || !error.message.startsWith(absentPrefix)) return false;
+    try {
+      const diagnostic = JSON.parse(error.message.slice(absentPrefix.length));
+      return diagnostic.output === 'child' && diagnostic.operation === 'readback' && diagnostic.phase === 'before-lstat'
+        && diagnostic.absent === true && diagnostic.overLimit === false && diagnostic.close === 'NOT_OPENED'
+        && diagnostic.stats?.before === null && diagnostic.checks?.['before-lstat'] === false;
+    } catch { return false; }
+  };
+  await assert.rejects(ownedFile(directory, `${ioName}/child`, limits.policy, true, shortBaseline), malformedPathRefusal);
+  let actualAbsentGuard;
+  await assert.rejects(ownedFile(directory, 'absent-component/child', limits.policy, true, shortBaseline), error => {
+    actualAbsentGuard = error;
+    return malformedPathRefusal(error, 'win32');
+  });
+  assert(malformedPathRefusal({ code: 'ENOTDIR' }, 'darwin'));
+  assert(!malformedPathRefusal(actualAbsentGuard, 'darwin'));
+  for (const code of ['ENOTDIR', 'ENOENT']) assert(!malformedPathRefusal({ code, message: actualAbsentGuard.message }, 'win32'));
+  assert(!malformedPathRefusal(new Error('unrelated failure'), 'win32'));
+  assert(!malformedPathRefusal(new Error(`${absentPrefix}{malformed`), 'win32'));
+  for (const [key, value] of [['output', 'different'], ['operation', 'write'], ['phase', 'close'], ['absent', false], ['close', 'SUCCEEDED']]) {
+    const diagnostic = JSON.parse(actualAbsentGuard.message.slice(absentPrefix.length));
+    diagnostic[key] = value;
+    assert(!malformedPathRefusal(new Error(absentPrefix + JSON.stringify(diagnostic)), 'win32'));
+  }
+  const malformedStatError = new Error('synthetic metadata accessor failure');
+  const malformedBaseline = { get dev() { throw malformedStatError; } };
+  await assert.rejects(ownedFile(directory, ioName, limits.policy, true, malformedBaseline), error => error === malformedStatError);
+  const modifiedTime = new Date(shortBaseline.mtimeMs + 2000);
+  await utimes(path.join(directory, ioName), modifiedTime, modifiedTime);
+  const retimed = await lstat(path.join(directory, ioName));
+  assert.equal(retimed.ino, shortBaseline.ino);
+  assert.notEqual(retimed.mtimeMs, shortBaseline.mtimeMs);
+  await assert.rejects(ownedFile(directory, ioName, limits.policy, true, shortBaseline), /differs from its closed writer/);
+  const replacementBaseline = await ownedWrite(directory, ioName, shortBytes);
+  const replacement = path.join(directory, 'replacement-data');
+  await writeFile(replacement, shortBytes);
+  const replacementStat = await lstat(replacement);
+  assert(replacementStat.dev !== replacementBaseline.dev || replacementStat.ino !== replacementBaseline.ino, 'Replacement fixture lacks distinguishable inode identity');
+  await rename(replacement, path.join(directory, ioName));
+  await assert.rejects(ownedFile(directory, ioName, limits.policy, true, replacementBaseline), /differs from its closed writer/);
+  await mkdir(path.join(directory, 'run-manifest.json'));
+  await assert.rejects(ownedWrite(directory, 'run-manifest.json', shortBytes), /nonlink regular file/);
+  const diagnosticContext = { output: ioName, operation: 'readback', phase: 'expected-path-join', close: 'NOT_OPENED',
+    stats: { expected: writtenMetadata, before: { ...writtenMetadata, ino: 3 } }, checks: { 'expected-path-join': false } };
+  const diagnostic = evidenceDiagnostic(diagnosticContext);
+  assert(Buffer.byteLength(diagnostic) <= 4096);
+  assert.equal(JSON.parse(diagnostic).stats.before.ino, 3);
+  assert.equal(JSON.parse(evidenceDiagnostic({ ...diagnosticContext, stats: { malformed: malformedBaseline } })).diagnostic, 'UNAVAILABLE_OR_OVER_LIMIT');
+  const readError = new Error('synthetic read failure');
+  const closeError = new Error('synthetic close failure');
+  let closeCount = 0;
+  await assert.rejects(closeEvidenceHandle({ async close() { closeCount++; throw closeError; } }, diagnosticContext, readError), error => error === readError);
+  assert.equal(closeCount, 1);
+  assert.equal(diagnosticContext.close, 'FAILED');
+  closeCount = 0;
+  await assert.rejects(closeEvidenceHandle({ async close() { closeCount++; throw closeError; } }, { ...diagnosticContext }, null), error => error === closeError);
+  assert.equal(closeCount, 1);
   await rm(directory, { recursive: true, force: true });
   return { policy: 'PASSED', nestedResolution: 'PASSED', auditErrorIdentity: 'PASSED', junction: process.platform === 'win32',
-    reviewRegressionSubcases: ['failed phases', 'canonical paths', 'null exit code', 'bounded errors'], encodedFailureManifestBytes };
+    reviewRegressionSubcases: ['failed phases', 'canonical paths', 'null exit code', 'bounded errors'], encodedFailureManifestBytes,
+    writeReadSubcases: ['write/stable metadata predicates', 'new/short overwrite and EOF', 'intended SHA256', 'replacement inode refusal',
+      'stable baseline mtime refusal', 'absent/over-limit and IO diagnostics', 'malformed diagnostics', 'single close and primary identity'] };
 }
 
-async function createEvidence(root, scratch) {
+async function createEvidence(root, scratch, lexicalScratch) {
   const artifactsRoot = await realpath(path.join(root, 'artifacts'));
   const directory = await mkdtemp(path.join(artifactsRoot, 'consumer-migration-'));
   const basename = path.basename(directory);
   assert(/^consumer-migration-[A-Za-z0-9]+$/.test(basename) && path.dirname(directory) === artifactsRoot, 'Invalid generated evidence directory');
   const relative = `artifacts/${basename}`;
-  const aliases = [[scratch, '<scratch>'], [await realpath(scratch), '<scratch>'], [root, '<project>'], [await realpath(root), '<project>']];
+  const aliases = [[lexicalScratch, '<scratch>'], [scratch, '<scratch>'], [root, '<project>'], [await realpath(root), '<project>']];
   for (const cli of [npmCli, pnpmCli, process.execPath]) {
     aliases.push([cli, path.basename(cli)], [await realpath(cli), path.basename(cli)]);
   }
@@ -497,9 +711,9 @@ async function createEvidence(root, scratch) {
           receipt.requiredBytes = bytes.length;
           bytes = Buffer.from(JSON.stringify(overLimitReceipt(receipt, bytes), null, 2));
         }
-        await ownedWrite(directory, name, bytes);
-        const actual = await ownedFile(directory, name, limits.receipt, false);
-        assert(actual.status === 'COMPLETE' && actual.sha256 === sha256(bytes), 'Receipt verification failed');
+        const baseline = await ownedWrite(directory, name, bytes);
+        const actual = await ownedFile(directory, name, limits.receipt, false, baseline);
+        assert(matchesEvidence(actual, bytes), 'Receipt verification failed');
         manifest.files[name] = { status: receipt.status, complete: receipt.complete, ...actual };
         manifest.files[name].status = receipt.status;
         manifest.files[name].complete = receipt.complete;
@@ -509,9 +723,9 @@ async function createEvidence(root, scratch) {
       manifest.complete = manifest.terminalStatus === 'SUCCEEDED' && complete;
       const bytes = Buffer.from(JSON.stringify(manifest, null, 2));
       assert(bytes.length <= limits.manifest && total + bytes.length <= 33_619_968, 'Evidence manifest/joint bound exceeded');
-      await ownedWrite(directory, 'run-manifest.json', bytes);
-      const actual = await ownedFile(directory, 'run-manifest.json', limits.manifest, false);
-      assert(actual.sha256 === sha256(bytes), 'Manifest verification failed');
+      const baseline = await ownedWrite(directory, 'run-manifest.json', bytes);
+      const actual = await ownedFile(directory, 'run-manifest.json', limits.manifest, false, baseline);
+      assert(matchesEvidence(actual, bytes), 'Manifest verification failed');
       assert(Object.values(receipts).every(receipt => receipt.status !== 'OVER_LIMIT'), 'Migration receipt exceeded 16 MiB');
     },
   };
@@ -524,12 +738,15 @@ async function createEvidence(root, scratch) {
   return evidence;
 }
 
-const root = path.resolve(import.meta.dirname, '..');
+const root = await realpath(path.resolve(import.meta.dirname, '..'));
 const { artifacts } = await loadArtifacts('artifacts');
 const npmCli = await resolveNpmCli();
 const pnpmCli = process.env.npm_execpath;
 assert(pnpmCli?.includes('pnpm'), 'Run this check through pnpm check:consumers');
-const scratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
+const lexicalScratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
+const scratch = await realpath(lexicalScratch);
+const temporaryRoot = await realpath(tmpdir());
+assert(contained(temporaryRoot, scratch) && scratch !== temporaryRoot, 'Consumer scratch escaped its temporary root');
 console.log(`Packed consumer scratch: ${scratch}`);
 const entries = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
 let origin;
@@ -568,7 +785,7 @@ const managerOptions = {
   maxBuffer: 16 * 1024 * 1024,
   timeout: 300_000,
 };
-const evidence = await createEvidence(root, scratch);
+const evidence = await createEvidence(root, scratch, lexicalScratch);
 const managerVersions = {};
 
 async function recordCommand(migration, cli, args, result, failure, ignoreScripts, version) {
@@ -681,7 +898,8 @@ try {
     for (const ignoreScripts of [false, true]) {
       for (const artifact of artifacts) {
         for (const withPeer of artifact.name === '@wyreup/core' ? [false, true] : [false]) {
-          const directory = await mkdtemp(path.join(scratch, `${manager}-`));
+          const directory = await realpath(await mkdtemp(path.join(scratch, `${manager}-`)));
+          assert(contained(scratch, directory) && directory !== scratch, 'Consumer directory escaped canonical scratch');
           console.log(`Consumer case: manager=${manager} package=${artifact.name} peer=${withPeer ? 'explicit' : 'default'} scripts=${ignoreScripts ? 'disabled' : 'normal'} directory=${directory}`);
           const dependencies = { [artifact.name]: artifact.version };
           if (withPeer) dependencies['@huggingface/transformers'] = '^4.3.1';
