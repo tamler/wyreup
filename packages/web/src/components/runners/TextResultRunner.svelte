@@ -4,6 +4,8 @@
   import ParamsForm from './ParamsForm.svelte';
   import ProgressBar from './ProgressBar.svelte';
   import ChainSection from './ChainSection.svelte';
+  import ShareResultLink from './ShareResultLink.svelte';
+  import { showShareFor } from '../../lib/shareLinks';
   import DOMPurify from 'dompurify';
   import { buildDownloadName } from './naming';
   import { markToolUsed } from '../../lib/toolUsage';
@@ -318,6 +320,9 @@
               {resultText.length.toLocaleString()} characters ·
               {resultText.trim().split(/\s+/).filter(Boolean).length.toLocaleString()} words
             </p>
+          {/if}
+          {#if showShareFor(tool.id, tool.cost) && resultText.trim()}
+            <ShareResultLink toolId={tool.id} text={resultText} />
           {/if}
         {/if}
 
