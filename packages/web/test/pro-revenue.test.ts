@@ -87,11 +87,24 @@ describe('Pro upgrade prompts', () => {
   });
 
   it('says what a hosted tool actually sends', () => {
-    expect(hostedInputPhrase('pdf-q-and-a')).toBe('the text extracted from your file in this browser');
+    // Q&A tools send the question with the extracted text (runPro { text, question }).
+    const withQuestion = 'the text extracted from your file in this browser, and your question,';
+    expect(hostedInputPhrase('pdf-q-and-a')).toBe(withQuestion);
+    expect(hostedInputPhrase('chat-long-pdf-pro')).toBe(withQuestion);
     expect(hostedInputPhrase('pdf-summarize')).toBe('the text extracted from your file in this browser');
+    expect(hostedInputPhrase('translate-document-pro')).toBe('the text extracted from your file in this browser');
     expect(hostedInputPhrase('ocr-hq')).toBe('your input');
     const prompt = readFileSync(new URL('../src/components/ProUpgradePrompt.astro', import.meta.url), 'utf8');
     expect(prompt).not.toMatch(/their input is sent/);
+    const page = readFileSync(new URL('../src/pages/tools/[slug].astro', import.meta.url), 'utf8');
+    expect(page).toMatch(/\{hostedInputPhrase\(serializedTool\.id\)\} is sent over TLS/);
+    expect(page).not.toMatch(/it, your input is sent/);
+  });
+
+  it('keeps the PDF Q&A guide explicit that the file itself is not uploaded', () => {
+    const formats = SEARCH_GUIDES['pdf-q-and-a']?.formats ?? '';
+    expect(formats).toMatch(/extracted text .*and your question are sent to Wyreup/);
+    expect(formats).toMatch(/the PDF file is not\b/);
   });
 });
 

@@ -75,7 +75,12 @@ const SENDS_EXTRACTED_TEXT = new Set([
   'translate-document-pro',
 ]);
 
-/** What a hosted tool sends to Wyreup, for privacy copy. */
+// Of those, the question-answering tools also send the question.
+const SENDS_QUESTION = new Set(['pdf-q-and-a', 'chat-long-pdf-pro']);
+
+/** What a hosted tool sends to Wyreup, for privacy copy ("… is sent"). */
 export function hostedInputPhrase(toolId: string): string {
-  return SENDS_EXTRACTED_TEXT.has(toolId) ? 'the text extracted from your file in this browser' : 'your input';
+  if (!SENDS_EXTRACTED_TEXT.has(toolId)) return 'your input';
+  const text = 'the text extracted from your file in this browser';
+  return SENDS_QUESTION.has(toolId) ? `${text}, and your question,` : text;
 }
