@@ -78,7 +78,8 @@ describe('Pro tool page search metadata', () => {
       const free = projectToolDiscoveryMetadata(registry.toolsById.get(FREE_SIBLING[id])!);
       expect(pro.title).not.toBe(free.title);
       expect(pro.heading).not.toBe(free.heading);
-      expect(pro.title).toMatch(/— Wyreup$/);
+      expect(pro.title).toMatch(/\| Wyreup$/);
+      expect(`${pro.title} ${pro.heading} ${pro.description}`).not.toMatch(/—/);
       expect(pro.description.length).toBeLessThanOrEqual(170);
       expect(pro.description).toMatch(/credit/i);
     }
