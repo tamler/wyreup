@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cp, mkdir, mkdtemp, open, readFile, readdir, realpath, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
-import { parseProductionHeaders, parseProductionRedirects, productionResponseHeaders, redirectLocation } from '../scripts/production-headers.mjs';
+import { parseProductionHeaders, parseProductionRedirects, productionResponseHeaders } from '../scripts/production-headers.mjs';
 import type { readCoordinatedCoreProof } from './productionBuildBindingObserver.mjs';
 
 const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
@@ -88,7 +88,7 @@ export async function serveBuiltCatalog(options: {
       }
       const explicit = redirects.find((rule) => rule.from === path);
       if (explicit) {
-        response.writeHead(explicit.status, { location: redirectLocation(explicit.to, url.search) }); response.end(); return;
+        response.writeHead(explicit.status, { location: explicit.to + url.search }); response.end(); return;
       }
       const redirect = (location: string) => {
         response.writeHead(301, { location: location + url.search }); response.end();
