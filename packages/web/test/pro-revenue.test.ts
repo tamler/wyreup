@@ -78,6 +78,9 @@ describe('Pro tool page search metadata', () => {
       const free = projectToolDiscoveryMetadata(registry.toolsById.get(FREE_SIBLING[id])!);
       expect(pro.title).not.toBe(free.title);
       expect(pro.heading).not.toBe(free.heading);
+      // The registry name must still lead the H1: job pages and the browser
+      // suite locate the tool page by it (job-no-tracking.test.ts).
+      expect(pro.heading.startsWith(registry.toolsById.get(id)!.name), id).toBe(true);
       expect(pro.title).toMatch(/\| Wyreup$/);
       expect(`${pro.title} ${pro.heading} ${pro.description}`).not.toMatch(/—/);
       expect(pro.description.length).toBeLessThanOrEqual(170);
@@ -89,12 +92,13 @@ describe('Pro tool page search metadata', () => {
     for (const id of PRO_PAGES) {
       const guide = SEARCH_GUIDES[id];
       expect(guide, id).toBeDefined();
-      expect(guide!.steps.length).toBeGreaterThanOrEqual(3);
-      expect(guide!.limitations.length).toBeGreaterThanOrEqual(2);
-      const hrefs = guide!.links.map((link) => link.href);
+      if (!guide) continue;
+      expect(guide.steps.length).toBeGreaterThanOrEqual(3);
+      expect(guide.limitations.length).toBeGreaterThanOrEqual(2);
+      const hrefs = guide.links.map((link) => link.href);
       expect(hrefs).toContain('/pro/#pricing');
       expect(hrefs).toContain(`/tools/${FREE_SIBLING[id]}/`);
-      expect(guide!.formats).toMatch(/sent to Wyreup|sends? .* to Wyreup/i);
+      expect(guide.formats).toMatch(/sent to Wyreup|sends? .* to Wyreup/i);
     }
   });
 });
