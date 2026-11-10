@@ -1,0 +1,130 @@
+---
+import { approxUsd } from '../data/pricing';
+
+export interface ProUpgradeOption {
+  id: string;
+  heading: string;
+  benefit: string;
+  creditCost: number;
+}
+
+interface Props {
+  options: ProUpgradeOption[];
+}
+
+const { options } = Astro.props;
+---
+
+{options.length > 0 && (
+  <aside class="pro-upgrade" aria-labelledby="pro-upgrade-heading">
+    <h2 id="pro-upgrade-heading" class="pro-upgrade__title">
+      <span class="pro-upgrade__chip">PRO</span>
+      Need a stronger result?
+    </h2>
+    <ul class="pro-upgrade__list">
+      {options.map((option) => (
+        <li class="pro-upgrade__item">
+          <a class="pro-upgrade__link" href={`/tools/${option.id}/`}>{option.heading}</a>
+          <span class="pro-upgrade__benefit">{option.benefit}</span>
+          <span class="pro-upgrade__cost">
+            {option.creditCost} {option.creditCost === 1 ? 'credit' : 'credits'} per run · {approxUsd(option.creditCost)}
+          </span>
+        </li>
+      ))}
+    </ul>
+    <p class="pro-upgrade__note">
+      This free tool keeps working without an account. PRO tools run on hosted
+      models, so their input is sent to Wyreup.
+      <a href="/pro/#pricing">See credit pricing</a>
+    </p>
+  </aside>
+)}
+
+<style>
+  .pro-upgrade {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .pro-upgrade__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .pro-upgrade__chip {
+    background: var(--accent);
+    color: var(--text-on-accent, #000);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  .pro-upgrade__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .pro-upgrade__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+
+  .pro-upgrade__link {
+    font-weight: 600;
+    color: var(--accent-text);
+    text-underline-offset: 3px;
+  }
+
+  .pro-upgrade__link:hover {
+    color: var(--accent-hover);
+  }
+
+  .pro-upgrade__benefit {
+    flex: 1 1 14rem;
+    color: var(--text-muted);
+  }
+
+  .pro-upgrade__cost {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  .pro-upgrade__note {
+    margin: var(--space-3) 0 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .pro-upgrade__note a {
+    color: var(--accent-text);
+    text-underline-offset: 3px;
+  }
+
+  .pro-upgrade a:focus-visible {
+    outline: 2px solid var(--accent-hover);
+    outline-offset: 2px;
+  }
+</style>

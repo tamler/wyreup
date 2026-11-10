@@ -37,6 +37,11 @@ export const PRO_UPSELLS: ProUpsell[] = [
     benefit: 'Summarize the document instead of just extracting it.',
   },
   {
+    freeToolId: 'pdf-to-text',
+    proToolId: 'pdf-q-and-a',
+    benefit: 'Ask a specific question and get an answer drawn from the document text.',
+  },
+  {
     freeToolId: 'text-summarize',
     proToolId: 'text-summarize-pro',
     benefit: 'Frontier-model summaries that hold up on long or messy text.',
@@ -53,6 +58,12 @@ export const PRO_UPSELLS: ProUpsell[] = [
   },
 ];
 
+/** First pairing for a free tool — the single post-run seam. */
 export function upsellFor(freeToolId: string): ProUpsell | undefined {
   return PRO_UPSELLS.find((u) => u.freeToolId === freeToolId);
+}
+
+/** Every pairing for a free tool, in list order — the tool-page prompt. */
+export function upsellsFor(freeToolId: string): ProUpsell[] {
+  return PRO_UPSELLS.filter((u) => u.freeToolId === freeToolId);
 }

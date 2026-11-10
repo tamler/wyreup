@@ -9,6 +9,8 @@ import { canonicalPageUrl } from '../../lib/seo';
 import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata';
 import { SEARCH_GUIDES } from '../../lib/search-guides';
 import SearchGuide from '../../components/SearchGuide.astro';
+import ProUpgradePrompt from '../../components/ProUpgradePrompt.astro';
+import { upsellsFor } from '../../data/pro-upsells';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -44,6 +46,20 @@ export async function getStaticPaths() {
         return t ? { id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description, why: entry.why } : null;
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
+
+    // Hosted siblings for a free tool. Only real credit-metered tools qualify.
+    const proUpgrades = tool.cost === 'free'
+      ? upsellsFor(tool.id).flatMap((pair) => {
+          const pro = registry.toolsById.get(pair.proToolId);
+          if (pro?.cost !== 'credit' || typeof pro.creditCost !== 'number' || pro.creditCost <= 0) return [];
+          return [{
+            id: pro.id,
+            heading: projectToolDiscoveryMetadata(pro).heading,
+            benefit: pair.benefit,
+            creditCost: pro.creditCost,
+          }];
+        })
+      : [];
 
     return {
       params: { slug: tool.id },
@@ -87,12 +103,13 @@ export async function getStaticPaths() {
         },
         relatedTools,
         alsoTry,
+        proUpgrades,
       },
     };
   });
 }
 
-const { serializedTool, relatedTools, alsoTry } = Astro.props;
+const { serializedTool, relatedTools, alsoTry, proUpgrades } = Astro.props;
 const { name, description, category, keywords, seoContent } = serializedTool;
 
 const heading = serializedTool.heading;
@@ -208,6 +225,7 @@ const breadcrumbLd = {
         installGroup={serializedTool.installGroup}
       />
       <ToolRunner client:load tool={serializedTool} />
+      <ProUpgradePrompt options={proUpgrades} />
       {guide && <SearchGuide guide={guide} />}
 
       {/* Auto-generated rich body — runs for every tool page.

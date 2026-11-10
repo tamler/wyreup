@@ -55,12 +55,19 @@ describe('search discovery', () => {
     }
   });
 
-  it('keeps curated local-tool metadata bound to real free tools', () => {
+  it('keeps curated metadata bound to each tool’s real execution', () => {
     const registry = createDefaultRegistry();
-    for (const id of Object.keys(TOOL_PAGE_METADATA)) {
+    const hosted = new Set(['ocr-hq', 'transcribe-pro', 'text-translate-pro', 'pdf-q-and-a']);
+    for (const [id, page] of Object.entries(TOOL_PAGE_METADATA)) {
       const tool = registry.toolsById.get(id);
       expect(tool, id).toBeDefined();
-      expect(tool?.cost, `${id} metadata must be reviewed when execution changes`).toBe('free');
+      expect(tool?.cost, `${id} metadata must be reviewed when execution changes`).toBe(
+        hosted.has(id) ? 'credit' : 'free',
+      );
+      if (hosted.has(id)) {
+        expect(page.description, id).toMatch(/sent to (Wyreup|a hosted model)/);
+        expect(page.description, id).toContain(`${tool!.creditCost} credit`);
+      }
     }
   });
 

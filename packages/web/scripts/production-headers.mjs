@@ -59,7 +59,8 @@ export function parseProductionRedirects(text) {
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!line || line.startsWith('#')) continue;
-    const match = /^(\/[A-Za-z0-9_./-]*)[ \t]+(\/[A-Za-z0-9_./-]*)(?:[ \t]+(301|302|303|307|308))?$/.exec(line);
+    // Pages evaluates fragments only in the destination; the source stays a plain path.
+    const match = /^(\/[A-Za-z0-9_./-]*)[ \t]+(\/[A-Za-z0-9_./-]*(?:#[A-Za-z0-9_-]+)?)(?:[ \t]+(301|302|303|307|308))?$/.exec(line);
     if (!match || line.length > 1000 || match[1].includes('..') || match[2].includes('..')) {
       throw new Error('Unsupported Pages redirect syntax.');
     }
@@ -67,4 +68,10 @@ export function parseProductionRedirects(text) {
     if (redirects.length > 2000) throw new Error('Too many static Pages redirects.');
   }
   return redirects;
+}
+
+/** Location for a parsed redirect, keeping the request query ahead of any destination fragment. */
+export function redirectLocation(to, search) {
+  const hash = to.indexOf('#');
+  return hash === -1 ? to + search : to.slice(0, hash) + search + to.slice(hash);
 }

@@ -8,7 +8,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
-import { parseProductionHeaders, parseProductionRedirects } from './production-headers.mjs';
+import { parseProductionHeaders, parseProductionRedirects, redirectLocation } from './production-headers.mjs';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const executeFile = promisify(execFile);
@@ -344,7 +344,7 @@ async function serveSnapshots(snapshots, collector) {
       try { pathname = decodeURIComponent(target.split('?')[0]); } catch { response.writeHead(400).end(); return; }
       if (pathname.includes('\\') || badChars(pathname) || pathname.split('/').some((part) => part === '.' || part === '..')) { response.writeHead(400).end(); return; }
       const explicit = snapshot.redirects.find((rule) => rule.from === pathname);
-      if (explicit) { response.writeHead(explicit.status, { location: explicit.to + url.search }).end(); return; }
+      if (explicit) { response.writeHead(explicit.status, { location: redirectLocation(explicit.to, url.search) }).end(); return; }
       const redirect = (location) => response.writeHead(301, { location: location + url.search }).end();
       if (pathname.endsWith('/index.html') && await file(snapshot, pathname)) { redirect(pathname.slice(0, -10)); return; }
       if (pathname.endsWith('.html') && await file(snapshot, pathname)) { redirect(pathname.slice(0, -5)); return; }

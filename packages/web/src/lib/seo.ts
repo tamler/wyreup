@@ -159,4 +159,30 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Build a TOTP or HOTP enrollment URI and optional QR code from a Base32 secret, issuer and account. Keep the secret and generated QR private.',
   },
+  // Hosted PRO pages: name the hosted task so titles do not collide with the
+  // free on-device sibling, and state the upload and credit cost up front.
+  'ocr-hq': {
+    heading: 'High-accuracy OCR for hard-to-read scans',
+    title: 'High-accuracy OCR — hosted image to text for hard scans — Wyreup',
+    description:
+      'Extract text from difficult scans, photos and screenshots with a hosted vision model. PNG, JPEG or WebP up to 10 MB is sent to Wyreup. 1 credit per run.',
+  },
+  'transcribe-pro': {
+    heading: 'Transcribe noisy or accented audio with hosted Whisper',
+    title: 'Hosted audio transcription — Whisper large-v3 turbo — Wyreup',
+    description:
+      'Transcribe one audio file with hosted Whisper large-v3 turbo. WAV, MP3, M4A, AAC, OGG, WebM or FLAC up to 25 MB is sent to Wyreup. 3 credits per run.',
+  },
+  'text-translate-pro': {
+    heading: 'Translate text with a hosted language model',
+    title: 'Hosted AI text translation — choose the target language — Wyreup',
+    description:
+      'Translate plain text with a hosted Llama-class model. Name the target language or give its ISO code. Text is sent to Wyreup. 2 credits per run.',
+  },
+  'pdf-q-and-a': {
+    heading: 'Ask a question about a PDF',
+    title: 'Ask a PDF — answers from the document text — Wyreup',
+    description:
+      'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
+  },
 };
