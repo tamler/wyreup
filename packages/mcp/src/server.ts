@@ -23,6 +23,7 @@ import { setEgressAllowedOrigins } from './egress.js';
 import { resolveModelCdn } from './runtime-config.js';
 import { MCP_VERSION } from './version.js';
 import { readCanonicalFileBounded } from './bounded-file-read.js';
+import { isInlineTextMime } from './output-types.js';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
 //
@@ -611,7 +612,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           }
         } else if (outputs.length > 0 && !outputDir && !outputPath) {
           const blob = outputs[0]!;
-          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          if (isInlineTextMime(blob.type)) {
             const text = await blob.text();
             return { content: [{ type: 'text', text }] };
           }
@@ -719,7 +720,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           }
         } else if (outputs.length > 0 && !outputDir && !outputPath) {
           const blob = outputs[0]!;
-          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          if (isInlineTextMime(blob.type)) {
             const text = await blob.text();
             return { content: [{ type: 'text', text }] };
           }

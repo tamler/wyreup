@@ -7,6 +7,7 @@
   import DropZone from './runners/DropZone.svelte';
   import ParamsForm from './runners/ParamsForm.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
+  import { knownExtensionForType } from './runners/naming';
   import { encodeChainSteps, decodeChainSteps } from './runners/chainUrl';
   import { saveChain } from './runners/toolbeltStorage';
   import { upsertRule, nextOrder } from './runners/triggerStorage';
@@ -604,7 +605,7 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
     if (!resultUrl || !resultBlob) return;
     const a = document.createElement('a');
     a.href = resultUrl;
-    const ext = resultBlob.type.split('/')[1] ?? 'bin';
+    const ext = knownExtensionForType(resultBlob.type) ?? resultBlob.type.split('/')[1] ?? 'bin';
     a.download = `chain-result.${ext}`;
     a.click();
   }
@@ -616,7 +617,7 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
     additionalResultUrls.add(url);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `chain-output-${index + 1}.${blob.type.split('/')[1] ?? 'bin'}`;
+    anchor.download = `chain-output-${index + 1}.${knownExtensionForType(blob.type) ?? blob.type.split('/')[1] ?? 'bin'}`;
     anchor.click();
   }
 

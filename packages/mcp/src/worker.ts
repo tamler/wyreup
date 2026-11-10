@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { assertPathAllowed } from './paths.js';
 import { atomicPublish } from './atomic-publish.js';
 import type { WorkerJob, WorkerResult } from './worker-types.js';
+import { isInlineTextMime, workerExtFromMime } from './output-types.js';
 import { readCanonicalFileBounded } from './bounded-file-read.js';
 
 const TEXT_OUTPUT_CAP = 10 * 1024 * 1024; // 10 MB per [spec §#8]
@@ -128,7 +129,7 @@ async function runJob(job: WorkerJob, clientSignal: AbortSignal): Promise<Worker
   // AND (c) under TEXT_OUTPUT_CAP.
   if (outputs.length === 1 && !job.outputPath && !job.outputDir) {
     const b = outputs[0]!;
-    if (b.type.startsWith('text/') || b.type === 'application/json') {
+    if (isInlineTextMime(b.type)) {
       const text = await b.text();
       if (Buffer.byteLength(text, 'utf8') <= TEXT_OUTPUT_CAP) {
         return { ok: true, writtenPaths: [], textOutput: text };
@@ -155,35 +156,8 @@ async function runJob(job: WorkerJob, clientSignal: AbortSignal): Promise<Worker
     if (writeErr) return { ok: false, error: writeErr, stage: 'write' };
     writtenPaths.push(resolvedOutputPath);
   } else if (resolvedOutputDir) {
-    const mimeToExt: Record<string, string> = {
-      'image/jpeg': '.jpg',
-      'image/png': '.png',
-      'image/webp': '.webp',
-      'image/gif': '.gif',
-      'image/x-icon': '.ico',
-      'image/bmp': '.bmp',
-      'image/svg+xml': '.svg',
-      'image/tiff': '.tiff',
-      'image/vnd.adobe.photoshop': '.psd',
-      'model/stl': '.stl',
-      'application/pdf': '.pdf',
-      'text/plain': '.txt',
-      'text/html': '.html',
-      'text/markdown': '.md',
-      'application/json': '.json',
-      'text/csv': '.csv',
-      'text/tab-separated-values': '.tsv',
-      'application/xml': '.xml',
-      'text/css': '.css',
-      'text/javascript': '.js',
-      'application/javascript': '.js',
-      'application/sql': '.sql',
-      'audio/wav': '.wav',
-      'audio/mpeg': '.mp3',
-      'video/mp4': '.mp4',
-    };
     for (let i = 0; i < outputs.length; i++) {
-      const ext = mimeToExt[outputs[i]!.type] ?? '.bin';
+      const ext = workerExtFromMime(outputs[i]!.type);
       const target = join(resolvedOutputDir, `${job.toolId}-${i}${ext}`);
       const buf = new Uint8Array(await outputs[i]!.arrayBuffer());
       const writeErr = await atomicPublish(target, buf, job.allowOverwrite, {}, signal);

@@ -112,8 +112,10 @@ export function convertVttToSrt(vtt: string, shiftMs = 0): string {
   let index = 1;
   for (const block of blocks) {
     const blockLines = block.trim().split('\n');
-    // Skip WEBVTT header block
-    if (blockLines[0]?.startsWith('WEBVTT') || blockLines[0]?.startsWith('NOTE')) continue;
+    // NOTE blocks are comments. A WEBVTT header block is skipped below when it
+    // has no timing line; when a cue follows the header without a blank line,
+    // the header lines sit before the timing line and are not treated as text.
+    if (blockLines[0]?.startsWith('NOTE')) continue;
     const timeIndex = blockLines.findIndex((l) => l.includes('-->'));
     if (timeIndex === -1) continue;
     const timestamps = parseTimeLine(blockLines[timeIndex]!);

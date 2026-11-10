@@ -14,10 +14,15 @@ describe('download extension from a result MIME type', () => {
     expect(knownExtensionForType('text/plain')).toBeUndefined();
   });
 
-  it('is used by the chain and batch downloads that the subtitle job reaches', () => {
-    for (const file of ['ChainRunner.svelte', 'BatchFolderRun.svelte']) {
+  it('is used by every chain and batch download namer', () => {
+    for (const file of ['ChainRunner.svelte', 'ChainBuilder.svelte', 'BatchFolderRun.svelte']) {
       const source = readFileSync(new URL(`../src/components/${file}`, import.meta.url), 'utf8');
-      expect(source, file).toMatch(/knownExtensionForType\(/);
+      // Every place that derives an extension from a MIME subtype must try the
+      // known map first.
+      const namers = source.match(/\.type\.split\('\/'\)\[1\]/g) ?? [];
+      const guarded = source.match(/knownExtensionForType\([^)]*\)\s*\?\?\s*\(?[\w.]*\.type\.split\('\/'\)\[1\]/g) ?? [];
+      expect(namers.length, file).toBeGreaterThan(0);
+      expect(guarded.length, file).toBe(namers.length);
     }
   });
 });

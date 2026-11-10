@@ -7723,7 +7723,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'transcribe-pro',
-        why: 'Hosted Whisper-large for higher accuracy on noisy or accented recordings.',
+        why: 'Hosted Whisper large-v3 turbo for higher accuracy on noisy or accented recordings.',
       },
     ],
   },

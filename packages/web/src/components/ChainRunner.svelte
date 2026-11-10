@@ -352,7 +352,7 @@
     downloadUrls.add(url);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `chain-output-${index + 1}.${blob.type.split('/')[1] ?? 'bin'}`;
+    anchor.download = `chain-output-${index + 1}.${knownExtensionForType(blob.type) ?? blob.type.split('/')[1] ?? 'bin'}`;
     anchor.click();
     const timer = setTimeout(() => { URL.revokeObjectURL(url); downloadUrls.delete(url); downloadTimers.delete(timer); }, 1000);
     downloadTimers.add(timer);

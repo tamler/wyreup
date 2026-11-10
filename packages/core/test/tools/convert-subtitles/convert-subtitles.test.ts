@@ -122,6 +122,15 @@ describe('convert-subtitles — convertVttToSrt()', () => {
     expect(convertVttToSrt(vtt)).toBe('1\n00:00:01,500 --> 00:00:03,000\nمرحبا — 你好\n');
   });
 
+  it('keeps a cue that follows the WEBVTT header without a blank line', () => {
+    expect(convertVttToSrt('WEBVTT\n00:00:00.000 --> 00:00:01.500\nHello there\n')).toBe(
+      '1\n00:00:00,000 --> 00:00:01,500\nHello there\n',
+    );
+    expect(convertVttToSrt('WEBVTT - title\nKind: captions\n00:00:01.000 --> 00:00:02.000\nHi\n')).toBe(
+      '1\n00:00:01,000 --> 00:00:02,000\nHi\n',
+    );
+  });
+
   it('returns no cues for a header-only or NOTE-only document', () => {
     expect(convertVttToSrt('WEBVTT\n\n')).toBe('');
     expect(convertVttToSrt('WEBVTT\n\nNOTE nothing was said\n')).toBe('');

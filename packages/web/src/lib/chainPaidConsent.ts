@@ -48,5 +48,5 @@ export function paidChainDisclosure(
   files: readonly Pick<File, 'name'>[],
   email: string,
 ): string {
-  return `Run paid steps for ${files.map((file) => file.name).join(', ')} using account ${email}?\n${summary.steps.map((step) => `${step.name}: ${step.credits} credits per file`).join('\n')}\nTotal: ${summary.totalCredits} credits. File contents are uploaded to wyreup.com for server-side processing. Server pricing is authoritative; a changed price may refuse this run.`;
+  return `Run paid steps for ${files.map((file) => file.name).join(', ')} using account ${email}?\n${summary.steps.map((step) => `${step.name}: ${step.credits} credits per file`).join('\n')}\nTotal: ${summary.totalCredits} credits. Data from these files, or what earlier steps make from them, is uploaded to wyreup.com for the paid steps. Server pricing is authoritative; a changed price may refuse this run.`;
 }
