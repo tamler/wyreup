@@ -10,7 +10,7 @@ import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata'
 import { SEARCH_GUIDES } from '../../lib/search-guides';
 import SearchGuide from '../../components/SearchGuide.astro';
 import ProUpgradePrompt from '../../components/ProUpgradePrompt.astro';
-import { upsellsFor } from '../../data/pro-upsells';
+import { hostedInputPhrase, upsellsFor } from '../../data/pro-upsells';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -299,7 +299,7 @@ const breadcrumbLd = {
         ) : serializedTool.cost === 'credit' ? (
           <div class="privacy-callout" role="note">
             <strong>Privacy:</strong> {name} is a hosted PRO tool: when you run
-            it, your input is sent over TLS through Wyreup's edge to the model
+            it, {hostedInputPhrase(serializedTool.id)} is sent over TLS through Wyreup's edge to the model
             provider, processed, and returned. Inputs and outputs are not
             retained beyond the request; run metadata (tool, time, file name)
             is kept for your history. Details in the{' '}

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createDefaultRegistry } from '@wyreup/core';
-import { parseProductionRedirects } from '../scripts/production-headers.mjs';
-import { PRO_UPSELLS, upsellFor, upsellsFor } from '../src/data/pro-upsells';
+import { parseProductionRedirects, redirectLocation } from '../scripts/production-headers.mjs';
+import { hostedInputPhrase, PRO_UPSELLS, upsellFor, upsellsFor } from '../src/data/pro-upsells';
 import { TOOL_PAGE_METADATA } from '../src/lib/seo';
 import { SEARCH_GUIDES } from '../src/lib/search-guides';
 import { projectToolDiscoveryMetadata } from '../src/lib/tool-discovery-metadata';
@@ -29,6 +29,12 @@ describe('/pricing route', () => {
         status: 301,
       });
     }
+  });
+
+  it('keeps a request query ahead of the destination fragment', () => {
+    expect(redirectLocation('/pro/#pricing', '?utm=1')).toBe('/pro/?utm=1#pricing');
+    expect(redirectLocation('/pro/', '?utm=1')).toBe('/pro/?utm=1');
+    expect(redirectLocation('/pro/#pricing', '')).toBe('/pro/#pricing');
   });
 
   it('accepts a fragment only in the destination', () => {
@@ -66,6 +72,26 @@ describe('Pro upgrade prompts', () => {
   it('keeps the existing single post-run seam unchanged', () => {
     expect(upsellFor('pdf-to-text')?.proToolId).toBe('pdf-summarize');
     expect(upsellsFor('hash')).toEqual([]);
+  });
+
+  it('prints benefit copy that follows the copy rules and matches the hosted tool', () => {
+    for (const pair of PRO_UPSELLS) {
+      expect(pair.benefit, pair.proToolId).not.toMatch(/—|seamless|unlock|elevate|delve|leverage|Frontier/i);
+    }
+    // Hosted transcription caps at 25 MB; the free tool takes larger files.
+    expect(upsellsFor('transcribe')[0]?.benefit).not.toMatch(/long/i);
+    // "100+ languages" describes the free M2M100 tool, not the hosted model.
+    expect(upsellsFor('text-translate')[0]?.benefit).not.toMatch(/100\+/);
+    // Upscaling runs on a third-party GPU provider, not Wyreup's servers.
+    expect(upsellsFor('upscale-2x')[0]?.benefit).not.toMatch(/our servers/i);
+  });
+
+  it('says what a hosted tool actually sends', () => {
+    expect(hostedInputPhrase('pdf-q-and-a')).toBe('the text extracted from your file in this browser');
+    expect(hostedInputPhrase('pdf-summarize')).toBe('the text extracted from your file in this browser');
+    expect(hostedInputPhrase('ocr-hq')).toBe('your input');
+    const prompt = readFileSync(new URL('../src/components/ProUpgradePrompt.astro', import.meta.url), 'utf8');
+    expect(prompt).not.toMatch(/their input is sent/);
   });
 });
 

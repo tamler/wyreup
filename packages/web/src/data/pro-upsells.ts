@@ -12,19 +12,17 @@ export const PRO_UPSELLS: ProUpsell[] = [
   {
     freeToolId: 'ocr',
     proToolId: 'ocr-hq',
-    benefit:
-      'Higher-accuracy text reading — better with hard-to-read scans and handwriting.',
+    benefit: 'Reads hard-to-read scans, skewed photos and unusual fonts more reliably.',
   },
   {
     freeToolId: 'transcribe',
     proToolId: 'transcribe-pro',
-    benefit:
-      'Higher-accuracy transcription — better with accents, noise, and long recordings.',
+    benefit: 'More accurate transcription of accented or noisy speech, for files up to 25 MB.',
   },
   {
     freeToolId: 'upscale-2x',
     proToolId: 'upscale-2x-pro',
-    benefit: 'Production-quality enlargement from our servers.',
+    benefit: 'Enlargement on a hosted GPU model.',
   },
   {
     freeToolId: 'bg-remove',
@@ -44,12 +42,12 @@ export const PRO_UPSELLS: ProUpsell[] = [
   {
     freeToolId: 'text-summarize',
     proToolId: 'text-summarize-pro',
-    benefit: 'Frontier-model summaries that hold up on long or messy text.',
+    benefit: 'Summaries from a hosted language model that hold up on long or messy text.',
   },
   {
     freeToolId: 'text-translate',
     proToolId: 'text-translate-pro',
-    benefit: 'Natural-sounding translation across 100+ languages, not phrasebook output.',
+    benefit: 'More natural phrasing from a hosted language model, especially for less common language pairs.',
   },
   {
     freeToolId: 'text-redact',
@@ -66,4 +64,18 @@ export function upsellFor(freeToolId: string): ProUpsell | undefined {
 /** Every pairing for a free tool, in list order — the tool-page prompt. */
 export function upsellsFor(freeToolId: string): ProUpsell[] {
   return PRO_UPSELLS.filter((u) => u.freeToolId === freeToolId);
+}
+
+// Hosted tools that extract a document's text in the browser and send only
+// that text (each calls runPro with `text`, never the file bytes).
+const SENDS_EXTRACTED_TEXT = new Set([
+  'pdf-q-and-a',
+  'pdf-summarize',
+  'chat-long-pdf-pro',
+  'translate-document-pro',
+]);
+
+/** What a hosted tool sends to Wyreup, for privacy copy. */
+export function hostedInputPhrase(toolId: string): string {
+  return SENDS_EXTRACTED_TEXT.has(toolId) ? 'the text extracted from your file in this browser' : 'your input';
 }

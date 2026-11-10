@@ -76,7 +76,7 @@ Only if Jacob authorizes the second charge.
 ## G. Negative checks (no money involved)
 
 - [ ] `curl -s -o /dev/null -w '%{http_code}' -X POST https://wyreup.com/api/webhooks/lemonsqueezy -d '{}'` → `401` (no signature).
-- [ ] `POST /api/credits/checkout` without a session → 401; with a session but `{"pack":"bogus"}` → 400.
+- [ ] `POST /api/credits/checkout` without a session → 401; with a session cookie but no `X-Wyreup-CSRF: 1` header → 403; with the session and that header and `{"pack":"bogus"}` → 400.
 
 ## H. Clean-up and record
 
