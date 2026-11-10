@@ -5,6 +5,7 @@
   import ProgressBar from './runners/ProgressBar.svelte';
   import BatchFolderRun from './BatchFolderRun.svelte';
   import { decodeChainSteps } from './runners/chainUrl';
+  import { knownExtensionForType } from './runners/naming';
   import { saveChain } from './runners/toolbeltStorage';
   import { peekChainHandover, clearChainHandover, type ChainHandover } from './runners/chainStorage';
   import { clearTrail } from './runners/hopTrail';
@@ -339,7 +340,7 @@
     if (!resultUrl || !resultBlob) return;
     const a = document.createElement('a');
     a.href = resultUrl;
-    const ext = resultBlob.type.split('/')[1] ?? 'bin';
+    const ext = knownExtensionForType(resultBlob.type) ?? resultBlob.type.split('/')[1] ?? 'bin';
     a.download = `chain-result.${ext}`;
     a.click();
   }

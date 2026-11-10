@@ -138,7 +138,8 @@ export const JOBS: Job[] = [
     action: {
       kind: 'chain',
       steps: [
-        // 64 kbps MP3 keeps about 50 minutes of speech under the 25 MB hosted limit.
+        // 64 kbps MP3 keeps the upload small. The hosted call has a 90 s inference
+        // budget (functions/_lib/timeout.ts), so long recordings can time out first.
         { toolId: 'extract-audio', params: { format: 'mp3', bitrate: '64k' } },
         { toolId: 'transcribe-pro', params: { language: 'en', format: 'srt' } },
       ],

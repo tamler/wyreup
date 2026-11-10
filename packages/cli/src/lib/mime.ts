@@ -94,6 +94,7 @@ const MIME_TO_EXT: Record<string, string> = {
   'application/zip': '.zip',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
   'text/vtt': '.vtt',
+  'application/x-subrip': '.srt',
   'application/pgp-encrypted': '.pgp',
   'application/octet-stream': '.bin',
 };
@@ -105,4 +106,9 @@ export function inferMimeFromPath(filePath: string): string {
 
 export function extFromMime(mime: string): string {
   return MIME_TO_EXT[mime] ?? '.bin';
+}
+
+/** Output printed to stdout as text when no output path is given. */
+export function isTextOutputMime(mime: string): boolean {
+  return mime.startsWith('text/') || mime === 'application/json' || mime === 'application/x-subrip';
 }

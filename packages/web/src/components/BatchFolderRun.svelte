@@ -5,6 +5,7 @@
   import { tryReserveMediaJob } from '../lib/mediaJobReservation';
   import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
   import ProgressBar from './runners/ProgressBar.svelte';
+  import { knownExtensionForType } from './runners/naming';
   import type { ToolProgress } from '@wyreup/core';
 
   // Pick a folder, run the chain on every compatible file, ZIP the
@@ -181,7 +182,7 @@
           // ZIP so a recipient unzipping into the source folder can't
           // accidentally clobber the originals.
           for (const [outputIndex, blob] of blobs.entries()) {
-            const ext = blob.type.split('/')[1]?.split(/[;+]/)[0]?.replace(/[^a-zA-Z0-9.-]/g, '') || 'bin';
+            const ext = knownExtensionForType(blob.type) ?? (blob.type.split('/')[1]?.split(/[;+]/)[0]?.replace(/[^a-zA-Z0-9.-]/g, '') || 'bin');
             const legacyName = `Wyreup-output/${baseName}.${ext}`;
             const outName = blobs.length === 1 && !zip.file(legacyName)
               ? legacyName

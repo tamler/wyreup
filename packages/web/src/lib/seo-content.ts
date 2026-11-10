@@ -216,7 +216,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'transcribe-pro',
-        why: 'For noisy or accented enhanced audio, hosted Whisper-large-v3 gives higher transcription accuracy.',
+        why: 'For noisy or accented enhanced audio, hosted Whisper large-v3 turbo gives higher transcription accuracy.',
       },
       {
         id: 'record-audio',
@@ -10268,7 +10268,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How accurate is it on noisy or accented speech?',
-        a: "It's good for clear speech; for noisy, accented, or difficult audio the hosted Pro version uses the larger Whisper-large-v3 model for better results.",
+        a: "It's good for clear speech; for noisy, accented, or difficult audio the hosted Pro version uses the larger Whisper large-v3 turbo model for better results.",
       },
     ],
     alsoTry: [
@@ -10278,7 +10278,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'transcribe-pro',
-        why: 'Step up to hosted Whisper-large-v3 when the in-browser models struggle with noise or accents.',
+        why: 'Step up to hosted Whisper large-v3 turbo when the in-browser models struggle with noise or accents.',
       },
       {
         id: 'word-counter',
@@ -10336,7 +10336,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'transcribe-pro': {
     intro:
-      'Transcribe Audio (Pro) runs hosted Whisper-large-v3 for higher-accuracy speech-to-text, especially on noisy, accented, or low-quality recordings that trip up the free in-browser models. Reach for it when getting the words exactly right matters more than keeping the audio fully local. Each run uses 3 credits and returns plain text, or SRT or WebVTT subtitles with timings if you pick a subtitle output.',
+      'Transcribe Audio (Pro) runs hosted Whisper large-v3 turbo for higher-accuracy speech-to-text, especially on noisy, accented, or low-quality recordings that trip up the free in-browser models. Reach for it when getting the words exactly right matters more than keeping the audio fully local. Each run uses 3 credits and returns plain text, or SRT or WebVTT subtitles with timings if you pick a subtitle output.',
     useCases: [
       'Transcribe a multi-speaker conference recording with crosstalk and background noise',
       'Get an accurate transcript of an interview with a strong regional accent',
@@ -10348,7 +10348,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'How is this different from the free Transcribe tool?',
-        a: 'The free version runs Whisper locally in your browser. Pro sends the audio to a hosted Whisper-large-v3 model that is more accurate on noisy or accented speech, at a cost of 3 credits per run.',
+        a: 'The free version runs Whisper locally in your browser. Pro sends the audio to a hosted Whisper large-v3 turbo model that is more accurate on noisy or accented speech, at a cost of 3 credits per run.',
       },
       {
         q: 'What audio formats does it accept?',

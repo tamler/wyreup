@@ -3,7 +3,7 @@ import { basename, join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createDefaultRegistry, runChain, parseChainString, serializeChain, toolRunsOnSurface } from '@wyreup/core';
 import type { ToolRunContext } from '@wyreup/core';
-import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { inferMimeFromPath, extFromMime, isTextOutputMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
 import { buildDryRun } from './chain-dryrun.js';
 import { atomicPublish } from '../lib/safety/atomic-publish.js';
@@ -320,7 +320,7 @@ export async function executeChain(inputPaths: string[], opts: ChainOptions): Pr
 
   if (!opts.output) {
     // Text/JSON with no output path — print to stdout
-    if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+    if (isTextOutputMime(blob.type)) {
       const text = await blob.text();
       process.stdout.write(text);
       if (!text.endsWith('\n')) process.stdout.write('\n');

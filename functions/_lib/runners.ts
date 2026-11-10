@@ -118,11 +118,18 @@ function transcribePro(raw: RunnerInput, env: Env): PreparedProRun {
     const result = await runTranscribe(env, { bytes, language });
     // Throwing here takes the normal failed-run path, which refunds the
     // credits instead of charging for subtitles that cannot be produced.
-    if (format !== 'text' && !result.vtt?.trim()) {
+    if (format !== 'text' && !hasTimedCue(result.vtt)) {
       throw new Error('Audio model returned no subtitle timings');
     }
     return result;
   };
+}
+
+// A header-only or NOTE-only WebVTT document is not subtitles.
+const VTT_TIMING_LINE = /^\s*(?:\d+:)?\d{2}:\d{2}[.,]\d{3}\s+-->\s+(?:\d+:)?\d{2}:\d{2}[.,]\d{3}/m;
+
+function hasTimedCue(vtt: string | null | undefined): boolean {
+  return typeof vtt === 'string' && VTT_TIMING_LINE.test(vtt.replace(/\r\n?/g, '\n'));
 }
 
 // ────────────────────────────────────────────────────────────────────────

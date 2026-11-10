@@ -1,6 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
-import { convertVttToSrt } from '../convert-subtitles/index.js';
+import { convertVttToSrt, hasVttCue } from '../convert-subtitles/index.js';
 
 // transcribe-pro: hosted Whisper-large-v3 via Wyreup PRO.
 //
@@ -144,7 +144,7 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
     // The server refuses (and refunds) a subtitle run without timings; this
     // guards an older server that ignores the format field.
     const vtt = typeof result.vtt === 'string' ? result.vtt.replace(/\r\n?/g, '\n') : '';
-    if (!vtt.trim()) throw new Error('Hosted transcribe returned no subtitle timings');
+    if (!hasVttCue(vtt)) throw new Error('Hosted transcribe returned no subtitle timings');
     return format === 'vtt'
       ? new Blob([vtt], { type: 'text/vtt' })
       : new Blob([convertVttToSrt(vtt)], { type: 'application/x-subrip' });

@@ -110,10 +110,12 @@ describe('transcribe-pro runner', () => {
   });
 
   it('fails a subtitle request when the model returns no timings, so the run is refunded', async () => {
-    const env = aiEnv({ text: 'Hello there' });
-    await expect(
-      runPro('transcribe-pro', { audioBase64: AUDIO, format: 'srt' }, env),
-    ).rejects.toThrow('no subtitle timings');
+    for (const vtt of [undefined, '', '  ', 'WEBVTT\n\n', 'WEBVTT\n\nNOTE silence\n']) {
+      const env = aiEnv({ text: 'Hello there', vtt });
+      await expect(
+        runPro('transcribe-pro', { audioBase64: AUDIO, format: 'srt' }, env),
+      ).rejects.toThrow('no subtitle timings');
+    }
   });
 
   it('still returns plain text when no subtitles were requested and VTT is absent', async () => {

@@ -81,4 +81,21 @@ describe('transcribe-pro subtitles', () => {
       transcribePro.run([audio()], { language: 'en', format: 'srt' }, ctx()),
     ).rejects.toThrow('no subtitle timings');
   });
+
+  it('fails instead of returning an empty file when the VTT has no cues', async () => {
+    for (const vtt of ['WEBVTT\n\n', 'WEBVTT\r\n\r\nNOTE silence\r\n']) {
+      for (const format of ['srt', 'vtt'] as const) {
+        stubServer({ text: '', vtt });
+        await expect(
+          transcribePro.run([audio()], { language: 'en', format }, ctx()),
+        ).rejects.toThrow('no subtitle timings');
+      }
+    }
+  });
+
+  it('accepts CRLF captions from the model', async () => {
+    stubServer({ text: 'x', vtt: VTT.replace(/\n/g, '\r\n') });
+    const out = (await transcribePro.run([audio()], { language: 'en', format: 'srt' }, ctx())) as Blob;
+    expect(await out.text()).toContain('1\n00:00:00,000 --> 00:00:01,500\nHello there');
+  });
 });

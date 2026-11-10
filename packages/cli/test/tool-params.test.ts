@@ -10,7 +10,7 @@ import {
   STRICT_TOOL_IDS,
   toolParamHelp,
 } from '../src/lib/tool-params.js';
-import { extFromMime, inferMimeFromPath } from '../src/lib/mime.js';
+import { extFromMime, inferMimeFromPath, isTextOutputMime } from '../src/lib/mime.js';
 
 const registry = createDefaultRegistry();
 function tool(id: string): ToolModule {
@@ -273,5 +273,11 @@ describe('typed direct parameter merge', () => {
   ])('maps the actual file extension %s', (path, mime, extension) => {
     expect(inferMimeFromPath(path)).toBe(mime);
     expect(extFromMime(mime)).toBe(extension);
+  });
+  it('names subtitle output by its format', () => {
+    expect(extFromMime('application/x-subrip')).toBe('.srt');
+    expect(extFromMime('text/vtt')).toBe('.vtt');
+    expect(isTextOutputMime('application/x-subrip')).toBe(true);
+    expect(isTextOutputMime('image/png')).toBe(false);
   });
 });

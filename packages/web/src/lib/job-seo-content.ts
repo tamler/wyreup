@@ -373,7 +373,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
   },
   'make-subtitles-for-a-video': {
     intro:
-      "Turn the speech in a video into an SRT subtitle file you can upload to YouTube, a course platform, or a video editor. The audio track is pulled out in your browser first; the video itself stays on your device. Only that audio is sent to Wyreup, where a hosted Whisper model writes the words with start and end times. The run uses 3 credits, and a run that fails is refunded. Each upload can be up to 25 MB of audio, which at the quality used here is roughly fifty minutes of speech. Read through the subtitles before publishing, especially names, numbers, and moments where people talk over each other.",
+      "Turn the speech in a video into an SRT subtitle file you can upload to YouTube, a course platform, or a video editor. The audio track is pulled out in your browser first; the video itself stays on your device. Only that audio is sent to Wyreup, where a hosted Whisper model writes the words with start and end times. The run uses 3 credits, and a run that fails is refunded. The audio can be up to 25 MB, but the hosted step has a fixed processing time limit, so a long talk can run out of time; trim it into shorter parts if that happens. Read through the subtitles before publishing, especially names, numbers, and moments where people talk over each other.",
     useCases: [
       'Add captions to a recorded talk or lesson before posting it.',
       'Make a short social video watchable with the sound off.',
@@ -383,7 +383,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
     faq: [
       {
         q: 'What leaves my device?',
-        a: "The audio track extracted from your video is sent to Wyreup for transcription. The video file is not uploaded.",
+        a: "Only the audio track, extracted in your browser, is sent to Wyreup for transcription. The video file itself is not uploaded. The confirmation before the paid step names your video because the chain starts from it.",
       },
       {
         q: 'Can I burn the subtitles into the video?',

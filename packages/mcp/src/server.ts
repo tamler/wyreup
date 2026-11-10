@@ -138,6 +138,8 @@ const MIME_TO_EXT: Record<string, string> = {
   'audio/wav': '.wav',
   'audio/mpeg': '.mp3',
   'video/mp4': '.mp4',
+  'text/vtt': '.vtt',
+  'application/x-subrip': '.srt',
 };
 
 function inferMimeFromPath(filePath: string): string {
@@ -145,7 +147,7 @@ function inferMimeFromPath(filePath: string): string {
   return EXT_TO_MIME[ext] ?? 'application/octet-stream';
 }
 
-function extFromMime(mime: string): string {
+export function extFromMime(mime: string): string {
   return MIME_TO_EXT[mime] ?? '.bin';
 }
 
