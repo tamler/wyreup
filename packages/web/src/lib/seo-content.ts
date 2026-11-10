@@ -10336,7 +10336,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'transcribe-pro': {
     intro:
-      'Transcribe Audio (Pro) runs hosted Whisper-large-v3 for higher-accuracy speech-to-text, especially on noisy, accented, or low-quality recordings that trip up the free in-browser models. Reach for it when getting the words exactly right matters more than keeping the audio fully local. Each run uses 3 credits and returns plain text.',
+      'Transcribe Audio (Pro) runs hosted Whisper-large-v3 for higher-accuracy speech-to-text, especially on noisy, accented, or low-quality recordings that trip up the free in-browser models. Reach for it when getting the words exactly right matters more than keeping the audio fully local. Each run uses 3 credits and returns plain text, or SRT or WebVTT subtitles with timings if you pick a subtitle output.',
     useCases: [
       'Transcribe a multi-speaker conference recording with crosstalk and background noise',
       'Get an accurate transcript of an interview with a strong regional accent',
@@ -10352,11 +10352,15 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What audio formats does it accept?',
-        a: 'WAV, MP3, MP4/M4A, AAC, OGG, WebM, and FLAC. The result is plain text.',
+        a: 'WAV, MP3, MP4/M4A, AAC, OGG, WebM, and FLAC, up to 25 MB. Choose plain text, SRT subtitles or WebVTT subtitles as the output.',
+      },
+      {
+        q: 'Can it make subtitles for a video?',
+        a: 'Yes. Pick SRT or WebVTT output to get timed lines you can upload with a video, or open Burn Subtitles to put them on the picture. For a video file, use the Make subtitles for a video page, which extracts the audio in your browser first.',
       },
       {
         q: 'Is the audio uploaded?',
-        a: "Yes — because it's a hosted model, your audio is processed on a server. If you need everything to stay on your device, use the free in-browser Transcribe instead.",
+        a: "Yes. Because it's a hosted model, your audio is processed on a server. If you need everything to stay on your device, use the free in-browser Transcribe instead.",
       },
       {
         q: 'How many credits does it cost?',
