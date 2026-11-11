@@ -22,6 +22,7 @@
 import { PRICING } from './pricing';
 import {
   DEEP_ANALYSIS,
+  EXPLAIN_CODE,
   FIX_GRAMMAR,
   MODEL_GLM_FLASH,
   MODEL_GUARD,
@@ -71,6 +72,7 @@ export const TOKEN_PRICES: Readonly<Record<string, { inPerM: number; outPerM: nu
   [DEEP_ANALYSIS.primaryModel]: { inPerM: 0.3, outPerM: 1.2 },
   // Gemma 4: also TRANSLATE_MODEL and FIX_GRAMMAR.model (same id).
   [DEEP_ANALYSIS.fallbackModel]: { inPerM: 0.1, outPerM: 0.3 },
+  [EXPLAIN_CODE.model]: { inPerM: 0.66, outPerM: 1.0 },
 };
 const FLUX_USD_PER_TILE = 0.0000528;
 const FLUX_USD_PER_STEP = 0.0001056;
@@ -222,6 +224,16 @@ export const WORST_CASES: readonly WorstCase[] = [
       model: TEXT_MODEL,
       inputTokens: MAX_TOKENS.vision + TARGET_CHARS,
       maxOutputTokens: MAX_TOKENS.default,
+    },
+  ]),
+  // Snippet and language name at their token caps; the system prompt and
+  // "Language: ... Code:" wrapper fit inside PROMPT_OVERHEAD_TOKENS
+  // (cost-model.test.ts checks their length).
+  llmCase('explain-code-pro', [
+    {
+      model: EXPLAIN_CODE.model,
+      inputTokens: limitTokens('explain-code-pro'),
+      maxOutputTokens: EXPLAIN_CODE.maxOutputTokens,
     },
   ]),
   {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PROMPT_OVERHEAD_TOKENS,
   UNBOUNDED_TOOLS,
   WORST_CASES,
   WORST_NET_USD_PER_CREDIT,
@@ -8,7 +9,13 @@ import {
   llmCallUsd,
 } from './cost-model';
 import { PRICING } from './pricing';
-import { DEEP_ANALYSIS, MODEL_DEEPSEEK_FLASH, MODEL_GEMMA, prepareProRun } from './runners';
+import {
+  DEEP_ANALYSIS,
+  EXPLAIN_CODE,
+  MODEL_DEEPSEEK_FLASH,
+  MODEL_GEMMA,
+  prepareProRun,
+} from './runners';
 import type { Env } from './env';
 import { PRO_TEXT_LIMITS, estimateTokens } from '../../packages/core/src/lib/pro-limits';
 
@@ -56,6 +63,21 @@ describe('Pro cost model', () => {
       maxOutputTokens: DEEP_ANALYSIS.maxOutputTokens,
     });
     expect(deep.usd).toBeGreaterThan(primaryOnly);
+  });
+});
+
+describe('explain-code-pro worst case', () => {
+  it('keeps prompt text inside PROMPT_OVERHEAD_TOKENS and pins the 1-credit numbers', () => {
+    const wrapper = 'Language: not given, work it out from the code\n\nCode:\n';
+    for (const system of Object.values(EXPLAIN_CODE.systems)) {
+      expect(estimateTokens(system + wrapper)).toBeLessThanOrEqual(PROMPT_OVERHEAD_TOKENS - 64);
+    }
+    expect(PRICING['explain-code-pro']).toBe(1);
+    expect(limitTokens('explain-code-pro')).toBe(4_040);
+    const c = WORST_CASES.find((w) => w.toolId === 'explain-code-pro')!;
+    // (4,040 + 300) in x $0.66/M + 2,048 out x $1.00/M
+    expect(c.usd).toBeCloseTo(0.0049124, 7);
+    expect(c.usd).toBeLessThanOrEqual(floorUsd('explain-code-pro'));
   });
 });
 

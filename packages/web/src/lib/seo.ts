@@ -185,4 +185,10 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
   },
+  'explain-code-pro': {
+    heading: 'Explain Code in plain English',
+    title: 'Explain code in plain English with a hosted coding model | Wyreup',
+    description:
+      'Paste up to 12,000 characters of code and get a plain-English walkthrough at beginner or expert depth. The code is sent to Wyreup and read by a hosted Qwen2.5 Coder model. 1 credit per run.',
+  },
 };

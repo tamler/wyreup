@@ -4481,6 +4481,53 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'explain-code-pro': {
+    intro:
+      'Explain Code walks through a pasted code snippet in plain English. A hosted Qwen2.5 Coder 32B model says what the code is for, then goes through it step by step: what each part does, what goes in and comes out, and anything that looks like a bug or a risk. Choose beginner to have terms explained along the way, or expert to skip the basics. It is a Pro tool that uses 1 credit per run.',
+    useCases: [
+      'Understand a script you inherited before you run it, including which lines touch files, the network or a database',
+      'Get a beginner-friendly walkthrough of a code sample from a tutorial or a Stack Overflow answer',
+      'Review an unfamiliar function in a language you rarely use, such as Bash, Rust or SQL inside application code',
+      'Write a plain-English summary of a change for a teammate, a ticket or a pull request description',
+      'Check your own understanding of a tricky loop or recursion by comparing it with the explanation',
+    ],
+    faq: [
+      {
+        q: 'How much code can I paste?',
+        a: 'Up to about 12,000 characters of code per run, roughly 300 lines. Code full of Chinese, Japanese or Korean comments or strings has a lower limit, down to 4,000 characters. Explain a longer file one section at a time.',
+      },
+      {
+        q: 'Which languages does it understand?',
+        a: 'Common languages such as Python, JavaScript, TypeScript, Java, C, C++, C#, Go, Rust, PHP, Ruby, SQL and shell scripts. You can name the language or leave it blank and let the model work it out.',
+      },
+      {
+        q: 'Does it run my code?',
+        a: 'No. The model reads the code and explains it, but nothing is executed. That also means it can misjudge behavior that depends on libraries, data or configuration it cannot see, so check anything important against the code.',
+      },
+      {
+        q: 'Is my code uploaded?',
+        a: 'Yes. This is a Pro tool, so the code is sent to Wyreup and read by a hosted model. Remove API keys, passwords and other secrets before you paste. The free regex and SQL explainers run entirely in your browser.',
+      },
+      {
+        q: 'What does it return?',
+        a: 'Plain text: a short summary followed by numbered steps, usually under 900 words.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'regex-explain',
+        why: 'For a single regular expression, the free explainer breaks it down token by token without uploading anything.',
+      },
+      {
+        id: 'sql-format-explain',
+        why: 'For a SQL query, the free formatter and explainer runs in your browser.',
+      },
+      {
+        id: 'code-beautifier',
+        why: 'Reformat minified or messy code first so the explanation can refer to readable lines.',
+      },
+    ],
+  },
   'json-flatten': {
     intro:
       'JSON Flatten collapses a nested JSON object into a single level, turning paths like a.b.c into flat dot-notation keys. It is the bridge you need when nested data has to become tabular — for CSV export, search-index fields, or environment variables. It runs in your browser, so even sensitive config payloads stay on your device.',

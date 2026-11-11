@@ -52,6 +52,8 @@ export const PRO_TEXT_LIMITS: Readonly<Record<string, Readonly<Record<string, nu
   'translate-many-pro': { text: 10_000 },
   'translate-indic-pro': { text: 10_000 },
   'translate-document-pro': { text: PRO_TEXT_MAX_TOKENS },
+  // text = the code snippet. 4,000 tokens is 12,000 characters of ASCII code.
+  'explain-code-pro': { text: 4_000, language: 40 },
 };
 
 /**
@@ -81,6 +83,7 @@ const FIELD_LABELS: Record<string, string> = {
   question: 'The question',
   description: 'The description',
   schema: 'The field description',
+  language: 'The language name',
 };
 
 /** Hard character cap the server applies to every Pro text field. */

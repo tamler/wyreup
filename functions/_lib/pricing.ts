@@ -38,6 +38,8 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // Wave 3 — new Pro tools (2026-11-11)
+  'explain-code-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {

@@ -61,6 +61,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `text-to-speech-pro` | 2 | Deepgram Aura: English (Aura 1, 1,000 chars) or Spanish (Aura 2, 500 chars) |
 | `deep-analysis-pro` | 3 | DeepSeek V4.1 Flash reasoning, Gemma 4 fallback; 34,000-token document, 700-token question |
 | `fix-grammar-pro` | 1 | Gemma 4 copy edit, 4,000 tokens |
+| `explain-code-pro` | 1 | Qwen2.5 Coder 32B plain-English code walkthrough; 4,000-token snippet, 2,048 output tokens |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
