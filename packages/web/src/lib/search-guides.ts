@@ -215,6 +215,28 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
       { href: '/pro/#pricing', label: 'PRO credit pricing' },
     ],
   },
+  'explain-code-pro': {
+    heading: 'How to get a plain-English explanation of code',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then paste one function, script or file section.',
+      'Optionally name the language, and choose beginner for terms explained along the way or expert for design, edge cases and risks.',
+      'Run the tool. The code is sent to Wyreup\'s hosted Qwen2.5 Coder model, which returns a walkthrough as plain text. Check anything important against the code itself.',
+    ],
+    example:
+      'A Bash deploy script you inherited: paste it at beginner level to learn what each step does and which commands change files or call the network before you run it.',
+    formats:
+      'Input: pasted code up to 12,000 characters, sent to Wyreup. Code with many non-English characters in comments or strings has a lower limit. Output: a plain-text explanation of up to about 1,500 words. 1 credit per run.',
+    limitations: [
+      'The model reads the code but does not run it, so it can misjudge what the code does at runtime, especially with external libraries or configuration it cannot see.',
+      'Longer files must be split. Explain one section at a time.',
+      'Do not paste secrets such as API keys or passwords. Remove them first; the code leaves your device.',
+    ],
+    links: [
+      { href: '/tools/regex-explain/', label: 'Free in-browser regex explainer' },
+      { href: '/tools/sql-format-explain/', label: 'Free in-browser SQL formatter and explainer' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
 };
 
 export const JOB_SEARCH_GUIDES: Record<string, SearchGuide> = {

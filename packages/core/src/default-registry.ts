@@ -276,6 +276,7 @@ import { chatLongPdfPro } from './tools/chat-long-pdf-pro/index.js';
 import { imageGeneratePro } from './tools/image-generate-pro/index.js';
 import { jsonExtractPro } from './tools/json-extract-pro/index.js';
 import { translateIndicPro } from './tools/translate-indic-pro/index.js';
+import { explainCodePro } from './tools/explain-code-pro/index.js';
 import { csvSql } from './tools/csv-sql/index.js';
 import { financeTools } from './utilities/finance.js';
 import { planningTools } from './utilities/planning.js';
@@ -575,6 +576,7 @@ export const defaultTools: ToolModule<any>[] = [
   imageGeneratePro,
   jsonExtractPro,
   translateIndicPro,
+  explainCodePro,
   csvSql,
   ...financeTools,
   ...planningTools,

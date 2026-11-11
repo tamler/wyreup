@@ -54,6 +54,16 @@ export const PRO_UPSELLS: ProUpsell[] = [
     proToolId: 'text-redact-pro',
     benefit: 'Catches names, addresses, and identifiers the pattern-based redactor misses.',
   },
+  {
+    freeToolId: 'regex-explain',
+    proToolId: 'explain-code-pro',
+    benefit: 'Explains the whole snippet around the pattern in plain English, up to 12,000 characters of code.',
+  },
+  {
+    freeToolId: 'sql-format-explain',
+    proToolId: 'explain-code-pro',
+    benefit: 'Walks through what a longer query or the code around it does, in plain English.',
+  },
 ];
 
 /** First pairing for a free tool — the single post-run seam. */

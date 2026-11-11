@@ -688,3 +688,66 @@ describe('previously unbounded tools are bounded before any spend', () => {
     ).toThrow();
   });
 });
+
+describe('explain-code-pro runner', () => {
+  const choices = (content: string | null) => ({ choices: [{ message: { content } }] });
+  const mock = (result: unknown) => {
+    const run = vi.fn().mockResolvedValue(result);
+    return { env: { AI: { run } } as unknown as Env, run };
+  };
+
+  it('calls Qwen2.5 Coder with the level prompt, language and a capped output budget', async () => {
+    const { env, run } = mock(choices(' 1. It adds two numbers. '));
+    await expect(
+      runPro(
+        'explain-code-pro',
+        { text: 'def add(a, b): return a + b', level: 'expert', language: 'Python' },
+        env,
+      ),
+    ).resolves.toEqual({ explanation: '1. It adds two numbers.', level: 'expert' });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/qwen/qwen2.5-coder-32b-instruct');
+    expect(payload.max_tokens).toBe(2_048);
+    expect(payload.messages[0].content).toMatch(/experienced developer/);
+    expect(payload.messages[1].content).toMatch(/^Language: Python\n\nCode:\ndef add/);
+  });
+
+  it('defaults to the beginner level and lets the model detect the language', async () => {
+    const { env, run } = mock({ response: 'Explained.' });
+    await expect(runPro('explain-code-pro', { text: 'x = 1' }, env)).resolves.toEqual({
+      explanation: 'Explained.',
+      level: 'beginner',
+    });
+    const [, payload] = run.mock.calls[0];
+    expect(payload.messages[0].content).toMatch(/beginner/);
+    expect(payload.messages[1].content).toMatch(/^Language: not given/);
+  });
+
+  it.each([
+    [{ text: 'x', level: 'guru' }],
+    [{ text: 'x', language: 'p'.repeat(41) }],
+    [{ text: 'a'.repeat(12_001) }],
+    [{ text: '漢'.repeat(4_001) }],
+    [{ text: '   ' }],
+  ])('rejects %j before provider work', (input) => {
+    const { env, run } = mock({});
+    expect(() => prepareProRun('explain-code-pro', input, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('accepts 12,000 characters of ASCII code', () => {
+    const { env } = mock({});
+    expect(typeof prepareProRun('explain-code-pro', { text: 'a'.repeat(12_000) }, env)).toBe(
+      'function',
+    );
+  });
+
+  it('fails (and so refunds) when the model returns no text', async () => {
+    const { env } = mock(choices(''));
+    await expect(runPro('explain-code-pro', { text: 'x' }, env)).rejects.toThrow();
+  });
+
+  it('is priced at 1 credit', () => {
+    expect(PRICING['explain-code-pro']).toBe(1);
+  });
+});

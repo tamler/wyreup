@@ -393,6 +393,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'cron-from-text': 'UtilityRunner',
   'cron-from-text-pro': 'TextInputRunner',
   'deep-analysis-pro': 'TextInputRunner',
+  'explain-code-pro': 'TextInputRunner',
   'fix-grammar-pro': 'TextInputRunner',
   'html-redact': 'TextInputRunner',
   'json-extract-pro': 'TextInputRunner',
