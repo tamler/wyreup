@@ -185,4 +185,10 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
   },
+  'photo-edit-pro': {
+    heading: 'AI Photo Edit: remove objects, colorize or restore a photo from a prompt',
+    title: 'AI photo editor: remove objects, colorize, restore old photos | Wyreup',
+    description:
+      "Describe a change and AI edits your photo. Scaled to 512 px in your browser, then sent to Wyreup's hosted FLUX.2 model. Results vary. 1 credit per run.",
+  },
 };
