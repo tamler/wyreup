@@ -371,6 +371,34 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       },
     ],
   },
+  'make-subtitles-for-a-video': {
+    intro:
+      "Turn the speech in a video into an SRT subtitle file you can upload to YouTube, a course platform, or a video editor. The audio track is pulled out in your browser first; the video itself stays on your device. Only that audio is sent to Wyreup, where a hosted Whisper model writes the words with start and end times. The run uses 3 credits, and a run that fails is refunded. The audio can be up to 25 MB, but the hosted step has a fixed processing time limit, so a long talk can run out of time; trim it into shorter parts if that happens. Read through the subtitles before publishing, especially names, numbers, and moments where people talk over each other.",
+    useCases: [
+      'Add captions to a recorded talk or lesson before posting it.',
+      'Make a short social video watchable with the sound off.',
+      'Give a video editor a timed SRT file to place on the timeline.',
+      'Create a searchable written record of an interview recording.',
+    ],
+    faq: [
+      {
+        q: 'What leaves my device?',
+        a: "Only the audio track, extracted in your browser, is sent to Wyreup for transcription. The video file itself is not uploaded. The confirmation before the paid step names your video because the chain starts from it.",
+      },
+      {
+        q: 'Can I burn the subtitles into the video?',
+        a: 'Yes. Open Burn Subtitles with your original video and the downloaded SRT file. That step runs in your browser.',
+      },
+      {
+        q: 'Does it work for languages other than English?',
+        a: 'Yes. Open the transcription tool, pick the spoken language, and choose SRT or WebVTT output. A correct language choice gives better results than auto-detect.',
+      },
+      {
+        q: 'Will the timings be exact?',
+        a: 'They follow the model\'s detected speech segments, which are usually close but not frame-accurate. Check the start of each line in a player before publishing.',
+      },
+    ],
+  },
   'shrink-video': {
     intro:
       'Make a video file smaller so it is easier to upload, attach, store, or share. Phone recordings and exported clips can be much larger than messaging apps, forms, or slow connections handle comfortably. This job compresses the video into a lighter copy, trading some picture detail for reduced file size while keeping the source recording available. Processing happens in your browser, and the selected video stays on the device during this job. Longer or high-resolution videos take more time and memory to process, especially on a phone or older computer. File-size savings vary by source and compression history, so play the downloaded result and check motion, sound, and readable on-screen text before sending it.',

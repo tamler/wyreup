@@ -43,6 +43,11 @@ it('captures repeated actual paid steps and whole batch total without a fallback
   expect(
     paidChainDisclosure(summary, [{ name: 'current.png' }], 'owner@example.invalid'),
   ).toContain('uploaded to wyreup.com');
+  // A chain can upload a derived file (e.g. audio extracted from a video),
+  // so the dialog must not claim the selected file itself is uploaded.
+  const text = paidChainDisclosure(summary, [{ name: 'talk.mp4' }], 'owner@example.invalid');
+  expect(text).not.toContain('File contents are uploaded');
+  expect(text).toContain('what earlier steps make from them');
 });
 it.each([undefined, null, '3', NaN, Infinity, -Infinity, -1])(
   'refuses unknown or nonfinite or negative actual price %s',

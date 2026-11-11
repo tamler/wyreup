@@ -23,6 +23,7 @@ import { setEgressAllowedOrigins } from './egress.js';
 import { resolveModelCdn } from './runtime-config.js';
 import { MCP_VERSION } from './version.js';
 import { readCanonicalFileBounded } from './bounded-file-read.js';
+import { isInlineTextMime } from './output-types.js';
 
 // ──── Pro auth from environment ───────────────────────────────────────────────
 //
@@ -138,6 +139,8 @@ const MIME_TO_EXT: Record<string, string> = {
   'audio/wav': '.wav',
   'audio/mpeg': '.mp3',
   'video/mp4': '.mp4',
+  'text/vtt': '.vtt',
+  'application/x-subrip': '.srt',
 };
 
 function inferMimeFromPath(filePath: string): string {
@@ -145,7 +148,7 @@ function inferMimeFromPath(filePath: string): string {
   return EXT_TO_MIME[ext] ?? 'application/octet-stream';
 }
 
-function extFromMime(mime: string): string {
+export function extFromMime(mime: string): string {
   return MIME_TO_EXT[mime] ?? '.bin';
 }
 
@@ -609,7 +612,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           }
         } else if (outputs.length > 0 && !outputDir && !outputPath) {
           const blob = outputs[0]!;
-          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          if (isInlineTextMime(blob.type)) {
             const text = await blob.text();
             return { content: [{ type: 'text', text }] };
           }
@@ -717,7 +720,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
           }
         } else if (outputs.length > 0 && !outputDir && !outputPath) {
           const blob = outputs[0]!;
-          if (blob.type.startsWith('text/') || blob.type === 'application/json') {
+          if (isInlineTextMime(blob.type)) {
             const text = await blob.text();
             return { content: [{ type: 'text', text }] };
           }

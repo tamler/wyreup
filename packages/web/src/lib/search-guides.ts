@@ -158,7 +158,7 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
     example:
       'An interview recorded in a busy café. If the free in-browser Whisper drops words, run the original file here and spot-check names and numbers against the audio.',
     formats:
-      'Input: one WAV, MP3, M4A, AAC, OGG, WebM or FLAC file up to 25 MB, sent to Wyreup for processing. Output: plain text without timestamps or speaker labels. 3 credits per run.',
+      'Input: one WAV, MP3, M4A, AAC, OGG, WebM or FLAC file up to 25 MB, sent to Wyreup for processing. Output: plain text, or SRT/WebVTT subtitles with timings; no speaker labels. 3 credits per run.',
     limitations: [
       'Speech recognition can mishear names, jargon and overlapping speakers. Check anything you will quote.',
       'Recordings over 25 MB must be shortened or split before upload.',

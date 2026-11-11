@@ -110,7 +110,7 @@ Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 
 ## Wyreup PRO
 
-Everything above is free, forever. **PRO** is an optional credit-based tier for hosted-AI tools that need real servers — transcription (Whisper-large-v3), OCR, translation (100+ languages plus a dedicated Indic model), text-to-speech, image generation, long-context PDF Q&A (256k tokens), structured-JSON extraction, content safety classification, grammar fixing, tone rewriting, deep reasoning analysis, plus image background removal and upscaling. 30 tools today and growing.
+Everything above is free, forever. **PRO** is an optional credit-based tier for hosted-AI tools that need real servers — transcription (Whisper large-v3 turbo, with SRT/WebVTT subtitles), OCR, translation (100+ languages plus a dedicated Indic model), text-to-speech, image generation, long-context PDF Q&A (256k tokens), structured-JSON extraction, content safety classification, grammar fixing, tone rewriting, deep reasoning analysis, plus image background removal and upscaling. 30 tools today and growing.
 
 - Credits start at **220 for $5** (pay-as-you-go pack, never expire). Or **$8/mo** for 440 credits a cycle. Packs at $5 / $10 / $20 share the same ~$0.02/credit rate.
 - Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable. Orphan spends from mid-handler crashes are auto-refunded on the next request.

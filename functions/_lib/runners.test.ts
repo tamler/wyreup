@@ -96,6 +96,44 @@ function aiEnv(result: unknown) {
   return { AI: { run: vi.fn().mockResolvedValue(result) } } as unknown as Env;
 }
 
+describe('transcribe-pro runner', () => {
+  const AUDIO = btoa('RIFF0000WAVE');
+  const VTT = 'WEBVTT\n\n00:00:00.000 --> 00:00:01.500\nHello there\n';
+
+  it('returns the text and the model VTT', async () => {
+    const env = aiEnv({ text: 'Hello there', vtt: VTT });
+    const out = (await runPro('transcribe-pro', { audioBase64: AUDIO, language: 'en' }, env)) as {
+      text: string;
+      vtt: string | null;
+    };
+    expect(out).toEqual({ text: 'Hello there', vtt: VTT });
+  });
+
+  it('fails a subtitle request when the model returns no timings, so the run is refunded', async () => {
+    for (const vtt of [undefined, '', '  ', 'WEBVTT\n\n', 'WEBVTT\n\nNOTE silence\n']) {
+      const env = aiEnv({ text: 'Hello there', vtt });
+      await expect(
+        runPro('transcribe-pro', { audioBase64: AUDIO, format: 'srt' }, env),
+      ).rejects.toThrow('no subtitle timings');
+    }
+  });
+
+  it('still returns plain text when no subtitles were requested and VTT is absent', async () => {
+    const env = aiEnv({ text: 'Hello there' });
+    const out = (await runPro('transcribe-pro', { audioBase64: AUDIO }, env)) as { text: string };
+    expect(out.text).toBe('Hello there');
+  });
+
+  it('rejects an unknown format before any provider work', () => {
+    const env = aiEnv({ text: 'x' });
+    const run = vi.spyOn(env.AI, 'run');
+    expect(() => prepareProRun('transcribe-pro', { audioBase64: AUDIO, format: 'docx' }, env)).toThrow(
+      'Unsupported transcript format',
+    );
+    expect(run).not.toHaveBeenCalled();
+  });
+});
+
 describe('ocr-hq runner', () => {
   it('returns extracted text', async () => {
     const env = aiEnv({ response: 'INVOICE 2024' });

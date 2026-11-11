@@ -167,6 +167,8 @@
       forcePlainText = decodedOutput;
       resultExtension = tool.id === 'base64' && inputParams.mode === 'decode' ? 'bin' :
         tool.id === 'csv-json' && inputParams.direction === 'csv-to-csv' ? 'csv' :
+        blob.type === 'application/x-subrip' ? 'srt' :
+        blob.type === 'text/vtt' ? 'vtt' :
         blob.type.includes('html') ? 'html' : 'txt';
       markToolUsed(tool.id);
       state = 'done';

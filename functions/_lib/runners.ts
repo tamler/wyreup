@@ -109,8 +109,27 @@ const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
 
 function transcribePro(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
+  const format = readOptionalText(raw, 'format', 'text', 8);
+  if (format !== 'text' && format !== 'srt' && format !== 'vtt') {
+    throw new Error('Unsupported transcript format');
+  }
   const bytes = __readAudioBytes(raw);
-  return () => runTranscribe(env, { bytes, language });
+  return async () => {
+    const result = await runTranscribe(env, { bytes, language });
+    // Throwing here takes the normal failed-run path, which refunds the
+    // credits instead of charging for subtitles that cannot be produced.
+    if (format !== 'text' && !hasTimedCue(result.vtt)) {
+      throw new Error('Audio model returned no subtitle timings');
+    }
+    return result;
+  };
+}
+
+// A header-only or NOTE-only WebVTT document is not subtitles.
+const VTT_TIMING_LINE = /^\s*(?:\d+:)?\d{2}:\d{2}[.,]\d{3}\s+-->\s+(?:\d+:)?\d{2}:\d{2}[.,]\d{3}/m;
+
+function hasTimedCue(vtt: string | null | undefined): boolean {
+  return typeof vtt === 'string' && VTT_TIMING_LINE.test(vtt.replace(/\r\n?/g, '\n'));
 }
 
 // ────────────────────────────────────────────────────────────────────────

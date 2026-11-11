@@ -9,6 +9,19 @@
  *   buildDownloadName(undefined, 'qr-create', 'png')
  *     → 'qr-create-result.png'
  */
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  'application/x-subrip': 'srt',
+  'text/vtt': 'vtt',
+};
+
+/**
+ * Extension for result types whose MIME subtype is not the file extension.
+ * Subtitle files need theirs: video sites accept captions by extension.
+ */
+export function knownExtensionForType(type: string): string | undefined {
+  return EXTENSION_BY_TYPE[type.split(';')[0].trim()];
+}
+
 export function buildDownloadName(
   sourceName: string | undefined,
   toolId: string,

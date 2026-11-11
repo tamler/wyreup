@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { Command } from 'commander';
 import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
 import type { ToolModule, ToolRunContext } from '@wyreup/core';
-import { inferMimeFromPath, extFromMime } from '../lib/mime.js';
+import { inferMimeFromPath, extFromMime, isTextOutputMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
 import { readApiKey, resolveProOrigin } from '../lib/credentials.js';
 import { interactiveLogin } from '../lib/interactive-login.js';
@@ -72,7 +72,7 @@ async function writeOutputs(
   if (!outputPath && !outputDir) {
     const blob = outputs[0];
     if (!blob) return;
-    if (json || blob.type.startsWith('text/') || blob.type === 'application/json') {
+    if (json || isTextOutputMime(blob.type)) {
       const text = await blob.text();
       process.stdout.write(text);
       if (!text.endsWith('\n')) process.stdout.write('\n');

@@ -132,6 +132,22 @@ export const JOBS: Job[] = [
     priority: 240,
   },
   {
+    slug: 'make-subtitles-for-a-video',
+    title: 'Make subtitles for a video',
+    description: 'Get an SRT subtitle file with timings from the speech in a video.',
+    action: {
+      kind: 'chain',
+      steps: [
+        // 64 kbps MP3 keeps the upload small. The hosted call has a 90 s inference
+        // budget (functions/_lib/timeout.ts), so long recordings can time out first.
+        { toolId: 'extract-audio', params: { format: 'mp3', bitrate: '64k' } },
+        { toolId: 'transcribe-pro', params: { language: 'en', format: 'srt' } },
+      ],
+    },
+    acceptMimes: ['video/*'],
+    priority: 250,
+  },
+  {
     slug: 'shrink-video',
     title: 'Make a video smaller',
     description: 'Reduce a video file so it is easier to upload or share.',

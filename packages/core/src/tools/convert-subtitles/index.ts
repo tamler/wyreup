@@ -98,24 +98,34 @@ export function convertSrtToVtt(srt: string, shiftMs = 0): string {
   return lines.join('\n');
 }
 
+/** True when a WebVTT document has at least one timed cue (not just a header or NOTE). */
+export function hasVttCue(vtt: string): boolean {
+  return vtt
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .some((line) => parseTimeLine(line) !== null);
+}
+
 export function convertVttToSrt(vtt: string, shiftMs = 0): string {
   const lines: string[] = [];
   const blocks = vtt.trim().split(/\n\s*\n/);
   let index = 1;
   for (const block of blocks) {
     const blockLines = block.trim().split('\n');
-    // Skip WEBVTT header block
-    if (blockLines[0]?.startsWith('WEBVTT') || blockLines[0]?.startsWith('NOTE')) continue;
-    const timeLine = blockLines.find((l) => l.includes('-->'));
-    if (!timeLine) continue;
-    const timestamps = parseTimeLine(timeLine);
+    // NOTE blocks are comments. A WEBVTT header block is skipped below when it
+    // has no timing line; when a cue follows the header without a blank line,
+    // the header lines sit before the timing line and are not treated as text.
+    if (blockLines[0]?.startsWith('NOTE')) continue;
+    const timeIndex = blockLines.findIndex((l) => l.includes('-->'));
+    if (timeIndex === -1) continue;
+    const timestamps = parseTimeLine(blockLines[timeIndex]!);
     if (!timestamps) continue;
     const [startTimestamp, endTimestamp] = timestamps;
     const startMs = parseTimeMs(startTimestamp) + shiftMs;
     const endMs = parseTimeMs(endTimestamp) + shiftMs;
-    const textLines = blockLines.filter(
-      (l) => !l.includes('-->') && !/^\d+$/.test(l.trim()) && l.trim() !== '',
-    );
+    // Lines before the timing line are the optional cue identifier; everything
+    // after it is cue text, including text that is only a number.
+    const textLines = blockLines.slice(timeIndex + 1).filter((l) => l.trim() !== '');
     lines.push(String(index++));
     lines.push(`${srtTimestamp(Math.max(0, startMs))} --> ${srtTimestamp(Math.max(0, endMs))}`);
     lines.push(...textLines);

@@ -110,6 +110,32 @@ describe('convert-subtitles — convertSrtToVtt()', () => {
 });
 
 describe('convert-subtitles — convertVttToSrt()', () => {
+  it('keeps cue text that is only a number, and drops only the cue identifier', () => {
+    const vtt = 'WEBVTT\n\n7\n00:00:01.000 --> 00:00:02.000\n42\n\n00:00:02.000 --> 00:00:03.000\n3\n';
+    expect(convertVttToSrt(vtt)).toBe(
+      '1\n00:00:01,000 --> 00:00:02,000\n42\n\n2\n00:00:02,000 --> 00:00:03,000\n3\n',
+    );
+  });
+
+  it('keeps cue text and timings for hour-less timestamps, cue settings and non-ASCII text', () => {
+    const vtt = 'WEBVTT\n\n00:01.500 --> 00:03.000 align:start\nمرحبا — 你好\n';
+    expect(convertVttToSrt(vtt)).toBe('1\n00:00:01,500 --> 00:00:03,000\nمرحبا — 你好\n');
+  });
+
+  it('keeps a cue that follows the WEBVTT header without a blank line', () => {
+    expect(convertVttToSrt('WEBVTT\n00:00:00.000 --> 00:00:01.500\nHello there\n')).toBe(
+      '1\n00:00:00,000 --> 00:00:01,500\nHello there\n',
+    );
+    expect(convertVttToSrt('WEBVTT - title\nKind: captions\n00:00:01.000 --> 00:00:02.000\nHi\n')).toBe(
+      '1\n00:00:01,000 --> 00:00:02,000\nHi\n',
+    );
+  });
+
+  it('returns no cues for a header-only or NOTE-only document', () => {
+    expect(convertVttToSrt('WEBVTT\n\n')).toBe('');
+    expect(convertVttToSrt('WEBVTT\n\nNOTE nothing was said\n')).toBe('');
+  });
+
   it('output contains numeric index', () => {
     const result = convertVttToSrt(SAMPLE_VTT);
     expect(result).toMatch(/^1\s*$/m);
