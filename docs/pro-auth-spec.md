@@ -55,6 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `text-checklist-pro` | 1 | Yes/no, pick-one and score probabilities over up to 16,000 characters of text, hosted clef-flash. Worst case $0.00093/run (see `functions/_lib/cost-model.ts`) |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
@@ -552,6 +553,7 @@ Rotate `SESSION_SECRET` to invalidate every outstanding browser session at once 
 | `text-*-pro` (summarize/translate/sentiment/NER/redact) | Workers AI (Llama 3.3 70B or Mistral) | Same — cheapest path |
 | `bg-remove-pro` | external image-model provider (RMBG-2.0) | HTTP API |
 | `upscale-2x-pro` | external image-model provider (Real-ESRGAN) | HTTP API |
+| `text-checklist-pro` | Workers AI (`@cf/cloudflare/clef-flash`) | One call, no retry or fallback; text only (no `images`); input-only billing capped by the 24,576-token context |
 
 Self-host on Thunder Compute / R2 is a deliberate v2 — defer until one tool has steady volume.
 
