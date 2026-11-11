@@ -185,4 +185,10 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
   },
+  'pdf-scan-q-and-a-pro': {
+    heading: 'Ask a Scanned PDF a question when it has no selectable text',
+    title: 'Ask a scanned PDF: answers from page images | Wyreup',
+    description:
+      'Ask about a scanned PDF with no text layer. Up to 10 pages are rendered in your browser and sent to Wyreup with your question. 1 credit per run.',
+  },
 };

@@ -8,12 +8,19 @@ import { SEARCH_GUIDES } from '../src/lib/search-guides';
 import { projectToolDiscoveryMetadata } from '../src/lib/tool-discovery-metadata';
 
 const registry = createDefaultRegistry();
-const PRO_PAGES = ['ocr-hq', 'transcribe-pro', 'text-translate-pro', 'pdf-q-and-a'] as const;
+const PRO_PAGES = [
+  'ocr-hq',
+  'transcribe-pro',
+  'text-translate-pro',
+  'pdf-q-and-a',
+  'pdf-scan-q-and-a-pro',
+] as const;
 const FREE_SIBLING: Record<(typeof PRO_PAGES)[number], string> = {
   'ocr-hq': 'ocr',
   'transcribe-pro': 'transcribe',
   'text-translate-pro': 'text-translate',
   'pdf-q-and-a': 'pdf-to-text',
+  'pdf-scan-q-and-a-pro': 'pdf-to-text',
 };
 
 describe('/pricing route', () => {
@@ -94,6 +101,10 @@ describe('Pro upgrade prompts', () => {
     expect(hostedInputPhrase('pdf-summarize')).toBe('the text extracted from your file in this browser');
     expect(hostedInputPhrase('translate-document-pro')).toBe('the text extracted from your file in this browser');
     expect(hostedInputPhrase('ocr-hq')).toBe('your input');
+    // Scanned-PDF Q&A sends rendered page images and the question (runPro { pages, question }).
+    expect(hostedInputPhrase('pdf-scan-q-and-a-pro')).toBe(
+      'one image per PDF page you picked, rendered in this browser, along with your question,',
+    );
     const prompt = readFileSync(new URL('../src/components/ProUpgradePrompt.astro', import.meta.url), 'utf8');
     expect(prompt).not.toMatch(/their input is sent/);
     const page = readFileSync(new URL('../src/pages/tools/[slug].astro', import.meta.url), 'utf8');
@@ -105,6 +116,12 @@ describe('Pro upgrade prompts', () => {
     const formats = SEARCH_GUIDES['pdf-q-and-a']?.formats ?? '';
     expect(formats).toMatch(/extracted text .*and your question are sent to Wyreup/);
     expect(formats).toMatch(/the PDF file is not\b/);
+    const scan = SEARCH_GUIDES['pdf-scan-q-and-a-pro']?.formats ?? '';
+    expect(scan).toMatch(/page images and your question are sent to Wyreup; the PDF file is not\b/);
+  });
+
+  it('offers scanned-PDF Q&A from the free text extractor', () => {
+    expect(upsellsFor('pdf-to-text').map((u) => u.proToolId)).toContain('pdf-scan-q-and-a-pro');
   });
 });
 

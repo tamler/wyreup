@@ -55,6 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `pdf-scan-q-and-a-pro` | 1 | Q&A over up to 10 browser-rendered page images of a scanned PDF, hosted Gemma 4 vision. Worst case ~$0.0034/run (see `functions/_lib/pricing-margin.ts`) |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
@@ -552,6 +553,7 @@ Rotate `SESSION_SECRET` to invalidate every outstanding browser session at once 
 | `text-*-pro` (summarize/translate/sentiment/NER/redact) | Workers AI (Llama 3.3 70B or Mistral) | Same — cheapest path |
 | `bg-remove-pro` | external image-model provider (RMBG-2.0) | HTTP API |
 | `upscale-2x-pro` | external image-model provider (Real-ESRGAN) | HTTP API |
+| `pdf-scan-q-and-a-pro` | Workers AI (`@cf/google/gemma-4-26b-a4b-it`) | One vision call, no retry or fallback; 10 pages, 2 MB per page image, `max_completion_tokens` 2048 |
 
 Self-host on Thunder Compute / R2 is a deliberate v2 — defer until one tool has steady volume.
 
