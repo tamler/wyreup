@@ -92,22 +92,22 @@ describe('Pro tools moved off retiring models', () => {
 
   it('fix-grammar-pro rejects CJK text over its token cap without a request', async () => {
     const fetchMock = stubFetch({});
-    await expect(fixGrammarPro.run([textFile('漢'.repeat(4_001))], {}, makeCtx())).rejects.toThrow(
-      '4,000 of Chinese, Japanese or Korean',
+    await expect(fixGrammarPro.run([textFile('漢'.repeat(5_334))], {}, makeCtx())).rejects.toThrow(
+      '5,333 of Chinese, Japanese or Korean',
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('fix-grammar-pro still takes 12,000 characters of English', async () => {
+  it('fix-grammar-pro still takes 16,000 characters of English', async () => {
     const fetchMock = stubFetch({ corrected: 'ok' });
-    await fixGrammarPro.run([textFile('a'.repeat(12_000))], {}, makeCtx());
+    await fixGrammarPro.run([textFile('a'.repeat(16_000))], {}, makeCtx());
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('deep-analysis-pro rejects an over-long question without a request', async () => {
     const fetchMock = stubFetch({});
     await expect(
-      deepAnalysisPro.run([textFile('doc')], { question: 'q'.repeat(2_200) }, makeCtx()),
+      deepAnalysisPro.run([textFile('doc')], { question: 'q'.repeat(1_501) }, makeCtx()),
     ).rejects.toThrow('The question is too long');
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -144,14 +144,19 @@ describe('client caps, voices, copy and prices mirror the server', () => {
     'content-safety-pro',
     'translate-many-pro',
     'translate-document-pro',
+    'text-summarize-pro',
+    'text-translate-pro',
+    'text-redact-pro',
+    'pdf-summarize',
   ])('%s description states its main text cap', (toolId) => {
     const tool = createDefaultRegistry().toolsById.get(toolId)!;
     const max = PRO_TEXT_LIMITS[toolId]!.text!;
+    // Caps are UTF-8 bytes: 1 per English letter, 3 per CJK character.
     expect(tool.description).toContain(
-      `${max.toLocaleString('en-US')} of Chinese, Japanese or Korean`,
+      `${Math.floor(max / 3).toLocaleString('en-US')} of Chinese, Japanese or Korean`,
     );
     expect(tool.description).toContain(
-      `${Math.min(max * 3, 100_000).toLocaleString('en-US')} characters of English`,
+      `${Math.min(max, 100_000).toLocaleString('en-US')} characters of English`,
     );
   });
 });

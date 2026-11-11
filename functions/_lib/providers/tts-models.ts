@@ -105,12 +105,30 @@ export function checkTtsInput(args: SynthesizeArgs): { language: TtsLang; voice:
 export async function synthesize(env: Env, args: SynthesizeArgs): Promise<SynthesizeResult> {
   const { language, voice } = checkTtsInput(args);
   const model = TTS_MODELS[language];
-  const res: unknown = await withTimeout(
-    env.AI.run(model, { text: args.text, speaker: voice, encoding: 'mp3' }),
-    INFERENCE_TIMEOUTS.tts,
-    `tts (${model})`,
-  );
-  const bytes = await audioBytes(res);
+  // One deadline covers the inference call and reading the whole audio
+  // stream: Aura resolves with a ReadableStream before the body arrives, so
+  // a stalled stream must also time out (and be cancelled) for the run to
+  // fail fast and refund.
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  const work = (async () => {
+    const res: unknown = await env.AI.run(model, {
+      text: args.text,
+      speaker: voice,
+      encoding: 'mp3',
+    });
+    return audioBytes(res, (r) => {
+      reader = r;
+    });
+  })();
+  let bytes: Uint8Array;
+  try {
+    bytes = await withTimeout(work, INFERENCE_TIMEOUTS.tts, `tts (${model})`);
+  } catch (error) {
+    if (reader) await reader.cancel(error).catch(() => {});
+    // Keep a late rejection from the abandoned work from going unhandled.
+    work.catch(() => {});
+    throw error;
+  }
   if (bytes.length === 0) throw new Error('TTS model returned no audio');
   return { contentType: 'audio/mpeg', base64: bytesToBase64(bytes) };
 }
@@ -118,17 +136,26 @@ export async function synthesize(env: Env, args: SynthesizeArgs): Promise<Synthe
 // The binding returns a ReadableStream of MP3 bytes for Aura. Other binary
 // shapes are accepted too, so a binding change degrades to a clear error
 // instead of corrupt output.
-async function audioBytes(res: unknown): Promise<Uint8Array> {
+async function audioBytes(
+  res: unknown,
+  onReader: (reader: ReadableStreamDefaultReader<Uint8Array>) => void,
+): Promise<Uint8Array> {
   if (res instanceof Uint8Array) return res;
   if (res instanceof ArrayBuffer) return new Uint8Array(res);
-  if (res instanceof Response) return readStream(res.body);
-  if (res instanceof ReadableStream) return readStream(res as ReadableStream<Uint8Array>);
+  if (res instanceof Response) return readStream(res.body, onReader);
+  if (res instanceof ReadableStream) {
+    return readStream(res as ReadableStream<Uint8Array>, onReader);
+  }
   throw new Error('TTS model returned no audio');
 }
 
-async function readStream(stream: ReadableStream<Uint8Array> | null): Promise<Uint8Array> {
+async function readStream(
+  stream: ReadableStream<Uint8Array> | null,
+  onReader: (reader: ReadableStreamDefaultReader<Uint8Array>) => void,
+): Promise<Uint8Array> {
   if (!stream) return new Uint8Array(0);
   const reader = stream.getReader();
+  onReader(reader);
   const chunks: Uint8Array[] = [];
   let total = 0;
   for (;;) {

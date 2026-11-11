@@ -33,6 +33,12 @@ export interface ChatDetail {
   content: string;
   /** Reasoning trace, trimmed. Empty when the model returned none. */
   reasoning: string;
+  /**
+   * True when the provider reported `finish_reason: 'length'`: the output
+   * budget ran out and the answer is incomplete. Callers must not present
+   * it as a whole result.
+   */
+  truncated: boolean;
 }
 
 export async function chat(
@@ -78,11 +84,12 @@ export async function chatWithDetail(
   user: string,
   opts: ChatOptions = {},
 ): Promise<ChatDetail> {
-  const { raw, reasoning } = await runChat(env, modelId, system, user, opts);
+  const { raw, reasoning, truncated } = await runChat(env, modelId, system, user, opts);
   const think = raw.match(/<think>([\s\S]*?)<\/think>/i);
   return {
     content: raw.replace(/<think>[\s\S]*?<\/think>/i, '').trim(),
     reasoning: [reasoning, think?.[1]?.trim() ?? ''].filter(Boolean).join('\n\n'),
+    truncated,
   };
 }
 
@@ -92,7 +99,7 @@ async function runChat(
   system: string,
   user: string,
   opts: ChatOptions,
-): Promise<{ raw: string; reasoning: string }> {
+): Promise<{ raw: string; reasoning: string; truncated: boolean }> {
   const max_tokens = opts.maxTokens ?? MAX_TOKENS.default;
   const timeoutMs = opts.timeoutMs ?? INFERENCE_TIMEOUTS.text;
   const payload: Record<string, unknown> = {
@@ -114,22 +121,31 @@ async function runChat(
 // `{ choices: [{ message: { content } }] }` for newer ones (Gemma 4, GLM
 // 4.7 Flash, DeepSeek V4.1 Flash). `content` may be null when the whole
 // budget went to reasoning; that comes back as an empty string here.
-export function parseChatResponse(res: unknown): { raw: string; reasoning: string } {
+export function parseChatResponse(res: unknown): {
+  raw: string;
+  reasoning: string;
+  truncated: boolean;
+} {
   const obj = (res ?? {}) as {
     response?: unknown;
     choices?: Array<{
       message?: { content?: unknown; reasoning_content?: unknown; reasoning?: unknown };
+      finish_reason?: unknown;
     }>;
   };
-  if (typeof obj.response === 'string') return { raw: obj.response.trim(), reasoning: '' };
-  const message = Array.isArray(obj.choices) ? obj.choices[0]?.message : undefined;
+  if (typeof obj.response === 'string') {
+    return { raw: obj.response.trim(), reasoning: '', truncated: false };
+  }
+  const choice = Array.isArray(obj.choices) ? obj.choices[0] : undefined;
+  const message = choice?.message;
+  const truncated = choice?.finish_reason === 'length';
   if (message && typeof message === 'object') {
     const content = message.content;
     const trace = message.reasoning_content ?? message.reasoning;
     const reasoning = typeof trace === 'string' ? trace.trim() : '';
-    if (typeof content === 'string') return { raw: content.trim(), reasoning };
+    if (typeof content === 'string') return { raw: content.trim(), reasoning, truncated };
     if (content === null || content === undefined) {
-      if (reasoning) return { raw: '', reasoning };
+      if (reasoning) return { raw: '', reasoning, truncated };
     }
   }
   throw new Error('Text model returned no response');

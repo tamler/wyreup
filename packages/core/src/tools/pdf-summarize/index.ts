@@ -14,7 +14,7 @@ export const pdfSummarize: ToolModule<Record<string, never>> = {
   slug: 'pdf-summarize',
   name: 'Summarize PDF',
   description:
-    'Extracts a PDF’s text in your browser, then summarizes it with a hosted LLM. Uses 2 credits per run.',
+    'Extracts a PDF’s text in your browser, then summarizes it with a hosted LLM. Reads up to about 38,000 characters of English (or 12,666 of Chinese, Japanese or Korean) per run. Uses 2 credits per run.',
   category: 'export',
   keywords: ['pdf', 'summarize', 'summary', 'document', 'pro', 'ai', 'llm'],
 

@@ -17,7 +17,7 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
   slug: 'deep-analysis-pro',
   name: 'Deep Analysis',
   description:
-    'Hosted DeepSeek V4.1 Flash reasoning model reads your document (up to about 100,000 characters of English, or 34,000 of Chinese, Japanese or Korean) and answers one specific question with step-by-step reasoning, returning both the answer and the reasoning. Suited to contracts, legal text, code review, and root-cause analysis from logs. Uses 3 credits per run.',
+    'Hosted DeepSeek V4.1 Flash reasoning model reads your document (up to about 34,000 characters of English, or 11,333 of Chinese, Japanese or Korean) and answers one specific question with step-by-step reasoning, returning both the answer and the reasoning. Suited to contracts, legal text, code review, and root-cause analysis from logs. Uses 3 credits per run.',
   category: 'text',
   keywords: ['analysis', 'reasoning', 'deepseek', 'v4', 'contract', 'legal', 'pro'],
 
@@ -43,7 +43,7 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
       type: 'string',
       label: 'question',
       placeholder: 'What termination conditions apply?',
-      help: 'The specific question to reason about (up to about 2,000 characters of English, or 700 of Chinese, Japanese or Korean).',
+      help: 'The specific question to reason about (up to about 1,500 characters of English, or 500 of Chinese, Japanese or Korean).',
       multiline: true,
     },
   },

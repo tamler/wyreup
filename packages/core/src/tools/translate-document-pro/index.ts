@@ -94,7 +94,7 @@ export const translateDocumentPro: ToolModule<TranslateDocumentProParams> = {
   slug: 'translate-document-pro',
   name: 'Translate a Document',
   description:
-    'Translate a whole PDF or text file across 35+ languages with hosted Google Gemma 4. Text is extracted on your device; only the text is sent. Output is plain text and chains into summarize, text-to-speech, and PDF tools. Documents up to about 100,000 characters of English (roughly 40 pages) or 34,000 of Chinese, Japanese or Korean. Uses 3 credits per run.',
+    'Translate a whole PDF or text file across 35+ languages with hosted Google Gemma 4. Text is extracted on your device; only the text is sent. Output is plain text and chains into summarize, text-to-speech, and PDF tools. Documents up to about 48,000 characters of English (roughly 19 pages) or 16,000 of Chinese, Japanese or Korean. Uses 3 credits per run.',
   category: 'text',
   keywords: ['translate', 'document', 'pdf', 'language', 'pro', 'hosted'],
 

@@ -10,7 +10,7 @@ export const textRedactPro: ToolModule<TextRedactProParams> = {
   slug: 'text-redact-pro',
   name: 'Redact PII',
   description:
-    'Hosted LLM strips personal data — names, emails, phones, addresses, SSNs, card-shaped numbers — replacing each with [REDACTED]. Catches free-form mentions ("met Joe at Acme HQ in March") that pattern-based redaction misses. Uses 2 credits per run.',
+    'Hosted LLM strips personal data (names, emails, phones, addresses, SSNs, card-shaped numbers), replacing each with [REDACTED]. Catches free-form mentions ("met Joe at Acme HQ in March") that pattern-based redaction misses. Takes up to about 38,000 characters of English (or 12,666 of Chinese, Japanese or Korean) per run. Uses 2 credits per run.',
   category: 'privacy',
   keywords: ['redact', 'pii', 'privacy', 'mask', 'sanitize', 'pro', 'llm'],
 

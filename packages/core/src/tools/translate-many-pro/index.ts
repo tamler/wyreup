@@ -16,7 +16,7 @@ export const translateManyPro: ToolModule<TranslateManyProParams> = {
   slug: 'translate-many-pro',
   name: 'Translate (100+ languages)',
   description:
-    'Hosted Google Gemma 4 translates between 100+ languages using ISO codes (en, fr, es, zh and so on). Cheaper than the Llama-class Translate for straight-shot translation. Takes up to about 30,000 characters of English (or 10,000 of Chinese, Japanese or Korean) per run. Uses 1 credit per run.',
+    'Hosted Google Gemma 4 translates between 100+ languages using ISO codes (en, fr, es, zh and so on). Cheaper than the Llama-class Translate for straight-shot translation. Takes up to about 16,000 characters of English (or 5,333 of Chinese, Japanese or Korean) per run. Uses 1 credit per run.',
   category: 'text',
   keywords: ['translate', 'translation', 'gemma', 'language', 'pro', 'hosted'],
 

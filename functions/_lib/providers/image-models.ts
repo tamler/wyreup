@@ -199,8 +199,10 @@ async function runPrediction(
   }
 
   let prediction = await readPrediction(createRes, signal);
+  // `aborted`: Replicate's terminal status when Cancel-After expires before
+  // the prediction starts (lifecycle docs).
   const isDone = (status: string) =>
-    status === 'succeeded' || status === 'failed' || status === 'canceled';
+    status === 'succeeded' || status === 'failed' || status === 'canceled' || status === 'aborted';
   try {
     while (!isDone(prediction.status)) {
       if (typeof prediction.id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(prediction.id)) {

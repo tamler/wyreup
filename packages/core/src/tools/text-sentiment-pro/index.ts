@@ -10,7 +10,7 @@ export const textSentimentPro: ToolModule<TextSentimentProParams> = {
   slug: 'text-sentiment-pro',
   name: 'Sentiment',
   description:
-    'Hosted LLM sentiment classification that handles sarcasm, mixed tone, and domain language the in-browser heuristic misses. Returns positive / negative / neutral. Takes up to about 72,000 characters of English (or 24,000 of Chinese, Japanese or Korean). Uses 1 credit per run.',
+    'Hosted LLM sentiment classification that handles sarcasm, mixed tone, and domain language the in-browser heuristic misses. Returns positive / negative / neutral. Takes up to about 26,000 characters of English (or 8,666 of Chinese, Japanese or Korean). Uses 1 credit per run.',
   category: 'text',
   keywords: ['sentiment', 'tone', 'classification', 'pro', 'llm', 'hosted'],
 

@@ -17,7 +17,7 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   slug: 'transcribe-and-translate',
   name: 'Transcribe & Translate',
   description:
-    'Transcribes an audio file and translates the transcript in one step. Takes WAV or MP3 up to 45 minutes and 25 MB (convert other formats to MP3 first); the translation covers up to about 60,000 characters of transcript. Uses 5 credits per run.',
+    'Transcribes an audio file and translates the transcript in one step. Takes WAV or MP3 up to 45 minutes and 25 MB (convert other formats to MP3 first); the translation covers up to about 40,000 characters of transcript. Uses 5 credits per run.',
   category: 'export',
   keywords: ['transcribe', 'translate', 'audio', 'speech', 'pro', 'hosted'],
 

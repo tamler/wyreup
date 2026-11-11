@@ -75,6 +75,9 @@ function u32(bytes: Uint8Array, offset: number): number {
 
 // ── WAV ────────────────────────────────────────────────────────────────
 
+const AMBIGUOUS_WAV =
+  'This WAV file has more than one format or data section, so its length cannot be checked. Re-export it as a plain WAV or MP3 first.';
+
 function wavSeconds(bytes: Uint8Array): number {
   let byteRate = 0;
   let dataBytes = 0;
@@ -90,6 +93,10 @@ function wavSeconds(bytes: Uint8Array): number {
     const size =
       declared === 0 || declared === 0xffffffff ? available : Math.min(declared, available);
     if (id === 'fmt ') {
+      // Decoders disagree on which of several format chunks wins (FFmpeg
+      // uses the first), so a second one could make a 50-minute file look
+      // like 2 seconds here. Only one format chunk, before the data, is valid.
+      if (byteRate || sawData) throw new AudioDurationError(AMBIGUOUS_WAV);
       if (size < 16) throw new AudioDurationError('This WAV file has an invalid format header.');
       let format = u16(bytes, body);
       const channels = u16(bytes, body + 2);
@@ -121,6 +128,9 @@ function wavSeconds(bytes: Uint8Array): number {
     } else if (id === 'data') {
       if (!byteRate)
         throw new AudioDurationError('This WAV file has audio data before its format header.');
+      // Likewise only one data chunk: decoders differ on whether they read
+      // past the first.
+      if (sawData) throw new AudioDurationError(AMBIGUOUS_WAV);
       dataBytes += size;
       sawData = true;
     }

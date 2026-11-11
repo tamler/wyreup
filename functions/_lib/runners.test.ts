@@ -472,6 +472,23 @@ describe('runners moved off retiring models', () => {
     );
   });
 
+  it('text-to-speech-pro times out and cancels a stream that stalls after the call resolves', async () => {
+    vi.useFakeTimers();
+    try {
+      const cancel = vi.fn();
+      // Resolves at once with a stream that never delivers or closes.
+      const stalled = new ReadableStream<Uint8Array>({ cancel });
+      const { env } = aiMock(stalled);
+      const pending = runPro('text-to-speech-pro', { text: 'hello' }, env);
+      const assertion = expect(pending).rejects.toThrow('timed out');
+      await vi.advanceTimersByTimeAsync(60_001);
+      await assertion;
+      expect(cancel).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('text-to-speech-pro fails (and so refunds) on an empty audio stream', async () => {
     await expect(
       runPro('text-to-speech-pro', { text: 'hello' }, aiEnv(mp3Stream([]))),
@@ -543,16 +560,41 @@ describe('runners moved off retiring models', () => {
     });
     const [model, payload] = run.mock.calls[0];
     expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
+    // 'fixd txt' = 8 bytes; output budget = bytes + 512 so a full rewrite fits.
     expect(payload).toMatchObject({
-      max_completion_tokens: 6_144,
+      max_completion_tokens: 520,
       chat_template_kwargs: { enable_thinking: false },
     });
   });
 
-  it('fix-grammar-pro rejects English text over 12,000 chars (4,000 tokens) before provider work', () => {
+  it('fix-grammar-pro rejects text over 16,000 bytes before provider work', () => {
     const { env, run } = aiMock({});
-    expect(() => prepareProRun('fix-grammar-pro', { text: 'a'.repeat(12_001) }, env)).toThrow();
+    expect(() => prepareProRun('fix-grammar-pro', { text: 'a'.repeat(16_001) }, env)).toThrow();
+    expect(() => prepareProRun('fix-grammar-pro', { text: '1 '.repeat(8_001) }, env)).toThrow();
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro fails (and so refunds) when the correction is cut off', async () => {
+    const cut = {
+      choices: [{ message: { role: 'assistant', content: 'Half of it' }, finish_reason: 'length' }],
+    };
+    await expect(runPro('fix-grammar-pro', { text: 'x y z' }, aiEnv(cut))).rejects.toThrow(
+      'cut off',
+    );
+  });
+
+  it('deep-analysis-pro flags an answer that hit the output budget', async () => {
+    const cut = {
+      choices: [
+        {
+          message: { role: 'assistant', content: 'Partial', reasoning_content: 'r' },
+          finish_reason: 'length',
+        },
+      ],
+    };
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, aiEnv(cut)),
+    ).resolves.toEqual({ answer: 'Partial', reasoning: 'r', truncated: true });
   });
 
   it('fix-grammar-pro fails (and so refunds) when the model returns no text', async () => {
@@ -627,7 +669,7 @@ describe('previously unbounded tools are bounded before any spend', () => {
     expect(out.translationTruncated).toBe(true);
     const messages = run.mock.calls[1][1].messages as { role: string; content: string }[];
     const user = messages.find((m) => m.role === 'user')!.content;
-    expect(user.length).toBeLessThanOrEqual(20_000);
+    expect(new TextEncoder().encode(user).length).toBeLessThanOrEqual(40_000);
   });
 
   it('translate-many-pro uses Gemma 4 with output capped from the input estimate', async () => {
@@ -640,9 +682,9 @@ describe('previously unbounded tools are bounded before any spend', () => {
     ).resolves.toMatchObject({ translation: 'Bonjour', target: 'fr' });
     const [model, payload] = run.mock.calls[0];
     expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
-    // 'hello there' = 11 ASCII chars = 4 estimated tokens -> ceil(4 * 1.5) + 128.
+    // 'hello there' = 11 bytes -> 11 + 256.
     expect(payload).toMatchObject({
-      max_completion_tokens: 134,
+      max_completion_tokens: 267,
       chat_template_kwargs: { enable_thinking: false },
     });
     expect(JSON.stringify(payload.messages)).toContain('French (fr)');
@@ -676,6 +718,48 @@ describe('previously unbounded tools are bounded before any spend', () => {
     expect(out.chunks).toBe(3);
     expect(out.text).toBe('T(a)\n\nT(b)\n\nT(c)');
     expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it.each(['translate-many-pro', 'translate-indic-pro'])(
+    '%s fails (and so refunds) when the provider reports finish_reason length',
+    async (toolId) => {
+      const cut = {
+        choices: [{ message: { role: 'assistant', content: 'partial' }, finish_reason: 'length' }],
+      };
+      await expect(
+        runPro(toolId, { text: 'hello', target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'fr' }, aiEnv(cut)),
+      ).rejects.toThrow('cut off');
+    },
+  );
+
+  it('translate-document-pro starts no new paid calls after a chunk fails, and waits for in-flight ones', async () => {
+    // 6 chunks of ~7,000 chars (42,000 bytes, under the 48,000 cap).
+    const doc = ['a', 'b', 'c', 'd', 'e', 'f'].map((c) => c.repeat(7_000)).join('\n\n');
+    let started = 0;
+    let settled = 0;
+    const run = vi.fn((_m: string, _i: Record<string, unknown>) => {
+      const call = ++started;
+      if (call === 1) return Promise.reject(new Error('provider down'));
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          settled++;
+          resolve(gemmaReply('ok'));
+        }, 10),
+      );
+    });
+    const env = { AI: { run } } as unknown as Env;
+    // Concurrency 6 = all 6 start at once; make it observable with 6 workers
+    // over 6 chunks by checking nothing starts after the failure.
+    await expect(
+      runPro('translate-document-pro', { text: doc + '\n\n' + doc.slice(0, 1), target: 'fr' }, env),
+    ).rejects.toThrow('provider down');
+    const startedAtReturn = started;
+    // In-flight calls were awaited before the failure returned.
+    expect(settled).toBe(started - 1);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(started).toBe(startedAtReturn);
+    // The 7th chunk (beyond the 6 parallel slots) was never started.
+    expect(started).toBeLessThanOrEqual(6);
   });
 
   it('translate-document-pro refuses more than 100,000 characters', () => {

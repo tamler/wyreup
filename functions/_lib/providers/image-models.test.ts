@@ -237,6 +237,19 @@ describe('image provider URL boundary', () => {
     expect(headers['Cancel-After']).toBe(`${REPLICATE_CANCEL_AFTER_SECONDS}s`);
     expect(REPLICATE_CANCEL_AFTER_SECONDS).toBeGreaterThanOrEqual(5);
   });
+  it('treats aborted (Cancel-After before start) as terminal and fails promptly', async () => {
+    vi.useFakeTimers();
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ id: 'abc123', status: 'starting' }))
+      .mockResolvedValueOnce(Response.json({ id: 'abc123', status: 'aborted' }));
+    vi.stubGlobal('fetch', fetcher);
+    const pending = runBgRemove({ image: 'data:image/png;base64,eA==' }, env);
+    const assertion = expect(pending).rejects.toThrow('aborted');
+    await vi.advanceTimersByTimeAsync(2_000);
+    await assertion;
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
   it('cancels a running prediction when polling fails', async () => {
     vi.useFakeTimers();
     const fetcher = vi

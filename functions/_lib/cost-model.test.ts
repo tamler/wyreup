@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  PROMPT_OVERHEAD_TOKENS,
+  TEMPLATE_TOKENS,
   UNBOUNDED_TOOLS,
   WORST_CASES,
   WORST_NET_USD_PER_CREDIT,
@@ -8,7 +10,7 @@ import {
   llmCallUsd,
 } from './cost-model';
 import { PRICING } from './pricing';
-import { DEEP_ANALYSIS, MODEL_DEEPSEEK_FLASH, MODEL_GEMMA, prepareProRun } from './runners';
+import { DEEP_ANALYSIS, MODEL_DEEPSEEK_FLASH, MODEL_GEMMA, prepareProRun, runPro } from './runners';
 import type { Env } from './env';
 import { PRO_TEXT_LIMITS, estimateTokens } from '../../packages/core/src/lib/pro-limits';
 
@@ -59,17 +61,18 @@ describe('Pro cost model', () => {
   });
 });
 
-describe('token estimate is conservative for non-English text', () => {
-  it('counts ASCII at 1 per 3 chars and every non-ASCII code unit as a token', () => {
-    expect(estimateTokens('abc')).toBe(1);
-    expect(estimateTokens('a'.repeat(100_000))).toBe(33_334);
-    expect(estimateTokens('漢字かな한글')).toBe(6);
-    expect(estimateTokens('😀')).toBe(2);
+describe('token bound is the UTF-8 byte count', () => {
+  it('counts bytes, taking the larger of raw and NFKC forms', () => {
+    expect(estimateTokens('abc')).toBe(3);
+    expect(estimateTokens('1 '.repeat(50_000))).toBe(100_000);
+    expect(estimateTokens('龘'.repeat(34_000))).toBe(102_000);
+    expect(estimateTokens('😀')).toBe(4);
+    // U+FDFA expands to 18 Arabic letters and spaces under NFKC.
+    expect(estimateTokens('ﷺ')).toBe('ﷺ'.normalize('NFKC').length > 1 ? 33 : 3);
   });
 
-  // The cost model prices caps in estimated tokens; these prove the server
-  // actually refuses the all-CJK and all-emoji inputs just over each cap,
-  // and accepts the same cap in English.
+  // The cost model prices caps in bytes; these prove the server refuses the
+  // review's adversarial inputs just over each cap and accepts inputs at it.
   const cases = Object.entries(PRO_TEXT_LIMITS).flatMap(([toolId, fields]) =>
     Object.entries(fields).map(([field, max]) => [toolId, field, max] as const),
   );
@@ -85,22 +88,67 @@ describe('token estimate is conservative for non-English text', () => {
     ...(toolId === 'json-extract-pro' ? { schema: 's' } : {}),
   });
 
+  const prep = (toolId: string, field: string, value: string) =>
+    prepareProRun(toolId, { ...baseInput(toolId), [field]: value }, noAi);
+
   it.each(cases)(
-    '%s.%s refuses CJK and emoji over the cap before provider work',
+    '%s.%s refuses digits, rare CJK and emoji over the cap before provider work',
     (toolId, field, max) => {
-      expect(() =>
-        prepareProRun(toolId, { ...baseInput(toolId), [field]: '漢'.repeat(max + 1) }, noAi),
-      ).toThrow('too long');
-      expect(() =>
-        prepareProRun(
-          toolId,
-          { ...baseInput(toolId), [field]: '😀'.repeat(Math.floor(max / 2) + 1) },
-          noAi,
-        ),
-      ).toThrow('too long');
-      expect(
-        typeof prepareProRun(toolId, { ...baseInput(toolId), [field]: '漢'.repeat(max) }, noAi),
-      ).toBe('function');
+      const digits = '1 '.repeat(Math.ceil((max + 1) / 2));
+      expect(() => prep(toolId, field, digits)).toThrow('too long');
+      expect(() => prep(toolId, field, '龘'.repeat(Math.floor(max / 3) + 1))).toThrow('too long');
+      expect(() => prep(toolId, field, '😀'.repeat(Math.floor(max / 4) + 1))).toThrow('too long');
+      const atCap = Math.min(max, 100_000);
+      expect(typeof prep(toolId, field, 'a'.repeat(atCap))).toBe('function');
+      expect(typeof prep(toolId, field, '龘'.repeat(Math.floor(max / 3)))).toBe('function');
     },
   );
+});
+
+describe('prompt overhead covers every real system prompt and wrapper', () => {
+  // Run each text and vision runner with one-character inputs, capture
+  // what it actually sends, and check the bytes beyond the user's fields
+  // fit the per-call overhead the cost model assumes.
+  const universal = {
+    response: '{"entities":[],"pattern":"a","flags":"","cron":"* * * * *","explanation":"e"}',
+    choices: [{ message: { role: 'assistant', content: '{"a":1}' }, finish_reason: 'stop' }],
+  };
+  const toolIds = [
+    ...Object.keys(PRO_TEXT_LIMITS),
+    'ocr-hq',
+    'image-describe',
+    'analyze-chart',
+    'read-handwriting',
+    'translate-image',
+  ];
+  it.each(toolIds)('%s', async (toolId) => {
+    const sent: string[] = [];
+    const run = vi.fn((_model: string, input: Record<string, unknown>) => {
+      const messages = (input.messages ?? []) as { content: string }[];
+      const prompt = typeof input.prompt === 'string' ? input.prompt : '';
+      sent.push(messages.map((m) => m.content).join('') + prompt);
+      return Promise.resolve(universal);
+    });
+    const env = { AI: { run } } as unknown as Env;
+    await runPro(
+      toolId,
+      {
+        text: 'x',
+        question: 'q',
+        description: 'd',
+        schema: 's',
+        imageBase64:
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'fr',
+        source: 'en',
+      },
+      env,
+    ).catch(() => {});
+    expect(sent.length, toolId).toBeGreaterThan(0);
+    for (const text of sent) {
+      expect(estimateTokens(text), toolId).toBeLessThanOrEqual(
+        PROMPT_OVERHEAD_TOKENS - TEMPLATE_TOKENS,
+      );
+    }
+  });
 });

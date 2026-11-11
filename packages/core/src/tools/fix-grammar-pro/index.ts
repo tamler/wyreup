@@ -9,7 +9,7 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
   slug: 'fix-grammar-pro',
   name: 'Fix Grammar',
   description:
-    'Hosted Gemma 4 model cleans up grammar, spelling, and punctuation while preserving your voice. Returns the corrected text only, with no commentary. Takes up to about 12,000 characters of English (about 2,000 words), or 4,000 of Chinese, Japanese or Korean, per run. Uses 1 credit per run.',
+    'Hosted Gemma 4 model cleans up grammar, spelling, and punctuation while preserving your voice. Returns the corrected text only, with no commentary. Takes up to about 16,000 characters of English (about 2,700 words), or 5,333 of Chinese, Japanese or Korean, per run. Uses 1 credit per run.',
   category: 'text',
   keywords: ['grammar', 'spelling', 'proofread', 'edit', 'copy-edit', 'pro'],
 

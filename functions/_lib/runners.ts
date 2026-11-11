@@ -28,6 +28,7 @@ import {
 import { generateImage } from './providers/image-gen-models';
 import {
   assertProTextLimits,
+  estimateTokens,
   PRO_TEXT_MAX_CHARS,
   truncateToTokens,
 } from '../../packages/core/src/lib/pro-limits';
@@ -312,11 +313,11 @@ function translateImage(raw: RunnerInput, env: Env): PreparedProRun {
 }
 
 /**
- * Transcript tokens sent to the translate call in transcribe-and-translate.
- * 45 minutes of fast speech is roughly 13,000 tokens even for CJK, so this
- * only trims pathological transcripts; it bounds the second call's cost.
+ * Transcript token bound (UTF-8 bytes) sent to the translate call in
+ * transcribe-and-translate. 45 minutes of fast English speech is about
+ * 40,000 characters, so this rarely trims; it bounds the second call's cost.
  */
-export const TRANSCRIPT_TRANSLATE_MAX_TOKENS = 20_000;
+export const TRANSCRIPT_TRANSLATE_MAX_TOKENS = 40_000;
 
 function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
@@ -501,10 +502,15 @@ function translateManyPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-const MAX_DOC_CHARS = PRO_TEXT_MAX_CHARS;
+// The byte cap in PRO_TEXT_LIMITS (48,000) is the binding limit; this
+// char check only gives a clearer message for plainly oversized input.
+const MAX_DOC_CHARS = 48_000;
 const TRANSLATION_CHUNK_CHARS = 8_000;
 /** Most chunks (model calls) one document run may make; priced in cost-model.ts. */
-export const MAX_DOC_CHUNKS = 40;
+// A 48,000-byte document makes at most 6 full 8,000-char windows; the
+// paragraph-aware chunker can at worst alternate short and full chunks,
+// so 16 covers it with room to spare.
+export const MAX_DOC_CHUNKS = 16;
 /** Chunks translated at once; Gemma calls are slower than m2m100 was. */
 const DOC_CONCURRENCY = 6;
 
@@ -551,7 +557,7 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
     throw new Error("'text' (non-empty string) is required");
   }
   if (textRaw.length > MAX_DOC_CHARS) {
-    throw new Error('Document exceeds the 40-page limit (100,000 characters maximum).');
+    throw new Error('Document exceeds the 20-page limit (48,000 characters maximum).');
   }
 
   const target = readLanguage(raw, 'target');
@@ -567,21 +573,34 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
     const startedAt = Date.now();
     const translations: string[] = new Array<string>(chunks.length);
     let next = 0;
+    // First failure stops every worker from starting another paid call; the
+    // run then waits for calls already in flight before it fails (and the
+    // endpoint refunds), so nothing new is submitted for a refunded run.
+    let failure: unknown;
+    let failed = false;
     const worker = async () => {
-      while (next < chunks.length) {
+      while (!failed && next < chunks.length) {
         const index = next++;
-        if (Date.now() - startedAt > DOC_START_DEADLINE_MS) {
-          throw new Error(
-            'Translation is taking too long for this document. Try a shorter document or split it.',
-          );
+        try {
+          if (Date.now() - startedAt > DOC_START_DEADLINE_MS) {
+            throw new Error(
+              'Translation is taking too long for this document. Try a shorter document or split it.',
+            );
+          }
+          const result = await runTranslateMany(env, { text: chunks[index], source, target });
+          translations[index] = result.translation;
+        } catch (error) {
+          if (!failed) {
+            failed = true;
+            failure = error;
+          }
         }
-        const result = await runTranslateMany(env, { text: chunks[index], source, target });
-        translations[index] = result.translation;
       }
     };
     await Promise.all(
       Array.from({ length: Math.min(DOC_CONCURRENCY, chunks.length) }, () => worker()),
     );
+    if (failed) throw failure instanceof Error ? failure : new Error('Translation failed');
 
     return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
   };
@@ -633,7 +652,9 @@ function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
     if (!answer) {
       throw new Error('Analysis model returned no answer');
     }
-    return { answer, reasoning };
+    // An answer that hit the output budget is returned but flagged, so the
+    // caller never presents it as complete.
+    return out.truncated ? { answer, reasoning, truncated: true } : { answer, reasoning };
   };
 }
 
@@ -644,18 +665,24 @@ export const FIX_GRAMMAR = {
   model: MODEL_GEMMA,
   system:
     'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text: no explanations, no preamble, no quotes.',
-  maxOutputTokens: 6_144,
+  /** Output budget = the input's token upper bound + this, so a full rewrite fits. */
+  outputExtraTokens: 512,
   timeoutMs: 90_000,
 } as const;
 
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
+  const maxTokens = estimateTokens(text) + FIX_GRAMMAR.outputExtraTokens;
   return async () => {
-    const { content } = await chatWithDetail(env, FIX_GRAMMAR.model, FIX_GRAMMAR.system, text, {
-      maxTokens: FIX_GRAMMAR.maxOutputTokens,
-      timeoutMs: FIX_GRAMMAR.timeoutMs,
-      thinking: false,
-    });
+    const { content, truncated } = await chatWithDetail(
+      env,
+      FIX_GRAMMAR.model,
+      FIX_GRAMMAR.system,
+      text,
+      { maxTokens, timeoutMs: FIX_GRAMMAR.timeoutMs, thinking: false },
+    );
+    // A cut-off correction would silently drop the end of the user's text.
+    if (truncated) throw new Error('The corrected text was cut off. Try a shorter text.');
     if (!content) throw new Error('Grammar model returned no text');
     return { corrected: content };
   };

@@ -13,7 +13,7 @@ export const jsonExtractPro: ToolModule<JsonExtractProParams> = {
   slug: 'json-extract-pro',
   name: 'Extract JSON',
   description:
-    'Hosted Llama-4 Scout pulls structured JSON out of text such as receipts, emails, contracts and log lines. Describe the fields you want and get back a valid object. Major chain unlock: feeds anything downstream that needs structured input. Takes up to about 60,000 characters of English (or 20,000 of Chinese, Japanese or Korean) and a field description of up to about 2,000 characters. Uses 1 credit per run.',
+    'Hosted Llama-4 Scout pulls structured JSON out of text such as receipts, emails, contracts and log lines. Describe the fields you want and get back a valid object. Major chain unlock: feeds anything downstream that needs structured input. Takes up to about 21,000 characters of English (or 7,000 of Chinese, Japanese or Korean) and a field description of up to about 1,500 characters. Uses 1 credit per run.',
   category: 'text',
   keywords: ['json', 'extract', 'structured', 'parse', 'scout', 'pro', 'llm'],
 

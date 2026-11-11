@@ -697,7 +697,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'chat-long-pdf-pro': {
     intro:
-      "Ask a Long PDF answers questions about long documents using hosted Llama 4 Scout, and gives longer answers than the standard Ask-a-PDF tool. It extracts the PDF's text in your browser, then sends up to about 100,000 characters of English (roughly 40 pages, or 34,000 characters of Chinese, Japanese or Korean) to the model. It's a Pro tool using 2 credits per run.",
+      "Ask a Long PDF answers questions about long documents using hosted Llama 4 Scout, and gives longer answers than the standard Ask-a-PDF tool. It extracts the PDF's text in your browser, then sends up to about 44,000 characters of English (roughly 17 pages, or 14,666 characters of Chinese, Japanese or Korean) to the model. It's a Pro tool using 2 credits per run.",
     useCases: [
       'Ask where a specific clause appears in a long contract without searching it yourself',
       'Query a court transcript for every mention of a particular witness or exhibit',
@@ -709,7 +709,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'When should I use this over Ask a PDF?',
-        a: 'When you want a longer, more detailed answer. Both tools read up to about 100,000 characters of English per run (roughly 40 pages). For a book, run it chapter by chapter. For short answers the standard tool is the simpler choice.',
+        a: 'When you want a longer, more detailed answer. This tool reads up to about 44,000 characters of English per run (roughly 17 pages); Ask a PDF reads up to about 36,000. For a book, run it chapter by chapter. For short answers the standard tool is the simpler choice.',
       },
       {
         q: 'How is the PDF processed?',
@@ -2318,7 +2318,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'deep-analysis-pro': {
     intro:
-      "Deep Analysis runs your document through DeepSeek V4.1 Flash, a hosted reasoning model, and answers one specific question with step-by-step reasoning. Reach for it when a quick summary won't cut it: contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It reads up to 100,000 characters per run and is a Pro tool using 3 credits per run.",
+      "Deep Analysis runs your document through DeepSeek V4.1 Flash, a hosted reasoning model, and answers one specific question with step-by-step reasoning. Reach for it when a quick summary won't cut it: contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It reads up to about 34,000 characters of English per run and is a Pro tool using 3 credits per run.",
     useCases: [
       'Ask whether a contract clause actually limits liability, and see the reasoning behind the answer',
       'Walk through a stack of log lines to identify the most likely root cause of an incident',
@@ -2338,7 +2338,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What do I provide?',
-        a: 'Plain text (your document or log excerpt, up to about 100,000 characters of English or 34,000 of Chinese, Japanese or Korean) plus the specific question you want answered, up to about 2,000 characters.',
+        a: 'Plain text (your document or log excerpt, up to about 34,000 characters of English or 11,333 of Chinese, Japanese or Korean) plus the specific question you want answered, up to about 1,500 characters.',
       },
       {
         q: 'Is the document sent to a server?',
@@ -2989,7 +2989,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'fix-grammar-pro': {
     intro:
-      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to about 12,000 characters of English per run (4,000 of Chinese, Japanese or Korean) and is a Pro tool using 1 credit per run.',
+      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to about 16,000 characters of English per run (5,333 of Chinese, Japanese or Korean) and is a Pro tool using 1 credit per run.',
     useCases: [
       'Tidy up a quickly written email before you hit send, without it sounding robotic',
       'Fix typos and punctuation in a blog draft while keeping your phrasing intact',
@@ -3017,7 +3017,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'Up to about 12,000 characters of English per run, which is about 2,000 words, or 4,000 characters of Chinese, Japanese or Korean. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
+        a: 'Up to about 16,000 characters of English per run, which is about 2,700 words, or 5,333 characters of Chinese, Japanese or Korean. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
       },
     ],
     alsoTry: [
@@ -10380,7 +10380,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-indic-pro': {
     intro:
-      'Translate to Indic Languages converts English text into eleven major South Asian languages, in their native scripts, using hosted Google Gemma 4: Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Pick the language from a list instead of typing a code. Each run takes up to about 30,000 characters of English and uses 1 credit.',
+      'Translate to Indic Languages converts English text into eleven major South Asian languages, in their native scripts, using hosted Google Gemma 4: Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Pick the language from a list instead of typing a code. Each run takes up to about 16,000 characters of English and uses 1 credit.',
     useCases: [
       'Localize app copy or onboarding screens into Hindi, Tamil, and Bengali for an Indian launch',
       'Translate a customer-facing announcement into Marathi and Gujarati for regional audiences',
@@ -10412,7 +10412,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'Up to about 30,000 characters of English per run. For longer documents, split the text into sections and translate each in turn.',
+        a: 'Up to about 16,000 characters of English per run. For longer documents, split the text into sections and translate each in turn.',
       },
     ],
     alsoTry: [
@@ -10432,7 +10432,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-many-pro': {
     intro:
-      "Translate (100+ languages) uses hosted Google Gemma 4 to translate directly between more than 100 languages, picked by ISO code. Reach for it when you want straight-shot translation that's cheaper than the Llama-class Translate tool. Each run takes up to about 30,000 characters of English (or 10,000 of Chinese, Japanese or Korean) and uses 1 credit.",
+      "Translate (100+ languages) uses hosted Google Gemma 4 to translate directly between more than 100 languages, picked by ISO code. Reach for it when you want straight-shot translation that's cheaper than the Llama-class Translate tool. Each run takes up to about 16,000 characters of English (or 5,333 of Chinese, Japanese or Korean) and uses 1 credit.",
     useCases: [
       'Translate a batch of short product strings between two non-English languages directly, no English pivot',
       'Localize UI labels into a less-common target language at a lower per-run cost than the chat-LLM translator',

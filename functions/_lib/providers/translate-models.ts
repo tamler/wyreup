@@ -6,17 +6,23 @@
 // It replaced m2m100 and IndicTrans2 on 2026-11-11 because those seq2seq
 // models bill input and output tokens and have no output-length parameter,
 // so a run's cost could not be bounded. Gemma takes max_completion_tokens,
-// and every call here caps output at a multiple of the input's estimated
-// token count (see translateOutputTokens), which cost-model.ts prices.
+// and every call here caps output from the input's token upper bound (its
+// UTF-8 bytes, see translateOutputTokens), which cost-model.ts prices.
+//
+// A translation that hits that cap (finish_reason 'length') is incomplete,
+// so it throws and the run is refunded rather than sold as a whole result.
+// The budget is generous: the input's byte count is several times its real
+// token count for English, and a translation rarely needs more real tokens
+// than the source.
 
 import type { Env } from '../env';
 import { chatWithDetail } from './text-models';
 import { estimateTokens } from '../../../packages/core/src/lib/pro-limits';
 
 export const TRANSLATE_MODEL = '@cf/google/gemma-4-26b-a4b-it';
-/** Output budget = input estimate x factor + extra (room for scripts that expand). */
-export const TRANSLATE_OUTPUT_FACTOR = 1.5;
-export const TRANSLATE_OUTPUT_EXTRA_TOKENS = 128;
+/** Output budget = input token bound x factor + extra. */
+export const TRANSLATE_OUTPUT_FACTOR = 1;
+export const TRANSLATE_OUTPUT_EXTRA_TOKENS = 256;
 export const TRANSLATE_TIMEOUT_MS = 60_000;
 
 export function translateOutputTokens(text: string): number {
@@ -46,7 +52,7 @@ function languageName(code: string): string {
 }
 
 async function translate(env: Env, text: string, from: string, into: string): Promise<string> {
-  const { content } = await chatWithDetail(
+  const { content, truncated } = await chatWithDetail(
     env,
     TRANSLATE_MODEL,
     `You are a professional translator. Translate the user's text from ${from} into ${into}. ` +
@@ -59,6 +65,9 @@ async function translate(env: Env, text: string, from: string, into: string): Pr
       thinking: false,
     },
   );
+  if (truncated) {
+    throw new Error('Translation was cut off before the end. Try a shorter text.');
+  }
   if (!content) throw new Error('Translation model returned no text');
   return content;
 }

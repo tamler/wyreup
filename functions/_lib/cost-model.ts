@@ -9,11 +9,12 @@
 // token budget, and every call the runner can make (including a fallback
 // call after a failed, possibly still billed, primary call).
 //
-// Text inputs are bounded in estimated tokens by PRO_TEXT_LIMITS
-// (packages/core/src/lib/pro-limits.ts), where every non-ASCII character
-// counts as a full token. So an all-CJK or emoji input at the cap is
-// already the worst case here. Short char-capped fields (target language,
-// tone) are counted at 1 token per character.
+// Text inputs are bounded by PRO_TEXT_LIMITS (packages/core/src/lib/
+// pro-limits.ts) in UTF-8 bytes, which is an upper bound on tokens for
+// every hosted tokenizer (byte-level BPE, or SentencePiece with byte
+// fallback): no input, in any script, can need more tokens than its
+// bytes. Short char-capped fields (target language, tone) are counted at
+// 4 bytes per character.
 //
 // cost-model.test.ts asserts every entry clears the floor and that every
 // priced tool is either modelled here or listed in UNBOUNDED_TOOLS with a
@@ -47,11 +48,14 @@ import { HOSTED_AUDIO_MAX_SECONDS } from '../../packages/core/src/lib/audio-dura
 export const WORST_NET_USD_PER_CREDIT = (8 * 0.95 - 0.5) / 440;
 export const MAX_COST_SHARE = 0.5;
 /**
- * Tokens per call for system prompt, wrapper text and chat template. The
- * longest system prompt in runners.ts is under 600 characters (about 200
- * tokens), so 300 covers every call.
+ * Tokens per call for system prompt, wrapper text and chat template,
+ * counted at the same byte bound. cost-model.test.ts captures every
+ * runner's real system prompt and wrapper and asserts they fit in this
+ * minus TEMPLATE_TOKENS.
  */
-export const PROMPT_OVERHEAD_TOKENS = 300;
+export const PROMPT_OVERHEAD_TOKENS = 800;
+/** Special tokens a chat template adds around the messages. */
+export const TEMPLATE_TOKENS = 64;
 /**
  * Llama 3.2 Vision splits an image into at most 4 tiles of 560x560, each
  * 1,601 tokens. Assumption from the model architecture; Cloudflare does
@@ -74,18 +78,29 @@ export const TOKEN_PRICES: Readonly<Record<string, { inPerM: number; outPerM: nu
 };
 const FLUX_USD_PER_TILE = 0.0000528;
 const FLUX_USD_PER_STEP = 0.0001056;
-/** @cf/openai/whisper-large-v3-turbo, per audio minute (rounded up per run here). */
-export const WHISPER_USD_PER_MINUTE = 0.0005;
 /**
- * Replicate's most expensive listed GPU (H100, replicate.com/pricing,
- * 2026-11-11). Both Replicate models list T4 ($0.000225/s); pricing at the
- * top rate covers a hardware change.
+ * @cf/openai/whisper-large-v3-turbo per audio minute, rounded up per run.
+ * The pricing overview lists $0.0005; the model page lists $0.000513. The
+ * higher one is used.
+ */
+export const WHISPER_USD_PER_MINUTE = 0.000513;
+/**
+ * Replicate's highest single-GPU rate (H100, replicate.com/pricing,
+ * 2026-11-11). Both models run on one Nvidia T4 ($0.000225/s) per their
+ * model pages; this covers a move to any single-GPU SKU. Multi-GPU SKUs
+ * cost more, and neither model uses one.
  */
 export const REPLICATE_MAX_USD_PER_SECOND = 0.001525;
 
-/** Short char-capped fields read with readOptionalText in runners.ts. */
-const TARGET_CHARS = 100;
+/** Short char-capped fields read with readOptionalText in runners.ts, at 4 bytes per char. */
+const TARGET_CHARS = 4 * 100;
 const TONE_CHARS = 32;
+/**
+ * translate-many source + target as written into the prompt: each up to 100
+ * chars (4 bytes each) plus an English display name added by
+ * Intl.DisplayNames (allow 200 bytes).
+ */
+const LANGUAGE_NAME_TOKENS = 2 * (TARGET_CHARS + 200);
 
 export interface LlmCall {
   model: string;
@@ -170,7 +185,7 @@ export const WORST_CASES: readonly WorstCase[] = [
     {
       model: FIX_GRAMMAR.model,
       inputTokens: limitTokens('fix-grammar-pro'),
-      maxOutputTokens: FIX_GRAMMAR.maxOutputTokens,
+      maxOutputTokens: limitTokens('fix-grammar-pro') + FIX_GRAMMAR.outputExtraTokens,
     },
   ]),
   llmCase('text-summarize-pro', [chatCall('text-summarize-pro')]),
@@ -238,10 +253,10 @@ export const WORST_CASES: readonly WorstCase[] = [
       maxOutputTokens: MAX_TOKENS.default,
     },
   ]),
-  // Gemma 4 with output capped at 1.5x the input estimate + 128 tokens.
-  // Source and target names (<= 100 chars each) go in the system prompt.
+  // Gemma 4 with output capped at the input's byte bound + 256 tokens.
+  // Source and target (<= 100 chars each) go in the system prompt.
   llmCase('translate-many-pro', [
-    translateCall(limitTokens('translate-many-pro'), 2 * TARGET_CHARS),
+    translateCall(limitTokens('translate-many-pro'), LANGUAGE_NAME_TOKENS),
   ]),
   llmCase('translate-indic-pro', [translateCall(limitTokens('translate-indic-pro'), 0)]),
   documentCase(),
@@ -279,18 +294,18 @@ function translateCall(inputTokens: number, nameTokens: number): LlmCall {
   };
 }
 
-// translate-document-pro: up to MAX_DOC_CHUNKS calls. Chunk estimates sum
-// to at most the document cap plus one token per chunk (rounding); each
-// call adds the prompt overhead and both language names, and its output
-// is capped at 1.5x its own input estimate + 128 (+1 for rounding).
+// translate-document-pro: up to MAX_DOC_CHUNKS calls. Chunks are exact
+// slices, so their byte counts sum to the document's; each call adds the
+// prompt overhead and both language names, and its output is capped at its
+// own byte bound + 256.
 function documentCase(): WorstCase {
   const toolId = 'translate-document-pro';
   const chunks = MAX_DOC_CHUNKS;
-  const textTokens = limitTokens(toolId) + chunks;
+  const textTokens = limitTokens(toolId);
   const price = TOKEN_PRICES[TRANSLATE_MODEL];
-  const inputTokens = textTokens + chunks * (PROMPT_OVERHEAD_TOKENS + 2 * TARGET_CHARS);
+  const inputTokens = textTokens + chunks * (PROMPT_OVERHEAD_TOKENS + LANGUAGE_NAME_TOKENS);
   const outputTokens =
-    textTokens * TRANSLATE_OUTPUT_FACTOR + chunks * (TRANSLATE_OUTPUT_EXTRA_TOKENS + 1);
+    textTokens * TRANSLATE_OUTPUT_FACTOR + chunks * TRANSLATE_OUTPUT_EXTRA_TOKENS;
   return {
     toolId,
     detail: `${TRANSLATE_MODEL} x ${chunks} chunks: ${inputTokens} in, ${Math.ceil(outputTokens)} out in total`,
@@ -301,7 +316,7 @@ function documentCase(): WorstCase {
 function replicateCase(toolId: string): WorstCase {
   return {
     toolId,
-    detail: `Replicate: Cancel-After ${REPLICATE_CANCEL_AFTER_SECONDS}s at $${REPLICATE_MAX_USD_PER_SECOND}/s (H100, the dearest listed GPU)`,
+    detail: `Replicate: Cancel-After ${REPLICATE_CANCEL_AFTER_SECONDS}s at $${REPLICATE_MAX_USD_PER_SECOND}/s (H100, the highest single-GPU rate; models run on T4)`,
     usd: REPLICATE_CANCEL_AFTER_SECONDS * REPLICATE_MAX_USD_PER_SECOND,
   };
 }
