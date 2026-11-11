@@ -39,6 +39,10 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // Similarity tools (2026-11-11), bge-m3 and bge-reranker-base
+  'text-find-similar-pro': 1,
+  'rank-results-pro': 1,
+  'text-cluster-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {

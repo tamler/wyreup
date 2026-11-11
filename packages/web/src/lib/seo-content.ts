@@ -10482,6 +10482,137 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'text-find-similar-pro': {
+    intro:
+      'Find Similar Text ranks a list by how close each item is in meaning to a piece of text you choose. Paste the list one item per line, type what you are looking for, and every item gets a similarity score from the hosted BGE-M3 multilingual embedding model. Matches that say the same thing in different words still rank high. Results come back as a ranked CSV or JSON list. Each run takes up to 100 items and 50,000 characters and uses 1 credit.',
+    useCases: [
+      'Find the support tickets that describe the same problem as a new one, even when customers word it differently',
+      'Check a list of existing FAQ answers for the one closest to a question someone just asked',
+      'Spot near-duplicate product descriptions or titles before you publish a catalog',
+      'Match a job description against a list of short candidate summaries to decide who to read first',
+      'Search notes or snippets written in several languages with one query, since the model is multilingual',
+    ],
+    faq: [
+      {
+        q: 'What do I paste in?',
+        a: 'A list with one item per line, or a JSON array of strings. Blank lines are skipped. Separately, enter the text you want to match against. Each item and the target can be up to 4,000 characters, with 100 items and 50,000 characters per run in total.',
+      },
+      {
+        q: 'What does the score mean?',
+        a: 'It is the cosine similarity between the meaning vectors of your text and each item, so higher means closer in meaning. Scores are useful for ordering one list, not as an absolute pass mark. Compare items within a run rather than across different runs.',
+      },
+      {
+        q: 'What does it return?',
+        a: 'By default a CSV with rank, score, item (the position in your list, counting non-blank lines) and the text. Choose JSON to get the same rows plus the target and the model name.',
+      },
+      {
+        q: 'How is it different from the free Text Embeddings tool?',
+        a: 'Text Embeddings runs a small English model in your browser and compares files pairwise. This Pro tool sends your text to the larger multilingual BGE-M3 model and ranks a whole list against one target in a single step.',
+      },
+      {
+        q: 'Is my text uploaded?',
+        a: 'Yes. Your list and your target text are sent to Wyreup and run on Cloudflare Workers AI. Each run uses 1 credit, and a failed run refunds automatically.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'rank-results-pro',
+        why: 'Paste the top matches into Rank Results and score them against a question for a sharper order.',
+      },
+      {
+        id: 'csv-sql',
+        why: 'Filter the ranked CSV, for example to keep only rows above a score you pick.',
+      },
+      {
+        id: 'text-embed',
+        why: 'Compare a few texts on your device with the free, in-browser embedding model.',
+      },
+    ],
+  },
+  'rank-results-pro': {
+    intro:
+      'Rank Results puts a list of passages in order of how well each one answers your question. Paste search results, help articles or paragraphs one per line, enter the question, and the hosted BGE reranker reads the question together with each passage and scores the pair. This is the step search engines use to sharpen a rough first pass. It works best on English or Chinese text. Each run takes up to 100 passages of 2,000 characters and uses 1 credit.',
+    useCases: [
+      'Reorder search results from your own site or docs so the passage that actually answers the question comes first',
+      'Pick the best help-center article to send in reply to a customer question',
+      'Sharpen the top matches from Find Similar Text before you read them',
+      'Choose which paragraphs of a long document to quote for a specific question',
+    ],
+    faq: [
+      {
+        q: 'What do I paste in?',
+        a: 'Passages one per line, or a JSON array of strings, plus a question or search of up to 500 characters. Each passage can be up to 2,000 characters, with up to 100 passages and 50,000 characters per run.',
+      },
+      {
+        q: 'How is this different from Find Similar Text?',
+        a: 'Find Similar Text compares meanings one at a time, which is fast and multilingual. Rank Results reads the question and each passage together, so it judges whether the passage answers the question rather than whether it is about the same topic. Use it on a shortlist.',
+      },
+      {
+        q: 'Which languages work?',
+        a: 'The bge-reranker-base model is trained on English and Chinese. Other languages may still produce an order, but expect weaker results.',
+      },
+      {
+        q: 'What about long passages?',
+        a: 'The model reads a limited window of about 512 tokens for the question and passage together, so a long passage is judged mostly on its opening. Split long text into paragraphs for better scores.',
+      },
+      {
+        q: 'Is my text uploaded?',
+        a: 'Yes. Your passages and question are sent to Wyreup and run on Cloudflare Workers AI. Each run uses 1 credit, and a failed run refunds automatically.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'text-find-similar-pro',
+        why: 'Narrow a large list by meaning first, then rerank the best matches here.',
+      },
+      {
+        id: 'csv-sql',
+        why: 'Query the ranked CSV, such as keeping the top five rows.',
+      },
+    ],
+  },
+  'text-cluster-pro': {
+    intro:
+      'Group Similar Text sorts a list into groups of items that mean roughly the same thing. Paste survey answers, reviews or support messages one per line, and the hosted BGE-M3 multilingual embedding model maps each one, then k-means puts them into 2 to 10 groups. Groups are numbered from largest to smallest, not named, and each shows its most typical item as an example so you can label it yourself. Each run takes 3 to 100 items and up to 50,000 characters and uses 1 credit.',
+    useCases: [
+      'Sort open-ended survey answers into themes before you count them',
+      'Group customer reviews to see which complaints come up most',
+      'Bucket support messages by issue so each group can go to the right person',
+      'Collapse a long brainstorm list into a handful of related ideas',
+    ],
+    faq: [
+      {
+        q: 'How many groups will I get?',
+        a: 'Pick 2 to 10, or leave it on auto, which uses about the square root of half the item count (for example 5 groups for 50 items). A group never comes back empty; if items are too alike to fill every group you may get fewer.',
+      },
+      {
+        q: 'Does it name the groups?',
+        a: 'No. Groups are numbered, with group 1 the largest. The JSON output lists each group with its most typical item as an example, which is usually enough to name the theme yourself.',
+      },
+      {
+        q: 'What does it return?',
+        a: "By default a CSV with one row per item: group, item (the position in your list, counting non-blank lines) and text, sorted by group. Choose JSON for the groups, their sizes, examples and each member's similarity to the group centre.",
+      },
+      {
+        q: 'Will the same list give the same groups?',
+        a: 'Normally, yes. The grouping step starts from the first item and has no random element, so the same list in the same order gives the same groups unless the hosted model changes. Reordering the list can change the groups.',
+      },
+      {
+        q: 'Is my text uploaded?',
+        a: 'Yes. Your list is sent to Wyreup and run on Cloudflare Workers AI. Each run uses 1 credit, and a failed run refunds automatically.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'csv-sql',
+        why: 'Count items per group with a GROUP BY on the CSV.',
+      },
+      {
+        id: 'text-find-similar-pro',
+        why: 'Find every item close to one example from a group.',
+      },
+    ],
+  },
   'translate-many-pro': {
     intro:
       "Translate (100+ languages) uses a hosted M2M-100 model to translate directly across more than 100 language pairs without routing through a chat LLM. Reach for it when you want straight-shot translation that's faster and cheaper than the Llama-class Translate tool. It's a Pro tool using 1 credit per run.",
