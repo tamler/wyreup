@@ -185,4 +185,22 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
   },
+  'text-find-similar-pro': {
+    heading: 'Find Similar Text in a list, ranked by meaning',
+    title: 'Find similar text: rank a list by meaning with AI embeddings | Wyreup',
+    description:
+      'Rank up to 100 lines by how close they are in meaning to your text, with scores as CSV or JSON. The list and your text are sent to Wyreup. 1 credit per run.',
+  },
+  'rank-results-pro': {
+    heading: 'Rank Results by how well they answer a question',
+    title: 'Rerank search results and passages by relevance | Wyreup',
+    description:
+      'Score up to 100 passages against a question with a hosted reranker and get a ranked CSV or JSON list. Passages and question are sent to Wyreup. 1 credit per run.',
+  },
+  'text-cluster-pro': {
+    heading: 'Group Similar Text such as feedback or survey answers',
+    title: 'Group feedback and survey answers by meaning | Wyreup',
+    description:
+      'Sort up to 100 lines into numbered groups of similar meaning, with one example per group, as CSV or JSON. The list is sent to Wyreup. 1 credit per run.',
+  },
 };

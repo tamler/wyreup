@@ -26,6 +26,11 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import {
+  prepareCluster,
+  prepareFindSimilar,
+  prepareRankResults,
+} from './providers/similarity-models';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -96,6 +101,9 @@ const RUNNERS: Record<string, Runner> = {
   'image-generate-pro': imageGeneratePro,
   'json-extract-pro': jsonExtractPro,
   'translate-indic-pro': translateIndicPro,
+  'text-find-similar-pro': prepareFindSimilar,
+  'rank-results-pro': prepareRankResults,
+  'text-cluster-pro': prepareCluster,
 };
 
 // ────────────────────────────────────────────────────────────────────────
