@@ -2,4 +2,6 @@
 /chains /toolbelt 301
 /legal/pricing /pro 301
 /legal/pricing/ /pro/ 301
+/pricing /pro/#pricing 301
+/pricing/ /pro/#pricing 301
 /privacy.html /legal/privacy/ 301

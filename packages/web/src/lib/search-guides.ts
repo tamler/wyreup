@@ -123,6 +123,98 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
       { href: '/tools/compress/', label: 'Compress the converted image' },
     ],
   },
+  // Hosted PRO pages. Facts come from each tool module (input limits) and its
+  // runner in functions/_lib/runners.ts (what is sent, server text caps).
+  'ocr-hq': {
+    heading: 'How to extract text from a hard-to-read scan',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then select one PNG, JPEG or WebP image.',
+      "Run the tool. The image is sent to Wyreup's hosted vision model, which returns the text it reads.",
+      'Compare the plain-text output with the image before relying on it, then copy it or chain it into a text tool.',
+    ],
+    example:
+      'A phone photo of a faded, skewed receipt that the free OCR reads poorly. Try the free on-device OCR first; if it misses words, run this hosted version on the original photo and check every figure against the image.',
+    formats:
+      'Input: one PNG, JPEG or WebP image up to 10 MB, sent to Wyreup for processing. Output: plain text. 1 credit per run.',
+    limitations: [
+      'A vision model can misread or skip characters. Check numbers, names and identifiers against the source.',
+      'Output is plain text. Columns, tables and page layout are not reproduced.',
+      'The image leaves your device. For an image you should not upload, use the free on-device OCR.',
+    ],
+    links: [
+      { href: '/tools/ocr/', label: 'Free on-device OCR for clean images' },
+      { href: '/tools/read-handwriting/', label: 'Read handwritten notes instead' },
+      { href: '/scan-to-searchable-text/', label: 'Turn a scanned page into text' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
+  'transcribe-pro': {
+    heading: 'How to transcribe a noisy or accented recording',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then select one audio file up to 25 MB.',
+      'Choose the spoken language. Auto-detect is available but slower than a correct language hint.',
+      'Run the tool. The audio is sent to Wyreup and transcribed by hosted Whisper large-v3 turbo. Review the text against the recording.',
+    ],
+    example:
+      'An interview recorded in a busy café. If the free in-browser Whisper drops words, run the original file here and spot-check names and numbers against the audio.',
+    formats:
+      'Input: one WAV, MP3, M4A, AAC, OGG, WebM or FLAC file up to 25 MB, sent to Wyreup for processing. Output: plain text without timestamps or speaker labels. 3 credits per run.',
+    limitations: [
+      'Speech recognition can mishear names, jargon and overlapping speakers. Check anything you will quote.',
+      'Recordings over 25 MB must be shortened or split before upload.',
+      'The audio leaves your device. For a recording you should not upload, use the free on-device transcription.',
+    ],
+    links: [
+      { href: '/tools/transcribe/', label: 'Free on-device transcription' },
+      { href: '/tools/transcribe-and-translate/', label: 'Transcribe and translate in one run' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
+  'text-translate-pro': {
+    heading: 'How to translate text with the hosted model',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then paste or select plain text.',
+      'Enter the target language as a name (Spanish, Mandarin) or an ISO code. The default is English.',
+      "Run the tool. The text is sent to Wyreup's hosted model. Read the translation before you send it on.",
+    ],
+    example:
+      'A customer email in Portuguese you need to answer in English. Translate it here, then have a fluent speaker check anything with legal, medical or financial consequences.',
+    formats:
+      'Input: plain text up to 100,000 characters, sent to Wyreup for processing. Output: the translation as plain text. 2 credits per run.',
+    limitations: [
+      'Machine translation can change meaning, tone or terminology. Have important text reviewed by a fluent speaker.',
+      'There is no source-language setting; the model infers it from the text.',
+      'The text leaves your device. For text you should not upload, use the free browser translator.',
+    ],
+    links: [
+      { href: '/tools/text-translate/', label: 'Free in-browser translation' },
+      { href: '/tools/translate-document-pro/', label: 'Translate a whole document' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
+  'pdf-q-and-a': {
+    heading: 'How to ask a question about a PDF',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then select one PDF up to 50 MB and 500 pages.',
+      'Type one specific question, such as a notice period, a deadline or an invoice total.',
+      'Run the tool. Text is extracted in your browser; the extracted text and your question are sent to Wyreup\'s hosted model. Check the answer against the page it came from.',
+    ],
+    example:
+      'A long service agreement: ask "What is the termination notice period?", then find the clause in the document to confirm the exact wording.',
+    formats:
+      'Input: one text-based PDF up to 50 MB and 500 pages. The extracted text (up to 100,000 characters) and your question are sent to Wyreup; the PDF file is not. Output: a plain-text answer. 2 credits per run.',
+    limitations: [
+      'Scanned PDFs without a text layer have nothing to extract. Run OCR on the page images first.',
+      'Extracted text longer than 100,000 characters is rejected. Split the PDF and ask about the relevant part.',
+      'The model is instructed to answer only from the document and to say when the answer is missing, but it can still be wrong.',
+    ],
+    links: [
+      { href: '/tools/pdf-to-text/', label: 'Free in-browser PDF text extraction' },
+      { href: '/tools/split-pdf/', label: 'Split a PDF into smaller parts' },
+      { href: '/tools/pdf-summarize/', label: 'Summarize the whole PDF instead' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
 };
 
 export const JOB_SEARCH_GUIDES: Record<string, SearchGuide> = {
