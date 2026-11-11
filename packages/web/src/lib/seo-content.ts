@@ -747,6 +747,53 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'pdf-scan-q-and-a-pro': {
+    intro:
+      'Ask a Scanned PDF answers a question about a PDF made from scans or photos, where there is no text to select or copy. Your browser renders up to 10 pages as images, then sends those images and your question to a hosted Gemma 4 vision model that reads the pages. It is a Pro tool using 1 credit per run.',
+    useCases: [
+      'Find the notice period in a scanned contract that the text-based PDF tools see as blank',
+      'Check the total, due date or account number on a scanned invoice or statement',
+      'Ask what a faxed or photocopied letter is asking you to do, and by when',
+      'Pull a figure from a table on a scanned report page',
+      'Read a stamped or handwritten note on a signed form',
+    ],
+    faq: [
+      {
+        q: 'When should I use this instead of Ask a PDF?',
+        a: 'Use it when the PDF is a scan with no text layer, so Ask a PDF finds nothing to read. If you can select text in the PDF, Ask a PDF is the better fit: it reads the text of the whole document, up to 500 pages.',
+      },
+      {
+        q: 'How many pages does it read?',
+        a: 'Up to 10 pages per run. By default it reads the first 10. To ask about other pages, list them in the pages field, for example "12-15, 20".',
+      },
+      {
+        q: 'What is sent to Wyreup?',
+        a: 'One image per page you picked, rendered in your browser, and your question. Pages you did not pick are not sent, and neither is the PDF file.',
+      },
+      {
+        q: 'How accurate is it?',
+        a: 'It handles clean scans and printed text well. Blurry photos, very small print and messy handwriting can be misread, so check the answer against the page it names.',
+      },
+      {
+        q: 'How much does it cost?',
+        a: '1 credit per run.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'pdf-q-and-a',
+        why: 'If the PDF has selectable text, ask about the whole document from its text instead.',
+      },
+      {
+        id: 'pdf-to-image',
+        why: 'Free in-browser page rendering when you want the page images themselves.',
+      },
+      {
+        id: 'ocr',
+        why: 'Free on-device OCR to pull the raw text from a page image.',
+      },
+    ],
+  },
   'color-blind-simulator': {
     intro:
       'Color Blind Simulator applies a color-vision-deficiency transform to an image so you can see roughly how it looks to someone with protanopia, deuteranopia, tritanopia, milder anomalous variants, or full achromatopsia. It is the quick sanity check for charts, UI screenshots, and brand palettes before you ship them. The whole transform runs on your device, so screenshots of unreleased designs never leave your browser.',

@@ -215,6 +215,29 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
       { href: '/pro/#pricing', label: 'PRO credit pricing' },
     ],
   },
+  'pdf-scan-q-and-a-pro': {
+    heading: 'How to ask a question about a scanned PDF',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then select one PDF up to 50 MB.',
+      'Type one specific question. To ask about pages past the first 10, list them in the pages field, for example "12-15, 20".',
+      'Run the tool. Your browser renders each picked page as an image; those images and your question are sent to Wyreup\'s hosted vision model. Check the answer against the page it names.',
+    ],
+    example:
+      'A scanned lease with no selectable text: ask "What notice is needed to end the lease?" and confirm the wording on the page the answer cites.',
+    formats:
+      'Input: one PDF up to 50 MB. Up to 10 pages per run are rendered in your browser at up to 1536 pixels on the long side, and those page images and your question are sent to Wyreup; the PDF file is not. Output: a plain-text answer. 1 credit per run.',
+    limitations: [
+      'Only 10 pages are read per run. For a longer scan, run it again with a different page range.',
+      'Blurry photos, very small print and messy handwriting can be misread. The model can still be wrong, so check the page.',
+      'If the PDF has selectable text, Ask a PDF reads the whole document, up to 500 pages, from its text.',
+    ],
+    links: [
+      { href: '/tools/pdf-to-text/', label: 'Free in-browser PDF text extraction' },
+      { href: '/tools/pdf-q-and-a/', label: 'Ask a text-based PDF instead' },
+      { href: '/tools/pdf-to-image/', label: 'Render PDF pages to images for free' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
 };
 
 export const JOB_SEARCH_GUIDES: Record<string, SearchGuide> = {
