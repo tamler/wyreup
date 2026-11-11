@@ -77,7 +77,6 @@ import { imageDescribe } from './tools/image-describe/index.js';
 import { analyzeChart } from './tools/analyze-chart/index.js';
 import { imageQandA } from './tools/image-q-and-a/index.js';
 import { readHandwriting } from './tools/read-handwriting/index.js';
-import { detectObjects } from './tools/detect-objects/index.js';
 import { translateImage } from './tools/translate-image/index.js';
 import { transcribeAndTranslate } from './tools/transcribe-and-translate/index.js';
 import { regexFromTextPro } from './tools/regex-from-text-pro/index.js';
@@ -377,7 +376,6 @@ export const defaultTools: ToolModule<any>[] = [
   analyzeChart,
   imageQandA,
   readHandwriting,
-  detectObjects,
   translateImage,
   transcribeAndTranslate,
   regexFromTextPro,

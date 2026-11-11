@@ -23,7 +23,7 @@ export const translateIndicPro: ToolModule<TranslateIndicProParams> = {
   slug: 'translate-indic-pro',
   name: 'Translate to Indic Languages',
   description:
-    'Hosted IndicTrans2 — purpose-built English-to-Indic translation across Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, and Assamese. Higher fidelity for these languages than a general LLM. Uses 1 credit per run.',
+    'Hosted Google Gemma 4 translates English into Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese, in the native script. Takes up to about 16,000 characters of English per run. Uses 1 credit per run.',
   category: 'text',
   keywords: ['translate', 'indic', 'hindi', 'tamil', 'bengali', 'india', 'pro'],
 

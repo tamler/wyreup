@@ -13,7 +13,8 @@ export const defaultTranslateDocumentProParams: TranslateDocumentProParams = {
   target: 'es',
 };
 
-// Curated m2m100 language list for the document UI. Superset of the
+// Curated language list for the document UI (first chosen for m2m100; the
+// backend is Gemma 4 since 2026-11-11, which covers all of them). Superset of the
 // text-translate dropdown plus the languages our real traffic speaks
 // (Filipino, Khmer, Burmese, Lao, Bengali, Tamil, Urdu, Persian, Swahili).
 const M2M100_LANGUAGE_OPTIONS = [
@@ -93,7 +94,7 @@ export const translateDocumentPro: ToolModule<TranslateDocumentProParams> = {
   slug: 'translate-document-pro',
   name: 'Translate a Document',
   description:
-    'Translate a whole PDF or text file across 35+ languages, powered by a hosted translation model. Text is extracted on your device; only the text is sent. Output is plain text — chains into summarize, text-to-speech, and PDF tools. Uses 3 credits per run. Documents up to 40 pages.',
+    'Translate a whole PDF or text file across 35+ languages with hosted Google Gemma 4. Text is extracted on your device; only the text is sent. Output is plain text and chains into summarize, text-to-speech, and PDF tools. Documents up to about 48,000 characters of English (roughly 19 pages) or 16,000 of Chinese, Japanese or Korean. Uses 3 credits per run.',
   category: 'text',
   keywords: ['translate', 'document', 'pdf', 'language', 'pro', 'hosted'],
 

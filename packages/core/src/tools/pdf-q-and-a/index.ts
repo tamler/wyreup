@@ -20,7 +20,7 @@ export const pdfQandA: ToolModule<PdfQandAParams> = {
   slug: 'pdf-q-and-a',
   name: 'Ask a PDF',
   description:
-    'Extracts a PDF’s text in your browser, then answers a question about it with a hosted LLM. Uses 2 credits per run.',
+    'Extracts a PDF’s text in your browser, then answers a question about it with a hosted LLM. Reads up to about 36,000 characters of English (or 12,000 of Chinese, Japanese or Korean); questions up to about 1,500 characters. Uses 2 credits per run.',
   category: 'export',
   keywords: ['pdf', 'question', 'answer', 'document', 'ask', 'pro', 'ai', 'llm'],
 

@@ -3,6 +3,63 @@ import { __readImageBytes, readImageRef, runPro, prepareProRun } from './runners
 import type { Env } from './env';
 import { PRICING } from './pricing';
 
+/** A silent 8 kHz 16-bit mono PCM WAV of `seconds`, base64. */
+function wavBase64(seconds: number): string {
+  const dataLen = Math.round(seconds * 16_000);
+  const bytes = new Uint8Array(44 + dataLen);
+  const view = new DataView(bytes.buffer);
+  const tag = (offset: number, s: string) => {
+    for (let i = 0; i < 4; i++) bytes[offset + i] = s.charCodeAt(i);
+  };
+  tag(0, 'RIFF');
+  view.setUint32(4, 36 + dataLen, true);
+  tag(8, 'WAVE');
+  tag(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, 8_000, true);
+  view.setUint32(28, 16_000, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  tag(36, 'data');
+  view.setUint32(40, dataLen, true);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+const TINY_WAV = wavBase64(0.1);
+
+/** 8 kHz 8-bit mono PCM (8,000 bytes/s): long durations that still fit 25 MB. */
+function wav8BitBase64(seconds: number): string {
+  const dataLen = Math.round(seconds * 8_000);
+  const bytes = new Uint8Array(44 + dataLen).fill(0x80);
+  const view = new DataView(bytes.buffer);
+  const tag = (offset: number, s: string) => {
+    for (let i = 0; i < 4; i++) bytes[offset + i] = s.charCodeAt(i);
+  };
+  tag(0, 'RIFF');
+  view.setUint32(4, 36 + dataLen, true);
+  tag(8, 'WAVE');
+  tag(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, 8_000, true);
+  view.setUint32(28, 8_000, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  tag(36, 'data');
+  view.setUint32(40, dataLen, true);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
 // A 1x1 PNG, base64.
 const TINY_PNG =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -57,7 +114,7 @@ describe('preparing Pro dispatch', () => {
           target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'en',
           image: `data:image/png;base64,${TINY_PNG}`,
           imageBase64: TINY_PNG,
-          audioBase64: 'QUJD',
+          audioBase64: TINY_WAV,
         },
         env,
       );
@@ -158,19 +215,12 @@ describe('read-handwriting runner', () => {
   });
 });
 
-describe('detect-objects runner', () => {
-  it('returns detected objects sorted by score', async () => {
-    const env = aiEnv([
-      { score: 0.5, label: 'dog', box: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 } },
-      { score: 0.9, label: 'cat', box: { xmin: 2, ymin: 2, xmax: 3, ymax: 3 } },
-    ]);
-    const out = (await runPro('detect-objects', { imageBase64: TINY_PNG }, env)) as {
-      objects: { label: string; score: number }[];
-      count: number;
-    };
-    expect(out.objects[0].label).toBe('cat');
-    expect(out.objects.length).toBe(2);
-    expect(out.count).toBe(2);
+describe('detect-objects (disabled 2026-11-11, no published model price)', () => {
+  it('is no longer a hosted runner', () => {
+    expect(() => prepareProRun('detect-objects', { imageBase64: TINY_PNG }, aiEnv({}))).toThrow(
+      'No hosted runner',
+    );
+    expect(PRICING['detect-objects']).toBeUndefined();
   });
 });
 
@@ -201,10 +251,10 @@ describe('transcribe-and-translate runner', () => {
       .mockResolvedValueOnce({ text: 'Bonjour le monde' }) // whisper
       .mockResolvedValueOnce({ response: 'Hello world' }); // translate
     const env = { AI: { run } } as unknown as Env;
-    // 'QUJD' = base64 of "ABC" — any non-empty payload works; AI.run is mocked.
+    // A real (silent) WAV: the runner measures duration before dispatch.
     const out = (await runPro(
       'transcribe-and-translate',
-      { audioBase64: 'QUJD', target: 'English' },
+      { audioBase64: TINY_WAV, target: 'English' },
       env,
     )) as { transcript: string; translation: string; target: string };
     expect(out.transcript).toBe('Bonjour le monde');
@@ -361,5 +411,364 @@ describe('readImageRef SSRF validation', () => {
     'data:image/jpeg;base64,!!!',
   ])('rejects invalid image upload %s', (image) => {
     expect(() => readImageRef({ image })).toThrow();
+  });
+});
+
+// Cloudflare returns 410 for melotts, deepseek-r1-distill-qwen-32b and
+// llama-3.2-3b-instruct from 2026-11-20.
+describe('runners moved off retiring models', () => {
+  const RETIRED = [
+    '@cf/myshell-ai/melotts',
+    '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+    '@cf/meta/llama-3.2-3b-instruct',
+  ];
+  const completion = (content: string | null, reasoning_content?: string) => ({
+    choices: [{ message: { role: 'assistant', content, refusal: null, reasoning_content } }],
+  });
+  const aiMock = (result: unknown) => {
+    const run = vi.fn((_model: string, _input: Record<string, unknown>) => Promise.resolve(result));
+    return { env: { AI: { run } } as unknown as Env, run };
+  };
+  const mp3Stream = (bytes: number[]) =>
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(bytes));
+        controller.close();
+      },
+    });
+
+  it('text-to-speech-pro uses Aura 1 for English and returns the streamed MP3 as base64', async () => {
+    const { env, run } = aiMock(mp3Stream([0x49, 0x44, 0x33]));
+    const out = await runPro('text-to-speech-pro', { text: 'hello', language: 'EN' }, env);
+    expect(out).toEqual({ contentType: 'audio/mpeg', base64: btoa('ID3') });
+    expect(run).toHaveBeenCalledWith('@cf/deepgram/aura-1', {
+      text: 'hello',
+      speaker: 'asteria',
+      encoding: 'mp3',
+    });
+  });
+
+  it('text-to-speech-pro uses Aura 2 Spanish with the chosen voice', async () => {
+    const { env, run } = aiMock(mp3Stream([1, 2]));
+    await runPro('text-to-speech-pro', { text: 'hola', language: 'ES', voice: 'celeste' }, env);
+    expect(run.mock.calls[0]?.[0]).toBe('@cf/deepgram/aura-2-es');
+    expect(run.mock.calls[0]?.[1]).toMatchObject({ speaker: 'celeste' });
+  });
+
+  it.each([
+    [{ text: 'a'.repeat(1_001), language: 'EN' }],
+    [{ text: 'a'.repeat(501), language: 'ES' }],
+    [{ text: 'bonjour', language: 'FR' }],
+    [{ text: 'hola', language: 'ES', voice: 'asteria' }],
+  ])('text-to-speech-pro rejects %j before provider work', (input) => {
+    const { env, run } = aiMock({});
+    expect(() => prepareProRun('text-to-speech-pro', input, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('text-to-speech-pro accepts exactly the cap', () => {
+    expect(typeof prepareProRun('text-to-speech-pro', { text: 'a'.repeat(1_000) }, aiEnv({}))).toBe(
+      'function',
+    );
+  });
+
+  it('text-to-speech-pro times out and cancels a stream that stalls after the call resolves', async () => {
+    vi.useFakeTimers();
+    try {
+      const cancel = vi.fn();
+      // Resolves at once with a stream that never delivers or closes.
+      const stalled = new ReadableStream<Uint8Array>({ cancel });
+      const { env } = aiMock(stalled);
+      const pending = runPro('text-to-speech-pro', { text: 'hello' }, env);
+      const assertion = expect(pending).rejects.toThrow('timed out');
+      await vi.advanceTimersByTimeAsync(60_001);
+      await assertion;
+      expect(cancel).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('text-to-speech-pro fails (and so refunds) on an empty audio stream', async () => {
+    await expect(
+      runPro('text-to-speech-pro', { text: 'hello' }, aiEnv(mp3Stream([]))),
+    ).rejects.toThrow('no audio');
+  });
+
+  it('deep-analysis-pro calls DeepSeek V4.1 Flash with thinking on and a bounded budget', async () => {
+    const { env, run } = aiMock(completion('The answer.', 'Step one.'));
+    const out = await runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env);
+    expect(out).toEqual({ answer: 'The answer.', reasoning: 'Step one.' });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/deepseek-ai/deepseek-v4.1-flash-1017');
+    expect(payload).toMatchObject({
+      max_tokens: 6_144,
+      max_completion_tokens: 6_144,
+      chat_template_kwargs: { enable_thinking: true },
+    });
+  });
+
+  it('deep-analysis-pro splits an inline <think> block from the answer', async () => {
+    const { env } = aiMock(completion('<think>Because.</think>\nYes.'));
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env),
+    ).resolves.toEqual({ answer: 'Yes.', reasoning: 'Because.' });
+  });
+
+  it('deep-analysis-pro falls back to Gemma 4 once when the primary errors', async () => {
+    const run = vi
+      .fn<(model: string, input: unknown) => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error('5016: requires Workers Paid'))
+      .mockResolvedValueOnce(completion('Fallback answer.', 'Fallback reasoning.'));
+    const env = { AI: { run } } as unknown as Env;
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env),
+    ).resolves.toEqual({ answer: 'Fallback answer.', reasoning: 'Fallback reasoning.' });
+    expect(run.mock.calls.map((c) => c[0])).toEqual([
+      '@cf/deepseek-ai/deepseek-v4.1-flash-1017',
+      '@cf/google/gemma-4-26b-a4b-it',
+    ]);
+  });
+
+  it('deep-analysis-pro does not stack a fallback on a timed-out primary', async () => {
+    vi.useFakeTimers();
+    try {
+      const run = vi.fn(() => new Promise<never>(() => {}));
+      const env = { AI: { run } } as unknown as Env;
+      const pending = runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env);
+      const assertion = expect(pending).rejects.toThrow('timed out');
+      await vi.advanceTimersByTimeAsync(90_001);
+      await assertion;
+      expect(run).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('deep-analysis-pro rejects a question over its 700-token cap before provider work', () => {
+    const { env, run } = aiMock({});
+    expect(() =>
+      prepareProRun('deep-analysis-pro', { text: 'doc', question: 'q'.repeat(2_200) }, env),
+    ).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro calls Gemma 4 with thinking off and returns the corrected text', async () => {
+    const { env, run } = aiMock(completion(' Fixed text. '));
+    await expect(runPro('fix-grammar-pro', { text: 'fixd txt' }, env)).resolves.toEqual({
+      corrected: 'Fixed text.',
+    });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
+    // 'fixd txt' = 8 bytes; output budget = bytes + 512 so a full rewrite fits.
+    expect(payload).toMatchObject({
+      max_completion_tokens: 520,
+      chat_template_kwargs: { enable_thinking: false },
+    });
+  });
+
+  it('fix-grammar-pro rejects text over 16,000 bytes before provider work', () => {
+    const { env, run } = aiMock({});
+    expect(() => prepareProRun('fix-grammar-pro', { text: 'a'.repeat(16_001) }, env)).toThrow();
+    expect(() => prepareProRun('fix-grammar-pro', { text: '1 '.repeat(8_001) }, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro fails (and so refunds) when the correction is cut off', async () => {
+    const cut = {
+      choices: [{ message: { role: 'assistant', content: 'Half of it' }, finish_reason: 'length' }],
+    };
+    await expect(runPro('fix-grammar-pro', { text: 'x y z' }, aiEnv(cut))).rejects.toThrow(
+      'cut off',
+    );
+  });
+
+  it('deep-analysis-pro flags an answer that hit the output budget', async () => {
+    const cut = {
+      choices: [
+        {
+          message: { role: 'assistant', content: 'Partial', reasoning_content: 'r' },
+          finish_reason: 'length',
+        },
+      ],
+    };
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, aiEnv(cut)),
+    ).resolves.toEqual({ answer: 'Partial', reasoning: 'r', truncated: true });
+  });
+
+  it('fix-grammar-pro fails (and so refunds) when the model returns no text', async () => {
+    await expect(runPro('fix-grammar-pro', { text: 'x' }, aiEnv(completion(null)))).rejects.toThrow();
+  });
+
+  it.each([
+    ['text-to-speech-pro', { text: 'hello' }, mp3Stream([1])],
+    ['deep-analysis-pro', { text: 'doc', question: 'q?' }, completion('a')],
+    ['fix-grammar-pro', { text: 'x' }, completion('x')],
+  ])('%s never calls a retired model', async (toolId, input, result) => {
+    const { env, run } = aiMock(result);
+    await runPro(toolId, input, env);
+    for (const [model] of run.mock.calls) {
+      expect(RETIRED).not.toContain(model);
+    }
+  });
+});
+
+describe('previously unbounded tools are bounded before any spend', () => {
+  const gemmaReply = (content: string) => ({
+    choices: [{ message: { role: 'assistant', content, refusal: null } }],
+  });
+
+  it.each(['transcribe-pro', 'transcribe-and-translate'])(
+    '%s refuses audio over 45 minutes before provider work',
+    (toolId) => {
+      const run = vi.fn();
+      const env = { AI: { run } } as unknown as Env;
+      expect(() =>
+        prepareProRun(toolId, { audioBase64: wav8BitBase64(46 * 60), target: 'English' }, env),
+      ).toThrow('45 minutes');
+      expect(run).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['transcribe-pro', 'transcribe-and-translate'])(
+    '%s accepts 45 minutes exactly',
+    (toolId) => {
+      expect(
+        typeof prepareProRun(
+          toolId,
+          { audioBase64: wav8BitBase64(45 * 60), target: 'English' },
+          aiEnv({}),
+        ),
+      ).toBe('function');
+    },
+  );
+
+  it.each(['transcribe-pro', 'transcribe-and-translate'])(
+    '%s refuses formats whose length cannot be verified',
+    (toolId) => {
+      // 'ftypM4A' box: an M4A container.
+      const m4a = btoa('\u0000\u0000\u0000\u0018ftypM4A \u0000\u0000\u0000\u0000');
+      expect(() =>
+        prepareProRun(toolId, { audioBase64: m4a, target: 'English' }, aiEnv({})),
+      ).toThrow('WAV or MP3');
+    },
+  );
+
+  it('transcribe-and-translate trims a huge transcript to its token cap before translating', async () => {
+    const run = vi
+      .fn<(model: string, input: Record<string, unknown>) => Promise<unknown>>()
+      .mockResolvedValueOnce({ text: '漢'.repeat(25_000) })
+      .mockResolvedValueOnce({ response: 'translated' });
+    const env = { AI: { run } } as unknown as Env;
+    const out = (await runPro(
+      'transcribe-and-translate',
+      { audioBase64: TINY_WAV, target: 'English' },
+      env,
+    )) as { translationTruncated?: boolean };
+    expect(out.translationTruncated).toBe(true);
+    const messages = run.mock.calls[1][1].messages as { role: string; content: string }[];
+    const user = messages.find((m) => m.role === 'user')!.content;
+    expect(new TextEncoder().encode(user).length).toBeLessThanOrEqual(40_000);
+  });
+
+  it('translate-many-pro uses Gemma 4 with output capped from the input estimate', async () => {
+    const run = vi.fn((_m: string, _i: Record<string, unknown>) =>
+      Promise.resolve(gemmaReply('Bonjour')),
+    );
+    const env = { AI: { run } } as unknown as Env;
+    await expect(
+      runPro('translate-many-pro', { text: 'hello there', source: 'en', target: 'fr' }, env),
+    ).resolves.toMatchObject({ translation: 'Bonjour', target: 'fr' });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
+    // 'hello there' = 11 bytes -> 11 + 256.
+    expect(payload).toMatchObject({
+      max_completion_tokens: 267,
+      chat_template_kwargs: { enable_thinking: false },
+    });
+    expect(JSON.stringify(payload.messages)).toContain('French (fr)');
+  });
+
+  it('translate-indic-pro sends English to the chosen Indic script through Gemma 4', async () => {
+    const run = vi.fn((_m: string, _i: Record<string, unknown>) =>
+      Promise.resolve(gemmaReply('नमस्ते')),
+    );
+    const env = { AI: { run } } as unknown as Env;
+    await expect(
+      runPro('translate-indic-pro', { text: 'hello', target: 'hin_Deva' }, env),
+    ).resolves.toMatchObject({ translation: 'नमस्ते', target: 'hin_Deva' });
+    expect(run.mock.calls[0][0]).toBe('@cf/google/gemma-4-26b-a4b-it');
+    expect(JSON.stringify(run.mock.calls[0][1].messages)).toContain('Hindi (Devanagari script)');
+  });
+
+  it('translate-document-pro translates chunks in parallel and keeps their order', async () => {
+    const run = vi.fn((_m: string, input: Record<string, unknown>) => {
+      const messages = input.messages as { role: string; content: string }[];
+      const text = messages.find((m) => m.role === 'user')!.content;
+      return Promise.resolve(gemmaReply(`T(${text.trim().slice(0, 1)})`));
+    });
+    const env = { AI: { run } } as unknown as Env;
+    const doc = ['a', 'b', 'c'].map((c) => c.repeat(7_000)).join('\n\n');
+    const out = (await runPro(
+      'translate-document-pro',
+      { text: doc, source: 'en', target: 'fr' },
+      env,
+    )) as { text: string; chunks: number };
+    expect(out.chunks).toBe(3);
+    expect(out.text).toBe('T(a)\n\nT(b)\n\nT(c)');
+    expect(run).toHaveBeenCalledTimes(3);
+  });
+
+  it.each(['translate-many-pro', 'translate-indic-pro'])(
+    '%s fails (and so refunds) when the provider reports finish_reason length',
+    async (toolId) => {
+      const cut = {
+        choices: [{ message: { role: 'assistant', content: 'partial' }, finish_reason: 'length' }],
+      };
+      await expect(
+        runPro(toolId, { text: 'hello', target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'fr' }, aiEnv(cut)),
+      ).rejects.toThrow('cut off');
+    },
+  );
+
+  it('translate-document-pro starts no new paid calls after a chunk fails, and waits for in-flight ones', async () => {
+    // 6 chunks of ~7,000 chars (42,000 bytes, under the 48,000 cap).
+    const doc = ['a', 'b', 'c', 'd', 'e', 'f'].map((c) => c.repeat(7_000)).join('\n\n');
+    let started = 0;
+    let settled = 0;
+    const run = vi.fn((_m: string, _i: Record<string, unknown>) => {
+      const call = ++started;
+      if (call === 1) return Promise.reject(new Error('provider down'));
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          settled++;
+          resolve(gemmaReply('ok'));
+        }, 10),
+      );
+    });
+    const env = { AI: { run } } as unknown as Env;
+    // Concurrency 6 = all 6 start at once; make it observable with 6 workers
+    // over 6 chunks by checking nothing starts after the failure.
+    await expect(
+      runPro('translate-document-pro', { text: doc + '\n\n' + doc.slice(0, 1), target: 'fr' }, env),
+    ).rejects.toThrow('provider down');
+    const startedAtReturn = started;
+    // In-flight calls were awaited before the failure returned.
+    expect(settled).toBe(started - 1);
+    await new Promise((r) => setTimeout(r, 30));
+    expect(started).toBe(startedAtReturn);
+    // The 7th chunk (beyond the 6 parallel slots) was never started.
+    expect(started).toBeLessThanOrEqual(6);
+  });
+
+  it('translate-document-pro refuses more than 100,000 characters', () => {
+    expect(() =>
+      prepareProRun(
+        'translate-document-pro',
+        { text: 'a'.repeat(100_001), target: 'fr' },
+        aiEnv({}),
+      ),
+    ).toThrow();
   });
 });

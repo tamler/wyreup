@@ -59,14 +59,10 @@ export const INFERENCE_TIMEOUTS = {
   vision: 60_000,
   /** Whisper / speech-to-text. Bounded by 25 MB input cap upstream. */
   audio: 90_000,
-  /** Text-to-speech (melotts). Bounded by char cap upstream. */
+  /** Text-to-speech (Deepgram Aura). Bounded by char cap upstream. */
   tts: 60_000,
   /** Image generation (flux). Bounded by step cap upstream. */
   image: 60_000,
-  /** Specialty translation (m2m100, indictrans2). */
-  translate: 30_000,
-  /** Object detection (DETR). */
-  detection: 30_000,
 } as const;
 
 // ── Default max_tokens per LLM class ───────────────────────────────────────

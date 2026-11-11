@@ -75,10 +75,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         id: 'ocr-hq',
         why: 'Extract the raw labels and axis text from the chart image as plain text.',
       },
-      {
-        id: 'detect-objects',
-        why: 'When you need located items in an image rather than a narrative explanation.',
-      },
     ],
   },
   'analyze-loudness': {
@@ -701,19 +697,19 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'chat-long-pdf-pro': {
     intro:
-      "Ask a Long PDF answers questions about documents that are too big for the standard Ask-a-PDF tool, using hosted Llama 4 Scout with a 10M-token context window. It extracts the PDF's text in your browser, then sends it to the long-context model — built for textbooks, court transcripts, large contracts, and full books. It's a Pro tool using 2 credits per run.",
+      "Ask a Long PDF answers questions about long documents using hosted Llama 4 Scout, and gives longer answers than the standard Ask-a-PDF tool. It extracts the PDF's text in your browser, then sends up to about 44,000 characters of English (roughly 17 pages, or 14,666 characters of Chinese, Japanese or Korean) to the model. It's a Pro tool using 2 credits per run.",
     useCases: [
-      'Ask where a specific clause appears across a 400-page contract without chunking it yourself',
-      'Query a full court transcript for every mention of a particular witness or exhibit',
-      'Pull the relevant passage from an entire textbook to answer a study question',
+      'Ask where a specific clause appears in a long contract without searching it yourself',
+      'Query a court transcript for every mention of a particular witness or exhibit',
+      'Pull the relevant passage from a textbook chapter to answer a study question',
       'Find how a policy changed across a long compliance document in one pass',
-      'Ask a whole technical manual a setup question that spans multiple chapters',
-      'Get an answer that draws on the entire length of a book rather than just a section',
+      'Ask a technical manual section a setup question that spans several pages',
+      'Get a detailed answer that draws on the whole document rather than one page',
     ],
     faq: [
       {
         q: 'When should I use this over Ask a PDF?',
-        a: 'Use it when your document exceeds what the standard Ask-a-PDF tool can hold. Its 10M-token context window is built for textbooks, transcripts, large contracts, and books; for shorter PDFs the standard tool is cheaper.',
+        a: 'When you want a longer, more detailed answer. This tool reads up to about 44,000 characters of English per run (roughly 17 pages); Ask a PDF reads up to about 36,000. For a book, run it chapter by chapter. For short answers the standard tool is the simpler choice.',
       },
       {
         q: 'How is the PDF processed?',
@@ -2322,7 +2318,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'deep-analysis-pro': {
     intro:
-      "Deep Analysis runs your document through a hosted DeepSeek R1 reasoning model that answers a specific question with explicit step-by-step reasoning. Reach for it when a quick summary won't cut it — contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It's a Pro tool using 3 credits per run.",
+      "Deep Analysis runs your document through DeepSeek V4.1 Flash, a hosted reasoning model, and answers one specific question with step-by-step reasoning. Reach for it when a quick summary won't cut it: contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It reads up to about 34,000 characters of English per run and is a Pro tool using 3 credits per run.",
     useCases: [
       'Ask whether a contract clause actually limits liability, and see the reasoning behind the answer',
       'Walk through a stack of log lines to identify the most likely root cause of an incident',
@@ -2334,7 +2330,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: "What's different about a reasoning model here?",
-        a: 'DeepSeek R1 works through the problem with explicit step-by-step reasoning rather than jumping to a one-line answer, which suits contracts, legal text, code review, and root-cause analysis where the chain of logic matters.',
+        a: 'DeepSeek V4.1 Flash works through the problem step by step before it answers, instead of jumping to a one-line reply. That suits contracts, legal text, code review, and root-cause analysis where the chain of logic matters. If DeepSeek is unavailable, the run falls back to Google Gemma 4, which also reasons before answering.',
       },
       {
         q: 'What does it return?',
@@ -2342,11 +2338,11 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What do I provide?',
-        a: 'Plain text — your document or log excerpt — plus the specific question you want answered.',
+        a: 'Plain text (your document or log excerpt, up to about 34,000 characters of English or 11,333 of Chinese, Japanese or Korean) plus the specific question you want answered, up to about 1,500 characters.',
       },
       {
         q: 'Is the document sent to a server?',
-        a: "Yes. It's a Pro tool that sends your text to the hosted DeepSeek R1 model for analysis. It's processed for your request and the result is returned to you.",
+        a: "Yes. It's a Pro tool that sends your text to a hosted model on Cloudflare Workers AI for analysis. It's processed for your request and the result is returned to you.",
       },
       {
         q: 'Why does it cost more than the summarize tools?',
@@ -2364,55 +2360,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'chat-long-pdf-pro',
-        why: 'For documents too large for standard context, switch to the 10M-token long-context model.',
-      },
-    ],
-  },
-  'detect-objects': {
-    intro:
-      "Detect Objects finds and locates items in an image, returning each one's label, a confidence score, and a bounding box as structured JSON. Reach for it when you need to count things or know where they are in the frame, not just a written description. It runs on a hosted vision model and costs 1 credit per run.",
-    useCases: [
-      'Count how many cars or people appear in a surveillance or street photo',
-      'Locate products on a shelf image for a retail audit',
-      'Auto-tag images with the objects they contain for a searchable library',
-      'Feed bounding boxes into a downstream crop or annotation pipeline',
-      'Verify a photo contains an expected item before approving an upload',
-      'Build a quick inventory count from a single warehouse photo',
-    ],
-    faq: [
-      {
-        q: 'What does the output look like?',
-        a: 'A JSON array where each detected object has a label, a confidence score, and a bounding box. That structure plugs directly into code or other JSON-aware tools.',
-      },
-      {
-        q: 'Which image formats are supported?',
-        a: 'PNG, JPEG, and WebP.',
-      },
-      {
-        q: 'Does the image get uploaded?',
-        a: "Yes. This Pro tool sends the image to a hosted vision model for detection. It's processed for that run and not retained.",
-      },
-      {
-        q: 'How reliable are the boxes and counts?',
-        a: 'Confidence scores let you filter weak detections, but no detector is perfect: overlapping or tiny objects may be missed or merged. Use the scores to set a threshold that fits your task.',
-      },
-      {
-        q: "What's the cost?",
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-q-and-a',
-        why: 'Ask a plain-language question when you want an answer rather than coordinates.',
-      },
-      {
-        id: 'image-describe',
-        why: 'Get a narrative caption instead of structured detection data.',
-      },
-      {
-        id: 'analyze-chart',
-        why: 'Use when the image is a chart and you want the trend explained, not objects located.',
+        why: 'For a longer, more detailed answer about a long document, switch to the Llama 4 Scout tool.',
       },
     ],
   },
@@ -3041,7 +2989,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'fix-grammar-pro': {
     intro:
-      "Fix Grammar runs your text through a hosted LLM that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only — no commentary, no explanation — so you can drop it straight back into your draft. It's a Pro tool using 1 credit per run.",
+      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to about 16,000 characters of English per run (5,333 of Chinese, Japanese or Korean) and is a Pro tool using 1 credit per run.',
     useCases: [
       'Tidy up a quickly written email before you hit send, without it sounding robotic',
       'Fix typos and punctuation in a blog draft while keeping your phrasing intact',
@@ -3069,7 +3017,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'It handles typical emails, paragraphs, and short documents well. For very long pieces, correcting section by section keeps results sharp and cost predictable.',
+        a: 'Up to about 16,000 characters of English per run, which is about 2,700 words, or 5,333 characters of Chinese, Japanese or Korean. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
       },
     ],
     alsoTry: [
@@ -4191,10 +4139,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'analyze-chart',
         why: 'Better suited when the image is a chart and you want the overall trend explained.',
-      },
-      {
-        id: 'detect-objects',
-        why: 'Use when you need located objects with bounding boxes rather than a written answer.',
       },
     ],
   },
@@ -7709,7 +7653,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Can I send the recording straight to transcription?',
-        a: 'Yes. The WebM output chains directly into Transcribe (free, in-browser) or Transcribe Pro (hosted, higher accuracy).',
+        a: 'Yes. The WebM output chains directly into Transcribe (free, in-browser). For Transcribe Pro (hosted, higher accuracy), convert it to MP3 first with Convert Audio.',
       },
     ],
     alsoTry: [
@@ -9948,10 +9892,10 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'text-to-speech-pro': {
     intro:
-      "Text to Speech turns written text into a natural-sounding MP3 in seconds using a hosted neural TTS model. Reach for it when you want to listen to something instead of read it, or to add a voiceover to content you've produced with other tools. It's a Pro tool that runs on hosted infrastructure and uses 2 credits per run.",
+      "Text to Speech turns written English or Spanish into a natural-sounding MP3 in seconds using Deepgram Aura voices hosted on Cloudflare. Reach for it when you want to listen to something instead of reading it, or to add a voiceover to content you've produced with other tools. Each run takes up to 1,000 characters of English or 500 of Spanish and uses 2 credits.",
     useCases: [
       'Chain it after Summarize to turn a long article into a short audio briefing for your commute',
-      'Voice a translated paragraph from Translate so you can hear how a phrase sounds in another language',
+      'Voice a paragraph you translated into Spanish so you can hear how it sounds',
       "Convert OCR'd text from a scanned page into spoken audio for hands-free review",
       'Generate narration for a slideshow or product demo from a written script',
       'Produce an MP3 of redacted notes so a teammate can listen without seeing the original document',
@@ -9976,7 +9920,11 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the text be?',
-        a: 'It handles typical paragraphs and articles comfortably. Very long inputs are best split into sections, both for cost control and to keep each clip a manageable length.',
+        a: 'Up to 1,000 characters of English (roughly a minute of speech) or 500 characters of Spanish per run. Split longer text into sections and run each one.',
+      },
+      {
+        q: 'Which languages and voices are there?',
+        a: 'English, with 12 Deepgram Aura voices, and Spanish, with 10. Other languages are not supported, so text in French, Chinese, Japanese, or Korean will not be read correctly.',
       },
     ],
     alsoTry: [
@@ -9986,7 +9934,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'text-translate-pro',
-        why: 'Translate text, then hear the result spoken aloud in the target language.',
+        why: 'Translate into English or Spanish, then hear the result spoken aloud.',
       },
       {
         id: 'transcribe-and-translate',
@@ -10300,7 +10248,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'What audio formats are accepted?',
-        a: 'MP3 (audio/mpeg), WAV, MP4/M4A audio, and WebM. The output is plain translated text.',
+        a: 'MP3 or WAV, up to 45 minutes and 25 MB. Hosted runs need a format whose length can be checked before any credits are used, so convert M4A, WebM or other recordings to MP3 first with the free Convert Audio tool. The output is plain translated text.',
       },
       {
         q: 'Is this two tools in one?',
@@ -10352,7 +10300,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What audio formats does it accept?',
-        a: 'WAV, MP3, MP4/M4A, AAC, OGG, WebM, and FLAC. The result is plain text.',
+        a: 'MP3 or WAV, up to 45 minutes and 25 MB. Hosted runs need a format whose length can be checked before any credits are used, so convert M4A, WebM, OGG or FLAC to MP3 first with the free Convert Audio tool. The free in-browser Transcribe takes all of those formats directly. The result is plain text.',
       },
       {
         q: 'Is the audio uploaded?',
@@ -10432,7 +10380,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-indic-pro': {
     intro:
-      'Translate to Indic Languages converts English text into eleven major South Asian languages using IndicTrans2, a model built specifically for this job. Reach for it when a general-purpose LLM gives stilted or inaccurate output for Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Because the model is purpose-built for English-to-Indic pairs, the wording reads more natural than a one-size-fits-all translator.',
+      'Translate to Indic Languages converts English text into eleven major South Asian languages, in their native scripts, using hosted Google Gemma 4: Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Pick the language from a list instead of typing a code. Each run takes up to about 16,000 characters of English and uses 1 credit.',
     useCases: [
       'Localize app copy or onboarding screens into Hindi, Tamil, and Bengali for an Indian launch',
       'Translate a customer-facing announcement into Marathi and Gujarati for regional audiences',
@@ -10448,7 +10396,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Why use this instead of the general Translate tool?',
-        a: 'IndicTrans2 is trained specifically on English-to-Indic pairs, so it handles these scripts and grammar more faithfully than a general LLM. For other language pairs, use the general hosted Translate tool.',
+        a: 'It is set up for the English-to-Indic direction with the target script named explicitly, and it costs 1 credit instead of 2. For other language pairs, use the general hosted Translate tool.',
       },
       {
         q: 'What format does it take and return?',
@@ -10456,15 +10404,15 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does my text leave my device?',
-        a: 'Yes — this is a Pro tool running on hosted infrastructure, and each run uses 1 credit. The text is sent to the IndicTrans2 model to be translated.',
+        a: 'Yes. This is a Pro tool running on hosted infrastructure, and each run uses 1 credit. The text is sent to Google Gemma 4 on Cloudflare Workers AI to be translated.',
       },
       {
         q: 'Can it translate from Hindi back into English?',
-        a: 'No — this tool is purpose-built for the English-to-Indic direction. For other directions or non-Indic languages, use the general hosted Translate tool.',
+        a: 'No. This tool only translates from English into the Indic languages. For other directions or non-Indic languages, use the general hosted Translate tool.',
       },
       {
         q: 'How long can the input be?',
-        a: 'It works best on focused passages — a paragraph, a screen of copy, a set of strings. For very long documents, split the text into sections and translate each in turn.',
+        a: 'Up to about 16,000 characters of English per run. For longer documents, split the text into sections and translate each in turn.',
       },
     ],
     alsoTry: [
@@ -10484,7 +10432,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-many-pro': {
     intro:
-      "Translate (100+ languages) uses a hosted M2M-100 model to translate directly across more than 100 language pairs without routing through a chat LLM. Reach for it when you want straight-shot translation that's faster and cheaper than the Llama-class Translate tool. It's a Pro tool using 1 credit per run.",
+      "Translate (100+ languages) uses hosted Google Gemma 4 to translate directly between more than 100 languages, picked by ISO code. Reach for it when you want straight-shot translation that's cheaper than the Llama-class Translate tool. Each run takes up to about 16,000 characters of English (or 5,333 of Chinese, Japanese or Korean) and uses 1 credit.",
     useCases: [
       'Translate a batch of short product strings between two non-English languages directly, no English pivot',
       'Localize UI labels into a less-common target language at a lower per-run cost than the chat-LLM translator',
@@ -10496,7 +10444,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'How is this different from the regular Translate tool?',
-        a: 'This uses M2M-100, a dedicated translation model, for direct straight-shot translation — faster and cheaper at 1 credit. The Llama-class Translate often produces more nuanced phrasing for tricky or idiomatic text but costs more.',
+        a: 'This uses Google Gemma 4 for direct straight-shot translation at 1 credit. The Llama-class Translate can produce more nuanced phrasing for tricky or idiomatic text but costs 2 credits.',
       },
       {
         q: 'How many languages does it support?',
@@ -10508,7 +10456,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does it run in my browser?',
-        a: 'No. As a Pro tool it sends your text to a hosted M2M-100 model. The free in-browser tools stay free; hosted-model tools are Pro.',
+        a: 'No. As a Pro tool it sends your text to Google Gemma 4 on Cloudflare Workers AI. The free in-browser tools stay free; hosted-model tools are Pro.',
       },
       {
         q: 'How much does each translation cost?',
@@ -10522,7 +10470,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'text-to-speech-pro',
-        why: 'Hear the translation spoken aloud once you have the target-language text.',
+        why: 'Hear the translation spoken aloud when the target language is English or Spanish.',
       },
       {
         id: 'fix-grammar-pro',

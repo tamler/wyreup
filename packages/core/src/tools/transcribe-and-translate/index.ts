@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
+import { assertHostedAudioDuration } from '../../lib/audio-duration.js';
 
 export interface TranscribeAndTranslateParams {
   target: string;
@@ -16,12 +17,14 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
   slug: 'transcribe-and-translate',
   name: 'Transcribe & Translate',
   description:
-    'Transcribes an audio file and translates the transcript in one step. Uses 5 credits per run.',
+    'Transcribes an audio file and translates the transcript in one step. Takes WAV or MP3 up to 45 minutes and 25 MB (convert other formats to MP3 first); the translation covers up to about 40,000 characters of transcript. Uses 5 credits per run.',
   category: 'export',
   keywords: ['transcribe', 'translate', 'audio', 'speech', 'pro', 'hosted'],
 
   input: {
-    accept: ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a', 'audio/webm'],
+    // WAV and MP3 only: the server measures their length from the bytes
+    // before reserving credits (lib/audio-duration.ts).
+    accept: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/wave'],
     min: 1,
     max: 1,
     sizeLimit: 25 * 1024 * 1024,
@@ -73,6 +76,8 @@ export const transcribeAndTranslate: ToolModule<TranscribeAndTranslateParams> = 
     if (inputs.length !== 1) {
       throw new Error('transcribe-and-translate accepts exactly one audio file.');
     }
+    // Same check the server runs; fails here before anything is uploaded.
+    assertHostedAudioDuration(new Uint8Array(await inputs[0]!.arrayBuffer()));
     const audioBase64 = await fileToBase64(inputs[0]!);
     const result = await runPro<{ translation: string; transcript: string; target: string }>(
       'transcribe-and-translate',

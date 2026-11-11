@@ -17,7 +17,7 @@ export const CURATED_CHAIN_SUGGESTIONS: Record<string, readonly string[]> = {
   "burn-subtitles": ["compress-video", "trim-media", "resize-video", "extract-audio", "video-to-gif"],
   "calculator": ["json-formatter"],
   "case-converter": ["slug", "text-escape", "url-encoder", "word-counter"],
-  "color-blind-simulator": ["image-info", "compress", "color-palette", "image-diff", "detect-objects"],
+  "color-blind-simulator": ["image-info", "compress", "color-palette", "image-diff"],
   "color-contrast": ["json-formatter", "json-yaml", "json-flatten"],
   "color-converter": ["json-formatter", "json-yaml", "json-flatten"],
   "color-harmony": ["json-formatter"],

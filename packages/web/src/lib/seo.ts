@@ -171,7 +171,7 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     heading: 'Transcribe Audio with hosted Whisper for noisy or accented speech',
     title: 'Hosted audio transcription with Whisper large-v3 turbo | Wyreup',
     description:
-      'Transcribe one audio file with hosted Whisper large-v3 turbo. WAV, MP3, M4A, AAC, OGG, WebM or FLAC up to 25 MB is sent to Wyreup. 3 credits per run.',
+      'Transcribe one audio file with hosted Whisper large-v3 turbo. WAV or MP3 up to 45 minutes and 25 MB is sent to Wyreup. 3 credits per run.',
   },
   'text-translate-pro': {
     heading: 'Translate text with a hosted language model',

@@ -4,13 +4,12 @@ import { runPro } from '../../lib/pro-runner.js';
 export type FixGrammarProParams = Record<string, never>;
 
 export const defaultFixGrammarProParams: FixGrammarProParams = {};
-
 export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
   id: 'fix-grammar-pro',
   slug: 'fix-grammar-pro',
   name: 'Fix Grammar',
   description:
-    'Hosted LLM cleans up grammar, spelling, and punctuation while preserving your voice. Returns the corrected text only — no commentary, no explanation. Uses 1 credit per run.',
+    'Hosted Gemma 4 model cleans up grammar, spelling, and punctuation while preserving your voice. Returns the corrected text only, with no commentary. Takes up to about 16,000 characters of English (about 2,700 words), or 5,333 of Chinese, Japanese or Korean, per run. Uses 1 credit per run.',
   category: 'text',
   keywords: ['grammar', 'spelling', 'proofread', 'edit', 'copy-edit', 'pro'],
 

@@ -371,7 +371,6 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'translate-image': 'TextResultRunner',
 
   // Image → JSON (object/safety detection — structured output beats text)
-  'detect-objects': 'JsonResultRunner',
   'ocr-suspicious': 'JsonResultRunner',
 
   // PDF → text / JSON (LLM-backed extraction and chat)

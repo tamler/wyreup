@@ -15,7 +15,7 @@ export const textSummarizePro: ToolModule<TextSummarizeProParams> = {
   slug: 'text-summarize-pro',
   name: 'Summarize',
   description:
-    'Higher-quality summarization powered by a hosted Llama-class model. Pairs well with transcribe-pro for "audio → notes" flows. Uses 2 credits per run.',
+    'Higher-quality summarization powered by a hosted Llama-class model. Pairs well with transcribe-pro for "audio → notes" flows. Takes up to about 38,000 characters of English (or 12,666 of Chinese, Japanese or Korean) per run. Uses 2 credits per run.',
   category: 'text',
   keywords: ['summarize', 'summary', 'tldr', 'pro', 'llm', 'hosted'],
 

@@ -19,7 +19,6 @@ export const PRICING: Readonly<Record<string, number>> = {
   'analyze-chart': 1,
   'image-q-and-a': 1,
   'read-handwriting': 1,
-  'detect-objects': 1,
   'translate-image': 2,
   'transcribe-and-translate': 5,
   'regex-from-text-pro': 1,

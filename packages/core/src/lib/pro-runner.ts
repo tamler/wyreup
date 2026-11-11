@@ -12,6 +12,7 @@
 // functions/_lib/auth.ts).
 
 import type { ToolRunContext } from '../types.js';
+import { assertProTextLimits } from './pro-limits.js';
 
 export interface ProRunError {
   status: number;
@@ -46,6 +47,9 @@ export async function runPro<TResult>(
   ctx: ToolRunContext,
 ): Promise<TResult> {
   if (ctx.signal.aborted) throw new Error('Aborted');
+  // Same table the server enforces; failing here gives a readable message
+  // and never reaches the endpoint, so no credits are involved.
+  assertProTextLimits(toolId, input);
 
   const isBrowser = typeof window !== 'undefined';
   const base = ctx.proOrigin ?? '';

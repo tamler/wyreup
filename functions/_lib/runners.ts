@@ -15,31 +15,41 @@
 
 import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
-import { chat, chatWith } from './providers/text-models';
-import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from './timeout';
+import { chat, chatWith, chatWithDetail, type ChatDetail } from './providers/text-models';
+import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS, InferenceTimeoutError } from './timeout';
 import { transcribe as runTranscribe } from './providers/audio-models';
-import { visionPrompt, detectObjects } from './providers/vision-models';
-import { synthesize, TTS_MAX_CHARS, type TtsLang } from './providers/tts-models';
+import { visionPrompt } from './providers/vision-models';
+import { synthesize, checkTtsInput, type TtsLang } from './providers/tts-models';
 import {
   translateMany as runTranslateMany,
   translateIndic as runTranslateIndic,
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import {
+  assertProTextLimits,
+  estimateTokens,
+  PRO_TEXT_MAX_CHARS,
+  truncateToTokens,
+} from '../../packages/core/src/lib/pro-limits';
+import { assertHostedAudioDuration } from '../../packages/core/src/lib/audio-duration';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
-const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
-const MODEL_DEEPSEEK = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
-const MODEL_LLAMA_SMALL = '@cf/meta/llama-3.2-3b-instruct';
-const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
+export const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
+// DeepSeek V4.1 Flash replaces the R1 distill Cloudflare retires on
+// 2026-11-20. It needs Workers Paid or AI Gateway credits, so Gemma 4
+// stands in when the primary call fails (both calls are in the cost model).
+export const MODEL_DEEPSEEK_FLASH = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
+export const MODEL_GEMMA = '@cf/google/gemma-4-26b-a4b-it';
+export const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
 // MODEL_SCOUT — Llama 4 Scout, used for both json-extract-pro and
 // chat-long-pdf-pro. 10M token context window (succeeds kimi-k2.5 here
 // — k2.5 was planned-deprecation and k2.6 raised input/output pricing
 // 60%, eating margin on a 2-credit tool). Scout is ~3-4× cheaper per
 // token than the kimi family at typical sizes, and the bigger context
 // means we can take genuinely huge PDFs without chunking.
-const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
+export const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -59,6 +69,9 @@ export function prepareProRun(toolId: string, input: RunnerInput, env: Env): Pre
   if (!runner) {
     throw new Error(`No hosted runner registered for tool '${toolId}'`);
   }
+  // Token caps per tool and field (shared with the client). The cost model
+  // prices every worst case from these, so they must hold before any spend.
+  assertProTextLimits(toolId, input);
   return runner(input, env);
 }
 
@@ -78,7 +91,6 @@ const RUNNERS: Record<string, Runner> = {
   'analyze-chart': analyzeChart,
   'image-q-and-a': imageQandA,
   'read-handwriting': readHandwriting,
-  'detect-objects': detectObjectsPro,
   'translate-image': translateImage,
   'transcribe-and-translate': transcribeAndTranslate,
   'regex-from-text-pro': regexFromTextPro,
@@ -110,6 +122,9 @@ const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
 function transcribePro(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
+  // Whisper bills per audio minute: measure the real length from the bytes
+  // (WAV/MP3 only) and refuse anything over the cap before credits move.
+  assertHostedAudioDuration(bytes);
   return () => runTranscribe(env, { bytes, language });
 }
 
@@ -142,6 +157,10 @@ function translatePro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
+// The answer is one word; a small output budget lets the 1-credit price
+// carry a 24,000-token input (see cost-model.ts).
+export const SENTIMENT_MAX_TOKENS = 16;
+
 function sentimentPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   return async () => {
@@ -149,6 +168,7 @@ function sentimentPro(raw: RunnerInput, env: Env): PreparedProRun {
       env,
       'Classify the sentiment of the user message. Respond with EXACTLY one word: positive, negative, or neutral. No punctuation, no explanation.',
       text,
+      { maxTokens: SENTIMENT_MAX_TOKENS },
     );
     const label = out.toLowerCase().replace(/[^a-z]/g, '');
     const known = ['positive', 'negative', 'neutral'].includes(label) ? label : 'neutral';
@@ -255,23 +275,6 @@ function readHandwriting(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-function detectObjectsPro(raw: RunnerInput, env: Env): PreparedProRun {
-  const image = __readImageBytes(raw);
-  return async () => {
-    const found = await detectObjects(env, image);
-    // Highest-confidence first; round scores for a clean UI / chainable JSON.
-    const objects = found
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .map((o) => ({
-        label: o.label,
-        score: Math.round(o.score * 1000) / 1000,
-        box: o.box,
-      }));
-    return { objects, count: objects.length };
-  };
-}
-
 function ocrHq(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
   return async () => {
@@ -309,9 +312,17 @@ function translateImage(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
+/**
+ * Transcript token bound (UTF-8 bytes) sent to the translate call in
+ * transcribe-and-translate. 45 minutes of fast English speech is about
+ * 40,000 characters, so this rarely trims; it bounds the second call's cost.
+ */
+export const TRANSCRIPT_TRANSLATE_MAX_TOKENS = 40_000;
+
 function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
+  assertHostedAudioDuration(bytes);
   const target = readOptionalText(raw, 'target', 'English', 100);
   return async () => {
     const { text: transcript } = await runTranscribe(env, {
@@ -321,12 +332,18 @@ function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
     if (transcript.trim().length === 0) {
       throw new Error('No speech found in the audio to translate');
     }
+    const forTranslation = truncateToTokens(transcript, TRANSCRIPT_TRANSLATE_MAX_TOKENS);
     const translation = await chat(
       env,
       `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
-      transcript,
+      forTranslation,
     );
-    return { transcript, translation, target };
+    return {
+      transcript,
+      translation,
+      target,
+      ...(forTranslation.length < transcript.length ? { translationTruncated: true } : {}),
+    };
   };
 }
 
@@ -427,14 +444,12 @@ function pdfQandA(raw: RunnerInput, env: Env): PreparedProRun {
 
 function textToSpeechPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  if (text.length > TTS_MAX_CHARS) {
-    throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
-  }
-  const langRaw = readOptionalText(raw, 'language', 'EN', 2);
-  if (!['EN', 'ES', 'FR', 'ZH', 'JP', 'KR'].includes(langRaw!))
-    throw new Error('Unsupported TTS language');
-  const language = langRaw as TtsLang;
-  return () => synthesize(env, { text, language });
+  const language = readOptionalText(raw, 'language', 'EN', 2) as TtsLang;
+  const voice = readOptionalText(raw, 'voice', undefined, 32);
+  // Validates language, per-language character cap and voice up front so a
+  // bad request is rejected before any credit is reserved.
+  checkTtsInput({ text, language, voice });
+  return () => synthesize(env, { text, language, voice });
 }
 
 // Llama Guard 3 has its own trained safety template — passing a custom
@@ -487,8 +502,17 @@ function translateManyPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-const MAX_DOC_CHARS = 120_000;
-const TRANSLATION_CHUNK_CHARS = 4_000;
+// The byte cap in PRO_TEXT_LIMITS (48,000) is the binding limit; this
+// char check only gives a clearer message for plainly oversized input.
+const MAX_DOC_CHARS = 48_000;
+const TRANSLATION_CHUNK_CHARS = 8_000;
+/** Most chunks (model calls) one document run may make; priced in cost-model.ts. */
+// A 48,000-byte document makes at most 6 full 8,000-char windows; the
+// paragraph-aware chunker can at worst alternate short and full chunks,
+// so 16 covers it with room to spare.
+export const MAX_DOC_CHUNKS = 16;
+/** Chunks translated at once; Gemma calls are slower than m2m100 was. */
+const DOC_CONCURRENCY = 6;
 
 export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_CHARS): string[] {
   if (!Number.isInteger(maxChars) || maxChars < 1) {
@@ -533,69 +557,134 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
     throw new Error("'text' (non-empty string) is required");
   }
   if (textRaw.length > MAX_DOC_CHARS) {
-    throw new Error('Document exceeds the 40-page limit (120,000 characters maximum).');
+    throw new Error('Document exceeds the 20-page limit (48,000 characters maximum).');
   }
 
   const target = readLanguage(raw, 'target');
   const source = readOptionalText(raw, 'source', 'en', 100);
   const chunks = __chunkDocumentText(textRaw);
+  if (chunks.length > MAX_DOC_CHUNKS) {
+    throw new Error('Document splits into too many sections; remove blank lines or split it.');
+  }
   return async () => {
-    // Aggregate deadline: the char cap already bounds this to <=30 model
-    // calls, but a slow provider must not stack thirty 30s timeouts.
-    const DOC_RUN_DEADLINE_MS = 100_000;
+    // Do not start new chunks after this point: a slow provider must not
+    // stack dozens of 60 s calls. Chunks already running finish or time out.
+    const DOC_START_DEADLINE_MS = 60_000;
     const startedAt = Date.now();
-    const translations: string[] = [];
-    for (const chunk of chunks) {
-      if (Date.now() - startedAt > DOC_RUN_DEADLINE_MS) {
-        throw new Error(
-          'Translation is taking too long for this document — try a shorter document or split it.',
-        );
+    const translations: string[] = new Array<string>(chunks.length);
+    let next = 0;
+    // First failure stops every worker from starting another paid call; the
+    // run then waits for calls already in flight before it fails (and the
+    // endpoint refunds), so nothing new is submitted for a refunded run.
+    let failure: unknown;
+    let failed = false;
+    const worker = async () => {
+      while (!failed && next < chunks.length) {
+        const index = next++;
+        try {
+          if (Date.now() - startedAt > DOC_START_DEADLINE_MS) {
+            throw new Error(
+              'Translation is taking too long for this document. Try a shorter document or split it.',
+            );
+          }
+          const result = await runTranslateMany(env, { text: chunks[index], source, target });
+          translations[index] = result.translation;
+        } catch (error) {
+          if (!failed) {
+            failed = true;
+            failure = error;
+          }
+        }
       }
-      const result = await runTranslateMany(env, { text: chunk, source, target });
-      translations.push(result.translation);
-    }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(DOC_CONCURRENCY, chunks.length) }, () => worker()),
+    );
+    if (failed) throw failure instanceof Error ? failure : new Error('Translation failed');
 
     return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
   };
 }
 
-// DeepSeek R1 emits a <think>...</think> reasoning trace before the final
-// answer. We return both so callers can show or hide the reasoning.
+// Caps and budgets for deep-analysis-pro. cost-model.ts prices the worst
+// case from these values: max document + max question, the full output
+// budget on the primary, plus the full budget again on the fallback.
+// max_completion_tokens bounds reasoning and answer tokens together.
+export const DEEP_ANALYSIS = {
+  primaryModel: MODEL_DEEPSEEK_FLASH,
+  fallbackModel: MODEL_GEMMA,
+  system:
+    'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
+  maxOutputTokens: 6_144,
+  primaryTimeoutMs: 90_000,
+  fallbackTimeoutMs: 60_000,
+} as const;
+
+// The reasoning trace comes back separately from the answer; we return both
+// so callers can show or hide it.
 function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
+  const user = `Document:\n${text}\n\nQuestion: ${question}`;
   return async () => {
-    const out = await chatWith(
-      env,
-      MODEL_DEEPSEEK,
-      'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
-      `Document:\n${text}\n\nQuestion: ${question}`,
-      { maxTokens: MAX_TOKENS.reasoning },
-    );
-    const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
-    const reasoning = thinkMatch?.[1]?.trim() ?? '';
-    // R1 sometimes returns its full answer inside the <think> block and
-    // nothing after the closing tag. Fall back to the reasoning so the
-    // user gets a usable answer; only throw if the whole output is empty.
-    let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-    if (!answer) answer = reasoning;
+    let out: ChatDetail;
+    try {
+      out = await chatWithDetail(env, DEEP_ANALYSIS.primaryModel, DEEP_ANALYSIS.system, user, {
+        maxTokens: DEEP_ANALYSIS.maxOutputTokens,
+        timeoutMs: DEEP_ANALYSIS.primaryTimeoutMs,
+        thinking: true,
+      });
+    } catch (err) {
+      // A timeout means the primary may still be generating; do not stack a
+      // second long call on top. Any other failure (plan or billing errors
+      // included) falls back to Gemma 4 once.
+      if (err instanceof InferenceTimeoutError) throw err;
+      out = await chatWithDetail(env, DEEP_ANALYSIS.fallbackModel, DEEP_ANALYSIS.system, user, {
+        maxTokens: DEEP_ANALYSIS.maxOutputTokens,
+        timeoutMs: DEEP_ANALYSIS.fallbackTimeoutMs,
+        thinking: true,
+      });
+    }
+    const reasoning = out.reasoning;
+    // If the whole budget went to reasoning, return the reasoning as the
+    // answer rather than nothing; only throw if both are empty.
+    const answer = out.content || reasoning;
     if (!answer) {
       throw new Error('Analysis model returned no answer');
     }
-    return { answer, reasoning };
+    // An answer that hit the output budget is returned but flagged, so the
+    // caller never presents it as complete.
+    return out.truncated ? { answer, reasoning, truncated: true } : { answer, reasoning };
   };
 }
 
+// Budgets for fix-grammar-pro. The input cap (4,000 estimated tokens, in
+// pro-limits.ts) keeps a full rewrite inside the 6,144-token output budget
+// even for CJK text; thinking is off so the budget goes to the answer.
+export const FIX_GRAMMAR = {
+  model: MODEL_GEMMA,
+  system:
+    'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text: no explanations, no preamble, no quotes.',
+  /** Output budget = the input's token upper bound + this, so a full rewrite fits. */
+  outputExtraTokens: 512,
+  timeoutMs: 90_000,
+} as const;
+
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
+  const maxTokens = estimateTokens(text) + FIX_GRAMMAR.outputExtraTokens;
   return async () => {
-    const corrected = await chatWith(
+    const { content, truncated } = await chatWithDetail(
       env,
-      MODEL_LLAMA_SMALL,
-      'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
+      FIX_GRAMMAR.model,
+      FIX_GRAMMAR.system,
       text,
+      { maxTokens, timeoutMs: FIX_GRAMMAR.timeoutMs, thinking: false },
     );
-    return { corrected };
+    // A cut-off correction would silently drop the end of the user's text.
+    if (truncated) throw new Error('The corrected text was cut off. Try a shorter text.');
+    if (!content) throw new Error('Grammar model returned no text');
+    return { corrected: content };
   };
 }
 
@@ -702,7 +791,7 @@ function readText(raw: RunnerInput, field: string): string {
   if (typeof v !== 'string' || v.trim().length === 0) {
     throw new Error(`'${field}' (non-empty string) is required`);
   }
-  if (v.length > 100_000) {
+  if (v.length > PRO_TEXT_MAX_CHARS) {
     throw new Error(`'${field}' exceeds 100k chars`);
   }
   return v;

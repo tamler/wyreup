@@ -37,26 +37,48 @@ Each version is its own registry entry with its own `id`. Don't try to encode "t
 
 ```
 transcribe         → cost: 'free' (small quantized, in-browser)
-transcribe-pro     → cost: 'credit', creditCost: 5 (Whisper large-v3, hosted)
+transcribe-pro     → cost: 'credit', creditCost: 3 (Whisper large-v3 turbo, hosted)
 ```
 
 The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps the active tool id.
 
-### PRO tool candidates (hosted model inference)
+### PRO tools (hosted model inference)
 
-| Tool ID | Credit Cost | Why PRO |
-|---------|-------------|---------|
-| `transcribe-pro` | 5 | Whisper large-v3 hosted |
-| `text-summarize-pro` | 3 | LLM summarization |
-| `text-translate-pro` | 3 | LLM translation |
-| `text-sentiment-pro` | 2 | LLM sentiment |
-| `text-ner-pro` | 2 | LLM named entity |
-| `bg-remove-pro` | 4 | Large RMBG model |
-| `upscale-2x-pro` | 4 | Large upscale model |
-| `text-redact-pro` | 3 | PII detection via LLM |
-| `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+Prices match `functions/_lib/pricing.ts` (2026-11-11). Caps are UTF-8 bytes of the field (1 per English letter, 3 per CJK character), see below.
+
+| Tool ID | Credits | Backend and cap |
+|---------|---------|-----------------|
+| `transcribe-pro` | 3 | Whisper large-v3 turbo; WAV or MP3 only, at most 45 minutes measured from the bytes |
+| `transcribe-and-translate` | 5 | Whisper, then Llama 3.3 on up to 40,000 bytes of transcript |
+| `text-summarize-pro` / `text-translate-pro` / `text-redact-pro` / `pdf-summarize` | 2 | Llama 3.3 70B, 38,000 bytes |
+| `pdf-q-and-a` | 2 | Llama 3.3 70B, 36,000-byte document, 1,500-byte question |
+| `text-sentiment-pro` | 1 | Llama 3.3 70B, 26,000 bytes, 16 output tokens |
+| `text-ner-pro` | 1 | Llama 3.3 70B, 10,500 bytes |
+| `regex-from-text-pro` / `cron-from-text-pro` | 1 | Llama 3.3 70B, 2,000-byte description |
+| `content-safety-pro` | 1 | Llama Guard 3 8B, 15,500 bytes |
+| `rewrite-tone-pro` | 1 | GLM 4.7 Flash, 100,000 bytes |
+| `chat-long-pdf-pro` | 2 | Llama 4 Scout, 44,000-byte document, 1,500-byte question |
+| `json-extract-pro` | 1 | Llama 4 Scout, 21,000 bytes, 1,500-byte schema hint |
+| `deep-analysis-pro` | 3 | DeepSeek V4.1 Flash, Gemma 4 fallback; 34,000-byte document, 1,500-byte question |
+| `fix-grammar-pro` | 1 | Gemma 4, 16,000 bytes, output budget = input bytes + 512 |
+| `translate-many-pro` / `translate-indic-pro` | 1 | Gemma 4, 16,000 bytes, output budget = input bytes + 256 |
+| `translate-document-pro` | 3 | Gemma 4, 48,000-byte document in at most 16 chunks, per-chunk output budget = chunk bytes + 256 |
+| `text-to-speech-pro` | 2 | Deepgram Aura: English (Aura 1, 1,000 chars) or Spanish (Aura 2, 500 chars) |
+| `ocr-hq` / `image-describe` / `analyze-chart` / `read-handwriting` | 1 | Llama 3.2 11B Vision, 1,024 output tokens |
+| `image-q-and-a` | 1 | Llama 3.2 11B Vision, 1,500-byte question |
+| `translate-image` | 2 | Vision OCR, then Llama 3.3 translation |
+| `image-generate-pro` | 1 | flux-1-schnell, at most 8 steps |
+| `bg-remove-pro` / `upscale-2x-pro` | 3 | Replicate with `Cancel-After: 14s`, so billed GPU time is capped |
+
+A translation or grammar fix that hits its output budget (`finish_reason: 'length'`) fails and is refunded instead of being returned as complete; a deep analysis answer that hits it is returned with `truncated: true`.
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
+
+Every price must clear the margin floor: a run's worst-case Cloudflare cost is at most 50% of the worst-case net revenue for its credits ($8 / 440-credit plan after a 5% + $0.50 fee, so $0.016136 per credit). `functions/_lib/cost-model.ts` holds the per-tool worst case, built from the live caps and token budgets, and `cost-model.test.ts` fails CI if a cap or budget change breaks the floor, or if a priced tool is neither modelled nor listed in `UNBOUNDED_TOOLS` with a reason.
+
+Text caps are a token upper bound, not an estimate (`packages/core/src/lib/pro-limits.ts`, shared by client and server): the field's UTF-8 byte count (the larger of raw and NFKC). Byte-level BPE tokenizers and SentencePiece with byte fallback never emit more tokens than input bytes, so no text in any script can cost more than its cap prices. An earlier 1-token-per-3-characters rule was not a bound (`'1 '.repeat(50_000)` is 100,000 Llama tokens). `token-bound.test.ts` checks the bound against real cl100k and o200k tokenizers.
+
+Audio is bounded by duration, not bytes: `packages/core/src/lib/audio-duration.ts` measures WAV (data bytes / byte rate, header checked for consistency; files with more than one format or data chunk are refused because decoders disagree on them) and MP3 (every frame walked) and rejects formats whose length cannot be verified. `detect-objects` was removed on 2026-11-11 because its DETR model has no published price.
 
 **Free tier of PRO tools:** Small/quantized local versions remain free under the bare tool id. PRO unlocks the hosted high-quality version. The free version genuinely works — PRO is just better.
 

@@ -15,7 +15,7 @@ export const textTranslatePro: ToolModule<TextTranslateProParams> = {
   slug: 'text-translate-pro',
   name: 'Translate',
   description:
-    'Hosted Llama-class translation. Higher quality than browser-only models — particularly for less common language pairs. Uses 2 credits per run.',
+    'Hosted Llama-class translation. Higher quality than browser-only models, particularly for less common language pairs. Takes up to about 38,000 characters of English (or 12,666 of Chinese, Japanese or Korean) per run. Uses 2 credits per run.',
   category: 'text',
   keywords: ['translate', 'translation', 'language', 'pro', 'llm', 'hosted'],
 
