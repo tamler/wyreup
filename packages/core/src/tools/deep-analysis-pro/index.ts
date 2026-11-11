@@ -7,6 +7,11 @@ export interface DeepAnalysisProParams {
 
 export const defaultDeepAnalysisProParams: DeepAnalysisProParams = { question: '' };
 
+/** Mirrors DEEP_ANALYSIS.maxQuestionChars in functions/_lib/runners.ts. */
+export const DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS = 2_000;
+/** Mirrors the server's 100,000-character document cap. */
+export const DEEP_ANALYSIS_PRO_MAX_DOCUMENT_CHARS = 100_000;
+
 interface AnalysisResult {
   answer: string;
   reasoning: string;
@@ -17,9 +22,9 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
   slug: 'deep-analysis-pro',
   name: 'Deep Analysis',
   description:
-    'Hosted DeepSeek R1 reasoning model — reads your document and answers a specific question with explicit step-by-step reasoning. Suited to contracts, legal text, code review, and root-cause analysis from logs. Uses 3 credits per run.',
+    'Hosted DeepSeek V4.1 Flash reasoning model reads your document (up to 100,000 characters) and answers one specific question with step-by-step reasoning, returning both the answer and the reasoning. Suited to contracts, legal text, code review, and root-cause analysis from logs. Uses 3 credits per run.',
   category: 'text',
-  keywords: ['analysis', 'reasoning', 'deepseek', 'r1', 'contract', 'legal', 'pro'],
+  keywords: ['analysis', 'reasoning', 'deepseek', 'v4', 'contract', 'legal', 'pro'],
 
   input: {
     accept: ['text/plain'],
@@ -43,7 +48,7 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
       type: 'string',
       label: 'question',
       placeholder: 'What termination conditions apply?',
-      help: 'The specific question to reason about.',
+      help: 'The specific question to reason about (up to 2,000 characters).',
       multiline: true,
     },
   },
@@ -54,6 +59,16 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
     if (!text) throw new Error('Empty input.');
     const question = params.question?.trim();
     if (!question) throw new Error('Enter a question.');
+    if (text.length > DEEP_ANALYSIS_PRO_MAX_DOCUMENT_CHARS) {
+      throw new Error(
+        `Deep Analysis reads up to ${DEEP_ANALYSIS_PRO_MAX_DOCUMENT_CHARS.toLocaleString('en-US')} characters per run (this document has ${text.length.toLocaleString('en-US')}). Trim it to the relevant part.`,
+      );
+    }
+    if (question.length > DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS) {
+      throw new Error(
+        `Keep the question under ${DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS.toLocaleString('en-US')} characters.`,
+      );
+    }
 
     const result = await runPro<AnalysisResult>(
       'deep-analysis-pro',

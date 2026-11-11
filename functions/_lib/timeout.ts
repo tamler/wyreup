@@ -59,7 +59,7 @@ export const INFERENCE_TIMEOUTS = {
   vision: 60_000,
   /** Whisper / speech-to-text. Bounded by 25 MB input cap upstream. */
   audio: 90_000,
-  /** Text-to-speech (melotts). Bounded by char cap upstream. */
+  /** Text-to-speech (Deepgram Aura). Bounded by char cap upstream. */
   tts: 60_000,
   /** Image generation (flux). Bounded by step cap upstream. */
   image: 60_000,

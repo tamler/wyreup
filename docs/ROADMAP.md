@@ -840,19 +840,23 @@ Last audit: `docs/audit-2026-04-17.md`. Next due: 2026-07-17.
   backend hits a quality or pricing wall:
   - `@cf/openai/gpt-oss-120b` / `gpt-oss-20b` — reasoning + function
     calls, alternative to DeepSeek R1 for `deep-analysis-pro`. Open-
-    weight, native pricing.
+    weight, native pricing. (2026-11-11: `deep-analysis-pro` moved to
+    DeepSeek V4.1 Flash with a Gemma 4 fallback, because Cloudflare retires
+    the R1 distill on 2026-11-20.)
   - `@cf/google/gemma-4-26b-a4b-it` — multimodal (text + image),
     alternative to llama-3.2-11b-vision for the OCR/vision flow.
   - `@cf/nvidia/nemotron-3-120b-a12b` — reasoning, agentic. Another
-    deep-analysis backend option.
+    deep-analysis backend option. Retired by Cloudflare on 2026-11-20;
+    do not target.
   - `@cf/moonshotai/kimi-k2.6` — frontier-class 1T param successor to
     k2.5. **Rejected 2026-05-23** as a chat-long-pdf-pro target:
     pricing 60% higher than k2.5 ($0.95 + $4.00/M vs $0.60 + $3.00/M)
     would drop margin to 30% at our 2-credit price. Migrated to
-    `llama-4-scout` instead (10M context, 4× cheaper). Keep noted
-    in case quality complaints surface.
+    `llama-4-scout` instead (10M context, 4× cheaper). Retired by
+    Cloudflare on 2026-11-20; do not target.
   - `@cf/qwen/qwen3-30b-a3b-fp8` — function-calling specialist for
     a future `json-extract-pro` swap if Llama 4 Scout disappoints.
+    Retired by Cloudflare on 2026-11-20; do not target.
 
 ### Catalog items evaluated 2026-05-23 — partner-billed, deferred
 

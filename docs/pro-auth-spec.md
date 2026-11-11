@@ -55,8 +55,13 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `text-to-speech-pro` | 2 | Deepgram Aura: English (Aura 1, 1,000 chars) or Spanish (Aura 2, 500 chars) |
+| `deep-analysis-pro` | 3 | DeepSeek V4.1 Flash reasoning, Gemma 4 fallback; 100,000-char document, 2,000-char question |
+| `fix-grammar-pro` | 1 | Gemma 4 copy edit, 12,000 chars |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
+
+Every price must clear the margin floor: a run's worst-case Cloudflare cost is at most 50% of the worst-case net revenue for its credits ($8 / 440-credit plan after a 5% + $0.50 fee, so $0.016136 per credit). `functions/_lib/cost-model.ts` holds the per-tool worst case, built from the live caps and token budgets, and `cost-model.test.ts` fails CI if a cap or budget change breaks the floor.
 
 **Free tier of PRO tools:** Small/quantized local versions remain free under the bare tool id. PRO unlocks the hosted high-quality version. The free version genuinely works — PRO is just better.
 

@@ -1,12 +1,66 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro } from '../../lib/pro-runner.js';
 
+export type TextToSpeechProLanguage = 'EN' | 'ES';
+
 export interface TextToSpeechProParams {
-  /** Language code understood by melotts. EN default. */
-  language?: 'EN' | 'ES' | 'FR' | 'ZH' | 'JP' | 'KR';
+  /** EN (Deepgram Aura 1) or ES (Deepgram Aura 2 Spanish). EN default. */
+  language?: TextToSpeechProLanguage;
+  /** Aura speaker name for the chosen language. Omit for the default voice. */
+  voice?: string;
 }
 
 export const defaultTextToSpeechProParams: TextToSpeechProParams = { language: 'EN' };
+
+/**
+ * Per-language character caps. Mirrors TTS_MAX_CHARS in
+ * functions/_lib/providers/tts-models.ts (the server enforces it; a test
+ * keeps the two in sync).
+ */
+export const TEXT_TO_SPEECH_PRO_MAX_CHARS: Readonly<Record<TextToSpeechProLanguage, number>> = {
+  EN: 1_000,
+  ES: 500,
+};
+
+/** Aura speakers per language. First entry is the default voice. */
+export const TEXT_TO_SPEECH_PRO_VOICES: Readonly<
+  Record<TextToSpeechProLanguage, readonly string[]>
+> = {
+  EN: [
+    'asteria',
+    'luna',
+    'stella',
+    'athena',
+    'hera',
+    'orion',
+    'arcas',
+    'perseus',
+    'angus',
+    'orpheus',
+    'helios',
+    'zeus',
+  ],
+  ES: [
+    'aquila',
+    'celeste',
+    'carina',
+    'diana',
+    'estrella',
+    'selena',
+    'alvaro',
+    'javier',
+    'nestor',
+    'sirio',
+  ],
+};
+
+const LANGUAGE_NAMES: Record<TextToSpeechProLanguage, string> = { EN: 'English', ES: 'Spanish' };
+
+const voiceOptions = (language: TextToSpeechProLanguage) =>
+  TEXT_TO_SPEECH_PRO_VOICES[language].map((value) => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+  }));
 
 interface TtsResult {
   contentType: string;
@@ -18,9 +72,9 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
   slug: 'text-to-speech-pro',
   name: 'Text to Speech',
   description:
-    'Hosted neural TTS — turns text into a natural-sounding MP3 in seconds. Chain it after Summarize, Translate, OCR, or Redact to get audio out of any tool that produces text. Uses 2 credits per run.',
+    'Hosted Deepgram Aura voices turn text into a natural-sounding MP3 in seconds. English (up to 1,000 characters, 12 voices) or Spanish (up to 500 characters, 10 voices). Chain it after Summarize, Translate, OCR, or Redact to hear what they produce. Uses 2 credits per run.',
   category: 'audio',
-  keywords: ['tts', 'text-to-speech', 'audio', 'voice', 'mp3', 'pro', 'hosted'],
+  keywords: ['tts', 'text-to-speech', 'audio', 'voice', 'mp3', 'aura', 'deepgram', 'pro', 'hosted'],
 
   input: {
     accept: ['text/plain'],
@@ -43,15 +97,21 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     language: {
       type: 'enum',
       label: 'voice language',
-      help: 'Match the language of the input text for best pronunciation.',
+      help: 'Match the language of the input text. English allows up to 1,000 characters per run, Spanish up to 500.',
       options: [
         { value: 'EN', label: 'English' },
         { value: 'ES', label: 'Spanish' },
-        { value: 'FR', label: 'French' },
-        { value: 'ZH', label: 'Chinese' },
-        { value: 'JP', label: 'Japanese' },
-        { value: 'KR', label: 'Korean' },
       ],
+    },
+    voice: {
+      type: 'enum',
+      label: 'voice',
+      help: 'Each language has its own set of Aura voices.',
+      options: voiceOptions('EN'),
+      optionsFrom: {
+        field: 'language',
+        map: { EN: voiceOptions('EN'), ES: voiceOptions('ES') },
+      },
     },
   },
 
@@ -59,10 +119,26 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     if (inputs.length !== 1) throw new Error('text-to-speech-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');
+    const language = params.language ?? 'EN';
+    if (language !== 'EN' && language !== 'ES') {
+      throw new Error('Text to Speech supports English (EN) and Spanish (ES) only.');
+    }
+    const max = TEXT_TO_SPEECH_PRO_MAX_CHARS[language];
+    if (text.length > max) {
+      throw new Error(
+        `${LANGUAGE_NAMES[language]} text is limited to ${max.toLocaleString('en-US')} characters per run (this input has ${text.length.toLocaleString('en-US')}). Split it into shorter parts.`,
+      );
+    }
+    const voice = params.voice || undefined;
+    if (voice !== undefined && !TEXT_TO_SPEECH_PRO_VOICES[language].includes(voice)) {
+      throw new Error(
+        `Voice '${voice}' is not available for ${LANGUAGE_NAMES[language]}. Choose one of: ${TEXT_TO_SPEECH_PRO_VOICES[language].join(', ')}.`,
+      );
+    }
 
     const result = await runPro<TtsResult>(
       'text-to-speech-pro',
-      { text, language: params.language ?? 'EN', fileName: inputs[0]!.name },
+      { text, language, ...(voice ? { voice } : {}), fileName: inputs[0]!.name },
       ctx,
     );
 

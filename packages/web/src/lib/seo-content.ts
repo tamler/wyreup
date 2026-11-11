@@ -2322,7 +2322,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'deep-analysis-pro': {
     intro:
-      "Deep Analysis runs your document through a hosted DeepSeek R1 reasoning model that answers a specific question with explicit step-by-step reasoning. Reach for it when a quick summary won't cut it — contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It's a Pro tool using 3 credits per run.",
+      "Deep Analysis runs your document through DeepSeek V4.1 Flash, a hosted reasoning model, and answers one specific question with step-by-step reasoning. Reach for it when a quick summary won't cut it: contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It reads up to 100,000 characters per run and is a Pro tool using 3 credits per run.",
     useCases: [
       'Ask whether a contract clause actually limits liability, and see the reasoning behind the answer',
       'Walk through a stack of log lines to identify the most likely root cause of an incident',
@@ -2334,7 +2334,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: "What's different about a reasoning model here?",
-        a: 'DeepSeek R1 works through the problem with explicit step-by-step reasoning rather than jumping to a one-line answer, which suits contracts, legal text, code review, and root-cause analysis where the chain of logic matters.',
+        a: 'DeepSeek V4.1 Flash works through the problem step by step before it answers, instead of jumping to a one-line reply. That suits contracts, legal text, code review, and root-cause analysis where the chain of logic matters. If DeepSeek is unavailable, the run falls back to Google Gemma 4, which also reasons before answering.',
       },
       {
         q: 'What does it return?',
@@ -2342,11 +2342,11 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What do I provide?',
-        a: 'Plain text — your document or log excerpt — plus the specific question you want answered.',
+        a: 'Plain text (your document or log excerpt, up to 100,000 characters) plus the specific question you want answered, up to 2,000 characters.',
       },
       {
         q: 'Is the document sent to a server?',
-        a: "Yes. It's a Pro tool that sends your text to the hosted DeepSeek R1 model for analysis. It's processed for your request and the result is returned to you.",
+        a: "Yes. It's a Pro tool that sends your text to a hosted model on Cloudflare Workers AI for analysis. It's processed for your request and the result is returned to you.",
       },
       {
         q: 'Why does it cost more than the summarize tools?',
@@ -3041,7 +3041,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'fix-grammar-pro': {
     intro:
-      "Fix Grammar runs your text through a hosted LLM that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only — no commentary, no explanation — so you can drop it straight back into your draft. It's a Pro tool using 1 credit per run.",
+      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to 12,000 characters per run and is a Pro tool using 1 credit per run.',
     useCases: [
       'Tidy up a quickly written email before you hit send, without it sounding robotic',
       'Fix typos and punctuation in a blog draft while keeping your phrasing intact',
@@ -3069,7 +3069,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'It handles typical emails, paragraphs, and short documents well. For very long pieces, correcting section by section keeps results sharp and cost predictable.',
+        a: 'Up to 12,000 characters per run, which is about 2,000 words. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
       },
     ],
     alsoTry: [
@@ -9948,10 +9948,10 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'text-to-speech-pro': {
     intro:
-      "Text to Speech turns written text into a natural-sounding MP3 in seconds using a hosted neural TTS model. Reach for it when you want to listen to something instead of read it, or to add a voiceover to content you've produced with other tools. It's a Pro tool that runs on hosted infrastructure and uses 2 credits per run.",
+      "Text to Speech turns written English or Spanish into a natural-sounding MP3 in seconds using Deepgram Aura voices hosted on Cloudflare. Reach for it when you want to listen to something instead of reading it, or to add a voiceover to content you've produced with other tools. Each run takes up to 1,000 characters of English or 500 of Spanish and uses 2 credits.",
     useCases: [
       'Chain it after Summarize to turn a long article into a short audio briefing for your commute',
-      'Voice a translated paragraph from Translate so you can hear how a phrase sounds in another language',
+      'Voice a paragraph you translated into Spanish so you can hear how it sounds',
       "Convert OCR'd text from a scanned page into spoken audio for hands-free review",
       'Generate narration for a slideshow or product demo from a written script',
       'Produce an MP3 of redacted notes so a teammate can listen without seeing the original document',
@@ -9976,7 +9976,11 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the text be?',
-        a: 'It handles typical paragraphs and articles comfortably. Very long inputs are best split into sections, both for cost control and to keep each clip a manageable length.',
+        a: 'Up to 1,000 characters of English (roughly a minute of speech) or 500 characters of Spanish per run. Split longer text into sections and run each one.',
+      },
+      {
+        q: 'Which languages and voices are there?',
+        a: 'English, with 12 Deepgram Aura voices, and Spanish, with 10. Other languages are not supported, so text in French, Chinese, Japanese, or Korean will not be read correctly.',
       },
     ],
     alsoTry: [
@@ -9986,7 +9990,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'text-translate-pro',
-        why: 'Translate text, then hear the result spoken aloud in the target language.',
+        why: 'Translate into English or Spanish, then hear the result spoken aloud.',
       },
       {
         id: 'transcribe-and-translate',
@@ -10522,7 +10526,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'text-to-speech-pro',
-        why: 'Hear the translation spoken aloud once you have the target-language text.',
+        why: 'Hear the translation spoken aloud when the target language is English or Spanish.',
       },
       {
         id: 'fix-grammar-pro',

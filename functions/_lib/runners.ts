@@ -15,11 +15,11 @@
 
 import type { Env } from './env';
 import { runBgRemove, runUpscale } from './providers/image-models';
-import { chat, chatWith } from './providers/text-models';
-import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from './timeout';
+import { chat, chatWith, chatWithDetail, type ChatDetail } from './providers/text-models';
+import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS, InferenceTimeoutError } from './timeout';
 import { transcribe as runTranscribe } from './providers/audio-models';
 import { visionPrompt, detectObjects } from './providers/vision-models';
-import { synthesize, TTS_MAX_CHARS, type TtsLang } from './providers/tts-models';
+import { synthesize, checkTtsInput, type TtsLang } from './providers/tts-models';
 import {
   translateMany as runTranslateMany,
   translateIndic as runTranslateIndic,
@@ -30,8 +30,11 @@ import { generateImage } from './providers/image-gen-models';
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
 const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
-const MODEL_DEEPSEEK = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
-const MODEL_LLAMA_SMALL = '@cf/meta/llama-3.2-3b-instruct';
+// DeepSeek V4.1 Flash replaces the R1 distill Cloudflare retires on
+// 2026-11-20. It needs Workers Paid or AI Gateway credits, so Gemma 4
+// stands in when the primary call fails (both calls are in the cost model).
+export const MODEL_DEEPSEEK_FLASH = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
+export const MODEL_GEMMA = '@cf/google/gemma-4-26b-a4b-it';
 const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
 // MODEL_SCOUT — Llama 4 Scout, used for both json-extract-pro and
 // chat-long-pdf-pro. 10M token context window (succeeds kimi-k2.5 here
@@ -427,14 +430,12 @@ function pdfQandA(raw: RunnerInput, env: Env): PreparedProRun {
 
 function textToSpeechPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  if (text.length > TTS_MAX_CHARS) {
-    throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
-  }
-  const langRaw = readOptionalText(raw, 'language', 'EN', 2);
-  if (!['EN', 'ES', 'FR', 'ZH', 'JP', 'KR'].includes(langRaw!))
-    throw new Error('Unsupported TTS language');
-  const language = langRaw as TtsLang;
-  return () => synthesize(env, { text, language });
+  const language = readOptionalText(raw, 'language', 'EN', 2) as TtsLang;
+  const voice = readOptionalText(raw, 'voice', undefined, 32);
+  // Validates language, per-language character cap and voice up front so a
+  // bad request is rejected before any credit is reserved.
+  checkTtsInput({ text, language, voice });
+  return () => synthesize(env, { text, language, voice });
 }
 
 // Llama Guard 3 has its own trained safety template — passing a custom
@@ -559,26 +560,55 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-// DeepSeek R1 emits a <think>...</think> reasoning trace before the final
-// answer. We return both so callers can show or hide the reasoning.
+// Caps and budgets for deep-analysis-pro. cost-model.ts prices the worst
+// case from these values: max document + max question, the full output
+// budget on the primary, plus the full budget again on the fallback.
+// max_completion_tokens bounds reasoning and answer tokens together.
+export const DEEP_ANALYSIS = {
+  primaryModel: MODEL_DEEPSEEK_FLASH,
+  fallbackModel: MODEL_GEMMA,
+  system:
+    'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
+  /** Characters the user-message wrapper adds around document and question. */
+  userTemplateChars: 'Document:\n\n\nQuestion: '.length,
+  maxQuestionChars: 2_000,
+  maxOutputTokens: 6_144,
+  primaryTimeoutMs: 90_000,
+  fallbackTimeoutMs: 60_000,
+} as const;
+
+// The reasoning trace comes back separately from the answer; we return both
+// so callers can show or hide it.
 function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
+  if (question.length > DEEP_ANALYSIS.maxQuestionChars) {
+    throw new Error(`'question' exceeds ${DEEP_ANALYSIS.maxQuestionChars} chars`);
+  }
+  const user = `Document:\n${text}\n\nQuestion: ${question}`;
   return async () => {
-    const out = await chatWith(
-      env,
-      MODEL_DEEPSEEK,
-      'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
-      `Document:\n${text}\n\nQuestion: ${question}`,
-      { maxTokens: MAX_TOKENS.reasoning },
-    );
-    const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
-    const reasoning = thinkMatch?.[1]?.trim() ?? '';
-    // R1 sometimes returns its full answer inside the <think> block and
-    // nothing after the closing tag. Fall back to the reasoning so the
-    // user gets a usable answer; only throw if the whole output is empty.
-    let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-    if (!answer) answer = reasoning;
+    let out: ChatDetail;
+    try {
+      out = await chatWithDetail(env, DEEP_ANALYSIS.primaryModel, DEEP_ANALYSIS.system, user, {
+        maxTokens: DEEP_ANALYSIS.maxOutputTokens,
+        timeoutMs: DEEP_ANALYSIS.primaryTimeoutMs,
+        thinking: true,
+      });
+    } catch (err) {
+      // A timeout means the primary may still be generating; do not stack a
+      // second long call on top. Any other failure (plan or billing errors
+      // included) falls back to Gemma 4 once.
+      if (err instanceof InferenceTimeoutError) throw err;
+      out = await chatWithDetail(env, DEEP_ANALYSIS.fallbackModel, DEEP_ANALYSIS.system, user, {
+        maxTokens: DEEP_ANALYSIS.maxOutputTokens,
+        timeoutMs: DEEP_ANALYSIS.fallbackTimeoutMs,
+        thinking: true,
+      });
+    }
+    const reasoning = out.reasoning;
+    // If the whole budget went to reasoning, return the reasoning as the
+    // answer rather than nothing; only throw if both are empty.
+    const answer = out.content || reasoning;
     if (!answer) {
       throw new Error('Analysis model returned no answer');
     }
@@ -586,16 +616,31 @@ function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
+// Caps and budgets for fix-grammar-pro. The output budget covers a full
+// rewrite of the largest accepted input (12,000 chars is about 4,000
+// tokens), with thinking turned off so the budget goes to the answer.
+export const FIX_GRAMMAR = {
+  model: MODEL_GEMMA,
+  system:
+    'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text: no explanations, no preamble, no quotes.',
+  maxChars: 12_000,
+  maxOutputTokens: 6_144,
+  timeoutMs: 90_000,
+} as const;
+
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
+  if (text.length > FIX_GRAMMAR.maxChars) {
+    throw new Error(`'text' exceeds ${FIX_GRAMMAR.maxChars} chars`);
+  }
   return async () => {
-    const corrected = await chatWith(
-      env,
-      MODEL_LLAMA_SMALL,
-      'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
-      text,
-    );
-    return { corrected };
+    const { content } = await chatWithDetail(env, FIX_GRAMMAR.model, FIX_GRAMMAR.system, text, {
+      maxTokens: FIX_GRAMMAR.maxOutputTokens,
+      timeoutMs: FIX_GRAMMAR.timeoutMs,
+      thinking: false,
+    });
+    if (!content) throw new Error('Grammar model returned no text');
+    return { corrected: content };
   };
 }
 
@@ -697,12 +742,15 @@ function translateIndicPro(raw: RunnerInput, env: Env): PreparedProRun {
 // helpers
 // ────────────────────────────────────────────────────────────────────────
 
+/** Upper bound on any single text field a Pro runner accepts. */
+export const PRO_TEXT_MAX_CHARS = 100_000;
+
 function readText(raw: RunnerInput, field: string): string {
   const v = (raw as Record<string, unknown>)[field];
   if (typeof v !== 'string' || v.trim().length === 0) {
     throw new Error(`'${field}' (non-empty string) is required`);
   }
-  if (v.length > 100_000) {
+  if (v.length > PRO_TEXT_MAX_CHARS) {
     throw new Error(`'${field}' exceeds 100k chars`);
   }
   return v;

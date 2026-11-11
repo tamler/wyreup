@@ -363,3 +363,161 @@ describe('readImageRef SSRF validation', () => {
     expect(() => readImageRef({ image })).toThrow();
   });
 });
+
+// Cloudflare returns 410 for melotts, deepseek-r1-distill-qwen-32b and
+// llama-3.2-3b-instruct from 2026-11-20.
+describe('runners moved off retiring models', () => {
+  const RETIRED = [
+    '@cf/myshell-ai/melotts',
+    '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b',
+    '@cf/meta/llama-3.2-3b-instruct',
+  ];
+  const completion = (content: string | null, reasoning_content?: string) => ({
+    choices: [{ message: { role: 'assistant', content, refusal: null, reasoning_content } }],
+  });
+  const aiMock = (result: unknown) => {
+    const run = vi.fn((_model: string, _input: Record<string, unknown>) => Promise.resolve(result));
+    return { env: { AI: { run } } as unknown as Env, run };
+  };
+  const mp3Stream = (bytes: number[]) =>
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(bytes));
+        controller.close();
+      },
+    });
+
+  it('text-to-speech-pro uses Aura 1 for English and returns the streamed MP3 as base64', async () => {
+    const { env, run } = aiMock(mp3Stream([0x49, 0x44, 0x33]));
+    const out = await runPro('text-to-speech-pro', { text: 'hello', language: 'EN' }, env);
+    expect(out).toEqual({ contentType: 'audio/mpeg', base64: btoa('ID3') });
+    expect(run).toHaveBeenCalledWith('@cf/deepgram/aura-1', {
+      text: 'hello',
+      speaker: 'asteria',
+      encoding: 'mp3',
+    });
+  });
+
+  it('text-to-speech-pro uses Aura 2 Spanish with the chosen voice', async () => {
+    const { env, run } = aiMock(mp3Stream([1, 2]));
+    await runPro('text-to-speech-pro', { text: 'hola', language: 'ES', voice: 'celeste' }, env);
+    expect(run.mock.calls[0]?.[0]).toBe('@cf/deepgram/aura-2-es');
+    expect(run.mock.calls[0]?.[1]).toMatchObject({ speaker: 'celeste' });
+  });
+
+  it.each([
+    [{ text: 'a'.repeat(1_001), language: 'EN' }],
+    [{ text: 'a'.repeat(501), language: 'ES' }],
+    [{ text: 'bonjour', language: 'FR' }],
+    [{ text: 'hola', language: 'ES', voice: 'asteria' }],
+  ])('text-to-speech-pro rejects %j before provider work', (input) => {
+    const { env, run } = aiMock({});
+    expect(() => prepareProRun('text-to-speech-pro', input, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('text-to-speech-pro accepts exactly the cap', () => {
+    expect(typeof prepareProRun('text-to-speech-pro', { text: 'a'.repeat(1_000) }, aiEnv({}))).toBe(
+      'function',
+    );
+  });
+
+  it('text-to-speech-pro fails (and so refunds) on an empty audio stream', async () => {
+    await expect(
+      runPro('text-to-speech-pro', { text: 'hello' }, aiEnv(mp3Stream([]))),
+    ).rejects.toThrow('no audio');
+  });
+
+  it('deep-analysis-pro calls DeepSeek V4.1 Flash with thinking on and a bounded budget', async () => {
+    const { env, run } = aiMock(completion('The answer.', 'Step one.'));
+    const out = await runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env);
+    expect(out).toEqual({ answer: 'The answer.', reasoning: 'Step one.' });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/deepseek-ai/deepseek-v4.1-flash-1017');
+    expect(payload).toMatchObject({
+      max_tokens: 6_144,
+      max_completion_tokens: 6_144,
+      chat_template_kwargs: { enable_thinking: true },
+    });
+  });
+
+  it('deep-analysis-pro splits an inline <think> block from the answer', async () => {
+    const { env } = aiMock(completion('<think>Because.</think>\nYes.'));
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env),
+    ).resolves.toEqual({ answer: 'Yes.', reasoning: 'Because.' });
+  });
+
+  it('deep-analysis-pro falls back to Gemma 4 once when the primary errors', async () => {
+    const run = vi
+      .fn<(model: string, input: unknown) => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error('5016: requires Workers Paid'))
+      .mockResolvedValueOnce(completion('Fallback answer.', 'Fallback reasoning.'));
+    const env = { AI: { run } } as unknown as Env;
+    await expect(
+      runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env),
+    ).resolves.toEqual({ answer: 'Fallback answer.', reasoning: 'Fallback reasoning.' });
+    expect(run.mock.calls.map((c) => c[0])).toEqual([
+      '@cf/deepseek-ai/deepseek-v4.1-flash-1017',
+      '@cf/google/gemma-4-26b-a4b-it',
+    ]);
+  });
+
+  it('deep-analysis-pro does not stack a fallback on a timed-out primary', async () => {
+    vi.useFakeTimers();
+    try {
+      const run = vi.fn(() => new Promise<never>(() => {}));
+      const env = { AI: { run } } as unknown as Env;
+      const pending = runPro('deep-analysis-pro', { text: 'doc', question: 'q?' }, env);
+      const assertion = expect(pending).rejects.toThrow('timed out');
+      await vi.advanceTimersByTimeAsync(90_001);
+      await assertion;
+      expect(run).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('deep-analysis-pro rejects a question over 2,000 chars before provider work', () => {
+    const { env, run } = aiMock({});
+    expect(() =>
+      prepareProRun('deep-analysis-pro', { text: 'doc', question: 'q'.repeat(2_001) }, env),
+    ).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro calls Gemma 4 with thinking off and returns the corrected text', async () => {
+    const { env, run } = aiMock(completion(' Fixed text. '));
+    await expect(runPro('fix-grammar-pro', { text: 'fixd txt' }, env)).resolves.toEqual({
+      corrected: 'Fixed text.',
+    });
+    const [model, payload] = run.mock.calls[0];
+    expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
+    expect(payload).toMatchObject({
+      max_completion_tokens: 6_144,
+      chat_template_kwargs: { enable_thinking: false },
+    });
+  });
+
+  it('fix-grammar-pro rejects text over 12,000 chars before provider work', () => {
+    const { env, run } = aiMock({});
+    expect(() => prepareProRun('fix-grammar-pro', { text: 'a'.repeat(12_001) }, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro fails (and so refunds) when the model returns no text', async () => {
+    await expect(runPro('fix-grammar-pro', { text: 'x' }, aiEnv(completion(null)))).rejects.toThrow();
+  });
+
+  it.each([
+    ['text-to-speech-pro', { text: 'hello' }, mp3Stream([1])],
+    ['deep-analysis-pro', { text: 'doc', question: 'q?' }, completion('a')],
+    ['fix-grammar-pro', { text: 'x' }, completion('x')],
+  ])('%s never calls a retired model', async (toolId, input, result) => {
+    const { env, run } = aiMock(result);
+    await runPro(toolId, input, env);
+    for (const [model] of run.mock.calls) {
+      expect(RETIRED).not.toContain(model);
+    }
+  });
+});
