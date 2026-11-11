@@ -49,7 +49,32 @@ export const PRO_TEXT_LIMITS: Readonly<Record<string, Readonly<Record<string, nu
   'rewrite-tone-pro': { text: PRO_TEXT_MAX_TOKENS },
   'chat-long-pdf-pro': { text: PRO_TEXT_MAX_TOKENS, question: PRO_SHORT_FIELD_MAX_TOKENS },
   'json-extract-pro': { text: 20_000, schema: PRO_SHORT_FIELD_MAX_TOKENS },
+  'translate-many-pro': { text: 10_000 },
+  'translate-indic-pro': { text: 10_000 },
+  'translate-document-pro': { text: PRO_TEXT_MAX_TOKENS },
 };
+
+/**
+ * Returns the longest prefix of `text` whose estimate fits `maxTokens`,
+ * cut at a whitespace boundary when one is near and never inside a
+ * surrogate pair.
+ */
+export function truncateToTokens(text: string, maxTokens: number): string {
+  if (estimateTokens(text) <= maxTokens) return text;
+  let ascii = 0;
+  let other = 0;
+  let end = 0;
+  for (; end < text.length; end++) {
+    if (text.charCodeAt(end) < 0x80) ascii++;
+    else other++;
+    if (Math.ceil(ascii / 3) + other > maxTokens) break;
+  }
+  const code = text.charCodeAt(end - 1);
+  if (code >= 0xd800 && code <= 0xdbff) end -= 1;
+  const space = text.lastIndexOf(' ', end);
+  if (space > end - 200 && space > 0) end = space;
+  return text.slice(0, end);
+}
 
 const FIELD_LABELS: Record<string, string> = {
   text: 'The text',

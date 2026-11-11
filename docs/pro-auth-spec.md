@@ -54,7 +54,10 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `bg-remove-pro` | 4 | Large RMBG model |
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
-| `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted Gemma 4 (34,000-token document, at most 40 chunks, output capped per chunk) |
+| `translate-many-pro` / `translate-indic-pro` | 1 | Gemma 4 translation, 10,000-token input, output capped at 1.5x input + 128 tokens |
+| `transcribe-pro` / `transcribe-and-translate` | 3 / 5 | Whisper turbo; WAV or MP3 only, at most 45 minutes measured from the bytes before credits are reserved |
+| `bg-remove-pro` / `upscale-2x-pro` | 3 | Replicate with `Cancel-After: 14s`, so billed GPU time is capped |
 | `text-to-speech-pro` | 2 | Deepgram Aura: English (Aura 1, 1,000 chars) or Spanish (Aura 2, 500 chars) |
 | `deep-analysis-pro` | 3 | DeepSeek V4.1 Flash reasoning, Gemma 4 fallback; 34,000-token document, 700-token question |
 | `fix-grammar-pro` | 1 | Gemma 4 copy edit, 4,000 tokens |
@@ -64,6 +67,8 @@ The server keeps its own authoritative price map in `functions/_lib/pricing.ts` 
 Every price must clear the margin floor: a run's worst-case Cloudflare cost is at most 50% of the worst-case net revenue for its credits ($8 / 440-credit plan after a 5% + $0.50 fee, so $0.016136 per credit). `functions/_lib/cost-model.ts` holds the per-tool worst case, built from the live caps and token budgets, and `cost-model.test.ts` fails CI if a cap or budget change breaks the floor, or if a priced tool is neither modelled nor listed in `UNBOUNDED_TOOLS` with a reason.
 
 Text caps are in estimated tokens, not characters (`packages/core/src/lib/pro-limits.ts`, shared by client and server). ASCII counts 1 token per 3 characters and every non-ASCII character counts as a full token, so all-CJK or emoji input at the cap is the priced worst case. A 34,000-token cap fits 100,000 characters of English or 34,000 of Chinese, Japanese or Korean.
+
+Audio is bounded by duration, not bytes: `packages/core/src/lib/audio-duration.ts` measures WAV (data bytes / byte rate, header checked for consistency) and MP3 (every frame walked) and rejects formats whose length cannot be verified. `detect-objects` was removed on 2026-11-11 because its DETR model has no published price.
 
 **Free tier of PRO tools:** Small/quantized local versions remain free under the bare tool id. PRO unlocks the hosted high-quality version. The free version genuinely works — PRO is just better.
 

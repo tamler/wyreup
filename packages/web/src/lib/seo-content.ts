@@ -75,10 +75,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         id: 'ocr-hq',
         why: 'Extract the raw labels and axis text from the chart image as plain text.',
       },
-      {
-        id: 'detect-objects',
-        why: 'When you need located items in an image rather than a narrative explanation.',
-      },
     ],
   },
   'analyze-loudness': {
@@ -2368,54 +2364,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'detect-objects': {
-    intro:
-      "Detect Objects finds and locates items in an image, returning each one's label, a confidence score, and a bounding box as structured JSON. Reach for it when you need to count things or know where they are in the frame, not just a written description. It runs on a hosted vision model and costs 1 credit per run.",
-    useCases: [
-      'Count how many cars or people appear in a surveillance or street photo',
-      'Locate products on a shelf image for a retail audit',
-      'Auto-tag images with the objects they contain for a searchable library',
-      'Feed bounding boxes into a downstream crop or annotation pipeline',
-      'Verify a photo contains an expected item before approving an upload',
-      'Build a quick inventory count from a single warehouse photo',
-    ],
-    faq: [
-      {
-        q: 'What does the output look like?',
-        a: 'A JSON array where each detected object has a label, a confidence score, and a bounding box. That structure plugs directly into code or other JSON-aware tools.',
-      },
-      {
-        q: 'Which image formats are supported?',
-        a: 'PNG, JPEG, and WebP.',
-      },
-      {
-        q: 'Does the image get uploaded?',
-        a: "Yes. This Pro tool sends the image to a hosted vision model for detection. It's processed for that run and not retained.",
-      },
-      {
-        q: 'How reliable are the boxes and counts?',
-        a: 'Confidence scores let you filter weak detections, but no detector is perfect: overlapping or tiny objects may be missed or merged. Use the scores to set a threshold that fits your task.',
-      },
-      {
-        q: "What's the cost?",
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-q-and-a',
-        why: 'Ask a plain-language question when you want an answer rather than coordinates.',
-      },
-      {
-        id: 'image-describe',
-        why: 'Get a narrative caption instead of structured detection data.',
-      },
-      {
-        id: 'analyze-chart',
-        why: 'Use when the image is a chart and you want the trend explained, not objects located.',
-      },
-    ],
-  },
   'diff-apply': {
     intro:
       'Apply Diff takes a unified diff (a patch) and applies it to a text file, verifying every hunk against the source and failing loudly if anything does not line up. It is the counterpart to Text Diff: one produces the patch, this one applies it. Because it runs in your browser, you can patch sensitive files without sending them to any server.',
@@ -4191,10 +4139,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'analyze-chart',
         why: 'Better suited when the image is a chart and you want the overall trend explained.',
-      },
-      {
-        id: 'detect-objects',
-        why: 'Use when you need located objects with bounding boxes rather than a written answer.',
       },
     ],
   },
@@ -7709,7 +7653,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Can I send the recording straight to transcription?',
-        a: 'Yes. The WebM output chains directly into Transcribe (free, in-browser) or Transcribe Pro (hosted, higher accuracy).',
+        a: 'Yes. The WebM output chains directly into Transcribe (free, in-browser). For Transcribe Pro (hosted, higher accuracy), convert it to MP3 first with Convert Audio.',
       },
     ],
     alsoTry: [
@@ -10304,7 +10248,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'What audio formats are accepted?',
-        a: 'MP3 (audio/mpeg), WAV, MP4/M4A audio, and WebM. The output is plain translated text.',
+        a: 'MP3 or WAV, up to 45 minutes and 25 MB. Hosted runs need a format whose length can be checked before any credits are used, so convert M4A, WebM or other recordings to MP3 first with the free Convert Audio tool. The output is plain translated text.',
       },
       {
         q: 'Is this two tools in one?',
@@ -10356,7 +10300,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What audio formats does it accept?',
-        a: 'WAV, MP3, MP4/M4A, AAC, OGG, WebM, and FLAC. The result is plain text.',
+        a: 'MP3 or WAV, up to 45 minutes and 25 MB. Hosted runs need a format whose length can be checked before any credits are used, so convert M4A, WebM, OGG or FLAC to MP3 first with the free Convert Audio tool. The free in-browser Transcribe takes all of those formats directly. The result is plain text.',
       },
       {
         q: 'Is the audio uploaded?',
@@ -10436,7 +10380,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-indic-pro': {
     intro:
-      'Translate to Indic Languages converts English text into eleven major South Asian languages using IndicTrans2, a model built specifically for this job. Reach for it when a general-purpose LLM gives stilted or inaccurate output for Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Because the model is purpose-built for English-to-Indic pairs, the wording reads more natural than a one-size-fits-all translator.',
+      'Translate to Indic Languages converts English text into eleven major South Asian languages, in their native scripts, using hosted Google Gemma 4: Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Pick the language from a list instead of typing a code. Each run takes up to about 30,000 characters of English and uses 1 credit.',
     useCases: [
       'Localize app copy or onboarding screens into Hindi, Tamil, and Bengali for an Indian launch',
       'Translate a customer-facing announcement into Marathi and Gujarati for regional audiences',
@@ -10452,7 +10396,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Why use this instead of the general Translate tool?',
-        a: 'IndicTrans2 is trained specifically on English-to-Indic pairs, so it handles these scripts and grammar more faithfully than a general LLM. For other language pairs, use the general hosted Translate tool.',
+        a: 'It is set up for the English-to-Indic direction with the target script named explicitly, and it costs 1 credit instead of 2. For other language pairs, use the general hosted Translate tool.',
       },
       {
         q: 'What format does it take and return?',
@@ -10460,15 +10404,15 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does my text leave my device?',
-        a: 'Yes — this is a Pro tool running on hosted infrastructure, and each run uses 1 credit. The text is sent to the IndicTrans2 model to be translated.',
+        a: 'Yes. This is a Pro tool running on hosted infrastructure, and each run uses 1 credit. The text is sent to Google Gemma 4 on Cloudflare Workers AI to be translated.',
       },
       {
         q: 'Can it translate from Hindi back into English?',
-        a: 'No — this tool is purpose-built for the English-to-Indic direction. For other directions or non-Indic languages, use the general hosted Translate tool.',
+        a: 'No. This tool only translates from English into the Indic languages. For other directions or non-Indic languages, use the general hosted Translate tool.',
       },
       {
         q: 'How long can the input be?',
-        a: 'It works best on focused passages — a paragraph, a screen of copy, a set of strings. For very long documents, split the text into sections and translate each in turn.',
+        a: 'Up to about 30,000 characters of English per run. For longer documents, split the text into sections and translate each in turn.',
       },
     ],
     alsoTry: [
@@ -10488,7 +10432,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'translate-many-pro': {
     intro:
-      "Translate (100+ languages) uses a hosted M2M-100 model to translate directly across more than 100 language pairs without routing through a chat LLM. Reach for it when you want straight-shot translation that's faster and cheaper than the Llama-class Translate tool. It's a Pro tool using 1 credit per run.",
+      "Translate (100+ languages) uses hosted Google Gemma 4 to translate directly between more than 100 languages, picked by ISO code. Reach for it when you want straight-shot translation that's cheaper than the Llama-class Translate tool. Each run takes up to about 30,000 characters of English (or 10,000 of Chinese, Japanese or Korean) and uses 1 credit.",
     useCases: [
       'Translate a batch of short product strings between two non-English languages directly, no English pivot',
       'Localize UI labels into a less-common target language at a lower per-run cost than the chat-LLM translator',
@@ -10500,7 +10444,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     faq: [
       {
         q: 'How is this different from the regular Translate tool?',
-        a: 'This uses M2M-100, a dedicated translation model, for direct straight-shot translation — faster and cheaper at 1 credit. The Llama-class Translate often produces more nuanced phrasing for tricky or idiomatic text but costs more.',
+        a: 'This uses Google Gemma 4 for direct straight-shot translation at 1 credit. The Llama-class Translate can produce more nuanced phrasing for tricky or idiomatic text but costs 2 credits.',
       },
       {
         q: 'How many languages does it support?',
@@ -10512,7 +10456,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does it run in my browser?',
-        a: 'No. As a Pro tool it sends your text to a hosted M2M-100 model. The free in-browser tools stay free; hosted-model tools are Pro.',
+        a: 'No. As a Pro tool it sends your text to Google Gemma 4 on Cloudflare Workers AI. The free in-browser tools stay free; hosted-model tools are Pro.',
       },
       {
         q: 'How much does each translation cost?',

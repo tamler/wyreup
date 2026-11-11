@@ -81,6 +81,7 @@ describe('token estimate is conservative for non-English text', () => {
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
     imageBase64:
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    target: toolId === 'translate-indic-pro' ? 'hin_Deva' : 'fr',
     ...(toolId === 'json-extract-pro' ? { schema: 's' } : {}),
   });
 

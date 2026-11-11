@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { runBgRemove } from './image-models';
+import { runBgRemove, REPLICATE_CANCEL_AFTER_SECONDS } from './image-models';
 import type { Env } from '../env';
 import { INFERENCE_TIMEOUTS } from '../timeout';
 
@@ -221,5 +221,37 @@ describe('image provider URL boundary', () => {
       'https://api.replicate.com/v1/predictions/abc123',
     );
     expect(fetcher.mock.calls[1][1]).toMatchObject({ redirect: 'error' });
+  });
+  it('asks Replicate to cancel the prediction after the billed-time cap', async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ status: 'succeeded', output: 'https://replicate.delivery/out.png' }),
+      )
+      .mockResolvedValueOnce(
+        new Response(new Uint8Array([1]), { headers: { 'Content-Type': 'image/png' } }),
+      );
+    vi.stubGlobal('fetch', fetcher);
+    await runBgRemove({ image: 'data:image/png;base64,eA==' }, env);
+    const headers = (fetcher.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers['Cancel-After']).toBe(`${REPLICATE_CANCEL_AFTER_SECONDS}s`);
+    expect(REPLICATE_CANCEL_AFTER_SECONDS).toBeGreaterThanOrEqual(5);
+  });
+  it('cancels a running prediction when polling fails', async () => {
+    vi.useFakeTimers();
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ id: 'abc123', status: 'processing' }))
+      .mockResolvedValueOnce(new Response('down', { status: 503 }))
+      .mockResolvedValueOnce(Response.json({ id: 'abc123', status: 'canceled' }));
+    vi.stubGlobal('fetch', fetcher);
+    const pending = runBgRemove({ image: 'data:image/png;base64,eA==' }, env);
+    const assertion = expect(pending).rejects.toThrow('poll failed');
+    await vi.runAllTimersAsync();
+    await assertion;
+    expect(String(fetcher.mock.calls[2][0])).toBe(
+      'https://api.replicate.com/v1/predictions/abc123/cancel',
+    );
+    expect(fetcher.mock.calls[2][1]).toMatchObject({ method: 'POST' });
   });
 });

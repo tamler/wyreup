@@ -39,6 +39,13 @@ export interface ImageOutput {
 const BG_REMOVE_MODEL = '851-labs/background-remover';
 const UPSCALE_MODEL = 'nightmareai/real-esrgan';
 const MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
+/**
+ * Replicate bills public models per second of run time. `Cancel-After`
+ * makes Replicate cancel the prediction this long after creation, so a
+ * run is billed for at most this many seconds even if we stop polling.
+ * cost-model.ts prices it at the most expensive GPU Replicate lists.
+ */
+export const REPLICATE_CANCEL_AFTER_SECONDS = 14;
 const MAX_METADATA_BYTES = 256 * 1024;
 
 export async function runBgRemove(input: BgRemoveInput, env: Env): Promise<ImageOutput> {
@@ -182,6 +189,7 @@ async function runPrediction(
       Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}`,
       'Content-Type': 'application/json',
       Prefer: 'wait',
+      'Cancel-After': `${REPLICATE_CANCEL_AFTER_SECONDS}s`,
     },
     body: JSON.stringify({ input }),
   });
@@ -191,22 +199,42 @@ async function runPrediction(
   }
 
   let prediction = await readPrediction(createRes, signal);
-  while (
-    prediction.status !== 'succeeded' &&
-    prediction.status !== 'failed' &&
-    prediction.status !== 'canceled'
-  ) {
-    if (typeof prediction.id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(prediction.id)) {
-      throw new Error('Invalid prediction id');
+  const isDone = (status: string) =>
+    status === 'succeeded' || status === 'failed' || status === 'canceled';
+  try {
+    while (!isDone(prediction.status)) {
+      if (typeof prediction.id !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(prediction.id)) {
+        throw new Error('Invalid prediction id');
+      }
+      await pauseBeforePoll(signal);
+      const poll = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+        redirect: 'error',
+        signal,
+        headers: { Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}` },
+      });
+      if (!poll.ok) throw new Error(`Image-model poll failed: ${poll.status}`);
+      prediction = await readPrediction(poll, signal);
     }
-    await pauseBeforePoll(signal);
-    const poll = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-      redirect: 'error',
-      signal,
-      headers: { Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}` },
-    });
-    if (!poll.ok) throw new Error(`Image-model poll failed: ${poll.status}`);
-    prediction = await readPrediction(poll, signal);
+  } catch (error) {
+    // We are giving up (deadline, poll error): stop the billing clock now
+    // rather than waiting for Cancel-After. Best effort; Cancel-After is the bound.
+    if (
+      !isDone(prediction.status) &&
+      typeof prediction.id === 'string' &&
+      /^[a-zA-Z0-9_-]+$/.test(prediction.id)
+    ) {
+      try {
+        await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}/cancel`, {
+          method: 'POST',
+          redirect: 'error',
+          signal: AbortSignal.timeout(3_000),
+          headers: { Authorization: `Bearer ${env.IMAGE_MODEL_TOKEN}` },
+        });
+      } catch {
+        // Ignored: Cancel-After still ends the prediction.
+      }
+    }
+    throw error;
   }
 
   if (prediction.status !== 'succeeded') {

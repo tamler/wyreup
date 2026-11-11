@@ -63,10 +63,6 @@ export const INFERENCE_TIMEOUTS = {
   tts: 60_000,
   /** Image generation (flux). Bounded by step cap upstream. */
   image: 60_000,
-  /** Specialty translation (m2m100, indictrans2). */
-  translate: 30_000,
-  /** Object detection (DETR). */
-  detection: 30_000,
 } as const;
 
 // ── Default max_tokens per LLM class ───────────────────────────────────────

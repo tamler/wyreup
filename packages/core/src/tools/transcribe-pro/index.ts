@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro, fileToBase64 } from '../../lib/pro-runner.js';
+import { assertHostedAudioDuration } from '../../lib/audio-duration.js';
 
 // transcribe-pro: hosted Whisper-large-v3 via Wyreup PRO.
 //
@@ -21,22 +22,16 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
   slug: 'transcribe-pro',
   name: 'Transcribe Audio',
   description:
-    'Hosted Whisper-large-v3 transcription — higher accuracy and better with' +
-    ' noisy or accented speech than the free in-browser version. Uses 3 credits per run.',
+    'Hosted Whisper-large-v3 transcription, more accurate with noisy or accented' +
+    ' speech than the free in-browser version. Takes WAV or MP3 up to 45 minutes and 25 MB' +
+    ' (convert other formats to MP3 first). Uses 3 credits per run.',
   category: 'export',
   keywords: ['transcribe', 'whisper', 'speech', 'pro', 'hosted', 'large', 'audio'],
 
   input: {
-    accept: [
-      'audio/wav',
-      'audio/mpeg',
-      'audio/mp4',
-      'audio/x-m4a',
-      'audio/aac',
-      'audio/ogg',
-      'audio/webm',
-      'audio/flac',
-    ],
+    // WAV and MP3 only: the server measures their length from the bytes
+    // before reserving credits (lib/audio-duration.ts).
+    accept: ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/mpeg', 'audio/mp3'],
     min: 1,
     max: 1,
     // 25 MB — Whisper API hard cap; larger files should use the free
@@ -89,6 +84,8 @@ export const transcribePro: ToolModule<TranscribeProParams> = {
     }
     const input = inputs[0]!;
     if (ctx.signal.aborted) throw new Error('Aborted');
+    // Same check the server runs; fails here before anything is uploaded.
+    assertHostedAudioDuration(new Uint8Array(await input.arrayBuffer()));
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Uploading audio' });
     const audioBase64 = await fileToBase64(input);

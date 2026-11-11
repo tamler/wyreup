@@ -26,14 +26,23 @@ import {
   MODEL_GLM_FLASH,
   MODEL_GUARD,
   MODEL_SCOUT,
+  MAX_DOC_CHUNKS,
   SENTIMENT_MAX_TOKENS,
+  TRANSCRIPT_TRANSLATE_MAX_TOKENS,
 } from './runners';
 import { MAX_TOKENS } from './timeout';
 import { TEXT_MODEL } from './providers/text-models';
 import { VISION_MODEL } from './providers/vision-models';
 import { MAX_STEPS } from './providers/image-gen-models';
+import { REPLICATE_CANCEL_AFTER_SECONDS } from './providers/image-models';
+import {
+  TRANSLATE_MODEL,
+  TRANSLATE_OUTPUT_EXTRA_TOKENS,
+  TRANSLATE_OUTPUT_FACTOR,
+} from './providers/translate-models';
 import { TTS_LANGS, TTS_MAX_CHARS, TTS_USD_PER_1K_CHARS } from './providers/tts-models';
 import { PRO_TEXT_LIMITS } from '../../packages/core/src/lib/pro-limits';
+import { HOSTED_AUDIO_MAX_SECONDS } from '../../packages/core/src/lib/audio-duration';
 
 export const WORST_NET_USD_PER_CREDIT = (8 * 0.95 - 0.5) / 440;
 export const MAX_COST_SHARE = 0.5;
@@ -60,10 +69,19 @@ export const TOKEN_PRICES: Readonly<Record<string, { inPerM: number; outPerM: nu
   [MODEL_GLM_FLASH]: { inPerM: 0.06, outPerM: 0.4 },
   [VISION_MODEL]: { inPerM: 0.049, outPerM: 0.676 },
   [DEEP_ANALYSIS.primaryModel]: { inPerM: 0.3, outPerM: 1.2 },
+  // Gemma 4: also TRANSLATE_MODEL and FIX_GRAMMAR.model (same id).
   [DEEP_ANALYSIS.fallbackModel]: { inPerM: 0.1, outPerM: 0.3 },
 };
 const FLUX_USD_PER_TILE = 0.0000528;
 const FLUX_USD_PER_STEP = 0.0001056;
+/** @cf/openai/whisper-large-v3-turbo, per audio minute (rounded up per run here). */
+export const WHISPER_USD_PER_MINUTE = 0.0005;
+/**
+ * Replicate's most expensive listed GPU (H100, replicate.com/pricing,
+ * 2026-11-11). Both Replicate models list T4 ($0.000225/s); pricing at the
+ * top rate covers a hardware change.
+ */
+export const REPLICATE_MAX_USD_PER_SECOND = 0.001525;
 
 /** Short char-capped fields read with readOptionalText in runners.ts. */
 const TARGET_CHARS = 100;
@@ -211,24 +229,82 @@ export const WORST_CASES: readonly WorstCase[] = [
     detail: `flux-1-schnell: ${FLUX_OUTPUT_TILES} tiles, ${MAX_STEPS} steps`,
     usd: FLUX_OUTPUT_TILES * FLUX_USD_PER_TILE + MAX_STEPS * FLUX_USD_PER_STEP,
   },
+  whisperCase('transcribe-pro', []),
+  // Whisper, then Llama 3.3 on the transcript (trimmed to its token cap).
+  whisperCase('transcribe-and-translate', [
+    {
+      model: TEXT_MODEL,
+      inputTokens: TRANSCRIPT_TRANSLATE_MAX_TOKENS + TARGET_CHARS,
+      maxOutputTokens: MAX_TOKENS.default,
+    },
+  ]),
+  // Gemma 4 with output capped at 1.5x the input estimate + 128 tokens.
+  // Source and target names (<= 100 chars each) go in the system prompt.
+  llmCase('translate-many-pro', [
+    translateCall(limitTokens('translate-many-pro'), 2 * TARGET_CHARS),
+  ]),
+  llmCase('translate-indic-pro', [translateCall(limitTokens('translate-indic-pro'), 0)]),
+  documentCase(),
+  replicateCase('bg-remove-pro'),
+  replicateCase('upscale-2x-pro'),
 ];
 
-/** Priced tools whose worst case this model cannot bound, and why. */
-export const UNBOUNDED_TOOLS: Readonly<Record<string, string>> = {
-  'transcribe-pro':
-    'Whisper bills per audio minute and the runner only caps bytes (25 MB); a low-bitrate file can hold hours. Needs a duration check.',
-  'transcribe-and-translate':
-    'Same Whisper per-minute exposure as transcribe-pro, plus a Llama 3.3 call.',
-  'translate-many-pro':
-    'm2m100 bills input and output tokens and its Workers AI schema has no output-length parameter.',
-  'translate-document-pro':
-    'm2m100 per chunk, up to 30 chunks, with no output-length parameter; input alone at 120,000 chars can approach the floor.',
-  'translate-indic-pro':
-    'IndicTrans2 bills input and output tokens with no output-length parameter.',
-  'detect-objects': 'detr-resnet-50 has no list price on the Workers AI pricing page.',
-  'bg-remove-pro': 'Runs on Replicate (per-second GPU billing), not Workers AI.',
-  'upscale-2x-pro': 'Runs on Replicate (per-second GPU billing), not Workers AI.',
-};
+/**
+ * Priced tools whose worst case cannot be bounded, with the reason. Empty
+ * since 2026-11-11: every such tool was bounded or removed (detect-objects).
+ * A tool listed here must still be priced deliberately; the test requires
+ * every priced tool to be modelled above or explained here.
+ */
+export const UNBOUNDED_TOOLS: Readonly<Record<string, string>> = {};
+
+function whisperCase(toolId: string, extraCalls: LlmCall[]): WorstCase {
+  const minutes = Math.ceil(HOSTED_AUDIO_MAX_SECONDS / 60);
+  const whisperUsd = minutes * WHISPER_USD_PER_MINUTE;
+  const extra = extraCalls.length ? llmCase(toolId, extraCalls) : undefined;
+  return {
+    toolId,
+    detail:
+      `whisper-large-v3-turbo: ${minutes} min at $${WHISPER_USD_PER_MINUTE}/min` +
+      (extra ? ` + ${extra.detail}` : ''),
+    usd: whisperUsd + (extra?.usd ?? 0),
+  };
+}
+
+function translateCall(inputTokens: number, nameTokens: number): LlmCall {
+  return {
+    model: TRANSLATE_MODEL,
+    inputTokens: inputTokens + nameTokens,
+    maxOutputTokens:
+      Math.ceil(inputTokens * TRANSLATE_OUTPUT_FACTOR) + TRANSLATE_OUTPUT_EXTRA_TOKENS,
+  };
+}
+
+// translate-document-pro: up to MAX_DOC_CHUNKS calls. Chunk estimates sum
+// to at most the document cap plus one token per chunk (rounding); each
+// call adds the prompt overhead and both language names, and its output
+// is capped at 1.5x its own input estimate + 128 (+1 for rounding).
+function documentCase(): WorstCase {
+  const toolId = 'translate-document-pro';
+  const chunks = MAX_DOC_CHUNKS;
+  const textTokens = limitTokens(toolId) + chunks;
+  const price = TOKEN_PRICES[TRANSLATE_MODEL];
+  const inputTokens = textTokens + chunks * (PROMPT_OVERHEAD_TOKENS + 2 * TARGET_CHARS);
+  const outputTokens =
+    textTokens * TRANSLATE_OUTPUT_FACTOR + chunks * (TRANSLATE_OUTPUT_EXTRA_TOKENS + 1);
+  return {
+    toolId,
+    detail: `${TRANSLATE_MODEL} x ${chunks} chunks: ${inputTokens} in, ${Math.ceil(outputTokens)} out in total`,
+    usd: (inputTokens * price.inPerM + outputTokens * price.outPerM) / 1e6,
+  };
+}
+
+function replicateCase(toolId: string): WorstCase {
+  return {
+    toolId,
+    detail: `Replicate: Cancel-After ${REPLICATE_CANCEL_AFTER_SECONDS}s at $${REPLICATE_MAX_USD_PER_SECOND}/s (H100, the dearest listed GPU)`,
+    usd: REPLICATE_CANCEL_AFTER_SECONDS * REPLICATE_MAX_USD_PER_SECOND,
+  };
+}
 
 export function floorUsd(toolId: string): number {
   const credits = PRICING[toolId];

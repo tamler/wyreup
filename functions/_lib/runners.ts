@@ -18,7 +18,7 @@ import { runBgRemove, runUpscale } from './providers/image-models';
 import { chat, chatWith, chatWithDetail, type ChatDetail } from './providers/text-models';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS, InferenceTimeoutError } from './timeout';
 import { transcribe as runTranscribe } from './providers/audio-models';
-import { visionPrompt, detectObjects } from './providers/vision-models';
+import { visionPrompt } from './providers/vision-models';
 import { synthesize, checkTtsInput, type TtsLang } from './providers/tts-models';
 import {
   translateMany as runTranslateMany,
@@ -26,7 +26,12 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
-import { assertProTextLimits, PRO_TEXT_MAX_CHARS } from '../../packages/core/src/lib/pro-limits';
+import {
+  assertProTextLimits,
+  PRO_TEXT_MAX_CHARS,
+  truncateToTokens,
+} from '../../packages/core/src/lib/pro-limits';
+import { assertHostedAudioDuration } from '../../packages/core/src/lib/audio-duration';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -85,7 +90,6 @@ const RUNNERS: Record<string, Runner> = {
   'analyze-chart': analyzeChart,
   'image-q-and-a': imageQandA,
   'read-handwriting': readHandwriting,
-  'detect-objects': detectObjectsPro,
   'translate-image': translateImage,
   'transcribe-and-translate': transcribeAndTranslate,
   'regex-from-text-pro': regexFromTextPro,
@@ -117,6 +121,9 @@ const TRANSCRIBE_MAX_BYTES = 25 * 1024 * 1024;
 function transcribePro(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
+  // Whisper bills per audio minute: measure the real length from the bytes
+  // (WAV/MP3 only) and refuse anything over the cap before credits move.
+  assertHostedAudioDuration(bytes);
   return () => runTranscribe(env, { bytes, language });
 }
 
@@ -267,23 +274,6 @@ function readHandwriting(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-function detectObjectsPro(raw: RunnerInput, env: Env): PreparedProRun {
-  const image = __readImageBytes(raw);
-  return async () => {
-    const found = await detectObjects(env, image);
-    // Highest-confidence first; round scores for a clean UI / chainable JSON.
-    const objects = found
-      .slice()
-      .sort((a, b) => b.score - a.score)
-      .map((o) => ({
-        label: o.label,
-        score: Math.round(o.score * 1000) / 1000,
-        box: o.box,
-      }));
-    return { objects, count: objects.length };
-  };
-}
-
 function ocrHq(raw: RunnerInput, env: Env): PreparedProRun {
   const image = __readImageBytes(raw);
   return async () => {
@@ -321,9 +311,17 @@ function translateImage(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
+/**
+ * Transcript tokens sent to the translate call in transcribe-and-translate.
+ * 45 minutes of fast speech is roughly 13,000 tokens even for CJK, so this
+ * only trims pathological transcripts; it bounds the second call's cost.
+ */
+export const TRANSCRIPT_TRANSLATE_MAX_TOKENS = 20_000;
+
 function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
   const language = readOptionalText(raw, 'language', undefined, 32);
   const bytes = __readAudioBytes(raw);
+  assertHostedAudioDuration(bytes);
   const target = readOptionalText(raw, 'target', 'English', 100);
   return async () => {
     const { text: transcript } = await runTranscribe(env, {
@@ -333,12 +331,18 @@ function transcribeAndTranslate(raw: RunnerInput, env: Env): PreparedProRun {
     if (transcript.trim().length === 0) {
       throw new Error('No speech found in the audio to translate');
     }
+    const forTranslation = truncateToTokens(transcript, TRANSCRIPT_TRANSLATE_MAX_TOKENS);
     const translation = await chat(
       env,
       `You are a translator. Translate the user message into ${target}. Return ONLY the translation — no commentary, no original text, no quotation marks.`,
-      transcript,
+      forTranslation,
     );
-    return { transcript, translation, target };
+    return {
+      transcript,
+      translation,
+      target,
+      ...(forTranslation.length < transcript.length ? { translationTruncated: true } : {}),
+    };
   };
 }
 
@@ -497,8 +501,12 @@ function translateManyPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-const MAX_DOC_CHARS = 120_000;
-const TRANSLATION_CHUNK_CHARS = 4_000;
+const MAX_DOC_CHARS = PRO_TEXT_MAX_CHARS;
+const TRANSLATION_CHUNK_CHARS = 8_000;
+/** Most chunks (model calls) one document run may make; priced in cost-model.ts. */
+export const MAX_DOC_CHUNKS = 40;
+/** Chunks translated at once; Gemma calls are slower than m2m100 was. */
+const DOC_CONCURRENCY = 6;
 
 export function __chunkDocumentText(text: string, maxChars = TRANSLATION_CHUNK_CHARS): string[] {
   if (!Number.isInteger(maxChars) || maxChars < 1) {
@@ -543,27 +551,37 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
     throw new Error("'text' (non-empty string) is required");
   }
   if (textRaw.length > MAX_DOC_CHARS) {
-    throw new Error('Document exceeds the 40-page limit (120,000 characters maximum).');
+    throw new Error('Document exceeds the 40-page limit (100,000 characters maximum).');
   }
 
   const target = readLanguage(raw, 'target');
   const source = readOptionalText(raw, 'source', 'en', 100);
   const chunks = __chunkDocumentText(textRaw);
+  if (chunks.length > MAX_DOC_CHUNKS) {
+    throw new Error('Document splits into too many sections; remove blank lines or split it.');
+  }
   return async () => {
-    // Aggregate deadline: the char cap already bounds this to <=30 model
-    // calls, but a slow provider must not stack thirty 30s timeouts.
-    const DOC_RUN_DEADLINE_MS = 100_000;
+    // Do not start new chunks after this point: a slow provider must not
+    // stack dozens of 60 s calls. Chunks already running finish or time out.
+    const DOC_START_DEADLINE_MS = 60_000;
     const startedAt = Date.now();
-    const translations: string[] = [];
-    for (const chunk of chunks) {
-      if (Date.now() - startedAt > DOC_RUN_DEADLINE_MS) {
-        throw new Error(
-          'Translation is taking too long for this document — try a shorter document or split it.',
-        );
+    const translations: string[] = new Array<string>(chunks.length);
+    let next = 0;
+    const worker = async () => {
+      while (next < chunks.length) {
+        const index = next++;
+        if (Date.now() - startedAt > DOC_START_DEADLINE_MS) {
+          throw new Error(
+            'Translation is taking too long for this document. Try a shorter document or split it.',
+          );
+        }
+        const result = await runTranslateMany(env, { text: chunks[index], source, target });
+        translations[index] = result.translation;
       }
-      const result = await runTranslateMany(env, { text: chunk, source, target });
-      translations.push(result.translation);
-    }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(DOC_CONCURRENCY, chunks.length) }, () => worker()),
+    );
 
     return { text: translations.join('\n\n'), source, target, chunks: chunks.length };
   };

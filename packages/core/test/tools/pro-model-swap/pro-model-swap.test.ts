@@ -142,6 +142,8 @@ describe('client caps, voices, copy and prices mirror the server', () => {
     'text-sentiment-pro',
     'text-ner-pro',
     'content-safety-pro',
+    'translate-many-pro',
+    'translate-document-pro',
   ])('%s description states its main text cap', (toolId) => {
     const tool = createDefaultRegistry().toolsById.get(toolId)!;
     const max = PRO_TEXT_LIMITS[toolId]!.text!;

@@ -21,7 +21,7 @@ pdf-decrypt pdf-redact pdf-metadata pdf-extract-tables pdf-crop face-blur transc
 text-sentences text-keywords text-dates docx-to-text extract-article-text pdf-flatten
 pdf-form-fields zip-remove zip-flatten text-summarize-pro text-translate-pro text-sentiment-pro
 text-ner-pro text-redact-pro upscale-2x-pro ocr-hq image-describe analyze-chart image-q-and-a
-read-handwriting detect-objects translate-image transcribe-and-translate regex-from-text-pro
+read-handwriting translate-image transcribe-and-translate regex-from-text-pro
 cron-from-text-pro pdf-summarize pdf-q-and-a image-caption image-caption-detailed image-collage
 pixelate-region ics-to-csv x509-decode heic-to-jpg merge-audio images-to-gif epub-to-text
 har-sanitize vcf-to-csv toml-convert csv-to-geojson kml-to-geojson geojson-to-kml gpx-to-geojson

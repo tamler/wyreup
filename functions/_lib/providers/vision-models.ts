@@ -1,23 +1,17 @@
 // Vision-model provider wrapper.
 //
 // One file, one vendor — replace the body when switching backends. Public
-// signatures (`visionPrompt`, `detectObjects`) are what the rest of the
-// code imports, so swaps don't ripple beyond this module.
+// signature (`visionPrompt`) is what the rest of the code imports, so
+// swaps don't ripple beyond this module.
 //
 // Current backend: Cloudflare Workers AI. The env.AI binding ships with
-// Pages Functions — no token needed.
+// Pages Functions, no token needed. (detect-objects and its DETR model
+// were removed on 2026-11-11: no published price, so cost was unbounded.)
 
 import type { Env } from '../env';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
 export const VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
-const DETECTION_MODEL = '@cf/facebook/detr-resnet-50';
-
-export interface DetectedObject {
-  score: number;
-  label: string;
-  box: { xmin: number; ymin: number; xmax: number; ymax: number };
-}
 
 // Single-turn vision prompt: one image + one instruction → text.
 export async function visionPrompt(
@@ -38,22 +32,4 @@ export async function visionPrompt(
     throw new Error('Vision model returned no response');
   }
   return res.response.trim();
-}
-
-export async function detectObjects(env: Env, imageBytes: Uint8Array): Promise<DetectedObject[]> {
-  const res = await withTimeout(
-    env.AI.run(DETECTION_MODEL, {
-      image: Array.from(imageBytes),
-    }),
-    INFERENCE_TIMEOUTS.detection,
-    'detection-model',
-  );
-  if (!Array.isArray(res)) {
-    throw new Error('Detection model returned no array');
-  }
-  const first = res[0] as Partial<DetectedObject> | undefined;
-  if (res.length > 0 && (typeof first?.score !== 'number' || typeof first?.label !== 'string')) {
-    throw new Error('Detection model returned unexpected object shape');
-  }
-  return res as DetectedObject[];
 }
