@@ -43,6 +43,7 @@ package-json-validate json-merge pdf-suspicious regex-from-text sql-format-expla
 image-to-ascii prompt-injection-demo pdf-extract-data text-to-speech-pro content-safety-pro
 translate-many-pro translate-document-pro deep-analysis-pro fix-grammar-pro rewrite-tone-pro
 chat-long-pdf-pro image-generate-pro json-extract-pro translate-indic-pro csv-sql
+photo-edit-pro
 `.trim().split(/\s+/));
 
 export interface FileCandidateTool {

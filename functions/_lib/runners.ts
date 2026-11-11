@@ -26,6 +26,11 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import {
+  editPhoto,
+  checkPhotoEditImage,
+  PHOTO_EDIT_MAX_PROMPT_CHARS,
+} from './providers/photo-edit-models';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -96,6 +101,7 @@ const RUNNERS: Record<string, Runner> = {
   'image-generate-pro': imageGeneratePro,
   'json-extract-pro': jsonExtractPro,
   'translate-indic-pro': translateIndicPro,
+  'photo-edit-pro': photoEditPro,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -640,6 +646,18 @@ function imageGeneratePro(raw: RunnerInput, env: Env): PreparedProRun {
     throw new Error('steps must be an integer from 1 to 8');
   const steps = typeof stepsRaw === 'number' ? stepsRaw : 4;
   return () => generateImage(env, { prompt, steps });
+}
+
+// One reference image, already downscaled by the client to fit 512x512.
+// The size check runs here, before the credit is spent, so an oversized
+// image from a hand-rolled client is rejected without provider work.
+function photoEditPro(raw: RunnerInput, env: Env): PreparedProRun {
+  const image = __readImageBytes(raw);
+  checkPhotoEditImage(image);
+  const prompt = readText(raw, 'prompt').trim();
+  if (prompt.length > PHOTO_EDIT_MAX_PROMPT_CHARS)
+    throw new Error(`'prompt' exceeds ${PHOTO_EDIT_MAX_PROMPT_CHARS} characters`);
+  return () => editPhoto(env, { image, prompt });
 }
 
 function jsonExtractPro(raw: RunnerInput, env: Env): PreparedProRun {

@@ -39,6 +39,9 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // Prompt-based photo edit on flux-2-klein-4b (2026-11-11). Worst case
+  // ~$0.0012 per run; see functions/_lib/pricing-margin.test.ts.
+  'photo-edit-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {
