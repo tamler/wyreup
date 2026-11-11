@@ -106,6 +106,12 @@ describe('Pro upgrade prompts', () => {
     expect(formats).toMatch(/extracted text .*and your question are sent to Wyreup/);
     expect(formats).toMatch(/the PDF file is not\b/);
   });
+
+  it('tells transcribe-pro searchers that subtitle output exists', () => {
+    const formats = SEARCH_GUIDES['transcribe-pro']?.formats ?? '';
+    expect(formats).toMatch(/SRT\/WebVTT/);
+    expect(formats).not.toMatch(/plain text without timestamps/);
+  });
 });
 
 describe('Pro tool page search metadata', () => {
