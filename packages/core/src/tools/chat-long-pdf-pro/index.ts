@@ -20,7 +20,7 @@ export const chatLongPdfPro: ToolModule<ChatLongPdfProParams> = {
   slug: 'chat-long-pdf-pro',
   name: 'Ask a Long PDF',
   description:
-    'Hosted Llama 4 Scout with a 10M-token context window — for textbooks, court transcripts, large contracts, and books that exceed the standard Ask-a-PDF tool. Extracts text in your browser then sends to the long-context model. Uses 2 credits per run.',
+    'Hosted Llama 4 Scout answers a question about a long document such as a contract, court transcript or report, with a longer answer than Ask-a-PDF. Reads up to about 100,000 characters of English (or 34,000 of Chinese, Japanese or Korean) per run. Extracts text in your browser, then sends it to the model. Uses 2 credits per run.',
   category: 'export',
   keywords: ['pdf', 'long', 'llama', 'scout', 'document', 'q-and-a', 'pro', 'llm'],
 

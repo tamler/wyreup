@@ -701,19 +701,19 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'chat-long-pdf-pro': {
     intro:
-      "Ask a Long PDF answers questions about documents that are too big for the standard Ask-a-PDF tool, using hosted Llama 4 Scout with a 10M-token context window. It extracts the PDF's text in your browser, then sends it to the long-context model — built for textbooks, court transcripts, large contracts, and full books. It's a Pro tool using 2 credits per run.",
+      "Ask a Long PDF answers questions about long documents using hosted Llama 4 Scout, and gives longer answers than the standard Ask-a-PDF tool. It extracts the PDF's text in your browser, then sends up to about 100,000 characters of English (roughly 40 pages, or 34,000 characters of Chinese, Japanese or Korean) to the model. It's a Pro tool using 2 credits per run.",
     useCases: [
-      'Ask where a specific clause appears across a 400-page contract without chunking it yourself',
-      'Query a full court transcript for every mention of a particular witness or exhibit',
-      'Pull the relevant passage from an entire textbook to answer a study question',
+      'Ask where a specific clause appears in a long contract without searching it yourself',
+      'Query a court transcript for every mention of a particular witness or exhibit',
+      'Pull the relevant passage from a textbook chapter to answer a study question',
       'Find how a policy changed across a long compliance document in one pass',
-      'Ask a whole technical manual a setup question that spans multiple chapters',
-      'Get an answer that draws on the entire length of a book rather than just a section',
+      'Ask a technical manual section a setup question that spans several pages',
+      'Get a detailed answer that draws on the whole document rather than one page',
     ],
     faq: [
       {
         q: 'When should I use this over Ask a PDF?',
-        a: 'Use it when your document exceeds what the standard Ask-a-PDF tool can hold. Its 10M-token context window is built for textbooks, transcripts, large contracts, and books; for shorter PDFs the standard tool is cheaper.',
+        a: 'When you want a longer, more detailed answer. Both tools read up to about 100,000 characters of English per run (roughly 40 pages). For a book, run it chapter by chapter. For short answers the standard tool is the simpler choice.',
       },
       {
         q: 'How is the PDF processed?',
@@ -2342,7 +2342,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What do I provide?',
-        a: 'Plain text (your document or log excerpt, up to 100,000 characters) plus the specific question you want answered, up to 2,000 characters.',
+        a: 'Plain text (your document or log excerpt, up to about 100,000 characters of English or 34,000 of Chinese, Japanese or Korean) plus the specific question you want answered, up to about 2,000 characters.',
       },
       {
         q: 'Is the document sent to a server?',
@@ -2364,7 +2364,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'chat-long-pdf-pro',
-        why: 'For documents too large for standard context, switch to the 10M-token long-context model.',
+        why: 'For a longer, more detailed answer about a long document, switch to the Llama 4 Scout tool.',
       },
     ],
   },
@@ -3041,7 +3041,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'fix-grammar-pro': {
     intro:
-      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to 12,000 characters per run and is a Pro tool using 1 credit per run.',
+      'Fix Grammar runs your text through Google Gemma 4, a hosted model that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only, with no commentary, so you can drop it straight back into your draft. It takes up to about 12,000 characters of English per run (4,000 of Chinese, Japanese or Korean) and is a Pro tool using 1 credit per run.',
     useCases: [
       'Tidy up a quickly written email before you hit send, without it sounding robotic',
       'Fix typos and punctuation in a blog draft while keeping your phrasing intact',
@@ -3069,7 +3069,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'Up to 12,000 characters per run, which is about 2,000 words. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
+        a: 'Up to about 12,000 characters of English per run, which is about 2,000 words, or 4,000 characters of Chinese, Japanese or Korean. That covers emails, posts, and short documents. For longer pieces, run it section by section.',
       },
     ],
     alsoTry: [

@@ -10,7 +10,7 @@
 import type { Env } from '../env';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
-const VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
+export const VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 const DETECTION_MODEL = '@cf/facebook/detr-resnet-50';
 
 export interface DetectedObject {

@@ -478,10 +478,10 @@ describe('runners moved off retiring models', () => {
     }
   });
 
-  it('deep-analysis-pro rejects a question over 2,000 chars before provider work', () => {
+  it('deep-analysis-pro rejects a question over its 700-token cap before provider work', () => {
     const { env, run } = aiMock({});
     expect(() =>
-      prepareProRun('deep-analysis-pro', { text: 'doc', question: 'q'.repeat(2_001) }, env),
+      prepareProRun('deep-analysis-pro', { text: 'doc', question: 'q'.repeat(2_200) }, env),
     ).toThrow();
     expect(run).not.toHaveBeenCalled();
   });
@@ -499,7 +499,7 @@ describe('runners moved off retiring models', () => {
     });
   });
 
-  it('fix-grammar-pro rejects text over 12,000 chars before provider work', () => {
+  it('fix-grammar-pro rejects English text over 12,000 chars (4,000 tokens) before provider work', () => {
     const { env, run } = aiMock({});
     expect(() => prepareProRun('fix-grammar-pro', { text: 'a'.repeat(12_001) }, env)).toThrow();
     expect(run).not.toHaveBeenCalled();

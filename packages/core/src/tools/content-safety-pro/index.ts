@@ -16,7 +16,7 @@ export const contentSafetyPro: ToolModule<ContentSafetyProParams> = {
   slug: 'content-safety-pro',
   name: 'Content Safety',
   description:
-    'Hosted Llama Guard classifier — flags text containing violence, sexual content, hate speech, self-harm, harassment, and 9 other categories. Useful for moderators, parents, and anyone shipping user-generated content. Uses 1 credit per run.',
+    'Hosted Llama Guard classifier that flags text containing violence, sexual content, hate speech, self-harm, harassment, and 9 other categories. Useful for moderators, parents, and anyone shipping user-generated content. Checks up to about 45,000 characters of English (or 15,000 of Chinese, Japanese or Korean) per run. Uses 1 credit per run.',
   category: 'privacy',
   keywords: ['safety', 'moderation', 'classify', 'guard', 'pii', 'pro', 'llm'],
 

@@ -26,23 +26,24 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import { assertProTextLimits, PRO_TEXT_MAX_CHARS } from '../../packages/core/src/lib/pro-limits';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
-const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
+export const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
 // DeepSeek V4.1 Flash replaces the R1 distill Cloudflare retires on
 // 2026-11-20. It needs Workers Paid or AI Gateway credits, so Gemma 4
 // stands in when the primary call fails (both calls are in the cost model).
 export const MODEL_DEEPSEEK_FLASH = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
 export const MODEL_GEMMA = '@cf/google/gemma-4-26b-a4b-it';
-const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
+export const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
 // MODEL_SCOUT — Llama 4 Scout, used for both json-extract-pro and
 // chat-long-pdf-pro. 10M token context window (succeeds kimi-k2.5 here
 // — k2.5 was planned-deprecation and k2.6 raised input/output pricing
 // 60%, eating margin on a 2-credit tool). Scout is ~3-4× cheaper per
 // token than the kimi family at typical sizes, and the bigger context
 // means we can take genuinely huge PDFs without chunking.
-const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
+export const MODEL_SCOUT = '@cf/meta/llama-4-scout-17b-16e-instruct';
 
 export type RunnerInput = Record<string, unknown>;
 export type RunnerOutput = unknown;
@@ -62,6 +63,9 @@ export function prepareProRun(toolId: string, input: RunnerInput, env: Env): Pre
   if (!runner) {
     throw new Error(`No hosted runner registered for tool '${toolId}'`);
   }
+  // Token caps per tool and field (shared with the client). The cost model
+  // prices every worst case from these, so they must hold before any spend.
+  assertProTextLimits(toolId, input);
   return runner(input, env);
 }
 
@@ -145,6 +149,10 @@ function translatePro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
+// The answer is one word; a small output budget lets the 1-credit price
+// carry a 24,000-token input (see cost-model.ts).
+export const SENTIMENT_MAX_TOKENS = 16;
+
 function sentimentPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   return async () => {
@@ -152,6 +160,7 @@ function sentimentPro(raw: RunnerInput, env: Env): PreparedProRun {
       env,
       'Classify the sentiment of the user message. Respond with EXACTLY one word: positive, negative, or neutral. No punctuation, no explanation.',
       text,
+      { maxTokens: SENTIMENT_MAX_TOKENS },
     );
     const label = out.toLowerCase().replace(/[^a-z]/g, '');
     const known = ['positive', 'negative', 'neutral'].includes(label) ? label : 'neutral';
@@ -569,9 +578,6 @@ export const DEEP_ANALYSIS = {
   fallbackModel: MODEL_GEMMA,
   system:
     'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
-  /** Characters the user-message wrapper adds around document and question. */
-  userTemplateChars: 'Document:\n\n\nQuestion: '.length,
-  maxQuestionChars: 2_000,
   maxOutputTokens: 6_144,
   primaryTimeoutMs: 90_000,
   fallbackTimeoutMs: 60_000,
@@ -582,9 +588,6 @@ export const DEEP_ANALYSIS = {
 function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
-  if (question.length > DEEP_ANALYSIS.maxQuestionChars) {
-    throw new Error(`'question' exceeds ${DEEP_ANALYSIS.maxQuestionChars} chars`);
-  }
   const user = `Document:\n${text}\n\nQuestion: ${question}`;
   return async () => {
     let out: ChatDetail;
@@ -616,23 +619,19 @@ function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-// Caps and budgets for fix-grammar-pro. The output budget covers a full
-// rewrite of the largest accepted input (12,000 chars is about 4,000
-// tokens), with thinking turned off so the budget goes to the answer.
+// Budgets for fix-grammar-pro. The input cap (4,000 estimated tokens, in
+// pro-limits.ts) keeps a full rewrite inside the 6,144-token output budget
+// even for CJK text; thinking is off so the budget goes to the answer.
 export const FIX_GRAMMAR = {
   model: MODEL_GEMMA,
   system:
     'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text: no explanations, no preamble, no quotes.',
-  maxChars: 12_000,
   maxOutputTokens: 6_144,
   timeoutMs: 90_000,
 } as const;
 
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  if (text.length > FIX_GRAMMAR.maxChars) {
-    throw new Error(`'text' exceeds ${FIX_GRAMMAR.maxChars} chars`);
-  }
   return async () => {
     const { content } = await chatWithDetail(env, FIX_GRAMMAR.model, FIX_GRAMMAR.system, text, {
       maxTokens: FIX_GRAMMAR.maxOutputTokens,
@@ -741,9 +740,6 @@ function translateIndicPro(raw: RunnerInput, env: Env): PreparedProRun {
 // ────────────────────────────────────────────────────────────────────────
 // helpers
 // ────────────────────────────────────────────────────────────────────────
-
-/** Upper bound on any single text field a Pro runner accepts. */
-export const PRO_TEXT_MAX_CHARS = 100_000;
 
 function readText(raw: RunnerInput, field: string): string {
   const v = (raw as Record<string, unknown>)[field];

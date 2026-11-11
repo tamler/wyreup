@@ -12,7 +12,7 @@
 import type { Env } from '../env';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
-const TEXT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+export const TEXT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 export interface ChatOptions {
   /** Cap the model's output token count. Default 2048 (MAX_TOKENS.default). */

@@ -27,7 +27,7 @@ export interface ImageGenOutput {
 
 // Hard cap on steps to keep cost predictable. Schnell's quality plateaus
 // past 4 steps anyway.
-const MAX_STEPS = 8;
+export const MAX_STEPS = 8;
 
 export async function generateImage(env: Env, input: ImageGenInput): Promise<ImageGenOutput> {
   const steps = Math.min(Math.max(input.steps ?? 4, 1), MAX_STEPS);

@@ -5,14 +5,10 @@ import {
   TEXT_TO_SPEECH_PRO_VOICES,
   textToSpeechPro,
 } from '../../../src/tools/text-to-speech-pro/index.js';
-import {
-  FIX_GRAMMAR_PRO_MAX_CHARS,
-  fixGrammarPro,
-} from '../../../src/tools/fix-grammar-pro/index.js';
-import {
-  DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS,
-  deepAnalysisPro,
-} from '../../../src/tools/deep-analysis-pro/index.js';
+import { fixGrammarPro } from '../../../src/tools/fix-grammar-pro/index.js';
+import { deepAnalysisPro } from '../../../src/tools/deep-analysis-pro/index.js';
+import { createDefaultRegistry } from '../../../src/default-registry.js';
+import { PRO_TEXT_LIMITS } from '../../../src/lib/pro-limits.js';
 import type { ToolRunContext } from '../../../src/types.js';
 
 const FUNCTIONS = (path: string) =>
@@ -94,47 +90,66 @@ describe('Pro tools moved off retiring models', () => {
     });
   });
 
-  it('fix-grammar-pro rejects text over 12,000 characters without a request', async () => {
+  it('fix-grammar-pro rejects CJK text over its token cap without a request', async () => {
     const fetchMock = stubFetch({});
-    await expect(
-      fixGrammarPro.run([textFile('a'.repeat(FIX_GRAMMAR_PRO_MAX_CHARS + 1))], {}, makeCtx()),
-    ).rejects.toThrow('up to 12,000 characters');
+    await expect(fixGrammarPro.run([textFile('漢'.repeat(4_001))], {}, makeCtx())).rejects.toThrow(
+      '4,000 of Chinese, Japanese or Korean',
+    );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('fix-grammar-pro still takes 12,000 characters of English', async () => {
+    const fetchMock = stubFetch({ corrected: 'ok' });
+    await fixGrammarPro.run([textFile('a'.repeat(12_000))], {}, makeCtx());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('deep-analysis-pro rejects an over-long question without a request', async () => {
     const fetchMock = stubFetch({});
     await expect(
-      deepAnalysisPro.run(
-        [textFile('doc')],
-        { question: 'q'.repeat(DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS + 1) },
-        makeCtx(),
-      ),
-    ).rejects.toThrow('under 2,000 characters');
+      deepAnalysisPro.run([textFile('doc')], { question: 'q'.repeat(2_200) }, makeCtx()),
+    ).rejects.toThrow('The question is too long');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 
-describe('client caps, voices and prices mirror the server', () => {
-  it('matches the server caps, voice lists and PRICING', async () => {
+describe('client caps, voices, copy and prices mirror the server', () => {
+  it('matches the server TTS caps, voice lists and PRICING', async () => {
     const tts = (await import(FUNCTIONS('providers/tts-models.js'))) as {
       TTS_MAX_CHARS: unknown;
       TTS_VOICES: unknown;
-    };
-    const runners = (await import(FUNCTIONS('runners.js'))) as {
-      FIX_GRAMMAR: { maxChars: number };
-      DEEP_ANALYSIS: { maxQuestionChars: number };
     };
     const { PRICING } = (await import(FUNCTIONS('pricing.js'))) as {
       PRICING: Record<string, number>;
     };
     expect(TEXT_TO_SPEECH_PRO_MAX_CHARS).toEqual(tts.TTS_MAX_CHARS);
     expect(TEXT_TO_SPEECH_PRO_VOICES).toEqual(tts.TTS_VOICES);
-    expect(FIX_GRAMMAR_PRO_MAX_CHARS).toBe(runners.FIX_GRAMMAR.maxChars);
-    expect(DEEP_ANALYSIS_PRO_MAX_QUESTION_CHARS).toBe(runners.DEEP_ANALYSIS.maxQuestionChars);
-    for (const tool of [textToSpeechPro, deepAnalysisPro, fixGrammarPro]) {
-      expect(tool.creditCost, tool.id).toBe(PRICING[tool.id]);
-      expect(tool.description, tool.id).toContain(`Uses ${PRICING[tool.id]} credit`);
+    const registry = createDefaultRegistry();
+    for (const toolId of new Set([...Object.keys(PRO_TEXT_LIMITS), 'text-to-speech-pro'])) {
+      const tool = registry.toolsById.get(toolId);
+      expect(tool, toolId).toBeDefined();
+      expect(tool!.creditCost, toolId).toBe(PRICING[toolId]);
+      expect(tool!.description, toolId).toContain(`Uses ${PRICING[toolId]} credit`);
     }
+  });
+
+  it.each([
+    'deep-analysis-pro',
+    'fix-grammar-pro',
+    'json-extract-pro',
+    'chat-long-pdf-pro',
+    'pdf-q-and-a',
+    'text-sentiment-pro',
+    'text-ner-pro',
+    'content-safety-pro',
+  ])('%s description states its main text cap', (toolId) => {
+    const tool = createDefaultRegistry().toolsById.get(toolId)!;
+    const max = PRO_TEXT_LIMITS[toolId]!.text!;
+    expect(tool.description).toContain(
+      `${max.toLocaleString('en-US')} of Chinese, Japanese or Korean`,
+    );
+    expect(tool.description).toContain(
+      `${Math.min(max * 3, 100_000).toLocaleString('en-US')} characters of English`,
+    );
   });
 });
