@@ -55,6 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `image-generate-hd-pro` | 2 | FLUX.2 [klein] 9B text-to-image, output capped at 1,000,000 px, no input images, one call per run (worst case $0.015) |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
@@ -552,6 +553,7 @@ Rotate `SESSION_SECRET` to invalidate every outstanding browser session at once 
 | `text-*-pro` (summarize/translate/sentiment/NER/redact) | Workers AI (Llama 3.3 70B or Mistral) | Same — cheapest path |
 | `bg-remove-pro` | external image-model provider (RMBG-2.0) | HTTP API |
 | `upscale-2x-pro` | external image-model provider (Real-ESRGAN) | HTTP API |
+| `image-generate-hd-pro` | Workers AI (`@cf/black-forest-labs/flux-2-klein-9b`) | Partner model, Black Forest Labs terms (https://bfl.ai/legal/terms-of-service) |
 
 Self-host on Thunder Compute / R2 is a deliberate v2 — defer until one tool has steady volume.
 

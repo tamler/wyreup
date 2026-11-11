@@ -7,6 +7,7 @@ export const NON_IDEMPOTENT_TOOLS = new Set<string>([
   'chat-long-pdf-pro',
   'chat-image-pro',
   'image-generate-pro',
+  'image-generate-hd-pro',
   'text-summarize',
   'text-translate-pro',
 ]);

@@ -275,6 +275,7 @@ import { fixGrammarPro } from './tools/fix-grammar-pro/index.js';
 import { rewriteTonePro } from './tools/rewrite-tone-pro/index.js';
 import { chatLongPdfPro } from './tools/chat-long-pdf-pro/index.js';
 import { imageGeneratePro } from './tools/image-generate-pro/index.js';
+import { imageGenerateHdPro } from './tools/image-generate-hd-pro/index.js';
 import { jsonExtractPro } from './tools/json-extract-pro/index.js';
 import { translateIndicPro } from './tools/translate-indic-pro/index.js';
 import { csvSql } from './tools/csv-sql/index.js';
@@ -575,6 +576,7 @@ export const defaultTools: ToolModule<any>[] = [
   rewriteTonePro,
   chatLongPdfPro,
   imageGeneratePro,
+  imageGenerateHdPro,
   jsonExtractPro,
   translateIndicPro,
   csvSql,
