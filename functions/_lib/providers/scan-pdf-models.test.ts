@@ -3,7 +3,9 @@ import type { Env } from '../env';
 import {
   buildScanPdfRequest,
   prepareScanPdfQandA,
+  QUESTION_TOKENS_PER_UTF16_UNIT_BOUND,
   readScanPdfInput,
+  SCAN_PDF_SYSTEM_PROMPT,
   scanPdfWorstCaseUsd,
   SCAN_PDF_MAX_IMAGE_BYTES,
   SCAN_PDF_MAX_OUTPUT_TOKENS,
@@ -134,10 +136,19 @@ describe('prepareScanPdfQandA', () => {
 
 describe('scanPdfWorstCaseUsd', () => {
   it('bounds 10 pages at 2,048 tokens each plus text and 2,048 output tokens', () => {
-    // 10 * 2048 image tokens + ceil(chars / 3) text + 500 template, at $0.10/M in,
-    // and 2048 output tokens at $0.30/M.
-    const usd = scanPdfWorstCaseUsd();
-    expect(usd).toBeGreaterThan((10 * 2048 * 0.1 + 2048 * 0.3) / 1e6);
-    expect(usd).toBeLessThan(0.003);
+    // Input: 10 * 2048 image tokens + 2000-unit question at 3 tokens/unit
+    // + ceil((system prompt + 400 label chars) / 3) + 500 template, at $0.10/M.
+    // Output: 2048 tokens at $0.30/M.
+    const own = Math.ceil((SCAN_PDF_SYSTEM_PROMPT.length + 400) / 3);
+    const input = 10 * 2048 + 2000 * 3 + own + 500;
+    expect(scanPdfWorstCaseUsd()).toBeCloseTo((input * 0.1 + 2048 * 0.3) / 1e6, 12);
+  });
+
+  it('charges a non-ASCII question at up to 3 tokens per UTF-16 unit', () => {
+    // A question of rare CJK characters at the cap must fit inside the bound.
+    const question = '龘'.repeat(2000);
+    expect(readScanPdfInput({ question, pages: [page(1)] }).question).toHaveLength(2000);
+    expect(QUESTION_TOKENS_PER_UTF16_UNIT_BOUND).toBe(3);
+    expect(scanPdfWorstCaseUsd()).toBeGreaterThanOrEqual((2000 * 3 * 0.1) / 1e6);
   });
 });

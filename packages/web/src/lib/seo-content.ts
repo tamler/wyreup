@@ -772,7 +772,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How accurate is it?',
-        a: 'It handles clean scans and printed text well. Blurry photos, very small print and messy handwriting can be misread, so check the answer against the page it names.',
+        a: 'Clear, upright scans give the best results. Blurry photos, very small print and messy handwriting can be misread, and the model can still be wrong, so check the answer against the pages you sent.',
       },
       {
         q: 'How much does it cost?',

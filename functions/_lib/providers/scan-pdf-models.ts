@@ -48,14 +48,19 @@ export const SCAN_PDF_SYSTEM_PROMPT =
 /**
  * Worst-case Cloudflare cost of one run in USD: every page at the cap, the
  * longest question, the full output cap, and every call the runner makes.
- * Text is bounded at 1 token per 3 characters.
+ * Our own ASCII text (system prompt, page labels) is bounded at 1 token per
+ * 3 characters. The user's question can be any script: CJK, emoji or rare
+ * characters can fall back to byte tokens, so it is bounded at 3 tokens per
+ * UTF-16 unit (the unit `question.length` counts and the server caps).
  */
+export const QUESTION_TOKENS_PER_UTF16_UNIT_BOUND = 3;
+
 export function scanPdfWorstCaseUsd(): number {
-  const textChars =
-    SCAN_PDF_SYSTEM_PROMPT.length + SCAN_PDF_MAX_QUESTION_CHARS + PAGE_LABEL_CHARS_BOUND;
+  const ownTextChars = SCAN_PDF_SYSTEM_PROMPT.length + PAGE_LABEL_CHARS_BOUND;
   const inputTokens =
     SCAN_PDF_MAX_PAGES * SCAN_PDF_TOKENS_PER_IMAGE_BOUND +
-    Math.ceil(textChars / 3) +
+    SCAN_PDF_MAX_QUESTION_CHARS * QUESTION_TOKENS_PER_UTF16_UNIT_BOUND +
+    Math.ceil(ownTextChars / 3) +
     TEMPLATE_TOKENS_BOUND;
   const perCall =
     (inputTokens * USD_PER_M_INPUT + SCAN_PDF_MAX_OUTPUT_TOKENS * USD_PER_M_OUTPUT) / 1_000_000;

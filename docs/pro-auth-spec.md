@@ -55,7 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
-| `pdf-scan-q-and-a-pro` | 1 | Q&A over up to 10 browser-rendered page images of a scanned PDF, hosted Gemma 4 vision. Worst case ~$0.0028/run (see `functions/_lib/pricing-margin.ts`) |
+| `pdf-scan-q-and-a-pro` | 1 | Q&A over up to 10 browser-rendered page images of a scanned PDF, hosted Gemma 4 vision. Worst case ~$0.0034/run (see `functions/_lib/pricing-margin.ts`) |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
