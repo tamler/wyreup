@@ -26,6 +26,7 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import { extractReceipt, readReceiptInput } from './providers/receipt-models';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -96,6 +97,7 @@ const RUNNERS: Record<string, Runner> = {
   'image-generate-pro': imageGeneratePro,
   'json-extract-pro': jsonExtractPro,
   'translate-indic-pro': translateIndicPro,
+  'receipt-extract-pro': receiptExtractPro,
 };
 
 // ────────────────────────────────────────────────────────────────────────
@@ -691,6 +693,12 @@ function translateIndicPro(raw: RunnerInput, env: Env): PreparedProRun {
     const result = await runTranslateIndic(env, { text, target });
     return { ...result, target };
   };
+}
+
+// Validation and the cost-bound caps live in providers/receipt-models.ts.
+function receiptExtractPro(raw: RunnerInput, env: Env): PreparedProRun {
+  const input = readReceiptInput(raw);
+  return () => extractReceipt(env, input);
 }
 
 // ────────────────────────────────────────────────────────────────────────
