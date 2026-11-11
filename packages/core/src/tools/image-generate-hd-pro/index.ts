@@ -23,7 +23,7 @@ export const imageGenerateHdPro: ToolModule<ImageGenerateHdProParams> = {
   slug: 'image-generate-hd-pro',
   name: 'Generate Image HD',
   description:
-    'Hosted FLUX.2 [klein] 9B, a newer and larger model than the Flux Schnell one behind Generate Image, for sharper, more detailed pictures. Pick a shape: 992×992 square, 1152×864 landscape, 864×1152 portrait, or 1328×752 wide, each about one megapixel. Text prompt only, up to 2,000 characters; no reference images. Uses 2 credits per run.',
+    'Hosted FLUX.2 [klein] 9B, a newer-generation model than the Flux Schnell (FLUX.1) one behind Generate Image, aimed at more detail. Pick a shape: 992×992 square, 1152×864 landscape, 864×1152 portrait, or 1328×752 wide, each about one megapixel. Text prompt only, up to 2,000 characters; no reference images. Uses 2 credits per run.',
   category: 'create',
   keywords: ['image', 'generate', 'flux', 'flux 2', 'klein', 'hd', 'text-to-image', 'pro'],
 

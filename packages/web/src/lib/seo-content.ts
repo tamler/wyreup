@@ -4056,19 +4056,19 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'image-generate-hd-pro': {
     intro:
-      'Generate Image HD turns a text prompt into a sharper, more detailed picture using hosted FLUX.2 [klein] 9B, a newer and larger model than the Flux Schnell one behind Generate Image. Pick square, landscape, portrait, or wide; every size is about one megapixel. It costs 2 credits per run, so use the 1-credit Generate Image for quick drafts and switch to HD when the picture is the final one.',
+      'Generate Image HD turns a text prompt into a picture using hosted FLUX.2 [klein] 9B, a newer-generation model than the Flux Schnell (FLUX.1) one behind Generate Image, aimed at more detail. Pick square, landscape, portrait, or wide; every size is about one megapixel. It costs 2 credits per run, so use the 1-credit Generate Image for quick drafts and try HD when you want the newer model.',
     useCases: [
       'Make a finished hero image for a blog post or landing page',
       'Produce a wide 16:9 banner or slide background from one description',
       'Generate a portrait-shaped image for a poster, story, or phone wallpaper',
-      'Re-run a prompt you already like in Generate Image to get a more detailed version',
-      'Create product or concept art where fine texture matters',
+      'Re-run a prompt you already like in Generate Image to compare it on the newer model',
+      'Create product or concept art at a chosen aspect ratio',
       'Make a base image, then send it to Background Remove for a transparent cutout',
     ],
     faq: [
       {
         q: 'How is this different from Generate Image?',
-        a: 'Generate Image uses Flux Schnell at 1024×1024 for 1 credit and is built for speed. Generate Image HD uses FLUX.2 [klein] 9B, a newer and larger model, for more detailed results at 2 credits, and lets you choose the shape.',
+        a: 'Generate Image uses Flux Schnell at 1024×1024 for 1 credit and is built for speed. Generate Image HD uses FLUX.2 [klein] 9B, a newer-generation model aimed at more detail, at 2 credits, and lets you choose the shape.',
       },
       {
         q: 'What sizes can I get?',
