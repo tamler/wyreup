@@ -363,3 +363,54 @@ describe('readImageRef SSRF validation', () => {
     expect(() => readImageRef({ image })).toThrow();
   });
 });
+
+describe('receipt-extract-pro runner', () => {
+  const pngDataUrl = (width: number, height: number) => {
+    const bytes = new Uint8Array(33);
+    bytes.set([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82]);
+    new DataView(bytes.buffer).setUint32(16, width);
+    new DataView(bytes.buffer).setUint32(20, height);
+    return `data:image/png;base64,${btoa(String.fromCharCode(...bytes))}`;
+  };
+
+  it('accepts text or up to four images within the pixel caps without provider work', () => {
+    const env = aiEnv({});
+    const run = vi.spyOn(env.AI, 'run');
+    expect(typeof prepareProRun('receipt-extract-pro', { text: 'Total 9.72' }, env)).toBe('function');
+    expect(
+      typeof prepareProRun('receipt-extract-pro', { images: [pngDataUrl(1000, 1000), pngDataUrl(1000, 800)] }, env),
+    ).toBe('function');
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['text and images together', { text: 'x', images: [`data:image/png;base64,${TINY_PNG}`] }],
+    ['text over 6,000 characters', { text: 'x'.repeat(6001) }],
+    ['no input', {}],
+    ['five images', { images: Array(5).fill(`data:image/png;base64,${TINY_PNG}`) }],
+    ['an image over 1 megapixel', { images: [pngDataUrl(1001, 1000)] }],
+    ['images over 2 megapixels in total', { images: [pngDataUrl(1000, 1000), pngDataUrl(1000, 1000), pngDataUrl(10, 10)] }],
+    ['a remote URL', { images: ['https://example.com/r.png'] }],
+    ['a mislabelled format', { images: [`data:image/jpeg;base64,${TINY_PNG}`] }],
+  ])('rejects %s before provider work', (_label, input) => {
+    const env = aiEnv({});
+    const run = vi.spyOn(env.AI, 'run');
+    expect(() => prepareProRun('receipt-extract-pro', input, env)).toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('returns clairic fields with confidence', async () => {
+    const answers: Record<string, Record<string, unknown>> = Object.fromEntries(
+      ['vendor', 'document_number', 'date', 'due_date', 'currency', 'subtotal', 'tax', 'total', 'line_items', 'contact'].map(
+        (name) => [name, { type: 'text', value: null, confidence: 0.9, p_null: 0.9 }],
+      ),
+    );
+    answers.total = { type: 'number', value: 9.72, confidence: 0.95, p_null: 0 };
+    const out = (await runPro('receipt-extract-pro', { text: 'Total 9.72' }, aiEnv({ answers, truncated: false }))) as {
+      engine: string;
+      data: Record<string, unknown>;
+    };
+    expect(out.engine).toBe('clairic');
+    expect(out.data.total).toBe(9.72);
+  });
+});
