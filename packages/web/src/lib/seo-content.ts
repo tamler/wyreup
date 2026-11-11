@@ -12788,4 +12788,47 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'text-checklist-pro': {
+    intro:
+      "Text Checklist answers a short list of questions about a piece of text with numbers instead of prose. Write a yes/no question, a pick-one question with your own options, or a score on levels you define, and Cloudflare's hosted clef-flash decision model returns a probability for every option. It suits triage work: is this email urgent, which queue does this ticket belong in, does this contract mention auto-renewal.",
+    useCases: [
+      'Flag whether a support email is urgent and which team should pick it up',
+      'Sort a ticket or form submission into one of your own categories',
+      'Check whether a contract or policy mentions auto-renewal, a termination fee or a data-sharing clause',
+      'Rate the severity of an incident report on a none, minor, major, critical scale',
+      'Screen a review or comment for a refund request or a complaint about shipping',
+    ],
+    faq: [
+      {
+        q: 'How do I write the questions?',
+        a: 'One per line, up to 10. A plain line is a yes/no question. Put options in square brackets separated by |, like "Which team? [billing | technical | sales]", to pick one. Start the brackets with "score:" to rate on ordered levels, lowest first.',
+      },
+      {
+        q: 'What does it return?',
+        a: 'JSON with one entry per question: the yes and no probabilities, or a probability per option with the top pick and a confidence value. Scores also give a probability-weighted level that can land between two levels.',
+      },
+      {
+        q: 'How much text can it read?',
+        a: 'Up to 16,000 characters of plain text per run. Each question can be up to 200 characters, with 2 to 10 options of up to 40 characters each. Images and video are not accepted.',
+      },
+      {
+        q: 'Does my text get uploaded?',
+        a: 'Yes. This is a Pro tool: the text and your questions are sent to Wyreup and answered by a hosted model on Cloudflare Workers AI. Each run uses 1 credit.',
+      },
+      {
+        q: 'Can I trust the probabilities?',
+        a: 'They are estimates from the model, not facts about the text. Spot-check a sample before you route or reject anything automatically on them.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'json-extract-pro',
+        why: 'Pull named fields out of the same text when you need values, not probabilities.',
+      },
+      {
+        id: 'json-to-excel',
+        why: 'Turn checklist results into a spreadsheet you can sort and filter.',
+      },
+    ],
+  },
 };

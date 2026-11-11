@@ -39,6 +39,8 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // clef-flash decision model (2026-11-11); worst case in cost-model.ts.
+  'text-checklist-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {
