@@ -84,6 +84,8 @@ describe('preparing Pro dispatch', () => {
   it.each([
     ['text-to-speech-pro', { text: 'hello', language: 'XX' }],
     ['image-generate-pro', { prompt: 'image', steps: 1.5 }],
+    ['image-generate-hd-pro', { prompt: 'image', aspect: 'panorama' }],
+    ['image-generate-hd-pro', { prompt: 'x'.repeat(2001) }],
     ['text-translate-pro', { text: 'hello', target: 'x'.repeat(101) }],
     ['transcribe-pro', { audioBase64: '!!!' }],
     ['ocr-hq', { imageBase64: 'QUJD' }],
@@ -95,6 +97,45 @@ describe('preparing Pro dispatch', () => {
 function aiEnv(result: unknown) {
   return { AI: { run: vi.fn().mockResolvedValue(result) } } as unknown as Env;
 }
+
+describe('image-generate-hd-pro runner', () => {
+  // JPEG magic bytes (FF D8 FF E0 ...), base64.
+  const JPEG_B64 = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBD';
+
+  it('sends one multipart request to klein 9B with the chosen size and no input image', async () => {
+    const env = aiEnv({ image: JPEG_B64 });
+    const run = vi.spyOn(env.AI, 'run');
+    const out = (await runPro('image-generate-hd-pro', { prompt: ' a lighthouse ', aspect: 'wide' }, env)) as {
+      contentType: string;
+      width: number;
+      height: number;
+    };
+    expect(out).toMatchObject({ contentType: 'image/jpeg', width: 1328, height: 752 });
+    expect(run).toHaveBeenCalledTimes(1);
+    const [model, payload] = run.mock.calls[0] as [string, { multipart: { body: ReadableStream; contentType: string } }];
+    expect(model).toBe('@cf/black-forest-labs/flux-2-klein-9b');
+    expect(payload.multipart.contentType).toMatch(/^multipart\/form-data; boundary=/);
+    const form = await new Response(payload.multipart.body, {
+      headers: { 'content-type': payload.multipart.contentType },
+    }).formData();
+    expect(form.get('prompt')).toBe('a lighthouse');
+    expect(form.get('width')).toBe('1328');
+    expect(form.get('height')).toBe('752');
+    for (const slot of [0, 1, 2, 3]) expect(form.has(`input_image_${slot}`)).toBe(false);
+  });
+
+  it('defaults to the 992x992 square', async () => {
+    const env = aiEnv({ image: JPEG_B64 });
+    const out = (await runPro('image-generate-hd-pro', { prompt: 'cat' }, env)) as { width: number; height: number };
+    expect(out).toMatchObject({ width: 992, height: 992 });
+  });
+
+  it('rejects a response that is not an image', async () => {
+    await expect(runPro('image-generate-hd-pro', { prompt: 'cat' }, aiEnv({ image: 'aGVsbG8gd29ybGQgaGVsbG8=' })))
+      .rejects.toThrow('unrecognized image format');
+    await expect(runPro('image-generate-hd-pro', { prompt: 'cat' }, aiEnv({}))).rejects.toThrow('returned no image');
+  });
+});
 
 describe('ocr-hq runner', () => {
   it('returns extracted text', async () => {

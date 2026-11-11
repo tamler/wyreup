@@ -408,6 +408,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
 
   // Text → media (image / audio generation)
   'image-generate-pro': 'TextInputRunner',
+  'image-generate-hd-pro': 'TextInputRunner',
   'text-to-speech-pro': 'TextInputRunner',
 
   // openapi-report: JSON/YAML in → markdown out — TextResultRunner handles

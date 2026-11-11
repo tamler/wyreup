@@ -37,6 +37,7 @@ export const PRICING: Readonly<Record<string, number>> = {
   'rewrite-tone-pro': 1,
   'chat-long-pdf-pro': 2,
   'image-generate-pro': 1,
+  'image-generate-hd-pro': 2,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
 };

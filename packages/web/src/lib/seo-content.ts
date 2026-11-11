@@ -4054,6 +4054,54 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'image-generate-hd-pro': {
+    intro:
+      'Generate Image HD turns a text prompt into a sharper, more detailed picture using hosted FLUX.2 [klein] 9B, a newer and larger model than the Flux Schnell one behind Generate Image. Pick square, landscape, portrait, or wide; every size is about one megapixel. It costs 2 credits per run, so use the 1-credit Generate Image for quick drafts and switch to HD when the picture is the final one.',
+    useCases: [
+      'Make a finished hero image for a blog post or landing page',
+      'Produce a wide 16:9 banner or slide background from one description',
+      'Generate a portrait-shaped image for a poster, story, or phone wallpaper',
+      'Re-run a prompt you already like in Generate Image to get a more detailed version',
+      'Create product or concept art where fine texture matters',
+      'Make a base image, then send it to Background Remove for a transparent cutout',
+    ],
+    faq: [
+      {
+        q: 'How is this different from Generate Image?',
+        a: 'Generate Image uses Flux Schnell at 1024×1024 for 1 credit and is built for speed. Generate Image HD uses FLUX.2 [klein] 9B, a newer and larger model, for more detailed results at 2 credits, and lets you choose the shape.',
+      },
+      {
+        q: 'What sizes can I get?',
+        a: '992×992 square, 1152×864 landscape, 864×1152 portrait, or 1328×752 wide. Each is just under one megapixel. There is no larger option.',
+      },
+      {
+        q: 'Can I give it a reference image?',
+        a: 'No. This tool takes a text prompt only, up to 2,000 characters.',
+      },
+      {
+        q: "What's the cost?",
+        a: '2 credits per run. If the run fails, the credits are refunded automatically.',
+      },
+      {
+        q: 'Does it run in my browser?',
+        a: 'No. Your prompt is sent to a hosted model on Cloudflare Workers AI and the image is returned. It is a Pro tool, not one of the free in-browser ones.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'image-generate-pro',
+        why: 'Need a quick draft? Generate Image is faster and costs 1 credit.',
+      },
+      {
+        id: 'bg-remove-pro',
+        why: 'Cut the generated subject out onto a transparent background for compositing.',
+      },
+      {
+        id: 'image-watermark',
+        why: 'Brand or label the finished image for free, right in your browser.',
+      },
+    ],
+  },
   'image-generate-pro': {
     intro:
       "Generate Image turns a text prompt into a 1024×1024 JPEG in seconds using hosted Flux Schnell. Reach for it when you need a quick original image from a description — a hero graphic, a concept sketch, a placeholder mockup. It's a Pro tool using 1 credit per run, and it pairs naturally with the background-removal and upscaling tools to take the result further.",

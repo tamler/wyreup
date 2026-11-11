@@ -26,6 +26,11 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import {
+  generateImageHd,
+  isImageGenHdAspect,
+  IMAGE_GEN_HD_MAX_PROMPT_CHARS,
+} from './providers/image-gen-hd-models';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -94,6 +99,7 @@ const RUNNERS: Record<string, Runner> = {
   'rewrite-tone-pro': rewriteTonePro,
   'chat-long-pdf-pro': chatLongPdfPro,
   'image-generate-pro': imageGeneratePro,
+  'image-generate-hd-pro': imageGenerateHdPro,
   'json-extract-pro': jsonExtractPro,
   'translate-indic-pro': translateIndicPro,
 };
@@ -640,6 +646,19 @@ function imageGeneratePro(raw: RunnerInput, env: Env): PreparedProRun {
     throw new Error('steps must be an integer from 1 to 8');
   const steps = typeof stepsRaw === 'number' ? stepsRaw : 4;
   return () => generateImage(env, { prompt, steps });
+}
+
+// One model call per run: no retry, no fallback. The 2-credit price in
+// pricing.ts depends on that; see functions/_lib/pricing-margin.test.ts.
+function imageGenerateHdPro(raw: RunnerInput, env: Env): PreparedProRun {
+  const prompt = readText(raw, 'prompt').trim();
+  if (prompt.length > IMAGE_GEN_HD_MAX_PROMPT_CHARS)
+    throw new Error(`'prompt' exceeds ${IMAGE_GEN_HD_MAX_PROMPT_CHARS} chars`);
+  const aspectRaw = raw.aspect;
+  if (aspectRaw !== undefined && !isImageGenHdAspect(aspectRaw))
+    throw new Error('aspect must be one of square, landscape, portrait, wide');
+  const aspect = aspectRaw ?? 'square';
+  return () => generateImageHd(env, { prompt, aspect });
 }
 
 function jsonExtractPro(raw: RunnerInput, env: Env): PreparedProRun {
