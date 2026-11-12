@@ -12,6 +12,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  rehearsal-freshness:
+    name: Authentication rehearsal freshness
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check approved protected source
+        env:
+          APPROVED_SHA: ${{ vars.EMAIL_BOUND_AUTH_REHEARSAL_COMMIT }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]] ||
+             ! git cat-file -e "$APPROVED_SHA^{commit}" ||
+             [ "$(git rev-parse "$APPROVED_SHA^{commit}")" != "$APPROVED_SHA" ] ||
+             ! git merge-base --is-ancestor "$APPROVED_SHA" HEAD ||
+             ! git diff --quiet "$APPROVED_SHA" HEAD -- functions/ migrations/ wrangler.toml .github/workflows/deploy.yml; then
+            echo '::error::Protected source does not match an approved ancestor rehearsal. Follow docs/auth-migration-release.md.'
+            exit 1
+          fi
+
   lint-and-types:
     name: Lint + Types
     runs-on: ubuntu-latest

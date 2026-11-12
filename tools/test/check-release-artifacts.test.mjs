@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, mkdir, rm, writeFile, symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { c as createTar } from 'tar';
-import { inspectTarball } from '../check-release-artifacts.mjs';
+import { inspectTarball, verifyPublishedArtifact } from '../check-release-artifacts.mjs';
 import { assertMinimumVersion, checkInstalledVersions, minimumVersions } from '../check-dependency-versions.mjs';
 
 let directory;
@@ -13,6 +13,45 @@ beforeEach(async () => {
   await mkdir(path.join(directory, 'package'));
 });
 afterEach(async () => { await rm(directory, { recursive: true, force: true }); });
+
+describe('post-publish registry verification', () => {
+  const artifact = { name: '@wyreup/example', version: '1.0.0', integrity: 'sha512-expected' };
+  const absent = () => ({ status: 404, ok: false });
+  const present = integrity => ({ status: 200, ok: true, json: async () => ({ dist: { integrity } }) });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it('retries a missing version until the published bytes become visible', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(absent()).mockResolvedValueOnce(present(artifact.integrity));
+    const wait = vi.fn(async () => {});
+    await expect(verifyPublishedArtifact(artifact, { wait, attempts: 3 })).resolves.toBeUndefined();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(wait).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses different bytes as soon as they become visible', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(absent()).mockResolvedValueOnce(present('sha512-other'));
+    const wait = vi.fn(async () => {});
+    await expect(verifyPublishedArtifact(artifact, { wait, attempts: 3 })).rejects.toThrow('registry bytes differ');
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(wait).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails after a bounded number of missing-version responses', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(absent());
+    const wait = vi.fn(async () => {});
+    await expect(verifyPublishedArtifact(artifact, { wait, attempts: 3 })).rejects.toThrow('wait and reconcile every artifact');
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(wait).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails immediately on a registry error instead of retrying', async () => {
+    const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ status: 503, ok: false });
+    const wait = vi.fn(async () => {});
+    await expect(verifyPublishedArtifact(artifact, { wait, attempts: 3 })).rejects.toThrow('Registry check failed: 503');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(wait).not.toHaveBeenCalled();
+  });
+});
 
 async function pack(manifest) {
   await writeFile(path.join(directory, 'package/package.json'), JSON.stringify(manifest));
