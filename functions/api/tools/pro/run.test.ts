@@ -49,6 +49,16 @@ describe('Pro endpoint admission order', () => {
         .first(),
     ).toEqual({ n: 0 });
   });
+  it('refuses the unfinished receipt batch feature before validation, reservation or inference', async () => {
+    const provider = vi.spyOn(env.AI, 'run');
+    const response = await request({ toolId: 'receipt-batch-to-csv-pro', input: { images: ['not-an-image'] } });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ code: 'tool_unavailable' });
+    expect((await request({ toolId: 'receipt-batch-to-csv-pro' })).status).toBe(503);
+    expect(provider).not.toHaveBeenCalled();
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind != 'grant'").first()).toEqual({ n: 0 });
+    expect(await sqlite.db.prepare('SELECT COUNT(*) AS n FROM run_history').first()).toEqual({ n: 0 });
+  });
   it.each([
     null,
     [],
