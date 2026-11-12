@@ -28,9 +28,30 @@ const lastUpdated = '2026-10-11';
       AI or our image-model provider) that runs against it. The model —
       not Wyreup — acts on your data. Wyreup is the conduit: we route
       the request, deduct the credit, and return the model's response
-      to you. We do not retain the input or output beyond the request.
-      We do log metadata (which tool ran, when, file name) for your run
-      history.
+      to you. We do not retain the input or output beyond the request,
+      unless you choose to create a share link for a text result (see
+      below). We do log metadata (which tool ran, when, file name) for
+      your run history.
+    </p>
+    <p id="share-links">
+      <strong>Share links are opt-in.</strong> Where share links are
+      offered, nothing is shared unless you select "Create a share link"
+      for an eligible PRO text result. Creating a link saves that text in
+      our database. Anyone with the link can read it without signing in.
+      Each link uses up one PRO run of that tool from the previous 24
+      hours, and we keep a record of which run it used and when for 48
+      hours to enforce creation limits. A link expires 30 days after it is
+      created, and you can delete it sooner from your account. We tell
+      browsers and caches not to store the shared page, so a deleted or
+      expired link stops working on the next request. Expired links are
+      deleted from our database in small batches when share links are
+      created, listed or deleted, when someone opens an expired link, and
+      when you open your account page. This is not a guaranteed deletion
+      timer, but an expired link's text is never shown to anyone. Deleting
+      your account deletes all of your links. Platform backups have their
+      own retention. We cannot take back copies people made while a link
+      was active, and a page someone already has open stays on their
+      screen until they reload it.
     </p>
     <p>
       <strong>You decide what gets sent.</strong> You choose which
@@ -91,10 +112,10 @@ const lastUpdated = '2026-10-11';
       </li>
     </ul>
 
-    <h3>What we never store</h3>
+    <h3>What we do not store</h3>
     <ul>
       <li>File contents — your files are forwarded through Wyreup to the model provider and discarded on our side immediately after the request returns.</li>
-      <li>Output contents — the model's response is returned to you and not retained on our side.</li>
+      <li>Output contents. The model's response is returned to you and not retained on our side, unless you create a <a href="#share-links">share link</a> for a text result.</li>
       <li>Card numbers — handled by Lemon Squeezy, never by Wyreup.</li>
       <li>Plain-text API keys.</li>
       <li>Analytics, fingerprints, third-party tracking, or advertising cookies.</li>

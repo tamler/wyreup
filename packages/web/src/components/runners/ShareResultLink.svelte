@@ -43,7 +43,8 @@
     }
   }
 
-  const day = (ms: number) => new Date(ms).toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+  const when = (ms: number) =>
+    new Date(ms).toLocaleString(undefined, { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 </script>
 
 <div class="share">
@@ -53,13 +54,19 @@
       <input id="share-url" class="share__url" type="text" readonly value={url} on:focus={(e) => e.currentTarget.select()} />
       <button class="btn-secondary" type="button" on:click={copy}>{copied ? 'Copied' : 'Copy link'}</button>
     </div>
-    <p class="share__note">Anyone with this link can read the text until {day(expiresAt)}. Delete it any time from your account page.</p>
+    <p class="share__note">
+      Anyone with this link can read the text without signing in. It expires {when(expiresAt)}, and Wyreup then
+      deletes the text. You can delete it sooner from your account page. Copies people make cannot be taken back.
+    </p>
   {:else}
     <button class="btn-secondary" type="button" on:click={create} disabled={state === 'busy'}>
       {state === 'busy' ? 'Creating link…' : 'Create a share link'}
     </button>
     <p class="share__note">
-      Saves this text on Wyreup so anyone with the link can read it for 30 days. Nothing is stored unless you click.
+      Creating a link saves this text on Wyreup. Anyone with the link can read it without signing in. The link
+      expires 30 days after creation, and Wyreup then deletes the text. You can delete it sooner from your account.
+      Each link uses up one PRO run of this tool from the last 24 hours. Copies people make cannot be taken back.
+      This text is not saved as a share unless you create a link. <a href="/legal/privacy#share-links">Details</a>
     </p>
   {/if}
   {#if message}<p class="share__error" role="alert">{message}</p>{/if}

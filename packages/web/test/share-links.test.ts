@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { createDefaultRegistry } from '@wyreup/core';
 import { SHAREABLE_TOOLS } from '../../../functions/_lib/shares';
@@ -40,6 +41,43 @@ describe('share link client', () => {
     expect(url).toBe('/api/shares');
     expect((init!.headers as Record<string, string>)['X-Wyreup-CSRF']).toBe('1');
     expect(JSON.parse(init!.body as string)).toEqual({ toolId: 'ocr-hq', text: 'hello' });
+  });
+
+  it('describes what a share link stores, for how long, and what deletion can and cannot do', () => {
+    const src = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/\s+/g, ' ');
+    const button = src('../src/components/runners/ShareResultLink.svelte');
+    const account = src('../src/components/AccountShareLinks.svelte');
+    const privacy = src('../src/pages/legal/privacy.astro');
+    const publicPage = readFileSync(new URL('../../../functions/s/[id].ts', import.meta.url), 'utf8');
+
+    expect(button).toContain('Anyone with the link can read it without signing in.');
+    expect(button).toContain('expires 30 days after creation, and Wyreup then deletes the text.');
+    expect(button).toContain('Each link uses up one PRO run of this tool from the last 24 hours.');
+    expect(button).toContain('Copies people make cannot be taken back.');
+    expect(button).not.toContain('Nothing is stored unless you click');
+    expect(button).not.toContain('Delete it any time');
+
+    expect(account).toContain('Only active links appear here.');
+    expect(account).toContain("Expired links are deleted from Wyreup's database and are not listed.");
+    expect(account).toContain('Expires {when(s.expiresAt)}');
+    // The explanation sits outside the loading / empty / list branches.
+    expect(account.indexOf('Only active links appear here.')).toBeLessThan(account.indexOf('{#if loading}'));
+
+    expect(privacy).toContain('id="share-links"');
+    expect(privacy).toContain('Each link uses up one PRO run of that tool');
+    expect(privacy).toContain('This is not a guaranteed deletion timer');
+    expect(privacy).toContain('Deleting your account deletes all of your links.');
+    expect(privacy).not.toContain('We do not retain the input or output beyond the request. We do log');
+    expect(privacy).not.toContain('<h3>What we never store</h3>');
+
+    expect(publicPage).toContain('and Wyreup then deletes the text.');
+    // The pages are no-store now, so no copy may promise or warn about a browser cache window.
+    for (const copy of [button, account, privacy, publicPage]) {
+      expect(copy).not.toMatch(/five minutes|max-age=300/);
+    }
+    // New share copy carries no em dashes.
+    const shareParagraph = privacy.slice(privacy.indexOf('id="share-links"'), privacy.indexOf('</p>', privacy.indexOf('id="share-links"')));
+    for (const copy of [button, account, shareParagraph, publicPage]) expect(copy).not.toContain('—');
   });
 
   it('surfaces the server message and a sign-in hint', async () => {
