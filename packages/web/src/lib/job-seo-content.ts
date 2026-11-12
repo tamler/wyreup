@@ -349,7 +349,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
     useCases: [
       'Translate a readable PDF report for a colleague who uses another language.',
       'Convert a plain-text guide into another language for a wider audience.',
-      'Prepare translated document text for summarizing or text-to-speech.',
+      'Prepare translated document text for summarizing.',
       'Read the contents of a multilingual handout without translating each page separately.',
     ],
     faq: [
