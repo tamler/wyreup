@@ -20,6 +20,7 @@ const EXT_TO_MIME: Record<string, string> = {
   psd: 'image/vnd.adobe.photoshop',
   stl: 'model/stl',
   pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   txt: 'text/plain',
   html: 'text/html',
   htm: 'text/html',
