@@ -34,6 +34,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     throw error;
   }
   const toolId = typeof body.toolId === 'string' ? body.toolId : '';
+  if (toolId === 'document-to-markdown-pro') {
+    return json({ error: 'Document conversion is not available yet.', code: 'feature_unavailable' }, 503);
+  }
   if (!body.input || typeof body.input !== 'object' || Array.isArray(body.input))
     return json({ error: 'Input object required' }, 400);
   const input = body.input as Record<string, unknown>;

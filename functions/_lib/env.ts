@@ -25,6 +25,10 @@ export interface D1Database {
 // typed loosely here, narrowed at call sites.
 export interface AiBinding {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
+  toMarkdown?(
+    document: { name: string; blob: Blob },
+    options: { conversionOptions: { output: { format: 'markdown' }; pdf: { metadata: false } } },
+  ): Promise<unknown>;
 }
 
 export interface Env {

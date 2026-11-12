@@ -280,4 +280,9 @@ describe('typed direct parameter merge', () => {
     expect(isTextOutputMime('application/x-subrip')).toBe(true);
     expect(isTextOutputMime('image/png')).toBe(false);
   });
+  it('recognizes DOCX input paths case-insensitively', () => {
+    expect(inferMimeFromPath('document.DOCX')).toBe(
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    );
+  });
 });
