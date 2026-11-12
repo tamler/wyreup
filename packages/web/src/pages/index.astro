@@ -34,13 +34,14 @@ const popularTools = popularToolIds.map((id) => {
   description="Calculate, generate, inspect hardware or work with images, PDFs, audio and data. Local tools keep inputs on your device; network lookups and hosted PRO disclose what they send."
   surfaceMode="welcome"
 >
-  <script is:inline>
+  <script>
+    import { withCampaignRef } from '../lib/campaign-ref';
     // Tool-first when installed: PWA users skip the marketing landing
     // and land directly on the tool grid. Browser visitors get the full
     // sell-what-it-is page. location.replace so the marketing page
     // never enters history (no back-button trap).
     if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
-      window.location.replace('/tools');
+      window.location.replace(withCampaignRef('/tools', window.location.href));
     }
   </script>
 

@@ -4,6 +4,7 @@
   import type { SearchResult, SearchableTool } from '../lib/tool-search';
   import { JOBS, type Job } from '../data/jobs';
   import { encodeChainSteps } from './runners/chainUrl';
+  import { withCampaignRef } from '../lib/campaign-ref';
 
   const dropdownId = 'hero-search-results';
   const examples = [
@@ -121,9 +122,9 @@
     if (event.key === 'Enter') {
       event.preventDefault();
       if (activeIndex >= 0 && activeIndex < resultCount) {
-        window.location.assign(resultUrl(activeIndex));
+        window.location.assign(withCampaignRef(resultUrl(activeIndex), window.location.href));
       } else {
-        window.location.assign(searchUrl());
+        window.location.assign(withCampaignRef(searchUrl(), window.location.href));
       }
       return;
     }

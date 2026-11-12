@@ -22,6 +22,12 @@ async function signup(email = 'owner@example.com', ip = '192.0.2.1') {
     body: JSON.stringify({ email, surface: 'browser' }),
   })));
 }
+async function attributedSignup(email: string, ref: string, heard: string) {
+  return create(context(new Request('https://wyreup.com/api/account/create', {
+    method: 'POST', headers: { 'CF-Connecting-IP': '192.0.2.99', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, ref, heard }),
+  })));
+}
 function bearer(key: string) {
   return new Request('https://wyreup.com/api/account/verify', {
     method: 'POST', headers: { Authorization: `Bearer ${key}` },
@@ -51,6 +57,16 @@ afterEach(async () => {
 });
 
 describe('email ownership and recovery', () => {
+  it('stores only configured signup ref and counts survey once for concurrent new-account attempts', async () => {
+    env.METRICS_REF_TAGS = 'youtube,rumble';
+    const results = await Promise.all(Array.from({ length: 5 }, () => attributedSignup('owner@example.com', 'youtube', 'friend')));
+    expect(results.every((r) => r.status === 200)).toBe(true);
+    expect(await env.DB.prepare('SELECT signup_ref FROM users').first()).toEqual({ signup_ref: 'youtube' });
+    expect(await env.DB.prepare("SELECT n FROM attribution_daily WHERE kind='heard' AND label='friend'").first()).toEqual({ n: 1 });
+    await attributedSignup('another@example.com', 'private-id-123', 'private@example.com');
+    expect(await env.DB.prepare("SELECT signup_ref FROM users WHERE email = 'another@example.com'").first()).toEqual({ signup_ref: null });
+    expect(await count('attribution_daily')).toBe(1);
+  });
   it('rejects browser-simple cross-site submissions before recording attempts or sending mail', async () => {
     const response = await create(context(new Request('https://wyreup.com/api/account/create', {
       method: 'POST', headers: { 'Content-Type': 'text/plain', Origin: 'https://untrusted.example' },

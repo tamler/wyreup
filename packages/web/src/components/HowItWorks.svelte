@@ -4,6 +4,7 @@
   import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
   import { setTrailHandover } from './runners/hopTrail';
   import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
+  import { withCampaignRef } from '../lib/campaign-ref';
 import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
 
   // Live three-step walkthrough. Replaces the static "01 Drop / 02 Pick /
@@ -105,7 +106,7 @@ import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
       handoffError = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
       handingOff = false; return;
     }
-    window.location.href = `/tools/${target}`;
+    window.location.href = withCampaignRef(`/tools/${target}`, window.location.href);
   }
 
   function downloadOriginal() {

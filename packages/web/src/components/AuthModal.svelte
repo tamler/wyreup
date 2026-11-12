@@ -14,6 +14,7 @@
   let screen: Screen = 'closed';
   let keyInput = '';
   let emailInput = '';
+  let heard = '';
   let busy = false;
   let error = '';
   let emailSent = false;
@@ -32,6 +33,7 @@
     error = '';
     keyInput = '';
     emailInput = '';
+    heard = '';
     setTimeout(() => firstFocusEl?.focus(), 30);
   }
 
@@ -93,7 +95,7 @@
       const res = await fetch('/api/account/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailInput.trim(), surface: 'browser' }),
+        body: JSON.stringify({ email: emailInput.trim(), surface: 'browser', ref: new URL(window.location.href).searchParams.get('ref'), heard }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         status?: string;
@@ -220,6 +222,14 @@
             bind:value={emailInput}
             disabled={busy}
           />
+          <label>How did you hear about Wyreup? (optional)
+            <select bind:value={heard} disabled={busy}>
+              <option value="">Choose one</option>
+              <option value="youtube">YouTube</option><option value="rumble">Rumble</option>
+              <option value="reddit">Reddit</option><option value="x">X</option>
+              <option value="search">Search</option><option value="friend">Friend</option><option value="other">Other</option>
+            </select>
+          </label>
           {#if error}
             <p class="error" role="alert">{error}</p>
           {/if}

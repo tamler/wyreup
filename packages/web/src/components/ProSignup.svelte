@@ -10,6 +10,7 @@
 
   let screen: Screen = 'email';
   let emailInput = '';
+  let heard = '';
   let keyInput = '';
   let busy = false;
   let error = '';
@@ -36,7 +37,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email, surface: 'browser' }),
+        body: JSON.stringify({ email, surface: 'browser', ref: new URL(window.location.href).searchParams.get('ref'), heard }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         status?: string;
@@ -108,6 +109,14 @@
           {busy ? 'Activating…' : 'Activate'}
         </button>
       </div>
+      <label>How did you hear about Wyreup? (optional)
+        <select bind:value={heard} disabled={busy}>
+          <option value="">Choose one</option>
+          <option value="youtube">YouTube</option><option value="rumble">Rumble</option>
+          <option value="reddit">Reddit</option><option value="x">X</option>
+          <option value="search">Search</option><option value="friend">Friend</option><option value="other">Other</option>
+        </select>
+      </label>
       {#if error}<p class="error" role="alert">{error}</p>{/if}
     </form>
     <button type="button" class="switch" on:click={() => { screen = 'email'; error = ''; }}>

@@ -5,6 +5,7 @@ import { fileMatchesMime, createDefaultRegistry } from '@wyreup/core/execution';
   import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
   import { clearTrail, setTrailHandover } from './runners/hopTrail';
   import { acceptsBrowserFile } from '../lib/file-tool-candidates';
+  import { withCampaignRef } from '../lib/campaign-ref';
 
   type SerializedJobAction =
     | { kind: 'tool'; toolId: string; params?: Record<string, unknown> }
@@ -118,7 +119,7 @@ import { fileMatchesMime, createDefaultRegistry } from '@wyreup/core/execution';
     }
     if (result.stored && (action.kind === 'chain' || setTrailHandover([], result.token, first.id))) {
       if (action.kind === 'chain') clearTrail();
-      window.location.assign(destination);
+      window.location.assign(withCampaignRef(destination, window.location.href));
       return;
     }
 

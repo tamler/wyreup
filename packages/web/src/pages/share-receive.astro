@@ -12,6 +12,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <script>
+  import { withCampaignRef } from '../lib/campaign-ref';
   // Read file(s) from Cache API (stashed by the service worker's share target handler)
   async function loadSharedFiles() {
     const root = document.getElementById('share-receive-root');
@@ -96,7 +97,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       sessionStorage.removeItem('wyreup:share-file-type');
 
       // Full-page navigate to home — HeroDrop reads the payload on mount.
-      window.location.href = '/';
+      window.location.href = withCampaignRef('/', window.location.href);
     } catch (err) {
       console.error('share-receive error:', err);
       const root2 = document.getElementById('share-receive-root');

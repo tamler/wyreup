@@ -5,6 +5,7 @@ import { json } from '../../_lib/auth';
 import { generateApiKey, nanoid, sha256hex } from '../../_lib/crypto';
 import { sendEmail, welcomeEmail } from '../../_lib/email';
 import { readJsonObject, RequestBodyError } from '../../_lib/request';
+import { campaignRef, heardAnswer } from '../../_lib/attribution';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -48,10 +49,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ error: 'Too many email requests today. Please try again tomorrow.' }, 429);
   }
 
-  await env.DB.prepare(
-    `INSERT INTO users (id, email, created_at) VALUES (?, ?, ?)
-     ON CONFLICT(email) DO NOTHING`,
-  ).bind(`usr_${nanoid(16)}`, email, now).run();
+  const newId = `usr_${nanoid(16)}`;
+  const ref = campaignRef(body.ref, env);
+  const heard = heardAnswer(body.heard);
+  // Both writes run in one transaction. The unique new id exists only if the
+  // insert won, so a recovery or concurrent duplicate cannot count a survey.
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO users (id, email, created_at, signup_ref) VALUES (?, ?, ?, ?)
+       ON CONFLICT(email) DO NOTHING`,
+    ).bind(newId, email, now, ref),
+    env.DB.prepare(
+      `INSERT INTO attribution_daily (day, kind, label, n)
+       SELECT ?, 'heard', ?, 1 WHERE ? IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE id = ?)
+       ON CONFLICT(day, kind, label) DO UPDATE SET n = n + 1`,
+    ).bind(new Date(now).toISOString().slice(0, 10), heard, heard, newId),
+  ]);
   const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?')
     .bind(email).first<{ id: string }>();
   if (!user) throw new Error('Account creation failed');

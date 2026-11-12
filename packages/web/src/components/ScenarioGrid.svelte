@@ -8,6 +8,7 @@ import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
   import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
   import { clearTrail, setTrailHandover } from './runners/hopTrail';
   import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
+  import { withCampaignRef } from '../lib/campaign-ref';
 
   // Static scenario data — shown when no file is dropped
   interface Scenario {
@@ -133,7 +134,8 @@ import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
       handingOff = false; return;
     }
     if (action.kind === 'chain') clearTrail();
-    window.location.href = action.kind === 'tool' ? `/tools/${first.id}` : `/chain/run?steps=${encodeURIComponent(encodeChainSteps(action.steps))}`;
+    const destination = action.kind === 'tool' ? `/tools/${first.id}` : `/chain/run?steps=${encodeURIComponent(encodeChainSteps(action.steps))}`;
+    window.location.href = withCampaignRef(destination, window.location.href);
   }
 
   function downloadOriginal() {
