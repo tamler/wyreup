@@ -19,7 +19,9 @@ import { chat, chatWith } from './providers/text-models';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from './timeout';
 import { transcribe as runTranscribe } from './providers/audio-models';
 import { visionPrompt, detectObjects } from './providers/vision-models';
-import { synthesize, TTS_MAX_CHARS, type TtsLang } from './providers/tts-models';
+import { synthesize, validateTts } from './providers/tts-models';
+import { analyze, correctGrammar } from './providers/new-text-models';
+import { boundedText, GRAMMAR_MAX_BYTES, ANALYSIS_TEXT_MAX_BYTES, ANALYSIS_QUESTION_MAX_BYTES } from '../../packages/core/src/lib/pro-migration-limits';
 import {
   translateMany as runTranslateMany,
   translateIndic as runTranslateIndic,
@@ -30,8 +32,6 @@ import { generateImage } from './providers/image-gen-models';
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
 const MODEL_GUARD = '@cf/meta/llama-guard-3-8b';
-const MODEL_DEEPSEEK = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
-const MODEL_LLAMA_SMALL = '@cf/meta/llama-3.2-3b-instruct';
 const MODEL_GLM_FLASH = '@cf/zai-org/glm-4.7-flash';
 // MODEL_SCOUT — Llama 4 Scout, used for both json-extract-pro and
 // chat-long-pdf-pro. 10M token context window (succeeds kimi-k2.5 here
@@ -446,13 +446,9 @@ function pdfQandA(raw: RunnerInput, env: Env): PreparedProRun {
 
 function textToSpeechPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
-  if (text.length > TTS_MAX_CHARS) {
-    throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
-  }
   const langRaw = readOptionalText(raw, 'language', 'EN', 2);
-  if (!['EN', 'ES', 'FR', 'ZH', 'JP', 'KR'].includes(langRaw!))
-    throw new Error('Unsupported TTS language');
-  const language = langRaw as TtsLang;
+  const language = langRaw ?? 'EN';
+  validateTts(text, language);
   return () => synthesize(env, { text, language });
 }
 
@@ -578,39 +574,26 @@ function translateDocumentPro(raw: RunnerInput, env: Env): PreparedProRun {
   };
 }
 
-// DeepSeek R1 emits a <think>...</think> reasoning trace before the final
-// answer. We return both so callers can show or hide the reasoning.
 function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   const question = readText(raw, 'question');
+  boundedText(text, ANALYSIS_TEXT_MAX_BYTES, 'Document');
+  boundedText(question, ANALYSIS_QUESTION_MAX_BYTES, 'Question');
   return async () => {
-    const out = await chatWith(
+    return analyze(
       env,
-      MODEL_DEEPSEEK,
       'You are a careful analyst. Read the document, then answer the question with explicit reasoning. Cite specific passages from the document.',
       `Document:\n${text}\n\nQuestion: ${question}`,
-      { maxTokens: MAX_TOKENS.reasoning },
     );
-    const thinkMatch = out.match(/<think>([\s\S]*?)<\/think>/i);
-    const reasoning = thinkMatch?.[1]?.trim() ?? '';
-    // R1 sometimes returns its full answer inside the <think> block and
-    // nothing after the closing tag. Fall back to the reasoning so the
-    // user gets a usable answer; only throw if the whole output is empty.
-    let answer = out.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
-    if (!answer) answer = reasoning;
-    if (!answer) {
-      throw new Error('Analysis model returned no answer');
-    }
-    return { answer, reasoning };
   };
 }
 
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
+  boundedText(text, GRAMMAR_MAX_BYTES, 'Grammar input');
   return async () => {
-    const corrected = await chatWith(
+    const corrected = await correctGrammar(
       env,
-      MODEL_LLAMA_SMALL,
       'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
       text,
     );

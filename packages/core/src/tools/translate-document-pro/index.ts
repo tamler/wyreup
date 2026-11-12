@@ -93,7 +93,7 @@ export const translateDocumentPro: ToolModule<TranslateDocumentProParams> = {
   slug: 'translate-document-pro',
   name: 'Translate a Document',
   description:
-    'Translate a whole PDF or text file across 35+ languages, powered by a hosted translation model. Text is extracted on your device; only the text is sent. Output is plain text — chains into summarize, text-to-speech, and PDF tools. Uses 3 credits per run. Documents up to 40 pages.',
+    'Translate a whole PDF or text file across 35+ languages, powered by a hosted translation model. Text is extracted on your device; only the text is sent. Output is plain text for summarizing or PDF tools. Uses 3 credits per run. Documents up to 40 pages.',
   category: 'text',
   keywords: ['translate', 'document', 'pdf', 'language', 'pro', 'hosted'],
 
@@ -117,7 +117,6 @@ export const translateDocumentPro: ToolModule<TranslateDocumentProParams> = {
     'text-summarize',
     'word-counter',
     'html-to-pdf',
-    'text-to-speech-pro',
   ],
 
   defaults: defaultTranslateDocumentProParams,

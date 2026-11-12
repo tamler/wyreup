@@ -1,8 +1,9 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro } from '../../lib/pro-runner.js';
+import { boundedText, TTS_MAX_BYTES, ttsLanguage } from '../../lib/pro-migration-limits.js';
 
 export interface TextToSpeechProParams {
-  /** Language code understood by melotts. EN default. */
+  /** English or Spanish. Other languages are currently unavailable. */
   language?: 'EN' | 'ES' | 'FR' | 'ZH' | 'JP' | 'KR';
 }
 
@@ -18,7 +19,7 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
   slug: 'text-to-speech-pro',
   name: 'Text to Speech',
   description:
-    'Hosted neural TTS — turns text into a natural-sounding MP3 in seconds. Chain it after Summarize, Translate, OCR, or Redact to get audio out of any tool that produces text. Uses 2 credits per run.',
+    'Hosted text to speech for English and Spanish, up to 500 UTF-8 bytes per run. French, Chinese, Japanese and Korean are currently unavailable. Produces MP3 and uses 2 credits per run.',
   category: 'audio',
   keywords: ['tts', 'text-to-speech', 'audio', 'voice', 'mp3', 'pro', 'hosted'],
 
@@ -26,7 +27,7 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     accept: ['text/plain'],
     min: 1,
     max: 1,
-    sizeLimit: 32 * 1024,
+    sizeLimit: TTS_MAX_BYTES,
   },
   output: { mime: 'audio/mpeg' },
 
@@ -43,14 +44,10 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     language: {
       type: 'enum',
       label: 'voice language',
-      help: 'Match the language of the input text for best pronunciation.',
+      help: 'English and Spanish only; French, Chinese, Japanese and Korean are currently unavailable.',
       options: [
         { value: 'EN', label: 'English' },
         { value: 'ES', label: 'Spanish' },
-        { value: 'FR', label: 'French' },
-        { value: 'ZH', label: 'Chinese' },
-        { value: 'JP', label: 'Japanese' },
-        { value: 'KR', label: 'Korean' },
       ],
     },
   },
@@ -59,6 +56,8 @@ export const textToSpeechPro: ToolModule<TextToSpeechProParams> = {
     if (inputs.length !== 1) throw new Error('text-to-speech-pro accepts exactly one input.');
     const text = (await inputs[0]!.text()).trim();
     if (!text) throw new Error('Empty input.');
+    boundedText(text, TTS_MAX_BYTES, 'Text to Speech input');
+    ttsLanguage(params.language ?? 'EN');
 
     const result = await runPro<TtsResult>(
       'text-to-speech-pro',

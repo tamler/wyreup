@@ -59,7 +59,7 @@ export const INFERENCE_TIMEOUTS = {
   vision: 60_000,
   /** Whisper / speech-to-text. Bounded by 25 MB input cap upstream. */
   audio: 90_000,
-  /** Text-to-speech (melotts). Bounded by char cap upstream. */
+  /** Text-to-speech. Bounded by input byte cap upstream. */
   tts: 60_000,
   /** Image generation (flux). Bounded by step cap upstream. */
   image: 60_000,
@@ -72,14 +72,14 @@ export const INFERENCE_TIMEOUTS = {
 // ── Default max_tokens per LLM class ───────────────────────────────────────
 //
 // Without a cap, Llama 3.3 70B will happily emit 4096+ tokens on a
-// loose prompt; DeepSeek R1's <think> block can balloon further. At
+// loose prompt; reasoning output can grow further. At
 // $2.25-$4.88 per M output tokens that's a real cost spike. Cap so a
 // single call can't blow our per-run margin by 10x.
 
 export const MAX_TOKENS = {
   /** Most chat tools (summarize, translate, sentiment, NER, redact). */
   default: 2048,
-  /** Reasoning models — DeepSeek R1, Kimi K2 — need room for <think>. */
+  /** Default reasoning budget for callers using the shared adapter. */
   reasoning: 4096,
   /** Vision (already capped inline at 1024 in vision-models.ts). */
   vision: 1024,

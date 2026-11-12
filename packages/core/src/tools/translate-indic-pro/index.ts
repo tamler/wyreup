@@ -42,7 +42,7 @@ export const translateIndicPro: ToolModule<TranslateIndicProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-to-speech-pro'],
+  chainSuggestions: [],
 
   defaults: defaultTranslateIndicProParams,
   paramSchema: {

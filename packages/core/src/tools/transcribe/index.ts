@@ -167,7 +167,6 @@ export const transcribe: ToolModule<TranscribeParams> = {
     'text-sentences',
     'word-counter',
     'text-stats',
-    'text-to-speech-pro',
   ],
   outputDisplay: 'prose',
 

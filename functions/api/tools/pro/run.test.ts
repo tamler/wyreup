@@ -70,6 +70,25 @@ describe('Pro endpoint admission order', () => {
         .first(),
     ).toEqual({ n: 1 });
   });
+  it.each([
+    [{ toolId: 'text-to-speech-pro', input: { text: 'Bonjour', language: 'FR' } }, 'unsupported_language'],
+    [{ toolId: 'fix-grammar-pro', input: { text: 'a'.repeat(4001) } }, 'input_too_long'],
+  ])('returns an actionable safe rejection before reserving', async (body, code) => {
+    const response = await request(body);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code });
+    expect(vi.spyOn(env.AI, 'run')).not.toHaveBeenCalled();
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind != 'grant'").first()).toEqual({ n: 0 });
+  });
+
+  it('refunds an invalid replacement-model response', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(env.AI, 'run').mockResolvedValue({ choices: [{ finish_reason: 'length', message: { content: 'partial' } }] });
+    const response = await request({ toolId: 'fix-grammar-pro', input: { text: 'Example' } });
+    expect(response.status).toBe(502);
+    expect(await response.json()).toMatchObject({ code: 'output_truncated' });
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind='refund'").first()).toEqual({ n: 1 });
+  });
   it('five provider failures refund once each and prevent further dispatch', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(env.AI, 'run').mockRejectedValue(new Error('provider failure'));
