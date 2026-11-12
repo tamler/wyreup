@@ -1,0 +1,45 @@
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { afterEach, expect, it } from 'vitest';
+
+const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+const block = workflow.match(/      - name: Check approved protected source[\s\S]*?        run: \|\n((?:          .*\n)+)/)?.[1];
+if (!block) throw new Error('Rehearsal check not found in CI workflow');
+const script = block.split('\n').map(line => line.slice(10)).join('\n');
+let directory;
+afterEach(() => { if (directory) rmSync(directory, { recursive: true, force: true }); });
+
+it('fails closed on stale or invalid approval and accepts matching protected source', () => {
+  directory = mkdtempSync(path.join(tmpdir(), 'wyreup-rehearsal-check-'));
+  const git = (...args) => execFileSync('git', args, { cwd: directory, encoding: 'utf8' }).trim();
+  git('init', '-q');
+  git('config', 'user.name', 'Test');
+  git('config', 'user.email', 'test@example.invalid');
+  git('config', 'commit.gpgsign', 'false');
+  mkdirSync(path.join(directory, 'functions'));
+  writeFileSync(path.join(directory, 'functions/auth'), 'first');
+  git('add', '.');
+  git('commit', '-qm', 'first');
+  const approved = git('rev-parse', 'HEAD');
+  const check = value => spawnSync('bash', ['-c', script], { cwd: directory, env: { ...process.env, APPROVED_SHA: value }, encoding: 'utf8' });
+  expect(check(approved).status).toBe(0);
+  expect(check('').status).not.toBe(0);
+  expect(check('f'.repeat(40)).status).not.toBe(0);
+  writeFileSync(path.join(directory, 'functions/auth'), 'changed');
+  git('add', '.');
+  git('commit', '-qm', 'change protected file');
+  expect(check(approved).status).not.toBe(0);
+  const changed = git('rev-parse', 'HEAD');
+  expect(check(changed).status).toBe(0);
+  git('rm', '-q', 'functions/auth');
+  git('commit', '-qm', 'delete protected file');
+  expect(check(changed).status).not.toBe(0);
+  git('checkout', '-qb', 'unrelated', approved);
+  writeFileSync(path.join(directory, 'other'), 'other');
+  git('add', '.');
+  git('commit', '-qm', 'unrelated');
+  expect(check(changed).status).not.toBe(0);
+  expect(check(approved).status).toBe(0);
+});

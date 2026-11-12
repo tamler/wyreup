@@ -106,6 +106,22 @@ async function registryIntegrity(artifact) {
   return metadata.dist?.integrity;
 }
 
+export async function verifyPublishedArtifact(artifact, {
+  lookup = registryIntegrity,
+  wait = () => new Promise(resolve => setTimeout(resolve, 5000)),
+  attempts = 7,
+} = {}) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const integrity = await lookup(artifact);
+    if (integrity !== null) {
+      assert.equal(integrity, artifact.integrity, `${artifact.name}@${artifact.version}: registry bytes differ; refuse overwrite, deprecate and release a repaired version`);
+      return;
+    }
+    if (attempt + 1 < attempts) await wait();
+  }
+  assert.fail(`${artifact.name}@${artifact.version} is not visible in the registry after ${attempts} attempts; wait and reconcile every artifact before rerunning`);
+}
+
 async function main() {
   const { location, plan, artifacts } = await loadArtifacts(process.argv[2]);
   const prepare = process.argv.includes('--prepare-publish');
@@ -113,10 +129,13 @@ async function main() {
   if (prepare || registry) {
     const published = new Set();
     for (const artifact of artifacts) {
+      if (registry) {
+        await verifyPublishedArtifact(artifact);
+        published.add(artifact.name);
+        continue;
+      }
       const integrity = await registryIntegrity(artifact);
-      if (integrity === null) {
-        assert(!registry, `${artifact.name}@${artifact.version} was not published`);
-      } else {
+      if (integrity !== null) {
         assert.equal(integrity, artifact.integrity, `${artifact.name}@${artifact.version}: registry bytes differ; refuse overwrite, deprecate and release a repaired version`);
         published.add(artifact.name);
       }
