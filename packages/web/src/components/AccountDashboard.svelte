@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { user, authReady, hydrateUser, refreshBalance } from '../stores/user';
   import BuyCreditsSheet from './BuyCreditsSheet.svelte';
+  import AccountShareLinks from './AccountShareLinks.svelte';
+  import { SHARE_LINKS_ENABLED } from '../lib/shareLinks';
   import { displayName } from '../data/display-names';
 
   interface ApiKey {
@@ -275,6 +277,12 @@
       </ul>
     {/if}
   </section>
+
+  {#if SHARE_LINKS_ENABLED}
+    <section class="card">
+      <AccountShareLinks />
+    </section>
+  {/if}
 {/if}
 
 {#if showBuySheet}
