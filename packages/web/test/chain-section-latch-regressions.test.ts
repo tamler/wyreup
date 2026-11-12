@@ -21,8 +21,8 @@ vi.mock('node:fs/promises', async (importOriginal) => {
       compileMutation.selectedReads++;
       if (compileMutation.selectedReads !== 1 || args[1] !== 'utf8' || typeof value !== 'string')
         throw new Error('Expected exactly one selected UTF8 compiler read');
-      expect(Buffer.byteLength(value)).toBe(16640);
-      expect(createHash('sha256').update(value).digest('hex')).toBe('3ef898b82813beb606e5cc03d1e2879c06e6f96b075090e52549aca6236e3098');
+      expect(Buffer.byteLength(value)).toBe(16739);
+      expect(createHash('sha256').update(value).digest('hex')).toBe('67ba22877499be13691694881bc3691ad9db817df2529b39480b5c313678ab34');
       const original = 'if (!locationAssigned) navigating = false;';
       const replacement = 'navigating = false;';
       const offset = value.indexOf(original);

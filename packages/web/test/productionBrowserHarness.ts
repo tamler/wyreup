@@ -398,6 +398,10 @@ export async function buildProductionCatalogFixture(options: {
     for (const path of ['src', 'public', 'scripts', 'licenses', 'package.json', 'astro.config.mjs', 'tsconfig.json']) {
       await phase(() => cp(join(originalWeb, path), join(web, path), { recursive: true, dereference: true }));
     }
+    // The site and Functions share this protected source. Copy the actual file
+    // before collecting fixture input pins so the build uses and records it.
+    await phase(() => mkdir(join(tree, 'functions/_lib'), { recursive: true }));
+    await phase(() => cp(join(originalRoot, 'functions/_lib/campaign-tags.ts'), join(tree, 'functions/_lib/campaign-tags.ts')));
     await phase(() => cp(join(originalCore, 'package.json'), join(core, 'package.json')));
     if (coordinatedCore) {
       const actualPackage = await phase(() => readFile(join(core, 'package.json')));
