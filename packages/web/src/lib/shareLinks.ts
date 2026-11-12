@@ -11,8 +11,14 @@ export const SHAREABLE_TOOL_IDS: readonly string[] = [
   'text-summarize-pro',
 ];
 
-/** Build-time switch, paired with the server's SHARE_LINKS_ENABLED. Off unless set to "1". */
-export const SHARE_LINKS_ENABLED: boolean = import.meta.env.PUBLIC_SHARE_LINKS === '1';
+/**
+ * Build-time switch, paired with the server's SHARE_LINKS_ENABLED. Off unless set to "1".
+ * Optional chaining: bundles built without Vite (the esbuild browser test
+ * harness) have no import.meta.env, and a throw here would stop every text
+ * runner from loading.
+ */
+export const SHARE_LINKS_ENABLED: boolean =
+  (import.meta as { env?: Record<string, string | undefined> }).env?.PUBLIC_SHARE_LINKS === '1';
 
 export function isShareableTool(toolId: string): boolean {
   return SHAREABLE_TOOL_IDS.includes(toolId);
