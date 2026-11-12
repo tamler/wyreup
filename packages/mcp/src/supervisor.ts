@@ -92,6 +92,7 @@ export type SupervisorResult = WorkerResult & { stderr: string };
 export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise<SupervisorResult> {
   if (signal?.aborted) return { ok: false, error: 'Tool request cancelled.', stage: 'run', stderr: '' };
   return new Promise((resolve) => {
+    const recovery = job.proRequestKey ? ` Request key: ${job.proRequestKey}. Repeat the same request with this key to check its status; completed output is not stored.` : '';
     const child: ChildProcess = fork(WORKER_PATH, [], {
       silent: true,
       env: scrubbedEnv(),
@@ -127,7 +128,7 @@ export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise
     };
     const onAbort = () => {
       stopChild();
-      finalize({ ok: false, error: 'Tool request cancelled.', stage: 'run', stderr: stderrBuf });
+      finalize({ ok: false, error: `Tool request cancelled.${recovery}`, stage: 'run', stderr: stderrBuf });
     };
     if (job.timeoutMs > 0) {
       killTimer = setTimeout(stopChild, job.timeoutMs + 1000);
@@ -138,7 +139,9 @@ export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise
       const result = msg as WorkerResult;
       if (killTimer) clearTimeout(killTimer);
       if (sigkillTimer) clearTimeout(sigkillTimer);
-      finalize({ ...result, stderr: stderrBuf });
+      finalize(!result.ok && job.proRequestKey && !result.error.includes(job.proRequestKey)
+        ? { ...result, error: result.error + recovery, stderr: stderrBuf }
+        : { ...result, stderr: stderrBuf });
     });
 
     child.once('exit', (code, signal) => {
@@ -150,8 +153,10 @@ export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise
           ok: false,
           error:
             tt === 'timeout'
-              ? `Tool worker timed out (signal ${signal}). Raise timeout_ms.`
-              : `Tool worker crashed (exit=${code}, signal=${signal}).`,
+              ? job.proRequestKey
+                ? `Tool worker timed out.${recovery}`
+                : `Tool worker timed out (signal ${signal}). Raise timeout_ms.`
+              : `Tool worker crashed (exit=${code}, signal=${signal}).${recovery}`,
           stage: 'run',
           stderr: stderrBuf,
         });
@@ -163,7 +168,7 @@ export async function runInWorker(job: WorkerJob, signal?: AbortSignal): Promise
       if (sigkillTimer) clearTimeout(sigkillTimer);
       finalize({
         ok: false,
-        error: `Worker spawn failed: ${err.message}`,
+        error: `Worker spawn failed: ${err.message}.${recovery}`,
         stage: 'run',
         stderr: stderrBuf,
       });

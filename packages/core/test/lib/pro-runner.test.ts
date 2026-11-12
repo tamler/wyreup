@@ -141,3 +141,28 @@ describe('runPro — result unwrapping', () => {
     ).rejects.toThrow(/no result/i);
   });
 });
+
+describe('managed Pro request keys', () => {
+  it('preserves a caller supplied key and creates distinct keys for separate invocations', async () => {
+    const { calls } = spyFetch(() => makeRes(200));
+    const key = 'aa097a65-0c3a-4dc0-9ad3-c9cf1bd0df82';
+    await runPro('document-to-markdown-pro', { text: 'x' }, makeCtx({ apiKey: 'wk_test', proRequestKey: key }));
+    const ctx = makeCtx({ apiKey: 'wk_test' });
+    await runPro('document-to-markdown-pro', { text: 'x' }, ctx);
+    await runPro('document-to-markdown-pro', { text: 'x' }, ctx);
+    const bodies = calls.map(call => JSON.parse(call.init?.body as string) as { requestKey: string });
+    expect(bodies[0]?.requestKey).toBe(key);
+    expect(bodies[1]?.requestKey).not.toBe(bodies[2]?.requestKey);
+  });
+  it('includes the request key after a transport failure', async () => {
+    const key = 'aa097a65-0c3a-4dc0-9ad3-c9cf1bd0df82';
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline')) as typeof fetch;
+    await expect(runPro('document-to-markdown-pro', { text: 'x' }, makeCtx({ apiKey: 'wk_test', proRequestKey: key }))).rejects.toThrow(key);
+  });
+  it('includes the request key if a successful response body fails while downloading', async () => {
+    const key = 'aa097a65-0c3a-4dc0-9ad3-c9cf1bd0df82';
+    const response = new Response(new ReadableStream({ start(controller) { controller.error(new Error('connection lost')); } }), { status: 200 });
+    globalThis.fetch = vi.fn().mockResolvedValue(response) as typeof fetch;
+    await expect(runPro('document-to-markdown-pro', { text: 'x' }, makeCtx({ apiKey: 'wk_test', proRequestKey: key }))).rejects.toThrow(key);
+  });
+});

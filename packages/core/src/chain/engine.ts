@@ -3,6 +3,7 @@ import type { ToolRegistry } from '../registry.js';
 import type { Chain, ChainStep } from './types.js';
 import { ChainError } from './errors.js';
 import { validateToolInputs } from '../lib/input-validation.js';
+import { usesManagedProRequests } from '../lib/pro-runner.js';
 
 // Re-export for ergonomics.
 export { ChainError };
@@ -46,6 +47,11 @@ export async function runChain(
 
   if (chain.length === 0) {
     return [];
+  }
+
+  const managedIndex = chain.findIndex(step => usesManagedProRequests(step.toolId));
+  if (managedIndex !== -1) {
+    throw new ChainError('This hosted file tool must be run separately so its request key can be recovered after a timeout.', managedIndex);
   }
 
   let currentInputs: File[] = inputs;

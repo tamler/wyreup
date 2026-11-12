@@ -9,6 +9,8 @@ declare const __WYREUP_CORE_VERSION__: string | undefined;
 export const WYREUP_CORE_VERSION: string =
   typeof __WYREUP_CORE_VERSION__ === 'string' ? __WYREUP_CORE_VERSION__ : '0.0.0-src';
 
+export { usesManagedProRequests } from './lib/pro-runner.js';
+
 export type {
   ToolModule,
   ToolCategory,

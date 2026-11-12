@@ -27,6 +27,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!target) return json({ error: 'No account with that email.' }, 404);
 
   const results = await env.DB.batch([
+    env.DB.prepare(`DELETE FROM pro_requests WHERE user_id = ?`).bind(target.id),
     env.DB.prepare(`DELETE FROM run_history   WHERE user_id = ?`).bind(target.id),
     env.DB.prepare(`DELETE FROM credit_events WHERE user_id = ?`).bind(target.id),
     env.DB.prepare(`DELETE FROM saved_chains  WHERE user_id = ?`).bind(target.id),
@@ -38,11 +39,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ok: true,
     deleted: target.email,
     rows: {
-      runs: results[0]?.meta?.changes ?? 0,
-      creditEvents: results[1]?.meta?.changes ?? 0,
-      savedChains: results[2]?.meta?.changes ?? 0,
-      keys: results[3]?.meta?.changes ?? 0,
-      users: results[4]?.meta?.changes ?? 0,
+      requests: results[0]?.meta?.changes ?? 0,
+      runs: results[1]?.meta?.changes ?? 0,
+      creditEvents: results[2]?.meta?.changes ?? 0,
+      savedChains: results[3]?.meta?.changes ?? 0,
+      keys: results[4]?.meta?.changes ?? 0,
+      users: results[5]?.meta?.changes ?? 0,
     },
   });
 };

@@ -4,7 +4,7 @@
 // Missing settings use installation defaults; an invalid existing switch
 // fails closed. The admin UI and SQL reservation use the same parsing policy.
 
-import type { Env } from './env';
+import type { D1PreparedStatement, Env } from './env';
 import { getBalance, json } from './auth';
 
 export const DEFAULT_LIMITS = {
@@ -149,15 +149,16 @@ export interface ProReservation {
   now?: number;
 }
 
-/** Every admission predicate shares the ledger INSERT's SQLite write lock. */
-export async function reserveProCredits(
+/** Prepare the same admission write for standalone use or an atomic batch. */
+export function prepareProReservation(
   env: Env,
   reservation: ProReservation,
-): Promise<Response | null> {
+  requestKey?: string,
+): D1PreparedStatement {
   const { userId, cost, toolId, spendId, now = Date.now() } = reservation;
   if (!Number.isSafeInteger(cost) || cost <= 0) throw new Error('Invalid credit cost');
   const day = startOfUtcDay(now);
-  const result = await env.DB.prepare(
+  return env.DB.prepare(
     `
     INSERT INTO credit_events (id, user_id, kind, amount, tool_id, note, created_at)
     SELECT ?, ?, 'spend', ?, ?, ?, ?
@@ -170,6 +171,7 @@ export async function reserveProCredits(
       AND (SELECT COUNT(*) FROM credit_events spend
         WHERE spend.user_id = ? AND spend.kind='spend' AND spend.created_at >= ?
           AND NOT EXISTS (SELECT 1 FROM run_history WHERE spend_event_id = spend.id)) < 5
+      ${requestKey === undefined ? '' : 'AND NOT EXISTS (SELECT 1 FROM pro_requests WHERE user_id = ? AND request_key = ?)'}
   `,
   )
     .bind(
@@ -187,10 +189,23 @@ export async function reserveProCredits(
       now - 60_000,
       userId,
       day,
-    )
-    .run();
-  if (result.meta.changes === 1) return null;
+      ...(requestKey === undefined ? [] : [userId, requestKey]),
+    );
+}
 
+/** Every admission predicate shares the ledger INSERT's SQLite write lock. */
+export async function reserveProCredits(
+  env: Env,
+  reservation: ProReservation,
+): Promise<Response | null> {
+  const result = await prepareProReservation(env, reservation).run();
+  if (result.meta.changes === 1) return null;
+  return explainProDenial(env, reservation);
+}
+
+export async function explainProDenial(env: Env, reservation: ProReservation): Promise<Response> {
+  const { userId, cost, now = Date.now() } = reservation;
+  const day = startOfUtcDay(now);
   // Reads only choose a helpful denial message. They never authorize dispatch.
   const limits = await enforceLimits(env, { id: userId }, cost, now);
   if (limits) return limits;

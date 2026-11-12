@@ -18,6 +18,12 @@ export interface ProRunError {
   message: string;
 }
 
+const MANAGED_TOOLS = new Set(['document-to-markdown-pro', 'receipt-batch-to-csv-pro', 'image-edit-pro']);
+
+export function usesManagedProRequests(toolId: string): boolean {
+  return MANAGED_TOOLS.has(toolId);
+}
+
 /**
  * Read a File's bytes and base64-encode them. Chunked to avoid a
  * RangeError from `String.fromCharCode` spread on large inputs.
@@ -52,10 +58,15 @@ export async function runPro<TResult>(
   const url = `${base}/api/tools/pro/run`;
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const requestKey = ctx.proRequestKey ?? (usesManagedProRequests(toolId) ? crypto.randomUUID() : undefined);
+  if (requestKey !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestKey)) {
+    throw new Error('Pro request key must be a UUID v4.');
+  }
+  const keySuffix = requestKey ? ` Request key: ${requestKey}.` : '';
   const init: RequestInit = {
     method: 'POST',
     headers,
-    body: JSON.stringify({ toolId, input }),
+    body: JSON.stringify({ toolId, input, ...(requestKey ? { requestKey } : {}) }),
     signal: ctx.signal,
   };
 
@@ -78,29 +89,41 @@ export async function runPro<TResult>(
     );
   }
 
-  const res = await fetch(url, init);
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch (error) {
+    if (requestKey) throw new Error(`Pro request outcome is unknown. Request key: ${requestKey}. Repeat the same request with this key to check its status; completed output is not stored.`);
+    throw error;
+  }
 
   if (!res.ok) {
-    const detail = (await res.json().catch(() => ({}))) as { error?: string };
+    const detail = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
     if (res.status === 401) {
       throw new Error(
-        isBrowser && !ctx.apiKey
+        (isBrowser && !ctx.apiKey
           ? 'Please sign in with your Wyreup API key to use PRO tools.'
-          : 'Your Wyreup API key was rejected. Request a new emailed key at https://wyreup.com/account, then re-run `wyreup login` or update WYREUP_API_KEY.',
+          : 'Your Wyreup API key was rejected. Request a new emailed key at https://wyreup.com/account, then re-run `wyreup login` or update WYREUP_API_KEY.') + keySuffix,
       );
     }
     if (res.status === 402) {
-      throw new Error(detail.error ?? 'Not enough credits. Buy more from /account.');
+      throw new Error((detail.error ?? 'Not enough credits. Buy more from /account.') + keySuffix);
     }
     if (res.status === 429) {
-      throw new Error(detail.error ?? 'Too many PRO runs — wait a minute.');
+      throw new Error((detail.error ?? 'Too many PRO runs — wait a minute.') + keySuffix);
     }
-    throw new Error(detail.error ?? `PRO run failed (${res.status})`);
+    throw new Error(`${detail.error ?? `PRO run failed (${res.status})`}${keySuffix}`);
   }
 
-  const body = (await res.json()) as { result?: TResult };
+  let body: { result?: TResult };
+  try {
+    body = (await res.json()) as { result?: TResult };
+  } catch (error) {
+    if (requestKey) throw new Error(`Pro response could not be read. Request key: ${requestKey}. Repeat the same request with this key to check its status; completed output is not stored.`);
+    throw error;
+  }
   if (body.result === undefined) {
-    throw new Error('PRO endpoint returned no result');
+    throw new Error(`PRO endpoint returned no result.${keySuffix}`);
   }
 
   // Tell the browser shell to re-fetch the balance. Guarded for non-browser
