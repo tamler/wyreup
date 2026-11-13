@@ -34,6 +34,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     throw error;
   }
   const toolId = typeof body.toolId === 'string' ? body.toolId : '';
+  // This feature remains unavailable until its cost, privacy and input gates are verified.
+  if (toolId === 'receipt-batch-to-csv-pro') {
+    return json({ error: 'Receipt batch is not available yet.', code: 'tool_unavailable' }, 503);
+  }
   if (!body.input || typeof body.input !== 'object' || Array.isArray(body.input))
     return json({ error: 'Input object required' }, 400);
   const input = body.input as Record<string, unknown>;
