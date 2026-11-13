@@ -4,11 +4,13 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import {
   createDefaultRegistry,
   toolRunsOnSurface,
+  usesManagedProRequests,
   runChain,
   parseChainString,
   setModelCdn,
 } from '@wyreup/core';
 import { basename, delimiter, join } from 'node:path';
+import { lstat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { atomicPublish } from './atomic-publish.js';
 import { resolveAllowedRoots, assertPathAllowed } from './paths.js';
@@ -154,6 +156,9 @@ export function extFromMime(mime: string): string {
 
 // ──── Schema builder ──────────────────────────────────────────────────────────
 
+const REQUEST_KEY_PATTERN = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$';
+const REQUEST_KEY_RE = new RegExp(REQUEST_KEY_PATTERN);
+
 function buildMcpInputSchema(tool: ToolModule): Record<string, unknown> {
   const isMultiOutput = tool.output.multiple === true;
   const properties: Record<string, unknown> = {
@@ -174,6 +179,13 @@ function buildMcpInputSchema(tool: ToolModule): Record<string, unknown> {
       type: 'boolean',
       description: 'Overwrite existing output files. Default false.',
     },
+  };
+  if (tool.cost === 'credit') properties['request_key'] = {
+    type: 'string',
+    pattern: REQUEST_KEY_PATTERN,
+    minLength: 36,
+    maxLength: 36,
+    description: 'UUID v4 request key to check or retry the same paid attempt.',
   };
 
   if (isMultiOutput) {
@@ -493,6 +505,8 @@ export async function createWyreupMcpServer(): Promise<Server> {
         if (chain.length === 0) {
           return errorResult('wyreup_chain: no valid steps parsed from input.');
         }
+        if (chain.some(step => usesManagedProRequests(step.toolId)))
+          return errorResult('This hosted file tool must be run separately so its request key can be recovered after a timeout.');
         // Validate every step references a real, MCP-runnable tool.
         for (const step of chain) {
           const t = registry.toolsById.get(step.toolId);
@@ -647,9 +661,16 @@ export async function createWyreupMcpServer(): Promise<Server> {
     }
 
     const rawArgs = args ?? {};
+    const managed = usesManagedProRequests(tool.id);
+    const suppliedKey = rawArgs['request_key'];
+    if (suppliedKey !== undefined && (typeof suppliedKey !== 'string' || suppliedKey.length !== 36 || !REQUEST_KEY_RE.test(suppliedKey)))
+      return errorResult('request_key must be a UUID v4.');
+    const requestKey = typeof suppliedKey === 'string' ? suppliedKey : managed ? randomUUID() : undefined;
     const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
     const outputPath = rawArgs['output_path'] as string | undefined;
     const outputDir = rawArgs['output_dir'] as string | undefined;
+    if (tool.id === 'image-edit-pro' && !outputPath)
+      return errorResult('image-edit-pro requires output_path before processing.');
     let params: Record<string, unknown>;
     try {
       params = admitToolParams(tool, rawArgs['params'] === undefined ? {} : rawArgs['params']);
@@ -660,13 +681,22 @@ export async function createWyreupMcpServer(): Promise<Server> {
 
     const timeoutCheck = resolveTimeout(rawArgs['timeout_ms']);
     if (!timeoutCheck.ok) return errorResult(timeoutCheck.error);
-    const timeoutMs = timeoutCheck.ms;
+    const timeoutMs = managed && timeoutCheck.ms > 0 ? Math.max(timeoutCheck.ms, 330_000) : timeoutCheck.ms;
 
     const allowOverwrite = rawArgs['allow_overwrite'] === true;
 
     return withAudit(name, inputPaths, outputPath, async () => {
       const validatedPaths = await validatePaths(inputPaths, outputPath, outputDir);
       if (!validatedPaths.ok) return errorResult(validatedPaths.error);
+      if (tool.id === 'image-edit-pro' && validatedPaths.outputPath && !allowOverwrite) {
+        try {
+          await lstat(validatedPaths.outputPath);
+          return errorResult('Output already exists. Choose another path or allow overwrite.');
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+            return errorResult('Cannot check the output path.');
+        }
+      }
 
       const disableIsolation = process.env['WYREUP_DISABLE_WORKER_ISOLATION'] === '1';
 
@@ -685,6 +715,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
             cache: new Map(),
             executionId: randomUUID(),
             apiKey: proApiKey,
+            proRequestKey: requestKey,
             proOrigin,
           });
         } catch (err) {
@@ -748,6 +779,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
         outputDir,
         timeoutMs,
         proApiKey: tool.cost === 'credit' ? proApiKey : undefined,
+        proRequestKey: requestKey,
         proOrigin,
         modelCdn: modelCdn.base,
         modelAllowedOrigins: modelCdn.allowedOrigins,

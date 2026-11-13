@@ -8,6 +8,7 @@ export type WorkerJob = {
   outputDir?: string;
   timeoutMs: number;
   proApiKey?: string;
+  proRequestKey?: string;
   proOrigin: string;
   modelCdn: string | null;
   modelAllowedOrigins: string[];

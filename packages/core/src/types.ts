@@ -132,6 +132,8 @@ export interface ToolRunContext {
    * backend calls so that retries don't double-charge credits.
    */
   executionId: string;
+  /** Optional caller-supplied UUID for one paid request, retained across retries. */
+  proRequestKey?: string;
   /**
    * Caller-supplied API key for Pro tools. Required when running a Pro
    * tool outside the browser (CLI, MCP). Ignored in the browser, which

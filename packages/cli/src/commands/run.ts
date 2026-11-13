@@ -2,7 +2,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { Command } from 'commander';
-import { createDefaultRegistry, toolRunsOnSurface } from '@wyreup/core';
+import { createDefaultRegistry, toolRunsOnSurface, usesManagedProRequests } from '@wyreup/core';
 import type { ToolModule, ToolRunContext } from '@wyreup/core';
 import { inferMimeFromPath, extFromMime, isTextOutputMime } from '../lib/mime.js';
 import { formatSuggestion } from '../lib/fuzzy.js';
@@ -20,6 +20,7 @@ interface CtxOptions {
   ac: AbortController;
   apiKey?: string;
   proOrigin?: string;
+  proRequestKey?: string;
 }
 
 function makeCtx(opts: CtxOptions): ToolRunContext {
@@ -35,6 +36,7 @@ function makeCtx(opts: CtxOptions): ToolRunContext {
     executionId: randomUUID(),
     apiKey: opts.apiKey,
     proOrigin: opts.proOrigin,
+    proRequestKey: opts.proRequestKey,
   };
 }
 
@@ -139,6 +141,7 @@ export interface RunOptions {
   verbose?: boolean;
   overwrite?: boolean;
   timeout?: number;
+  requestKey?: string;
 }
 
 export async function executeTool(
@@ -219,7 +222,9 @@ export async function executeTool(
     process.stderr.write(`${timeoutResult.error}\n`);
     process.exit(1);
   }
-  const { ms: timeoutMs } = timeoutResult;
+  const managed = usesManagedProRequests(tool.id);
+  const timeoutMs = managed && timeoutResult.ms > 0 ? Math.max(timeoutResult.ms, 330_000) : timeoutResult.ms;
+  const proRequestKey = managed ? opts.requestKey ?? randomUUID() : opts.requestKey;
 
   const ac = new AbortController();
   const interrupt = () => ac.abort();
@@ -237,6 +242,7 @@ export async function executeTool(
     ac,
     apiKey,
     proOrigin,
+    proRequestKey,
   });
 
   let result: Blob | Blob[];

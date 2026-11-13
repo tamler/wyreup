@@ -115,6 +115,7 @@ async function runJob(job: WorkerJob, clientSignal: AbortSignal): Promise<Worker
       cache: new Map(),
       executionId: randomUUID(),
       apiKey: job.proApiKey,
+      proRequestKey: job.proRequestKey,
       proOrigin: job.proOrigin,
     });
   } catch (err) {

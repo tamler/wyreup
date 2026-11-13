@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   runChain,
   MAX_CHAIN_DEPTH,
@@ -42,6 +42,16 @@ function makeTool(overrides: Partial<ToolModule> & Pick<ToolModule, 'id'>): Tool
 }
 
 describe('runChain', () => {
+  it('rejects a managed paid tool before dispatching any earlier step', async () => {
+    const earlierRun = vi.fn(() => Promise.resolve(new Blob(['x'])));
+    const paidRun = vi.fn(() => Promise.resolve(new Blob(['x'])));
+    const earlier = makeTool({ id: 'earlier', run: earlierRun });
+    const paid = makeTool({ id: 'image-edit-pro', cost: 'credit', run: paidRun });
+    const chain: Chain = [{ toolId: 'earlier', params: {} }, { toolId: 'image-edit-pro', params: {} }];
+    await expect(runChain(chain, [new File(['x'], 'x.txt', { type: 'text/plain' })], makeCtx(), createRegistry([earlier, paid]))).rejects.toThrow(/run separately/);
+    expect(earlierRun).not.toHaveBeenCalled();
+    expect(paidRun).not.toHaveBeenCalled();
+  });
   it('throws ChainError with depth info when MAX_CHAIN_DEPTH exceeded', async () => {
     const step: ChainStep = { toolId: 'nonexistent-tool', params: {} };
     const chain: Chain = Array<ChainStep>(MAX_CHAIN_DEPTH + 1).fill(step);

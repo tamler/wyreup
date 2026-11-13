@@ -137,6 +137,7 @@ const runCmd = program
   .option('--json', 'Force JSON output to stdout')
   .option('--verbose', 'Print progress to stderr')
   .option('--overwrite', 'Overwrite existing output files (default: refuse)')
+  .option('--request-key <uuid>', 'Reuse a paid request key after an uncertain outcome')
   .option(
     '--timeout <ms>',
     'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)',
@@ -153,6 +154,7 @@ const runCmd = program
       verbose: opts['verbose'] as boolean | undefined,
       overwrite: opts['overwrite'] as boolean | undefined,
       timeout: opts['timeout'] as number | undefined,
+      requestKey: opts['requestKey'] as string | undefined,
     });
   });
 
@@ -364,6 +366,7 @@ if (firstArg && !firstArg.startsWith('-') && !BUILTIN_COMMANDS.has(firstArg)) {
       .option('--json', 'Force JSON output to stdout')
       .option('--verbose', 'Print progress to stderr')
       .option('--overwrite', 'Overwrite existing output files (default: refuse)')
+      .option('--request-key <uuid>', 'Reuse a paid request key after an uncertain outcome')
       .option(
         '--timeout <ms>',
         'Max runtime per tool in milliseconds (default: 300000, range [1, 3600000], 0 disables with WYREUP_ALLOW_DISABLE_TIMEOUT=1)',
@@ -385,6 +388,7 @@ if (firstArg && !firstArg.startsWith('-') && !BUILTIN_COMMANDS.has(firstArg)) {
         verbose: opts['verbose'] as boolean | undefined,
         overwrite: opts['overwrite'] as boolean | undefined,
         timeout: opts['timeout'] as number | undefined,
+        requestKey: opts['requestKey'] as string | undefined,
       });
     });
 

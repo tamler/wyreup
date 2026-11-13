@@ -13,6 +13,9 @@ import { reserveProCredits } from '../../../_lib/limits';
 import { priceFor } from '../../../_lib/pricing';
 import { prepareProRun, type PreparedProRun } from '../../../_lib/runners';
 import { readJsonObject, RequestBodyError } from '../../../_lib/request';
+import { admitManaged, managedStatus, MANAGED_DEADLINE_MS, recoverStale, requiresRequestKey, settleManaged, validRequestKey } from '../../../_lib/pro-requests';
+import { safeInputError, safeProviderError } from '../../../_lib/pro-errors';
+import { InferenceTimeoutError, withTimeout } from '../../../_lib/timeout';
 
 // Largest legitimate input is a 25 MB audio file (~33.3 MB once base64-
 // encoded); 36 MB leaves headroom for the JSON envelope. Rejecting early
@@ -33,6 +36,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (error instanceof RequestBodyError) return json({ error: error.message }, error.status);
     throw error;
   }
+  if (body.action === 'status') return managedStatus(env, user.id, body.requestKey);
   const toolId = typeof body.toolId === 'string' ? body.toolId : '';
   if (!body.input || typeof body.input !== 'object' || Array.isArray(body.input))
     return json({ error: 'Input object required' }, 400);
@@ -45,9 +49,40 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // otherwise consumes the gross platform cap without any provider work.
   let dispatch: PreparedProRun;
   try {
-    dispatch = prepareProRun(toolId, input, env);
-  } catch {
-    return json({ error: 'Invalid tool input' }, 400);
+    dispatch = await Promise.resolve(prepareProRun(toolId, input, env));
+  } catch (error) {
+    const safe = safeInputError(error);
+    return json(safe.code === 'invalid_input' ? { error: 'Invalid tool input' } : safe, 400);
+  }
+
+  try { await recoverStale(env, user.id); }
+  catch { return json({ error: 'Pro request protection is unavailable.' }, 503); }
+  const rawKey = body.requestKey;
+  if (rawKey !== undefined || requiresRequestKey(toolId)) {
+    if (!validRequestKey(rawKey)) return json({ code: 'request_key_required', error: 'A valid request key is required.' }, 400);
+    const key = rawKey.toLowerCase();
+    const admission = await admitManaged(env, user.id, key, toolId, input, creditCost);
+    if ('response' in admission) return admission.response;
+    let result: unknown;
+    try {
+      result = await withTimeout(dispatch(), MANAGED_DEADLINE_MS, 'managed request');
+    } catch (error) {
+      const refunded = await settleManaged(env, user.id, admission.row, false, creditCost);
+      const safe = refunded ? safeProviderError(error) : null;
+      console.error('managed Pro run failed', {
+        toolId,
+        spendId: admission.row.spend_id,
+        category: error instanceof InferenceTimeoutError ? 'timeout' : safe ? safe.code : 'provider_failure',
+        refunded,
+      });
+      return json({ code: safe?.code ?? (refunded ? 'request_failed_refunded' : 'request_outcome_unknown'), error: safe?.error ?? (refunded ? 'Run failed and was refunded.' : 'Run outcome is unknown. Check its status.'), requestKey: key }, refunded ? 502 : 503);
+    }
+    const completed = await settleManaged(env, user.id, admission.row, true, creditCost);
+    if (!completed) {
+      console.error('managed Pro settlement unresolved', { toolId, spendId: admission.row.spend_id });
+      return json({ code: 'request_outcome_unknown', error: 'Run outcome is unknown. Check its status.', requestKey: key }, 503);
+    }
+    return json({ result });
   }
 
   // 0a. Sweep orphan spend rows from prior mid-handler crashes. A `spend`
@@ -66,6 +101,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         AND spend.created_at < ?
         AND rh.id IS NULL
         AND ref.id IS NULL
+        AND NOT EXISTS (SELECT 1 FROM pro_requests WHERE spend_id=spend.id)
       LIMIT 10`,
   )
     .bind(user.id, Date.now() - 5 * 60 * 1000)
@@ -76,7 +112,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
          (id, user_id, kind, amount, tool_id, refund_of, note, created_at)
        SELECT ?, ?, 'refund', ?, ?, ?, ?, ?
        WHERE NOT EXISTS (SELECT 1 FROM run_history WHERE spend_event_id = ?)
-         AND NOT EXISTS (SELECT 1 FROM credit_events WHERE refund_of = ?)`,
+         AND NOT EXISTS (SELECT 1 FROM credit_events WHERE refund_of = ?)
+         AND NOT EXISTS (SELECT 1 FROM pro_requests WHERE spend_id = ?)`,
     )
       .bind(
         `evt_${nanoid(16)}`,
@@ -86,6 +123,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         orphan.spend_id,
         `Auto-refund for orphan spend ${orphan.spend_id}`,
         Date.now(),
+        orphan.spend_id,
         orphan.spend_id,
         orphan.spend_id,
       )

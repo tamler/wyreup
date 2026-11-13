@@ -37,6 +37,18 @@ describe('worker client cancellation', () => {
     expect(child.kill).toHaveBeenCalledWith('SIGTERM');
     expect(remove).toHaveBeenCalledWith('abort', expect.any(Function));
   });
+  it('returns the managed request key when a worker is cancelled', async () => {
+    const child = Object.assign(new EventEmitter(), { stderr: new EventEmitter(), send: vi.fn(), kill: vi.fn() });
+    vi.mocked(fork).mockReturnValue(child as unknown as ReturnType<typeof fork>);
+    const controller = new AbortController();
+    const key = 'aa097a65-0c3a-4dc0-9ad3-c9cf1bd0df82';
+    const pending = runInWorker({ ...job, proRequestKey: key }, controller.signal);
+    controller.abort();
+    child.emit('exit', null, 'SIGTERM');
+    const result = await pending;
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain(key);
+  });
 });
 
 describe('cancelled output publication', () => {
