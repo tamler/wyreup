@@ -1,4 +1,4 @@
-import { PUBLIC_CAMPAIGN_TAGS } from '../../../../functions/_lib/campaign-tags';
+import { PUBLIC_CAMPAIGN_TAGS } from './campaign-tags';
 
 /** Carry only an approved public label to a same-origin navigation. */
 export function withCampaignRef(destination: string, current: string): string {
