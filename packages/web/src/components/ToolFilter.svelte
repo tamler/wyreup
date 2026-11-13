@@ -6,6 +6,7 @@
   import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
   import { capabilities, showUnrunnable, filterRunnable } from '../stores/capabilities';
   import type { ToolRequires } from '@wyreup/core';
+  import { withCampaignRef } from '../lib/campaign-ref';
 
   // Tool suggestions go to hello@wyreup.com — lower friction than
   // GitHub Issues for non-technical users (no signup wall). Power
@@ -219,7 +220,7 @@
       handoffError = 'Could not complete the handover. Original retained; download it or retry.' + (cleared ? '' : ' Shared storage could not confirm deleting this token.');
       handingOff = false; return;
     }
-    window.location.href = `/tools/${toolId}`;
+    window.location.href = withCampaignRef(`/tools/${toolId}`, window.location.href);
   }
 
   function downloadOriginal() {

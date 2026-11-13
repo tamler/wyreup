@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-10-11';
+const lastUpdated = '2026-11-13';
 ---
 
 <BaseLayout
@@ -41,6 +41,15 @@ const lastUpdated = '2026-10-11';
     </p>
 
     <h2>What we collect</h2>
+
+    <h3>Aggregate campaign counts</h3>
+    <p>When a link includes an approved public campaign tag, we count the page
+      load by tag and UTC day. The counter does not store an IP address, cookie,
+      browser identifier or full URL. Counts can include repeat visits or bots.
+      If you create an account while the tag is present, we store the tag on the
+      new account so purchases can be counted by signup source. The optional
+      signup question is counted by answer and day without linking the answer
+      to your account. Account creation has separate rate limits described below.</p>
 
     <h3>Local tools and free public lookups</h3>
     <p>Local file tools keep their file processing on your device. Setup
@@ -97,7 +106,7 @@ const lastUpdated = '2026-10-11';
       <li>Output contents — the model's response is returned to you and not retained on our side.</li>
       <li>Card numbers — handled by Lemon Squeezy, never by Wyreup.</li>
       <li>Plain-text API keys.</li>
-      <li>Analytics, fingerprints, third-party tracking, or advertising cookies.</li>
+      <li>Analytics cookies, fingerprints, third-party tracking cookies, or advertising cookies.</li>
     </ul>
 
     <h2>Cookies</h2>

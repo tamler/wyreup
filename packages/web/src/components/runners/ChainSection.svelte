@@ -7,6 +7,7 @@
   import { upsellFor } from '../../data/pro-upsells';
   import { approxUsd } from '../../data/pricing';
   import { displayName } from '../../data/display-names';
+  import { withCampaignRef } from '../../lib/campaign-ref';
 
   export let resultBlob: Blob | null = null;
   export let resultName: string = 'result';
@@ -167,7 +168,7 @@
         downloadBlob(blob, name);
         return;
       }
-      window.location.href = `/tools/${toolId}`;
+      window.location.href = withCampaignRef(`/tools/${toolId}`, window.location.href);
       locationAssigned = true;
     } finally {
       if (!locationAssigned) navigating = false;

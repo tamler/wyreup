@@ -65,6 +65,11 @@ export interface Env {
   // owner still needs the matching API key), but there's no reason to
   // expose the operator set publicly either.
   ADMIN_EMAILS?: string;
+
+  // Independent aggregate-only operator credential; never an account API key.
+  OPS_METRICS_KEY?: string;
+  // Public, non-identifying campaign tags, comma separated.
+  METRICS_REF_TAGS?: string;
 }
 
 export function isAdminEmail(email: string, env: Env): boolean {
