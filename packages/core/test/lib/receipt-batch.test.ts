@@ -55,6 +55,16 @@ describe('receipt batch export', () => {
     expect(csv).not.toContain(',line,');
   });
 
+  it('loads blank model lines for editing but refuses them on export', () => {
+    const value = { ...sample, receipts: [{ ...sample.receipts[0], lines: [{ description: null, quantity: null, amount: null }] }] };
+    expect(parseReceiptBatch(value).receipts[0]!.lines).toHaveLength(1);
+    expect(() => receiptBatchCsv(value)).toThrow(/Enter a description, quantity or amount/);
+  });
+
+  it('explains how to correct values exceeding 15 significant digits', () => {
+    expect(() => receiptBatchCsv({ ...sample, receipts: [{ ...sample.receipts[0], total: '123456789012345.1' }] })).toThrow(/fewer digits/i);
+  });
+
   it.each([
     { ...sample, version: 2 },
     { ...sample, receipts: [] },
