@@ -156,6 +156,9 @@ export function extFromMime(mime: string): string {
 
 // ──── Schema builder ──────────────────────────────────────────────────────────
 
+const REQUEST_KEY_PATTERN = '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$';
+const REQUEST_KEY_RE = new RegExp(REQUEST_KEY_PATTERN);
+
 function buildMcpInputSchema(tool: ToolModule): Record<string, unknown> {
   const isMultiOutput = tool.output.multiple === true;
   const properties: Record<string, unknown> = {
@@ -179,6 +182,9 @@ function buildMcpInputSchema(tool: ToolModule): Record<string, unknown> {
   };
   if (tool.cost === 'credit') properties['request_key'] = {
     type: 'string',
+    pattern: REQUEST_KEY_PATTERN,
+    minLength: 36,
+    maxLength: 36,
     description: 'UUID v4 request key to check or retry the same paid attempt.',
   };
 
@@ -657,7 +663,7 @@ export async function createWyreupMcpServer(): Promise<Server> {
     const rawArgs = args ?? {};
     const managed = usesManagedProRequests(tool.id);
     const suppliedKey = rawArgs['request_key'];
-    if (suppliedKey !== undefined && (typeof suppliedKey !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(suppliedKey)))
+    if (suppliedKey !== undefined && (typeof suppliedKey !== 'string' || suppliedKey.length !== 36 || !REQUEST_KEY_RE.test(suppliedKey)))
       return errorResult('request_key must be a UUID v4.');
     const requestKey = typeof suppliedKey === 'string' ? suppliedKey : managed ? randomUUID() : undefined;
     const inputPaths = (rawArgs['input_paths'] as string[] | undefined) ?? [];
