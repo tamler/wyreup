@@ -87,19 +87,34 @@ describe('email ownership and recovery', () => {
 
   it('denies legacy keys and their sessions, preserves account and balances through canonical recovery', async () => {
     const oldKey = generateApiKey();
-    await env.DB.prepare('INSERT INTO users(id,email,created_at) VALUES(?,?,0)')
-      .bind('original', 'owner@example.com').run();
-    await env.DB.prepare('INSERT INTO api_keys(id,user_id,key_hash,name,created_at) VALUES(?,?,?,?,0)')
-      .bind('legacy', 'original', await sha256hex(oldKey), 'Legacy').run();
-    await env.DB.prepare("INSERT INTO credit_events(id,user_id,kind,amount,created_at) VALUES('credit','original','grant',100,0)").run();
+    await database.close();
+    database = await createSqliteTestDb(async (name, db) => {
+      if (name !== '0006_email_bound_keys.sql') return;
+      await db.prepare('INSERT INTO users(id,email,created_at) VALUES(?,?,0)')
+        .bind('original', 'owner@example.com').run();
+      await db.prepare('INSERT INTO api_keys(id,user_id,key_hash,name,created_at) VALUES(?,?,?,?,0)')
+        .bind('legacy', 'original', await sha256hex(oldKey), 'Legacy').run();
+      await db.prepare("INSERT INTO credit_events(id,user_id,kind,amount,created_at) VALUES('credit','original','grant',100,0)").run();
+    });
+    env.DB = database.db;
+    expect(await env.DB.prepare("SELECT email_bound FROM api_keys WHERE id='legacy'").first()).toEqual({ email_bound: 0 });
     expect(await resolveUser(bearer(oldKey), env)).toBeNull();
     const cookie = await signSessionCookie({ uid: 'original', kid: 'legacy', exp: Date.now() + 10000 }, env.SESSION_SECRET);
-    expect(await resolveUser(new Request('https://wyreup.com', { headers: { Cookie: `__Host-wyreup_session=${cookie}` } }), env)).toBeNull();
-    expect((await signup(' OWNER@EXAMPLE.COM ')).status).toBe(200);
-    const response = await verify(context(bearer(sentKeys[0])));
+    const legacySession = new Request('https://wyreup.com', { headers: { Cookie: `__Host-wyreup_session=${cookie}` } });
+    expect(await resolveUser(legacySession, env)).toBeNull();
+    const recovery = await signup(' OWNER@EXAMPLE.COM ');
+    expect(recovery.status).toBe(200);
+    expect(recovery.headers.has('Set-Cookie')).toBe(false);
+    expect(JSON.stringify(await recovery.json()) === '{"status":"check_email"}').toBe(true);
+    expect(sentKeys.length).toBe(1);
+    const recoveredKey = bearer(sentKeys[0]);
+    expect(await requireAdmin(recoveredKey, env)).toMatchObject({ id: 'original', email: 'owner@example.com' });
+    const response = await verify(context(recoveredKey));
+    expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ email: 'owner@example.com', balance: 100 });
     expect(await count('users')).toBe(1);
     expect(await resolveUser(bearer(oldKey), env)).toBeNull();
+    expect(await resolveUser(legacySession, env)).toBeNull();
     expect(await env.DB.prepare("SELECT bucket_val FROM create_attempts WHERE bucket_kind='email'").first()).toEqual({ bucket_val: 'owner@example.com' });
   });
 

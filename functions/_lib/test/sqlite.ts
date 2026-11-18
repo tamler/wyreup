@@ -11,7 +11,9 @@ function literal(value: unknown): string {
   throw new Error('SQLite test binding must be a string, finite number, or null');
 }
 
-export async function createSqliteTestDb(): Promise<{
+export async function createSqliteTestDb(
+  beforeMigration?: (name: string, db: D1Database) => Promise<void>,
+): Promise<{
   db: D1Database;
   exec(sql: string): Promise<void>;
   close(): Promise<void>;
@@ -121,6 +123,7 @@ export async function createSqliteTestDb(): Promise<{
   try {
     const migrations = new URL('../../../migrations/', import.meta.url);
     for (const name of (await readdir(migrations)).filter((name) => name.endsWith('.sql')).sort()) {
+      await beforeMigration?.(name, db);
       await execute(await readFile(new URL(name, migrations), 'utf8'));
     }
   } catch (error) {
