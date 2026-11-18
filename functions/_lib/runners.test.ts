@@ -58,6 +58,9 @@ describe('preparing Pro dispatch', () => {
           image: `data:image/png;base64,${TINY_PNG}`,
           imageBase64: TINY_PNG,
           audioBase64: 'QUJD',
+          query: 'query',
+          candidates: ['a', 'b', 'c'],
+          texts: ['a', 'b', 'c'],
         },
         env,
       );

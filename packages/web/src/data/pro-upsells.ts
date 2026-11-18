@@ -54,6 +54,11 @@ export const PRO_UPSELLS: ProUpsell[] = [
     proToolId: 'text-redact-pro',
     benefit: 'Catches names, addresses, and identifiers the pattern-based redactor misses.',
   },
+  {
+    freeToolId: 'text-embed',
+    proToolId: 'text-find-similar-pro',
+    benefit: 'Ranks up to 100 items against your text with a multilingual hosted model and gives you a CSV of scores.',
+  },
 ];
 
 /** First pairing for a free tool — the single post-run seam. */

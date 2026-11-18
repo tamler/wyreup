@@ -405,6 +405,9 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'sql-format-explain': 'TextInputRunner',
   'translate-indic-pro': 'TextInputRunner',
   'translate-many-pro': 'TextInputRunner',
+  'text-find-similar-pro': 'TextInputRunner',
+  'rank-results-pro': 'TextInputRunner',
+  'text-cluster-pro': 'TextInputRunner',
 
   // Text → media (image / audio generation)
   'image-generate-pro': 'TextInputRunner',

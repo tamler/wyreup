@@ -57,7 +57,15 @@ describe('search discovery', () => {
 
   it('keeps curated metadata bound to each tool’s real execution', () => {
     const registry = createDefaultRegistry();
-    const hosted = new Set(['ocr-hq', 'transcribe-pro', 'text-translate-pro', 'pdf-q-and-a']);
+    const hosted = new Set([
+      'ocr-hq',
+      'transcribe-pro',
+      'text-translate-pro',
+      'pdf-q-and-a',
+      'text-find-similar-pro',
+      'rank-results-pro',
+      'text-cluster-pro',
+    ]);
     for (const [id, page] of Object.entries(TOOL_PAGE_METADATA)) {
       const tool = registry.toolsById.get(id);
       expect(tool, id).toBeDefined();

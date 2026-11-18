@@ -55,6 +55,9 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `text-find-similar-pro` | 1 | BGE-M3 embeddings rank up to 100 items (50,000 chars) against a target |
+| `rank-results-pro` | 1 | BGE reranker scores up to 100 passages (2,000 chars each) against a 500-char query |
+| `text-cluster-pro` | 1 | BGE-M3 embeddings + k-means group 3 to 100 items (50,000 chars) into 2 to 10 groups |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 

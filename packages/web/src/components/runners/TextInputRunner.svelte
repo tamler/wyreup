@@ -97,6 +97,7 @@
   $: isHtml = resultMime === 'text/html';
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
+  $: resultExt = isJson ? 'json' : isHtml ? 'html' : resultMime === 'text/csv' ? 'csv' : 'txt';
   // Strip <script>, event handlers, javascript: URLs before {@html}.
   // Input is user-typed text — markdown-to-html and friends are designed
   // to convert it into rendered HTML, but a hostile chain/trigger could
@@ -234,8 +235,7 @@
     if (!resultBlob) return;
     const a = document.createElement('a');
     const url = URL.createObjectURL(resultBlob); urls.add(url); a.href = url;
-    const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
-    a.download = buildDownloadName(undefined, tool.id, ext);
+    a.download = buildDownloadName(undefined, tool.id, resultExt);
     a.click();
     const timer = setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); timers.delete(timer); }, 1000); timers.add(timer);
   }
@@ -353,7 +353,7 @@
           <ChainSection
             resultBlob={resultBlob}
             sourceToolId={tool.id}
-            resultName={buildDownloadName(undefined, tool.id, isJson ? 'json' : isHtml ? 'html' : 'txt')}
+            resultName={buildDownloadName(undefined, tool.id, resultExt)}
           />
         {/if}
       </div>
