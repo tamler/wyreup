@@ -4,7 +4,7 @@ import { boundedText, TTS_MAX_BYTES, ttsLanguage } from '../../lib/pro-migration
 
 export interface TextToSpeechProParams {
   /** English or Spanish. Other languages are currently unavailable. */
-  language?: 'EN' | 'ES' | 'FR' | 'ZH' | 'JP' | 'KR';
+  language?: 'EN' | 'ES';
 }
 
 export const defaultTextToSpeechProParams: TextToSpeechProParams = { language: 'EN' };

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { textToSpeechPro } from '../../src/tools/text-to-speech-pro/index.js';
+import { textToSpeechPro, type TextToSpeechProParams } from '../../src/tools/text-to-speech-pro/index.js';
 import { fixGrammarPro } from '../../src/tools/fix-grammar-pro/index.js';
 import { deepAnalysisPro } from '../../src/tools/deep-analysis-pro/index.js';
 import type { ToolRunContext } from '../../src/types.js';
@@ -16,7 +16,8 @@ describe('Pro migration client preflight', () => {
   it('rejects unavailable speech languages before a network call', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     try {
-      await expect(textToSpeechPro.run([new File(['bonjour'], 'a.txt')], { language: 'FR' }, ctx)).rejects.toThrow(/currently unavailable/);
+      const legacyParams = JSON.parse('{"language":"FR"}') as TextToSpeechProParams;
+      await expect(textToSpeechPro.run([new File(['bonjour'], 'a.txt')], legacyParams, ctx)).rejects.toThrow(/currently unavailable/);
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally { fetchSpy.mockRestore(); }
   });
