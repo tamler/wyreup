@@ -377,6 +377,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   // PDF → text / JSON (LLM-backed extraction and chat)
   'chat-long-pdf-pro': 'TextResultRunner',
   'pdf-q-and-a': 'TextResultRunner',
+  'pdf-scan-q-and-a-pro': 'TextResultRunner',
   'pdf-summarize': 'TextResultRunner',
   'translate-document-pro': 'TextResultRunner',
   'pdf-extract-data': 'JsonResultRunner',

@@ -26,6 +26,7 @@ import {
   type IndicLang,
 } from './providers/translate-models';
 import { generateImage } from './providers/image-gen-models';
+import { prepareScanPdfQandA } from './providers/scan-pdf-models';
 
 // Workers AI model IDs for the Wave-1 Pro tools. Centralized so swapping
 // a model only touches this block.
@@ -96,6 +97,7 @@ const RUNNERS: Record<string, Runner> = {
   'image-generate-pro': imageGeneratePro,
   'json-extract-pro': jsonExtractPro,
   'translate-indic-pro': translateIndicPro,
+  'pdf-scan-q-and-a-pro': prepareScanPdfQandA,
 };
 
 // ────────────────────────────────────────────────────────────────────────

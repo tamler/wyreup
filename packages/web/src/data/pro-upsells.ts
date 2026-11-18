@@ -54,6 +54,11 @@ export const PRO_UPSELLS: ProUpsell[] = [
     proToolId: 'text-redact-pro',
     benefit: 'Catches names, addresses, and identifiers the pattern-based redactor misses.',
   },
+  {
+    freeToolId: 'pdf-to-text',
+    proToolId: 'pdf-scan-q-and-a-pro',
+    benefit: 'For scanned PDFs with no text to extract: a vision model reads up to 10 pages and answers your question.',
+  },
 ];
 
 /** First pairing for a free tool — the single post-run seam. */
@@ -78,8 +83,15 @@ const SENDS_EXTRACTED_TEXT = new Set([
 // Of those, the question-answering tools also send the question.
 const SENDS_QUESTION = new Set(['pdf-q-and-a', 'chat-long-pdf-pro']);
 
+// Hosted tools that render PDF pages to images in the browser and send those
+// images with the question (runPro { pages, question }), never the PDF bytes.
+const SENDS_PAGE_IMAGES = new Set(['pdf-scan-q-and-a-pro']);
+
 /** What a hosted tool sends to Wyreup, for privacy copy ("… is sent"). */
 export function hostedInputPhrase(toolId: string): string {
+  if (SENDS_PAGE_IMAGES.has(toolId)) {
+    return 'one image per PDF page you picked, rendered in this browser, along with your question,';
+  }
   if (!SENDS_EXTRACTED_TEXT.has(toolId)) return 'your input';
   const text = 'the text extracted from your file in this browser';
   return SENDS_QUESTION.has(toolId) ? `${text}, and your question,` : text;

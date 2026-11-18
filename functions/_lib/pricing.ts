@@ -39,6 +39,8 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // Scanned PDFs: page images + question to a vision model (2026-11-11)
+  'pdf-scan-q-and-a-pro': 1,
 };
 
 export function priceFor(toolId: string): number | null {
