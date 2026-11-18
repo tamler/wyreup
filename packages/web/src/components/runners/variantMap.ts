@@ -397,6 +397,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'fix-grammar-pro': 'TextInputRunner',
   'html-redact': 'TextInputRunner',
   'json-extract-pro': 'TextInputRunner',
+  'text-checklist-pro': 'TextInputRunner',
   'prompt-injection-demo': 'TextInputRunner',
   'regex-explain': 'TextInputRunner',
   'regex-from-text': 'TextInputRunner',

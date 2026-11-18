@@ -215,6 +215,29 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
       { href: '/pro/#pricing', label: 'PRO credit pricing' },
     ],
   },
+  'text-checklist-pro': {
+    heading: 'How to classify a text with yes/no and pick-one questions',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then paste or upload the text, up to 16,000 characters.',
+      'Write up to 10 questions, one per line. A plain line is a yes/no question. Add options in square brackets separated by | to pick one, for example "Which team? [billing | technical | sales]". Start the brackets with "score:" for levels from lowest to highest.',
+      "Run the tool. The text and your questions are sent to Wyreup's hosted clef-flash model, which returns a probability for every option.",
+    ],
+    example:
+      'A support email: ask "Is this urgent?", "Which team should handle it? [billing | technical | sales]" and "Does the customer ask for a refund?", then route it by the highest probabilities.',
+    formats:
+      'Input: plain text up to 16,000 characters, plus up to 10 questions of up to 200 characters, each with 2 to 10 options of up to 40 characters. The text and questions are sent to Wyreup. Output: JSON with a probability per option, the top pick and a confidence value. 1 credit per run.',
+    limitations: [
+      'Text only. Images and video are not accepted.',
+      'Probabilities are model estimates, not guarantees. Spot-check them before you automate a decision on them.',
+      'The model returns numbers, not explanations. Use Deep Analysis when you need the reasoning.',
+    ],
+    links: [
+      { href: '/tools/json-extract-pro/', label: 'Pull fields out of the text as JSON instead' },
+      { href: '/tools/text-sentiment-pro/', label: 'Check only positive, negative or neutral' },
+      { href: '/tools/json-to-excel/', label: 'Turn the results into a spreadsheet' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
 };
 
 export const JOB_SEARCH_GUIDES: Record<string, SearchGuide> = {

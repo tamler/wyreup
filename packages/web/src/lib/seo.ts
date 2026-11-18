@@ -185,4 +185,10 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Ask a question about a text-based PDF. Text is extracted in your browser, then the text and question are sent to a hosted model. 2 credits per run.',
   },
+  'text-checklist-pro': {
+    heading: 'Text Checklist: yes/no and pick-one answers with probabilities',
+    title: 'Classify text with probabilities: urgent, category, yes/no | Wyreup',
+    description:
+      'Ask up to 10 yes/no, pick-one or score questions about a text and get a probability per option. Text up to 16,000 characters is sent to Wyreup. 1 credit per run.',
+  },
 };
