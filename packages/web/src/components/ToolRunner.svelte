@@ -51,6 +51,7 @@
     TimerRunner: () => import('./runners/TimerRunner.svelte'),
     SeatingChartRunner: () => import('./runners/SeatingChartRunner.svelte'),
     NamesRunner: () => import('./runners/NamesRunner.svelte'),
+    ReceiptExtractRunner: () => import('./runners/ReceiptExtractRunner.svelte'),
     UtilityRunner: () => import('./runners/UtilityRunner.svelte'),
     GeneratorRunner: () => import('./runners/GeneratorRunner.svelte'),
     GradientPreview: () => import('./runners/GradientPreview.svelte'),

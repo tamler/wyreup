@@ -38,6 +38,7 @@ export type RunnerVariant =
   | 'TimerRunner'
   | 'SeatingChartRunner'
   | 'NamesRunner'
+  | 'ReceiptExtractRunner'
   | 'UtilityRunner'
   | 'GeneratorRunner'
   | 'GradientPreview'
@@ -397,6 +398,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'fix-grammar-pro': 'TextInputRunner',
   'html-redact': 'TextInputRunner',
   'json-extract-pro': 'TextInputRunner',
+  'receipt-extract-pro': 'ReceiptExtractRunner',
   'prompt-injection-demo': 'TextInputRunner',
   'regex-explain': 'TextInputRunner',
   'regex-from-text': 'TextInputRunner',

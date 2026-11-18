@@ -179,6 +179,12 @@ export const TOOL_PAGE_METADATA: Record<string, ToolPageMetadata> = {
     description:
       'Translate plain text with a hosted Llama-class model. Name the target language or give its ISO code. Text is sent to Wyreup. 2 credits per run.',
   },
+  'receipt-extract-pro': {
+    heading: 'Receipt and Invoice Extractor: totals, dates and line items to JSON or CSV',
+    title: 'Receipt and invoice data extraction to JSON and CSV | Wyreup',
+    description:
+      'Pull vendor, dates, invoice number, tax, total and line items from receipt text or up to 4 photos. Photos are downscaled in your browser, then sent to Wyreup. 2 credits per run.',
+  },
   'pdf-q-and-a': {
     heading: 'Ask a PDF a question about its text',
     title: 'Ask a PDF: answers from the document text | Wyreup',

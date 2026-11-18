@@ -39,6 +39,9 @@ export const PRICING: Readonly<Record<string, number>> = {
   'image-generate-pro': 1,
   'json-extract-pro': 1,
   'translate-indic-pro': 1,
+  // Receipt / invoice fields (clairic with gemma-4 fallback). Worst case
+  // in functions/_lib/pricing-margin.test.ts.
+  'receipt-extract-pro': 2,
 };
 
 export function priceFor(toolId: string): number | null {

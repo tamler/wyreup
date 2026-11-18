@@ -4537,6 +4537,53 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'receipt-extract-pro': {
+    intro:
+      'The Receipt and Invoice Extractor reads a receipt, invoice or simple bill and fills in a fixed set of fields: vendor, invoice or receipt number, date, due date, currency, subtotal, tax, total, line items and a contact. Paste the text or add up to 4 photos. Every field is marked as found or missing, and when the primary hosted model answers, each value comes with a confidence score. You get a readable table plus JSON and CSV you can copy or download.',
+    useCases: [
+      'Log a stack of paper receipts for an expense report without typing every total by hand',
+      'Pull the invoice number, due date and amount from a supplier invoice before paying it',
+      'Turn a pasted email receipt into a CSV row for a bookkeeping spreadsheet',
+      'Check which fields a scanned bill is missing, such as a tax line or a due date',
+      'Capture the line items from a long receipt as separate rows you can edit',
+    ],
+    faq: [
+      {
+        q: 'What can I send?',
+        a: 'Either pasted text up to 6,000 characters (fewer for non-Latin scripts), or 1 to 4 photos in PNG, JPEG or WebP. Not both in the same run. Use one photo per page of a long invoice.',
+      },
+      {
+        q: 'What gets uploaded?',
+        a: 'This is a Pro tool, so your input is sent to Wyreup and a hosted model on Cloudflare Workers AI. Photos are first downscaled in your browser to at most 1 megapixel and 1,600 pixels on a side each (1.8 megapixels across all photos) and re-encoded as JPEG, which also strips location data. Each run uses 2 credits.',
+      },
+      {
+        q: 'What does the confidence score mean?',
+        a: 'The primary model, Cloudflare Clairic, reports how sure it is of each value and how likely a field is to be absent. Values under 80% are flagged as low. It is a preview model, so if it is unavailable the run falls back to a general vision model, Gemma 4. Fallback results are labelled and show no confidence scores, because that model does not give any.',
+      },
+      {
+        q: 'Can I trust the totals?',
+        a: 'Treat them as a draft. The models read what is printed and are weaker at arithmetic, so check the subtotal, tax and total against the original, especially on long item lists or faded photos.',
+      },
+      {
+        q: 'Which fields does it extract?',
+        a: 'Vendor, invoice or receipt number, date, due date, currency, subtotal, tax, total, line items and a vendor contact (phone, email or website). The field list is fixed. For your own custom fields, use Extract JSON on pasted text.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'json-extract-pro',
+        why: 'Choose your own fields from pasted text when the fixed receipt fields are not what you need.',
+      },
+      {
+        id: 'ocr-hq',
+        why: 'Get the full text of a hard-to-read scan when you want every line, not just the key fields.',
+      },
+      {
+        id: 'csv-json',
+        why: 'Convert the downloaded CSV back to JSON, or JSON from several runs into one CSV.',
+      },
+    ],
+  },
   'json-flatten': {
     intro:
       'JSON Flatten collapses a nested JSON object into a single level, turning paths like a.b.c into flat dot-notation keys. It is the bridge you need when nested data has to become tabular — for CSV export, search-index fields, or environment variables. It runs in your browser, so even sensitive config payloads stay on your device.',

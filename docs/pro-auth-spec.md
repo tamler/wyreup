@@ -55,6 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `receipt-extract-pro` | 2 | Receipt/invoice fields with confidence via `@cf/cloudflare/clairic` (preview), falling back to `@cf/google/gemma-4-26b-a4b-it` without confidence. Text up to 6,000 chars and 9,000 UTF-8 bytes, or 1-4 photos, each at most 1 MP and 1,600 px per side, 1.8 MP total. Worst case in `functions/_lib/pricing-margin.test.ts` |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 
