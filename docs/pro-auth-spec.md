@@ -55,6 +55,7 @@ The UI shows them as one tool with a "Free / PRO" toggle; selecting PRO swaps th
 | `upscale-2x-pro` | 4 | Large upscale model |
 | `text-redact-pro` | 3 | PII detection via LLM |
 | `translate-document-pro` | 3 | Whole-document PDF/text translation with hosted m2m100 |
+| `photo-edit-pro` | 1 | Prompt-based photo edit on FLUX.2 [klein] 4B; 512 px reference in, up to 1024 px out (worst case ~$0.0012/run) |
 
 The server keeps its own authoritative price map in `functions/_lib/pricing.ts` — the client's `creditCost` is for UI display only.
 

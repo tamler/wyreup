@@ -148,6 +148,29 @@ export const SEARCH_GUIDES: Record<string, SearchGuide> = {
       { href: '/pro/#pricing', label: 'PRO credit pricing' },
     ],
   },
+  'photo-edit-pro': {
+    heading: 'How to edit a photo by describing the change',
+    steps: [
+      'Sign in with a Wyreup PRO account that has credits, then select one PNG, JPEG or WebP photo.',
+      'Pick a quick action (Remove something, Colorize, Restore an old photo) or write your own instruction. For Remove, say what to remove.',
+      "Run the tool. Your browser scales the photo to fit 512 x 512 and sends it with the instruction to Wyreup's hosted FLUX.2 [klein] 4B model. Check the result closely before you use it.",
+    ],
+    example:
+      'A faded, scratched family print scanned on a phone. Choose Restore an old photo, run it, and compare faces with the original. If a face looks different, run it again or keep the original.',
+    formats:
+      'Input: one PNG, JPEG or WebP image up to 10 MB, scaled in your browser to at most 512 px per side before upload. Output: one image up to 1024 px on the long side, same aspect ratio. 1 credit per run.',
+    limitations: [
+      'This is generative AI editing. Results vary between runs, and faces, text and fine details can change or be invented.',
+      'Output tops out at 1024 px, and the model only sees a 512 px copy, so small details in large photos are lost. Upscale afterward if you need a bigger file.',
+      'Restoration and colorization are the model\'s best guess, not a record of the original colors or damaged areas.',
+      'The scaled photo leaves your device. Use free on-device tools for photos you should not upload.',
+    ],
+    links: [
+      { href: '/tools/upscale-2x-pro/', label: 'Upscale the edited photo' },
+      { href: '/tools/bg-remove-pro/', label: 'Remove the background instead' },
+      { href: '/pro/#pricing', label: 'PRO credit pricing' },
+    ],
+  },
   'transcribe-pro': {
     heading: 'How to transcribe a noisy or accented recording',
     steps: [

@@ -348,6 +348,7 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'upscale-2x': 'SimpleImageRunner',
   'ocr-pro': 'TextResultRunner',
   'svg-optimizer': 'SimpleImageRunner',
+  'photo-edit-pro': 'SimpleImageRunner',
 
   // Geospatial — text-formatted vector data (geojson, kml, gpx) renders
   // well as a TextResultRunner (preview + copy + download). The catch-all

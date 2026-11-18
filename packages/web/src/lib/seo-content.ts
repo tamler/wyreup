@@ -4102,6 +4102,57 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
+  'photo-edit-pro': {
+    intro:
+      'AI Photo Edit changes a photo from a plain-language instruction. Pick a quick action (remove something, colorize a black and white photo, restore an old print) or write your own, such as "make the sky a clear blue". It runs on the hosted FLUX.2 [klein] 4B model from Black Forest Labs. This is generative editing, so the model redraws the photo: results vary between runs, and faces, text and fine details can change. It is a Pro tool using 1 credit per run.',
+    useCases: [
+      'Remove a stranger, a sign or a power line from a travel photo',
+      'Add natural color to a black and white family photo',
+      'Clean up scratches, dust and fading on a scanned old print',
+      'Try a quick change such as a different sky or season before doing it by hand',
+      'Edit a product shot, then send it to Upscale for a larger file',
+    ],
+    faq: [
+      {
+        q: 'What model does it use?',
+        a: 'FLUX.2 [klein] 4B from Black Forest Labs, hosted on Cloudflare Workers AI. Black Forest Labs terms of service apply to the model.',
+      },
+      {
+        q: 'What size is the result?',
+        a: 'Your browser scales the photo to fit within 512 x 512 before upload, because that is the largest reference image the model accepts. The result comes back at up to 1024 px on the long side, in the same aspect ratio.',
+      },
+      {
+        q: 'Will it keep faces exactly the same?',
+        a: 'Not always. The model redraws the image, so faces, hands, text and small details can shift or be invented. Compare the result with the original, and run it again if something looks wrong.',
+      },
+      {
+        q: 'Is a restored or colorized photo accurate?',
+        a: "It is the model's best guess. Colors and repaired areas are plausible, not a record of what was really there.",
+      },
+      {
+        q: "What's the cost?",
+        a: '1 credit per run. If the run fails, the credit is refunded.',
+      },
+      {
+        q: 'Does it run in my browser?',
+        a: 'No. Scaling happens in your browser, which also drops photo metadata such as location. The scaled photo and your instruction are then sent to the hosted model, and the edited image is returned.',
+      },
+    ],
+    alsoTry: [
+      {
+        id: 'upscale-2x-pro',
+        why: 'Enlarge the edited photo beyond 1024 px.',
+      },
+      {
+        id: 'bg-remove-pro',
+        why: 'Cut the subject out onto a transparent background instead of editing the scene.',
+      },
+      {
+        id: 'image-generate-pro',
+        why: 'Start from a text prompt alone when you have no photo.',
+      },
+    ],
+  },
   'image-info': {
     intro:
       "Inspect an image and get its dimensions, format, and metadata as structured JSON. Reach for it when you need to confirm a file's exact width and height, verify its real format, or check what metadata it carries. Everything is read in your browser, so the image is never uploaded.",
