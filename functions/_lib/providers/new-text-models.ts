@@ -1,5 +1,6 @@
 import type { Env } from '../env';
 import { INFERENCE_TIMEOUTS, withTimeout } from '../timeout';
+import { GRAMMAR_EDIT_PROMPT, prepareGrammarEdits } from './grammar-edits';
 
 const DEEPSEEK = '@cf/deepseek-ai/deepseek-v4.1-flash-1017';
 const GEMMA = '@cf/google/gemma-4-26b-a4b-it';
@@ -21,19 +22,24 @@ async function completion(env: Env, model: string, system: string, user: string,
   const obj = result as { choices?: Array<{ finish_reason?: unknown; message?: { content?: unknown; reasoning_content?: unknown } }> } | null;
   const choice = obj?.choices?.[0];
   if (choice?.finish_reason === 'length') throw new OutputTruncatedError();
-  if (!choice || choice.finish_reason !== 'stop' || typeof choice.message?.content !== 'string' || !choice.message.content.trim()) {
+  if (!choice || choice.finish_reason !== 'stop' || typeof choice.message?.content !== 'string') {
     throw new Error('Text model returned an incomplete or invalid answer');
   }
   return {
-    answer: choice.message.content.trim(),
-    reasoning: typeof choice.message.reasoning_content === 'string' ? choice.message.reasoning_content.trim() : '',
+    answer: choice.message.content,
+    reasoning: typeof choice.message.reasoning_content === 'string' ? choice.message.reasoning_content : '',
   };
 }
 
-export function analyze(env: Env, system: string, user: string) {
-  return completion(env, DEEPSEEK, system, user, true);
+export async function analyze(env: Env, system: string, user: string) {
+  const { answer: content, reasoning } = await completion(env, DEEPSEEK, system, user, true);
+  const answer = content.trim();
+  if (!answer) throw new Error('Text model returned an incomplete or invalid answer');
+  return { answer, reasoning: reasoning.trim() };
 }
 
-export async function correctGrammar(env: Env, system: string, text: string): Promise<string> {
-  return (await completion(env, GEMMA, system, text, false)).answer;
+export async function correctGrammar(env: Env, text: string): Promise<string> {
+  const applyEdits = prepareGrammarEdits(text);
+  const { answer } = await completion(env, GEMMA, GRAMMAR_EDIT_PROMPT, text, false);
+  return applyEdits(answer);
 }

@@ -31,4 +31,43 @@ describe('Pro migration client preflight', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     } finally { fetchSpy.mockRestore(); }
   });
+
+  it('preserves a 4,000-byte UTF-8 file in the grammar request and a no-op result', async () => {
+    const prefix = '\uFEFF  Cafe\u0301 👩‍💻\r\n漢字\t \r\n';
+    const encoder = new TextEncoder();
+    const text = prefix + ' '.repeat(4000 - encoder.encode(prefix).length);
+    const original = encoder.encode(text);
+    const file = new File([original], 'original.txt', { type: 'text/plain' });
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ result: { corrected: text } }));
+    try {
+      const result = await fixGrammarPro.run([file], {}, ctx);
+      if (!(result instanceof Blob)) throw new Error('Expected a single grammar result');
+      expect(result.type).toBe('text/plain');
+      expect(new Uint8Array(await result.arrayBuffer())).toEqual(original);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      const body = fetchSpy.mock.calls[0]?.[1]?.body;
+      if (typeof body !== 'string') throw new Error('Expected a JSON request body');
+      const request: unknown = JSON.parse(body);
+      expect(request).toEqual({ toolId: 'fix-grammar-pro', input: { text, fileName: file.name } });
+    } finally { fetchSpy.mockRestore(); }
+  });
+
+  it('rejects invalid UTF-8, whitespace-only files and either grammar byte overrun before dispatch', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    try {
+      const oversized = new File([' '.repeat(4000) + 'a'], 'raw.txt');
+      const decode = vi.spyOn(oversized, 'arrayBuffer');
+      await expect(fixGrammarPro.run([oversized], {}, ctx)).rejects.toThrow(/4000-byte/);
+      expect(decode).not.toHaveBeenCalled();
+
+      const normalizedOversize = new File(['㍿'.repeat(334)], 'normalized.txt');
+      expect(normalizedOversize.size).toBeLessThan(4000);
+      await expect(fixGrammarPro.run([normalizedOversize], {}, ctx)).rejects.toThrow(/4000-byte/);
+
+      const invalid = new File([Uint8Array.of(0xc3, 0x28)], 'invalid.txt');
+      await expect(fixGrammarPro.run([invalid], {}, ctx)).rejects.toThrow('Grammar input must be valid UTF-8.');
+      await expect(fixGrammarPro.run([new File(['\uFEFF \r\n'], 'empty.txt')], {}, ctx)).rejects.toThrow('Empty input.');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally { fetchSpy.mockRestore(); }
+  });
 });

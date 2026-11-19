@@ -21,6 +21,7 @@ import { transcribe as runTranscribe } from './providers/audio-models';
 import { visionPrompt, detectObjects } from './providers/vision-models';
 import { synthesize, validateTts } from './providers/tts-models';
 import { analyze, correctGrammar } from './providers/new-text-models';
+import { validateGrammarSource } from './providers/grammar-edits';
 import { boundedText, GRAMMAR_MAX_BYTES, ANALYSIS_TEXT_MAX_BYTES, ANALYSIS_QUESTION_MAX_BYTES } from '../../packages/core/src/lib/pro-migration-limits';
 import {
   translateMany as runTranslateMany,
@@ -591,12 +592,9 @@ function deepAnalysisPro(raw: RunnerInput, env: Env): PreparedProRun {
 function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   const text = readText(raw, 'text');
   boundedText(text, GRAMMAR_MAX_BYTES, 'Grammar input');
+  validateGrammarSource(text);
   return async () => {
-    const corrected = await correctGrammar(
-      env,
-      'You are a copy editor. Fix only genuine grammar, spelling, and punctuation errors. Preserve the author’s voice and meaning. Preserve every sentence and paragraph, all repetitions, and their original order. Do not omit, summarize, or deduplicate any text. If no correction is needed, return the input unchanged. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
-      text,
-    );
+    const corrected = await correctGrammar(env, text);
     return { corrected };
   };
 }

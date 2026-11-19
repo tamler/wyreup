@@ -4,7 +4,8 @@ import { prepareProRun, runPro } from '../runners';
 import type { Env } from '../env';
 import { TTS_MAX_AUDIO_BYTES } from './tts-models';
 import { INFERENCE_TIMEOUTS } from '../timeout';
-import { OutputTruncatedError } from './new-text-models';
+import { correctGrammar, OutputTruncatedError } from './new-text-models';
+import { GRAMMAR_EDIT_PROMPT } from './grammar-edits';
 import grammarPreservationFixture from './fixtures/grammar-preservation-11.json';
 
 // Contract fixtures reflect the documented input options and synchronous choices shape,
@@ -21,7 +22,7 @@ function envWith(result: unknown) {
 
 describe('replacement model contracts', () => {
   it('uses bounded DeepSeek completion and returns a separate answer', async () => {
-    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'Answer', reasoning_content: 'Evidence' } }] });
+    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: ' Answer ', reasoning_content: '\nEvidence\t' } }] });
     await expect(runPro('deep-analysis-pro', { text: 'Document', question: 'Why?' }, env)).resolves.toEqual({ answer: 'Answer', reasoning: 'Evidence' });
     expect(run).toHaveBeenCalledWith('@cf/deepseek-ai/deepseek-v4.1-flash-1017', expect.objectContaining({ max_completion_tokens: 6144, reasoning_effort: 'low', stream: false }));
   });
@@ -32,12 +33,19 @@ describe('replacement model contracts', () => {
   });
 
   it('runs grammar on Gemma with a bounded completion', async () => {
-    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'Corrected.' } }] });
-    await expect(runPro('fix-grammar-pro', { text: 'Corrected' }, env)).resolves.toEqual({ corrected: 'Corrected.' });
-    expect(run).toHaveBeenCalledWith('@cf/google/gemma-4-26b-a4b-it', expect.objectContaining({ max_completion_tokens: 6144, chat_template_kwargs: { enable_thinking: false }, stream: false }));
+    const text = 'This is correct';
+    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: '[["This is ","correct","","correct."]]' } }] });
+    await expect(runPro('fix-grammar-pro', { text }, env)).resolves.toEqual({ corrected: 'This is correct.' });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(run).toHaveBeenCalledWith('@cf/google/gemma-4-26b-a4b-it', {
+      messages: [{ role: 'system', content: GRAMMAR_EDIT_PROMPT }, { role: 'user', content: text }],
+      max_completion_tokens: 6144,
+      chat_template_kwargs: { enable_thinking: false },
+      stream: false,
+    });
   });
 
-  it('keeps the captured near-cap truncation as a failing no-op preservation control', () => {
+  it('rejects captured near-cap prose from both attempts despite a normal stop', async () => {
     const input = Array(grammarPreservationFixture.inputSentenceCount)
       .fill(grammarPreservationFixture.sentence)
       .join(' ') + ' ';
@@ -46,16 +54,20 @@ describe('replacement model contracts', () => {
       .join(' ');
     expect(new TextEncoder().encode(input)).toHaveLength(grammarPreservationFixture.source.inputBytes);
     expect(createHash('sha256').update(input).digest('hex')).toBe(grammarPreservationFixture.source.inputSha256);
+    // The original and stronger-prompt response receipts contain identical prose.
+    // Stronger-prompt full response SHA-256: 9d152f92930e64f93c3e3d1fce5bc6c7246ff30c03dd444c03d72e13cfb66309.
     expect(createHash('sha256').update(failedOutput).digest('hex')).toBe(grammarPreservationFixture.source.failedOutputSha256);
     expect(failedOutput.trim()).not.toBe(input.trim());
+    const { env } = envWith({ choices: [{ finish_reason: grammarPreservationFixture.source.finishReason, message: { content: failedOutput } }] });
+    await expect(runPro('fix-grammar-pro', { text: input }, env)).rejects.toThrow('Grammar model returned invalid edits');
   });
 
   it('sends the preservation directive with the unchanged near-cap request', async () => {
     const input = Array(grammarPreservationFixture.inputSentenceCount)
       .fill(grammarPreservationFixture.sentence)
       .join(' ') + ' ';
-    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'mock completion' } }] });
-    await runPro('fix-grammar-pro', { text: input }, env);
+    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: ' \r\n[]\t ' } }] });
+    await expect(runPro('fix-grammar-pro', { text: input }, env)).resolves.toEqual({ corrected: input });
     const [model, capturedRequest] = run.mock.calls[0] as unknown as [unknown, unknown];
     expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
     expect(capturedRequest).toHaveProperty('max_completion_tokens', 6144);
@@ -76,12 +88,41 @@ describe('replacement model contracts', () => {
     expect(userMessage.content).toBe(input);
   });
 
-  it('still makes genuine short grammar corrections', async () => {
-    const { env } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'The reports were ready.' } }] });
-    await expect(runPro('fix-grammar-pro', { text: 'The reports was ready.' }, env)).resolves.toEqual({ corrected: 'The reports were ready.' });
+  it.each([
+    ['The reports was ready.', ['The ', 'reports was', ' ready.', 'reports were'], 'The reports were ready.'],
+    ['They went store.', ['They ', 'went store', '.', 'went to the store'], 'They went to the store.'],
+    ['The the report is ready.', ['', 'The the', ' report', 'The'], 'The report is ready.'],
+    ['I found a note book.', ['a ', 'note book', '.', 'notebook'], 'I found a notebook.'],
+  ])('applies a local grammar edit to %j', async (text, edit, corrected) => {
+    const { env } = envWith({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify([edit]) } }] });
+    await expect(runPro('fix-grammar-pro', { text }, env)).resolves.toEqual({ corrected });
   });
 
-  it.each([{ choices: [] }, { response: 'old schema' }, { choices: [{ finish_reason: 'stop', message: { content: null, reasoning_content: 'thinking' } }] }, { choices: [{ finish_reason: 'content_filter', message: { content: 'filtered' } }] }])('rejects missing or malformed answers', async result => {
+  it('preserves the original input at the 4,000-byte limit', async () => {
+    const text = '\uFEFF é' + 'é'.repeat(1996) + '\r\n';
+    expect(new TextEncoder().encode(text)).toHaveLength(4000);
+    const { env } = envWith({ choices: [{ finish_reason: 'stop', message: { content: '[]' } }] });
+    await expect(runPro('fix-grammar-pro', { text }, env)).resolves.toEqual({ corrected: text });
+  });
+
+  it('rejects an ill-formed source before sending it to Gemma', async () => {
+    const { env, run } = envWith({});
+    await expect(correctGrammar(env, 'invalid \uD800 source')).rejects.toThrow('Grammar input must be well-formed Unicode.');
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('retains the text deadline for a stalled grammar call', async () => {
+    vi.useFakeTimers();
+    try {
+      const { env, run } = envWith(new Promise(() => {}));
+      const failure = expect(runPro('fix-grammar-pro', { text: 'Example' }, env)).rejects.toThrow(/timed out/);
+      await vi.advanceTimersByTimeAsync(INFERENCE_TIMEOUTS.text);
+      await failure;
+      expect(run).toHaveBeenCalledTimes(1);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it.each([{ choices: [] }, { response: 'old schema' }, { choices: [{ finish_reason: 'stop', message: { content: null, reasoning_content: 'thinking' } }] }, { choices: [{ finish_reason: 'stop', message: { content: ' \t\n ' } }] }, { choices: [{ finish_reason: 'content_filter', message: { content: 'filtered' } }] }])('rejects missing or malformed answers', async result => {
     const { env } = envWith(result);
     await expect(runPro('deep-analysis-pro', { text: 'Document', question: 'Why?' }, env)).rejects.toThrow('Text model returned an incomplete or invalid answer');
   });
