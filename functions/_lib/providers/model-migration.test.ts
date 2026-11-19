@@ -56,15 +56,24 @@ describe('replacement model contracts', () => {
       .join(' ') + ' ';
     const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'mock completion' } }] });
     await runPro('fix-grammar-pro', { text: input }, env);
-    expect(run).toHaveBeenCalledWith('@cf/google/gemma-4-26b-a4b-it', expect.objectContaining({
-      max_completion_tokens: 6144,
-      chat_template_kwargs: { enable_thinking: false },
-      stream: false,
-      messages: expect.arrayContaining([
-        expect.objectContaining({ role: 'system', content: expect.stringContaining('Preserve every sentence') }),
-        expect.objectContaining({ role: 'user', content: input }),
-      ]),
-    }));
+    const [model, capturedRequest] = run.mock.calls[0] as unknown as [unknown, unknown];
+    expect(model).toBe('@cf/google/gemma-4-26b-a4b-it');
+    expect(capturedRequest).toHaveProperty('max_completion_tokens', 6144);
+    expect(capturedRequest).toHaveProperty('chat_template_kwargs', { enable_thinking: false });
+    expect(capturedRequest).toHaveProperty('stream', false);
+    expect(capturedRequest).toHaveProperty('messages');
+    const request = capturedRequest as { messages?: unknown };
+    if (!Array.isArray(request.messages)) throw new Error('Model request messages are not an array');
+    const records = (request.messages as unknown[]).filter((message): message is Record<string, unknown> =>
+      typeof message === 'object' && message !== null && !Array.isArray(message));
+    const systemMessage = records.find(message => message.role === 'system');
+    const userMessage = records.find(message => message.role === 'user');
+    expect(systemMessage).toBeDefined();
+    expect(userMessage).toBeDefined();
+    if (!systemMessage || typeof systemMessage.content !== 'string') throw new Error('System preservation message is missing');
+    if (!userMessage || userMessage.content !== input) throw new Error('Original user input changed');
+    expect(systemMessage.content).toContain('Preserve every sentence');
+    expect(userMessage.content).toBe(input);
   });
 
   it('still makes genuine short grammar corrections', async () => {
