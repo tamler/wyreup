@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
+import { constants as fsConstants, createReadStream } from 'node:fs';
 import { copyFile, lstat, mkdir, mkdtemp, open, realpath, rename, rm, symlink, utimes, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
@@ -17,6 +17,8 @@ import { assertNpmMajor, resolveNpmCli } from './consumer-package-managers.mjs';
 const exec = promisify(execFile);
 const limits = { policy: 256 * 1024, lock: 2 * 1024 * 1024, stream: 2 * 1024 * 1024, error: 4 * 1024, receipt: 16 * 1024 * 1024, manifest: 64 * 1024 };
 const receiptNames = ['migration-npm.json', 'migration-pnpm.json'];
+const pinnedEvidenceRoots = new Map();
+const trustedEvidenceWrites = new Map();
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const portable = value => value.split(path.sep).join('/');
 let normalizeDiagnostics = value => value;
@@ -80,6 +82,36 @@ function evidenceGuard(context, condition, message) {
   throw error;
 }
 
+function evidenceOpenFlags(mode) {
+  if (process.platform === 'win32') return mode;
+  evidenceGuard(null, ['r', 'r+'].includes(mode)
+    && Number.isInteger(fsConstants.O_NOFOLLOW) && Number.isInteger(fsConstants.O_NONBLOCK),
+  'POSIX evidence open protections are unavailable');
+  return (mode === 'r+' ? fsConstants.O_RDWR : fsConstants.O_RDONLY)
+    | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK;
+}
+
+async function pinEvidenceRoot(owner, context) {
+  const key = path.resolve(owner);
+  context.phase = 'owner-lstat';
+  const metadata = await lstat(owner, { bigint: true });
+  context.stats.owner = metadata;
+  context.phase = 'owner-type';
+  evidenceGuard(context, metadata.isDirectory() && !metadata.isSymbolicLink(), 'Evidence owner is not a nonlink directory');
+  const canonical = await realpath(owner);
+  const pinned = pinnedEvidenceRoots.get(key);
+  context.phase = 'owner-identity';
+  evidenceGuard(context, !pinned || (pinned.path === canonical && pinned.dev === metadata.dev && pinned.ino === metadata.ino),
+    'Evidence owner identity changed');
+  if (!pinned) pinnedEvidenceRoots.set(key, { path: canonical, dev: metadata.dev, ino: metadata.ino });
+  return canonical;
+}
+
+function trustVerifiedEvidence(owner, name, baseline, actual, bytes) {
+  evidenceGuard(null, matchesEvidence(actual, bytes), 'Evidence write failed expected-byte verification');
+  trustedEvidenceWrites.set(path.join(path.resolve(owner), name), baseline);
+}
+
 function matchesEvidence(actual, bytes) {
   return actual.status === 'COMPLETE' && actual.sha256 === sha256(bytes);
 }
@@ -133,17 +165,39 @@ async function closeEvidenceHandle(handle, context, primary) {
   return closeEvidenceHandles([handle], context, primary);
 }
 
-async function ownedFile(owner, relative, maximum, retain = true, expected) {
+async function ownedFile(owner, relative, maximum, retain = true, expected, rejectLinkedParents = false) {
   const context = { output: path.basename(relative), operation: 'readback', phase: 'owner-realpath',
     close: 'NOT_OPENED', stats: expected ? { expected } : {}, checks: {}, owners: [] };
   let handle;
   let primary;
   let bytes;
   try {
-    const owned = await realpath(owner);
+    const owned = await pinEvidenceRoot(owner, context);
     const target = path.resolve(owned, relative);
     if (context) context.phase = 'owned-path';
     evidenceGuard(context, contained(owned, target), 'Evidence input escaped its owned root');
+    if (rejectLinkedParents) {
+      let parent = path.dirname(target);
+      while (parent !== owned) {
+        context.phase = 'seed-parent-lstat';
+        const parentMetadata = await lstat(parent, { bigint: true }).catch(error => {
+          if (error.code === 'ENOENT') return null;
+          throw error;
+        });
+        if (!parentMetadata) {
+          context.absent = true;
+          evidenceGuard(context, !expected, 'Expected evidence readback is absent');
+          return { status: 'ABSENT', complete: true, bytes: 0 };
+        }
+        context.stats.parent = parentMetadata;
+        context.phase = 'seed-parent-type';
+        evidenceGuard(context, parentMetadata.isDirectory() && !parentMetadata.isSymbolicLink(),
+          'Optional history parent is not a nonlink directory');
+        context.phase = 'seed-parent-realpath';
+        evidenceGuard(context, contained(owned, await realpath(parent)), 'Optional history parent escaped its owned root');
+        parent = path.dirname(parent);
+      }
+    }
     if (context) context.phase = 'before-lstat';
     const before = await lstat(target, { bigint: true }).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
     if (context) { context.stats.before = before; context.absent = !before; }
@@ -170,7 +224,7 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
     }
     const boundedSize = Number(before.size);
     if (context) context.phase = 'open';
-    handle = await open(target, 'r');
+    handle = await open(target, evidenceOpenFlags('r'));
     context.owners.push({ handle, attempted: false, closed: false });
     if (context) { context.close = 'OPEN'; context.phase = 'opened-stat'; }
     const opened = await handle.stat({ bigint: true });
@@ -204,7 +258,7 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
     if (context) context.phase = 'after-realpath';
     evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence input ownership changed');
     context.phase = 'reopen';
-    const reopened = await open(target, 'r');
+    const reopened = await open(target, evidenceOpenFlags('r'));
     context.owners.push({ handle: reopened, attempted: false, closed: false });
     context.phase = 'reopened-stat';
     const reopenedStat = await reopened.stat({ bigint: true });
@@ -241,18 +295,26 @@ async function ownedWrite(owner, name, bytes) {
   let written;
   let anchor;
   let anchorStat;
+  let baselineKey;
   try {
-    owned = await realpath(owner);
+    owned = await pinEvidenceRoot(owner, context);
     target = path.join(owned, name);
+    baselineKey = target;
     context.phase = 'before-lstat';
     const before = await lstat(target, { bigint: true }).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
     context.stats.before = before;
+    const previous = trustedEvidenceWrites.get(baselineKey);
     if (before) {
       context.phase = 'before-type';
       evidenceGuard(context, before.isFile() && !before.isSymbolicLink(), 'Evidence output is not a nonlink regular file');
       context.phase = 'before-realpath';
       evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence output escaped its owned root');
     }
+    context.phase = previous ? 'previous-writer-join' : 'before-existing-check';
+    evidenceGuard(context, previous
+      ? Boolean(before && pathFileCandidate(before, previous))
+      : !before, previous ? 'Evidence output differs from its previous verified writer'
+        : 'Evidence output already exists without a trusted writer');
     if (before && process.platform === 'win32' && before.dev === 0n) {
       context.phase = 'anchor-open';
       anchor = await open(target, 'r');
@@ -262,10 +324,11 @@ async function ownedWrite(owner, name, bytes) {
       anchorStat = await anchor.stat({ bigint: true });
       context.stats.anchor = anchorStat;
       context.phase = 'anchor-path-join';
-      evidenceGuard(context, pathFileCandidate(before, anchorStat), 'Evidence output changed before writing');
+      evidenceGuard(context, pathFileCandidate(before, anchorStat) && (!previous || sameFile(previous, anchorStat)),
+        'Evidence output changed before writing');
     }
     context.phase = 'open';
-    handle = await open(target, before ? 'r+' : 'wx');
+    handle = await open(target, before ? evidenceOpenFlags('r+') : 'wx');
     context.owners.push({ handle, attempted: false, closed: false });
     context.close = 'OPEN';
     context.phase = 'opened-stat';
@@ -312,7 +375,7 @@ async function ownedWrite(owner, name, bytes) {
     context.phase = 'post-close-realpath';
     evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence output ownership changed');
     context.phase = 'post-close-open';
-    verification = await open(target, 'r');
+    verification = await open(target, evidenceOpenFlags('r'));
     context.owners.push({ handle: verification, attempted: false, closed: false });
     context.close = 'OPEN';
     context.phase = 'post-close-opened-stat';
@@ -482,7 +545,8 @@ function lockGraph(lock, manager, manifest) {
 }
 
 async function resolveManifest(owner, from, name) {
-  const owned = await realpath(owner);
+  const owned = await pinEvidenceRoot(owner, { output: path.basename(owner), operation: 'package-resolution',
+    phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
   for (const search of createRequire(from).resolve.paths(`${name}/package.json`) ?? []) {
     const candidate = await realpath(path.join(search, name)).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
     if (!candidate) continue;
@@ -498,7 +562,8 @@ async function resolveManifest(owner, from, name) {
 }
 
 async function physicalGraph(directory) {
-  const owned = await realpath(directory);
+  const owned = await pinEvidenceRoot(directory, { output: path.basename(directory), operation: 'physical-graph',
+    phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
   const hf = await resolveManifest(owned, path.join(owned, 'package.json'), '@huggingface/transformers');
   const sharp = hf.path ? await resolveManifest(owned, path.join(owned, hf.path, 'package.json'), 'sharp') : { status: 'ABSENT' };
   return { hf, hfRelativeSharp: sharp };
@@ -603,7 +668,10 @@ async function selfControls(scratch) {
     mutate(changed);
     assert.throws(() => assertPolicyUnchanged(baseline, changed));
   }
-  const directory = await mkdtemp(path.join(scratch, 'self-control-'));
+  const createdDirectory = await mkdtemp(path.join(scratch, 'self-control-'));
+  const directory = await pinEvidenceRoot(createdDirectory, { output: path.basename(createdDirectory), operation: 'self-control',
+    phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
+  assert.equal(path.dirname(directory), scratch, 'Self-control directory is not a direct scratch child');
   const hf = path.join(directory, 'owned-hf');
   await mkdir(path.join(directory, 'node_modules', '@huggingface'), { recursive: true });
   await mkdir(path.join(directory, 'node_modules', 'sharp'), { recursive: true });
@@ -712,6 +780,7 @@ async function selfControls(scratch) {
   const freshBaseline = await ownedWrite(directory, ioName, longBytes);
   const freshRead = await ownedFile(directory, ioName, limits.policy, true, freshBaseline);
   assert(matchesEvidence(freshRead, longBytes));
+  trustVerifiedEvidence(directory, ioName, freshBaseline, freshRead, longBytes);
   assert(!matchesEvidence(freshRead, Buffer.from('87654321')), 'Intended SHA256 predicate accepted different same-length content');
   assert.deepEqual(Object.keys(freshRead).sort(), ['bytes', 'complete', 'raw', 'sha256', 'status']);
   const shortBytes = Buffer.from('abc');
@@ -719,6 +788,7 @@ async function selfControls(scratch) {
   assert.equal(shortBaseline.ino, freshBaseline.ino);
   const shortRead = await ownedFile(directory, ioName, limits.policy, true, shortBaseline);
   assert(matchesEvidence(shortRead, shortBytes));
+  trustVerifiedEvidence(directory, ioName, shortBaseline, shortRead, shortBytes);
   assert.equal(shortRead.raw, 'abc');
   assert.equal(shortRead.bytes, 3);
   await assert.rejects(ownedFile(directory, ioName, 2, true, shortBaseline), /exceeds its bound/);
@@ -760,13 +830,14 @@ async function selfControls(scratch) {
   assert.equal(retimed.ino, shortBaseline.ino);
   assert.notEqual(retimed.mtimeNs, shortBaseline.mtimeNs);
   await assert.rejects(ownedFile(directory, ioName, limits.policy, true, shortBaseline), /differs from its closed writer/);
-  const replacementBaseline = await ownedWrite(directory, ioName, shortBytes);
+  const replacementName = 'migration-pnpm.json';
+  const replacementBaseline = await ownedWrite(directory, replacementName, shortBytes);
   const replacement = path.join(directory, 'replacement-data');
   await writeFile(replacement, shortBytes);
   const replacementStat = await lstat(replacement, { bigint: true });
   assert(replacementStat.ino !== replacementBaseline.ino, 'Replacement fixture lacks distinguishable inode identity');
-  await rename(replacement, path.join(directory, ioName));
-  await assert.rejects(ownedFile(directory, ioName, limits.policy, true, replacementBaseline), /differs from its closed writer/);
+  await rename(replacement, path.join(directory, replacementName));
+  await assert.rejects(ownedFile(directory, replacementName, limits.policy, true, replacementBaseline), /differs from its closed writer/);
   await mkdir(path.join(directory, 'run-manifest.json'));
   await assert.rejects(ownedWrite(directory, 'run-manifest.json', shortBytes), /nonlink regular file/);
   const diagnosticContext = { output: ioName, operation: 'readback', phase: 'expected-path-join', close: 'NOT_OPENED',
@@ -792,10 +863,14 @@ async function selfControls(scratch) {
 }
 
 async function createEvidence(root, scratch, lexicalScratch) {
-  const artifactsRoot = await realpath(path.join(root, 'artifacts'));
-  const directory = await mkdtemp(path.join(artifactsRoot, 'consumer-migration-'));
+  const artifactsRoot = await pinEvidenceRoot(path.join(root, 'artifacts'), { output: 'artifacts', operation: 'evidence-root',
+    phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
+  const createdDirectory = await mkdtemp(path.join(artifactsRoot, 'consumer-migration-'));
+  const directory = await pinEvidenceRoot(createdDirectory, { output: path.basename(createdDirectory), operation: 'evidence-output',
+    phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
   const basename = path.basename(directory);
-  assert(/^consumer-migration-[A-Za-z0-9]+$/.test(basename) && path.dirname(directory) === artifactsRoot, 'Invalid generated evidence directory');
+  assert(/^consumer-migration-[A-Za-z0-9]+$/.test(basename) && path.dirname(directory) === artifactsRoot,
+    'Invalid generated evidence directory');
   const relative = `artifacts/${basename}`;
   const aliases = [[lexicalScratch, '<scratch>'], [scratch, '<scratch>'], [root, '<project>'], [await realpath(root), '<project>']];
   for (const cli of [npmCli, pnpmCli, process.execPath]) {
@@ -813,7 +888,8 @@ async function createEvidence(root, scratch, lexicalScratch) {
   for (const manager of ['npm', 'pnpm']) {
     for (const name of ['seed-package.json', 'original-lock', 'original-audit.json', 'updated-package.json', 'updated-lock', 'updated-versions.json', 'updated-audit.json']) {
       const relative = `seeded-lock-${manager}/${name}`;
-      const file = await ownedFile(artifactsRoot, relative, name.includes('lock') || name.includes('audit') ? limits.lock : limits.policy, false);
+      const file = await ownedFile(artifactsRoot, relative,
+        name.includes('lock') || name.includes('audit') ? limits.lock : limits.policy, false, undefined, true);
       manifest.protectedPriorHistory[relative] = file;
       assert(file.complete, 'Protected prior history exceeds evidence bound');
     }
@@ -835,6 +911,7 @@ async function createEvidence(root, scratch, lexicalScratch) {
         const baseline = await ownedWrite(directory, name, bytes);
         const actual = await ownedFile(directory, name, limits.receipt, false, baseline);
         assert(matchesEvidence(actual, bytes), 'Receipt verification failed');
+        trustVerifiedEvidence(directory, name, baseline, actual, bytes);
         manifest.files[name] = { status: receipt.status, complete: receipt.complete, ...actual };
         manifest.files[name].status = receipt.status;
         manifest.files[name].complete = receipt.complete;
@@ -847,6 +924,7 @@ async function createEvidence(root, scratch, lexicalScratch) {
       const baseline = await ownedWrite(directory, 'run-manifest.json', bytes);
       const actual = await ownedFile(directory, 'run-manifest.json', limits.manifest, false, baseline);
       assert(matchesEvidence(actual, bytes), 'Manifest verification failed');
+      trustVerifiedEvidence(directory, 'run-manifest.json', baseline, actual, bytes);
       assert(Object.values(receipts).every(receipt => receipt.status !== 'OVER_LIMIT'), 'Migration receipt exceeded 16 MiB');
     },
   };
@@ -860,14 +938,27 @@ async function createEvidence(root, scratch, lexicalScratch) {
 }
 
 const root = await realpath(path.resolve(import.meta.dirname, '..'));
-const { artifacts } = await loadArtifacts('artifacts');
+const rootMetadata = await lstat(root, { bigint: true });
+assert(rootMetadata.isDirectory() && !rootMetadata.isSymbolicLink(), 'Project root is not a canonical nonlink directory');
+pinnedEvidenceRoots.set(path.resolve(root), { path: root, dev: rootMetadata.dev, ino: rootMetadata.ino });
+const artifactsPath = path.join(root, 'artifacts');
+const artifactsMetadata = await lstat(artifactsPath, { bigint: true });
+assert(artifactsMetadata.isDirectory() && !artifactsMetadata.isSymbolicLink(), 'Artifacts root is not a nonlink directory');
+const canonicalArtifactsPath = await realpath(artifactsPath);
+assert.equal(canonicalArtifactsPath, artifactsPath, 'Artifacts root is redirected from the repository');
+pinnedEvidenceRoots.set(path.resolve(artifactsPath), { path: canonicalArtifactsPath, dev: artifactsMetadata.dev, ino: artifactsMetadata.ino });
+const { artifacts } = await loadArtifacts(canonicalArtifactsPath);
 const npmCli = await resolveNpmCli();
 const pnpmCli = process.env.npm_execpath;
 assert(pnpmCli?.includes('pnpm'), 'Run this check through pnpm check:consumers');
 const lexicalScratch = await mkdtemp(path.join(tmpdir(), 'wyreup-consumers-'));
 const scratch = await realpath(lexicalScratch);
+const pinnedScratch = await pinEvidenceRoot(scratch, { output: path.basename(scratch), operation: 'consumer-scratch',
+  phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
+assert.equal(pinnedScratch, scratch, 'Consumer scratch changed during initialization');
 const temporaryRoot = await realpath(tmpdir());
 assert(contained(temporaryRoot, scratch) && scratch !== temporaryRoot, 'Consumer scratch escaped its temporary root');
+assert.equal(path.dirname(scratch), temporaryRoot, 'Consumer scratch is not a direct temporary-root child');
 console.log(`Packed consumer scratch: ${scratch}`);
 const entries = new Map(artifacts.map((artifact) => [artifact.name, artifact]));
 let origin;
@@ -1019,8 +1110,11 @@ try {
     for (const ignoreScripts of [false, true]) {
       for (const artifact of artifacts) {
         for (const withPeer of artifact.name === '@wyreup/core' ? [false, true] : [false]) {
-          const directory = await realpath(await mkdtemp(path.join(scratch, `${manager}-`)));
+          const createdDirectory = await mkdtemp(path.join(scratch, `${manager}-`));
+          const directory = await pinEvidenceRoot(createdDirectory, { output: path.basename(createdDirectory), operation: 'consumer-case',
+            phase: 'owner-lstat', close: 'NOT_OPENED', stats: {}, checks: {} });
           assert(contained(scratch, directory) && directory !== scratch, 'Consumer directory escaped canonical scratch');
+          assert.equal(path.dirname(directory), scratch, 'Consumer directory is not a direct scratch child');
           console.log(`Consumer case: manager=${manager} package=${artifact.name} peer=${withPeer ? 'explicit' : 'default'} scripts=${ignoreScripts ? 'disabled' : 'normal'} directory=${directory}`);
           const dependencies = { [artifact.name]: artifact.version };
           if (withPeer) dependencies['@huggingface/transformers'] = '^4.3.1';
