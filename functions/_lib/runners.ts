@@ -594,7 +594,7 @@ function fixGrammarPro(raw: RunnerInput, env: Env): PreparedProRun {
   return async () => {
     const corrected = await correctGrammar(
       env,
-      'You are a copy editor. Fix grammar, spelling, and punctuation. Preserve the author’s voice and meaning. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
+      'You are a copy editor. Fix only genuine grammar, spelling, and punctuation errors. Preserve the author’s voice and meaning. Preserve every sentence and paragraph, all repetitions, and their original order. Do not omit, summarize, or deduplicate any text. If no correction is needed, return the input unchanged. Return ONLY the corrected text — no explanations, no preamble, no quotes.',
       text,
     );
     return { corrected };

@@ -119,7 +119,7 @@ Everything above is free, forever. **PRO** is an optional credit-based tier for 
 
 ### PRO input and account migration
 
-- Text-to-speech supports English and Spanish, with a 500-byte limit. Grammar accepts up to 4,000 UTF-8 bytes; analysis accepts a 34,000-byte document and a 1,500-byte question. Each limit applies to both the original text and its NFKC-normalized UTF-8 form.
+- Text-to-speech supports English and Spanish, with a 500-byte limit. Grammar accepts up to 4,000 UTF-8 bytes and asks the model to preserve every sentence, paragraph, repetition, and their order while fixing only genuine grammar, spelling, or punctuation errors; analysis accepts a 34,000-byte document and a 1,500-byte question. Each limit applies to both the original text and its NFKC-normalized UTF-8 form.
 - Signup and account recovery deliver API keys only by email; the browser does not receive the key. The email-bound key rollout disables existing keys and their sessions while retaining account data and credits. Existing CLI and MCP users must request a new emailed key and update their local credentials or `WYREUP_API_KEY` configuration.
 - Before deployment, complete authorized real-provider qualification and rehearse real inbox delivery plus recovered-admin access. See the [PRO model migration decisions](./docs/PRO-MODEL-MIGRATION-DECISIONS.md) and [email-bound auth migration release guide](./docs/auth-migration-release.md) for required checks. These notes do not indicate that the rollout is live or release-ready.
 

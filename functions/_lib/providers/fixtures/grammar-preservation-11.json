@@ -1,0 +1,14 @@
+{
+  "id": "grammar-near-cap-11",
+  "source": {
+    "requestSha256": "8e7d86ea07b6f3e6aad2c98e07c50f401509ea5894393ea2ce05aa18e9c626a7",
+    "responseSha256": "08e6f5041b5170388a733b04498f0a2441980a6ba2228b9556ceabcc322fbba9",
+    "inputSha256": "6b68caa676f8d9a13b15a54712806e2fe62686a64d37422d86287b530feb416c",
+    "failedOutputSha256": "ecf1ed7fc972e16596968b18750f5b72144360733119501acb178a34eaf1b62a",
+    "inputBytes": 3640,
+    "finishReason": "stop"
+  },
+  "sentence": "A short synthetic sentence.",
+  "inputSentenceCount": 130,
+  "failedOutputSentenceCount": 128
+}

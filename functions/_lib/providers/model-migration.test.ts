@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 import { prepareProRun, runPro } from '../runners';
 import type { Env } from '../env';
 import { TTS_MAX_AUDIO_BYTES } from './tts-models';
 import { INFERENCE_TIMEOUTS } from '../timeout';
 import { OutputTruncatedError } from './new-text-models';
+import grammarPreservationFixture from './fixtures/grammar-preservation-11.json';
 
 // Contract fixtures reflect the documented input options and synchronous choices shape,
 // not a captured runtime response. Checked 2026-11-13:
@@ -33,6 +35,41 @@ describe('replacement model contracts', () => {
     const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'Corrected.' } }] });
     await expect(runPro('fix-grammar-pro', { text: 'Corrected' }, env)).resolves.toEqual({ corrected: 'Corrected.' });
     expect(run).toHaveBeenCalledWith('@cf/google/gemma-4-26b-a4b-it', expect.objectContaining({ max_completion_tokens: 6144, chat_template_kwargs: { enable_thinking: false }, stream: false }));
+  });
+
+  it('keeps the captured near-cap truncation as a failing no-op preservation control', () => {
+    const input = Array(grammarPreservationFixture.inputSentenceCount)
+      .fill(grammarPreservationFixture.sentence)
+      .join(' ') + ' ';
+    const failedOutput = Array(grammarPreservationFixture.failedOutputSentenceCount)
+      .fill(grammarPreservationFixture.sentence)
+      .join(' ');
+    expect(new TextEncoder().encode(input)).toHaveLength(grammarPreservationFixture.source.inputBytes);
+    expect(createHash('sha256').update(input).digest('hex')).toBe(grammarPreservationFixture.source.inputSha256);
+    expect(createHash('sha256').update(failedOutput).digest('hex')).toBe(grammarPreservationFixture.source.failedOutputSha256);
+    expect(failedOutput.trim()).not.toBe(input.trim());
+  });
+
+  it('sends the preservation directive with the unchanged near-cap request', async () => {
+    const input = Array(grammarPreservationFixture.inputSentenceCount)
+      .fill(grammarPreservationFixture.sentence)
+      .join(' ') + ' ';
+    const { env, run } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'mock completion' } }] });
+    await runPro('fix-grammar-pro', { text: input }, env);
+    expect(run).toHaveBeenCalledWith('@cf/google/gemma-4-26b-a4b-it', expect.objectContaining({
+      max_completion_tokens: 6144,
+      chat_template_kwargs: { enable_thinking: false },
+      stream: false,
+      messages: expect.arrayContaining([
+        expect.objectContaining({ role: 'system', content: expect.stringContaining('Preserve every sentence') }),
+        expect.objectContaining({ role: 'user', content: input }),
+      ]),
+    }));
+  });
+
+  it('still makes genuine short grammar corrections', async () => {
+    const { env } = envWith({ choices: [{ finish_reason: 'stop', message: { content: 'The reports were ready.' } }] });
+    await expect(runPro('fix-grammar-pro', { text: 'The reports was ready.' }, env)).resolves.toEqual({ corrected: 'The reports were ready.' });
   });
 
   it.each([{ choices: [] }, { response: 'old schema' }, { choices: [{ finish_reason: 'stop', message: { content: null, reasoning_content: 'thinking' } }] }, { choices: [{ finish_reason: 'content_filter', message: { content: 'filtered' } }] }])('rejects missing or malformed answers', async result => {
