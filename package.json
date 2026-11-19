@@ -58,7 +58,7 @@
   },
   "pnpm": {
     "overrides": {
-      "astro@7.3.7>http-cache-semantics": "-",
+      "astro@7.4.7>http-cache-semantics": "-",
       "jspdf>dompurify": "^3.4.17",
       "express-rate-limit>ip-address": "^10.7.4",
       "miniflare>sharp": "^0.35.5",
@@ -79,7 +79,7 @@
       "glob@14.0.2>minimatch": "11.0.1"
     },
     "patchedDependencies": {
-      "astro@7.3.7": "patches/astro@7.3.7.patch",
+      "astro@7.4.7": "patches/astro@7.4.7.patch",
       "pdfjs-dist@6.4.299": "patches/pdfjs-dist@6.4.299.patch",
       "glob@14.0.2": "patches/glob@14.0.2.patch"
     },

@@ -44,21 +44,34 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@v6
+        if: matrix.node-version == '22.13.0'
+        with:
+          node-version: ${{ matrix.node-version }}
       # MCP worker tests fork dist/worker.js — build first so that artifact
       # exists. Without this, `runInWorker` fails to spawn and every worker-
       # dispatched test reports "Tool worker crashed (exit=1, signal=null)".
       - run: pnpm build
+        if: matrix.node-version == '24.x'
+      - run: pnpm build --filter='!@wyreup/web'
+        if: matrix.node-version == '22.13.0'
       - run: pnpm exec playwright install --with-deps chromium
       - run: sudo apt-get update && sudo apt-get install -y sqlite3
       - run: pnpm test:functions
       - run: pnpm exec vitest run tools/test/dependency-parent-compatibility.test.mjs
       - run: pnpm test
+        if: matrix.node-version == '24.x'
+      - run: pnpm test --filter='!@wyreup/web'
+        if: matrix.node-version == '22.13.0'
       - run: pnpm --filter @wyreup/web check:pwa
+        if: matrix.node-version == '24.x'
       - run: pnpm --filter @wyreup/web check:remote-cache
+        if: matrix.node-version == '24.x'
       - run: pnpm --filter @wyreup/web check:pgp
+        if: matrix.node-version == '24.x'
       - name: Packaged file worker tests
         run: node --test tools/test/catalog-packaged-workers.test.mjs
 
@@ -100,9 +113,13 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@v6
+        if: matrix.node-version == '22.13.0'
+        with:
+          node-version: ${{ matrix.node-version }}
       - run: pnpm --filter @wyreup/core... build
       - run: WYREUP_GDAL_NODE=1 pnpm --filter @wyreup/core test convert-geo
 
@@ -167,10 +184,14 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.runtime.node }}
+          node-version: 24
           cache: pnpm
-      - run: npm install -g npm@${{ matrix.runtime.npm }}
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@v6
+        if: matrix.runtime.node == '22.13.0'
+        with:
+          node-version: ${{ matrix.runtime.node }}
+      - run: npm install -g npm@${{ matrix.runtime.npm }}
       - uses: actions/download-artifact@v5
         with:
           name: release-artifacts

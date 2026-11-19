@@ -168,7 +168,9 @@ See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 
 ## Development
 
-Prerequisites: Node >= 22.13.0, pnpm 10.34.5.
+Use Node 24 and pnpm 10.34.5 for full-workspace development, as in web CI.
+The private web toolchain requires Node 22.23.4 or newer.
+The published core, MCP, and CLI packages support Node 22.13.0 and later.
 
 ```bash
 pnpm install

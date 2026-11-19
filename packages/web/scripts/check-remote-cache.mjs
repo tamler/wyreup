@@ -10,7 +10,7 @@ const packageDirectory =
   process.env.WYREUP_ASTRO_BASELINE_DIRECTORY ??
   path.dirname(require.resolve('astro/package.json'));
 const manifest = JSON.parse(await readFile(path.join(packageDirectory, 'package.json'), 'utf8'));
-assert.equal(manifest.version, '7.3.7', 'Cache contract requires the exact reviewed Astro version');
+assert.equal(manifest.version, '7.4.7', 'Cache contract requires the exact reviewed Astro version');
 const remoteFile = path.join(packageDirectory, 'dist/assets/build/remote.js');
 const { loadRemoteImage, revalidateRemoteImage } = await import(pathToFileURL(remoteFile).href);
 const source = 'https://images.example/image.png';
