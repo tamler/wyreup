@@ -1,10 +1,11 @@
 import { it } from 'vitest';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { lstat as actualLstat, mkdtemp, open as actualOpen, readFile, realpath as actualRealpath, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import pathModule from 'node:path';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { tmpdir } from 'node:os';
 
 const source = await readFile(new URL('../check-package-consumers.mjs', import.meta.url), 'utf8');
 const sourceHash = createHash('sha256').update(source).digest('hex');
@@ -33,13 +34,14 @@ const extracted = [...declarations.values()].flat().join('\n');
 const path = pathModule.posix;
 const owner = '/synthetic-owned';
 const target = path.join(owner, 'migration-npm.json');
-const W = 3436560750;
-const I = 281474976787152;
+const W = 3436560750n;
+const I = (1n << 53n) + 777n;
 const M = 1793765790016.5876;
+const MNS = 1793765790016587600n;
 const body = Buffer.alloc(550, 120);
 
 function stats(changes = {}) {
-  return { dev: W, ino: I, size: body.length, mtimeMs: M,
+  return { dev: W, ino: I, size: BigInt(body.length), mtimeMs: M, mtimeNs: MNS,
     isFile: () => true, isSymbolicLink: () => false, ...changes };
 }
 const op = (name, value, error) => ({ name, value, error });
@@ -52,7 +54,7 @@ const close = (name, error) => op(`${name}.close`, undefined, error);
 const read = (name, bytes, error) => op(`${name}.read`, bytes, error);
 
 function fixture(steps, platform = 'win32') {
-  const pending = [...steps], calls = [], diagnostics = [];
+  const pending = [...steps], calls = [], diagnostics = [], statOptions = [];
   let allocations = 0;
   function take(name) {
     calls.push(name);
@@ -63,7 +65,7 @@ function fixture(steps, platform = 'win32') {
   }
   function handle(name) {
     return {
-      async stat() { return take(`${name}.stat`); },
+      async stat(options) { statOptions.push(options); return take(`${name}.stat`); },
       async close() { take(`${name}.close`); },
       async writeFile(bytes) { assert.deepEqual(bytes, body); take(`${name}.writeFile`); },
       async truncate(size) { assert.equal(size, body.length); take(`${name}.truncate`); },
@@ -85,10 +87,11 @@ function fixture(steps, platform = 'win32') {
       diagnostics.push(JSON.parse(message.slice(prefix.length)));
     } } },
     async realpath(value) { assert([owner, target].includes(value)); return take(value === owner ? 'realpath:owner' : 'realpath:path'); },
-    async lstat(value) { assert.equal(value, target); return take('lstat'); },
+    async lstat(value, options) { assert.equal(value, target); statOptions.push(options); return take('lstat'); },
     async open(value, mode) { assert.equal(value, target); return handle(take(`open:${mode}`)); },
   });
   return { api, calls, diagnostics, get allocations() { return allocations; },
+    statOptions,
     consumed() { assert.deepEqual(pending.map(x => x.name), [], `unconsumed source transcript ${sourceHash}`); } };
 }
 
@@ -105,18 +108,18 @@ async function refuses(f, invoke, phase, check, message, identity) {
   f.consumed();
 }
 
-function freshWriteTail({ pathRow = stats({ dev: 0 }), reopenedRow = stats(), finalPath = pathRow } = {}) {
+function freshWriteTail({ pathRow = stats({ dev: 0n }), reopenedRow = stats(), finalPath = pathRow } = {}) {
   return [ls(pathRow), real(), opened('r', 'verify'), fs('verify', reopenedRow),
     ls(finalPath), real(), close('verify')];
 }
-function freshWriteHead(openedRow = stats({ size: 0, mtimeMs: 1793765790015.7983 }), written = stats()) {
+function freshWriteHead(openedRow = stats({ size: 0n, mtimeMs: 1793765790015.7983 }), written = stats()) {
   return [root(), ls(null), opened('wx', 'writer'), fs('writer', openedRow),
     op('writer.writeFile'), op('writer.truncate'), fs('writer', written), close('writer')];
 }
-function readHead({ before = stats({ dev: 0 }), openedRow = stats() } = {}) {
+function readHead({ before = stats({ dev: 0n }), openedRow = stats() } = {}) {
   return [root(), ls(before), real(), opened('r', 'read1'), fs('read1', openedRow)];
 }
-function readTail({ before = stats({ dev: 0 }), afterFd = stats(), second = stats(), finalPath = before, bytes = body } = {}) {
+function readTail({ before = stats({ dev: 0n }), afterFd = stats(), second = stats(), finalPath = before, bytes = body } = {}) {
   return [read('read1', bytes), read('read1', Buffer.alloc(0)), fs('read1', afterFd), ls(before), real(),
     opened('r', 'read2'), fs('read2', second), ls(finalPath), real(), close('read1'), close('read2')];
 }
@@ -127,40 +130,97 @@ it('accepts the captured Windows writer rows only after a SYNTHETIC independent 
   const baseline = await f.api.ownedWrite(owner, 'migration-npm.json', body);
   assert.equal(baseline.dev, W);
   assert.equal(baseline.ino, I);
-  assert.equal(baseline.size, body.length);
+  assert.equal(baseline.size, BigInt(body.length));
   f.consumed();
 });
 
+it('requests BigInt metadata for every path and descriptor observation', async () => {
+  const f = fixture([...freshWriteHead(), ...freshWriteTail()]);
+  await f.api.ownedWrite(owner, 'migration-npm.json', body);
+  assert(f.statOptions.length > 0);
+  assert(f.statOptions.every(options => options?.bigint === true), 'Every lstat/stat call must request bigint metadata');
+  f.consumed();
+});
+
+it('accepts a matching large BigInt inode when a Windows path reports device zero', async () => {
+  const ino = (1n << 53n) + 17n;
+  const before = stats({ dev: 0n, ino });
+  const descriptor = stats({ dev: W, ino });
+  const f = fixture([...readHead({ before, openedRow: descriptor }),
+    ...readTail({ before, afterFd: descriptor, second: descriptor, finalPath: before })]);
+  const result = await f.api.ownedFile(owner, 'migration-npm.json', 1024, false);
+  assert.equal(result.status, 'COMPLETE');
+  f.consumed();
+});
+
+it('rejects distinct adjacent BigInt inodes that collide when converted to Number', async () => {
+  const pathIno = 1n << 53n;
+  const descriptorIno = pathIno + 1n;
+  assert.equal(Number(pathIno), Number(descriptorIno));
+  const before = stats({ dev: 0n, ino: pathIno });
+  const descriptor = stats({ dev: W, ino: descriptorIno });
+  const f = fixture([...readHead({ before, openedRow: descriptor }), close('read1')]);
+  await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1024, false),
+    'path-fd-join', 'path-fd-join', 'Evidence input changed before reading');
+  assert.equal(f.allocations, 0);
+  assert(!f.calls.includes('read1.read'));
+});
+
+it('round-trips owned evidence with actual filesystem BigIntStats', async () => {
+  const directory = await mkdtemp(pathModule.join(tmpdir(), 'consumer-bigint-identity-'));
+  try {
+    const api = vm.runInNewContext(`${extracted}\n({ ownedWrite, ownedFile, matchesEvidence })`, {
+      assert, createHash, path: pathModule, Error, Object, Number, JSON, Buffer,
+      process: { platform: process.platform, stderr: { write() {} } },
+      realpath: actualRealpath,
+      lstat: actualLstat,
+      open: actualOpen,
+    });
+    const bytes = Buffer.from('synthetic real-filesystem BigIntStats evidence');
+    const baseline = await api.ownedWrite(directory, 'migration-npm.json', bytes);
+    assert.equal(typeof baseline.dev, 'bigint');
+    assert.equal(typeof baseline.ino, 'bigint');
+    assert.equal(typeof baseline.size, 'bigint');
+    assert.equal(typeof baseline.mtimeNs, 'bigint');
+    const actual = await api.ownedFile(directory, 'migration-npm.json', 1024, false, baseline);
+    assert.equal(actual.status, 'COMPLETE');
+    assert.equal(typeof actual.bytes, 'number');
+    assert(api.matchesEvidence(actual, bytes));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 it('keeps a permitted write-close mtime transition out of the later stable baseline', async () => {
-  const after = stats({ mtimeMs: M + 10 });
-  const f = fixture([...freshWriteHead(), ...freshWriteTail({ pathRow: { ...after, dev: 0 }, reopenedRow: after })]);
+  const after = stats({ mtimeMs: M + 10, mtimeNs: MNS + 10_000_000n });
+  const f = fixture([...freshWriteHead(), ...freshWriteTail({ pathRow: { ...after, dev: 0n }, reopenedRow: after })]);
   const baseline = await f.api.ownedWrite(owner, 'migration-npm.json', body);
-  assert.equal(baseline.mtimeMs, M + 10);
+  assert.equal(baseline.mtimeNs, MNS + 10_000_000n);
   f.consumed();
 });
 
 it('refuses a same-inode post-close FD on another device', async () => {
-  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0 })), real(), opened('r', 'verify'),
-    fs('verify', stats({ dev: W + 1 })), close('verify')]);
+  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0n })), real(), opened('r', 'verify'),
+    fs('verify', stats({ dev: W + 1n })), close('verify')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'post-close-fd-join',
     'post-close-fd-join', 'Evidence output path differs from its closed writer');
 });
 
 it('refuses pathname replacement during the post-close reopen', async () => {
-  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0 })), real(), opened('r', 'verify'),
-    fs('verify', stats()), ls(stats({ dev: 0, ino: I + 1 })), close('verify')]);
+  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0n })), real(), opened('r', 'verify'),
+    fs('verify', stats()), ls(stats({ dev: 0n, ino: I + 1n })), close('verify')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'post-close-path-join',
     'post-close-path-join', 'Evidence output path differs from its closed writer');
 });
 
 it('does not accept path dev0 without a successful independent FD observation', async () => {
   const failure = new Error('synthetic reopen failure');
-  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0 })), real(), op('open:r', undefined, failure)]);
+  const f = fixture([...freshWriteHead(), ls(stats({ dev: 0n })), real(), op('open:r', undefined, failure)]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'post-close-open', null, null, failure);
 });
 
 it('anchors an existing Windows output and closes that anchor before any write', async () => {
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([root(), ls(before), real(), opened('r', 'anchor'), fs('anchor', stats()),
     opened('r+', 'writer'), fs('writer', stats()), ls(before), real(), close('anchor'),
     op('writer.writeFile'), op('writer.truncate'), fs('writer', stats()), close('writer'), ...freshWriteTail()]);
@@ -170,8 +230,8 @@ it('anchors an existing Windows output and closes that anchor before any write',
 });
 
 it('refuses a mismatched anchor before even opening r+', async () => {
-  const f = fixture([root(), ls(stats({ dev: 0 })), real(), opened('r', 'anchor'),
-    fs('anchor', stats({ ino: I + 1 })), close('anchor')]);
+  const f = fixture([root(), ls(stats({ dev: 0n })), real(), opened('r', 'anchor'),
+    fs('anchor', stats({ ino: I + 1n })), close('anchor')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'anchor-path-join',
     'anchor-path-join', 'Evidence output changed before writing');
   assert(!f.calls.includes('open:r+'));
@@ -179,8 +239,8 @@ it('refuses a mismatched anchor before even opening r+', async () => {
 });
 
 it('refuses a writer device mismatch and closes both prewrite handles without writing', async () => {
-  const f = fixture([root(), ls(stats({ dev: 0 })), real(), opened('r', 'anchor'), fs('anchor', stats()),
-    opened('r+', 'writer'), fs('writer', stats({ dev: W + 1 })), close('anchor'), close('writer')]);
+  const f = fixture([root(), ls(stats({ dev: 0n })), real(), opened('r', 'anchor'), fs('anchor', stats()),
+    opened('r+', 'writer'), fs('writer', stats({ dev: W + 1n })), close('anchor'), close('writer')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'before-fd-join',
     'before-fd-join', 'Evidence output changed before writing');
   assert(!f.calls.includes('writer.writeFile'));
@@ -189,7 +249,7 @@ it('refuses a writer device mismatch and closes both prewrite handles without wr
 
 it('refuses an anchor close failure, still closes the writer, and never writes', async () => {
   const failure = new Error('synthetic anchor close failure');
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([root(), ls(before), real(), opened('r', 'anchor'), fs('anchor', stats()),
     opened('r+', 'writer'), fs('writer', stats()), ls(before), real(), close('anchor', failure), close('writer')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body), 'close', null, null, failure);
@@ -199,7 +259,7 @@ it('refuses an anchor close failure, still closes the writer, and never writes',
 });
 
 it('preserves expected-path refusal before bounds, open and allocation', async () => {
-  const f = fixture([root(), ls(stats({ dev: 0, ino: I + 1, size: 1000 })), real()]);
+  const f = fixture([root(), ls(stats({ dev: 0n, ino: I + 1n, size: 1000n })), real()]);
   await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1, false, stats()),
     'expected-path-join', 'expected-path-join', 'Evidence readback differs from its closed writer');
   assert.equal(f.allocations, 0);
@@ -207,7 +267,7 @@ it('preserves expected-path refusal before bounds, open and allocation', async (
 });
 
 it('strictly joins expected writer and first read FD before any bytes', async () => {
-  const f = fixture([...readHead({ openedRow: stats({ dev: W + 1 }) }), close('read1')]);
+  const f = fixture([...readHead({ openedRow: stats({ dev: W + 1n }) }), close('read1')]);
   await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1024, false, stats()),
     'expected-fd-join', 'expected-fd-join', 'Evidence readback differs from its closed writer');
   assert.equal(f.allocations, 0);
@@ -230,9 +290,9 @@ it('preserves the ordinary POSIX stable read with strict reopen joins', async ()
 });
 
 it.each([
-  ['path and first FD dev0; a second dev0 cannot repair missing evidence', { dev: 0 }, 'win32'],
-  ['zero inode', { ino: 0 }, 'win32'],
-  ['unsafe inode', { ino: Number.MAX_SAFE_INTEGER + 1 }, 'win32'],
+  ['path and first FD dev0; a second dev0 cannot repair missing evidence', { dev: 0n }, 'win32'],
+  ['zero inode', { ino: 0n }, 'win32'],
+  ['unsafe Number inode', { ino: Number.MAX_SAFE_INTEGER + 1 }, 'win32'],
   ['unknown device', { dev: undefined }, 'win32'],
   ['path dev0 on non-Windows', {}, 'darwin'],
 ])('refuses %s before allocation/read', async (_label, change, platform) => {
@@ -245,17 +305,17 @@ it.each([
 });
 
 it('refuses a zero-device reopened FD even when another zero observation could agree', async () => {
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([...readHead(), read('read1', body), read('read1', Buffer.alloc(0)), fs('read1', stats()),
-    ls(before), real(), opened('r', 'read2'), fs('read2', stats({ dev: 0 })), close('read1'), close('read2')]);
+    ls(before), real(), opened('r', 'read2'), fs('read2', stats({ dev: 0n })), close('read1'), close('read2')]);
   await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1024, false),
     'reopened-fd-join', 'reopened-fd-join', 'Evidence input FD changed while reopening');
 });
 
 it('refuses a same-inode read reopen on a different device', async () => {
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([...readHead(), read('read1', body), read('read1', Buffer.alloc(0)), fs('read1', stats()),
-    ls(before), real(), opened('r', 'read2'), fs('read2', stats({ dev: W + 1 })), close('read1'), close('read2')]);
+    ls(before), real(), opened('r', 'read2'), fs('read2', stats({ dev: W + 1n })), close('read1'), close('read2')]);
   await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1024, false),
     'reopened-fd-join', 'reopened-fd-join', 'Evidence input FD changed while reopening');
 });
@@ -271,7 +331,7 @@ it('keeps read errors primary over a once-attempted close failure without expect
 it('attempts both acquired closes after a reopen-stat primary and reports the close failure', async () => {
   const primary = new Error('synthetic second stat failure');
   const closing = new Error('synthetic first close failure');
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([...readHead(), read('read1', body), read('read1', Buffer.alloc(0)), fs('read1', stats()),
     ls(before), real(), opened('r', 'read2'), op('read2.stat', undefined, primary), close('read1', closing), close('read2')]);
   await refuses(f, () => f.api.ownedFile(owner, 'migration-npm.json', 1024, false), 'close', null, null, primary);
@@ -301,8 +361,27 @@ it('preserves optional absent and over-limit outcomes without opening files', as
   const absent = fixture([root(), op('lstat', null, Object.assign(new Error('absent'), { code: 'ENOENT' }))]);
   assert.equal((await absent.api.ownedFile(owner, 'migration-npm.json', 1, false)).status, 'ABSENT');
   absent.consumed();
-  const large = fixture([root(), ls(stats({ dev: 0 })), real()]);
+  const large = fixture([root(), ls(stats({ dev: 0n })), real()]);
   assert.equal((await large.api.ownedFile(owner, 'migration-npm.json', 1, false)).status, 'OVER_LIMIT');
+  large.consumed();
+});
+
+it('keeps safe over-limit byte counts numeric and preserves larger counts exactly', async () => {
+  const safeSize = 550n;
+  const safe = fixture([root(), ls(stats({ dev: 0n, size: safeSize })), real()]);
+  const safeResult = await safe.api.ownedFile(owner, 'migration-npm.json', 1, false);
+  assert.equal(safeResult.status, 'OVER_LIMIT');
+  assert.equal(safeResult.bytes, 550);
+  assert.equal(typeof safeResult.bytes, 'number');
+  assert.equal(safe.allocations, 0);
+  safe.consumed();
+
+  const largeSize = (1n << 53n) + 123n;
+  const large = fixture([root(), ls(stats({ dev: 0n, size: largeSize })), real()]);
+  const largeResult = await large.api.ownedFile(owner, 'migration-npm.json', 1, false);
+  assert.equal(largeResult.status, 'OVER_LIMIT');
+  assert.equal(largeResult.bytes, largeSize.toString());
+  assert.equal(large.allocations, 0);
   large.consumed();
 });
 
@@ -319,7 +398,7 @@ it.each([
 });
 
 it('refuses a fresh wx zero-device FD before writing or truncating', async () => {
-  const f = fixture([root(), ls(null), opened('wx', 'writer'), fs('writer', stats({ dev: 0 })), close('writer')]);
+  const f = fixture([root(), ls(null), opened('wx', 'writer'), fs('writer', stats({ dev: 0n })), close('writer')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body),
     'before-fd-join', 'before-fd-join', 'Evidence output changed before writing');
   assert(!f.calls.includes('writer.writeFile'));
@@ -327,10 +406,10 @@ it('refuses a fresh wx zero-device FD before writing or truncating', async () =>
 });
 
 it.each([
-  ['changed inode', stats({ dev: 0, ino: I + 1 })],
-  ['mtime-only change', stats({ dev: 0, mtimeMs: M + 1 })],
+  ['changed inode', stats({ dev: 0n, ino: I + 1n })],
+  ['mtime-only sub-ms change', stats({ dev: 0n, mtimeNs: MNS + 1n })],
 ])('refuses a prewrite pathname %s and closes both handles without mutation', async (_label, beforeWrite) => {
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([root(), ls(before), real(), opened('r', 'anchor'), fs('anchor', stats()),
     opened('r+', 'writer'), fs('writer', stats()), ls(beforeWrite), close('anchor'), close('writer')]);
   await refuses(f, () => f.api.ownedWrite(owner, 'migration-npm.json', body),
@@ -340,7 +419,7 @@ it.each([
 });
 
 it('refuses an escaped prewrite realpath and closes both handles without mutation', async () => {
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([root(), ls(before), real(), opened('r', 'anchor'), fs('anchor', stats()),
     opened('r+', 'writer'), fs('writer', stats()), ls(before), real('/outside-owned/migration-npm.json'),
     close('anchor'), close('writer')]);
@@ -352,7 +431,7 @@ it('refuses an escaped prewrite realpath and closes both handles without mutatio
 
 it.each(['anchor-open', 'anchor-stat', 'writer-open'])('retains the actual %s error and closes only acquired prewrite handles', async phase => {
   const failure = new Error(`synthetic ${phase} failure`);
-  const steps = [root(), ls(stats({ dev: 0 })), real()];
+  const steps = [root(), ls(stats({ dev: 0n })), real()];
   if (phase === 'anchor-open') steps.push(op('open:r', undefined, failure));
   else {
     steps.push(opened('r', 'anchor'));
@@ -382,7 +461,7 @@ it('attempts both failing closes and retains the first close error without a pri
 
 it('preserves a reopen-stat primary across two failing close attempts', async () => {
   const primary = new Error('synthetic reopen stat primary');
-  const before = stats({ dev: 0 });
+  const before = stats({ dev: 0n });
   const f = fixture([...readHead(), read('read1', body), read('read1', Buffer.alloc(0)), fs('read1', stats()),
     ls(before), real(), opened('r', 'read2'), op('read2.stat', undefined, primary),
     close('read1', new Error('synthetic close one')), close('read2', new Error('synthetic close two'))]);

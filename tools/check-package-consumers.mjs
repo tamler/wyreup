@@ -40,19 +40,21 @@ function contained(owner, candidate) {
 }
 
 function sameFile(before, after) {
-  return before.dev === after.dev && before.ino === after.ino && before.size === after.size && before.mtimeMs === after.mtimeMs && after.isFile();
+  return before.dev === after.dev && before.ino === after.ino && before.size === after.size
+    && before.mtimeNs === after.mtimeNs && after.isFile();
 }
 
 function writtenFileMatches(identity, observed, size) {
   return identity.dev === observed.dev && identity.ino === observed.ino && identity.isFile() && observed.isFile()
-    && !observed.isSymbolicLink() && observed.size === size;
+    && !observed.isSymbolicLink() && typeof size === 'bigint' && size >= 0n && observed.size === size;
 }
 
 function evidenceDiagnostic(context) {
   try {
+    const diagnosticNumber = value => typeof value === 'bigint' ? value.toString() : Number.isFinite(value) ? value : null;
     const stats = Object.fromEntries(Object.entries(context.stats).map(([key, value]) => [key, value ? {
-      dev: Number.isFinite(value.dev) ? value.dev : null, ino: Number.isFinite(value.ino) ? value.ino : null,
-      size: Number.isFinite(value.size) ? value.size : null, mtimeMs: Number.isFinite(value.mtimeMs) ? value.mtimeMs : null,
+      dev: diagnosticNumber(value.dev), ino: diagnosticNumber(value.ino),
+      size: diagnosticNumber(value.size), mtimeMs: diagnosticNumber(value.mtimeMs), mtimeNs: diagnosticNumber(value.mtimeNs),
       regular: value.isFile(), link: value.isSymbolicLink(),
     } : null]));
     const encoded = JSON.stringify({ output: context.output, operation: context.operation, phase: context.phase,
@@ -84,22 +86,23 @@ function matchesEvidence(actual, bytes) {
 
 function descriptorIdentityValid(value) {
   const dev = value.dev, ino = value.ino;
-  return value.isFile() && (process.platform !== 'win32' ||
-    (Number.isSafeInteger(dev) && dev > 0 && Number.isSafeInteger(ino) && ino > 0));
+  return value.isFile() && typeof dev === 'bigint' && dev >= 0n
+    && typeof ino === 'bigint' && ino > 0n && typeof value.size === 'bigint' && value.size >= 0n
+    && typeof value.mtimeNs === 'bigint' && (process.platform !== 'win32' || dev > 0n);
 }
 
 function pathFileCandidate(observed, descriptor) {
   const dev = descriptor.dev, ino = descriptor.ino;
   if (!descriptorIdentityValid(descriptor) || !observed.isFile() || observed.isSymbolicLink()
-    || !Number.isSafeInteger(observed.dev) || observed.dev < 0
-    || !Number.isSafeInteger(observed.ino) || observed.ino <= 0
-    || !Number.isSafeInteger(observed.size) || observed.size < 0
-    || !Number.isFinite(observed.mtimeMs) || !Number.isFinite(descriptor.mtimeMs)) return false;
-  if (observed.dev === 0) {
+    || typeof observed.dev !== 'bigint' || observed.dev < 0n
+    || typeof observed.ino !== 'bigint' || observed.ino <= 0n
+    || typeof observed.size !== 'bigint' || observed.size < 0n
+    || typeof observed.mtimeNs !== 'bigint') return false;
+  if (observed.dev === 0n) {
     // This is only metadata eligibility; independent FD joins remain mandatory.
-    return process.platform === 'win32' && Number.isSafeInteger(dev) && dev > 0
-      && Number.isSafeInteger(ino) && ino > 0 && observed.ino === ino
-      && observed.size === descriptor.size && observed.mtimeMs === descriptor.mtimeMs;
+    return process.platform === 'win32' && typeof dev === 'bigint' && dev > 0n
+      && typeof ino === 'bigint' && ino > 0n && observed.ino === ino
+      && observed.size === descriptor.size && observed.mtimeNs === descriptor.mtimeNs;
   }
   return sameFile(descriptor, observed);
 }
@@ -142,7 +145,7 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
     if (context) context.phase = 'owned-path';
     evidenceGuard(context, contained(owned, target), 'Evidence input escaped its owned root');
     if (context) context.phase = 'before-lstat';
-    const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
+    const before = await lstat(target, { bigint: true }).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
     if (context) { context.stats.before = before; context.absent = !before; }
     if (!before) {
       evidenceGuard(context, !expected, 'Expected evidence readback is absent');
@@ -156,16 +159,21 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
       context.phase = 'expected-path-join';
       evidenceGuard(context, pathFileCandidate(before, expected), 'Evidence readback differs from its closed writer');
     }
-    if (context) { context.phase = 'size-bound'; context.overLimit = before.size > maximum; }
+    if (context) context.phase = 'size-bound';
+    evidenceGuard(context, typeof before.size === 'bigint' && before.size >= 0n
+      && Number.isSafeInteger(maximum) && maximum >= 0, 'Evidence input size metadata or bound is invalid');
+    if (context) context.overLimit = before.size > maximum;
     if (before.size > maximum) {
       evidenceGuard(context, !expected, 'Expected evidence readback exceeds its bound');
-      return { status: 'OVER_LIMIT', complete: false, bytes: before.size, maximum };
+      return { status: 'OVER_LIMIT', complete: false,
+        bytes: before.size <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(before.size) : before.size.toString(), maximum };
     }
+    const boundedSize = Number(before.size);
     if (context) context.phase = 'open';
     handle = await open(target, 'r');
     context.owners.push({ handle, attempted: false, closed: false });
     if (context) { context.close = 'OPEN'; context.phase = 'opened-stat'; }
-    const opened = await handle.stat();
+    const opened = await handle.stat({ bigint: true });
     if (expected) {
       context.stats.opened = opened;
       context.phase = 'expected-fd-join';
@@ -174,7 +182,7 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
     }
     if (context) { context.stats.opened = opened; context.phase = 'path-fd-join'; }
     evidenceGuard(context, pathFileCandidate(before, opened), 'Evidence input changed before reading');
-    const buffer = Buffer.alloc(before.size + 1);
+    const buffer = Buffer.alloc(boundedSize + 1);
     let length = 0;
     if (context) context.phase = 'read';
     while (length < buffer.length) {
@@ -183,14 +191,14 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
       length += read.bytesRead;
     }
     if (context) context.phase = 'read-eof';
-    evidenceGuard(context, length === before.size, 'Evidence input size changed while reading');
+    evidenceGuard(context, length === boundedSize, 'Evidence input size changed while reading');
     if (context) context.phase = 'after-fd-stat';
-    const afterFd = await handle.stat();
+    const afterFd = await handle.stat({ bigint: true });
     if (context) { context.stats.afterFd = afterFd; context.phase = 'after-fd-join'; }
     evidenceGuard(context, descriptorIdentityValid(opened) && descriptorIdentityValid(afterFd)
       && sameFile(opened, afterFd), 'Evidence input FD changed while reading');
     if (context) context.phase = 'after-path-lstat';
-    const afterPath = await lstat(target);
+    const afterPath = await lstat(target, { bigint: true });
     if (context) { context.stats.afterPath = afterPath; context.phase = 'after-path-join'; }
     evidenceGuard(context, sameFile(before, afterPath) && !afterPath.isSymbolicLink(), 'Evidence input path changed while reading');
     if (context) context.phase = 'after-realpath';
@@ -199,14 +207,14 @@ async function ownedFile(owner, relative, maximum, retain = true, expected) {
     const reopened = await open(target, 'r');
     context.owners.push({ handle: reopened, attempted: false, closed: false });
     context.phase = 'reopened-stat';
-    const reopenedStat = await reopened.stat();
+    const reopenedStat = await reopened.stat({ bigint: true });
     context.stats.reopened = reopenedStat;
     context.phase = 'reopened-fd-join';
     // Without expected, this proves FD stability across reopen, not a dev0 path volume.
     evidenceGuard(context, descriptorIdentityValid(afterFd) && descriptorIdentityValid(reopenedStat)
       && sameFile(afterFd, reopenedStat), 'Evidence input FD changed while reopening');
     context.phase = 'reopened-path-lstat';
-    const reopenedPath = await lstat(target);
+    const reopenedPath = await lstat(target, { bigint: true });
     context.stats.reopenedPath = reopenedPath;
     context.phase = 'reopened-path-join';
     evidenceGuard(context, sameFile(afterPath, reopenedPath) && pathFileCandidate(reopenedPath, reopenedStat),
@@ -237,7 +245,7 @@ async function ownedWrite(owner, name, bytes) {
     owned = await realpath(owner);
     target = path.join(owned, name);
     context.phase = 'before-lstat';
-    const before = await lstat(target).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
+    const before = await lstat(target, { bigint: true }).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
     context.stats.before = before;
     if (before) {
       context.phase = 'before-type';
@@ -245,13 +253,13 @@ async function ownedWrite(owner, name, bytes) {
       context.phase = 'before-realpath';
       evidenceGuard(context, contained(owned, await realpath(target)), 'Evidence output escaped its owned root');
     }
-    if (before && process.platform === 'win32' && before.dev === 0) {
+    if (before && process.platform === 'win32' && before.dev === 0n) {
       context.phase = 'anchor-open';
       anchor = await open(target, 'r');
       context.owners.push({ handle: anchor, attempted: false, closed: false });
       context.close = 'OPEN';
       context.phase = 'anchor-stat';
-      anchorStat = await anchor.stat();
+      anchorStat = await anchor.stat({ bigint: true });
       context.stats.anchor = anchorStat;
       context.phase = 'anchor-path-join';
       evidenceGuard(context, pathFileCandidate(before, anchorStat), 'Evidence output changed before writing');
@@ -261,7 +269,7 @@ async function ownedWrite(owner, name, bytes) {
     context.owners.push({ handle, attempted: false, closed: false });
     context.close = 'OPEN';
     context.phase = 'opened-stat';
-    const opened = await handle.stat();
+    const opened = await handle.stat({ bigint: true });
     context.stats.opened = opened;
     context.phase = 'before-fd-join';
     evidenceGuard(context, descriptorIdentityValid(opened) && (anchorStat
@@ -269,7 +277,7 @@ async function ownedWrite(owner, name, bytes) {
       : before ? pathFileCandidate(before, opened) : opened.isFile()), 'Evidence output changed before writing');
     if (anchor) {
       context.phase = 'before-write-path-lstat';
-      const beforeWrite = await lstat(target);
+      const beforeWrite = await lstat(target, { bigint: true });
       context.stats.beforeWrite = beforeWrite;
       context.phase = 'before-write-path-join';
       evidenceGuard(context, sameFile(before, beforeWrite) && pathFileCandidate(beforeWrite, opened),
@@ -283,11 +291,11 @@ async function ownedWrite(owner, name, bytes) {
     context.phase = 'truncate';
     await handle.truncate(bytes.length);
     context.phase = 'written-stat';
-    written = await handle.stat();
+    written = await handle.stat({ bigint: true });
     context.stats.written = written;
     context.phase = 'written-identity-size';
     evidenceGuard(context, descriptorIdentityValid(opened) && descriptorIdentityValid(written)
-      && writtenFileMatches(opened, written, bytes.length), 'Evidence output FD changed while writing');
+      && writtenFileMatches(opened, written, BigInt(bytes.length)), 'Evidence output FD changed while writing');
   } catch (error) { primary = error; emitEvidenceDiagnostic(context); }
   if (handle && context.owners.every(item => item.handle === handle || item.attempted))
     await closeEvidenceHandle(handle, context, primary);
@@ -297,7 +305,7 @@ async function ownedWrite(owner, name, bytes) {
   let verification;
   try {
     context.phase = 'post-close-lstat';
-    const postClose = await lstat(target);
+    const postClose = await lstat(target, { bigint: true });
     context.stats.postClose = postClose;
     context.phase = 'post-close-type';
     evidenceGuard(context, postClose.isFile() && !postClose.isSymbolicLink(), 'Evidence output path differs from its closed writer');
@@ -308,15 +316,15 @@ async function ownedWrite(owner, name, bytes) {
     context.owners.push({ handle: verification, attempted: false, closed: false });
     context.close = 'OPEN';
     context.phase = 'post-close-opened-stat';
-    const reopened = await verification.stat();
+    const reopened = await verification.stat({ bigint: true });
     context.stats.reopened = reopened;
     context.phase = 'post-close-fd-join';
     evidenceGuard(context, descriptorIdentityValid(written) && descriptorIdentityValid(reopened)
-      && writtenFileMatches(written, reopened, bytes.length), 'Evidence output path differs from its closed writer');
+      && writtenFileMatches(written, reopened, BigInt(bytes.length)), 'Evidence output path differs from its closed writer');
     context.phase = 'post-close-path-candidate';
     evidenceGuard(context, pathFileCandidate(postClose, reopened), 'Evidence output path differs from its closed writer');
     context.phase = 'post-close-path-lstat';
-    const finalPath = await lstat(target);
+    const finalPath = await lstat(target, { bigint: true });
     context.stats.finalPath = finalPath;
     context.phase = 'post-close-path-join';
     evidenceGuard(context, sameFile(postClose, finalPath) && pathFileCandidate(finalPath, reopened),
@@ -690,14 +698,14 @@ async function selfControls(scratch) {
   const encodedFailureManifestBytes = Buffer.byteLength(JSON.stringify(failureManifest, null, 2));
   assert(encodedFailureManifestBytes <= limits.manifest, 'Encoded self-control failure exceeds manifest bound');
   assert.equal(failureManifest.selfControls.error.messageEvidence.complete, false);
-  const writtenMetadata = { dev: 1, ino: 2, size: 8, mtimeMs: 10, isFile: () => true, isSymbolicLink: () => false };
-  const closedMetadata = { ...writtenMetadata, mtimeMs: 11 };
-  assert(writtenFileMatches(writtenMetadata, closedMetadata, 8), 'Write transition must allow changed mtime before the post-close baseline');
+  const writtenMetadata = { dev: 1n, ino: 2n, size: 8n, mtimeNs: 10_000_000n, mtimeMs: 10, isFile: () => true, isSymbolicLink: () => false };
+  const closedMetadata = { ...writtenMetadata, mtimeNs: 11_000_000n, mtimeMs: 11 };
+  assert(writtenFileMatches(writtenMetadata, closedMetadata, 8n), 'Write transition must allow changed mtime before the post-close baseline');
   assert(!sameFile(writtenMetadata, closedMetadata), 'Stable reads must still refuse changed mtime');
   for (const changed of [
-    { ...writtenMetadata, dev: 3 }, { ...writtenMetadata, ino: 3 }, { ...writtenMetadata, size: 9 },
+    { ...writtenMetadata, dev: 3n }, { ...writtenMetadata, ino: 3n }, { ...writtenMetadata, size: 9n },
     { ...writtenMetadata, isFile: () => false }, { ...writtenMetadata, isSymbolicLink: () => true },
-  ]) assert(!writtenFileMatches(writtenMetadata, changed, 8), 'Writer identity/type/size predicate accepted a mutation');
+  ]) assert(!writtenFileMatches(writtenMetadata, changed, 8n), 'Writer identity/type/size predicate accepted a mutation');
   assert.equal(evidence.normalize(lexicalScratch), '<scratch>');
   const ioName = 'migration-npm.json';
   const longBytes = Buffer.from('12345678');
@@ -746,26 +754,26 @@ async function selfControls(scratch) {
   const malformedStatError = new Error('synthetic metadata accessor failure');
   const malformedBaseline = { get dev() { throw malformedStatError; } };
   await assert.rejects(ownedFile(directory, ioName, limits.policy, true, malformedBaseline), error => error === malformedStatError);
-  const modifiedTime = new Date(shortBaseline.mtimeMs + 2000);
+  const modifiedTime = new Date(Number(shortBaseline.mtimeNs / 1_000_000n) + 2000);
   await utimes(path.join(directory, ioName), modifiedTime, modifiedTime);
-  const retimed = await lstat(path.join(directory, ioName));
+  const retimed = await lstat(path.join(directory, ioName), { bigint: true });
   assert.equal(retimed.ino, shortBaseline.ino);
-  assert.notEqual(retimed.mtimeMs, shortBaseline.mtimeMs);
+  assert.notEqual(retimed.mtimeNs, shortBaseline.mtimeNs);
   await assert.rejects(ownedFile(directory, ioName, limits.policy, true, shortBaseline), /differs from its closed writer/);
   const replacementBaseline = await ownedWrite(directory, ioName, shortBytes);
   const replacement = path.join(directory, 'replacement-data');
   await writeFile(replacement, shortBytes);
-  const replacementStat = await lstat(replacement);
+  const replacementStat = await lstat(replacement, { bigint: true });
   assert(replacementStat.ino !== replacementBaseline.ino, 'Replacement fixture lacks distinguishable inode identity');
   await rename(replacement, path.join(directory, ioName));
   await assert.rejects(ownedFile(directory, ioName, limits.policy, true, replacementBaseline), /differs from its closed writer/);
   await mkdir(path.join(directory, 'run-manifest.json'));
   await assert.rejects(ownedWrite(directory, 'run-manifest.json', shortBytes), /nonlink regular file/);
   const diagnosticContext = { output: ioName, operation: 'readback', phase: 'expected-path-join', close: 'NOT_OPENED',
-    stats: { expected: writtenMetadata, before: { ...writtenMetadata, ino: 3 } }, checks: { 'expected-path-join': false } };
+    stats: { expected: writtenMetadata, before: { ...writtenMetadata, ino: 3n } }, checks: { 'expected-path-join': false } };
   const diagnostic = evidenceDiagnostic(diagnosticContext);
   assert(Buffer.byteLength(diagnostic) <= 4096);
-  assert.equal(JSON.parse(diagnostic).stats.before.ino, 3);
+  assert.equal(JSON.parse(diagnostic).stats.before.ino, '3');
   assert.equal(JSON.parse(evidenceDiagnostic({ ...diagnosticContext, stats: { malformed: malformedBaseline } })).diagnostic, 'UNAVAILABLE_OR_OVER_LIMIT');
   const readError = new Error('synthetic read failure');
   const closeError = new Error('synthetic close failure');

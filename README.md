@@ -203,6 +203,12 @@ Run just the core library tests:
 pnpm --filter @wyreup/core test
 ```
 
+Run the package-consumer evidence identity regression tests, including their real-filesystem check:
+
+```bash
+pnpm exec vitest run tools/test/consumer-evidence-identity.test.mjs
+```
+
 Scaffold a new tool:
 
 ```bash
