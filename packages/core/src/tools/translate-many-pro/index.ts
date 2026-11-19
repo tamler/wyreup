@@ -35,7 +35,7 @@ export const translateManyPro: ToolModule<TranslateManyProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-sentences', 'word-counter', 'text-to-speech-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter'],
 
   defaults: defaultTranslateManyProParams,
   paramSchema: {

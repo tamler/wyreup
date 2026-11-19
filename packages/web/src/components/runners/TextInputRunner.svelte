@@ -30,6 +30,7 @@
   let resultBlob: Blob | null = null;
   let resultText = '';
   let resultMime = '';
+  let audioUrl = '';
   let tablePreview: MarkdownTableView | null = null;
   let tablePage = 0;
   let generation = 0;
@@ -95,6 +96,7 @@
   }
   $: canRun = !preloadReading && (inputText.trim().length > 0 || allowsEmptyText(tool.id, params)) && state !== 'running';
   $: isHtml = resultMime === 'text/html';
+  $: isAudio = resultMime === 'audio/mpeg';
   $: isJson =
     resultMime === 'application/json' || resultMime.endsWith('+json');
   // Strip <script>, event handlers, javascript: URLs before {@html}.
@@ -137,11 +139,12 @@
       const blob = blobs[0];
       if (!blob) throw new Error('No output produced.');
 
-      const output = await blob.text();
+      const output = blob.type === 'audio/mpeg' ? '' : await blob.text();
       if (disposed || generation !== own) return;
       const prepared = tool.id === 'markdown-to-html' ? prepareMarkdownPreview(output) : { blob, text: output };
       resultBlob = prepared.blob;
       resultMime = prepared.blob.type;
+      if (resultMime === 'audio/mpeg') { audioUrl = URL.createObjectURL(resultBlob); urls.add(audioUrl); }
       resultText = isJsonMime(prepared.blob.type) ? prettifyJson(prepared.text) : prepared.text;
       tablePreview = preparedTable;
       markToolUsed(tool.id);
@@ -182,6 +185,7 @@
     errorMsg = '';
     resultText = '';
     resultBlob = null;
+    audioUrl = '';
     tablePreview = null;
     tablePage = 0;
   }
@@ -234,7 +238,7 @@
     if (!resultBlob) return;
     const a = document.createElement('a');
     const url = URL.createObjectURL(resultBlob); urls.add(url); a.href = url;
-    const ext = isJson ? 'json' : isHtml ? 'html' : 'txt';
+    const ext = isAudio ? 'mp3' : isJson ? 'json' : isHtml ? 'html' : 'txt';
     a.download = buildDownloadName(undefined, tool.id, ext);
     a.click();
     const timer = setTimeout(() => { URL.revokeObjectURL(url); urls.delete(url); timers.delete(timer); }, 1000); timers.add(timer);
@@ -315,10 +319,10 @@
         <div class="panel-header">
           <span class="panel-label">Result</span>
           <div class="result-actions">
-            <button class="btn-secondary" on:click={copyResult} type="button">
+            {#if !isAudio}<button class="btn-secondary" on:click={copyResult} type="button">
               {copied ? 'Copied' : 'Copy'}
-            </button>
-            {#if speakSupported && !isHtml && !isJson}
+            </button>{/if}
+            {#if speakSupported && !isHtml && !isJson && !isAudio}
               <button class="btn-secondary" on:click={() => speak(resultText)} type="button" aria-label={speaking ? 'Stop speaking' : 'Speak this text aloud'}>
                 {speaking ? 'Stop' : 'Speak'}
               </button>
@@ -327,7 +331,7 @@
           </div>
         </div>
         <div class="panel-divider"></div>
-        <p>{resultBlob.size.toLocaleString()} output bytes{resultText === '' ? ' — Empty output.' : ''}</p>
+        <p>{resultBlob.size.toLocaleString()} output bytes{!isAudio && resultText === '' ? ' — Empty output.' : ''}</p>
         {#if errorMsg}<p role="alert">{errorMsg}</p>{/if}
 
         {#if tablePreview}
@@ -339,7 +343,9 @@
           </section>
         {/if}
 
-        {#if isHtml}
+        {#if isAudio}
+          <audio controls src={audioUrl} aria-label="Audio result"></audio>
+        {:else if isHtml}
           <div class="html-viewer" role="region" aria-label="HTML result">
             {@html safeHtml}
           </div>
@@ -353,7 +359,7 @@
           <ChainSection
             resultBlob={resultBlob}
             sourceToolId={tool.id}
-            resultName={buildDownloadName(undefined, tool.id, isJson ? 'json' : isHtml ? 'html' : 'txt')}
+            resultName={buildDownloadName(undefined, tool.id, isAudio ? 'mp3' : isJson ? 'json' : isHtml ? 'html' : 'txt')}
           />
         {/if}
       </div>

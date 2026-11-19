@@ -743,7 +743,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         id: 'deep-analysis-pro',
-        why: 'For a reasoned, step-by-step answer on extracted text, switch to the reasoning model.',
+        why: 'Ask a focused question about the extracted text with Deep Analysis.',
       },
     ],
   },
@@ -2322,35 +2322,35 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'deep-analysis-pro': {
     intro:
-      "Deep Analysis runs your document through a hosted DeepSeek R1 reasoning model that answers a specific question with explicit step-by-step reasoning. Reach for it when a quick summary won't cut it — contracts, legal text, code review, or root-cause analysis from logs where you need the model to show its work. It's a Pro tool using 3 credits per run.",
+      'Deep Analysis sends your document and question to a hosted model for an answer. Check its answer and any cited passages against the source. It uses 3 credits per run.',
     useCases: [
-      'Ask whether a contract clause actually limits liability, and see the reasoning behind the answer',
+      'Ask about a contract clause and check the cited passages',
       'Walk through a stack of log lines to identify the most likely root cause of an incident',
-      'Have it reason about whether a code snippet has a concurrency bug, step by step',
+      'Ask about a possible concurrency bug in a code snippet',
       'Analyze a legal notice to determine your obligations and the deadlines that apply',
       'Pressure-test an argument in a memo by asking the model to find the weakest assumption',
       'Compare two policy passages and reason out where they conflict',
     ],
     faq: [
       {
-        q: "What's different about a reasoning model here?",
-        a: 'DeepSeek R1 works through the problem with explicit step-by-step reasoning rather than jumping to a one-line answer, which suits contracts, legal text, code review, and root-cause analysis where the chain of logic matters.',
+        q: 'How should I use the answer?',
+        a: 'The model answers a question using the supplied text. Its answer can be wrong, so verify important details against the source.',
       },
       {
         q: 'What does it return?',
-        a: 'JSON containing the answer along with the reasoning the model used to reach it, given the document and your question.',
+        a: 'JSON containing an answer and a reasoning field, which may be empty.',
       },
       {
         q: 'What do I provide?',
-        a: 'Plain text — your document or log excerpt — plus the specific question you want answered.',
+        a: 'Plain text up to 34,000 UTF-8 bytes and a question up to 1,500 bytes, including their normalized forms.',
       },
       {
         q: 'Is the document sent to a server?',
-        a: "Yes. It's a Pro tool that sends your text to the hosted DeepSeek R1 model for analysis. It's processed for your request and the result is returned to you.",
+        a: 'Yes. This Pro tool sends your text to a hosted model for analysis.',
       },
       {
         q: 'Why does it cost more than the summarize tools?',
-        a: 'It uses 3 credits per run because reasoning models do substantially more work per query than a straight summarizer. Use it when the depth of analysis justifies the cost.',
+        a: 'Deep Analysis uses 3 credits per run.',
       },
     ],
     alsoTry: [
@@ -3069,7 +3069,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How long can the input be?',
-        a: 'It handles typical emails, paragraphs, and short documents well. For very long pieces, correcting section by section keeps results sharp and cost predictable.',
+        a: 'Up to 4,000 UTF-8 bytes, including the normalized form. Split longer text into sections.',
       },
     ],
     alsoTry: [
@@ -8105,10 +8105,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         id: 'text-summarize-pro',
         why: 'Shorten a long passage first, then set the tone on the trimmed version.',
       },
-      {
-        id: 'text-to-speech-pro',
-        why: 'Hear how the rewritten message sounds before you send it.',
-      },
     ],
   },
   'roman-numeral': {
@@ -9948,14 +9944,12 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'text-to-speech-pro': {
     intro:
-      "Text to Speech turns written text into a natural-sounding MP3 in seconds using a hosted neural TTS model. Reach for it when you want to listen to something instead of read it, or to add a voiceover to content you've produced with other tools. It's a Pro tool that runs on hosted infrastructure and uses 2 credits per run.",
+      'Text to Speech sends up to 500 UTF-8 bytes to a hosted model and returns an MP3. It supports English and Spanish; French, Chinese, Japanese and Korean are currently unavailable. It uses 2 credits per run.',
     useCases: [
-      'Chain it after Summarize to turn a long article into a short audio briefing for your commute',
-      'Voice a translated paragraph from Translate so you can hear how a phrase sounds in another language',
-      "Convert OCR'd text from a scanned page into spoken audio for hands-free review",
-      'Generate narration for a slideshow or product demo from a written script',
-      'Produce an MP3 of redacted notes so a teammate can listen without seeing the original document',
-      'Create an audio version of a blog post for accessibility or a podcast feed',
+      'Listen to a short text excerpt',
+      'Hear a short English or Spanish phrase',
+      'Generate a short audio clip from selected text',
+      'Create a short audio clip for accessibility',
     ],
     faq: [
       {
@@ -9972,25 +9966,25 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'What can feed into it?',
-        a: "Any plain text. It's designed to chain after tools that output text — Summarize, Translate, OCR, or Redact — so you can get audio out of nearly any pipeline.",
+        a: 'Plain text up to 500 UTF-8 bytes. Longer text needs to be split into separate runs.',
       },
       {
         q: 'How long can the text be?',
-        a: 'It handles typical paragraphs and articles comfortably. Very long inputs are best split into sections, both for cost control and to keep each clip a manageable length.',
+        a: 'Up to 500 UTF-8 bytes per run, including the normalized form of the input.',
       },
     ],
     alsoTry: [
       {
         id: 'text-summarize-pro',
-        why: 'Condense a long document first, then speak the summary instead of the whole thing.',
+        why: 'Summarize text before selecting an excerpt of at most 500 bytes to speak.',
       },
       {
         id: 'text-translate-pro',
-        why: 'Translate text, then hear the result spoken aloud in the target language.',
+        why: 'Translate text, then select a short English or Spanish excerpt to speak.',
       },
       {
         id: 'transcribe-and-translate',
-        why: 'Goes the other direction — audio in, translated text out — pairing naturally with a TTS flow.',
+        why: 'Transcribe and translate audio into text.',
       },
     ],
   },
@@ -10523,10 +10517,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'text-translate-pro',
         why: 'Switch to the Llama-class translator when phrasing nuance matters more than speed and cost.',
-      },
-      {
-        id: 'text-to-speech-pro',
-        why: 'Hear the translation spoken aloud once you have the target-language text.',
       },
       {
         id: 'fix-grammar-pro',

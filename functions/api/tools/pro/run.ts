@@ -13,6 +13,8 @@ import { reserveProCredits } from '../../../_lib/limits';
 import { priceFor } from '../../../_lib/pricing';
 import { prepareProRun, type PreparedProRun } from '../../../_lib/runners';
 import { readJsonObject, RequestBodyError } from '../../../_lib/request';
+import { ProInputError } from '../../../../packages/core/src/lib/pro-migration-limits';
+import { OutputTruncatedError } from '../../../_lib/providers/new-text-models';
 
 // Largest legitimate input is a 25 MB audio file (~33.3 MB once base64-
 // encoded); 36 MB leaves headroom for the JSON envelope. Rejecting early
@@ -46,7 +48,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let dispatch: PreparedProRun;
   try {
     dispatch = prepareProRun(toolId, input, env);
-  } catch {
+  } catch (error) {
+    if (error instanceof ProInputError) return json({ error: error.message, code: error.code }, 400);
     return json({ error: 'Invalid tool input' }, 400);
   }
 
@@ -136,6 +139,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       spendId,
       err: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
     });
+    if (err instanceof OutputTruncatedError) {
+      return json({ error: 'The model output was truncated. Try shorter input.', code: 'output_truncated', requestId: spendId }, 502);
+    }
     return json(
       {
         error: 'Run failed',

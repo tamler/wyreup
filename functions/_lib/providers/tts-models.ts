@@ -1,54 +1,54 @@
-// TTS provider wrapper.
-//
-// One file, one vendor — replace the body when switching backends. Public
-// signature (`synthesize`) is what the rest of the code imports, so swaps
-// don't ripple beyond this module.
-//
-// Current backend: Cloudflare Workers AI (melotts). The env.AI binding
-// ships with Pages Functions — no token needed. Premium voice (Deepgram
-// aura-2) lands here too when Wave 2 ships.
-
 import type { Env } from '../env';
-import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
+import { INFERENCE_TIMEOUTS, withTimeout } from '../timeout';
+import { boundedText, TTS_MAX_BYTES, ttsLanguage } from '../../../packages/core/src/lib/pro-migration-limits';
 
-const TTS_MODEL = '@cf/myshell-ai/melotts';
+export type TtsLang = 'EN' | 'ES';
+export const TTS_MAX_AUDIO_BYTES = 8 * 1024 * 1024;
 
-// Melotts language codes. The model accepts a free-form `language` param
-// and emits MP3 bytes; we keep the surface narrow on purpose — only the
-// languages we've validated round-trip.
-export type TtsLang = 'EN' | 'ES' | 'FR' | 'ZH' | 'JP' | 'KR';
-
-export interface SynthesizeArgs {
-  text: string;
-  language?: TtsLang;
+export function validateTts(text: string, language: string): asserts language is TtsLang {
+  ttsLanguage(language);
+  boundedText(text, TTS_MAX_BYTES, 'Text to Speech input');
 }
 
-export interface SynthesizeResult {
-  contentType: 'audio/mpeg';
-  /** Base64-encoded MP3 bytes. */
-  base64: string;
-}
-
-// Cap text length so worst-case run still clears the 50% margin floor.
-// At melotts' $0.0002/audio-minute and ~150 wpm, 8k chars ≈ 8 minutes
-// ≈ $0.0016 — still >90% margin on a 2-credit ($0.050 net) run.
-export const TTS_MAX_CHARS = 8_000;
-
-export async function synthesize(env: Env, args: SynthesizeArgs): Promise<SynthesizeResult> {
-  if (args.text.length > TTS_MAX_CHARS) {
-    throw new Error(`text exceeds ${TTS_MAX_CHARS} characters`);
+export async function synthesize(env: Env, args: { text: string; language?: TtsLang }): Promise<{ contentType: 'audio/mpeg'; base64: string }> {
+  const language = args.language ?? 'EN';
+  validateTts(args.text, language);
+  const model = language === 'EN' ? '@cf/deepgram/aura-2-en' : '@cf/deepgram/aura-2-es';
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let expired = false;
+  const work = (async () => {
+    const res = await env.AI.run(model, { text: args.text, speaker: language === 'EN' ? 'luna' : 'aquila', encoding: 'mp3' });
+    if (!(res instanceof ReadableStream)) throw new Error('TTS model returned invalid audio');
+    if (expired) { void res.cancel().catch(() => {}); throw new Error('TTS timed out'); }
+    reader = (res as ReadableStream<Uint8Array>).getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (!(value instanceof Uint8Array)) throw new Error('TTS model returned invalid audio');
+        total += value.byteLength;
+        if (total > TTS_MAX_AUDIO_BYTES) throw new Error('TTS audio exceeds size limit');
+        chunks.push(value);
+      }
+    } catch (error) {
+      void reader.cancel(error).catch(() => {});
+      throw error;
+    }
+    if (!total) throw new Error('TTS model returned no audio');
+    let binary = '';
+    for (const chunk of chunks) {
+      for (let i = 0; i < chunk.length; i += 0x8000) binary += String.fromCharCode(...chunk.subarray(i, i + 0x8000));
+    }
+    return btoa(binary);
+  })();
+  try {
+    const base64 = await withTimeout(work, INFERENCE_TIMEOUTS.tts, 'tts');
+    return { contentType: 'audio/mpeg', base64 };
+  } catch (error) {
+    expired = true;
+    if (reader) void reader.cancel(error).catch(() => {});
+    throw error;
   }
-  const res = (await withTimeout(
-    env.AI.run(TTS_MODEL, {
-      prompt: args.text,
-      lang: args.language ?? 'EN',
-    }),
-    INFERENCE_TIMEOUTS.tts,
-    'tts-melotts',
-  )) as { audio?: string };
-  if (!res || typeof res.audio !== 'string') {
-    throw new Error('TTS model returned no audio');
-  }
-  // Workers AI returns base64-encoded MP3 already.
-  return { contentType: 'audio/mpeg', base64: res.audio };
 }

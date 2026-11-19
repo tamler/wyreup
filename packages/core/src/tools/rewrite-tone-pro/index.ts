@@ -31,7 +31,7 @@ export const rewriteTonePro: ToolModule<RewriteToneProParams> = {
   memoryEstimate: 'low',
   outputDisplay: 'prose',
 
-  chainSuggestions: ['text-sentences', 'word-counter', 'text-to-speech-pro'],
+  chainSuggestions: ['text-sentences', 'word-counter'],
 
   defaults: defaultRewriteToneProParams,
   paramSchema: {

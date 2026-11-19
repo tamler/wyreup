@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro } from '../../lib/pro-runner.js';
+import { boundedText, GRAMMAR_MAX_BYTES, ProInputError } from '../../lib/pro-migration-limits.js';
 
 export type FixGrammarProParams = Record<string, never>;
 
@@ -10,7 +11,7 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
   slug: 'fix-grammar-pro',
   name: 'Fix Grammar',
   description:
-    'Hosted LLM cleans up grammar, spelling, and punctuation while preserving your voice. Returns the corrected text only — no commentary, no explanation. Uses 1 credit per run.',
+    'Hosted LLM corrects grammar, spelling and punctuation. Input is limited to 4,000 UTF-8 bytes, including its normalized form. Uses 1 credit per run.',
   category: 'text',
   keywords: ['grammar', 'spelling', 'proofread', 'edit', 'copy-edit', 'pro'],
 
@@ -18,7 +19,7 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
     accept: ['text/plain'],
     min: 1,
     max: 1,
-    sizeLimit: 256 * 1024,
+    sizeLimit: GRAMMAR_MAX_BYTES,
   },
   output: { mime: 'text/plain' },
 
@@ -35,12 +36,23 @@ export const fixGrammarPro: ToolModule<FixGrammarProParams> = {
 
   async run(inputs: File[], _params: FixGrammarProParams, ctx: ToolRunContext): Promise<Blob> {
     if (inputs.length !== 1) throw new Error('fix-grammar-pro accepts exactly one input.');
-    const text = (await inputs[0]!.text()).trim();
-    if (!text) throw new Error('Empty input.');
+    const file = inputs[0]!;
+    if (file.size > GRAMMAR_MAX_BYTES) {
+      throw new ProInputError('input_too_long', `Grammar input exceeds the ${GRAMMAR_MAX_BYTES}-byte limit.`);
+    }
+    const bytes = await file.arrayBuffer();
+    let text: string;
+    try {
+      text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+    } catch {
+      throw new Error('Grammar input must be valid UTF-8.');
+    }
+    if (!text.trim()) throw new Error('Empty input.');
+    boundedText(text, GRAMMAR_MAX_BYTES, 'Grammar input');
 
     const result = await runPro<{ corrected: string }>(
       'fix-grammar-pro',
-      { text, fileName: inputs[0]!.name },
+      { text, fileName: file.name },
       ctx,
     );
 

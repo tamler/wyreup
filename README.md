@@ -117,6 +117,14 @@ Everything above is free, forever. **PRO** is an optional credit-based tier for 
 - Same API key works across **browser**, **CLI** (`wyreup login` once, then any Pro tool runs from the shell), and **MCP** (set `WYREUP_API_KEY` in your MCP server config to expose Pro tools to your agent). Buying credits in one surface funds usage on every surface.
 - Free tools and the anonymous experience are unchanged.
 
+### PRO input and account migration
+
+- Text-to-speech supports English and Spanish, with a 500-byte limit. Grammar accepts valid UTF-8 files up to 4,000 bytes and applies validated local grammar, spelling, and punctuation edits to the original text. Untouched text keeps its original spacing, line endings, and Unicode representation, including a leading byte-order mark. Invalid model edits fail and refund the run. Analysis accepts a 34,000-byte document and a 1,500-byte question. Each limit applies to both the original text and its NFKC-normalized UTF-8 form.
+- Signup and account recovery deliver API keys only by email; the browser does not receive the key. The email-bound key rollout disables existing keys and their sessions while retaining account data and credits. Existing CLI and MCP users must request a new emailed key and update their local credentials or `WYREUP_API_KEY` configuration.
+- Before deployment, complete authorized real-provider qualification and rehearse real inbox delivery plus recovered-admin access. See the [PRO model migration decisions](./docs/PRO-MODEL-MIGRATION-DECISIONS.md) and [email-bound auth migration release guide](./docs/auth-migration-release.md) for required checks. These notes do not indicate that the rollout is live or release-ready.
+- Grammar qualification remains on hold after the near-cap case lost sentences with both earlier prompts. The local-edit candidate has no real-provider qualification; no further Gemma calls are authorized.
+- All 12 original English/Spanish Aura REST fixtures passed response, MP3 decoding and deadline checks. Human audio acceptance, Workers AI binding behavior, actual billing and the recovery rehearsal remain unverified. These compatibility checks do not establish release readiness.
+
 See [wyreup.com/pro](https://wyreup.com/pro) for what's hosted, [wyreup.com/legal/pricing](https://wyreup.com/legal/pricing) for prices, and [`docs/pro-auth-spec.md`](./docs/pro-auth-spec.md) for the full spec (D1 schema, atomic credit reservation, webhook idempotency, sanitization, CSP).
 
 ---
@@ -168,7 +176,10 @@ See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the full design.
 
 ## Development
 
-Prerequisites: Node >= 22.13.0, pnpm 10.34.5.
+Use Node 24 and pnpm 10.34.5 for full-workspace development, as in web CI.
+The private web toolchain requires Node 22.23.4 or newer.
+The published core, MCP, and CLI packages support Node 22.13.0 and later.
+The package-consumer check assumes a caller-owned checkout, temporary directory, and trusted local package-manager executables.
 
 ```bash
 pnpm install
@@ -193,6 +204,12 @@ Run just the core library tests:
 
 ```bash
 pnpm --filter @wyreup/core test
+```
+
+Run the package-consumer evidence identity regression tests, including their real-filesystem check:
+
+```bash
+pnpm exec vitest run tools/test/consumer-evidence-identity.test.mjs
 ```
 
 Scaffold a new tool:

@@ -38,7 +38,6 @@ export const epubToText: ToolModule<EpubToTextParams> = {
     'word-counter',
     'text-keywords',
     'text-sentences',
-    'text-to-speech-pro',
   ],
   defaults: defaultEpubToTextParams,
   paramSchema: {

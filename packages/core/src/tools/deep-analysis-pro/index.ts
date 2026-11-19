@@ -1,5 +1,6 @@
 import type { ToolModule, ToolRunContext } from '../../types.js';
 import { runPro } from '../../lib/pro-runner.js';
+import { boundedText, ANALYSIS_TEXT_MAX_BYTES, ANALYSIS_QUESTION_MAX_BYTES } from '../../lib/pro-migration-limits.js';
 
 export interface DeepAnalysisProParams {
   question: string;
@@ -17,15 +18,15 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
   slug: 'deep-analysis-pro',
   name: 'Deep Analysis',
   description:
-    'Hosted DeepSeek R1 reasoning model — reads your document and answers a specific question with explicit step-by-step reasoning. Suited to contracts, legal text, code review, and root-cause analysis from logs. Uses 3 credits per run.',
+    'Hosted analysis answers a question about your document and may cite passages. Document limit: 34,000 UTF-8 bytes; question limit: 1,500 bytes, including normalized forms. Check the answer against the source. Uses 3 credits per run.',
   category: 'text',
-  keywords: ['analysis', 'reasoning', 'deepseek', 'r1', 'contract', 'legal', 'pro'],
+  keywords: ['analysis', 'reasoning', 'deepseek', 'contract', 'legal', 'pro'],
 
   input: {
     accept: ['text/plain'],
     min: 1,
     max: 1,
-    sizeLimit: 512 * 1024,
+    sizeLimit: ANALYSIS_TEXT_MAX_BYTES,
   },
   output: { mime: 'application/json' },
 
@@ -54,6 +55,8 @@ export const deepAnalysisPro: ToolModule<DeepAnalysisProParams> = {
     if (!text) throw new Error('Empty input.');
     const question = params.question?.trim();
     if (!question) throw new Error('Enter a question.');
+    boundedText(text, ANALYSIS_TEXT_MAX_BYTES, 'Document');
+    boundedText(question, ANALYSIS_QUESTION_MAX_BYTES, 'Question');
 
     const result = await runPro<AnalysisResult>(
       'deep-analysis-pro',

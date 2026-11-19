@@ -70,6 +70,62 @@ describe('Pro endpoint admission order', () => {
         .first(),
     ).toEqual({ n: 1 });
   });
+  it.each([
+    [{ toolId: 'text-to-speech-pro', input: { text: 'Bonjour', language: 'FR' } }, 'unsupported_language'],
+    [{ toolId: 'fix-grammar-pro', input: { text: 'a'.repeat(4001) } }, 'input_too_long'],
+  ])('returns an actionable safe rejection before reserving', async (body, code) => {
+    const response = await request(body);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code });
+    expect(vi.spyOn(env.AI, 'run')).not.toHaveBeenCalled();
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind != 'grant'").first()).toEqual({ n: 0 });
+  });
+
+  it('refunds an invalid replacement-model response', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(env.AI, 'run').mockResolvedValue({ choices: [{ finish_reason: 'length', message: { content: 'partial' } }] });
+    const response = await request({ toolId: 'fix-grammar-pro', input: { text: 'Example' } });
+    expect(response.status).toBe(502);
+    expect(await response.json()).toMatchObject({ code: 'output_truncated' });
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind='refund'").first()).toEqual({ n: 1 });
+  });
+  it('rejects ill-formed grammar input before writing any credit events', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const run = vi.spyOn(env.AI, 'run');
+    const response = await request({ toolId: 'fix-grammar-pro', input: { text: 'invalid \uD800 source' } });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid tool input' });
+    expect(run).not.toHaveBeenCalled();
+    expect(log).not.toHaveBeenCalled();
+    expect(await sqlite.db.prepare("SELECT COUNT(*) AS n FROM credit_events WHERE kind != 'grant'").first()).toEqual({ n: 0 });
+    expect(await sqlite.db.prepare('SELECT COUNT(*) AS n FROM run_history').first()).toEqual({ n: 0 });
+  });
+  it.each([
+    'private provider text',
+    '[["", "absent source", "private provider text", "replacement"]]',
+    '[["text ", "€", " end", ""]]',
+    JSON.stringify([['private ', 'input', ' text', 'input\u2028']]),
+  ])('refunds invalid grammar edits and logs a content-free error (case %#)', async (content) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const run = vi.spyOn(env.AI, 'run').mockResolvedValue({ choices: [{ finish_reason: 'stop', message: { content } }] });
+    const response = await request({ toolId: 'fix-grammar-pro', input: { text: 'private input text € end' } });
+    expect(response.status).toBe(502);
+    const body = await response.json() as { requestId: string };
+    expect(typeof body.requestId).toBe('string');
+    expect(body).toEqual({ error: 'Run failed', requestId: body.requestId });
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith('runPro failed', {
+      toolId: 'fix-grammar-pro',
+      userId: 'user',
+      spendId: body.requestId,
+      err: 'Error: Grammar model returned invalid edits',
+    });
+    expect(await sqlite.db.prepare(
+      "SELECT spend.amount AS spent, refund.amount AS refunded FROM credit_events spend JOIN credit_events refund ON refund.refund_of = spend.id WHERE spend.id = ? AND spend.kind = 'spend' AND refund.kind = 'refund'",
+    ).bind(body.requestId).all()).toMatchObject({ results: [{ spent: -1, refunded: 1 }] });
+    expect(await sqlite.db.prepare('SELECT COUNT(*) AS n FROM run_history').first()).toEqual({ n: 0 });
+  });
   it('five provider failures refund once each and prevent further dispatch', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(env.AI, 'run').mockRejectedValue(new Error('provider failure'));
