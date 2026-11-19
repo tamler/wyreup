@@ -1,5 +1,15 @@
 # @wyreup/core
 
+## 3.0.0
+
+### Major Changes
+
+- deeadbd: Replace retiring hosted analysis, grammar and speech models. Speech now supports English and Spanish only, with a 500-byte input limit. Grammar input is limited to 4,000 bytes; analysis document and question limits are 34,000 and 1,500 bytes. Limits also apply to normalized text.
+
+### Patch Changes
+
+- 1c00d0a: Preserve the original whitespace and UTF-8 byte-order mark when submitting files to Fix Grammar, and reject invalid UTF-8 before dispatch.
+
 ## 2.2.0
 
 ### Minor Changes
