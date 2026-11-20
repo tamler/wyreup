@@ -6,7 +6,7 @@
   Service-Worker-Allowed: /
   X-Frame-Options: DENY
   Permissions-Policy: interest-cohort=(), browsing-topics=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://assets.lemonsqueezy.com https://models.wyreup.com/onnxruntime-web@1.24.3/dist/ https://models.wyreup.com/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://models.wyreup.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src https://app.lemonsqueezy.com; form-action 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://models.wyreup.com/onnxruntime-web@1.24.3/dist/ https://models.wyreup.com/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://models.wyreup.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob: data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; frame-src 'none'; form-action 'self'
 
 # The two Cross-Origin-* headers above enable SharedArrayBuffer, which is
 # required by ffmpeg.wasm (multi-threaded WASM) and Transformers.js (some
@@ -49,8 +49,8 @@
 #     blob:; the v3→v4 bump moved this load onto the main thread.) Do not
 #     remove without confirming transcribe/ML tools still load in a browser.
 #   - connect-src is intentionally tight: 'self' for /api/* + same-origin
-#     fetches, models.wyreup.com for model/WASM downloads. No third-party
-#     hosts. Model providers (Workers AI, Replicate, ZeptoMail) are all
+#     fetches, models.wyreup.com for model/WASM downloads. The payment
+#     Function sets its own policy. Model providers (Workers AI, Replicate, ZeptoMail) are all
 #     called server-side from Pages Functions; the browser never reaches
 #     them directly.
 #   - frame-ancestors 'none' + X-Frame-Options: DENY blocks clickjacking

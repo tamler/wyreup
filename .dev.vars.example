@@ -10,12 +10,19 @@
 # 32-byte hex. Generate with:  openssl rand -hex 32
 SESSION_SECRET=""
 
-# Lemon Squeezy ---------------------------------------------------------
-LS_API_KEY=""
-LS_STORE_ID=""
+# Paddle. Leave PADDLE_ENVIRONMENT empty to disable billing.
+# Use a separate local or sandbox D1 and sandbox credentials for testing.
+PADDLE_ENVIRONMENT=""
+PADDLE_API_KEY=""
+PADDLE_CLIENT_TOKEN=""
+PADDLE_WEBHOOK_SECRET=""
+PADDLE_PRICE_STARTER=""
+PADDLE_PRICE_STANDARD=""
+PADDLE_PRICE_POWER=""
+PADDLE_PRICE_MONTHLY=""
+
+# Lemon Squeezy inbound webhooks for earlier payments and subscriptions.
 LS_WEBHOOK_SECRET=""
-# Variant IDs from LS after you create the 3 credit-pack products
-# and the $8/mo subscription product.
 LS_VARIANT_STARTER=""
 LS_VARIANT_STANDARD=""
 LS_VARIANT_POWER=""

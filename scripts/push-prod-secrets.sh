@@ -22,8 +22,6 @@ fi
 # included so a regen propagates with the same script.
 SECRETS=(
   SESSION_SECRET
-  LS_API_KEY
-  LS_STORE_ID
   LS_WEBHOOK_SECRET
   LS_VARIANT_STARTER
   LS_VARIANT_STANDARD
@@ -50,6 +48,36 @@ read_var() {
     }
   ' "$DEV_VARS"
 }
+
+PADDLE_NAMES=(
+  PADDLE_API_KEY PADDLE_CLIENT_TOKEN PADDLE_WEBHOOK_SECRET
+  PADDLE_PRICE_STARTER PADDLE_PRICE_STANDARD PADDLE_PRICE_POWER PADDLE_PRICE_MONTHLY
+  APP_ORIGIN PADDLE_ENVIRONMENT
+)
+
+paddle_present=false
+for name in "${PADDLE_NAMES[@]}"; do
+  if [[ "$name" != APP_ORIGIN && -n "$(read_var "$name")" ]]; then
+    paddle_present=true
+    break
+  fi
+done
+if [[ "$paddle_present" == true ]]; then
+  if [[ "$PROJECT" != wyreup || "$(read_var APP_ORIGIN)" != https://wyreup.com
+      || "$(read_var PADDLE_ENVIRONMENT)" != live
+      || "$(read_var PADDLE_API_KEY)" != pdl_live_apikey_*
+      || "$(read_var PADDLE_CLIENT_TOKEN)" != live_* ]]; then
+    echo "error: this helper only accepts live Paddle settings for the canonical production project" >&2
+    exit 1
+  fi
+  for name in "${PADDLE_NAMES[@]}"; do
+    if [[ -z "$(read_var "$name")" ]]; then
+      echo "error: missing $name" >&2
+      exit 1
+    fi
+  done
+  SECRETS+=("${PADDLE_NAMES[@]}")
+fi
 
 PUSHED=0
 SKIPPED=0

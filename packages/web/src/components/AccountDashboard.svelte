@@ -25,6 +25,31 @@
   let loadingHistory = true;
 
   let showBuySheet = false;
+  let billingBusy = false;
+  let billingError = '';
+
+  async function manageBilling() {
+    billingBusy = true;
+    billingError = '';
+    try {
+      const res = await fetch('/api/credits/portal', {
+        method: 'POST',
+        headers: { 'X-Wyreup-CSRF': '1' },
+        credentials: 'same-origin',
+        signal: AbortSignal.timeout(12_000),
+      });
+      const data = (await res.json()) as { portalUrl?: string };
+      if (!res.ok || !data.portalUrl) throw new Error('Payment portal unavailable');
+      const portal = new URL(data.portalUrl);
+      if (!['https://customer-portal.paddle.com', 'https://sandbox-customer-portal.paddle.com'].includes(portal.origin)
+        || portal.username || portal.password) throw new Error('Invalid payment portal link');
+      window.location.assign(portal.href);
+    } catch {
+      billingError = 'Could not open billing management. Try again.';
+    } finally {
+      billingBusy = false;
+    }
+  }
 
   let newKeyName = '';
   let newKeyBusy = false;
@@ -184,18 +209,31 @@
       {#if $user.subscriptionStatus === 'active'}
         <span class="sub-badge sub-badge--active">Monthly · active</span>
       {:else if $user.subscriptionStatus === 'cancelled'}
-        <span class="sub-badge">Monthly · cancelled (runs until period end)</span>
+        <span class="sub-badge">Monthly · cancelled</span>
       {:else if $user.subscriptionStatus === 'paused'}
         <span class="sub-badge">Monthly · paused</span>
       {:else if $user.subscriptionStatus === 'expired'}
         <span class="sub-badge">Monthly · expired</span>
+      {:else if $user.subscriptionStatus === 'past_due' || $user.subscriptionStatus === 'unpaid'}
+        <span class="sub-badge">Monthly · payment due</span>
+      {:else if $user.subscriptionStatus === 'trialing' || $user.subscriptionStatus === 'on_trial'}
+        <span class="sub-badge">Monthly · trial</span>
       {/if}
       <div class="acct-header__actions">
         <button type="button" class="primary" on:click={() => (showBuySheet = true)}>
-          {$user.subscriptionStatus === 'active' ? 'Buy more credits' : 'Buy credits / subscribe'}
+          {($user.monthlyCheckoutBlocked ?? ($user.subscriptionStatus === 'active')) ? 'Buy more credits' : 'Buy credits / subscribe'}
         </button>
+        {#if $user.canManagePaddleBilling}
+          <button type="button" class="ghost" disabled={billingBusy} on:click={manageBilling}>
+            {billingBusy ? 'Opening…' : 'Manage Paddle billing'}
+          </button>
+        {/if}
         <button type="button" class="ghost" on:click={signOut}>Sign out</button>
       </div>
+      {#if billingError}<p role="alert">{billingError}</p>{/if}
+      {#if $user.subscriptionProvider === 'lemonsqueezy' && $user.monthlyCheckoutBlocked}
+        <p class="muted">Manage this subscription using your Lemon Squeezy receipt.</p>
+      {/if}
     </div>
   </header>
 

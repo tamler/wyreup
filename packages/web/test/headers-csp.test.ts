@@ -44,4 +44,10 @@ describe('CSP — _headers', () => {
   it('connect-src permits the first-party model host', () => {
     expect(directive('connect-src')).toContain('https://models.wyreup.com');
   });
+
+  it('keeps payment SDKs, frames and network permissions off local tool pages', () => {
+    for (const name of ['script-src', 'frame-src', 'connect-src']) {
+      expect(directive(name)).not.toMatch(/paddle\.com|lemonsqueezy\.com/i);
+    }
+  });
 });

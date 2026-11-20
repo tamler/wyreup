@@ -36,8 +36,6 @@ export interface Env {
 
   // Secrets (CF Pages → Settings → Environment variables, encrypted)
   SESSION_SECRET: string;
-  LS_API_KEY: string;
-  LS_STORE_ID: string;
   LS_WEBHOOK_SECRET: string;
 
   // ZeptoMail (Zoho transactional email — HTTP API, works from Workers)
@@ -59,6 +57,15 @@ export interface Env {
   LS_VARIANT_STANDARD?: string;
   LS_VARIANT_POWER?: string;
   LS_VARIANT_MONTHLY?: string; // LS variant ID for the $8/mo subscription
+
+  PADDLE_ENVIRONMENT?: string;
+  PADDLE_API_KEY?: string;
+  PADDLE_CLIENT_TOKEN?: string;
+  PADDLE_WEBHOOK_SECRET?: string;
+  PADDLE_PRICE_STARTER?: string;
+  PADDLE_PRICE_STANDARD?: string;
+  PADDLE_PRICE_POWER?: string;
+  PADDLE_PRICE_MONTHLY?: string;
 
   // Comma-separated list of emails allowed to access /api/admin/*.
   // Treat as a secret — its disclosure alone doesn't grant access (the

@@ -9,7 +9,7 @@ export async function sha256hex(s: string): Promise<string> {
   return bytesToHex(new Uint8Array(buf));
 }
 
-export async function hmacSha256Hex(secret: string, body: string): Promise<string> {
+export async function hmacSha256Hex(secret: string, body: string | Uint8Array<ArrayBuffer>): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     enc.encode(secret),
@@ -17,7 +17,7 @@ export async function hmacSha256Hex(secret: string, body: string): Promise<strin
     false,
     ['sign'],
   );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(body));
+  const sig = await crypto.subtle.sign('HMAC', key, typeof body === 'string' ? enc.encode(body) : body);
   return bytesToHex(new Uint8Array(sig));
 }
 

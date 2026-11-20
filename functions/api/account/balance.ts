@@ -5,19 +5,18 @@
 import type { Env } from '../../_lib/env';
 import type { PagesFunction } from '../../_lib/types';
 import { getBalance, json, resolveUser, unauthorized } from '../../_lib/auth';
+import { billingAccount } from '../../_lib/billing-account';
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
-  const [balance, subRow] = await Promise.all([
+  const [balance, billing] = await Promise.all([
     getBalance(user.id, env),
-    env.DB.prepare(`SELECT subscription_status FROM users WHERE id = ?`)
-      .bind(user.id)
-      .first<{ subscription_status: string | null }>(),
+    billingAccount(user.id, env),
   ]);
   return json({
     email: user.email,
     balance,
-    subscriptionStatus: subRow?.subscription_status ?? null,
+    ...billing,
   });
 };
