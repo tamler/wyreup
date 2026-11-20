@@ -75,7 +75,7 @@ describe('free website catalog', () => {
       const paths = [
         `/tools/${id}`, `/tools/${id}/`, `/tools/${id}.html`,
         `/tools/${id}/index.html?old=1`, `/tools/${id}/index`, `/tools/${id}/og.png`,
-        `/TOols//${id.toUpperCase()}`, `/tools%2F${id.replace('-', '%2D')}`,
+        `/TOols//${id.toUpperCase()}`, `/tools%2F${id.replaceAll('-', '%2D')}`,
       ];
       for (const path of paths) {
         for (const method of ['GET', 'HEAD']) {
