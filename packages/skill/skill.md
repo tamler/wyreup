@@ -1,14 +1,13 @@
 ---
 name: wyreup
-description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally without uploading to a cloud service — compress, convert, merge, redact, OCR, blur faces, strip metadata, chain steps, or watch a folder — via the wyreup CLI or the @wyreup/mcp MCP server. Also use when the user mentions Wyreup.
+description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally on their machine — compress, convert, merge, redact, OCR, blur faces, strip metadata, chain steps, or watch a folder — via the wyreup CLI or the @wyreup/mcp MCP server. Also use when the user mentions Wyreup.
 ---
 
 # Wyreup
 
-Wyreup runs 260+ privacy-first file tools on the user's machine. Nothing
-uploads (hosted PRO tools are the explicit, credit-metered exception). Two
-backends — prefer MCP when the server is configured, CLI otherwise. Lighter
-single-backend variants of this skill exist (`wyreup-cli`, `wyreup-mcp`).
+Wyreup runs 260+ local file tools on the user's machine. Two backends — prefer
+MCP when the server is configured, CLI otherwise. Lighter single-backend
+variants of this skill exist (`wyreup-cli`, `wyreup-mcp`).
 
 ## CLI
 
@@ -29,14 +28,14 @@ cat notes.md | wyreup run markdown-to-html - -o notes.html   # '-' = stdin
 Chains (each step's output feeds the next; step params in square brackets):
 
 ```bash
-wyreup chain photo.heic --steps "convert[format=webp]|strip-exif|compress[quality=80]" -o clean.webp
+wyreup chain photo.jpg --steps "convert[targetFormat=webp]|strip-exif|compress[quality=80]" -o clean.webp
 ```
 
 Folder automation: `wyreup watch ~/Drop --steps "pdf-compress"` runs the chain
 on every new file (results in `_wyreup-out/`).
 
 Discovery — never guess tool ids: `wyreup list`, then
-`wyreup run <tool-id> --help` for params.
+`wyreup <tool-id> --help` for params.
 
 ## MCP
 
@@ -45,8 +44,7 @@ Discovery — never guess tool ids: `wyreup list`, then
   "mcpServers": {
     "wyreup": {
       "command": "npx",
-      "args": ["-y", "@wyreup/mcp"],
-      "env": { "WYREUP_API_KEY": "<only needed for PRO tools>" }
+      "args": ["-y", "@wyreup/mcp"]
     }
   }
 }
@@ -54,21 +52,32 @@ Discovery — never guess tool ids: `wyreup list`, then
 
 The server lists every tool with input types and params — trust that listing
 over memory. Tools take file paths plus a `params` object; omitted params use
-defaults. Tool metadata includes `chainSuggestions` (sensible next steps,
-e.g. ocr → text-summarize); prefer those for multi-step goals, feeding each
-result path into the next tool.
+defaults. For multi-step goals, choose compatible input/output types and feed
+each result path into the next tool. Set `output_path` or `output_dir` when
+you need a local file; small text/JSON results otherwise return inline to the
+assistant.
 
 ## Shared notes
 
-- Model-backed tools (ocr, face-blur, transcribe, bg-remove…) download weights
-  on first use; the cache is shared between CLI and MCP.
-  CLI pre-download: `wyreup prefetch --group speech` (groups: core, ffmpeg,
-  image-ai, nlp-standard, speech, vision-llm).
-- PRO tools are hosted and credit-metered (upscale, image generation,
-  long-PDF Q&A…) — they send the input to Wyreup's backend; say so when the
-  user cares about locality. CLI auth: `wyreup login <apiKey>`;
-  `wyreup balance` for credits. MCP auth: the `WYREUP_API_KEY` env var.
-  Failed PRO runs auto-refund.
+- **Model downloads on setup**: Model-backed tools (ocr, face-blur, transcribe,
+  bg-remove…) download weights on first use (or during pre-download setup); the
+  cache is shared between CLI and MCP. CLI pre-download:
+  `wyreup prefetch --group speech`. Current install groups are `ffmpeg`, `gdal`,
+  `image-ai`, `nlp-standard`, `nlp-translate`, `speech`, and `vision-llm`.
+  Use `wyreup prefetch --help` for command options.
+- **Network disclosure**: Local file transformation tools process user files on
+  the local machine, though not all operations are strictly offline — model and
+  runtime downloads require network access during setup, and public
+  domain-registration lookup sends the entered domain to Wyreup, then its
+  public registration registry/RDAP service. The fixed IANA bootstrap request
+  does not include the queried domain.
+- **External assistant privacy**: When using Wyreup via an AI assistant or MCP
+  host, any prompts, paths, or tool outputs shared in the conversation remain
+  subject to that external assistant provider's own privacy policy.
+- **Retired hosted service**: Wyreup's hosted AI / Pro service, accounts, and
+  credit system are retired. Legacy hosted IDs may remain listed in installed
+  clients, but requests to the official Wyreup service fail after retirement.
+  Recommend local tools instead.
 
 ## Common mistakes
 
@@ -76,5 +85,5 @@ result path into the next tool.
 |---|---|
 | `wyreup --compress photo.jpg` | `wyreup run compress photo.jpg` |
 | `--quality 70` | `--param quality=70` |
-| inventing flags like `--strip-meta` | chain the real tool: `--steps "convert[format=webp]\|strip-exif"` |
+| inventing flags like `--strip-meta` | chain the real tool: `--steps "convert[targetFormat=webp]\|strip-exif"` |
 | guessing tool ids | `wyreup list` / read the MCP tool listing |

@@ -1,14 +1,13 @@
 /**
  * Consumer display names for tools whose registry names are jargon.
  *
- * The registry name (used by CLI/MCP/devs and tool-page SEO) is the
- * fallback; this map overrides ONLY on consumer surfaces (scenario cards,
- * job pages, saved-chain chips, next-step suggestions). Keep entries few —
- * most registry names are already plain.
+ * The registry name is the fallback. Consumer labels also apply where the
+ * site has only a tool ID, such as saved-chain chips.
  */
 const DISPLAY_NAMES: Record<string, string> = {
   'strip-exif': 'Remove Hidden Photo Data',
   ocr: 'Read Text from Image',
+  'ocr-pro': 'Neural OCR',
 };
 
 /** Prettify a tool id as a last resort: 'pdf-to-text' → 'Pdf To Text'. */

@@ -25,15 +25,16 @@ const loaderSource = `
 </script>
 <div title="literal > marker">{comparison}</div>
 `;
-const legacy = { id: 'legacy' };
-const utility = { id: 'utility', surfaces: ['web'] };
-const nodeOnly = { id: 'node-only', surfaces: ['cli', 'mcp'] };
+const legacy = { id: 'legacy', cost: 'free' };
+const utility = { id: 'utility', cost: 'free', surfaces: ['web'] };
+const hosted = { id: 'hosted', cost: 'credit', surfaces: ['web'] };
+const nodeOnly = { id: 'node-only', cost: 'free', surfaces: ['cli', 'mcp'] };
 const core = {
   legacy,
-  utilityTools: [utility],
+  utilityTools: [utility, hosted],
   nodeOnly,
-  defaultTools: [legacy, utility, nodeOnly],
-  createDefaultRegistry: () => ({ tools: [legacy, utility, nodeOnly] }),
+  defaultTools: [legacy, utility, hosted, nodeOnly],
+  createDefaultRegistry: () => ({ tools: [legacy, utility, hosted, nodeOnly] }),
 };
 
 describe('runner coverage AST and registry boundary', () => {
@@ -60,10 +61,10 @@ describe('runner coverage AST and registry boundary', () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it('uses source group membership and excludes an actual non-web tool', async () => {
+  it('preserves full source membership while excluding hosted and non-web tools from website coverage', async () => {
     expect(await checkRunnerCoverage({ root, core })).toEqual({
       tools: 2,
-      registeredTools: 3,
+      registeredTools: 4,
       variants: 2,
     });
   });

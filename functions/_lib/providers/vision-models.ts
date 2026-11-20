@@ -7,7 +7,7 @@
 // Current backend: Cloudflare Workers AI. The env.AI binding ships with
 // Pages Functions — no token needed.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
 const VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';

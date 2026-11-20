@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../../lib/core-execution';
 import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata';
 
 export async function getStaticPaths() {
@@ -46,7 +46,7 @@ Video and audio work have historically required heavy desktop software. These to
       displayName: 'Audio',
       h1: 'Audio enhancement and processing tools',
       sub: 'Upscale low-quality recordings. Convert between formats.',
-      description: 'Find audio tools for enhancement, noise reduction and format conversion. Compare requirements and free or hosted execution before running a recording.',
+      description: 'Find free browser tools for audio enhancement, noise reduction and format conversion. Check requirements before running a recording.',
       intro: `Enhance a voice recording with noise reduction. Clean up audio before transcription or sharing. Compare the selected tool's requirements and listen to the result; quality depends on the recording.
 
 Clear audio matters for transcription accuracy, accessibility, and professional output. These tools handle the preprocessing step that makes everything downstream easier.`,
@@ -64,7 +64,7 @@ Format conversion is one of the most frequent developer and document tasks. Thes
       displayName: 'Edit',
       h1: 'Image and PDF editing tools',
       sub: 'Crop, rotate, flip, watermark. No signup.',
-      description: 'Crop, rotate, flip, watermark and adjust images and PDFs. Browse free browser tools and optional hosted PRO editing tools.',
+      description: 'Crop, rotate, flip, watermark and adjust images and PDFs with free browser tools.',
       intro: `Crop an image to a specific region. Rotate a mis-oriented photo. Apply a grayscale or sepia filter. Add a watermark to protect your work. Extract or delete specific pages from a PDF. Crop a PDF to a region. These are the edit operations you reach for before sending a file on.
 
 Keep the source file and inspect the edited copy before replacing or publishing an asset.`,
@@ -109,7 +109,7 @@ Inspection tools tell you what is in a file or string without modifying it. Usef
       displayName: 'Export',
       h1: 'Text, OCR and data extraction tools',
       sub: 'Extract text, tables, pages, or convert to simpler formats.',
-      description: 'Extract text, run OCR and export structured data from images and documents. Check supported formats and local or hosted execution for each tool.',
+      description: 'Extract text, run OCR and export structured data from images and documents. Check supported formats and setup requirements for each tool.',
       intro: `Extract plain text from a PDF for further processing. Run OCR on a scanned image or document to get searchable text. Extract tables from a PDF into structured JSON. Pull audio from a video file. Export data to a format your next tool expects.
 
 Extraction is the first step in many document workflows. Getting clean output out of a file lets you process it further without manual copying.`,
@@ -118,7 +118,7 @@ Extraction is the first step in many document workflows. Getting clean output ou
       displayName: 'Text',
       h1: 'Text analysis and transformation tools',
       sub: 'Format JSON, decode JWTs, diff text, count words.',
-      description: 'Analyze, translate, summarize and transform text. Compare free tools and optional hosted models, with data flow and requirements shown on each tool page.',
+      description: 'Analyze, translate, summarize and transform text with free browser tools. Each tool explains its data flow and setup requirements.',
       intro: `Analyze the sentiment of a review or feedback batch. Run named entity recognition to extract names, places, and organizations. Summarize a long document. Translate text between languages. Compute readability scores for content targeting. Get word and character statistics. Calculate token counts for LLM input planning.
 
 Text tools use different models and algorithms. Compare the selected tool's capabilities and execution details, then verify its output before using it.`,
@@ -200,17 +200,12 @@ The focused tools handle KML to GeoJSON, GPX to KML, Shapefile to GeoJSON and CS
       description: `Browse ${cat} tools. Check each tool's supported files, requirements and execution details.`,
       intro: `These tools handle common ${cat} tasks directly in your browser.`,
     };
-    const hasHostedTools = catTools.some((tool) => tool.cost === 'credit');
     const hasNetworkTools = catTools.some(
       (tool) => projectToolDiscoveryMetadata(tool).networkAccess === 'domain-registration',
     );
     const executionNote = hasNetworkTools
-      ? hasHostedTools
-        ? 'This category includes network lookups and hosted PRO tools. Network lookups require a connection. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup. Check each tool for its data flow and offline requirements.'
-        : 'This category includes network lookups that require a connection. Check each tool for where it processes input and what it needs offline. Local tools may download required assets.'
-      : hasHostedTools
-        ? 'This category includes free browser tools and hosted PRO tools. Hosted tools explain what is sent before you run them. Local AI tools may download models during setup.'
-        : 'Check each tool for where it processes input and what it needs offline. Local tools may download required assets; network lookups require a connection.';
+      ? 'This category includes network lookups that require a connection. Local tools may download assets during setup.'
+      : 'Tools here process inputs in your browser. Check each tool for required setup downloads.';
 
     // Related categories: pick up to 4 others that share tools with similar output mimes
     const catMimes = new Set(catTools.map((t) => t.output?.mime));

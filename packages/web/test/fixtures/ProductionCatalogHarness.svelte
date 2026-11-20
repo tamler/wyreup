@@ -1,14 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { createDefaultRegistry, type ToolModule } from '@wyreup/core';
+  import type { ToolModule } from '@wyreup/core';
   import ToolRunner from '../../src/components/ToolRunner.svelte';
   import type { SerializedTool } from '../../src/components/runners/types';
   import { stashChainFile, stashChainHandover, peekChainFile } from '../../src/components/runners/chainStorage';
-  import { user, authReady } from '../../src/stores/user';
+  import { createDefaultRegistry } from '../../src/lib/core-execution';
   import { projectToolDiscoveryMetadata } from '../../src/lib/tool-discovery-metadata';
 
-  // The same package export resolves through Astro's browser condition.
-  // There is no injectedTool, source alias, alternate registry or fake run().
+  // Use the site's free registry with the actual ToolRunner.
   const registry = createDefaultRegistry();
   const tools = Array.from(registry.toolsById.values());
   let selectedId = tools[0]?.id ?? '';
@@ -35,7 +34,7 @@
       requires: module.requires ? { webgpu: module.requires.webgpu, minMemoryGB: module.requires.minMemoryGB } : undefined,
       installSize: module.installSize, installGroup: module.installGroup,
       memoryEstimate: module.memoryEstimate, outputDisplay: module.outputDisplay,
-      cost: module.cost, creditCost: module.creditCost,
+      cost: module.cost,
       networkAccess: discovery.networkAccess,
     };
   }
@@ -121,16 +120,11 @@
     status = 'Parent preload cleared; selected File identity retained.';
   }
 
-  function gate(state: 'loading' | 'signed-out') {
-    user.set(null);
-    authReady.set(state === 'signed-out');
-    status = `Controlled real auth stores: ${state}; no account or credentials supplied.`;
-  }
 </script>
 
 <section aria-label="Production catalog controlled fixture" data-ready={ready}>
   <h1>Production catalog controlled fixture</h1>
-  <p>This isolated route mounts the real default registry and ToolRunner. It supplies user-like files and lifecycle controls, without changing tool algorithms. Actual /tools/id routes are checked separately.</p>
+  <p>This isolated route mounts the website's free registry and ToolRunner. It supplies file and lifecycle controls for the real runners. The test suite also checks the published tool routes.</p>
   <label>Registered tool
     <select aria-label="Registered tool" bind:value={selectedId} on:change={changeTool}>
       {#each tools as entry}<option value={entry.id}>{entry.id}</option>{/each}
@@ -147,10 +141,8 @@
   <button type="button" on:click={() => stash('unbound')} disabled={!currentFile}>Stash unbound autoAccept File (manual Use required)</button>
   <button type="button" on:click={() => stash('manual')} disabled={!currentFile}>Stash manual File</button>
   <button type="button" on:click={observeStorage}>Observe pending metadata</button>
-  <button type="button" on:click={() => gate('loading')}>Set access loading context</button>
-  <button type="button" on:click={() => gate('signed-out')}>Set signed-out context</button>
   <p role="status" data-fixture-status>{status}</p>
-  {#if !serialized}<p role="alert">Requested tool is absent from the real default registry.</p>{/if}
+  {#if !serialized}<p role="alert">Requested tool is unavailable on the website.</p>{/if}
   {#if mounted && target}
     {#key `${selectedId}:${routingNegative}:${mountAttempt}`}
       <ToolRunner tool={target} preloadedFile={deliveredFile} />

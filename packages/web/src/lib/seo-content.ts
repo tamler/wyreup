@@ -33,54 +33,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'analyze-chart': {
-    intro:
-      "Analyze Chart reads an image of a chart, graph, or diagram and explains the data and main trend in plain English. Reach for it when you have a screenshot of a dashboard or a figure from a report and want a quick read on what it's showing. The hosted vision model returns plain text and costs 1 credit per run.",
-    useCases: [
-      'Get a plain-language summary of a sales chart screenshot for a meeting recap',
-      'Understand a figure pasted into a PDF report without the underlying numbers',
-      'Turn a dashboard screenshot into a sentence for a status update',
-      "Sanity-check what a colleague's graph is actually claiming before you cite it",
-      'Draft a caption explaining a chart for a blog post or newsletter',
-      "Extract the headline trend from a competitor's published bar or line chart",
-    ],
-    faq: [
-      {
-        q: 'What kinds of charts does it handle?',
-        a: 'Bar, line, pie, scatter, and similar common chart and diagram types supplied as PNG, JPEG, or WebP. It explains the visible trend rather than re-deriving exact data values.',
-      },
-      {
-        q: 'Will it give me the exact numbers?',
-        a: "It reads labeled values where it can, but it's describing what the chart shows, not performing precise data extraction. Treat specific figures as approximate unless they're clearly labeled.",
-      },
-      {
-        q: 'Does my chart image get uploaded?',
-        a: 'Yes. As a Pro vision tool it sends the image to a hosted model to analyze it. The image is used for that run and not retained.',
-      },
-      {
-        q: 'Can it handle a busy multi-series chart?',
-        a: 'It manages most real-world charts, but very dense or cluttered figures may yield a more general summary. Cleaner images give better answers.',
-      },
-      {
-        q: "What's the cost?",
-        a: '1 credit per chart.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-q-and-a',
-        why: 'Ask a pointed question about the chart rather than getting a general read-out.',
-      },
-      {
-        id: 'ocr-hq',
-        why: 'Extract the raw labels and axis text from the chart image as plain text.',
-      },
-      {
-        id: 'detect-objects',
-        why: 'When you need located items in an image rather than a narrative explanation.',
-      },
-    ],
-  },
   'analyze-loudness': {
     intro:
       "Analyze Loudness measures a clip's integrated loudness (LUFS), loudness range, and true peak against the EBU R128 standard, returning a clean JSON report. Use it to check whether audio or video meets a delivery spec before you publish or hand it off. The measurement runs in your browser, so the file is never uploaded.",
@@ -198,7 +150,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Is my recording uploaded?',
-        a: 'The tool is listed as a free wyreup tool; it processes your audio without charging credits. Like the other browser-native tools, your file stays in your control.',
+        a: 'Audio processing is free and runs on your device.',
       },
       {
         q: 'Why is the output a WAV and not an MP3?',
@@ -213,10 +165,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'transcribe',
         why: 'Clean the audio first, then turn the clearer speech into text in your browser.',
-      },
-      {
-        id: 'transcribe-pro',
-        why: 'For noisy or accented enhanced audio, hosted Whisper large-v3 turbo gives higher transcription accuracy.',
       },
       {
         id: 'record-audio',
@@ -489,7 +437,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How clean are the edges?',
-        a: 'It does well on clear subjects and defined edges. For tricky cases like fine hair or glass, the hosted Pro version produces noticeably cleaner cutouts.',
+        a: 'It does well on clear subjects and defined edges. Fine hair and transparent objects such as glass can be harder to separate.',
       },
       {
         q: 'Does it work offline?',
@@ -498,60 +446,8 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'bg-remove-pro',
-        why: 'For hair, glass, and fine detail, the hosted RMBG model gives cleaner edges.',
-      },
-      {
         id: 'image-watermark',
         why: 'Add a text watermark to your cutout before sharing or publishing it.',
-      },
-    ],
-  },
-  'bg-remove-pro': {
-    intro:
-      "Background Remove cuts the subject out of a photo using a hosted large RMBG model, producing cleaner edges on tricky areas like hair, glass, and fine detail than the in-browser version manages. The result is a transparent PNG ready to drop onto any background. It's the tool to reach for when cutout quality matters more than running locally; each run uses 3 credits.",
-    useCases: [
-      'Cut a product photo onto a transparent background for a clean catalog or store listing',
-      'Isolate a portrait with wispy hair edges that a lightweight model would leave jagged',
-      'Remove the backdrop from a headshot for use across slides, banners, and profiles',
-      'Extract an object photographed against a busy background for a composite image',
-      'Prepare a transparent logo or product shot to overlay onto marketing graphics',
-      'Clean up a subject shot through or near glass where edges are hard to separate',
-    ],
-    faq: [
-      {
-        q: 'What image formats can I upload?',
-        a: 'JPEG, PNG, and WebP. The output is always a transparent PNG so the removed background stays see-through.',
-      },
-      {
-        q: 'How is this better than the free in-browser remover?',
-        a: 'It uses a larger hosted RMBG model that produces cleaner edges on hard cases like hair, glass, and fine detail.',
-      },
-      {
-        q: 'Does my image get uploaded?',
-        a: 'Yes. The cutout is produced by a hosted model, so the image is sent there to be processed. For fully on-device removal, use the free in-browser Remove Background tool.',
-      },
-      {
-        q: 'What does it cost?',
-        a: '3 credits per run, covering the GPU compute behind the higher-quality model.',
-      },
-      {
-        q: 'Why is the output a PNG and not JPEG?',
-        a: "JPEG can't store transparency. PNG preserves the alpha channel so the area behind your subject is actually transparent.",
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'bg-remove',
-        why: 'Try the free, fully in-browser cutout first if your image has simple edges.',
-      },
-      {
-        id: 'upscale-2x-pro',
-        why: 'Upscale the cutout afterward for crisp detail at larger sizes.',
-      },
-      {
-        id: 'image-watermark',
-        why: 'Add a text watermark to the finished transparent image before sharing.',
       },
     ],
   },
@@ -592,10 +488,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'transcribe',
         why: 'Generate the subtitle text from your audio first, then burn it into the video here.',
-      },
-      {
-        id: 'transcribe-and-translate',
-        why: 'Produce translated captions from the source audio before hardcoding them onto the video.',
       },
     ],
   },
@@ -696,54 +588,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'unicode-normalize',
         why: 'Normalize odd Unicode before casing for predictable results',
-      },
-    ],
-  },
-  'chat-long-pdf-pro': {
-    intro:
-      "Ask a Long PDF answers questions about documents that are too big for the standard Ask-a-PDF tool, using hosted Llama 4 Scout with a 10M-token context window. It extracts the PDF's text in your browser, then sends it to the long-context model — built for textbooks, court transcripts, large contracts, and full books. It's a Pro tool using 2 credits per run.",
-    useCases: [
-      'Ask where a specific clause appears across a 400-page contract without chunking it yourself',
-      'Query a full court transcript for every mention of a particular witness or exhibit',
-      'Pull the relevant passage from an entire textbook to answer a study question',
-      'Find how a policy changed across a long compliance document in one pass',
-      'Ask a whole technical manual a setup question that spans multiple chapters',
-      'Get an answer that draws on the entire length of a book rather than just a section',
-    ],
-    faq: [
-      {
-        q: 'When should I use this over Ask a PDF?',
-        a: 'Use it when your document exceeds what the standard Ask-a-PDF tool can hold. Its 10M-token context window is built for textbooks, transcripts, large contracts, and books; for shorter PDFs the standard tool is cheaper.',
-      },
-      {
-        q: 'How is the PDF processed?',
-        a: 'The text is extracted in your browser first, then sent to the hosted Llama 4 Scout long-context model to answer your question.',
-      },
-      {
-        q: 'Is the full document uploaded?',
-        a: "The extracted text is sent to the hosted model — that's required for a hosted Q-and-A tool. The PDF parsing itself happens locally in your browser before that step.",
-      },
-      {
-        q: 'What does it return?',
-        a: 'Plain text: the answer to the question you asked about the document.',
-      },
-      {
-        q: 'How much does it cost?',
-        a: '2 credits per run.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'pdf-q-and-a',
-        why: 'For normal-sized PDFs, the standard ask tool covers the same flow at lower cost.',
-      },
-      {
-        id: 'pdf-summarize',
-        why: 'Want the gist of the whole document rather than a specific answer? Summarize it instead.',
-      },
-      {
-        id: 'deep-analysis-pro',
-        why: 'Ask a focused question about the extracted text with Deep Analysis.',
       },
     ],
   },
@@ -1121,54 +965,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'content-safety-pro': {
-    intro:
-      "Content Safety runs text through a hosted Llama Guard classifier that flags violence, sexual content, hate speech, self-harm, harassment, and nine other categories. Reach for it when you moderate user-generated content, screen submissions, or want a programmatic safety check before publishing. It's a Pro tool using 1 credit per run.",
-    useCases: [
-      'Screen forum posts or comments for hate speech and harassment before they go live',
-      'Flag self-harm or violence references in support-chat transcripts so a human can follow up',
-      'Pre-filter user-submitted reviews for sexual or abusive content on a marketplace',
-      'Gate a community submission form, blocking entries the classifier marks unsafe',
-      'Help a parent quickly assess whether a block of text a child encountered is concerning',
-      'Add an automated moderation step to a content pipeline that returns a machine-readable verdict',
-    ],
-    faq: [
-      {
-        q: 'What does it return?',
-        a: 'JSON: whether the text is flagged and which of the safety categories it matched (violence, sexual content, hate, self-harm, harassment, and others).',
-      },
-      {
-        q: 'Which model powers it?',
-        a: "A hosted Llama Guard classifier covering 14 safety categories. It's a Pro tool that uses 1 credit per run.",
-      },
-      {
-        q: 'Is my text sent to a server?',
-        a: "Yes. Classification happens on a hosted model, so the text is sent for the request. It's processed to return the verdict and not used for anything else.",
-      },
-      {
-        q: 'Does it edit or redact the content?',
-        a: 'No. It only classifies and reports categories. To remove personal data or cover content, use a dedicated redaction tool.',
-      },
-      {
-        q: 'Can it handle longer passages?',
-        a: 'Yes, it accepts plain text and classifies the passage as a whole. For very long documents, splitting into sections gives more localized flags.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-redact-pro',
-        why: 'When content is flagged, strip the personal data out of it before storing or escalating.',
-      },
-      {
-        id: 'text-suspicious',
-        why: "Catch prompt-injection and homoglyph tricks the safety classifier isn't looking for.",
-      },
-      {
-        id: 'rewrite-tone-pro',
-        why: 'Soften or rephrase borderline text into something publishable instead of rejecting it outright.',
-      },
-    ],
-  },
   convert: {
     intro:
       'Convert Format changes an image between JPEG, PNG, and WebP without touching its content. Use it when a site, app, or coworker needs a specific format, or when switching formats will save space, such as moving a photo to WebP or flattening a transparent PNG to JPEG. The conversion happens in your browser, so your image stays private.',
@@ -1412,50 +1208,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'cron-from-text-pro': {
-    intro:
-      'Cron From Text turns a plain-English schedule into a valid cron expression using a hosted language model, so you can describe what you want ("every weekday at 6am", "the first Monday of each quarter at noon") and get back the crontab string. Reach for it when the free heuristic parser chokes on phrasing it doesn\'t recognize. It runs on wyreup\'s hosted AI and costs 1 credit per run.',
-    useCases: [
-      'Turn "every 15 minutes during business hours on weekdays" into a working cron line for a CI job',
-      'Generate the schedule for a backup script described as "3am on the 1st and 15th of every month"',
-      'Get a cron expression for an awkward cadence like "every other Sunday at 10:30pm" that simple parsers miss',
-      'Translate a teammate\'s vague Slack request ("kick this off end of each sprint, Fridays") into something a scheduler accepts',
-      'Build a Kubernetes CronJob or GitHub Actions schedule without memorizing the five-field syntax',
-      'Convert a human-readable reminder like "weekday mornings except Mondays" into crontab form',
-    ],
-    faq: [
-      {
-        q: 'How is this different from the free Cron Parser?',
-        a: "Cron Parser goes the other way: it takes an existing cron expression and explains it plus shows upcoming run times. This tool goes from English to cron, and uses a hosted LLM that handles phrasing the free heuristic generator can't.",
-      },
-      {
-        q: 'What does it cost?',
-        a: "1 credit per run. It uses wyreup's hosted AI rather than running in your browser, which is why it's a Pro tool and not free.",
-      },
-      {
-        q: 'What do I give it and what comes back?',
-        a: 'You give it plain text describing a schedule. It returns JSON containing the generated cron expression (and related fields), so you can drop the result straight into config or pipe it onward.',
-      },
-      {
-        q: 'Is my input sent to a server?',
-        a: "Yes. Unlike wyreup's free in-browser tools, this one sends your text to a hosted model to generate the expression. Send only the schedule description, not sensitive data.",
-      },
-      {
-        q: 'Will the cron expression actually be valid?',
-        a: 'The model targets standard 5-field crontab syntax. For peace of mind, paste the result into the free Cron Parser to confirm it parses and to preview the next run times before you ship it.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'cron-parser',
-        why: 'Validate the generated expression and preview its next run times before deploying it.',
-      },
-      {
-        id: 'regex-from-text-pro',
-        why: 'Same English-to-pattern idea for regular expressions when a description is too open-ended for the free engine.',
-      },
-    ],
-  },
   'cron-parser': {
     intro:
       "Cron Parser takes a cron expression, validates its syntax, breaks down each field, and shows you the upcoming run times so you know exactly when a job will fire. It's the sanity check you run before committing a crontab line or a scheduled-task config. The parsing happens in your browser, so your schedule never goes to a server.",
@@ -1490,10 +1242,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
     alsoTry: [
-      {
-        id: 'cron-from-text-pro',
-        why: 'Generate a cron expression from a plain-English schedule, then verify it here.',
-      },
       {
         id: 'timestamp-converter',
         why: 'Turn the next-run epoch values into readable ISO and local times.',
@@ -2320,102 +2068,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'deep-analysis-pro': {
-    intro:
-      'Deep Analysis sends your document and question to a hosted model for an answer. Check its answer and any cited passages against the source. It uses 3 credits per run.',
-    useCases: [
-      'Ask about a contract clause and check the cited passages',
-      'Walk through a stack of log lines to identify the most likely root cause of an incident',
-      'Ask about a possible concurrency bug in a code snippet',
-      'Analyze a legal notice to determine your obligations and the deadlines that apply',
-      'Pressure-test an argument in a memo by asking the model to find the weakest assumption',
-      'Compare two policy passages and reason out where they conflict',
-    ],
-    faq: [
-      {
-        q: 'How should I use the answer?',
-        a: 'The model answers a question using the supplied text. Its answer can be wrong, so verify important details against the source.',
-      },
-      {
-        q: 'What does it return?',
-        a: 'JSON containing an answer and a reasoning field, which may be empty.',
-      },
-      {
-        q: 'What do I provide?',
-        a: 'Plain text up to 34,000 UTF-8 bytes and a question up to 1,500 bytes, including their normalized forms.',
-      },
-      {
-        q: 'Is the document sent to a server?',
-        a: 'Yes. This Pro tool sends your text to a hosted model for analysis.',
-      },
-      {
-        q: 'Why does it cost more than the summarize tools?',
-        a: 'Deep Analysis uses 3 credits per run.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-summarize-pro',
-        why: 'When you just need a condensed overview rather than reasoned answers, the summarizer is cheaper.',
-      },
-      {
-        id: 'pdf-q-and-a',
-        why: 'Ask questions of a PDF directly — it extracts the text for you before querying.',
-      },
-      {
-        id: 'chat-long-pdf-pro',
-        why: 'For documents too large for standard context, switch to the 10M-token long-context model.',
-      },
-    ],
-  },
-  'detect-objects': {
-    intro:
-      "Detect Objects finds and locates items in an image, returning each one's label, a confidence score, and a bounding box as structured JSON. Reach for it when you need to count things or know where they are in the frame, not just a written description. It runs on a hosted vision model and costs 1 credit per run.",
-    useCases: [
-      'Count how many cars or people appear in a surveillance or street photo',
-      'Locate products on a shelf image for a retail audit',
-      'Auto-tag images with the objects they contain for a searchable library',
-      'Feed bounding boxes into a downstream crop or annotation pipeline',
-      'Verify a photo contains an expected item before approving an upload',
-      'Build a quick inventory count from a single warehouse photo',
-    ],
-    faq: [
-      {
-        q: 'What does the output look like?',
-        a: 'A JSON array where each detected object has a label, a confidence score, and a bounding box. That structure plugs directly into code or other JSON-aware tools.',
-      },
-      {
-        q: 'Which image formats are supported?',
-        a: 'PNG, JPEG, and WebP.',
-      },
-      {
-        q: 'Does the image get uploaded?',
-        a: "Yes. This Pro tool sends the image to a hosted vision model for detection. It's processed for that run and not retained.",
-      },
-      {
-        q: 'How reliable are the boxes and counts?',
-        a: 'Confidence scores let you filter weak detections, but no detector is perfect: overlapping or tiny objects may be missed or merged. Use the scores to set a threshold that fits your task.',
-      },
-      {
-        q: "What's the cost?",
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-q-and-a',
-        why: 'Ask a plain-language question when you want an answer rather than coordinates.',
-      },
-      {
-        id: 'image-describe',
-        why: 'Get a narrative caption instead of structured detection data.',
-      },
-      {
-        id: 'analyze-chart',
-        why: 'Use when the image is a chart and you want the trend explained, not objects located.',
-      },
-    ],
-  },
   'diff-apply': {
     intro:
       'Apply Diff takes a unified diff (a patch) and applies it to a text file, verifying every hunk against the source and failing loudly if anything does not line up. It is the counterpart to Text Diff: one produces the patch, this one applies it. Because it runs in your browser, you can patch sensitive files without sending them to any server.',
@@ -2498,14 +2150,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
     alsoTry: [
-      {
-        id: 'text-summarize-pro',
-        why: "Extract a Word doc's text, then summarize it with a hosted model.",
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Pull the text out, then translate it into another language.',
-      },
       {
         id: 'word-counter',
         why: 'Get word, sentence, and reading-time stats on the extracted text.',
@@ -2693,10 +2337,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'html-to-markdown',
         why: "Prefer Markdown over plain text? Convert the page's HTML to clean Markdown instead.",
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'Strip the page to its article body, then summarize it.',
       },
       {
         id: 'text-keywords',
@@ -3036,54 +2676,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'base64',
         why: 'Encode the same file to Base64 text when you need to embed or transmit it inline.',
-      },
-    ],
-  },
-  'fix-grammar-pro': {
-    intro:
-      "Fix Grammar runs your text through a hosted LLM that cleans up grammar, spelling, and punctuation while preserving your voice. It returns the corrected text only — no commentary, no explanation — so you can drop it straight back into your draft. It's a Pro tool using 1 credit per run.",
-    useCases: [
-      'Tidy up a quickly written email before you hit send, without it sounding robotic',
-      'Fix typos and punctuation in a blog draft while keeping your phrasing intact',
-      'Clean up a non-native-English message so it reads smoothly but still sounds like you',
-      'Proofread a paragraph of release notes before publishing',
-      "Polish a chat reply to a customer so it's professional but on-voice",
-      "Correct a transcript snippet's punctuation after pulling it from speech-to-text",
-    ],
-    faq: [
-      {
-        q: 'Does it rewrite or just correct?',
-        a: "It corrects grammar, spelling, and punctuation while preserving your voice. It's not meant to restyle or paraphrase — for that, use the tone-rewriting tool.",
-      },
-      {
-        q: "What's the output?",
-        a: "The corrected text only. There's no commentary or list of changes, so you can paste the result straight back into your document.",
-      },
-      {
-        q: 'Is my text private?',
-        a: "It's a Pro tool, so your text is sent to a hosted LLM to perform the correction. It's processed for the request and returned; it isn't a fully in-browser tool.",
-      },
-      {
-        q: 'How much does it cost?',
-        a: '1 credit per run.',
-      },
-      {
-        q: 'How long can the input be?',
-        a: 'Up to 4,000 UTF-8 bytes, including the normalized form. Split longer text into sections.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'rewrite-tone-pro',
-        why: 'Go beyond corrections and shift the whole tone — formal, casual, concise, friendly.',
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Clean up the source first, then translate the polished text for a better result.',
-      },
-      {
-        id: 'word-counter',
-        why: 'Check length and reading time of the corrected text for free, in your browser.',
       },
     ],
   },
@@ -3757,10 +3349,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'text-redact-pro',
-        why: 'Catch free-form PII (names, places) that pattern matching misses.',
-      },
-      {
         id: 'html-to-markdown',
         why: 'Convert the redacted page to clean Markdown for sharing.',
       },
@@ -3901,10 +3489,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         why: "A larger model for richer, more accurate descriptions when the short caption isn't enough.",
       },
       {
-        id: 'image-describe',
-        why: "Hosted vision model for higher-quality captions when you'd rather not download a local model.",
-      },
-      {
         id: 'ocr',
         why: 'If the image is mostly text, extract the words instead of describing the scene.',
       },
@@ -3947,62 +3531,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'image-caption',
         why: 'The lighter, faster captioner with a smaller download when you only need a short description.',
-      },
-      {
-        id: 'image-describe',
-        why: 'A hosted vision model alternative that skips the local download for top-quality captions.',
-      },
-      {
-        id: 'read-handwriting',
-        why: 'If the image contains handwritten text, transcribe it instead of describing the scene.',
-      },
-    ],
-  },
-  'image-describe': {
-    intro:
-      'Describe Image generates a short, plain-English description of any photo using a hosted vision model, ideal for alt text and accessibility. Reach for it when you have a batch of images that need captions for a website, a CMS, or a screen-reader-friendly document. It returns plain text and costs 1 credit per run.',
-    useCases: [
-      'Write alt text for product photos so your store meets accessibility guidelines',
-      'Caption blog header images without stopping to phrase each one yourself',
-      'Generate descriptions for an image library so it becomes keyword-searchable',
-      'Add screen-reader text to social posts before scheduling them',
-      'Draft a starting caption you can lightly edit instead of writing from scratch',
-      'Describe user-uploaded photos in a moderation or cataloging workflow',
-    ],
-    faq: [
-      {
-        q: 'What formats can I describe?',
-        a: 'PNG, JPEG, and WebP. The description comes back as plain text ready to paste into an alt attribute or caption field.',
-      },
-      {
-        q: 'How long is the description?',
-        a: "It's intentionally concise, a sentence or short phrase suited to alt text rather than a paragraph. For a richer, multi-sentence description, use the detailed in-browser captioner.",
-      },
-      {
-        q: 'Does the image get uploaded?',
-        a: "Yes. This Pro tool sends the image to a hosted vision model. If you'd rather nothing leaves your device, the free in-browser captioners do this offline after a one-time model download.",
-      },
-      {
-        q: 'Is the caption always accurate?',
-        a: "It's usually solid for everyday photos, but vision models can miss small details or misread unusual scenes. Skim the output before publishing it as alt text.",
-      },
-      {
-        q: 'What does it cost?',
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-caption',
-        why: 'Free in-browser captioner that runs offline after a one-time model download, no credits or uploads.',
-      },
-      {
-        id: 'image-caption-detailed',
-        why: 'Free BLIP-based option when you want a longer, richer description rather than short alt text.',
-      },
-      {
-        id: 'image-q-and-a',
-        why: 'Ask a specific question about the image instead of getting a general description.',
       },
     ],
   },
@@ -4054,54 +3582,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'image-generate-pro': {
-    intro:
-      "Generate Image turns a text prompt into a 1024×1024 JPEG in seconds using hosted Flux Schnell. Reach for it when you need a quick original image from a description — a hero graphic, a concept sketch, a placeholder mockup. It's a Pro tool using 1 credit per run, and it pairs naturally with the background-removal and upscaling tools to take the result further.",
-    useCases: [
-      'Generate a custom hero image for a blog post from a one-line description',
-      'Spin up concept art to communicate an idea to a designer before any real work starts',
-      'Create a placeholder product image for a mockup while the real photography is pending',
-      'Produce a themed illustration for a slide or social post in seconds',
-      'Make a base image, then send it to Background Remove for a transparent cutout',
-      'Generate a low-res draft and run Upscale to get a larger, sharper final',
-    ],
-    faq: [
-      {
-        q: 'What model and output size?',
-        a: 'It uses Flux Schnell and produces a 1024×1024 JPEG.',
-      },
-      {
-        q: 'How fast is it?',
-        a: 'Flux Schnell is a fast model — generation typically takes seconds per run.',
-      },
-      {
-        q: "What's the cost?",
-        a: '1 credit per run, making it one of the cheaper Pro tools to experiment with.',
-      },
-      {
-        q: 'Does it run in my browser?',
-        a: "No. Image generation runs on a hosted model, so your prompt is sent to the server and the JPEG is returned. It's a Pro tool, not one of the free in-browser ones.",
-      },
-      {
-        q: 'Can I refine the generated image?',
-        a: 'Yes. The JPEG output feeds into other tools — remove its background for a transparent PNG, or upscale it 2× or 4× for a sharper, larger version.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'bg-remove-pro',
-        why: 'Cut the generated subject out onto a transparent background for compositing.',
-      },
-      {
-        id: 'upscale-2x-pro',
-        why: 'Enlarge the 1024px result to a higher resolution with sharper detail.',
-      },
-      {
-        id: 'image-watermark',
-        why: 'Brand or label the finished image for free, right in your browser.',
-      },
-    ],
-  },
   'image-info': {
     intro:
       "Inspect an image and get its dimensions, format, and metadata as structured JSON. Reach for it when you need to confirm a file's exact width and height, verify its real format, or check what metadata it carries. Everything is read in your browser, so the image is never uploaded.",
@@ -4147,54 +3627,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'color-palette',
         why: "Go beyond dimensions and pull the image's dominant colors as hex codes.",
-      },
-    ],
-  },
-  'image-q-and-a': {
-    intro:
-      'Ask About Image lets you pose a question about a photo and get a direct answer from a hosted vision model. Reach for it when you want a specific detail, not a general caption: how many of something is in the frame, what color an object is, or what a sign says. It returns plain text and costs 1 credit per run.',
-    useCases: [
-      'Ask how many people are in a crowd photo for a quick headcount',
-      'Check what brand or model is shown in a product image',
-      'Confirm whether a safety sign or label is present in a site photo',
-      'Ask what color a garment is when cataloging inventory shots',
-      'Query whether a document photo contains a signature or stamp',
-      'Get a yes/no answer about a detail in a screenshot without describing the whole thing',
-    ],
-    faq: [
-      {
-        q: 'What image formats can I ask about?',
-        a: 'PNG, JPEG, and WebP. You supply the image plus your question, and the answer comes back as plain text.',
-      },
-      {
-        q: 'How is this different from Describe Image?',
-        a: "Describe Image gives a general caption with no input from you. Ask About Image answers a specific question you write, so you get the exact detail you're after.",
-      },
-      {
-        q: 'Does the image get uploaded?',
-        a: "Yes. This Pro tool sends both the image and your question to a hosted vision model. Nothing is sent for the free in-browser tools, but they can't answer free-form questions.",
-      },
-      {
-        q: 'Can it always answer correctly?',
-        a: "It handles most everyday questions well, but vision models can be wrong on counting, fine text, or ambiguous scenes. Verify anything you'll rely on.",
-      },
-      {
-        q: 'What does a question cost?',
-        a: '1 credit per question.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'image-describe',
-        why: "Get a general caption when you don't have a specific question in mind.",
-      },
-      {
-        id: 'analyze-chart',
-        why: 'Better suited when the image is a chart and you want the overall trend explained.',
-      },
-      {
-        id: 'detect-objects',
-        why: 'Use when you need located objects with bounding boxes rather than a written answer.',
       },
     ],
   },
@@ -4482,58 +3914,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'json-yaml',
         why: 'Convert a YAML config to JSON first, then diff the normalized result.',
-      },
-    ],
-  },
-  'json-extract-pro': {
-    intro:
-      "Extract JSON turns messy, free-form text into a clean, structured object. Describe the fields you want — say, total, vendor, and date from a receipt — and a hosted Llama-4 Scout model reads the text and returns valid JSON. It's the missing link that lets unstructured emails, contracts, and log lines flow into any tool or workflow that expects structured input.",
-    useCases: [
-      'Pull line items, totals, and tax from a pasted receipt or invoice into a tidy object your accounting system can ingest',
-      'Convert a customer support email into {name, account_id, issue, urgency} for routing or ticketing',
-      'Parse a contract clause into {party, effective_date, term_months, auto_renew} without writing a regex',
-      'Normalize inconsistent log lines into a uniform schema before loading them into a dashboard',
-      'Lift shipping address, order number, and items out of an order-confirmation email into JSON',
-      'Extract structured fields from OCR or transcription output so downstream tools get a clean object instead of prose',
-    ],
-    faq: [
-      {
-        q: 'What input does it accept?',
-        a: 'Plain text (text/plain). Paste or feed in any prose — receipts, emails, contracts, notes — and describe the fields you want back.',
-      },
-      {
-        q: 'What does it return?',
-        a: 'A valid JSON object (application/json) shaped by the fields you asked for. Because the output is real JSON, it chains directly into formatters, converters, or anything that needs structured input.',
-      },
-      {
-        q: 'How is this different from the free JSON Formatter?',
-        a: 'JSON Formatter pretty-prints JSON you already have. Extract JSON creates the JSON from text that has no structure at all, using a hosted language model to infer the fields.',
-      },
-      {
-        q: 'Does my text get uploaded?',
-        a: 'Yes — this is a Pro tool. Your text is sent to a hosted Llama-4 Scout model to do the extraction, and each run uses 1 credit. The free, fully in-browser tools never upload anything.',
-      },
-      {
-        q: 'Why does it cost a credit when most wyreup tools are free?',
-        a: 'Field extraction from arbitrary text needs a real LLM running on a server. Anything backed by paid hosted compute is Pro; the heuristic and formatter tools that run on your device stay free.',
-      },
-      {
-        q: 'Will the output always be valid JSON?',
-        a: 'The model is constrained to return a syntactically valid object so it can feed downstream tools. Always sanity-check the field values against your source text, since extraction is inference, not a guaranteed parse.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'json-formatter',
-        why: 'Pretty-print and verify the structured object you just extracted before passing it on.',
-      },
-      {
-        id: 'json-yaml',
-        why: 'Turn the extracted JSON into YAML for a config file or human-readable diff.',
-      },
-      {
-        id: 'text-ner-pro',
-        why: 'If you want people, orgs, and places rather than your own custom fields, NER pulls named entities instead.',
       },
     ],
   },
@@ -5919,66 +5299,14 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'ocr-hq',
-        why: "When in-browser accuracy isn't enough, a hosted vision model gives higher-quality extraction.",
-      },
-      {
         id: 'word-counter',
         why: 'Count words and reading time on the text you just extracted.',
       },
     ],
   },
-  'ocr-hq': {
-    intro:
-      "OCR pulls the text out of an image or scan using a hosted vision model, returning clean plain text you can copy, search, or feed into other tools. Reach for it when a screenshot, photographed page, or scanned document has text you'd rather not retype. It's the higher-accuracy option for messy scans, skewed photos, and unusual fonts, and costs 1 credit per run.",
-    useCases: [
-      'Lift the text off a screenshot of a slide deck so you can quote it in your notes',
-      'Digitize a photographed page from a book or printed report into editable text',
-      'Extract a serial number or address from a photo of a label or receipt',
-      'Convert a scanned contract image into searchable text for a document archive',
-      'Pull text out of an infographic or poster that was only shared as a JPEG',
-      'Feed the extracted text straight into translate or summarize for a follow-up step',
-    ],
-    faq: [
-      {
-        q: 'Which image formats does it accept?',
-        a: 'PNG, JPEG, and WebP. The output is plain text, so it drops straight into any text editor or chains into the other text tools.',
-      },
-      {
-        q: 'How is this different from the free OCR tool?',
-        a: 'The free OCR runs entirely in your browser and is fine for clean, high-contrast images. This hosted version uses a vision model that reads noisy scans, skewed angles, and tricky fonts far more reliably.',
-      },
-      {
-        q: 'Does my image leave my device?',
-        a: 'Yes. As a Pro tool it sends the image to a hosted vision model to do the extraction. If you need a no-upload option, use the free in-browser OCR instead.',
-      },
-      {
-        q: 'Will it keep the original layout?',
-        a: 'It returns the readable text, not a pixel-perfect reproduction of columns and tables. For tabular data from a PDF, use a dedicated table extractor.',
-      },
-      {
-        q: 'What does each run cost?',
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'ocr',
-        why: "Free, fully in-browser OCR for clean images when you don't want to upload or spend credits.",
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Translate the extracted text into another language in one follow-up step.',
-      },
-      {
-        id: 'read-handwriting',
-        why: 'Use this instead when the source is handwritten rather than printed.',
-      },
-    ],
-  },
   'ocr-pro': {
     intro:
-      'OCR Pro reads text out of an image — both handwritten notes and printed pages — using a neural recognition model that runs entirely on your device. Reach for it when you have a photo of a page, a scanned receipt, or a whiteboard shot and you want editable, searchable text back instead of a picture. Because everything happens in your browser, the image never leaves your machine.',
+      'Neural OCR reads text out of an image — both handwritten notes and printed pages — using a neural recognition model that runs entirely on your device. Reach for it when you have a photo of a page, a scanned receipt, or a whiteboard shot and you want editable, searchable text back instead of a picture. Because everything happens in your browser, the image never leaves your machine.',
     useCases: [
       'Turn a phone photo of a handwritten lecture note into typed text you can search and edit',
       'Pull the line items off a scanned receipt or invoice so you can paste them into a spreadsheet',
@@ -6015,16 +5343,8 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'translate-image',
-        why: 'Skip the copy-paste step and translate the text in a photo directly.',
-      },
-      {
         id: 'text-summarize',
         why: 'Condense a long scanned document into a few sentences after you extract it.',
-      },
-      {
-        id: 'read-handwriting',
-        why: 'A hosted vision model tuned specifically for tougher handwriting if local OCR struggles.',
       },
     ],
   },
@@ -6069,10 +5389,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'html-redact',
         why: 'Found PII in the scanned text? Redact it from an HTML version.',
-      },
-      {
-        id: 'image-describe',
-        why: 'Get a model-written description of what the image actually depicts.',
       },
     ],
   },
@@ -6976,54 +6292,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'pdf-q-and-a': {
-    intro:
-      "Ask a PDF lets you pose a question about a document and get an answer back. It extracts the PDF's text locally in your browser, then sends that text plus your question to a hosted LLM. Use it to find a buried clause, a number, or a fact without scrolling through dozens of pages. Each run uses 2 credits.",
-    useCases: [
-      'Ask "what\'s the termination notice period?" of a long service agreement',
-      'Find the reported revenue figure in a financial statement without hunting through tables',
-      'Check whether a policy document covers a specific scenario you have in mind',
-      'Pull the deadline or effective date out of a multi-page legal notice',
-      'Ask a technical manual how to perform one specific procedure',
-      'Confirm whether a research paper mentions a particular method or dataset',
-    ],
-    faq: [
-      {
-        q: 'Is the PDF uploaded to a server?',
-        a: 'The text extraction happens in your browser; only the extracted text and your question are sent to the hosted model. The PDF file itself stays on your device.',
-      },
-      {
-        q: 'How much does it cost?',
-        a: "2 credits per run, because the answer is generated by wyreup's hosted LLM.",
-      },
-      {
-        q: 'Can it answer questions about a scanned document?',
-        a: "Not directly. Scanned PDFs are images with no text layer, so there's nothing to extract. Run OCR first, then ask questions of the resulting text.",
-      },
-      {
-        q: "What's the difference between this and Summarize PDF?",
-        a: 'Summarize PDF gives a general overview of the whole document. Ask a PDF answers a specific question you provide, returning a targeted response rather than a summary.',
-      },
-      {
-        q: 'What does the answer look like?',
-        a: "Plain text. The model answers based on the document's content, so phrasing a clear, specific question gives the most reliable result.",
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'pdf-summarize',
-        why: 'Get the overall gist first, then drill in with a specific question.',
-      },
-      {
-        id: 'pdf-to-text',
-        why: "Free in-browser extraction when you'd rather search the raw text yourself.",
-      },
-      {
-        id: 'pdf-info',
-        why: 'Check page count and metadata before querying a large document.',
-      },
-    ],
-  },
   'pdf-redact': {
     intro:
       "Redact PDF covers content with solid rectangles so account numbers, names, or signatures don't appear when the document is viewed. It's for sanitizing a file before you share it publicly or with a third party. The redaction runs in your browser, so the original sensitive document never gets uploaded — but read the caveat below before treating it as bulletproof.",
@@ -7068,54 +6336,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'pdf-encrypt',
         why: 'Lock the sanitized file with a password before sharing it.',
-      },
-    ],
-  },
-  'pdf-summarize': {
-    intro:
-      "Summarize PDF pulls the text out of a PDF right in your browser, then sends just that text to a hosted LLM for a concise summary. It's the fast way to get the gist of a long report, contract, or research paper without reading every page. The text extraction stays local; only the extracted text goes to the model, and each run costs 2 credits.",
-    useCases: [
-      'Get a one-paragraph overview of a 40-page quarterly report before a meeting',
-      "Summarize a dense research paper to decide whether it's worth a full read",
-      'Condense a vendor contract into its key terms and obligations',
-      'Produce a short brief from lengthy meeting minutes or board materials',
-      'Skim a long whitepaper down to its main argument and conclusions',
-      'Turn a multi-page policy document into a digestible summary for your team',
-    ],
-    faq: [
-      {
-        q: 'Does my whole PDF get uploaded?',
-        a: 'No. The text is extracted from the PDF inside your browser, and only that extracted text is sent to the hosted model for summarizing. The original PDF file never leaves your device.',
-      },
-      {
-        q: 'What does it cost?',
-        a: "2 credits per run, since the summary comes from wyreup's hosted LLM rather than an in-browser model.",
-      },
-      {
-        q: 'Will it work on a scanned PDF?',
-        a: 'Only if the PDF contains a real text layer. Scanned pages are images with no extractable text, so run them through an OCR tool first and summarize the resulting text.',
-      },
-      {
-        q: 'What format is the output?',
-        a: 'Plain text, so you can copy it, save it, or feed it into another text tool.',
-      },
-      {
-        q: 'Is there a page or length limit?',
-        a: "Very long documents may be truncated to fit the model's context. For huge PDFs, consider summarizing the most relevant pages by extracting them first.",
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'pdf-q-and-a',
-        why: 'When you want a specific answer from the PDF instead of a general summary.',
-      },
-      {
-        id: 'pdf-to-text',
-        why: 'Free, fully in-browser text extraction if you just need the raw text without an AI summary.',
-      },
-      {
-        id: 'pdf-extract-pages',
-        why: 'Pull out just the pages you care about before summarizing a very long document.',
       },
     ],
   },
@@ -7631,54 +6851,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'read-handwriting': {
-    intro:
-      "Read Handwriting transcribes handwritten text from a photo or scan into clean, typed plain text using a hosted vision model. Reach for it when you have handwritten notes, a filled-in form, or an old letter you'd rather not retype by hand. It handles cursive and print far better than standard OCR and costs 1 credit per run.",
-    useCases: [
-      'Type up handwritten meeting or lecture notes into a digital document',
-      'Transcribe a filled-out paper form into editable text for your records',
-      'Read an old handwritten letter or recipe card into searchable text',
-      "Capture a whiteboard photo's handwritten bullet points after a brainstorm",
-      'Convert handwritten survey responses into text for analysis',
-      'Digitize journal or diary pages so they can be searched later',
-    ],
-    faq: [
-      {
-        q: 'What should I upload?',
-        a: 'A clear PNG, JPEG, or WebP photo or scan of the handwriting. The flatter and better-lit the page, the more accurate the transcription.',
-      },
-      {
-        q: 'Why not use regular OCR?',
-        a: "Standard OCR is tuned for printed type and struggles with handwriting, especially cursive. This tool uses a vision model trained to read handwritten strokes, so it's the right pick for anything hand-written.",
-      },
-      {
-        q: 'Does my image get uploaded?',
-        a: 'Yes. As a Pro vision tool it sends the image to a hosted model to do the transcription. The image is used only for that run.',
-      },
-      {
-        q: 'How accurate is it on messy writing?',
-        a: "It's strong on legible handwriting and good with most cursive, but very sloppy or faint writing can produce errors. Always proofread the output against the original.",
-      },
-      {
-        q: 'What does it cost?',
-        a: '1 credit per image.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'ocr-hq',
-        why: 'Use this instead when the source is printed or typed rather than handwritten.',
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Translate the transcribed notes into another language afterward.',
-      },
-      {
-        id: 'word-counter',
-        why: 'Count words and estimate reading time on the text you just transcribed.',
-      },
-    ],
-  },
   'record-audio': {
     intro:
       "Record Audio is a push-to-talk microphone recorder: click record, speak, click stop, and the clip is yours to download or chain straight into another tool. It captures right in your browser with nothing sent anywhere. Reach for it to grab a quick voice memo or to produce audio you'll transcribe or clean up next.",
@@ -7709,7 +6881,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Can I send the recording straight to transcription?',
-        a: 'Yes. The WebM output chains directly into Transcribe (free, in-browser) or Transcribe Pro (hosted, higher accuracy).',
+        a: 'Yes. The WebM output can be passed directly to Transcribe for on-device transcription.',
       },
     ],
     alsoTry: [
@@ -7720,58 +6892,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'audio-enhance',
         why: 'Clean up and upscale a noisy or low-quality recording to crisp 48 kHz audio.',
-      },
-      {
-        id: 'transcribe-pro',
-        why: 'Hosted Whisper large-v3 turbo for higher accuracy on noisy or accented recordings.',
-      },
-    ],
-  },
-  'regex-from-text-pro': {
-    intro:
-      "Regex From Text turns a plain-English description into a working regular expression using a hosted LLM. Reach for it when the free heuristic builder can't handle your phrasing, or when the pattern is too open-ended to express by hand. You describe what to match and it returns the regex as JSON; each run costs 1 credit.",
-    useCases: [
-      "Generate a pattern to match invoice numbers like 'INV-2024-0001' described in words",
-      'Build a regex for an oddly formatted internal ID you can only describe loosely',
-      'Match dates written several different ways without hand-crafting alternations',
-      "Get a starting pattern for log lines you want to filter but can't express yet",
-      "Translate a teammate's plain-English 'match everything that looks like X' request into a real expression",
-      'Draft a validation pattern for a custom code format for a form field',
-    ],
-    faq: [
-      {
-        q: 'How do I use it?',
-        a: 'Type a description of what you want to match as plain text. It returns the generated regular expression as JSON that you can copy into your code.',
-      },
-      {
-        q: 'How is this different from the free Regex Tester?',
-        a: "The free Regex Tester runs a regex you already have against sample text. This tool writes the regex for you from a description, using an LLM that handles arbitrary phrasing the heuristic engine can't.",
-      },
-      {
-        q: 'Does my text get uploaded?',
-        a: 'Yes. As a Pro tool it sends your description to a hosted LLM. The free heuristic and the Regex Tester run in your browser if you prefer not to upload.',
-      },
-      {
-        q: 'Should I test the generated regex?',
-        a: 'Yes. LLM-generated patterns are usually close but not guaranteed correct, so run the result against real samples in the free Regex Tester before relying on it.',
-      },
-      {
-        q: 'What does it cost?',
-        a: '1 credit per generated expression.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'regex-tester',
-        why: 'Free in-browser tool to validate the generated pattern against your real sample text.',
-      },
-      {
-        id: 'cron-from-text-pro',
-        why: 'The same plain-English-to-syntax idea, but for cron schedule expressions.',
-      },
-      {
-        id: 'text-keywords',
-        why: 'Pull the key nouns out of a longer description before turning it into a pattern.',
       },
     ],
   },
@@ -7812,10 +6932,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
     alsoTry: [
-      {
-        id: 'regex-from-text-pro',
-        why: 'Describe what you want in plain English and get a regex to paste back here for testing.',
-      },
       {
         id: 'text-diff',
         why: 'Compare a before/after of text once your regex replacement has done its work.',
@@ -8060,50 +7176,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'mute-video',
         why: "Drop the audio if reversed sound isn't what you want",
-      },
-    ],
-  },
-  'rewrite-tone-pro': {
-    intro:
-      "Rewrite Tone uses a hosted fast LLM to rewrite your text in a tone you pick — formal, casual, kid-friendly, concise, professional, or friendly. Reach for it when a rough note needs to become something you can actually send, like an email draft or a customer reply. It's a Pro tool using 1 credit per run.",
-    useCases: [
-      'Turn a blunt internal note into a professional reply you can send to a client',
-      'Rewrite a dense paragraph in kid-friendly language for a younger audience',
-      'Make a wordy update concise so it fits a status post or Slack message',
-      'Soften a frustrated draft into a friendly customer-service response',
-      'Bump a casual message up to a formal register for an external partner',
-      'Rework a stiff product description into a warmer, more approachable tone',
-    ],
-    faq: [
-      {
-        q: 'Which tones can I choose?',
-        a: 'Formal, casual, kid-friendly, concise, professional, or friendly. You pick the target tone and the model rewrites your text to match.',
-      },
-      {
-        q: 'How is this different from Fix Grammar?',
-        a: 'Fix Grammar corrects errors while keeping your voice. Rewrite Tone deliberately changes the voice and style to the tone you select, so the wording can shift substantially.',
-      },
-      {
-        q: 'What does it return?',
-        a: 'Plain text — the rewritten version in your chosen tone, ready to use.',
-      },
-      {
-        q: 'Does it run locally?',
-        a: "No. It's a Pro tool that sends your text to a hosted LLM. Free in-browser tools stay free; this one runs on hosted infrastructure at 1 credit per run.",
-      },
-      {
-        q: 'Will it change the meaning?',
-        a: 'It aims to keep your meaning while changing tone, but rewriting can rephrase heavily — especially for concise or kid-friendly targets — so review the result before sending.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'fix-grammar-pro',
-        why: 'When you only need errors fixed and your voice kept, this is the lighter-touch option.',
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'Shorten a long passage first, then set the tone on the trimmed version.',
       },
     ],
   },
@@ -9244,10 +8316,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         id: 'word-counter',
         why: 'Pair topic keywords with word, sentence, and reading-time metrics.',
       },
-      {
-        id: 'text-ner-pro',
-        why: 'Go beyond topics to named people, orgs, places, and dates with a hosted model.',
-      },
     ],
   },
   'text-ner': {
@@ -9280,73 +8348,17 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does it catch dates and money amounts too?',
-        a: 'This free version focuses on people, organizations, and locations. For dates, money, and broader entity types with higher recall, use the hosted NER Pro tool.',
+        a: 'The model focuses on people, organizations and locations.',
       },
       {
         q: 'How accurate is it on long documents?',
-        a: 'It works well on clear prose, but recall drops on very long or unusual text. The hosted Pro version has notably better recall on long-form content.',
+        a: 'Recall can drop on very long or unusual text. Review the entities against the original.',
       },
     ],
     alsoTry: [
-      {
-        id: 'text-ner-pro',
-        why: 'Hosted LLM that also extracts dates and money with much better recall on long text.',
-      },
       {
         id: 'text-dates',
         why: 'Extract every date reference in the same document to complement the named entities.',
-      },
-      {
-        id: 'text-redact-pro',
-        why: 'Once you know which names appear, strip the personal ones out for safe sharing.',
-      },
-    ],
-  },
-  'text-ner-pro': {
-    intro:
-      "Named Entity Recognition pulls the people, organisations, places, dates, and money references out of text using a hosted LLM that recalls far more entities than lightweight browser models, especially across long documents. It's the right tool when you need a structured list of who, where, and how much from unstructured prose. Results come back as JSON and each run uses 1 credit.",
-    useCases: [
-      'Extract every company and person named across a long article for a research dossier',
-      'Pull dates and monetary amounts out of a contract for a quick at-a-glance summary',
-      'Build a list of locations mentioned in a travel or logistics document',
-      'Index meeting notes by the organisations and people discussed',
-      'Surface the parties and figures in a financial report without reading it line by line',
-      'Tag long-form content with its key entities for search or categorization',
-    ],
-    faq: [
-      {
-        q: 'What entity types does it find?',
-        a: 'People, organisations, places, dates, and money references, returned as structured JSON.',
-      },
-      {
-        q: 'Why use this over the free browser NER?',
-        a: 'The hosted LLM has much better recall on long-form text, catching entities that browser-only models miss across longer passages.',
-      },
-      {
-        q: 'What does it cost?',
-        a: '1 credit per run, since the extraction runs on a hosted model rather than in your browser.',
-      },
-      {
-        q: 'Does my text leave my device?',
-        a: 'Yes. The entities are extracted by a hosted model, so your text is sent there to be processed.',
-      },
-      {
-        q: 'What input does it accept?',
-        a: 'Plain text (text/plain). The output is JSON listing the entities it found.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-sentiment-pro',
-        why: 'Pair entity extraction with a tone read to see who is mentioned and how positively.',
-      },
-      {
-        id: 'text-dates',
-        why: 'Extract and normalize date references in your browser for free as a lighter alternative.',
-      },
-      {
-        id: 'text-redact-pro',
-        why: 'After spotting the people and orgs, redact the personal ones before sharing.',
       },
     ],
   },
@@ -9441,60 +8453,8 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         why: 'Cover sensitive content in a PDF document rather than plain text.',
       },
       {
-        id: 'text-redact-pro',
-        why: 'Catch free-form PII like names and places that regex patterns miss, using a hosted LLM.',
-      },
-      {
         id: 'file-fingerprint',
         why: 'Hash the redacted output to prove the version you shared is the one you intended.',
-      },
-    ],
-  },
-  'text-redact-pro': {
-    intro:
-      'Redact PII strips personal data out of text, replacing names, emails, phone numbers, addresses, SSNs, and card-shaped numbers with [REDACTED]. Because it\'s powered by a hosted LLM, it also catches free-form mentions like "met Joe at Acme HQ in March" that pattern-based redactors slide right past. Use it before sharing logs, transcripts, or notes that might contain sensitive identifiers; each run costs 2 credits.',
-    useCases: [
-      'Scrub customer names and emails from a support transcript before pasting it into a ticket',
-      'Remove addresses and phone numbers from notes before sharing them in a public channel',
-      'Strip SSNs and card-shaped numbers from a document headed for a less-trusted system',
-      'Sanitize a chat log of contextual mentions like a person met at a named company',
-      'Clean meeting notes of personal identifiers before archiving or distributing them',
-      'Prepare a sample dataset of free-text fields for sharing without exposing real people',
-    ],
-    faq: [
-      {
-        q: 'What kinds of data does it redact?',
-        a: 'Names, emails, phone numbers, addresses, SSNs, and card-shaped numbers, each replaced with [REDACTED]. It also catches free-form mentions of people and places that regex misses.',
-      },
-      {
-        q: 'Why is it better than pattern-based redaction?',
-        a: 'Pattern matching only catches structured formats; the hosted LLM also recognizes natural-language mentions like a name dropped mid-sentence.',
-      },
-      {
-        q: 'Is my text uploaded for redaction?',
-        a: 'Yes. The redaction is performed by a hosted model, so your text is sent to it. For fully on-device redaction, use the free in-browser Text Redact tool instead.',
-      },
-      {
-        q: 'What does it cost and what does it return?',
-        a: '2 credits per run. It takes plain text and returns the same text with personal data replaced by [REDACTED].',
-      },
-      {
-        q: 'Is redaction guaranteed to catch everything?',
-        a: 'It catches far more than pattern-based tools, but no automated redactor is perfect; review sensitive output before sharing it widely.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-redact',
-        why: "Run a fully in-browser, free redaction pass when you'd rather your text never leave the device.",
-      },
-      {
-        id: 'text-ner-pro',
-        why: 'Identify exactly which people and organisations appear before deciding what to redact.',
-      },
-      {
-        id: 'pdf-redact',
-        why: 'Cover sensitive content in a PDF with solid rectangles rather than editing text.',
       },
     ],
   },
@@ -9533,14 +8493,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'text-translate-pro',
-        why: 'Split first, then translate sentence by sentence for cleaner results.',
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'A natural next step after segmenting long prose.',
-      },
-      {
         id: 'word-counter',
         why: 'Pair sentence splitting with word, sentence, and reading-time stats.',
       },
@@ -9568,7 +8520,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Does it detect neutral or mixed sentiment?',
-        a: 'This free in-browser version classifies along a positive/negative axis. For neutral handling plus sarcasm and mixed tone, the hosted Sentiment Pro tool is more nuanced.',
+        a: 'This model classifies along a positive or negative axis. Mixed or neutral tone can be difficult to classify.',
       },
       {
         q: 'How long can the input be?',
@@ -9580,14 +8532,10 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Is it accurate on sarcasm?',
-        a: 'Lightweight heuristic models miss sarcasm and irony. If that matters, use the hosted Pro version, which handles tricky tone better.',
+        a: 'The model can miss sarcasm and irony. Check the output against the text and its context.',
       },
     ],
     alsoTry: [
-      {
-        id: 'text-sentiment-pro',
-        why: 'Hosted LLM version that catches sarcasm, mixed tone, and neutral cases this one misses.',
-      },
       {
         id: 'text-sentences',
         why: "Split a long review into sentences and score each one's tone individually.",
@@ -9595,54 +8543,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'text-keywords',
         why: 'Pair sentiment with the topics being talked about for a fuller picture.',
-      },
-    ],
-  },
-  'text-sentiment-pro': {
-    intro:
-      'Sentiment classifies text as positive, negative, or neutral using a hosted LLM that reads tone the way a person would, catching sarcasm, mixed feelings, and domain-specific language that simple keyword heuristics miss. It\'s the tool to reach for when you need a reliable read on how something is worded rather than a brittle count of "good" and "bad" words. It returns structured JSON and costs 1 credit per run.',
-    useCases: [
-      'Score a batch of customer reviews where sarcasm flips the apparent meaning',
-      'Gauge the tone of a support ticket before routing it to the right queue',
-      'Classify survey free-text responses that mix praise and complaints in one breath',
-      'Check whether a social mention is genuinely negative or just dryly worded',
-      'Triage feedback in a domain where jargon confuses simple keyword scoring',
-      'Add a sentiment label to chained text output for downstream filtering',
-    ],
-    faq: [
-      {
-        q: 'What does it return?',
-        a: 'JSON (application/json) with a sentiment classification of positive, negative, or neutral for the input text.',
-      },
-      {
-        q: 'How is this better than the free heuristic version?',
-        a: 'The hosted LLM understands sarcasm, mixed tone, and domain language, whereas keyword-based heuristics often mislabel anything more subtle than plain praise or complaint.',
-      },
-      {
-        q: 'Why does it cost a credit?',
-        a: 'It runs on a hosted model rather than in your browser, so each classification uses 1 credit.',
-      },
-      {
-        q: 'Is my text uploaded?',
-        a: 'Yes. Because the classification comes from a hosted model, your text is sent to it for processing, unlike the free in-browser tools.',
-      },
-      {
-        q: 'What input format does it take?',
-        a: 'Plain text (text/plain). Paste or chain in the content you want classified.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-ner-pro',
-        why: 'Pull out the people and companies mentioned alongside the sentiment for richer analysis.',
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'Summarize a long feedback thread, then check the overall tone of the summary.',
-      },
-      {
-        id: 'text-sentences',
-        why: 'Split text into sentences first to classify sentiment at a finer granularity.',
       },
     ],
   },
@@ -9775,19 +8675,11 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         a: 'It generates a condensed summary rather than only pulling sentences verbatim. Always skim the output against the source for accuracy on important details.',
       },
       {
-        q: 'Why might the hosted Pro version be better?',
-        a: 'The hosted Llama-class Summarize Pro tool produces higher-quality summaries, especially on dense or technical material, at the cost of credits.',
-      },
-      {
         q: 'What languages does it work on?',
         a: 'It is tuned primarily for English. Translate other-language text first if the summary quality is poor.',
       },
     ],
     alsoTry: [
-      {
-        id: 'text-summarize-pro',
-        why: 'Hosted Llama-class model for higher-quality summaries on dense material.',
-      },
       {
         id: 'pdf-to-text',
         why: "Extract a PDF's text in your browser, then summarize it here.",
@@ -9795,54 +8687,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'transcribe',
         why: 'Turn an audio recording into text first, then summarize the transcript.',
-      },
-    ],
-  },
-  'text-summarize-pro': {
-    intro:
-      'Summarize condenses long text into a short, readable summary using a hosted Llama-class model, delivering noticeably higher quality than browser-only summarizers. It\'s built for real source material like transcripts, articles, and reports where you want a faithful TLDR rather than a crude clip. It pairs naturally with hosted transcription for an end-to-end "audio to notes" workflow and costs 2 credits per run.',
-    useCases: [
-      'Turn a long meeting transcript into a tight set of takeaways and decisions',
-      'Generate a TLDR at the top of a lengthy report before circulating it',
-      'Condense a research article or whitepaper into a few sentences for a reading queue',
-      'Summarize a customer-feedback thread into the key themes for a status update',
-      'Compress a transcribe-pro output into shareable notes right after a call',
-      'Boil down product documentation into a quick-reference overview',
-    ],
-    faq: [
-      {
-        q: 'What input does Summarize accept?',
-        a: 'Plain text (text/plain). Paste or chain in the content you want summarized and it returns a plain-text summary.',
-      },
-      {
-        q: 'Why does this cost credits when other tools are free?',
-        a: 'It runs on a hosted Llama-class model rather than in your browser, so each run uses 2 credits to cover the compute that produces the higher-quality summary.',
-      },
-      {
-        q: 'How is this different from a free browser summarizer?',
-        a: 'The hosted model produces more coherent, faithful summaries, especially on long or complex text where lightweight in-browser methods tend to drop context.',
-      },
-      {
-        q: 'Is my text processed on a server?',
-        a: 'Yes. Because the summary comes from a hosted model, your text is sent to that model to be processed, unlike the free in-browser tools.',
-      },
-      {
-        q: "What's a good workflow to pair it with?",
-        a: 'Transcribe audio with transcribe-pro, then feed the transcript here for a clean "audio to notes" flow.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'transcribe-pro',
-        why: 'Produce a high-accuracy transcript, then summarize it here for instant meeting notes.',
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Translate the summary into another language with a matching hosted model.',
-      },
-      {
-        id: 'pdf-summarize',
-        why: "Skip the copy-paste and summarize a PDF's extracted text directly.",
       },
     ],
   },
@@ -9887,10 +8731,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       {
         id: 'strip-exif',
         why: 'Sanitize images from untrusted sources the way this tool screens text.',
-      },
-      {
-        id: 'text-redact-pro',
-        why: "Remove personal data from a message after you've assessed whether to trust it.",
       },
     ],
   },
@@ -9942,52 +8782,6 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
     ],
   },
-  'text-to-speech-pro': {
-    intro:
-      'Text to Speech sends up to 500 UTF-8 bytes to a hosted model and returns an MP3. It supports English and Spanish; French, Chinese, Japanese and Korean are currently unavailable. It uses 2 credits per run.',
-    useCases: [
-      'Listen to a short text excerpt',
-      'Hear a short English or Spanish phrase',
-      'Generate a short audio clip from selected text',
-      'Create a short audio clip for accessibility',
-    ],
-    faq: [
-      {
-        q: 'What format is the output?',
-        a: 'An MP3 audio file (audio/mpeg) generated from your plain-text input.',
-      },
-      {
-        q: 'How much does it cost?',
-        a: "It's a Pro tool that uses 2 credits per run. The free in-browser tools remain free; anything backed by a hosted model is Pro.",
-      },
-      {
-        q: 'Does my text get sent to a server?',
-        a: "Yes. Unlike the fully in-browser tools, this one sends your text to a hosted neural TTS model to synthesize the audio. It's processed for the request and the MP3 is returned to you.",
-      },
-      {
-        q: 'What can feed into it?',
-        a: 'Plain text up to 500 UTF-8 bytes. Longer text needs to be split into separate runs.',
-      },
-      {
-        q: 'How long can the text be?',
-        a: 'Up to 500 UTF-8 bytes per run, including the normalized form of the input.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-summarize-pro',
-        why: 'Summarize text before selecting an excerpt of at most 500 bytes to speak.',
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Translate text, then select a short English or Spanish excerpt to speak.',
-      },
-      {
-        id: 'transcribe-and-translate',
-        why: 'Transcribe and translate audio into text.',
-      },
-    ],
-  },
   'text-translate': {
     intro:
       'Translate Text converts text between 100+ languages. When your browser ships a built-in translator (Chrome 131 and up) it uses that, and otherwise it falls back to the M2M100 model running on your device. Reach for it to quickly translate a paragraph, a message, or extracted document text without sending it to a cloud service.',
@@ -10018,7 +8812,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How is the quality for rare language pairs?',
-        a: 'Common pairs translate well. For less common pairs or nuanced text, the hosted Translate Pro tool produces noticeably better results.',
+        a: 'Results vary by language pair and phrasing. Review technical terms, idioms and names before using the translation.',
       },
       {
         q: 'What format does it return?',
@@ -10027,64 +8821,8 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     ],
     alsoTry: [
       {
-        id: 'text-translate-pro',
-        why: 'Hosted Llama-class translation for higher quality on uncommon language pairs.',
-      },
-      {
-        id: 'translate-image',
-        why: 'Photograph a sign or document and translate the text in one step.',
-      },
-      {
         id: 'docx-to-text',
         why: 'Pull text out of a Word file first, then translate it here.',
-      },
-    ],
-  },
-  'text-translate-pro': {
-    intro:
-      'Translate converts text from one language to another using a hosted Llama-class model, producing more natural results than browser-only translators, especially on less common language pairs. Reach for it when machine output has to read fluently rather than literally, such as customer-facing copy or documents in lower-resource languages. Each run uses 2 credits.',
-    useCases: [
-      "Translate a support reply into a customer's native language with natural phrasing",
-      'Localize marketing or product copy where literal word-for-word output would read awkwardly',
-      'Handle a less common language pair that lightweight in-browser models translate poorly',
-      'Translate an article or email so a colleague abroad can read it in their own language',
-      'Convert a transcript into another language as a follow-on to a transcription workflow',
-      'Produce a readable draft translation of a document for review by a native speaker',
-    ],
-    faq: [
-      {
-        q: 'What does Translate accept and return?',
-        a: 'It takes plain text (text/plain) and returns the translated plain text.',
-      },
-      {
-        q: 'Which languages does it handle?',
-        a: 'It uses a hosted Llama-class model that covers a broad range of languages, with a particular edge on less common pairs where browser-only models struggle.',
-      },
-      {
-        q: 'Why is this a paid tool?',
-        a: 'It runs on a hosted model rather than in your browser, so each translation uses 2 credits to cover the compute behind the higher quality.',
-      },
-      {
-        q: 'Is my text sent to a server?',
-        a: 'Yes. The translation is produced by a hosted model, so your text is sent there to be processed, unlike the free in-browser tools.',
-      },
-      {
-        q: 'How does it compare to the free in-browser translator?',
-        a: 'The hosted model generally produces more fluent, context-aware translations, with the biggest gains on rarer language pairs.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-summarize-pro',
-        why: 'Summarize first, then translate the short version to save effort on long documents.',
-      },
-      {
-        id: 'transcribe-and-translate',
-        why: 'Go straight from an audio file to a translated transcript in one step.',
-      },
-      {
-        id: 'translate-image',
-        why: 'Translate text captured in a photo of a sign or document instead of pasted text.',
       },
     ],
   },
@@ -10262,7 +9000,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How accurate is it on noisy or accented speech?',
-        a: "It's good for clear speech; for noisy, accented, or difficult audio the hosted Pro version uses the larger Whisper large-v3 turbo model for better results.",
+        a: 'It works best with clear speech. Review passages with background noise, overlapping voices or unfamiliar names.',
       },
     ],
     alsoTry: [
@@ -10271,256 +9009,8 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
         why: 'Clean up a rough recording first so the transcript comes out more accurate.',
       },
       {
-        id: 'transcribe-pro',
-        why: 'Step up to hosted Whisper large-v3 turbo when the in-browser models struggle with noise or accents.',
-      },
-      {
         id: 'word-counter',
         why: 'Get word and reading-time stats on the finished transcript.',
-      },
-    ],
-  },
-  'transcribe-and-translate': {
-    intro:
-      'Transcribe & Translate takes an audio file, transcribes the speech, and translates the transcript into your target language in one combined step. Reach for it when you have a recording in one language and need readable text in another, such as a foreign interview or a call recap. It runs on hosted models and costs 5 credits per run.',
-    useCases: [
-      'Turn a foreign-language interview recording into a translated transcript',
-      'Get an English summary-ready transcript from a meeting held in another language',
-      'Translate a voice memo a colleague left in their native language',
-      'Produce a translated script from a foreign podcast or webinar clip',
-      'Convert a recorded customer call in another language into readable notes',
-      'Caption a foreign-language video by translating its audio track to text',
-    ],
-    faq: [
-      {
-        q: 'What audio formats are accepted?',
-        a: 'MP3 (audio/mpeg), WAV, MP4/M4A audio, and WebM. The output is plain translated text.',
-      },
-      {
-        q: 'Is this two tools in one?',
-        a: 'Yes. It transcribes the speech and then translates that transcript, saving you from running transcription and translation separately.',
-      },
-      {
-        q: 'Does my audio get uploaded?',
-        a: "Yes. This is a Pro tool that sends your audio to hosted models for transcription and translation. The free in-browser transcriber stays on your device but doesn't translate.",
-      },
-      {
-        q: 'Why is it 5 credits?',
-        a: 'It bundles two expensive steps, speech-to-text plus translation, which is why it costs more than transcription or translation alone.',
-      },
-      {
-        q: 'How long can the audio be?',
-        a: 'It handles typical clips and recordings; very long files take longer and cost the same per run. For best results, trim to the portion you actually need.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'transcribe',
-        why: 'Free in-browser transcription when you only need the original-language text and no translation.',
-      },
-      {
-        id: 'transcribe-pro',
-        why: "Hosted high-accuracy transcription when you don't need translation but want better quality.",
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'Condense the translated transcript into a short set of notes.',
-      },
-    ],
-  },
-  'transcribe-pro': {
-    intro:
-      'Transcribe Audio (Pro) runs hosted Whisper large-v3 turbo for higher-accuracy speech-to-text, especially on noisy, accented, or low-quality recordings that trip up the free in-browser models. Reach for it when getting the words exactly right matters more than keeping the audio fully local. Each run uses 3 credits and returns plain text, or SRT or WebVTT subtitles with timings if you pick a subtitle output.',
-    useCases: [
-      'Transcribe a multi-speaker conference recording with crosstalk and background noise',
-      'Get an accurate transcript of an interview with a strong regional accent',
-      'Caption a field recording made in a busy, echoey environment',
-      'Produce a clean transcript of a low-bitrate archival recording',
-      'Transcribe technical or domain-heavy speech where the free model misses terms',
-      'Turn a hard-to-hear voicemail or phone call into reliable text',
-    ],
-    faq: [
-      {
-        q: 'How is this different from the free Transcribe tool?',
-        a: 'The free version runs Whisper locally in your browser. Pro sends the audio to a hosted Whisper large-v3 turbo model that is more accurate on noisy or accented speech, at a cost of 3 credits per run.',
-      },
-      {
-        q: 'What audio formats does it accept?',
-        a: 'WAV, MP3, MP4/M4A, AAC, OGG, WebM, and FLAC, up to 25 MB. Choose plain text, SRT subtitles or WebVTT subtitles as the output.',
-      },
-      {
-        q: 'Can it make subtitles for a video?',
-        a: 'Yes. Pick SRT or WebVTT output to get timed lines you can upload with a video, or open Burn Subtitles to put them on the picture. For a video file, use the Make subtitles for a video page, which extracts the audio in your browser first.',
-      },
-      {
-        q: 'Is the audio uploaded?',
-        a: "Yes. Because it's a hosted model, your audio is processed on a server. If you need everything to stay on your device, use the free in-browser Transcribe instead.",
-      },
-      {
-        q: 'How many credits does it cost?',
-        a: '3 credits per run.',
-      },
-      {
-        q: 'When should I pay for Pro instead of using the free version?',
-        a: 'Choose Pro when the recording is noisy, accented, or otherwise hard, and accuracy matters more than keeping the file fully local.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'transcribe',
-        why: "Use the free in-browser version when the audio is clean and you'd rather keep it local.",
-      },
-      {
-        id: 'transcribe-and-translate',
-        why: 'Transcribe and translate the audio in one hosted step.',
-      },
-      {
-        id: 'text-summarize-pro',
-        why: 'Feed the transcript into hosted summarization for an audio-to-notes flow.',
-      },
-    ],
-  },
-  'translate-image': {
-    intro:
-      'Translate Image Text reads the text in a photo and translates it in a single step, so you can point at a foreign-language sign or document and get the meaning back. Reach for it while traveling, reviewing foreign paperwork, or handling screenshots in another language. It combines OCR and translation on a hosted vision model and costs 2 credits per run.',
-    useCases: [
-      'Photograph a restaurant menu abroad and read it in your own language',
-      'Translate a foreign-language street sign or notice from a travel photo',
-      'Understand a shipping label or invoice written in another language',
-      'Read a screenshot of a foreign-language app or webpage',
-      'Translate text baked into a foreign infographic that has no copyable text',
-      'Make sense of instructions printed on imported product packaging',
-    ],
-    faq: [
-      {
-        q: 'Do I need to extract the text first?',
-        a: 'No. It reads the text from the image and translates it in one pass, so you just supply the photo. The result is plain translated text.',
-      },
-      {
-        q: 'Which image formats work?',
-        a: 'PNG, JPEG, and WebP. A clear, well-lit photo of the text translates most reliably.',
-      },
-      {
-        q: 'Does my photo get uploaded?',
-        a: 'Yes. This Pro tool sends the image to a hosted vision model that does both the reading and the translation. The image is used only for that run.',
-      },
-      {
-        q: 'Why does it cost 2 credits when OCR is 1?',
-        a: 'It does two jobs in one step, extracting the text and then translating it, so it costs slightly more than reading text alone.',
-      },
-      {
-        q: 'How accurate is the translation?',
-        a: "It's good for everyday signs and documents, but handwriting, stylized fonts, or low-contrast text can cause errors. Double-check anything important.",
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'ocr-hq',
-        why: 'When you only need the original text extracted, without translating it.',
-      },
-      {
-        id: 'text-translate-pro',
-        why: 'Translate text you already have as plain text rather than inside an image.',
-      },
-      {
-        id: 'read-handwriting',
-        why: 'Use first if the source is handwritten, then translate the transcript.',
-      },
-    ],
-  },
-  'translate-indic-pro': {
-    intro:
-      'Translate to Indic Languages converts English text into eleven major South Asian languages using IndicTrans2, a model built specifically for this job. Reach for it when a general-purpose LLM gives stilted or inaccurate output for Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, or Assamese. Because the model is purpose-built for English-to-Indic pairs, the wording reads more natural than a one-size-fits-all translator.',
-    useCases: [
-      'Localize app copy or onboarding screens into Hindi, Tamil, and Bengali for an Indian launch',
-      'Translate a customer-facing announcement into Marathi and Gujarati for regional audiences',
-      'Render English product descriptions into Telugu and Kannada for a marketplace listing',
-      "Convert support macros into Punjabi or Malayalam so agents can reply in a customer's language",
-      'Translate survey questions into Urdu and Assamese to widen response coverage',
-      'Produce a first-pass Indic translation of documentation for a human reviewer to polish',
-    ],
-    faq: [
-      {
-        q: 'Which languages are supported?',
-        a: 'Eleven: Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Malayalam, Kannada, Urdu, and Assamese. The source text is English.',
-      },
-      {
-        q: 'Why use this instead of the general Translate tool?',
-        a: 'IndicTrans2 is trained specifically on English-to-Indic pairs, so it handles these scripts and grammar more faithfully than a general LLM. For other language pairs, use the general hosted Translate tool.',
-      },
-      {
-        q: 'What format does it take and return?',
-        a: 'Plain text in, plain text out (text/plain). Paste your English text and pick the target Indic language; the translated text comes back ready to copy or chain onward.',
-      },
-      {
-        q: 'Does my text leave my device?',
-        a: 'Yes — this is a Pro tool running on hosted infrastructure, and each run uses 1 credit. The text is sent to the IndicTrans2 model to be translated.',
-      },
-      {
-        q: 'Can it translate from Hindi back into English?',
-        a: 'No — this tool is purpose-built for the English-to-Indic direction. For other directions or non-Indic languages, use the general hosted Translate tool.',
-      },
-      {
-        q: 'How long can the input be?',
-        a: 'It works best on focused passages — a paragraph, a screen of copy, a set of strings. For very long documents, split the text into sections and translate each in turn.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-translate-pro',
-        why: 'Need a language pair outside the Indic set? The general hosted Translate tool covers the rest.',
-      },
-      {
-        id: 'transcribe-and-translate',
-        why: 'Start from an audio file: transcribe speech and translate it, then refine the Indic output here.',
-      },
-      {
-        id: 'text-sentences',
-        why: 'Split a long passage into sentences first, then translate each one for cleaner segment-by-segment results.',
-      },
-    ],
-  },
-  'translate-many-pro': {
-    intro:
-      "Translate (100+ languages) uses a hosted M2M-100 model to translate directly across more than 100 language pairs without routing through a chat LLM. Reach for it when you want straight-shot translation that's faster and cheaper than the Llama-class Translate tool. It's a Pro tool using 1 credit per run.",
-    useCases: [
-      'Translate a batch of short product strings between two non-English languages directly, no English pivot',
-      'Localize UI labels into a less-common target language at a lower per-run cost than the chat-LLM translator',
-      'Quickly render a customer message from one language to another when you just need the meaning, fast',
-      'Translate captions or subtitles where throughput and cost matter more than nuanced phrasing',
-      'Convert a paragraph across an uncommon language pair that general tools handle awkwardly',
-      'Run a high-volume translation step in a pipeline where the cheaper per-run rate adds up',
-    ],
-    faq: [
-      {
-        q: 'How is this different from the regular Translate tool?',
-        a: 'This uses M2M-100, a dedicated translation model, for direct straight-shot translation — faster and cheaper at 1 credit. The Llama-class Translate often produces more nuanced phrasing for tricky or idiomatic text but costs more.',
-      },
-      {
-        q: 'How many languages does it support?',
-        a: 'Over 100 language pairs, and it translates directly between them rather than pivoting through English.',
-      },
-      {
-        q: "What's the input and output?",
-        a: 'Plain text in, plain text out. You provide the source text and target language; it returns the translation.',
-      },
-      {
-        q: 'Does it run in my browser?',
-        a: 'No. As a Pro tool it sends your text to a hosted M2M-100 model. The free in-browser tools stay free; hosted-model tools are Pro.',
-      },
-      {
-        q: 'How much does each translation cost?',
-        a: '1 credit per run, which makes it the cheaper choice when you need volume or speed over maximally polished phrasing.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'text-translate-pro',
-        why: 'Switch to the Llama-class translator when phrasing nuance matters more than speed and cost.',
-      },
-      {
-        id: 'fix-grammar-pro',
-        why: 'Clean up source text before translating so the model gets a tidy input.',
       },
     ],
   },
@@ -10746,65 +9236,13 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'Can I go beyond 2x or get even sharper results?',
-        a: 'This tool is fixed at 2x. For 4x or sharper output on large inputs, the hosted Real-ESRGAN Pro version does the heavy lifting on a GPU.',
+        a: 'The scale is fixed at 2x. Review enlarged images before using them at a size where artifacts are visible.',
       },
     ],
     alsoTry: [
-      {
-        id: 'upscale-2x-pro',
-        why: 'For 4x scaling or sharper detail on big images, the hosted Real-ESRGAN runs on a GPU.',
-      },
       {
         id: 'resize',
         why: 'Need an exact pixel size instead of a 2x multiple? Resize gives you precise control.',
-      },
-    ],
-  },
-  'upscale-2x-pro': {
-    intro:
-      'Upscale enlarges an image 2x or 4x using a hosted Real-ESRGAN model, reconstructing sharp edges and fine detail instead of just stretching pixels. Reach for it when a logo, product shot, or old photo is too small to use at the size you need. Because the upscaling runs on a GPU server, large inputs finish faster than a browser could manage, and each run costs 3 credits.',
-    useCases: [
-      'Blow up a 400px product thumbnail to a crisp 1600px hero image for a landing page',
-      'Rescue a low-resolution logo handed off by a client so it holds up in print',
-      'Enlarge a cropped section of a photo without it turning into a blurry mush',
-      'Prepare small social-media avatars for use on a high-DPI retina display',
-      'Restore detail in an old scanned family photo before reprinting it larger',
-      'Upsize AI-generated art from 512px to a usable 2048px for posters',
-    ],
-    faq: [
-      {
-        q: 'What image formats can I upscale?',
-        a: "JPEG, PNG, and WebP. The result comes back as a PNG so the upscaled detail isn't re-degraded by lossy compression.",
-      },
-      {
-        q: 'How is this different from a plain resize?',
-        a: 'A normal resize just interpolates between existing pixels, so enlarging always looks soft. Real-ESRGAN is a trained model that reconstructs plausible edges and texture, giving genuinely sharper results.',
-      },
-      {
-        q: 'Does my image get uploaded?',
-        a: 'Yes. This is a Pro tool: the image is sent to a hosted GPU to run Real-ESRGAN. Local image tools such as Resize process images on your device. The hosted image is processed for the upscale and not retained.',
-      },
-      {
-        q: 'Should I pick 2x or 4x?',
-        a: 'Use 2x when the source is already reasonable and you just need more pixels; use 4x for very small inputs. 4x produces a much larger file and can over-smooth photos that were already sharp.',
-      },
-      {
-        q: 'What does it cost?',
-        a: '3 credits per run. The free tier has no in-browser upscaler at this quality, so this is the route when you need clean enlargement.',
-      },
-    ],
-    alsoTry: [
-      {
-        id: 'resize',
-        why: "Free in-browser tool to scale an image down or to exact dimensions when you don't need AI reconstruction.",
-      },
-      {
-        id: 'compress',
-        why: 'Shrink the file size of your upscaled PNG before publishing it to the web.',
-      },
-      {
-        id: 'bg-remove-pro',
-        why: 'Pair with upscale to get a high-resolution, cleanly cut-out product image.',
       },
     ],
   },

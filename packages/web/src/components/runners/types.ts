@@ -21,8 +21,6 @@ export interface SerializedTool {
   installGroup?: string;
   memoryEstimate: string;
   outputDisplay?: 'mono' | 'prose';
-  /** 'credit' = PRO tool, gated by ToolRunner. Defaults to 'free' when absent. */
+  /** Retained to reject stale serialized tool data. */
   cost?: 'free' | 'credit';
-  /** Credits per run when cost === 'credit'. Server price is authoritative. */
-  creditCost?: number;
 }

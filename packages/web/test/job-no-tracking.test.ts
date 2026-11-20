@@ -60,7 +60,7 @@ afterAll(async () => {
     );
 });
 
-it('real emitted job link navigates to its PRO tool without reporting a click metric', async () => {
+it('real emitted job link opens the free tool catalog without reporting a click metric', async () => {
   const context = await browser!.newContext();
   const page = await context.newPage();
   page.setDefaultTimeout(5000);
@@ -72,18 +72,19 @@ it('real emitted job link navigates to its PRO tool without reporting a click me
   try {
     const response = await page.goto(server!.url + '/transcribe-a-recording/');
     expect(response?.status()).toBe(200);
-    const anchor = page.locator('a[data-seam="transcribe-pro"]');
-    expect(await anchor.getAttribute('href')).toBe('/tools/transcribe-pro');
-    const navigation = page.waitForResponse(
-      (response) =>
-        response.request().isNavigationRequest() &&
-        new URL(response.url()).pathname === '/tools/transcribe-pro/',
-    );
-    await anchor.click();
-    expect((await navigation).status()).toBe(200);
-    await page.waitForURL('**/tools/transcribe-pro/');
-    expect(new URL(page.url()).pathname).toBe('/tools/transcribe-pro/');
-    await page.getByRole('heading', { name: /^Transcribe Audio/, level: 1 }).waitFor();
+    const anchor = page.getByRole('link', { name: 'Browse all tools' });
+    expect(await anchor.getAttribute('href')).toBe('/tools');
+    const canonical = new URL('/tools/', server!.url).href;
+    const [navigation] = await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().isNavigationRequest() && response.url() === canonical,
+      ),
+      anchor.click(),
+    ]);
+    expect(navigation.status()).toBe(200);
+    await page.getByRole('heading', { name: 'Calculators, generators, developer and file tools', level: 1 }).waitFor();
+    expect(page.url()).toBe(canonical);
     expect(metrics).toEqual([]);
   } finally {
     await context.close();

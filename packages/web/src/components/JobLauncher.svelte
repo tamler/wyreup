@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-import { fileMatchesMime, createDefaultRegistry } from '@wyreup/core/execution';
+import { fileMatchesMime } from '@wyreup/core/execution';
+import { createDefaultRegistry } from '../lib/core-execution';
   import { encodeChainSteps, type ChainStepSpec } from './runners/chainUrl';
   import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
   import { clearTrail, setTrailHandover } from './runners/hopTrail';

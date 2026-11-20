@@ -2,7 +2,7 @@
 // HTTP API — works from Workers/Pages Functions (Zoho Mail's SMTP does not).
 // API ref: https://www.zoho.com/zeptomail/help/api/email-api.html
 
-import type { Env } from './env';
+import type { HistoricalEmailEnv as Env } from './historical-env';
 import { appOrigin } from './env';
 
 interface SendArgs {

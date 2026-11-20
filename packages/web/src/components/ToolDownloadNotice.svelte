@@ -59,8 +59,7 @@
       <strong>First run downloads ~{sizeStr}.</strong>
       <span>
         Required assets download when needed. Local processing can work offline
-        when all required assets are available in this browser. Network lookups
-        and hosted PRO processing require a connection.
+        when those assets are available. Network lookups require a connection.
         {#if installGroup}
           Manage downloads on the
           <a href="/settings" class="dl-notice__link">settings page</a>.

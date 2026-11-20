@@ -656,8 +656,8 @@
       "sourcePins": [
         {
           "path": "domainFunctionsHarness.mjs",
-          "bytes": 39862,
-          "sha256": "fd62477b1690344dc10936fb7f45ef1d4183df7bbb764b5aa910680b436a0e5c"
+          "bytes": 41034,
+          "sha256": "537bd5aa6d3bb1f781616cc7ee7ca1bdfceb6fddd409d411a8169651cb35055a"
         },
         {
           "path": "domain-functions-integration.test.ts",
@@ -677,11 +677,11 @@
       ],
       "qualificationPrimitive": {
         "path": "fixtures/domainLifecyclePrimitives.ts",
-        "bytes": 42516,
-        "sha256": "60f162707fd229b78ebf98e60061d5812fe7273edd7c346d58d646ef20940391"
+        "bytes": 43020,
+        "sha256": "0ecf52a952ceed954df2011e0fc3ff68cf37aff8e9a61f783160dfabc80e7607"
       },
       "historicalDataSha256": "afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734",
-      "currentDataSha256": "d5999ea0da2c5b52c640e40bbeffcaa850d487686e674e9b9e01dfb6a4e17809",
+      "currentDataSha256": "25dc25a8155a6785adfd7c494929afa29ed9c14edeaa3e42baf026e81fbfbe60",
       "epochMs": 1792022400000,
       "microtaskTurns": 128,
       "factories": [

@@ -51,7 +51,7 @@ it('selects the exact approved current four-source tuple while preserving all hi
   const { historical, current, row, sources } = inputs();
   const beforeRows = historical.value.revisions.map(item => digest(JSON.stringify(item)));
   expect(digest(historical.bytes)).toBe('afbde92bf01a7ab1736f065ab60c88c5b38f4b5724f16d7a80e2f7abf4ae8734');
-  expect(digest(current.bytes)).toBe('d5999ea0da2c5b52c640e40bbeffcaa850d487686e674e9b9e01dfb6a4e17809');
+  expect(digest(current.bytes)).toBe('25dc25a8155a6785adfd7c494929afa29ed9c14edeaa3e42baf026e81fbfbe60');
   expect(current.value.revisions).toHaveLength(4);
   const oldRows = current.value.revisions.filter(item => item.revisionId === 'after-source0-followup-browser-binding-0');
   expect(oldRows).toHaveLength(1);

@@ -84,7 +84,7 @@ Every Wyreup tool takes a file and produces a file. Chain them to solve real pro
 
 ![Chain diagram](./assets/readme/chain-diagram.svg)
 
-Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save it to your Kit. Share the URL with anyone — they drop a file, it runs the exact pipeline on their device. No accounts required, no data leaves. (PRO is an optional credit-based tier for hosted-model tools — see below.)
+Build a chain at [wyreup.com/chain/build](https://wyreup.com/chain/build). Save it to your Kit. Share the URL with anyone — they drop a file and run the pipeline on their device. No account is required. Public network lookups disclose their requests separately; local AI tools may download model files before processing on your device.
 
 ---
 
@@ -108,24 +108,15 @@ Full catalog: [wyreup.com/tools](https://wyreup.com/tools)
 
 ---
 
-## Wyreup PRO
+## Free-only service
 
-Everything above is free, forever. **PRO** is an optional credit-based tier for hosted-AI tools that need real servers — transcription (Whisper large-v3 turbo, with SRT/WebVTT subtitles), OCR, translation (100+ languages plus a dedicated Indic model), text-to-speech, image generation, long-context PDF Q&A (256k tokens), structured-JSON extraction, content safety classification, grammar fixing, tone rewriting, deep reasoning analysis, plus image background removal and upscaling. 30 tools today and growing.
+Wyreup offers free browser and local tools. Hosted inference, account signup and payments are retired. The website excludes hosted tools from its catalog, search, task pages and chains. Old account, billing and hosted-tool API requests return HTTP 410 before authentication, database access, email or model execution. Existing CLI/MCP installations may still list legacy hosted definitions; those requests are rejected by the service. Local tools remain available without an account or API key.
 
-- Credits start at **220 for $5** (pay-as-you-go pack, never expire). Or **$8/mo** for 440 credits a cycle. Packs at $5 / $10 / $20 share the same ~$0.02/credit rate.
-- Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable. Orphan spends from mid-handler crashes are auto-refunded on the next request.
-- Same API key works across **browser**, **CLI** (`wyreup login` once, then any Pro tool runs from the shell), and **MCP** (set `WYREUP_API_KEY` in your MCP server config to expose Pro tools to your agent). Buying credits in one surface funds usage on every surface.
-- Free tools and the anonymous experience are unchanged.
+Browser model downloads from `models.wyreup.com` support inference on your device. The domain-registration lookup remains a disclosed public network request. Neither performs hosted AI inference. The site has no email signup or cross-product promotion.
 
-### PRO input and account migration
+The matching CLI patch updates the installer's integrity pins for the current skill documents. Upgrade the CLI before installing that guidance; older clients reject changed documents rather than install unverified instructions. Existing local tool commands remain available.
 
-- Text-to-speech supports English and Spanish, with a 500-byte limit. Grammar accepts valid UTF-8 files up to 4,000 bytes and applies validated local grammar, spelling, and punctuation edits to the original text. Untouched text keeps its original spacing, line endings, and Unicode representation, including a leading byte-order mark. Invalid model edits fail and refund the run. Analysis accepts a 34,000-byte document and a 1,500-byte question. Each limit applies to both the original text and its NFKC-normalized UTF-8 form.
-- Signup and account recovery deliver API keys only by email; the browser does not receive the key. The email-bound key rollout disables existing keys and their sessions while retaining account data and credits. Existing CLI and MCP users must request a new emailed key and update their local credentials or `WYREUP_API_KEY` configuration.
-- Before deployment, complete authorized real-provider qualification and rehearse real inbox delivery plus recovered-admin access. See the [PRO model migration decisions](./docs/PRO-MODEL-MIGRATION-DECISIONS.md) and [email-bound auth migration release guide](./docs/auth-migration-release.md) for required checks. These notes do not indicate that the rollout is live or release-ready.
-- Grammar qualification remains on hold after the near-cap case lost sentences with both earlier prompts. The local-edit candidate has no real-provider qualification; no further Gemma calls are authorized.
-- All 12 original English/Spanish Aura REST fixtures passed response, MP3 decoding and deadline checks. Human audio acceptance, Workers AI binding behavior, actual billing and the recovery rehearsal remain unverified. These compatibility checks do not establish release readiness.
-
-See [wyreup.com/pro](https://wyreup.com/pro) for what's hosted, [wyreup.com/legal/pricing](https://wyreup.com/legal/pricing) for prices, and [`docs/pro-auth-spec.md`](./docs/pro-auth-spec.md) for the full spec (D1 schema, atomic credit reservation, webhook idempotency, sanitization, CSP).
+Existing database records and historical migration files are preserved. A new migration sets the old service switch to disabled as defense in depth; database state cannot re-enable retired routes. The release procedure and relevant checks are documented in [free-only service retirement](./docs/free-only-service.md).
 
 ---
 
@@ -162,7 +153,7 @@ Open [wyreup.com](https://wyreup.com) and install as a PWA. On mobile, share any
 | `packages/web` | Astro 7 + Svelte 5 static site — wyreup.com, fully static, PWA |
 | `packages/cli` | `wyreup` CLI (`@wyreup/cli`) |
 | `packages/mcp` | MCP server (`@wyreup/mcp`) |
-| `functions/` | Cloudflare Pages Functions for the PRO tier — auth, credits, admin, hosted-model dispatch. Only loaded for `/api/*` routes; doesn't ship to npm. |
+| `functions/` | Cloudflare Pages Functions for public domain lookups and fail-closed retirement of other API routes. Doesn't ship to npm. |
 | `migrations/` | D1 schema migrations applied via `pnpm db:apply:remote` / `db:apply:local`. |
 
 Agent skills are installed via `wyreup install-skill [cli|mcp|combined]` —
@@ -193,7 +184,7 @@ Run the web app locally:
 pnpm --filter @wyreup/web dev
 ```
 
-Run the full stack with Pages Functions + local D1 (for PRO development):
+Run the public network lookup with Pages Functions and local D1:
 
 ```bash
 pnpm dev:pages          # builds the static site and serves it under wrangler

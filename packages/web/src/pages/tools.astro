@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolFilter from '../components/ToolFilter.svelte';
 import PwaOnboardBanner from '../components/PwaOnboardBanner.svelte';
 import SavedChainsSection from '../components/SavedChainsSection.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../lib/core-execution';
 import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 const registry = createDefaultRegistry();
@@ -150,8 +150,8 @@ function toolDisplayName(id: string): string {
 
 <BaseLayout
   title="Calculators, generators, developer & file tools — Wyreup"
-  description="Find calculators, generators, developer utilities, browser hardware tests and image, PDF, audio or file tools. Check each task's inputs and local or hosted processing."
-  ogDescription="Browse image, PDF, audio, video, text, data and developer tools. Check each tool's local, network or hosted processing requirements."
+  description="Find free calculators, generators, developer utilities, browser hardware tests and tools for images, PDFs, audio and files."
+  ogDescription="Browse free local tools for images, PDFs, audio, video and text, plus public network lookups. Check each tool's setup requirements."
 >
   <div class="reserve-pwa-banner">
     <PwaOnboardBanner client:load />

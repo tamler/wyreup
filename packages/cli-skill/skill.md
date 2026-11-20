@@ -1,12 +1,11 @@
 ---
 name: wyreup-cli
-description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally without uploading to a cloud service — compress, convert, merge, redact, OCR, blur faces, strip metadata — and the wyreup CLI is installed or npx is available. Also use when the user mentions wyreup, a wyreup chain, or watching a folder for automatic file processing.
+description: Use when the user wants to transform files (images, PDFs, audio, video, text, data) locally on their machine — compress, convert, merge, redact, OCR, blur faces, strip metadata — and the wyreup CLI is installed or npx is available. Also use when the user mentions wyreup, a wyreup chain, or watching a folder for automatic file processing.
 ---
 
 # Wyreup CLI
 
-Wyreup runs 260+ privacy-first file tools on the user's machine. Nothing uploads
-(hosted PRO tools are the explicit, credit-metered exception). Install:
+Wyreup runs 260+ local file tools on the user's machine. Install:
 `npm i -g @wyreup/cli`, or invoke ad hoc with `npx @wyreup/cli`.
 
 ## Command grammar
@@ -34,7 +33,7 @@ cat notes.md | wyreup run markdown-to-html - -o notes.html   # '-' = stdin
 Each step's output feeds the next. Step params go in square brackets:
 
 ```bash
-wyreup chain photo.heic --steps "convert[format=webp]|strip-exif|compress[quality=80]" -o clean.webp
+wyreup chain photo.jpg --steps "convert[targetFormat=webp]|strip-exif|compress[quality=80]" -o clean.webp
 wyreup chain scan.png --steps "ocr|text-summarize" -o summary.txt
 ```
 
@@ -53,22 +52,32 @@ Do not guess tool ids. List them:
 
 ```bash
 wyreup list                 # all tools, grouped by category
-wyreup run <tool-id> --help # a tool's params
+wyreup <tool-id> --help     # a tool's params
 ```
 
-## AI/ML tools and offline prep
+## AI/ML tools and model setup
 
 Model-backed tools (ocr, face-blur, transcribe, bg-remove…) download weights on
-first use. Pre-download: `wyreup prefetch <tool-ids…>` or
-`wyreup prefetch --group speech` (groups: core, ffmpeg, image-ai, nlp-standard,
-speech, vision-llm). `wyreup cache` inspects/clears the shared model cache.
+first use. Pre-download during setup: `wyreup prefetch <tool-ids…>` or
+`wyreup prefetch --group speech`. Current install groups are `ffmpeg`, `gdal`,
+`image-ai`, `nlp-standard`, `nlp-translate`, `speech`, and `vision-llm`.
+Use `wyreup prefetch --help` for command options. `wyreup cache list` inspects
+the shared model cache. `wyreup cache clear` clears it.
 
-## PRO (hosted) tools
+## Network and privacy notes
 
-Credit-metered tools that need a real GPU (hosted upscale, image generation,
-long-PDF Q&A…). They send the input to Wyreup's backend — say so if the user
-cares about locality. Setup: `wyreup login <apiKey>` once;
-`wyreup balance` shows credits. Everything else stays free and local.
+- **Network usage**: File transformations run on the user's machine, though not
+  all operations are strictly offline — model weights download over the network
+  on first use or via `wyreup prefetch`. Public domain-registration lookup
+  sends the entered domain to Wyreup, then its registration registry/RDAP service.
+  The fixed IANA bootstrap request does not include the queried domain.
+- **External assistant privacy**: Any prompts, command outputs, or file excerpts
+  passed through an external AI assistant remain subject to that assistant
+  provider's separate privacy terms.
+- **Retired hosted service**: Wyreup's hosted AI / Pro service, accounts, and
+  credit system are retired. Legacy hosted IDs may remain listed in installed
+  clients, but requests to the official Wyreup service fail after retirement.
+  Recommend local tools.
 
 ## Common mistakes
 
@@ -76,6 +85,6 @@ cares about locality. Setup: `wyreup login <apiKey>` once;
 |---|---|
 | `wyreup --compress photo.jpg` | `wyreup run compress photo.jpg` |
 | `--quality 70` | `--param quality=70` |
-| inventing flags like `--strip-meta` | chain the real tool: `--steps "convert[format=webp]\|strip-exif"` |
+| inventing flags like `--strip-meta` | chain the real tool: `--steps "convert[targetFormat=webp]\|strip-exif"` |
 | guessing tool ids | `wyreup list` first |
 | `watch --exec "…"` | `watch <dir> --steps "<chain>"` |

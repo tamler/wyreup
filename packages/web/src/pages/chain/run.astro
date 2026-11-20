@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ChainRunner from '../../components/ChainRunner.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../../lib/core-execution';
 
 const registry = createDefaultRegistry();
 const tools = Array.from(registry.toolsById.values()).map((t) => ({

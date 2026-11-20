@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sendEmail } from './email';
-import type { Env } from './env';
+import type { HistoricalEmailEnv as Env } from './historical-env';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const env = { ZEPTOMAIL_TOKEN: 'test', ZEPTOMAIL_SENDER: 'sender@example.com' } as Env;

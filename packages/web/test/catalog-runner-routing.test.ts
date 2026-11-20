@@ -86,7 +86,7 @@ describe('actual catalog runner routing boundaries', () => {
     expect(VARIANT_MAP['dwg-to-pdf']).toBeUndefined();
   });
 
-  it('uses exactly four local automatic live routes and cron Utility without changing manual PRO', () => {
+  it('uses exactly four local automatic live routes and does not route the retired cron tool', () => {
     for (const id of ['word-counter', 'json-formatter', 'json-path', 'markdown-to-html'])
       expect(VARIANT_MAP[id], id).toBe('LiveTextRunner');
     expect(
@@ -96,7 +96,7 @@ describe('actual catalog runner routing boundaries', () => {
         .sort(),
     ).toEqual(['json-formatter', 'json-path', 'markdown-to-html', 'word-counter']);
     expect(VARIANT_MAP['cron-from-text']).toBe('UtilityRunner');
-    expect(VARIANT_MAP['cron-from-text-pro']).toBe('TextInputRunner');
+    expect(VARIANT_MAP['cron-from-text-pro']).toBeUndefined();
     expect(VARIANT_MAP['number-base-converter']).toBe('TextInputRunner');
     expect(VARIANT_MAP['csv-json']).toBe('TextResultRunner');
     expect(VARIANT_MAP['base64']).toBe('TextResultRunner');
@@ -155,8 +155,8 @@ describe('actual catalog runner routing boundaries', () => {
     expect(assignment && ts.isBinaryExpression(assignment)).toBe(true);
     if (!assignment || !ts.isBinaryExpression(assignment))
       throw new Error('Actual variant selection is missing.');
-    expect(ts.isElementAccessExpression(assignment.right)).toBe(true);
-    expect(assignment.right.getText(ast)).toBe('VARIANT_MAP[tool.id]');
+    expect(ts.isConditionalExpression(assignment.right)).toBe(true);
+    expect(assignment.right.getText(ast)).toBe("tool.cost === 'credit' ? undefined : VARIANT_MAP[tool.id]");
     expect(toolRunnerSource).toContain('This tool does not have a supported runner.');
     expect(toolRunnerSource).toContain('effectivePreloaded.name');
     expect(toolRunnerSource).toContain('typeof loader');

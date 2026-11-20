@@ -8,7 +8,7 @@
 // auth scheme but keep the variable name generic so the rest of the
 // codebase, wrangler.toml, and the secret-set commands don't change.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { INFERENCE_TIMEOUTS, InferenceTimeoutError } from '../timeout';
 
 export interface BgRemoveInput {

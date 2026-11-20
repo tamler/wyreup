@@ -1,5 +1,7 @@
 # Wyreup Architecture (Quick Reference)
 
+Current service boundary (2026-11-20): the website exposes only free, web-supported tools. Hosted inference, account and billing routes are permanently retired; their old definitions remain in the public library for compatibility. Local model downloads and the disclosed public domain lookup remain available. See [free-only-service.md](free-only-service.md) for routing and release checks. Historical status sections below describe earlier releases.
+
 _Last refresh: 2026-05-14_
 
 The original design spec lives at [`superpowers/specs/2026-04-15-wyreup-tool-library-design.md`](./superpowers/specs/2026-04-15-wyreup-tool-library-design.md). This page is the short-form current state.

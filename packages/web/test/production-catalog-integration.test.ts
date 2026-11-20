@@ -69,14 +69,32 @@ it('reopens the complete number-base JSON artifact from the actual page', async 
   });
 }, 60000);
 
-it('does not report PRO page views as analytics beacons', async () => {
+it('redirects a retired Pro URL, ignores a stale hosted recent tool, and makes no retired API requests', async () => {
   await withPage(async (page) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('wyreup:recent-tools', JSON.stringify([
+        { id: 'transcribe-pro', name: 'Stale hosted transcription', ts: 1 },
+        { id: 'transcribe', name: 'Recent local transcription', ts: 2 },
+        { id: 'ocr-pro', name: 'OCR Pro', ts: 3 },
+      ]));
+    });
     const beacons: string[] = [];
     page.on('request', (request) => {
-      if (new URL(request.url()).pathname === '/api/metrics/hit') beacons.push(request.postData() ?? '');
+      const path = new URL(request.url()).pathname;
+      if (/^\/api\/(metrics|account|auth|credits|tools\/pro)(\/|$)/.test(path)) beacons.push(path);
     });
-    await page.goto(`${server!.url}/pro/`);
-    await page.getByRole('heading', { level: 1 }).waitFor();
+    expect((await page.goto(`${server!.url}/pro/`))?.status()).toBe(200);
+    await page.getByRole('heading', { name: 'Calculators, generators, developer and file tools', level: 1 }).waitFor();
+    expect(page.url()).toBe(new URL('/tools/', server!.url).href);
+    const recent = page.locator('[aria-label="Recently used tools"]');
+    const local = recent.getByRole('link', { name: 'Transcribe Audio', exact: true });
+    await local.waitFor();
+    expect(await local.getAttribute('href')).toBe('/tools/transcribe');
+    const ocr = recent.locator('a[href="/tools/ocr-pro"]');
+    expect(await ocr.innerText()).toBe('Neural OCR');
+    expect(await recent.getByRole('link', { name: 'OCR Pro', exact: true }).count()).toBe(0);
+    expect(await page.evaluate(() => localStorage.getItem('wyreup:recent-tools'))).toContain('"name":"OCR Pro"');
+    expect(await recent.locator('a[href="/tools/transcribe-pro"]').count()).toBe(0);
     expect(beacons).toEqual([]);
   });
 }, 60000);
@@ -88,11 +106,11 @@ it('keeps job links functional without reporting analytics clicks', async () => 
       if (new URL(request.url()).pathname === '/api/metrics/hit') beacons.push(request.postData() ?? '');
     });
     expect((await page.goto(`${server!.url}/transcribe-a-recording/`))?.status()).toBe(200);
-    const link = page.locator('a[data-seam]').first();
-    expect(await link.getAttribute('href')).toBe('/tools/transcribe-pro');
+    const link = page.getByRole('link', { name: 'Browse all tools' });
+    expect(await link.getAttribute('href')).toBe('/tools');
     await link.click();
     await page.getByRole('heading', { level: 1 }).waitFor();
-    expect(new URL(page.url()).pathname).toBe('/tools/transcribe-pro/');
+    expect(new URL(page.url()).pathname).toMatch(/^\/tools\/?$/);
     expect(beacons).toEqual([]);
   });
 }, 60000);

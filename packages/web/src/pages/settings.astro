@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolSettings from '../components/ToolSettings.svelte';
 import StorageSettings from '../components/StorageSettings.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../lib/core-execution';
 
 const registry = createDefaultRegistry();
 
@@ -41,7 +41,7 @@ const GROUP_LABELS: Record<string, { name: string; description: (toolIds: string
   'image-ai': {
     name: 'Image AI tools',
     description: (toolIds, totalMb) =>
-      `${toolIds.length} AI-powered image tools (background removal, upscaling, OCR Pro, image similarity). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
+      `${toolIds.length} AI-powered image tools (background removal, upscaling, Neural OCR, image similarity). Downloads ~${totalMb} MB on first use — runs entirely on your device.`,
   },
   'nlp-standard': {
     name: 'NLP tools (sentiment, NER, summarize, embeddings)',

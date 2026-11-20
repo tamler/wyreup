@@ -123,7 +123,6 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'pgp-armor': 'TextResultRunner',
   'pdf-extract-tables': 'TextResultRunner',
   transcribe: 'TextResultRunner',
-  'transcribe-pro': 'TextResultRunner',
   'image-caption': 'TextResultRunner',
   'image-caption-detailed': 'TextResultRunner',
 
@@ -156,13 +155,6 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'pdf-form-fields': 'JsonResultRunner',
   'zip-remove': 'PreviewRunner',
   'zip-flatten': 'PreviewRunner',
-  'text-summarize-pro': 'TextInputRunner',
-  'text-translate-pro': 'TextInputRunner',
-  'text-sentiment-pro': 'TextInputRunner',
-  'text-ner-pro': 'TextInputRunner',
-  'text-redact-pro': 'TextInputRunner',
-  'bg-remove-pro': 'PreviewRunner',
-  'upscale-2x-pro': 'PreviewRunner',
   'morse-code': 'TextInputRunner',
   'text-confusable': 'TextInputRunner',
   'text-suspicious': 'TextInputRunner',
@@ -362,27 +354,15 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'convert-geo': 'PreviewRunner',
 
   // Image → text (vision-LLM / OCR)
-  'analyze-chart': 'TextResultRunner',
-  'image-describe': 'TextResultRunner',
-  'image-q-and-a': 'TextResultRunner',
   'image-to-ascii': 'TextResultRunner',
-  'ocr-hq': 'TextResultRunner',
-  'read-handwriting': 'TextResultRunner',
-  'translate-image': 'TextResultRunner',
 
   // Image → JSON (object/safety detection — structured output beats text)
-  'detect-objects': 'JsonResultRunner',
   'ocr-suspicious': 'JsonResultRunner',
 
   // PDF → text / JSON (LLM-backed extraction and chat)
-  'chat-long-pdf-pro': 'TextResultRunner',
-  'pdf-q-and-a': 'TextResultRunner',
-  'pdf-summarize': 'TextResultRunner',
-  'translate-document-pro': 'TextResultRunner',
   'pdf-extract-data': 'JsonResultRunner',
 
   // Audio → text (transcribe + translate in one step)
-  'transcribe-and-translate': 'TextResultRunner',
 
   // CSV transforms — text/csv in and out, large preview + download
   'csv-filter': 'TextResultRunner',
@@ -390,25 +370,14 @@ export const VARIANT_MAP: Record<string, RunnerVariant> = {
   'csv-sql': 'TextResultRunner',
 
   // Text-in tools — TextInputRunner accepts paste/upload + any output
-  'content-safety-pro': 'TextInputRunner',
   'cron-from-text': 'UtilityRunner',
-  'cron-from-text-pro': 'TextInputRunner',
-  'deep-analysis-pro': 'TextInputRunner',
-  'fix-grammar-pro': 'TextInputRunner',
   'html-redact': 'TextInputRunner',
-  'json-extract-pro': 'TextInputRunner',
   'prompt-injection-demo': 'TextInputRunner',
   'regex-explain': 'TextInputRunner',
   'regex-from-text': 'TextInputRunner',
-  'regex-from-text-pro': 'TextInputRunner',
-  'rewrite-tone-pro': 'TextInputRunner',
   'sql-format-explain': 'TextInputRunner',
-  'translate-indic-pro': 'TextInputRunner',
-  'translate-many-pro': 'TextInputRunner',
 
   // Text → media (image / audio generation)
-  'image-generate-pro': 'TextInputRunner',
-  'text-to-speech-pro': 'TextInputRunner',
 
   // openapi-report: JSON/YAML in → markdown out — TextResultRunner handles
   // rendered markdown + download

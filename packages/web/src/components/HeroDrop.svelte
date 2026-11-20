@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-import { createDefaultRegistry } from '@wyreup/core/execution';
+import { createDefaultRegistry } from '../lib/core-execution';
   import { dropStore } from '../stores/drop';
   import { fileToolCandidates } from '../lib/file-tool-candidates';
 

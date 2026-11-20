@@ -1,13 +1,11 @@
-# Email-bound key rollout
+# Account service retired
 
-Migration 0006 disables all legacy API keys and sessions. Account data and credits remain intact. The requesting browser never receives the signup or recovery key; only the mailbox receives it.
+The November 20, 2026 free-only decision retires account creation, recovery, admin, billing and hosted inference. These endpoints return HTTP 410 without authentication, database access, email delivery or provider invocation. Existing records and migration history remain intact.
 
-Before pushing a release containing this migration, verify real delivery through the production ZeptoMail configuration to an operator-approved inbox. A configured secret or provider HTTP success alone is insufficient evidence of inbox delivery. The operator must be able to recover an account listed in `ADMIN_EMAILS`.
+The former inbox-recovery rehearsal applies to an account service no longer offered. It is replaced in this same change by the mandatory, same-source retirement gate in [free-only-service.md](free-only-service.md). No email is sent, no key issued and no recovery observation claimed. The old `EMAIL_BOUND_AUTH_REHEARSAL_COMMIT` variable is not used to approve different source.
 
-Rehearse the integrated Functions and configuration contract on a disposable project-owned D1 and separate preview target. Apply unchanged migrations 0001 through 0005, insert synthetic legacy key/session and balance records, then apply unchanged 0006, 0007 and 0008. Confirm the existing keys received `email_bound = 0` and account/balance data stayed intact. Exercise the new issuer using the production ZeptoMail delivery configuration and an explicitly approved recipient, then observe real inbox delivery, recovered-key admin login and legacy credential rejection. Keep unrelated external services disabled. Do not copy production customer data or secrets into evidence; retain only redacted results. A failed rehearsal blocks production apply.
+Do not run the former signup monitor, request recovery emails or replace credentials as part of this retirement.
 
-After independent review and the completed recovery observation, Root sets the repository variable `EMAIL_BOUND_AUTH_REHEARSAL_COMMIT` to the reviewed rehearsal commit. It has no default approval. Deployment requires a canonical existing ancestor commit with byte-identical `functions/`, `migrations/`, `wrangler.toml` and `.github/workflows/deploy.yml` source. Any protected-path change requires a new same-source rehearsal and approval. Root must independently review the final workflow before main push and confirm this gate precedes every production mutation: a workflow self-check cannot prevent its own deletion or replacement by a repository administrator. Refresh the production migration ledger and schema before applying.
+Deployment retains exact-source/current-main checks and requires successful retirement proof before production mutations. Existing migrations stay immutable; refresh the production migration ledger before apply. The project guide's applicable live-delivery checks remain required.
 
-After deployment, request a new emailed admin key, sign in, and create a dedicated device key for the signup monitor. Replace the GitHub Actions `WYREUP_ADMIN_KEY` secret with that trusted key through secure input, then verify `/api/admin/alerts` returns HTTP 200. Do not print raw keys in logs, commit them, or reuse the disabled legacy monitor key. Existing CLI/MCP installations must similarly request an emailed key and update their local credentials.
-
-Confirm legacy credentials are rejected, an emailed key authenticates, balances are unchanged, and the live account page offers email recovery. The deployment and npm release gates in the project guide still apply.
+Reintroducing any hosted, billing or account service requires a new explicit product decision, independent security review and relevant runtime qualification.

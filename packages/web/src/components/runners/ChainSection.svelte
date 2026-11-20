@@ -4,8 +4,6 @@
   import { clearTrail, getTrailHandover, setTrailHandover } from './hopTrail';
   import { fileToolCandidates } from '../../lib/file-tool-candidates';
   import { saveChain, type ToolbeltChainStep } from './toolbeltStorage';
-  import { upsellFor } from '../../data/pro-upsells';
-  import { approxUsd } from '../../data/pricing';
   import { displayName } from '../../data/display-names';
 
   export let resultBlob: Blob | null = null;
@@ -25,14 +23,7 @@
     description: string;
   }
 
-  interface ProSeam {
-    proToolId: string;
-    benefit: string;
-    creditCost: number;
-  }
-
   let nextTools: NextTool[] = [];
-  let proSeam: ProSeam | null = null;
   let stashFailed = false;
   let stashCleanupFailed = false;
   let saveIntermediate = false;
@@ -76,7 +67,6 @@
     generation++;
     nextTools = [];
     trail = [];
-    proSeam = null;
   }
 
   async function loadNextTools(blob: Blob, name: string, sourceId: string | undefined) {
@@ -111,22 +101,6 @@
       category: t.category,
       description: t.description,
     }));
-
-    // Single honest Pro seam for free tools with a hosted sibling. Always a
-    // plain link — the Pro tool should rerun the job on the original input,
-    // never on this already-processed result.
-    const pair = sourceId ? upsellFor(sourceId) : undefined;
-    if (pair) {
-      const pro = registry.toolsById.get(pair.proToolId);
-      const creditCost = pro?.creditCost;
-      proSeam = typeof creditCost === 'number' && Number.isFinite(creditCost) && creditCost >= 0 ? {
-        proToolId: pair.proToolId,
-        benefit: pair.benefit,
-        creditCost,
-      } : null;
-    } else {
-      proSeam = null;
-    }
   }
 
   function downloadBlob(blob: Blob, filename: string) {
@@ -210,7 +184,7 @@
   }
 </script>
 
-{#if nextTools.length > 0 || (resultBlob && sourceToolId && trail.length >= 1) || proSeam}
+{#if nextTools.length > 0 || (resultBlob && sourceToolId && trail.length >= 1)}
   <div class="chain-section">
     {#if resultBlob && sourceToolId && trail.length >= 1}
       <div class="chain-save">
@@ -271,25 +245,6 @@
             </div>
           </button>
         {/each}
-      </div>
-    {/if}
-    {#if proSeam}
-      {@const seam = proSeam}
-      <!-- Quality-first: the benefit is the pitch; price is fine print.
-           Always a plain link — the Pro sibling should redo the job on the
-           user's ORIGINAL input, not on this already-processed result. -->
-      <div class="pro-seam">
-        <p class="pro-seam__benefit">
-          <span class="pro-seam__chip">PRO</span>
-          {seam.benefit}
-        </p>
-        <a
-          class="pro-seam__link"
-          href={`/tools/${seam.proToolId}`}
-        >Try the stronger version →</a>
-        <p class="pro-seam__cost">
-          {seam.creditCost} {seam.creditCost === 1 ? 'credit' : 'credits'} per run · {approxUsd(seam.creditCost)}
-        </p>
       </div>
     {/if}
   </div>
@@ -489,72 +444,5 @@
     color: var(--text-subtle);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-  }
-
-  .pro-seam {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2) var(--space-3);
-    margin-top: var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-  }
-
-  .pro-seam__chip {
-    display: inline-block;
-    background: var(--accent);
-    color: var(--text-on-accent, #000);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    flex-shrink: 0;
-  }
-
-  .pro-seam__benefit {
-    flex: 1 1 12rem;
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    color: var(--text-primary);
-    line-height: 1.45;
-  }
-
-  .pro-seam__cost {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-  }
-
-  .pro-seam__link {
-    margin-left: auto;
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--accent-text);
-    text-decoration: none;
-  }
-
-  a.pro-seam__link {
-    display: inline;
-  }
-
-  .pro-seam__link:hover {
-    color: var(--accent-hover);
-  }
-
-  .pro-seam__link:focus-visible {
-    outline: 2px solid var(--accent-hover);
-    outline-offset: 2px;
   }
 </style>

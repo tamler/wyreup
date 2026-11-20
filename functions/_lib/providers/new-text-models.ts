@@ -1,4 +1,4 @@
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { INFERENCE_TIMEOUTS, withTimeout } from '../timeout';
 import { GRAMMAR_EDIT_PROMPT, prepareGrammarEdits } from './grammar-edits';
 

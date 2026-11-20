@@ -3,7 +3,7 @@ import { openMediaCallerHarness } from './mediaCallerHarness';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Page, Locator } from 'playwright';
+import type { Page } from 'playwright';
 let harness: Awaited<ReturnType<typeof openMediaCallerHarness>>;
 beforeAll(async () => {
   harness = await openMediaCallerHarness();
@@ -12,15 +12,14 @@ afterAll(async () => {
   await harness?.close();
 });
 
-for (const paid of [false, true]) {
-  it(`stale ${paid ? 'paid-confirm' : 'free'} batch restores its retained review only after owned work settles`, async () => {
+it('stale free batch restores its retained review only after owned work settles', async () => {
     const page = await harness.browser.newPage();
     const directory = await mkdtemp(join(tmpdir(), 'wyreup-stale-batch-'));
     await writeFile(join(directory, 'a.mp4'), 'retained stale original a');
     await writeFile(join(directory, 'b.mp4'), 'retained stale original b');
-    const initialCalls = paid ? ['bg-remove-pro', 'compress-video'] : ['compress-video'];
+    const initialCalls = ['compress-video'];
     try {
-      await page.goto(harness.url + '?scenario=batch' + (paid ? '&paid=1' : ''));
+      await page.goto(harness.url + '?scenario=batch');
       const batch = page.getByRole('region', { name: 'Batch caller' });
       const other = page.getByRole('region', { name: 'Other caller' });
       await batch.getByText('Or run on every file in a folder', { exact: true }).click();
@@ -28,10 +27,6 @@ for (const paid of [false, true]) {
       await batch.getByRole('button', { name: 'Pick folder…', exact: true }).click();
       await (await choosing).setFiles(directory);
       await batch.getByRole('button', { name: 'Run on 2 files', exact: true }).click();
-      if (paid) {
-        await batch.getByRole('dialog', { name: 'Confirm paid batch' }).waitFor();
-        await batch.getByRole('button', { name: 'Confirm paid batch', exact: true }).click();
-      }
       await page.waitForFunction((count) => (window as unknown as { mediaCalls: string[] }).mediaCalls.length === count, initialCalls.length);
       await page.getByRole('button', { name: 'Replace batch steps', exact: true }).click();
       expect(await batch.getByRole('button', { name: /Download ZIP/ }).count()).toBe(0);
@@ -51,8 +46,7 @@ for (const paid of [false, true]) {
       await page.close();
       await rm(directory, { recursive: true });
     }
-  }, 20000);
-}
+}, 20000);
 
 it('stale batch at the real registry-await boundary restores review without starting a task', async () => {
   const page = await harness.browser.newPage();
@@ -175,12 +169,11 @@ it('unmount does not release an unsettled caller lease', async () => {
   }
 }, 20000);
 
-it('stored chain original with auto URL is not consumed or paid-run without separate manual Use and Run', async () => {
+it('retains the stored original when an automatic URL names a retired step', async () => {
   const page = await harness.browser.newPage();
   try {
     await page.goto(harness.url + '?scenario=chain&steps=bg-remove-pro&auto=1');
-    await page.getByText('original.mp4', { exact: false }).first().waitFor();
-    await page.waitForTimeout(100);
+    await page.getByRole('alert').getByText('bg-remove-pro', { exact: true }).waitFor();
     expect(
       await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
     ).toEqual([]);
@@ -191,23 +184,19 @@ it('stored chain original with auto URL is not consumed or paid-run without sepa
       return value?.file?.name ?? null;
     });
     expect(state).toBe('original.mp4');
-    expect(
-      await page.getByRole('button', { name: 'Use this file for this chain', exact: true }).count(),
-    ).toBe(1);
+    expect(await page.getByRole('button', { name: 'Use this file for this chain', exact: true }).count()).toBe(0);
   } finally {
     await page.close();
   }
 }, 20000);
 
-it('unknown paid price disables the actual trigger Run before any paid execution', async () => {
+it('a retired step disables the actual trigger before dispatch', async () => {
   const page = await harness.browser.newPage();
   try {
-    await page.goto(harness.url + '?scenario=price&price=unknown');
+    await page.goto(harness.url + '?scenario=retired-trigger');
     await page.getByRole('dialog').waitFor();
     expect(await page.getByRole('button', { name: /^Run/ }).isDisabled()).toBe(true);
-    expect(await page.getByRole('dialog').textContent()).toMatch(
-      /price.*unavailable|unknown.*price/i,
-    );
+    expect(await page.getByRole('dialog').textContent()).toMatch(/Unknown tool:\s*bg-remove-pro/i);
     expect(
       await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
     ).toEqual([]);
@@ -432,10 +421,10 @@ it('busy trigger preserves original and records no fire until explicit retry act
   }
 }, 20000);
 
-it('paid builder opens a captured disclosure without a lease and refuses busy Confirm before any paid step', async () => {
+it('a retired URL-chain step disables the builder before dispatch of any step', async () => {
   const page = await harness.browser.newPage();
   try {
-    await page.goto(harness.url + '?scenario=builder&steps=bg-remove-pro|convert-video');
+    await page.goto(harness.url + '?scenario=builder&steps=compress-video|bg-remove-pro');
     const choosing = page.waitForEvent('filechooser');
     await page
       .getByRole('region', { name: 'Builder caller' })
@@ -444,63 +433,36 @@ it('paid builder opens a captured disclosure without a lease and refuses busy Co
     await (
       await choosing
     ).setFiles({
-      name: 'paid-original.mp4',
+      name: 'retained-original.mp4',
       mimeType: 'video/mp4',
-      buffer: Buffer.from('paid original never uploaded'),
+      buffer: Buffer.from('retained original'),
     });
-    await page
-      .getByRole('region', { name: 'Builder caller' })
-      .getByRole('button', { name: 'Run chain', exact: true })
-      .click();
-    await page.getByRole('dialog', { name: 'Confirm paid chain' }).waitFor();
-    expect(await page.getByRole('dialog').textContent()).toContain('Total: 3 credits');
-    expect(await page.getByRole('dialog').textContent()).toContain('paid-original.mp4');
-    expect(await page.getByRole('dialog').textContent()).toContain('controlled@example.invalid');
-    expect(
-      await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
-    ).toEqual([]);
-    await page
-      .getByRole('region', { name: 'Other caller' })
-      .getByRole('button', { name: 'Run compress-video', exact: true })
-      .click();
-    await page.waitForFunction(
-      () => (window as unknown as { mediaCalls: string[] }).mediaCalls.length === 1,
-    );
-    await page.getByRole('button', { name: 'Confirm paid chain', exact: true }).click();
-    await page.getByRole('region', { name: 'Builder caller' }).getByRole('alert').waitFor();
-    expect(
-      await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
-    ).toEqual(['compress-video']);
-    await page.evaluate(() => (window as unknown as { settleMedia(): void }).settleMedia());
+    const builder = page.getByRole('region', { name: 'Builder caller' });
+    expect(await builder.getByRole('button', { name: 'Run chain', exact: true }).isDisabled()).toBe(true);
+    expect(await builder.getByText('Unavailable tools: bg-remove-pro', { exact: false }).count()).toBe(1);
+    expect(await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls)).toEqual([]);
   } finally {
     await page.close();
   }
 }, 20000);
 
-it('paid batch discloses two-file total, reads no task payload before Confirm, and cancellation retains originals', async () => {
+it('a retired batch step fails locally before any file dispatch or ZIP', async () => {
   const page = await harness.browser.newPage();
-  const directory = await mkdtemp(join(tmpdir(), 'wyreup-owned-paid-batch-'));
-  await writeFile(join(directory, 'a.mp4'), 'paid original a');
-  await writeFile(join(directory, 'b.mp4'), 'paid original b');
+  const directory = await mkdtemp(join(tmpdir(), 'wyreup-retired-batch-'));
+  await writeFile(join(directory, 'a.mp4'), 'retained original a');
+  await writeFile(join(directory, 'b.mp4'), 'retained original b');
   try {
-    await page.goto(harness.url + '?scenario=batch&paid=1');
+    await page.goto(harness.url + '?scenario=batch&retired=1');
     await page.getByText('Or run on every file in a folder', { exact: true }).click();
     const choosing = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: 'Pick folder…', exact: true }).click();
     await (await choosing).setFiles(directory);
     await page.getByRole('button', { name: 'Run on 2 files', exact: true }).click();
-    await page.getByRole('dialog', { name: 'Confirm paid batch' }).waitFor();
-    expect(await page.getByRole('dialog').textContent()).toContain('2 matched files; 0 excluded');
-    expect(await page.getByRole('dialog').textContent()).toContain('Total: 6 credits');
-    expect(
-      await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
-    ).toEqual([]);
-    await page.getByRole('button', { name: 'Cancel paid batch', exact: true }).click();
-    expect(await page.getByRole('dialog').count()).toBe(0);
-    expect(await page.getByRole('button', { name: 'Run on 2 files', exact: true }).count()).toBe(1);
-    expect(
-      await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls),
-    ).toEqual([]);
+    const alert = page.getByRole('region', { name: 'Batch caller' }).getByRole('alert');
+    await alert.waitFor({ timeout: 2000 });
+    expect(await alert.textContent()).toContain('Tool is unavailable on Wyreup: bg-remove-pro');
+    expect(await page.getByRole('button', { name: 'Download ZIP' }).count()).toBe(0);
+    expect(await page.evaluate(() => (window as unknown as { mediaCalls: string[] }).mediaCalls)).toEqual([]);
   } finally {
     await page.close();
     await rm(directory, { recursive: true });
@@ -542,19 +504,11 @@ async function busyBatchObservation(page: Page, firstTool: string) {
       const file = record.inputs[0];
       return { sameOriginal: file === selected[index], name: file.name, text: await file.text() };
     }));
-    const downstream = firstTool === 'bg-remove-pro'
-      ? await Promise.all(records.filter((record) => record.toolId === 'compress-video').map(async (record) => {
-          if (record.inputs.length !== 1) throw new Error('Downstream step needs one actual File.');
-          const file = record.inputs[0];
-          return { isOriginal: selected.includes(file), mime: file.type, text: await file.text() };
-        }))
-      : [];
     return {
       calls,
       inputTools: records.map((record) => record.toolId),
       originals: await Promise.all(selected.map(async (file) => ({ name: file.name, text: await file.text() }))),
       firstSteps,
-      downstream,
     };
   }, firstTool);
 }
@@ -567,28 +521,14 @@ async function settleBusyMedia(page: Page) {
   });
 }
 
-async function expectBusyPaidDisclosure(batch: Locator) {
-  const dialog = batch.getByRole('dialog', { name: 'Confirm paid batch' });
-  await dialog.waitFor({ timeout: 2000 });
-  const text = await dialog.textContent();
-  expect(text).toContain('2 matched files; 0 excluded');
-  expect(text).toContain('a.mp4');
-  expect(text).toContain('b.mp4');
-  expect(text).toContain('controlled@example.invalid');
-  expect(text).toContain('Total: 6 credits');
-}
-
-for (const paid of [false, true]) {
-  it(paid
-    ? 'busy paid-confirm batch requires a fresh disclosure before retrying its exact selected Files'
-    : 'busy free batch retains its exact selected Files and completes only after an explicit retry', async () => {
+it('busy free batch retains its exact selected Files and completes only after an explicit retry', async () => {
     const page = await harness.browser.newPage();
     const directory = await mkdtemp(join(tmpdir(), 'wyreup-busy-retained-batch-'));
     await writeFile(join(directory, 'a.mp4'), 'busy original a');
     await writeFile(join(directory, 'b.mp4'), 'busy original b');
-    const firstTool = paid ? 'bg-remove-pro' : 'compress-video';
+    const firstTool = 'compress-video';
     try {
-      await page.goto(harness.url + '?scenario=batch' + (paid ? '&paid=1' : ''));
+      await page.goto(harness.url + '?scenario=batch');
       const batch = page.getByRole('region', { name: 'Batch caller' });
       const other = page.getByRole('region', { name: 'Other caller' });
       await batch.getByText('Or run on every file in a folder', { exact: true }).click();
@@ -620,11 +560,6 @@ for (const paid of [false, true]) {
       });
       expect((await busyBatchObservation(page, firstTool)).calls).toEqual(['convert-video']);
       await batch.getByRole('button', { name: 'Run on 2 files', exact: true }).click();
-      if (paid) {
-        await expectBusyPaidDisclosure(batch);
-        expect((await busyBatchObservation(page, firstTool)).inputTools).toEqual(['convert-video']);
-        await batch.getByRole('button', { name: 'Confirm paid batch', exact: true }).click();
-      }
       const alert = batch.getByRole('alert');
       await alert.waitFor({ timeout: 2000 });
       expect(await alert.textContent()).toContain('Another media job is still running');
@@ -637,7 +572,7 @@ for (const paid of [false, true]) {
       expect(await batch.getByRole('dialog').count()).toBe(0);
       const retainedRun = batch.getByRole('button', { name: 'Run on 2 files', exact: true });
       const retainedCount = await retainedRun.count();
-      console.warn('SOURCE8_SECOND_BUSY_TARGET', JSON.stringify({ paid, reached: 'actual holder, busy alert, no batch calls, no ZIP, retained Run assertion', calls: denied.calls, inputTools: denied.inputTools, originals: denied.originals, retainedRunCount: retainedCount }));
+      console.warn('SOURCE8_SECOND_BUSY_TARGET', JSON.stringify({ reached: 'actual holder, busy alert, no batch calls, no ZIP, retained Run assertion', calls: denied.calls, inputTools: denied.inputTools, originals: denied.originals, retainedRunCount: retainedCount }));
       expect(retainedCount).toBe(1);
       expect(await batch.getByRole('button', { name: 'Cancel', exact: true }).count()).toBe(1);
       expect((await batch.textContent())?.replace(/\s+/g, ' ')).toContain('2 of 2 files match this chain');
@@ -648,36 +583,26 @@ for (const paid of [false, true]) {
       expect(settledHolder.inputTools).toEqual(['convert-video']);
       expect(settledHolder.originals).toEqual(originals);
       await retainedRun.click();
-      if (paid) {
-        await expectBusyPaidDisclosure(batch);
-        expect((await busyBatchObservation(page, firstTool)).inputTools).toEqual(['convert-video']);
-        await batch.getByRole('button', { name: 'Confirm paid batch', exact: true }).click();
-      }
-      const firstCount = paid ? 3 : 2;
+      const firstCount = 2;
       await page.waitForFunction((count) => {
         const calls: unknown = Reflect.get(window, 'mediaCalls');
         return Array.isArray(calls) && calls.length === count;
       }, firstCount);
       const first = await busyBatchObservation(page, firstTool);
-      expect(first.calls).toEqual(paid ? ['convert-video', 'bg-remove-pro', 'compress-video'] : ['convert-video', 'compress-video']);
+      expect(first.calls).toEqual(['convert-video', 'compress-video']);
       expect(first.inputTools).toEqual(first.calls);
       expect(first.firstSteps).toEqual([{ sameOriginal: true, ...originals[0] }]);
-      if (paid) expect(first.downstream).toEqual([{ isOriginal: false, mime: 'video/mp4', text: 'actual controlled task result' }]);
       expect(await batch.getByRole('button', { name: /Download ZIP/ }).count()).toBe(0);
       await settleBusyMedia(page);
-      const secondCount = paid ? 5 : 3;
+      const secondCount = 3;
       await page.waitForFunction((count) => {
         const calls: unknown = Reflect.get(window, 'mediaCalls');
         return Array.isArray(calls) && calls.length === count;
       }, secondCount);
       const second = await busyBatchObservation(page, firstTool);
-      expect(second.calls).toEqual(paid ? ['convert-video', 'bg-remove-pro', 'compress-video', 'bg-remove-pro', 'compress-video'] : ['convert-video', 'compress-video', 'compress-video']);
+      expect(second.calls).toEqual(['convert-video', 'compress-video', 'compress-video']);
       expect(second.inputTools).toEqual(second.calls);
       expect(second.firstSteps).toEqual(originals.map((file) => ({ sameOriginal: true, ...file })));
-      if (paid) expect(second.downstream).toEqual([
-        { isOriginal: false, mime: 'video/mp4', text: 'actual controlled task result' },
-        { isOriginal: false, mime: 'video/mp4', text: 'actual controlled task result' },
-      ]);
       expect(await batch.getByRole('button', { name: /Download ZIP/ }).count()).toBe(0);
       await settleBusyMedia(page);
       const download = batch.getByRole('button', { name: 'Download ZIP', exact: true });
@@ -703,5 +628,4 @@ for (const paid of [false, true]) {
       await page.close();
       await rm(directory, { recursive: true });
     }
-  }, 20000);
-}
+}, 20000);

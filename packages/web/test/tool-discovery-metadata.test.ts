@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../src/lib/core-execution';
 import { projectToolDiscoveryMetadata } from '../src/lib/tool-discovery-metadata';
 import { createToolSearch, searchTools } from '../src/lib/tool-search';
 import { GET } from '../src/pages/tools-index.json';

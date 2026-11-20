@@ -17,11 +17,9 @@
   //    the chain happened to succeed).
 
   import { onMount, onDestroy } from 'svelte';
-  import { get } from 'svelte/store';
-  import { user, authReady } from '../stores/user';
   import { tryReserveMediaJob } from '../lib/mediaJobReservation';
-  import { summarizePaidChain, assertPaidAccount } from '../lib/chainPaidConsent';
-import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core/execution';
+  import { matchRule, runPreflight, validateChain, type TriggerRule, type Chain } from '@wyreup/core/execution';
+  import { createDefaultRegistry, runChain } from '../lib/core-execution';
   import TriggerPreviewSheet from './TriggerPreviewSheet.svelte';
   import { getAllRules, getFires, recordFire, updateRule } from './runners/triggerStorage';
   import { getChain, type ToolbeltChain } from './runners/toolbeltStorage';
@@ -102,17 +100,8 @@ import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain
     if (!registry) registry = createDefaultRegistry();
     const validation = validateChain(chain, registry);
 
-    // G5: chains containing Pro tools send file contents to wyreup.com
-    // server-side. The destination is first-party and the user opted into
-    // the rule + the chain, but they should SEE the disclosure on every
-    // fire — so confirmed-bypass is disabled for any chain with a Pro
-    // step. Same pattern as G4 forcing the sheet on high-suspicion files.
-    const hasProTool = chain.some((step) => registry.toolsById.get(step.toolId)?.cost === 'credit');
-
-    // G2: confirmed=true skips the sheet, BUT G4 still gets a vote — we
-    // run pre-flight first and force the sheet when verdict is 'high'.
-    // Spoof gate AND Pro-tool gate also veto the bypass.
-    if (rule.confirmed && validation.ok && !hasProTool) {
+    // A confirmed rule can skip the sheet only for a valid chain and after pre-flight.
+    if (rule.confirmed && validation.ok) {
       const verdict = await runPreflight(file).catch(() => ({ verdict: 'clean' as const }));
       if (verdict.verdict !== 'high') {
         await executeChain(file, rule, chain, savedChain.name);
@@ -132,7 +121,6 @@ import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain
     rule: TriggerRule,
     chain: Chain,
     chainName: string,
-    paidConsent: { fingerprint: string; accountEmail: string | null } | null = null,
   ) {
     const capturedChain = structuredClone(chain);
     const lease = tryReserveMediaJob(capturedChain.map((step) => step.toolId));
@@ -145,10 +133,7 @@ import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain
     // confirmed intent, not chain-success.
     try {
       if (!registry) registry = createDefaultRegistry();
-      const paid = summarizePaidChain(capturedChain, registry);
-      const account = get(user);
-      assertPaidAccount(paid, get(authReady), account);
-      if (paid.steps.length && (!paidConsent || paidConsent.fingerprint !== JSON.stringify(paid) || paidConsent.accountEmail !== account?.email)) throw new Error('Confirm the current paid steps and account for this file before running.');
+      if (!validateChain(capturedChain, registry).ok) throw new Error('This chain contains an unavailable tool.');
       if (disposed) return;
       recordFire(rule.id);
       showToast('info', `Running "${chainName}" on ${file.name}…`, 0);
@@ -195,7 +180,7 @@ import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain
     return `${base}__${safeChain}${tail}`;
   }
 
-  function handleRun(event: CustomEvent<{ dontAskAgain: boolean; file: File; chainFingerprint: string; paidFingerprint: string; accountEmail: string | null }>) {
+  function handleRun(event: CustomEvent<{ dontAskAgain: boolean; file: File; chainFingerprint: string }>) {
     if (!pendingFile || !pendingRule || !pendingChain) return;
     if (event.detail.file !== pendingFile || event.detail.chainFingerprint !== JSON.stringify(pendingChain)) return;
     const { dontAskAgain } = event.detail;
@@ -214,7 +199,7 @@ import { createDefaultRegistry, matchRule, runChain, runPreflight, validateChain
     pendingFile = null;
     pendingRule = null;
     pendingChain = null;
-    void executeChain(file, rule, chain, chainName, { fingerprint: event.detail.paidFingerprint, accountEmail: event.detail.accountEmail });
+    void executeChain(file, rule, chain, chainName);
   }
 
   function handleSkip() {

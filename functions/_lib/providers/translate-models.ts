@@ -8,7 +8,7 @@
 // Current backend: Cloudflare Workers AI. Swap to a self-hosted NMT
 // stack by replacing the bodies and exporting the same signatures.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 const M2M100_MODEL = '@cf/meta/m2m100-1.2b';

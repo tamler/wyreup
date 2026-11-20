@@ -16,6 +16,7 @@ export default defineConfig({
       'tools/test/catalog-browser-binding-followup.test.mjs',
       'tools/test/catalog-browser-binding-parser-followup.test.mjs',
       'tools/test/catalog-core-build-proof.test.mjs',
+      'tools/test/free-only-pages-runtime.test.mjs',
       '**/production-catalog-integration.test.ts',
       '**/domain-functions-integration.test.ts',
       '**/discovery-privacy-production.test.ts',

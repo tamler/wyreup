@@ -5,8 +5,6 @@ import '../styles/global.css';
 import '../styles/motifs.css';
 import PwaShell from '../components/PwaShell.svelte';
 import TriggerRuntime from '../components/TriggerRuntime.svelte';
-import AccountMenu from '../components/AccountMenu.svelte';
-import AuthModal from '../components/AuthModal.svelte';
 import { canonicalPageUrl, isIndexablePath } from '../lib/seo';
 
 interface Props {
@@ -20,7 +18,7 @@ interface Props {
 
 const {
   title,
-  description = 'Wyreup — local file tools, calculations, public network lookups, and hosted PRO tools. Each tool explains what it sends.',
+  description = 'Free browser tools for files, calculations, hardware tests and public network lookups. Each tool explains what it needs.',
   ogTitle = title,
   ogDescription = description,
   surfaceMode = 'engineering',
@@ -252,17 +250,8 @@ import { setModelCdn } from '@wyreup/core/execution';
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </button>
-
-        <!-- Account widget. Hydrates from /api/account/balance on mount;
-             shows [Get PRO] when signed-out, ⚡ badge + email dropdown when
-             signed-in. -->
-        <AccountMenu client:load />
       </div>
     </header>
-
-    <!-- Global auth modal — any component can open it by dispatching the
-         `wyreup:auth-open` event on window. -->
-    <AuthModal client:load />
 
     <main class="site-main" id="main-content">
       <slot />
@@ -274,7 +263,6 @@ import { setModelCdn } from '@wyreup/core/execution';
           <nav class="footer-col" aria-label="Wyreup">
             <span class="footer-col__head">Wyreup</span>
             <a href="/tools" class="footer-link">All tools</a>
-            <a href="/pro" class="footer-link">Pricing</a>
             <a href="/about" class="footer-link">About</a>
             <a href="https://github.com/tamler/wyreup" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
           </nav>
@@ -288,7 +276,6 @@ import { setModelCdn } from '@wyreup/core/execution';
             <span class="footer-col__head">Legal</span>
             <a href="/legal/terms" class="footer-link">Terms</a>
             <a href="/legal/privacy" class="footer-link">Privacy</a>
-            <a href="/legal/refund" class="footer-link">Refunds</a>
           </nav>
         </div>
         <div class="footer-base">

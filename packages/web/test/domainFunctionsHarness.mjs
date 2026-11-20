@@ -13,6 +13,9 @@ const SYNTHETIC_SECRET = 'wyreup-acceptance-only-domain-secret';
 const DATABASE_ID = '00000000-0000-4000-8000-000000000006';
 const SOURCE_FILES = [
   'functions/api/domain-age.ts',
+  'functions/_middleware.ts',
+  'functions/_lib/retired.ts',
+  'functions/api/[[path]].ts',
   'functions/_lib/rdap.ts',
   'functions/_lib/public-rate-limit.ts',
   'functions/_lib/crypto.ts',
@@ -502,11 +505,28 @@ export async function startDomainFunctionsHost({ projectDir, distDir, evidenceDi
     equalPins(coreBefore, expectedCoreDistPins, 'Coordinated core dist');
     sourceBefore = await Promise.all(SOURCE_FILES.map(relative => pin(path.join(project, relative), relative)));
     check();
-    // This selected endpoint currently has no ancestor middleware. A new one requires review.
+    // Only the pinned root middleware is part of this selected Functions host.
     for (const directory of ['functions', 'functions/api']) {
-      const names = await fs.readdir(path.join(project, directory));
+      const entries = await fs.readdir(path.join(project, directory), { withFileTypes: true });
       check();
-      if (names.some(name => name.startsWith('_middleware.'))) throw new Error('New Pages ancestor middleware requires host-scope review.');
+      const middleware = entries.filter(entry => entry.name.startsWith('_middleware.'));
+      if (directory === 'functions') {
+        const approved = middleware.filter(entry => entry.name === '_middleware.ts');
+        if (approved.length !== 1 || !approved[0]?.isFile() || middleware.length !== 1 || !SOURCE_FILES.includes('functions/_middleware.ts'))
+          throw new Error('Unapproved Pages root middleware requires host-scope review.');
+      } else {
+        const pending = entries.filter(entry => entry.isDirectory()).map(entry => path.join(project, directory, entry.name));
+        while (pending.length > 0) {
+          const current = pending.pop();
+          if (!current) continue;
+          const nested = await fs.readdir(current, { withFileTypes: true });
+          check();
+          if (nested.some(entry => entry.name.startsWith('_middleware.')))
+            throw new Error('Pages API middleware is outside this selected Functions host.');
+          for (const entry of nested) if (entry.isDirectory()) pending.push(path.join(current, entry.name));
+        }
+        if (middleware.length > 0) throw new Error('Pages API middleware is outside this selected Functions host.');
+      }
     }
     assetsBefore = await pinTree(dist, 'assets');
     check();

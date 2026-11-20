@@ -4,13 +4,11 @@ import ToolRunner from '../../components/ToolRunner.svelte';
 import ShareToolButton from '../../components/ShareToolButton.svelte';
 import ToolCapabilityBanner from '../../components/ToolCapabilityBanner.svelte';
 import ToolDownloadNotice from '../../components/ToolDownloadNotice.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../../lib/core-execution';
 import { canonicalPageUrl } from '../../lib/seo';
 import { projectToolDiscoveryMetadata } from '../../lib/tool-discovery-metadata';
 import { SEARCH_GUIDES } from '../../lib/search-guides';
 import SearchGuide from '../../components/SearchGuide.astro';
-import ProUpgradePrompt from '../../components/ProUpgradePrompt.astro';
-import { hostedInputPhrase, upsellsFor } from '../../data/pro-upsells';
 
 export async function getStaticPaths() {
   const registry = createDefaultRegistry();
@@ -46,20 +44,6 @@ export async function getStaticPaths() {
         return t ? { id: t.id, name: t.name, category: t.category, description: projectToolDiscoveryMetadata(t).description, why: entry.why } : null;
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
-
-    // Hosted siblings for a free tool. Only real credit-metered tools qualify.
-    const proUpgrades = tool.cost === 'free'
-      ? upsellsFor(tool.id).flatMap((pair) => {
-          const pro = registry.toolsById.get(pair.proToolId);
-          if (pro?.cost !== 'credit' || typeof pro.creditCost !== 'number' || pro.creditCost <= 0) return [];
-          return [{
-            id: pro.id,
-            heading: projectToolDiscoveryMetadata(pro).heading,
-            benefit: pair.benefit,
-            creditCost: pro.creditCost,
-          }];
-        })
-      : [];
 
     return {
       params: { slug: tool.id },
@@ -98,31 +82,22 @@ export async function getStaticPaths() {
           memoryEstimate: tool.memoryEstimate,
           outputDisplay: (tool as { outputDisplay?: 'mono' | 'prose' }).outputDisplay,
           cost: tool.cost,
-          creditCost: tool.creditCost,
           seoContent,
         },
         relatedTools,
         alsoTry,
-        proUpgrades,
       },
     };
   });
 }
 
-const { serializedTool, relatedTools, alsoTry, proUpgrades } = Astro.props;
+const { serializedTool, relatedTools, alsoTry } = Astro.props;
 const { name, description, category, keywords, seoContent } = serializedTool;
 
 const heading = serializedTool.heading;
 const seoTitle = serializedTool.title;
 const seoDescription = description;
 const guide = SEARCH_GUIDES[serializedTool.id];
-// Social metadata must match execution location like the privacy callout:
-// hosted PRO tools do send the input to Wyreup's backend.
-const ogDescription =
-  serializedTool.cost === 'credit'
-    ? `${seoDescription} Hosted PRO tool — pay per run, credits never expire.`
-    : seoDescription;
-
 // Auto-generated content. Used for every tool page (whether or not
 // seoContent is present) — adds depth that one-line descriptions miss
 // and gives Google something to rank beyond the runner widget.
@@ -140,9 +115,7 @@ const softwareLd = {
   description: seoDescription,
   applicationCategory: 'BrowserApplication',
   operatingSystem: 'Any',
-  ...(serializedTool.cost === 'credit'
-    ? {}
-    : { offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } }),
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   author: { '@type': 'Organization', name: 'Wyreup' },
   keywords: keywords.join(', '),
   url: canonicalPageUrl(`/tools/${serializedTool.id}`),
@@ -180,7 +153,7 @@ const breadcrumbLd = {
 <BaseLayout
   title={seoTitle}
   description={seoDescription}
-  ogDescription={ogDescription}
+  ogDescription={seoDescription}
 >
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(softwareLd)} />
@@ -225,7 +198,6 @@ const breadcrumbLd = {
         installGroup={serializedTool.installGroup}
       />
       <ToolRunner client:load tool={serializedTool} />
-      <ProUpgradePrompt options={proUpgrades} />
       {guide && <SearchGuide guide={guide} />}
 
       {/* Auto-generated rich body — runs for every tool page.
@@ -257,14 +229,10 @@ const breadcrumbLd = {
             <dt>Output</dt>
             <dd>{outputLabel}</dd>
           </div>
-          {serializedTool.cost && (
-            <div class="tool-facts__row">
-              <dt>Cost</dt>
-              <dd>{serializedTool.networkAccess === 'domain-registration'
-                ? 'Free network lookup'
-                : serializedTool.cost === 'free' ? 'Free, local processing' : 'Credit-metered'}</dd>
-            </div>
-          )}
+          <div class="tool-facts__row">
+            <dt>Cost</dt>
+            <dd>{serializedTool.networkAccess === 'domain-registration' ? 'Free network lookup' : 'Free, local processing'}</dd>
+          </div>
           {memEstimate && (
             <div class="tool-facts__row">
               <dt>Memory</dt>
@@ -285,24 +253,12 @@ const breadcrumbLd = {
           )}
         </dl>
 
-        {/* Privacy callout on every page. MUST stay truthful per execution
-            location: local tools never upload; credit-metered (hosted) tools
-            send the input to Wyreup's backend, so say so plainly. */}
         {serializedTool.networkAccess === 'domain-registration' ? (
           <div class="privacy-callout" role="note">
             <strong>Privacy:</strong> The domain you enter is sent to Wyreup and
             its public registration registry. Wyreup reads IANA's bootstrap
             without sending IANA the queried domain. No account or API key is
             required. A connection is required. Details in the{' '}
-            <a href="/legal/privacy">privacy policy</a>.
-          </div>
-        ) : serializedTool.cost === 'credit' ? (
-          <div class="privacy-callout" role="note">
-            <strong>Privacy:</strong> {name} is a hosted PRO tool: when you run
-            it, {hostedInputPhrase(serializedTool.id)} is sent over TLS through Wyreup's edge to the model
-            provider, processed, and returned. Inputs and outputs are not
-            retained beyond the request; run metadata (tool, time, file name)
-            is kept for your history. Details in the{' '}
             <a href="/legal/privacy">privacy policy</a>.
           </div>
         ) : (

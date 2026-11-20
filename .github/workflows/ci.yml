@@ -165,6 +165,23 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y sqlite3
       - run: pnpm test:functions
 
+  free-only-retirement:
+    name: Free-only retirement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update && sudo apt-get install -y sqlite3
+      - run: pnpm --filter @wyreup/core... build
+      - run: pnpm --filter @wyreup/web build
+      - run: pnpm exec vitest run functions/free-only-retirement.test.ts
+      - run: node --test tools/test/free-only-pages-runtime.test.mjs
+
   package-consumers:
     name: Packed consumers (${{ matrix.os }}, Node ${{ matrix.runtime.node }}, npm ${{ matrix.runtime.npm }})
     needs: build

@@ -7,7 +7,7 @@
 // Current backend: Cloudflare Workers AI (flux-1-schnell). The env.AI
 // binding ships with Pages Functions — no token needed.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 const FLUX_SCHNELL_MODEL = '@cf/black-forest-labs/flux-1-schnell';

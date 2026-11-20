@@ -67,12 +67,13 @@ function observe<T>(operation: Promise<T>) {
   return { done, get state() { return state; }, get value() { return value; }, get error() { return error; } };
 }
 
-async function loadHelperControl(mode: HelperMode) {
+async function loadHelperControl(mode: HelperMode, injectedProjectFile?: string) {
   vi.useRealTimers(); resetMocks();
   const qualification = captureQualification(directory);
   const oracle = readHelperDiagnosticOracle(directory);
   const session = createQualificationSession(qualification, {});
   const fixture = createHelperBehaviorFixture(qualification, mode);
+  if (injectedProjectFile) fixture.addProjectFile(injectedProjectFile);
   let staticFactoriesOpen = true;
   for (const entry of qualification.revision.helperBoundaryFactories) vi.doMock(entry.key, () => {
     if (!staticFactoriesOpen) {
@@ -200,12 +201,29 @@ it.each(['H1', 'H2', 'P2'] as const)('%s preserves exact preparation-startup ref
     const firstCopy = copies[0]?.sequence ?? -1;
     expect(endpoint.calls.some(call => call.operation === 'fs.readdir' && call.args[0] === control.fixture.project + '/packages/core/dist' && call.sequence < firstCopy)).toBe(true);
     expect(endpoint.calls.some(call => call.operation === 'fs.readdir' && call.args[0] === control.fixture.dist && call.sequence < firstCopy)).toBe(true);
-    expect(endpoint.calls.filter(call => call.operation === 'fs.readFile' && typeof call.args[0] === 'string' && call.args[0].startsWith(control.fixture.project + '/') && !call.args[0].includes('/dist/') && call.sequence < firstCopy)).toHaveLength(14);
+    expect(endpoint.calls.filter(call => call.operation === 'fs.readFile' && typeof call.args[0] === 'string' && call.args[0].startsWith(control.fixture.project + '/') && !call.args[0].includes('/dist/') && call.sequence < firstCopy)).toHaveLength(17);
     const expected = mode === 'H1' ? [control.fixture.E_START, control.fixture.E_WRITE] : mode === 'H2' ? [control.fixture.E_START, control.fixture.E_GUARD] : [control.fixture.E_START];
     expect(helperErrorLeaves(control.operation.error)).toEqual(expected);
     for (const error of expected) expect(helperErrorLeaves(control.operation.error).filter(leaf => leaf === error)).toHaveLength(1);
     if (mode === 'P2') expect(control.operation.error).toBe(control.fixture.E_START);
     expect(endpoint.calls.filter(call => call.operation === 'spawn' || call.operation === 'fork')).toEqual([]);
+  } finally { await finishControl(control, rejected); }
+}, 15000);
+
+it.each([
+  ['functions/_middleware.js', 'Unapproved Pages root middleware requires host-scope review.'],
+  ['functions/api/tools/_middleware.ts', 'Pages API middleware is outside this selected Functions host.'],
+] as const)('rejects unpinned middleware %s before copying or starting a child', async (injectedPath, expectedMessage) => {
+  const control = await loadHelperControl('P3', injectedPath);
+  let rejected = false;
+  try {
+    await control.operation.done;
+    const endpoint = freeze(control); rejected = control.operation.state === 'rejected';
+    expect(control.operation.state).toBe('rejected');
+    expect(control.operation.error).toBeInstanceOf(Error);
+    expect((control.operation.error as Error).message).toBe(expectedMessage);
+    expect(endpoint.calls.filter(call => call.operation === 'fs.copyFile')).toEqual([]);
+    expect(endpoint.calls.filter(call => call.operation === 'fork' || call.operation === 'spawn')).toEqual([]);
   } finally { await finishControl(control, rejected); }
 }, 15000);
 

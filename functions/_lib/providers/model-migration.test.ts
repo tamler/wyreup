@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { prepareProRun, runPro } from '../runners';
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { TTS_MAX_AUDIO_BYTES } from './tts-models';
 import { INFERENCE_TIMEOUTS } from '../timeout';
 import { correctGrammar, OutputTruncatedError } from './new-text-models';

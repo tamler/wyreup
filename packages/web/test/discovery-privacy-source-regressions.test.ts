@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { createDefaultRegistry, fileMatchesMime } from '@wyreup/core';
+import { fileMatchesMime } from '@wyreup/core';
+import { createDefaultRegistry } from '../src/lib/core-execution';
 import { acceptsBrowserFile } from '../src/lib/file-tool-candidates';
 import { projectToolDiscoveryMetadata } from '../src/lib/tool-discovery-metadata';
 
@@ -48,29 +49,27 @@ function actualDropPredicate(accept: string[], file: File): unknown {
 }
 
 describe('discovery/privacy source regressions; not production browser acceptance', () => {
-  it('keeps real local, hosted and free-network metadata distinct', () => {
+  it('keeps real local and free-network metadata distinct and excludes hosted tools', () => {
     const registry = createDefaultRegistry();
     const domain = registry.toolsById.get('domain-age-checker');
     const local = registry.toolsById.get('compress');
-    const hosted = registry.toolsById.get('analyze-chart');
-    if (!domain || !local || !hosted) throw new Error('Required actual registry controls are missing.');
+    if (!domain || !local) throw new Error('Required actual registry controls are missing.');
     expect(domain.cost).toBe('free');
     expect(projectToolDiscoveryMetadata(domain).networkAccess).toBe('domain-registration');
     expect(projectToolDiscoveryMetadata(domain).seoContent?.intro).toMatch(/domain.*sent.*Wyreup/i);
     expect(projectToolDiscoveryMetadata(local).networkAccess).toBeUndefined();
     expect(local.cost).toBe('free');
-    expect(projectToolDiscoveryMetadata(hosted).networkAccess).toBeUndefined();
-    expect(hosted.cost).toBe('credit');
+    expect(registry.toolsById.get('analyze-chart')).toBeUndefined();
   });
 
   it('does not leave the known generic free-local assertion in tool facts or privacy markup', () => {
     const page = source('pages/tools/[slug].astro');
     const facts = page.match(/<dl class="tool-facts">([\s\S]*?)<\/dl>/)?.[1];
-    const callout = page.match(/\{\/\* Privacy callout[\s\S]*?(?=<\/section>)/)?.[0];
+    const callout = page.match(/\{serializedTool\.networkAccess === 'domain-registration' \? \([\s\S]*?(?=<\/section>)/)?.[0];
     if (!facts || !callout) throw new Error('Actual tool facts/privacy blocks were not found.');
     expect(facts).not.toMatch(/Free,\s*runs in your browser/i);
     expect(visibleSourceText(callout)).not.toMatch(/This free tool executes in your browser/i);
-    // The real domain/local/PRO branches themselves are asserted on emitted HTML.
+    // The domain and local branches are also asserted on emitted HTML.
   });
 
   it('keeps the tools social preview explicit about execution choices', () => {
@@ -79,17 +78,17 @@ describe('discovery/privacy source regressions; not production browser acceptanc
     expect(description).not.toMatch(/free tools (?:run|execute) (?:entirely )?on your device/i);
     expect(description).toMatch(/local/i);
     expect(description).toMatch(/network/i);
-    expect(description).toMatch(/hosted/i);
+    expect(description).not.toMatch(/hosted/i);
   });
 
-  it('qualifies PwaShell offline availability by required local assets and network/hosted execution', () => {
+  it('qualifies PwaShell offline availability by required local assets and network access', () => {
     const message = source('components/PwaShell.svelte').match(/<span class="pwa-banner__msg">([\s\S]*?)<\/span>/)?.[1];
     expect(message).toBeTruthy();
     expect(message).toMatch(/local/i);
     expect(message).toMatch(/asset/i);
     expect(message).toMatch(/(?:if|when|available)/i);
     expect(message).toMatch(/network/i);
-    expect(message).toMatch(/hosted|PRO/i);
+    expect(message).not.toMatch(/hosted|\bPRO\b/i);
     expect(message).toMatch(/connection|internet|online/i);
     expect(message).not.toMatch(/cached tools still work/i);
   });
@@ -102,25 +101,9 @@ describe('discovery/privacy source regressions; not production browser acceptanc
     expect(message).not.toMatch(/then runs offline/i);
   });
 
-  it.each([false, true])('qualifies the actual category execution note; hosted=%s', (hasHostedTools) => {
-    const frontmatter = source('pages/category/[slug].astro').split('---')[1];
-    if (!frontmatter) throw new Error('Actual category frontmatter was not found.');
-    const code = declaration(frontmatter, 'executionNote', 'variable');
-    const text: unknown = runInNewContext(`${code}\nexecutionNote;`, { hasHostedTools, hasNetworkTools: false }, { timeout: 1000 });
-    expect(typeof text).toBe('string');
-    expect(text).not.toMatch(/(?:all|every|free) tools (?:run|execute) (?:entirely )?(?:locally|in your browser|on your device)/i);
-    expect(text).toMatch(/check|requirement|needed|supported|explain/i);
-    if (hasHostedTools) {
-      expect(text).toMatch(/hosted|PRO/i);
-      expect(text).toMatch(/sent/i);
-    }
-  });
-
   const categoryGroups = [
-    { name: 'local', ids: ['compress'], hosted: false, network: false },
-    { name: 'hosted', ids: ['analyze-chart'], hosted: true, network: false },
-    { name: 'network', ids: ['domain-age-checker'], hosted: false, network: true },
-    { name: 'mixed', ids: ['domain-age-checker', 'analyze-chart'], hosted: true, network: true },
+    { name: 'local', ids: ['compress'], network: false },
+    { name: 'network', ids: ['domain-age-checker'], network: true },
   ];
 
   function requiredTools(ids: readonly string[]) {
@@ -140,33 +123,29 @@ describe('discovery/privacy source regressions; not production browser acceptanc
 
   function actualCategoryNote(catTools: ReturnType<typeof requiredTools>) {
     const frontmatter = categoryFrontmatter();
-    const code = ['hasHostedTools', 'hasNetworkTools', 'executionNote']
+    const code = ['hasNetworkTools', 'executionNote']
       .map((name) => declaration(frontmatter, name, 'variable'))
       .join('\n');
     return runInNewContext(
-      `${code}\n({hasHostedTools, hasNetworkTools, executionNote});`,
+      `${code}\n({hasNetworkTools, executionNote});`,
       { catTools, projectToolDiscoveryMetadata },
       { timeout: 1000 },
-    ) as { hasHostedTools: unknown; hasNetworkTools: unknown; executionNote: unknown };
+    ) as { hasNetworkTools: unknown; executionNote: unknown };
   }
 
-  it.each(categoryGroups)('selects the actual category network/hosted branch for $name tools', (group) => {
+  it.each(categoryGroups)('selects the actual category branch for $name tools', (group) => {
     const result = actualCategoryNote(requiredTools(group.ids));
-    expect(result.hasHostedTools).toBe(group.hosted);
     expect(result.hasNetworkTools).toBe(group.network);
     expect(typeof result.executionNote).toBe('string');
     expect(result.executionNote).not.toMatch(/(?:all|every|free) tools (?:run|execute) (?:entirely )?(?:locally|in your browser|on your device)/i);
-    expect(result.executionNote).toMatch(/check|requirement|needed|supported|explain/i);
+    expect(result.executionNote).toMatch(/download/i);
     if (group.network) {
       expect(result.executionNote).toMatch(/includes network lookups/i);
       expect(result.executionNote).toMatch(/connection/i);
     } else {
       expect(result.executionNote).not.toMatch(/includes network lookups/i);
     }
-    if (group.hosted) {
-      expect(result.executionNote).toMatch(/hosted|PRO/i);
-      expect(result.executionNote).toMatch(/sent/i);
-    }
+    expect(result.executionNote).not.toMatch(/hosted|\bPRO\b/i);
     for (const other of categoryGroups) {
       if (other.name !== group.name)
         expect(result.executionNote).not.toBe(actualCategoryNote(requiredTools(other.ids)).executionNote);
@@ -182,7 +161,6 @@ describe('discovery/privacy source regressions; not production browser acceptanc
     expect(catTools.some((tool) => tool.id === 'domain-age-checker')).toBe(true);
     const result = actualCategoryNote(catTools);
     expect(result.hasNetworkTools).toBe(true);
-    expect(typeof result.hasHostedTools).toBe('boolean');
     expect(typeof result.executionNote).toBe('string');
     expect(result.executionNote).toMatch(/includes network lookups/i);
     expect(result.executionNote).toMatch(/connection/i);

@@ -15,20 +15,20 @@
   import type { TriggerRule } from '@wyreup/core';
   import { upsertRule, getFires } from '../../src/components/runners/triggerStorage';
   import { saveChain } from '../../src/components/runners/toolbeltStorage';
-  import { user, authReady } from '../../src/stores/user';
   const scenario = new URLSearchParams(location.search).get('scenario') ?? 'race';
   const file = new File(['independent original bytes'], 'original.mp4', { type: 'video/mp4' });
   const registry = createDefaultRegistry();
   const first = registry.toolsById.get('convert-video') as unknown as SerializedTool;
   const second = registry.toolsById.get('compress-video') as unknown as SerializedTool;
-  const tools = Array.from(registry.toolsById.values()).map((t) => ({ id: t.id, name: t.name, outputMime: t.output.mime, defaults: t.defaults }));
-  const rule = { id: 'controlled-rule', name: 'Controlled paid rule', mime: '*/*', enabled: true, confirmed: false } as TriggerRule;
+  const availableTools = registry.tools.filter((tool) => tool.cost === 'free');
+  const tools = availableTools.map((t) => ({ id: t.id, name: t.name, outputMime: t.output.mime, defaults: t.defaults }));
+  const rule = { id: 'controlled-rule', name: 'Controlled trigger rule', mime: '*/*', enabled: true, confirmed: false } as TriggerRule;
   let firstMounted = true;
   let firstFile = file;
   const admissions: PreloadAdmission[] = [];
-  const buildTools = [...registry.tools].map((t) => ({ id: t.id, name: t.name, description: t.description, inputAccept: t.input.accept, inputMin: t.input.min, outputMime: t.output.mime, defaults: t.defaults }));
-  let chainSteps = new URLSearchParams(location.search).get('paid') === '1'
-    ? [{ toolId: 'bg-remove-pro', name: 'bg-remove-pro', params: {}, valid: true }, { toolId: 'compress-video', name: 'compress-video', params: {}, valid: true }]
+  const buildTools = availableTools.map((t) => ({ id: t.id, name: t.name, description: t.description, inputAccept: t.input.accept, inputMin: t.input.min, outputMime: t.output.mime, defaults: t.defaults }));
+  let chainSteps = new URLSearchParams(location.search).get('retired') === '1'
+    ? [{ toolId: 'compress-video', name: 'compress-video', params: {}, valid: true }, { toolId: 'bg-remove-pro', name: 'bg-remove-pro', params: {}, valid: true }]
     : [{ toolId: 'compress-video', name: 'compress-video', params: {}, valid: true }];
   let batchMounted = true;
   let batchRegion: HTMLElement;
@@ -46,7 +46,6 @@
   let ready = scenario !== 'chain';
   onMount(async () => {
     Object.assign(window, { mediaCalls: calls, mediaCallInputs: callInputs, settleMedia: settleFirst, peekMediaFile: peekChainHandover, mediaAdmissions: admissions, mediaFires: getFires });
-    user.set({ email: 'controlled@example.invalid', balance: 100 }); authReady.set(true);
     if (scenario === 'trigger') {
       const now = new Date().toISOString();
       saveChain({ id: 'controlled-chain', name: 'Controlled media chain', steps: [{ toolId: 'compress-video', params: {} }], createdAt: now, updatedAt: now });
@@ -66,7 +65,7 @@
   <section aria-label="Second caller"><PreviewRunner tool={second} preloadedFile={file} /></section>
 {:else if scenario === 'chain' && ready}
   <ChainRunner {tools} />
-{:else if scenario === 'price'}
+{:else if scenario === 'retired-trigger'}
   <TriggerPreviewSheet {file} {rule} chain={[{ toolId: 'bg-remove-pro', params: {} }]} />
 {:else if scenario === 'handover'}
   <HowItWorks />

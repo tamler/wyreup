@@ -5,15 +5,13 @@ import HeroSearch from '../components/HeroSearch.svelte';
 import ScenarioGrid from '../components/ScenarioGrid.svelte';
 import HowItWorks from '../components/HowItWorks.svelte';
 import InstallCard from '../components/InstallCard.svelte';
-import { createDefaultRegistry } from '@wyreup/core';
-import { PACKS, MONTHLY } from '../data/pricing';
+import { createDefaultRegistry } from '../lib/core-execution';
 import { displayName } from '../data/display-names';
 import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 const registry = createDefaultRegistry();
 const allTools = Array.from(registry.toolsById.values());
-const localCount = allTools.filter((t) => t.cost !== 'credit' && !projectToolDiscoveryMetadata(t).networkAccess).length;
-const starterPack = PACKS[0]!;
+const localCount = allTools.filter((t) => !projectToolDiscoveryMetadata(t).networkAccess).length;
 
 // Hand-curated popular tools (Deliverable 5)
 const popularToolIds = ['compress', 'convert', 'merge-pdf', 'qr', 'face-blur', 'ocr', 'strip-exif', 'audio-enhance'];
@@ -31,7 +29,7 @@ const popularTools = popularToolIds.map((id) => {
 
 <BaseLayout
   title="Wyreup — Calculators, generators, developer & file tools"
-  description="Calculate, generate, inspect hardware or work with images, PDFs, audio and data. Local tools keep inputs on your device; network lookups and hosted PRO disclose what they send."
+  description="Free browser tools for files, calculations, hardware tests and public network lookups. Local tools process inputs on your device."
   surfaceMode="welcome"
 >
   <script is:inline>
@@ -52,7 +50,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="hero__copy">
         <h1 class="hero__headline">Calculate. Generate. <span class="hero__headline-accent">Work with your files.</span></h1>
         <p class="hero__body">
-          Use calculators, generators, developer helpers and hardware tests, or drop a file to compress, convert, inspect and edit it. Local tools keep inputs on your device; network lookups and hosted PRO tools explain what they send before you run them.
+          Use calculators, generators, developer helpers and hardware tests, or drop a file to compress, convert, inspect and edit it. Local tools keep inputs on your device. Network lookups explain what they send.
         </p>
         <HeroSearch client:load />
         <div class="hero__actions">
@@ -155,31 +153,6 @@ const popularTools = popularToolIds.map((id) => {
 
   </section>
 
-  <!-- Section 6: PRO callout — bridge between the free tools and the
-       monetized tier. Short on purpose; full detail at /pro and
-       /legal/pricing. -->
-  <section class="pro-callout section-rhythm" id="pro-section" aria-labelledby="pro-callout-heading">
-    <div class="container">
-      <div class="pro-block">
-        <span class="pro-block__chip">PRO</span>
-        <h2 id="pro-callout-heading" class="pro-block__title">
-          When the job needs more horsepower.
-        </h2>
-        <p class="pro-block__body">
-          Higher-accuracy transcription for accents and noisy audio.
-          Production-quality upscaling and background removal. Ask questions
-          across a long PDF. Most cost just 1–2 credits. Packs start at
-          <strong>{starterPack.credits} credits for {`$${starterPack.usd}`}</strong> (never expire), or
-          <strong>{`$${MONTHLY.usdPerMonth}/mo`} for {MONTHLY.credits} credits</strong>. Failed runs auto-refund.
-        </p>
-        <div class="pro-block__cta">
-          <a href="/pro" class="pro-block__primary">See what PRO unlocks &rarr;</a>
-          <a href="/pro#pricing" class="pro-block__secondary">Pricing</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Section 7: Use Wyreup anywhere -->
   <section class="anywhere section-rhythm" id="anywhere-section" aria-labelledby="anywhere-heading">
     <div class="container">
@@ -199,7 +172,7 @@ const popularTools = popularToolIds.map((id) => {
           <div class="anywhere-card__inner">
             <div class="anywhere-card__channel">Command line</div>
             <div class="anywhere-card__headline"><code>npx @wyreup/cli</code></div>
-            <p class="anywhere-card__body">Shell-scriptable, batch-friendly. Local tools and optional hosted PRO.</p>
+            <p class="anywhere-card__body">Run local tools in the shell, scripts and batch workflows.</p>
           </div>
         </a>
         <a href="/skill" class="anywhere-card brackets">
@@ -222,7 +195,7 @@ const popularTools = popularToolIds.map((id) => {
       <div class="privacy-block">
         <h2 id="privacy-heading" class="privacy-block__title">Private by default. No tradeoff.</h2>
         <p class="privacy-block__body">
-          No analytics. No tracking cookies. Local file tools process on your device. The free Domain Registration Age lookup sends your domain to Wyreup and its public registration registry. Hosted PRO tools explain their remote processing before you run them. See our privacy policy for temporary public-lookup counters, reservation tokens, and platform retention. Wyreup is open source — anyone can check how it works.
+          No analytics. No tracking cookies. Local file tools process on your device. The free Domain Registration Age lookup sends your domain to Wyreup and its public registration registry. See our privacy policy for temporary public-lookup counters and platform retention. Wyreup is open source.
         </p>
         <a
           href="https://github.com/tamler/wyreup"
@@ -612,87 +585,6 @@ const popularTools = popularToolIds.map((id) => {
   }
 
   /* ── Privacy ── */
-  /* ── PRO callout ── */
-  .pro-callout {
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  .pro-block {
-    max-width: 640px;
-  }
-
-  .pro-block__chip {
-    display: inline-block;
-    background: var(--accent);
-    color: var(--text-on-accent, #000);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-3);
-  }
-
-  .pro-block__title {
-    font-family: var(--font-sans);
-    font-size: var(--text-xl);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-    margin: 0 0 var(--space-3);
-  }
-
-  .pro-block__body {
-    font-family: var(--font-sans);
-    font-size: var(--text-base);
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin: 0 0 var(--space-4);
-  }
-
-  .pro-block__body strong {
-    color: var(--text-primary);
-  }
-
-  .pro-block__cta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    flex-wrap: wrap;
-  }
-
-  .pro-block__primary {
-    display: inline-flex;
-    align-items: center;
-    padding: var(--space-2) var(--space-4);
-    background: var(--accent);
-    color: var(--black);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    border-radius: var(--radius-md);
-    text-decoration: none;
-    transition: background var(--duration-instant) var(--ease-sharp);
-  }
-
-  .pro-block__primary:hover {
-    background: var(--accent-hover);
-  }
-
-  .pro-block__secondary {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color var(--duration-instant) var(--ease-sharp);
-  }
-
-  .pro-block__secondary:hover {
-    color: var(--text-primary);
-  }
-
   .privacy {
     padding: var(--space-16) 0;
   }

@@ -147,7 +147,7 @@ export async function checkRunnerCoverage({ root = projectRoot, core } = {}) {
   const webIds = uniqueIds(
     core
       .createDefaultRegistry()
-      .tools.filter((tool) => tool.surfaces === undefined || tool.surfaces.includes('web')),
+      .tools.filter((tool) => tool.cost === 'free' && (tool.surfaces === undefined || tool.surfaces.includes('web'))),
     'Web registry',
   );
   const mapPath = join(root, 'packages/web/src/components/runners/variantMap.ts');

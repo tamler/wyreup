@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { visionPrompt, detectObjects } from './vision-models';
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 
 function mockEnv(aiResult: unknown): Env {
   return { AI: { run: vi.fn().mockResolvedValue(aiResult) } } as unknown as Env;
