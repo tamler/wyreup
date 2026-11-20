@@ -118,7 +118,7 @@ The matching CLI patch updates the installer's integrity pins for the current sk
 
 Existing database records and historical migration files are preserved. A new migration sets the old service switch to disabled as defense in depth; database state cannot re-enable retired routes. The release procedure and relevant checks are documented in [free-only service retirement](./docs/free-only-service.md).
 
-The current Pages source removes the private billing, account, email and hosted model helpers. Release verification must also cover older Pages deployments and their aliases. Roll back only to a free-only deployment that has passed the compiled retirement probes.
+The current Pages source removes the private billing, account, email and hosted model helpers. Requests for retired hosted tool pages redirect to `/tools/` before static assets can serve old HTML. Release verification must also cover older immutable Pages deployment URLs and their aliases. Roll back only to a free-only deployment that has passed the compiled retirement probes.
 
 The obsolete bulk production secret-push script is removed. Use the current [deployment guide](./DEPLOYMENT.md) for the retained public service and its required configuration.
 

@@ -36,6 +36,8 @@ The existing Pages project serves `wyreup.com` and `www.wyreup.com`. Verify cano
 
 After deployment, verify the Cloudflare deployment SHA, current live catalog and local tool behavior, plus denied hosted/account/payment APIs. Inventory and retire legacy deployments and aliases before claiming live retirement. Retain a checked free-only production rollback target. Pre-retirement deployments are not valid rollback targets, even if the old database switch is disabled. Negative checks must not create accounts, send email, run hosted models or create checkouts.
 
+After verifying the Pages SHA and obtaining cache purge authorization, purge by hostname for exactly `wyreup.com` and `www.wyreup.com` in the Wyreup zone. Use the zone-scoped Cloudflare Cache Purge permission and keep credentials out of commands and logs. Leave `models.wyreup.com` and other hosts outside the purge. Verify retired hosted tool URLs return HTTP 301 to `/tools/` before static asset fallback. Old immutable Pages deployment URLs and aliases require separate retirement and verification.
+
 ## Publishing to npm
 
 Public package behavior changes and changes to files shipped in an npm tarball, including its README, need an appropriate Changeset in the same reviewed change. Private server, repository-only documentation and test cleanup do not themselves require a package version bump.

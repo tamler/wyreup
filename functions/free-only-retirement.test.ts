@@ -86,6 +86,52 @@ describe('free-only API retirement', () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
+  it.each(['GET', 'HEAD'])('redirects retired tool HTML on %s before stale assets', async method => {
+    const next = vi.fn(() => { throw new Error('Retired tool reached stale HTML fallback'); });
+    for (const path of [
+      '/tools/transcribe-pro', '/tools/transcribe-pro/', '/tools/transcribe-pro.html?old=1',
+      '/tools/transcribe-pro/index.html', '/tools/transcribe-pro/index',
+      '/tools/transcribe-pro/og.png?old=1', '//TOoLS//TraNSCribe-Pro/%69ndex.html',
+      '/%74ools%2Ftranscribe%2Dpro',
+    ]) {
+      const response = await middleware(context(path, method, undefined, next));
+      expect(response.status, path).toBe(301);
+      expect(response.headers.get('Location'), path).toBe('/tools/');
+      expect(response.headers.get('Cache-Control'), path).toBe('no-store');
+      expect((await response.arrayBuffer()).byteLength, path).toBe(0);
+    }
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'])('retires tool pages on %s without reading a body', async method => {
+    const next = vi.fn(() => { throw new Error('Retired tool reached stale HTML fallback'); });
+    const request = rawPathContext('/tools/transcribe-pro/index.html?old=1', method, next);
+    Object.defineProperty(request.request, 'body', { get() { throw new Error('Unexpected request body access'); } });
+    expect((await middleware(request)).status).toBe(410);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['/tools/%FF', 400], ['/%74ools/ocr-hq/%C0%AF', 400], ['/tools/%ZZ', 410],
+  ])('rejects malformed tool paths without stale asset access: %s', async (path, status) => {
+    const next = vi.fn(() => { throw new Error('Malformed tool path reached stale HTML fallback'); });
+    const response = await middleware(rawPathContext(path, 'GET', next));
+    expect(response.status).toBe(status);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('leaves non-retired paths and similar IDs to the asset router', async () => {
+    const next = vi.fn(() => Promise.resolve(new Response('asset')));
+    for (const path of [
+      '/tools/ocr-pro/index.html', '/tools/transcribe-pro-free', '/tools/transcribe-pro2',
+      '/tools/transcribe-pro.htmlx', '/tools/transcribe%252Dpro', '/elsewhere/transcribe-pro',
+    ]) {
+      const response = await middleware(context(path, 'GET', undefined, next));
+      expect(await response.text(), path).toBe('asset');
+    }
+    expect(next).toHaveBeenCalledTimes(6);
+  });
+
   it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'])
     ('the physical API fallback denies %s without environment or continuation', async method => {
       const next = vi.fn(() => Promise.resolve(new Response('must not continue')));

@@ -12,6 +12,8 @@ The Pages source removes the private account, credit, billing, email and hosted 
 
 The website projects the validated library registry to free, web-supported tools for pages, search, categories, recommendations, tasks, chains and triggers. Stored/imported chains referencing retired tools fail before execution. Pricing, account and admin paths redirect to the tool catalog. Hosted task pages and sales/upgrade prompts are removed. Local tools retain input validation and capability checks.
 
+Pages middleware guards the 31 retired hosted tool IDs and their old static asset paths. GET and HEAD return an empty HTTP 301 with `Location: /tools/` and `Cache-Control: no-store` before static asset lookup. Other methods return HTTP 410. The retired IDs remain reserved. Reusing one requires an explicit catalog and redirect change because a prior permanent redirect can persist in clients.
+
 Core and MCP runtime source is unchanged. The CLI installer requires a patch release updating its three integrity hashes to the current free-only skill documents; it still rejects mismatched content. Older installed clients reject the changed documents, so upgrade to the matching CLI release before installing them. Local tool commands are unchanged. The CLI-only patch changeset is part of this source change.
 
 ## Release gate
@@ -22,7 +24,7 @@ Deployment requires successful CI for the exact current main SHA, rechecks curre
 
 After merge, verify actual-main CI and Pages deployment, then inspect the live catalog, redirects, search index, privacy policy, old hosted/payment/signup API responses and a representative local tool. Negative probes must never call a real model, send email or create checkout. Distinguish observed zero provider invocations during verification from unmeasured historical billing totals. Retain the release SHA, deployment identifier and checks in the coordinator receipt.
 
-Inventory older Pages deployments and their preview and custom aliases. Retire legacy deployments that can still serve hosted, payment or account routes, and verify those deployment URLs and aliases reject access to retired routes. Keep a receipt of the checked URLs and outcomes. Roll back only to a free-only deployment that passed the compiled 168-probe retirement gate. Pre-retirement builds and aliases are ineligible rollback targets.
+Verify the hosted tool redirects on both website hostnames after the authorized cache purge described in the [deployment guide](../DEPLOYMENT.md). Separately inventory older immutable Pages deployment URLs and their preview and custom aliases. These can still serve old content until individually retired. Verify that the retired deployment URLs and aliases reject access to retired routes, and keep a receipt of the checked URLs and outcomes. Roll back only to a free-only deployment that passed the compiled retirement probes and serves the expected hosted tool redirects. Pre-retirement builds and aliases are ineligible rollback targets.
 
 Re-enabling any retired service requires a new explicit product decision, independent review and relevant runtime qualification.
 
