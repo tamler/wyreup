@@ -8,13 +8,16 @@
 
 import { writable, get } from 'svelte/store';
 
-export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'paused';
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'paused' | 'past_due' | 'unpaid' | 'trialing' | 'on_trial';
 
 export interface AuthedUser {
   email: string;
   balance: number;
   // Null = never subscribed. Active = monthly grant fires each cycle.
   subscriptionStatus?: SubscriptionStatus | null;
+  subscriptionProvider?: 'paddle' | 'lemonsqueezy' | null;
+  monthlyCheckoutBlocked?: boolean;
+  canManagePaddleBilling?: boolean;
 }
 
 export const apiKey = writable<string>('');

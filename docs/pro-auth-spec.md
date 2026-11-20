@@ -1,5 +1,7 @@
 # Wyreup PRO — Auth, Credits & Lemon Squeezy Spec
 
+The Lemon Squeezy checkout and configuration described in this original spec are historical. See the [Paddle deployment guide](../DEPLOYMENT.md#paddle-billing) for new payments and the [purchase verification checklist](T21-PURCHASE-TEST-CHECKLIST.md) for the current checkout contract. The Lemon Squeezy inbound webhook remains for earlier orders and subscriptions.
+
 **Version:** 2.1  
 **Status:** Ready for implementation  
 **Stack:** Astro 4 + Svelte + Cloudflare Pages Functions + D1 + Lemon Squeezy  

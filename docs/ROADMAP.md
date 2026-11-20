@@ -231,14 +231,15 @@ implementation — these are the decisions we made vs. the spec:
   restriction lifted 2026-05-23 — Pro tools now run on web, CLI, and
   MCP via a shared API key (see "CLI/MCP PRO support" below).~~
 
-**Pending — Lemon Squeezy store approval only:**
-- All monetization code is shipped — packs, the $8/mo subscription
-  (440 credits/cycle, D1 subscription state, subscription_* webhook
-  handlers), checkout, and the credit ledger. What remains is LS
-  approving the store for live sales; the end-to-end purchase test
-  (T21) waits on that. The auto-pause cron was dropped — the
-  subscription is blocked-on-empty: run out and you wait for the next
-  cycle or buy a pack.
+**T21 — End-to-end purchase validation (OPEN)**
+
+- Follow the [Paddle purchase test checklist](./T21-PURCHASE-TEST-CHECKLIST.md).
+  Isolated sandbox setup and end-to-end verification remain pending. Live
+  activation also requires independent review, green CI, and the
+  [protected-source authentication rehearsal](./auth-migration-release.md).
+- Historical: T21 previously awaited Lemon Squeezy store approval. The Paddle
+  checklist supersedes that test plan. The auto-pause cron was dropped.
+  Users who run out of credits can wait for the next cycle or buy a pack.
 
 **Deliberately not done (deviations from original spec):**
 - ~~CLI/MCP PRO support. Tools ship with `surfaces: ['web']`;

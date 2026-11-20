@@ -95,7 +95,7 @@ const lastUpdated = '2026-10-11';
     <ul>
       <li>File contents — your files are forwarded through Wyreup to the model provider and discarded on our side immediately after the request returns.</li>
       <li>Output contents — the model's response is returned to you and not retained on our side.</li>
-      <li>Card numbers — handled by Lemon Squeezy, never by Wyreup.</li>
+      <li>Card numbers — handled by the payment provider, never by Wyreup.</li>
       <li>Plain-text API keys.</li>
       <li>Analytics, fingerprints, third-party tracking, or advertising cookies.</li>
     </ul>
@@ -138,10 +138,16 @@ const lastUpdated = '2026-10-11';
         available on request at <strong>hello@wyreup.com</strong>.
       </li>
       <li>
-        <strong>Lemon Squeezy</strong> — merchant of record for credit
-        purchases. Receives your billing info (name, billing address,
-        payment instrument). Never sees your tool inputs or API keys.
-        See Lemon Squeezy's <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+        <strong>Paddle</strong> — merchant of record for new credit purchases.
+        Receives your account email and billing information, including your
+        name, billing address, and payment instrument. Wyreup stores billing
+        identifiers and records credit purchases and adjustments in your credit
+        ledger. See Paddle's <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+      </li>
+      <li>
+        <strong>Lemon Squeezy</strong> — continues to handle existing subscriptions
+        and refunds for earlier orders. See Lemon Squeezy's
+        <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>.
       </li>
       <li>
         <strong>Zoho (ZeptoMail)</strong> — transactional email delivery.

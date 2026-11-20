@@ -1,45 +1,7 @@
 <script lang="ts">
-  // BuyCreditsSheet — 3 pack cards → POST /api/credits/checkout → window.open
-  // a new tab. The originating page polls /api/account/balance until it sees
-  // the webhook land.
-
   import { createEventDispatcher, onDestroy } from 'svelte';
   import { refreshBalance, user } from '../stores/user';
   import { PACKS as PRICING_PACKS } from '../data/pricing';
-
-  // LS overlay — loaded on demand the first time the user clicks Buy.
-  // Avoids paying the script cost on page loads where the user never
-  // opens this sheet. Resolves once Lemon.Setup is callable.
-  declare global {
-    interface Window {
-      Lemon?: {
-        Setup: (opts: { eventHandler: (e: { event: string }) => void }) => void;
-        Url: { Open: (url: string) => void; Close: () => void };
-      };
-      createLemonSqueezy?: () => void;
-    }
-  }
-
-  let lemonReady: Promise<void> | null = null;
-  function ensureLemonLoaded(): Promise<void> {
-    if (lemonReady) return lemonReady;
-    lemonReady = new Promise<void>((resolve, reject) => {
-      if (window.Lemon) {
-        resolve();
-        return;
-      }
-      const s = document.createElement('script');
-      s.src = 'https://assets.lemonsqueezy.com/lemon.js';
-      s.defer = true;
-      s.onload = () => {
-        if (window.Lemon) resolve();
-        else reject(new Error('Lemon.js loaded but Lemon global is missing'));
-      };
-      s.onerror = () => reject(new Error('Could not load Lemon.js'));
-      document.head.appendChild(s);
-    });
-    return lemonReady;
-  }
 
   const dispatch = createEventDispatcher<{ close: void; success: void }>();
 
@@ -56,113 +18,120 @@
     }),
   );
 
-  $: hasActiveSubscription = $user?.subscriptionStatus === 'active';
+  $: hasSubscription = $user?.monthlyCheckoutBlocked ?? ($user?.subscriptionStatus === 'active');
 
   let busy: Pack | null = null;
+  let payment: { url: string; id: string } | null = null;
   let error = '';
   let polling = false;
-  let pollTimer: ReturnType<typeof setInterval> | null = null;
-  let pollDeadline = 0;
-  // Stop polling after 5 minutes regardless of balance movement. Without
-  // this, a user who spends in another tab during checkout (driving the
-  // post-purchase balance back below startBalance) would never see the
-  // poll resolve.
-  const POLL_MAX_MS = 5 * 60 * 1000;
-  let startBalance = 0;
+  let operation: AbortController | null = null;
+  let preparation: ReturnType<typeof setTimeout> | undefined;
+  let pollTimer: ReturnType<typeof setTimeout> | undefined;
+  let deadline: ReturnType<typeof setTimeout> | undefined;
 
   async function buy(pack: Pack) {
+    stop();
+    payment = null;
     error = '';
     busy = pack;
+    const current = new AbortController();
+    operation = current;
+    preparation = setTimeout(() => {
+      error = 'Checkout is taking longer than expected. Try again to resume it.';
+      current.abort();
+    }, 30_000);
     try {
-      // Snapshot balance so the poll loop knows when the webhook lands.
-      const balRes = await fetch('/api/account/balance', { credentials: 'same-origin' });
-      if (balRes.ok) {
-        const data = (await balRes.json()) as { balance?: number };
-        startBalance = data.balance ?? 0;
-      }
-
       const res = await fetch('/api/credits/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Wyreup-CSRF': '1' },
         credentials: 'same-origin',
         body: JSON.stringify({ pack }),
+        signal: current.signal,
       });
       const data = (await res.json().catch(() => ({}))) as {
         checkoutUrl?: string;
+        transactionId?: string;
         error?: string;
       };
-      if (!res.ok || !data.checkoutUrl) {
+      if (current.signal.aborted) return;
+      if (!res.ok || !data.checkoutUrl || !data.transactionId) {
         error = data.error || `Couldn't start checkout (${res.status})`;
         return;
       }
-      try {
-        await ensureLemonLoaded();
-        // Setup is idempotent — calling it again replaces the handler.
-        // We hook Checkout.Success so balance refresh fires the moment
-        // the user completes payment, without waiting for the poll.
-        window.Lemon!.Setup({
-          eventHandler: async (evt) => {
-            if (evt.event === 'Checkout.Success') {
-              stopPolling();
-              await refreshBalance();
-              dispatch('success');
-              dispatch('close');
-            }
-          },
-        });
-        window.Lemon!.Url.Open(data.checkoutUrl);
-      } catch {
-        // Fall back to a new tab if the overlay script failed to load
-        // (CSP misconfig, network drop) so the user can still purchase.
-        window.open(data.checkoutUrl, '_blank', 'noopener,noreferrer');
+      const url = new URL(data.checkoutUrl);
+      if (url.origin !== window.location.origin || url.pathname !== '/checkout'
+        || url.username || url.password || url.hash || url.searchParams.size !== 1
+        || !/^txn_[a-z0-9]{26}$/.test(data.transactionId)
+        || url.searchParams.get('_ptxn') !== data.transactionId) {
+        error = 'Checkout returned an invalid payment link.';
+        return;
       }
-      startPolling();
+      payment = { url: url.href, id: data.transactionId };
+    } catch {
+      if (!current.signal.aborted) error = 'Could not start checkout. Try again.';
     } finally {
-      busy = null;
+      if (operation === current) {
+        clearTimeout(preparation);
+        operation = null;
+        busy = null;
+      }
     }
   }
 
   function startPolling() {
+    if (polling || !payment) return;
+    const id = payment.id;
+    const current = new AbortController();
+    operation = current;
+    error = '';
     polling = true;
-    pollDeadline = Date.now() + POLL_MAX_MS;
-    pollTimer = setInterval(async () => {
-      if (Date.now() > pollDeadline) {
-        stopPolling();
-        error =
-          "We didn't see the credits land in 5 minutes. Check the LS receipt — if it shows paid, refresh /account; if not, the purchase didn't go through.";
-        return;
-      }
+    deadline = setTimeout(() => {
+      stop();
+      error = 'Payment is still unconfirmed. Check your Paddle receipt and account balance before trying again.';
+    }, 5 * 60 * 1000);
+    async function poll() {
       try {
-        const res = await fetch('/api/account/balance', { credentials: 'same-origin' });
-        if (!res.ok) return;
-        const data = (await res.json()) as { balance?: number };
-        if ((data.balance ?? 0) > startBalance) {
-          stopPolling();
-          await refreshBalance();
+        const res = await fetch(`/api/credits/status?transactionId=${encodeURIComponent(id)}`, {
+          credentials: 'same-origin', signal: current.signal,
+        });
+        const data = res.ok ? (await res.json()) as { state?: string } : {};
+        if (current.signal.aborted) return;
+        if (data.state === 'fulfilled') {
+          stop();
+          payment = null;
+          void refreshBalance();
           dispatch('success');
           dispatch('close');
+          return;
+        }
+        if (data.state === 'cancelled' || data.state === 'blocked' || res.status === 401 || res.status === 404) {
+          stop();
+          payment = null;
+          error = data.state === 'cancelled' ? 'Checkout was cancelled. Pick a pack to start again.'
+            : 'Could not confirm this checkout. Check your account and receipt.';
+          return;
         }
       } catch {
-        /* network blip — keep polling */
+        // Keep waiting through temporary network errors.
       }
-    }, 3000);
-  }
-
-  function stopPolling() {
-    polling = false;
-    if (pollTimer) {
-      clearInterval(pollTimer);
-      pollTimer = null;
+      if (!current.signal.aborted) pollTimer = setTimeout(poll, 3000);
     }
+    void poll();
   }
 
-  // BuyCreditsSheet only renders client-side (mounted via {#if showBuySheet}
-  // in ToolRunner / AccountDashboard) so onDestroy is safe — there is no SSR
-  // path that produces a render+destroy pair for this component.
-  onDestroy(() => stopPolling());
+  function stop() {
+    operation?.abort();
+    operation = null;
+    polling = false;
+    clearTimeout(preparation);
+    clearTimeout(pollTimer);
+    clearTimeout(deadline);
+  }
+
+  onDestroy(stop);
 
   function close() {
-    stopPolling();
+    stop();
     dispatch('close');
   }
 
@@ -184,8 +153,7 @@
     <button type="button" class="close" aria-label="Close" on:click={close}>×</button>
     <h2 id="buy-credits-title">Buy credits</h2>
     <p class="hint">
-      Pay-as-you-go credits never expire. Payment is processed by Lemon
-      Squeezy — we never see your card.
+      Pay-as-you-go credits never expire. Paddle processes your payment and handles your card details.
     </p>
 
     <div class="cards">
@@ -195,7 +163,7 @@
           class="card"
           class:tagged={p.tag}
           on:click={() => buy(p.id)}
-          disabled={busy !== null}
+          disabled={busy !== null || polling}
         >
           {#if p.tag}
             <span class="tag">{p.tag}</span>
@@ -216,24 +184,23 @@
       type="button"
       class="monthly"
       on:click={() => buy('monthly')}
-      disabled={busy !== null || hasActiveSubscription}
-      aria-label={hasActiveSubscription
-        ? 'You already have an active monthly subscription'
+      disabled={busy !== null || polling || hasSubscription}
+      aria-label={hasSubscription
+        ? 'You already have a monthly subscription'
         : 'Subscribe — 440 credits per month for $8'}
     >
       <div class="monthly__main">
         <span class="monthly__title">Monthly · 440 credits</span>
         <span class="monthly__sub">
-          440 credits granted each month. Renews automatically; cancel
-          anytime in your Lemon Squeezy receipt. If you run out before
-          the next grant, buy a pack or wait for the next cycle.
+          440 credits each paid month. Renews automatically. Manage your subscription
+          in your account or from your payment receipt.
         </span>
       </div>
       <div class="monthly__right">
         <span class="monthly__price">$8<span class="monthly__per">/mo</span></span>
         <span class="cta">
-          {#if hasActiveSubscription}
-            Active
+          {#if hasSubscription}
+            Subscribed
           {:else if busy === 'monthly'}
             Opening…
           {:else}
@@ -247,10 +214,17 @@
       <p class="error" role="alert">{error}</p>
     {/if}
 
-    {#if polling}
+    {#if payment}
       <p class="polling">
-        Waiting for payment confirmation… (this page will update when the credits land)
+        <a href={payment.url} target="_blank" rel="noopener noreferrer" on:click={startPolling}>
+          Continue to Paddle checkout
+        </a>
+        (opens in a new tab)
       </p>
+    {/if}
+
+    {#if polling}
+      <p class="polling" role="status">Waiting for payment confirmation…</p>
     {/if}
   </div>
 </div>
