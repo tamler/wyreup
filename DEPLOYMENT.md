@@ -38,7 +38,7 @@ After deployment, verify the Cloudflare deployment SHA, current live catalog and
 
 ## Publishing to npm
 
-Public package behavior changes need an appropriate Changeset in the same reviewed change. Private server, documentation and test cleanup does not itself require a package version bump.
+Public package behavior changes and changes to files shipped in an npm tarball, including its README, need an appropriate Changeset in the same reviewed change. Private server, repository-only documentation and test cleanup do not themselves require a package version bump.
 
 [`release.yml`](.github/workflows/release.yml) runs after successful current-main CI. It validates source identity and the downloaded release artifacts, then uses Changesets to create a version PR or invoke `release:publish`. The existing workflow can automatically merge the generated version PR. Publication goes through `release:pack`, `release:verify` and `release:publish`, including artifact preparation and the public-registry verification; do not bypass those checks with the raw publish command.
 
