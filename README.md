@@ -114,6 +114,7 @@ Everything above is free, forever. **PRO** is an optional credit-based tier for 
 
 - Pay-as-you-go packs contain **220 credits for $5**, **480 for $10**, or **1,000 for $20**. Pack credits never expire. The monthly plan grants **440 credits per paid $8 cycle**.
 - New payments use Paddle when billing is configured. Open checkout from your signed-in account or a Pro tool, and use **Manage Paddle billing** in your account to manage purchases and subscriptions. Existing Lemon Squeezy subscriptions and refunds continue through the original receipt. See the [billing deployment guide](./DEPLOYMENT.md#paddle-billing) for sandbox setup and the live cutover.
+- If checkout preparation remains unfinished after two minutes, a retry directs you to support. The earlier checkout stays reserved while support checks its payment status.
 - Failed runs auto-refund. The credit ledger is append-only — every spend / purchase / refund is auditable. Orphan spends from mid-handler crashes are auto-refunded on the next request.
 - Same API key works across **browser**, **CLI** (`wyreup login` once, then any Pro tool runs from the shell), and **MCP** (set `WYREUP_API_KEY` in your MCP server config to expose Pro tools to your agent). Buying credits in one surface funds usage on every surface.
 - Free tools and the anonymous experience are unchanged.

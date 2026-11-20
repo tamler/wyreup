@@ -17,6 +17,7 @@ Record each observation with the deployment commit, timestamp, and environment. 
 - [ ] Complete the test payment using Paddle sandbox. Observe `transaction.completed` delivery and exactly one purchase row with the test account's user ID and Paddle transaction ID. Verify the original tab confirms that transaction and the account balance reflects its credit grant.
 - [ ] Redeliver the completed notification and confirm the same balance and one purchase row. Simulate an unrelated balance change and confirm the sheet still waits for its own transaction.
 - [ ] Repeat for the other pack amounts. Confirm the payment link remains usable after a retry and concurrent clicks do not create a second payable transaction.
+- [ ] In a disposable local fixture, simulate an interrupted checkout with an unbound transaction. Confirm a fresh retry reports preparation and a retry after 120 seconds holds the reservation for support without creating a new transaction. Verify that a concurrent binding returns only the exact stored transaction. Use the [billing deployment guide](../DEPLOYMENT.md#paddle-billing) to review open holds against the stored environment, intent, customer, catalog, and time.
 
 ## C. Refund and adjustment
 

@@ -132,13 +132,20 @@ their original obligations. Keep `/api/webhooks/lemonsqueezy`,
 transition. Existing subscriptions continue under their original receipt.
 Neither deployment nor the new checkout moves or cancels them.
 
-If checkout creation returns an uncertain outcome, inspect its
-`paddle_checkouts` reservation and exact transaction in the same Paddle
-environment. The server-created `wyreup_intent` reference aids dashboard
-reconciliation. It does not establish ownership. Confirm the transaction
-is terminal or safely bind the confirmed transaction to that reservation
-before reopening purchases. Keep pending paid transactions and their
-webhook destinations available during rollback or a catalog-ID change.
+If checkout preparation is interrupted, a retry after 120 seconds places
+the unfinished reservation in `blocked` for reconciliation. A retry can
+return the already bound transaction if its original request just
+completed. An unresolved hold stays reserved for support review.
+
+Inspect the `paddle_checkouts` reservation and the corresponding Paddle
+records in the stored mode. Match the stored intent, customer, catalog
+price, quantity, currency, and creation time before binding a verified
+transaction to the reservation. The server-created `wyreup_intent` in
+`custom_data` helps locate the record. Ownership comes from the verified
+reservation and customer binding. Leave the hold in place while the
+transaction outcome is uncertain. Confirm its terminal outcome before
+reopening purchases. Keep pending paid transactions and their webhook
+destinations available during rollback or a catalog-ID change.
 
 ## CI/CD workflows
 

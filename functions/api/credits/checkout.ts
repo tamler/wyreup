@@ -6,6 +6,18 @@ import {
 import type { PaddleConfig } from '../../_lib/paddle';
 import type { PagesFunction } from '../../_lib/types';
 
+// Checkout preparation and creation make at most five Paddle requests, each
+// with an 8-second timeout. A stale reservation still protects a possible payment.
+const CREATING_STALE_MS = 120_000;
+
+interface PendingCheckout {
+  intent_id: string;
+  created_at: number;
+  state: string;
+  transaction_id: string | null;
+  price_id: string;
+}
+
 function paymentLink(config: PaddleConfig, transactionId: string): Response {
   const checkoutUrl = new URL('/checkout', config.origin);
   checkoutUrl.searchParams.set('_ptxn', transactionId);
@@ -52,11 +64,12 @@ async function verifiedCustomer(
 
 async function setUnavailable(
   env: Env, config: PaddleConfig, intent: string, state: 'blocked' | 'cancelled', transactionId?: string,
-): Promise<void> {
-  await env.DB.prepare(`
+): Promise<boolean> {
+  const result = await env.DB.prepare(`
     UPDATE paddle_checkouts SET state=?, transaction_id=?
     WHERE mode=? AND intent_id=? AND state='creating'
   `).bind(state, transactionId ?? null, config.mode, intent).run();
+  return result.meta.changes === 1;
 }
 
 async function recoverTransactionBinding(
@@ -80,9 +93,9 @@ async function recoverTransactionBinding(
   } catch {
     // Keep this reservation while the provider outcome is uncertain.
   }
-  await setUnavailable(env, config, intent, cancelled ? 'cancelled' : 'blocked', transactionId);
+  const updated = await setUnavailable(env, config, intent, cancelled ? 'cancelled' : 'blocked', transactionId);
   return json({
-    error: cancelled ? 'Could not start checkout. Try again.' : 'Checkout needs reconciliation. Contact support before retrying.',
+    error: cancelled && updated ? 'Could not start checkout. Try again.' : 'Checkout needs reconciliation. Contact support before retrying.',
   }, 503);
 }
 
@@ -117,16 +130,31 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     config.mode, intent, pack, priceId, product.credits, product.cents, Date.now(), user.id, pack, config.mode,
   ).run();
   if (!inserted.meta.changes) {
-    const pending = await env.DB.prepare(`
-      SELECT state, transaction_id, price_id FROM paddle_checkouts c JOIN users ON users.id=c.user_id
+    const pendingCheckout = env.DB.prepare(`
+      SELECT c.intent_id, c.created_at, c.state, c.transaction_id, c.price_id
+      FROM paddle_checkouts c JOIN users ON users.id=c.user_id
       WHERE c.mode=? AND c.user_id=? AND c.pack=? AND state IN ('creating','open','blocked')
         AND (c.pack != 'monthly' OR ${monthlyAvailable})
-    `).bind(config.mode, user.id, pack, config.mode)
-      .first<{ state: string; transaction_id: string | null; price_id: string }>();
-    if (pending?.state === 'open' && pending.price_id === priceId && pending.transaction_id) {
+    `).bind(config.mode, user.id, pack, config.mode);
+    let pending = await pendingCheckout.first<PendingCheckout>();
+    if (pending?.state === 'creating') {
+      if (Date.now() - pending.created_at < CREATING_STALE_MS) {
+        return json({ error: 'Checkout is being prepared. Try again shortly.' }, 409);
+      }
+      const blocked = await env.DB.prepare(`
+        UPDATE paddle_checkouts SET state='blocked'
+        WHERE mode=? AND intent_id=? AND user_id=? AND pack=?
+          AND created_at=? AND state='creating' AND transaction_id IS NULL
+      `).bind(config.mode, pending.intent_id, user.id, pack, pending.created_at).run();
+      if (!blocked.meta.changes) {
+        // The original request may have bound the transaction since our read.
+        const current = await pendingCheckout.first<PendingCheckout>();
+        if (current?.intent_id === pending.intent_id) pending = current;
+      }
+    }
+    if (pending?.state === 'open' && pending.price_id === priceId && paddleId(pending.transaction_id, 'txn')) {
       return paymentLink(config, pending.transaction_id);
     }
-    if (pending?.state === 'creating') return json({ error: 'Checkout is being prepared. Try again shortly.' }, 409);
     if (pending) return json({ error: 'An earlier checkout needs reconciliation. Contact support.' }, 409);
     return json({ error: 'You already have a monthly subscription.' }, 409);
   }
@@ -143,9 +171,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: 'This pack is temporarily unavailable.' }, 503);
     }
     customerId = await verifiedCustomer(env, config, user.id, user.email);
-    await env.DB.prepare(`
+    const prepared = await env.DB.prepare(`
       UPDATE paddle_checkouts SET customer_id=? WHERE mode=? AND intent_id=? AND state='creating'
     `).bind(customerId, config.mode, intent).run();
+    if (prepared.meta.changes !== 1) {
+      return json({ error: 'Checkout needs reconciliation. Contact support before retrying.' }, 503);
+    }
   } catch {
     // Customer uncertainty is reconciled with an exact-email lookup on retry.
     // No payable transaction has been attempted at this point.
