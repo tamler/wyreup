@@ -1,5 +1,13 @@
 # @wyreup/cli
 
+## 2.0.1
+
+### Patch Changes
+
+- 62c37c1: Refresh the installer integrity pins for the updated Wyreup skill guidance.
+- Updated dependencies [62c37c1]
+  - @wyreup/core@3.0.1
+
 ## 2.0.0
 
 ### Major Changes

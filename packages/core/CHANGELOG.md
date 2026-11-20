@@ -1,5 +1,11 @@
 # @wyreup/core
 
+## 3.0.1
+
+### Patch Changes
+
+- 62c37c1: Update the packaged Core and MCP guides for Wyreup's free-only service.
+
 ## 3.0.0
 
 ### Major Changes
