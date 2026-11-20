@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { onRequest as apiCatchAll } from './api/[[path]]';
 import { onRequest as middleware } from './_middleware';
@@ -111,6 +111,37 @@ describe('free-only API retirement', () => {
     expect(wrangler).not.toMatch(/^\[ai\]/m);
     expect(envTypes).not.toMatch(/\b(?:AI|LS_[A-Z_]+|ZEPTOMAIL_[A-Z_]+)\s*:/);
     expect(devVars).not.toMatch(/^(?:LS_|ZEPTOMAIL_|IMAGE_MODEL_TOKEN=)/m);
+  });
+
+  it('keeps exactly the free-only Functions runtime source inventory', async () => {
+    const root = resolve(REPO_ROOT, 'functions');
+    const entries = await readdir(root, { recursive: true, withFileTypes: true });
+    expect(entries.every(entry => entry.isDirectory() || entry.isFile())).toBe(true);
+    const testSupport = new Set([
+      '_lib/test/domain-rate-wrangler.jsonc',
+      '_lib/test/sqlite.ts',
+      'tsconfig.json',
+    ]);
+    const runtime = entries
+      .filter(entry => entry.isFile())
+      .map(entry => relative(root, resolve(entry.parentPath, entry.name)).split(sep).join('/'))
+      .filter(path => !testSupport.has(path) && !path.endsWith('.test.ts'))
+      .sort();
+    expect(runtime).toEqual([
+      '_lib/crypto.ts',
+      '_lib/env.ts',
+      '_lib/public-rate-limit.ts',
+      '_lib/rdap.ts',
+      '_lib/retired.ts',
+      '_lib/types.ts',
+      '_middleware.ts',
+      'api/[[path]].ts',
+      'api/domain-age.ts',
+    ]);
+    for (const path of runtime) {
+      const source = await readFile(resolve(root, path), 'utf8');
+      expect(source, path).not.toMatch(/\b(?:from\s+|import\s*(?:\(\s*)?|require\s*\(\s*)['"](?:[^'"]*\/)?test(?:\/|['"])/);
+    }
   });
 
   it('sets the retirement switch while preserving existing users and credit history', async () => {
