@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/mcp",
   "version": "3.0.0",
-  "description": "MCP server exposing Wyreup's local tools, public network lookups, and hosted PRO tools to MCP-compatible agents.",
+  "description": "MCP server for Wyreup's local file tools, calculations, and public network lookups.",
   "keywords": [
     "wyreup",
     "mcp",

@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/core",
   "version": "3.0.0",
-  "description": "Privacy-first tools for files, text, and calculations. Local processing tools, public network lookups, and optional hosted PRO tools.",
+  "description": "Tools for local file and text processing, calculations, and public network lookups.",
   "keywords": [
     "wyreup",
     "privacy",
