@@ -3,8 +3,5 @@
 # Copy this file to .dev.vars (gitignored) for local development.
 # `wrangler pages dev` reads .dev.vars automatically.
 #
-# 32-byte hex. Generate with:  openssl rand -hex 32
+# Public domain lookup rate-limit secret. Generate a 32-byte hex value with openssl rand -hex 32.
 SESSION_SECRET=""
-
-# Optional: override public origin for local development.
-APP_ORIGIN="http://localhost:8788"

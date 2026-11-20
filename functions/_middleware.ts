@@ -1,5 +1,5 @@
 import type { PagesFunction } from './_lib/types';
-import { retiredApiResponse } from './_lib/retired';
+import { retiredApiResponse, retiredToolPageResponse } from './_lib/retired';
 
 const PUBLIC_METHODS = new Map([
   ['/api/domain-age', 'POST'],
@@ -37,5 +37,5 @@ export const onRequest: PagesFunction = ({ request, next }) => {
   if (route && PUBLIC_METHODS.get(route) === request.method) return next();
   if (apiLikePath(rawPathname)) return retiredApiResponse();
   if (/%(?![\da-f]{2})/i.test(rawPathname)) return retiredApiResponse();
-  return next();
+  return retiredToolPageResponse(rawPathname, request.method) ?? next();
 };

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDefaultRegistry as createCoreRegistry } from '@wyreup/core/execution';
+import { onRequest as middleware } from '../../../functions/_middleware';
 import { createDefaultRegistry, runChain } from '../src/lib/core-execution';
 import { decodeChainSteps, encodeChainSteps } from '../src/components/runners/chainUrl';
 import { getAllChains, importChainsJson, validateToolbeltChain } from '../src/components/runners/toolbeltStorage';
@@ -12,6 +13,17 @@ import { GET as sitemap } from '../src/pages/sitemap.xml';
 import type { APIRoute } from 'astro';
 
 const context = {} as Parameters<APIRoute>[0];
+
+function toolPageRequest(path: string, method: string, next: Parameters<typeof middleware>[0]['next']) {
+  return middleware({
+    request: new Request(`https://wyreup.com${path}`, { method }),
+    get env(): never { throw new Error('Tool page routing read environment'); },
+    params: {},
+    data: {},
+    next,
+    waitUntil() { throw new Error('Tool page routing started background work'); },
+  });
+}
 
 describe('free website catalog', () => {
   it('admits only free browser tools through every registry lookup', () => {
@@ -53,6 +65,43 @@ describe('free website catalog', () => {
     const index: unknown = await (await toolIndex(context)).json();
     expect(index).toContainEqual(expect.objectContaining({ id: tool.id, name: tool.name }));
     expect(createCoreRegistry().toolsById.get(tool.id)?.name).toBe('OCR Pro');
+  });
+
+  it('redirects every retired Core credit tool before static assets on GET and HEAD', async () => {
+    const retired = createCoreRegistry().tools.filter(tool => tool.cost === 'credit');
+    expect(retired).toHaveLength(31);
+    const next = vi.fn(() => { throw new Error('Retired tool reached stale HTML fallback'); });
+    for (const { id } of retired) {
+      const paths = [
+        `/tools/${id}`, `/tools/${id}/`, `/tools/${id}.html`,
+        `/tools/${id}/index.html?old=1`, `/tools/${id}/index`, `/tools/${id}/og.png`,
+        `/TOols//${id.toUpperCase()}`, `/tools%2F${id.replaceAll('-', '%2D')}`,
+      ];
+      for (const path of paths) {
+        for (const method of ['GET', 'HEAD']) {
+          const response = await toolPageRequest(path, method, next);
+          expect(response.status, `${method} ${path}`).toBe(301);
+          expect(response.headers.get('Location'), path).toBe('/tools/');
+          expect(response.headers.get('Cache-Control'), path).toBe('no-store');
+          expect((await response.arrayBuffer()).byteLength, path).toBe(0);
+        }
+      }
+    }
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('keeps every free web-supported Core tool available to static assets', async () => {
+    const free = createCoreRegistry().tools.filter(tool =>
+      tool.cost === 'free' && (!tool.surfaces || tool.surfaces.includes('web')),
+    );
+    expect(free).toHaveLength(384);
+    expect(free.some(tool => tool.id === 'ocr-pro')).toBe(true);
+    const asset = new Response('free tool HTML');
+    const next = vi.fn(() => Promise.resolve(asset));
+    for (const { id } of free) {
+      expect(await toolPageRequest(`/tools/${id}/`, 'GET', next), id).toBe(asset);
+    }
+    expect(next).toHaveBeenCalledTimes(384);
   });
 
   it('rejects a retired URL-chain step before dispatching its earlier valid step', async () => {

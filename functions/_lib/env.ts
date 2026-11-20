@@ -25,17 +25,4 @@ export interface Env {
   DB: D1Database;
   // Used to derive private rate-limit keys for the public domain lookup.
   SESSION_SECRET: string;
-  APP_ORIGIN?: string;
-}
-
-export function isAdminEmail(email: string, env: { ADMIN_EMAILS?: string }): boolean {
-  const list = (env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return list.includes(email.toLowerCase());
-}
-
-export function appOrigin(env: Env): string {
-  return env.APP_ORIGIN || 'https://wyreup.com';
 }

@@ -6,11 +6,13 @@ The November 20, 2026 product decision makes Wyreup a free browser/local tool li
 
 API middleware allows only the public domain lookup with its supported POST method. Other API requests return HTTP 410 before authentication, body parsing, database access, email or provider work. Retired handlers cannot dispatch hosted models or process payments. The orphaned sales-funnel counter is retired too; its historical table is preserved. The Workers AI deployment binding is removed. Old CLI/MCP hosted definitions remain compatible in published packages, but their service requests receive the same retirement response.
 
-The disable-switch migration preserves account, balance and history rows. It is defense in depth: changing the old database switch cannot enable the retired service. Existing migrations are immutable. No customer refunds or notifications are part of this change.
+The Pages source removes the private account, credit, billing, email and hosted model helpers. The disable-switch migration preserves account, balance and history rows. Changing the old database switch cannot enable the retired routes. Existing migrations and published Core, CLI and MCP tool definitions are preserved. This source cleanup leaves customer refunds and notifications outside its scope.
 
 ## Website boundary
 
 The website projects the validated library registry to free, web-supported tools for pages, search, categories, recommendations, tasks, chains and triggers. Stored/imported chains referencing retired tools fail before execution. Pricing, account and admin paths redirect to the tool catalog. Hosted task pages and sales/upgrade prompts are removed. Local tools retain input validation and capability checks.
+
+Pages middleware guards the 31 retired hosted tool IDs and their old static asset paths. GET and HEAD return an empty HTTP 301 with `Location: /tools/` and `Cache-Control: no-store` before static asset lookup. Other methods return HTTP 410. The retired IDs remain reserved. Reusing one requires an explicit catalog and redirect change because a prior permanent redirect can persist in clients.
 
 Core and MCP runtime source is unchanged. The CLI installer requires a patch release updating its three integrity hashes to the current free-only skill documents; it still rejects mismatched content. Older installed clients reject the changed documents, so upgrade to the matching CLI release before installing them. Local tool commands are unchanged. The CLI-only patch changeset is part of this source change.
 
@@ -21,6 +23,8 @@ The mandatory **Free-only retirement** CI job builds the current Core and websit
 Deployment requires successful CI for the exact current main SHA, rechecks current main before production changes and verifies the triggering CI run contains exactly one successful Free-only retirement job for that source. This replaces the obsolete inbox-recovery rehearsal for a service no longer issuing accounts. It does not claim an inbox test happened or reuse older rehearsal approval. Retirement proof precedes every production mutation.
 
 After merge, verify actual-main CI and Pages deployment, then inspect the live catalog, redirects, search index, privacy policy, old hosted/payment/signup API responses and a representative local tool. Negative probes must never call a real model, send email or create checkout. Distinguish observed zero provider invocations during verification from unmeasured historical billing totals. Retain the release SHA, deployment identifier and checks in the coordinator receipt.
+
+Verify the hosted tool redirects on both website hostnames after the authorized cache purge described in the [deployment guide](../DEPLOYMENT.md). Separately inventory older immutable Pages deployment URLs and their preview and custom aliases. These can still serve old content until individually retired. Verify that the retired deployment URLs and aliases reject access to retired routes, and keep a receipt of the checked URLs and outcomes. Roll back only to a free-only deployment that passed the compiled retirement probes and serves the expected hosted tool redirects. Pre-retirement builds and aliases are ineligible rollback targets.
 
 Re-enabling any retired service requires a new explicit product decision, independent review and relevant runtime qualification.
 

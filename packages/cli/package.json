@@ -1,7 +1,7 @@
 {
   "name": "@wyreup/cli",
-  "version": "2.0.1",
-  "description": "Wyreup CLI — scriptable file tools, calculations, public network lookups, and optional hosted PRO tools from the shell.",
+  "version": "2.0.0",
+  "description": "Wyreup CLI for local file processing, calculations, and public network lookups.",
   "keywords": [
     "wyreup",
     "cli",
