@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
   import { dropStore } from '../stores/drop';
-import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
+import { type ToolModule } from '@wyreup/core/execution';
+import { createDefaultRegistry } from '../lib/core-execution';
   import { jobsForMime, type Job } from '../data/jobs';
   import { displayName } from '../data/display-names';
   import { encodeChainSteps } from './runners/chainUrl';
@@ -65,7 +66,6 @@ import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
     { label: 'Edit', categories: ['edit', 'create', 'media', 'audio', 'pdf', 'geo', 'archive'] },
     { label: 'Remove private information', categories: ['privacy'] },
     { label: 'Understand', categories: ['inspect', 'text', 'dev', 'finance'] },
-    { label: 'Improve with AI', categories: [] },
   ];
 
   function clearDrop() {
@@ -107,7 +107,6 @@ import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
   }
 
   function groupLabel(tool: ToolModule): string | undefined {
-    if (tool.cost === 'credit') return 'Improve with AI';
     return outcomeGroups.find((group) => group.categories.includes(tool.category))?.label ?? 'Understand';
   }
 

@@ -9,7 +9,7 @@
 // Whisper-large-v3 turbo is ~5× cheaper per audio-minute; switch by
 // replacing this body and adding AUDIO_MODEL_TOKEN to env.ts.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { withTimeout, INFERENCE_TIMEOUTS } from '../timeout';
 
 export interface TranscribeArgs {

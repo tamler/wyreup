@@ -13,6 +13,7 @@ export default defineConfig({
       'test/catalog-browser-binding-followup.test.mjs',
       'test/catalog-browser-binding-parser-followup.test.mjs',
       'test/catalog-core-build-proof.test.mjs',
+      'test/free-only-pages-runtime.test.mjs',
     ],
     // globalSetup runs before tests and sets cwd to repo root so relative paths resolve correctly.
     globalSetup: ['./test/setup.mjs'],

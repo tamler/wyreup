@@ -290,7 +290,8 @@ export function createHelperBehaviorFixture(qualification: Qualification, mode: 
   const evidence = '/unit-domain-lifecycle/evidence';
   const owned = path.join(evidence, 'domain-functions-controlled');
   const sourceFiles = [
-    'functions/api/domain-age.ts', 'functions/_lib/rdap.ts', 'functions/_lib/public-rate-limit.ts',
+    'functions/api/domain-age.ts', 'functions/_middleware.ts', 'functions/_lib/retired.ts', 'functions/api/[[path]].ts',
+    'functions/_lib/rdap.ts', 'functions/_lib/public-rate-limit.ts',
     'functions/_lib/crypto.ts', 'functions/_lib/env.ts', 'functions/_lib/types.ts',
     'packages/core/src/lib/domain-registration.ts', 'packages/core/src/lib/tr46.d.ts',
     'packages/core/src/utilities/common.ts', 'packages/core/src/types.ts',
@@ -374,6 +375,11 @@ export function createHelperBehaviorFixture(qualification: Qualification, mode: 
   }
   directories.add('/'); directories.add('/unit-domain-lifecycle');
   const put = (file: string, bytes: Buffer) => { mkdirValue(path.dirname(file), true); files.set(file, bytes); };
+  const addProjectFile = (relative: string) => {
+    if (typeof relative !== 'string' || !relative || path.isAbsolute(relative) || path.resolve(project, relative).startsWith(project + path.sep) === false)
+      throw new Error('Synthetic project injection must remain under its fixture root.');
+    put(path.resolve(project, relative), Buffer.from(`Inert injected unit file: ${relative}\n`));
+  };
   for (const relative of sourceFiles) put(path.join(project, relative), Buffer.from(`Inert unit dependency fixture: ${relative}\n`));
   const coreBytes = Buffer.from('Inert coordinated core fixture; never imported.\n');
   put(path.join(project, 'packages/core/dist/browser/index.js'), coreBytes);
@@ -641,5 +647,5 @@ export function createHelperBehaviorFixture(qualification: Qualification, mode: 
   return { mode, project, dist, evidence, owned, corePins, calls, writes, violations, E_START, E_WRITE, E_GUARD, E_STREAM, E_DWRITE,
     factory, requireClean, compilerReady: compilerReady.promise, writerEnd: writerEnd.promise, hostReady: hostReady.promise,
     markDeadlineFailure, freezeEndpoint, releaseWrite, releaseFinal, releaseAlreadyCreated, postEndpointWork,
-    children, firstWriter, failedLaunch, terminal };
+    children, firstWriter, failedLaunch, terminal, addProjectFile };
 }

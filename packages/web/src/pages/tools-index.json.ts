@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../lib/core-execution';
 import { projectToolDiscoveryMetadata } from '../lib/tool-discovery-metadata';
 
 export const GET: APIRoute = () => {

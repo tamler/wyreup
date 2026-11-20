@@ -1,6 +1,6 @@
 # @wyreup/mcp
 
-MCP server exposing Wyreup's local tools, public network lookups, and hosted PRO tools to Claude Code, Claude Desktop, Cline, Continue, and any MCP-compatible agent.
+MCP server exposing Wyreup's local tools and disclosed public network lookups to Claude Code, Claude Desktop, Cline, Continue, and any MCP-compatible agent. Hosted inference and account services are retired; legacy hosted definitions receive HTTP 410. Local tools need no account or API key.
 
 ## Install
 
@@ -93,7 +93,7 @@ Tools span image, PDF, audio, video, text, dev, geo, archive, finance, security/
 
 ## Privacy
 
-The MCP server is a local stdio process. Local file-processing tools keep their inputs on your machine; hosted PRO tools send their declared inputs for remote processing.
+The MCP server is a local stdio process. Local file-processing tools keep their inputs on your machine. Hosted execution is unavailable; your assistant provider may separately receive prompts and tool results.
 
 Domain Registration Age is a free network lookup. The entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key is required. Registration age may differ from first-ever use. The trusted `WYREUP_ORIGIN` (default `https://wyreup.com`) travels through the existing parent-to-worker context; the normal egress lock still blocks direct registry requests. Its MCP annotation declares network access even though it is free.
 
@@ -109,8 +109,8 @@ With the fetch lock enabled, redirects are followed only for HTTP 301, 302, 303,
 
 | Var | Default | Purpose |
 | --- | --- | --- |
-| `WYREUP_API_KEY` | — | Pro tools' bearer token. Read once at startup. Never inherited by worker env (passed via IPC). |
-| `WYREUP_ORIGIN` | `https://wyreup.com` | Trusted public lookup and Pro endpoint origin, allowed alongside configured model origins by the fetch lock. |
+| `WYREUP_API_KEY` | — | Legacy setting; the hosted/account service is retired. Not needed for local tools or public lookups. |
+| `WYREUP_ORIGIN` | `https://wyreup.com` | Trusted public lookup origin, allowed alongside configured model origins by the fetch lock. |
 | `WYREUP_MODEL_CDN` | `https://models.wyreup.com` | Model mirror URL, or `disabled` to use the configured upstream model origins. Passed to workers over trusted parent IPC. |
 | `WYREUP_ALLOW_PATHS` | CWD + `os.tmpdir()` | Platform-delimited absolute path roots (`:` on POSIX, `;` on Windows). `*` disables the allowlist, never directory-permission checks. |
 | `WYREUP_MAX_INPUT_BYTES` | `524288000` (500 MB) | Aggregate cap on input file bytes per call. |

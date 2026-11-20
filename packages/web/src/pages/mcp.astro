@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="MCP file tools — images, PDFs & OCR for AI agents — Wyreup"
-  description="Use Wyreup file tools through an MCP server: compress images, work with PDFs and extract text. Local execution, setup downloads and optional hosted PRO are documented."
+  description="Use free Wyreup file tools through an MCP server to compress images, work with PDFs and extract text. Check setup and network requirements."
 >
   <div class="dist-page">
     <div class="container">
@@ -13,7 +13,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section class="dist-hero" aria-labelledby="mcp-heading">
         <h1 id="mcp-heading" class="dist-hero__title">MCP file tools for AI agents.</h1>
         <p class="dist-hero__sub">
-          Give an MCP-compatible assistant tools for images, PDFs, OCR and other file tasks. Local file tools execute on your machine; network lookups disclose their destinations, and optional hosted PRO tools use your API key.
+          Give an MCP-compatible assistant tools for images, PDFs, OCR and other file tasks. Local file tools execute on your machine. Network lookups disclose their destinations.
         </p>
       </section>
 
@@ -30,10 +30,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           Wyreup's MCP server exposes supported registry tools so your agent can compress images,
           work with PDFs or blur detected faces. Local image and PDF operations process files on
           your machine. Setup can download packages, runtimes or models; network-related tools
-          make requests as described by their task. Optional hosted PRO tools send their inputs
-          for remote processing. Your assistant provider may also receive tool requests and
-          results according to its own settings — local file processing does not make the entire
-          agent conversation private.
+          make requests as described by their task. Your assistant provider may receive tool
+          requests and results according to its own settings. Check those settings before
+          giving an assistant access to sensitive data.
           Domain Registration Age is a free network lookup: the entered domain is sent to Wyreup,
           which reads the public IANA bootstrap without sending IANA the queried domain, then
           sends the domain to its registration registry. No API key is required; registration
@@ -61,25 +60,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   "mcpServers": {
     "wyreup": {
       "command": "npx",
-      "args": ["-y", "@wyreup/mcp"],
-      "env": {
-        "WYREUP_API_KEY": "wk_live_..."
-      }
+      "args": ["-y", "@wyreup/mcp"]
     }
   }
 }`}</code></pre>
         </div>
-        <p class="dist-section__body">
-          The <code class="inline-code">WYREUP_API_KEY</code> field is optional — omit it
-          and the free in-browser-class tools still work. Provide it
-          (get one at <a href="/account" class="inline-link">/account</a>) to
-          unlock supported hosted-AI PRO tools (transcription, OCR,
-          translation, text-to-speech, image generation, long-context
-          PDF Q&amp;A, structured-JSON extraction, and more). The agent
-          sees only the tools your config has unlocked, so there's no
-          fail path from missing auth.
-        </p>
-
         <ul class="config-locations">
           <li class="config-loc">
             <span class="config-loc__client">Claude Desktop (macOS)</span>

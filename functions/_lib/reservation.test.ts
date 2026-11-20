@@ -11,6 +11,9 @@ describe('atomic Pro reservation on SQLite', () => {
   beforeEach(async () => {
     sqlite = await createSqliteTestDb();
     env = { DB: sqlite.db } as Env;
+    // Migration 0009 retires production admission; this historical unit
+    // suite explicitly enables the old library while testing its predicates.
+    await sqlite.exec("UPDATE system_settings SET value='0' WHERE key='system_disabled';");
     await sqlite.exec(
       "INSERT INTO users(id,email,created_at) VALUES ('user','user@example.com',0),('other','other@example.com',0); INSERT INTO credit_events(id,user_id,kind,amount,created_at) VALUES ('grant','user','grant',1000,0),('grant2','other','grant',1000,0);",
     );

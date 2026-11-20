@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runBgRemove } from './image-models';
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { INFERENCE_TIMEOUTS } from '../timeout';
 
 const env = { IMAGE_MODEL_TOKEN: 'test-secret' } as Env;

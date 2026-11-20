@@ -54,7 +54,7 @@
 {#if isOffline}
   <div class="pwa-banner pwa-banner--offline" role="status" aria-live="polite">
     <span class="pwa-banner__dot pwa-banner__dot--offline" aria-hidden="true"></span>
-    <span class="pwa-banner__msg">Offline. Local tools can work when their required assets are available. Network lookups and hosted PRO tools need a connection; some local tools download assets on first use.</span>
+    <span class="pwa-banner__msg">Offline. Local tools can work when their required assets are available. Network lookups require a connection.</span>
   </div>
 {/if}
 

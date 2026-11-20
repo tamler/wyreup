@@ -13,7 +13,7 @@
 //   - Return plain JSON; image providers return contentType/base64 inline.
 //   - The client `input` is untrusted. Validate shape before calling.
 
-import type { Env } from './env';
+import type { HistoricalProviderEnv as Env } from './historical-env';
 import { runBgRemove, runUpscale } from './providers/image-models';
 import { chat, chatWith } from './providers/text-models';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from './timeout';

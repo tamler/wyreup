@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../lib/core-execution';
 import { JOBS } from '../data/jobs';
 import { canonicalPageUrl } from '../lib/seo';
 
@@ -11,10 +11,8 @@ const STATIC_PAGES = [
   '/cli',
   '/skill',
   '/triggers',
-  '/pro',
   '/legal/privacy',
   '/legal/terms',
-  '/legal/refund',
 ];
 
 export const GET: APIRoute = () => {

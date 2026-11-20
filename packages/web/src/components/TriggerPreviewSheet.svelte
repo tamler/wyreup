@@ -11,12 +11,10 @@
   // which owns the chain executor + rule store.
 
   import { onMount, createEventDispatcher } from 'svelte';
-  import { user, authReady } from '../stores/user';
-  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure, type PaidChainSummary } from '../lib/chainPaidConsent';
+  import { createDefaultRegistry } from '../lib/core-execution';
 import {
     readFileHeader,
     runPreflight,
-    createDefaultRegistry,
     validateChain,
     type PreflightResult,
     type FileHeader,
@@ -39,7 +37,7 @@ import {
   $: validation = validateChain(chain, registry);
 
   const dispatch = createEventDispatcher<{
-    run: { dontAskAgain: boolean; file: File; chainFingerprint: string; paidFingerprint: string; accountEmail: string | null };
+    run: { dontAskAgain: boolean; file: File; chainFingerprint: string };
     skip: void;
     disable: void;
   }>();
@@ -52,27 +50,11 @@ import {
   let runAnywayUnlocked = false;
   let mounted = false;
   let generation = 0;
-  let paid: PaidChainSummary | null = null;
-  let paidError = '';
-  let paidConfirmed = false;
-  let consentFile = file;
-  let consentAccount = $user;
-  $: if (file !== consentFile || $user !== consentAccount) {
-    consentFile = file; consentAccount = $user; paidConfirmed = false;
-  }
-  $: {
-    paidConfirmed = false;
-    try { paid = summarizePaidChain(chain, registry); paidError = ''; }
-    catch (error) { paid = null; paidError = error instanceof Error ? error.message : String(error); }
-  }
-  $: accountError = (() => { if (!paid) return paidError; try { assertPaidAccount(paid, $authReady, $user); return ''; } catch (error) { return error instanceof Error ? error.message : String(error); } })();
-
   onMount(() => { mounted = true; return () => { mounted = false; generation++; }; });
   $: if (mounted) void preparePreview(file, chain);
   async function preparePreview(capturedFile: File, capturedChain: Chain) {
     const attempt = ++generation;
     const current = () => mounted && attempt === generation && file === capturedFile && chain === capturedChain;
-    paidConfirmed = false;
     runAnywayUnlocked = false;
     preflightLoading = true;
     preflightFailed = false;
@@ -111,12 +93,11 @@ import {
     // Spoof gate — Run must never fire on an invalid chain. The button
     // is also disabled in the markup, but defense in depth.
     if (preflightLoading || !validation.ok) return;
-    if (!paid || paidError || accountError || (paid.steps.length > 0 && !paidConfirmed)) return;
     if (preflight?.verdict === 'high' && !runAnywayUnlocked) {
       runAnywayUnlocked = true;
       return;
     }
-    dispatch('run', { dontAskAgain, file, chainFingerprint: JSON.stringify(chain), paidFingerprint: JSON.stringify(paid), accountEmail: $user?.email ?? null });
+    dispatch('run', { dontAskAgain, file, chainFingerprint: JSON.stringify(chain) });
   }
 
   function handleSkip() {
@@ -210,15 +191,6 @@ import {
       {/if}
     </section>
 
-    {#if paidError || accountError}
-      <p class="sheet__warn" role="alert">{paidError || accountError}</p>
-    {:else if paid && paid.steps.length > 0 && $user}
-      <section class="sheet__section">
-        <p>{paidChainDisclosure(paid, [file], $user.email)}</p>
-        <label><input type="checkbox" bind:checked={paidConfirmed} /> I confirm these paid steps for this file and account.</label>
-      </section>
-    {/if}
-
     <label class="sheet__remember">
       <input type="checkbox" bind:checked={dontAskAgain} />
       <span>Don't ask for this rule again</span>
@@ -235,7 +207,7 @@ import {
           Acknowledge severity to enable Run
         </button>
       {:else}
-        <button type="button" class="btn-primary" on:click={handleRun} disabled={preflightLoading || !!paidError || !!accountError || !paid || (paid.steps.length > 0 && !paidConfirmed)}>Run</button>
+        <button type="button" class="btn-primary" on:click={handleRun} disabled={preflightLoading}>Run</button>
       {/if}
       <button type="button" class="btn-secondary" on:click={handleSkip}>Skip</button>
       <button type="button" class="btn-secondary btn-secondary--quiet" on:click={handleDisable}>

@@ -1,6 +1,6 @@
 # @wyreup/core
 
-Privacy-first tools for images, PDFs, audio, text, and calculations. Local processing tools use your device. Public network lookups and hosted PRO tools disclose what they send before execution.
+Privacy-first tools for images, PDFs, audio, text, and calculations. Local processing tools use your device. Public network lookups disclose what they send before execution. Wyreup's hosted inference and account service is retired; legacy hosted definitions remain in the library for compatibility, but the service rejects their requests. Use local tools without an account.
 
 Domain Registration Age is a free network tool: the entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key is required. Registration age may differ from first-ever use. Node callers use the trusted `ctx.proOrigin` (default `https://wyreup.com`); browser callers use the current site origin. This tool needs a connection.
 

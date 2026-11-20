@@ -4,7 +4,8 @@
   import { stashChainHandover, clearChainHandover } from './runners/chainStorage';
   import { setTrailHandover } from './runners/hopTrail';
   import { fileToolCandidates, acceptsBrowserFile } from '../lib/file-tool-candidates';
-import { createDefaultRegistry, type ToolModule } from '@wyreup/core/execution';
+import { type ToolModule } from '@wyreup/core/execution';
+import { createDefaultRegistry } from '../lib/core-execution';
 
   // Live three-step walkthrough. Replaces the static "01 Drop / 02 Pick /
   // 03 Download" copy with a working flow:

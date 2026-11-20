@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { createDefaultRegistry } from '../../core/dist/node/index.js';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const read = (path) => readFileSync(join(dist, path), 'utf8');
@@ -31,6 +32,34 @@ function check(label, run) {
 }
 
 const urls = [...read('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+const core = createDefaultRegistry();
+const retired = core.tools.filter((tool) => tool.cost === 'credit').map((tool) => tool.id);
+const commercialPaths = ['/pro', '/account', '/admin', '/pricing', '/legal/pricing', '/legal/refund'];
+const retiredJobs = ['/translate-a-document', '/make-subtitles-for-a-video'];
+const retiredIds = new RegExp(`(?:^|[^a-z0-9-])(?:${retired.join('|')})(?=$|[^a-z0-9-])`);
+const salesCopy = /hosted PRO|credit-metered|credits? per run|buy credits|credit pricing|\bGet PRO\b|lemonsqueezy|wyreup:auth-open|\/(?:api\/(?:account|auth|credits|tools\/pro)|pro(?:[/#"]|&quot;)|account(?:[/#"]|&quot;))/i;
+check('published free tool catalog', () => {
+  const entries = JSON.parse(read('tools-index.json'));
+  const expected = core.tools
+    .filter((tool) => tool.cost === 'free' && (tool.surfaces === undefined || tool.surfaces.includes('web')))
+    .map((tool) => tool.id).sort();
+  assert.deepEqual(entries.map((tool) => tool.id).sort(), expected);
+  assert.match(entries.find((tool) => tool.id === 'domain-age-checker')?.description ?? '', /Wyreup.*domain registry/i);
+});
+for (const path of [...commercialPaths, ...retiredJobs, ...retired.map((id) => `/tools/${id}`)]) {
+  check(`${path} is retired`, () => {
+    assert.ok(!urls.includes(`https://wyreup.com${path}/`));
+    assert.ok(!existsSync(join(dist, path.slice(1), 'index.html')));
+    assert.ok(!existsSync(join(dist, `${path.slice(1)}.html`)));
+  });
+}
+for (const file of readdirSync(dist, { recursive: true }).filter((path) => path.endsWith('.html'))) {
+  check(`${file} excludes commercial content`, () => {
+    const html = read(file);
+    assert.ok(!retiredIds.test(html), `retired tool ID: ${html.match(retiredIds)?.[0]}`);
+    assert.ok(!salesCopy.test(html), `commercial content: ${html.match(salesCopy)?.[0]}`);
+  });
+}
 check('sitemap uniqueness', () => assert.equal(new Set(urls).size, urls.length));
 for (const value of urls) {
   check(value, () => {
@@ -72,11 +101,8 @@ for (const value of urls) {
         }
       };
       const schema = JSON.parse(script[1]);
-      if (
-        schema['@type'] === 'SoftwareApplication' &&
-        (content(html, 'og:description') ?? '').includes('Hosted PRO tool — pay per run')
-      ) {
-        assert.equal(schema.offers, undefined, 'hosted tool must not advertise a free Offer');
+      if (url.pathname.startsWith('/tools/') && url.pathname !== '/tools/' && schema['@type'] === 'SoftwareApplication') {
+        assert.equal(schema.offers?.price, '0', 'free tool advertises a zero-price Offer');
       }
       walk(schema);
     }
@@ -84,8 +110,6 @@ for (const value of urls) {
 }
 
 for (const path of [
-  '/account/',
-  '/admin/',
   '/settings/',
   '/share/',
   '/share-receive/',
@@ -143,7 +167,7 @@ for (const path of ['/mcp/', '/cli/', '/skill/']) {
       html,
       /Files never leave your machine|No server call, ever|no uploads, no cloud calls|npm publish is imminent/i,
     );
-    assert.match(html, /hosted/i);
+    assert.doesNotMatch(html, /hosted PRO|credits? per run/i);
     assert.match(html, /download|setup/i);
   });
 }
@@ -176,9 +200,14 @@ for (const path of [
   });
 }
 const redirects = readFileSync(new URL('../public/_redirects', import.meta.url), 'utf8');
-check('legacy pricing redirect', () =>
-  assert.match(redirects, /^\/legal\/pricing\/\s+\/pro\/\s+301\s*$/m),
-);
+for (const path of commercialPaths) {
+  for (const from of [path, `${path}/`]) {
+    const to = path === '/legal/refund' ? '/legal/terms' : '/tools';
+    check(`legacy redirect ${from}`, () =>
+      assert.ok(redirects.split('\n').includes(`${from} ${to} 301`)),
+    );
+  }
+}
 check('legacy privacy redirect', () =>
   assert.match(redirects, /^\/privacy\.html\s+\/legal\/privacy\/\s+301\s*$/m),
 );

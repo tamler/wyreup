@@ -9,7 +9,7 @@
 // volume justifies the switch, replace the body with a Groq call and add
 // TEXT_MODEL_TOKEN to env.ts; the abstraction means nothing else changes.
 
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { withTimeout, INFERENCE_TIMEOUTS, MAX_TOKENS } from '../timeout';
 
 const TEXT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';

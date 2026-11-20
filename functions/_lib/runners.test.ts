@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { __readImageBytes, readImageRef, runPro, prepareProRun } from './runners';
-import type { Env } from './env';
+import type { HistoricalProviderEnv as Env } from './historical-env';
 import { PRICING } from './pricing';
 
 // A 1x1 PNG, base64.

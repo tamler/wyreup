@@ -591,13 +591,13 @@
     },
     {
       "revisionId": "after-source4-provider-capture-480a8c9",
-      "helperSha256": "fd62477b1690344dc10936fb7f45ef1d4183df7bbb764b5aa910680b436a0e5c",
+      "helperSha256": "537bd5aa6d3bb1f781616cc7ee7ca1bdfceb6fddd409d411a8169651cb35055a",
       "suiteSha256": "81ea18fdec094a4c195be78c6b7205842cb68b1352a20ddae55faa09ffbe5b21",
       "sourcePins": [
         {
           "path": "domainFunctionsHarness.mjs",
-          "bytes": 39862,
-          "sha256": "fd62477b1690344dc10936fb7f45ef1d4183df7bbb764b5aa910680b436a0e5c"
+          "bytes": 41034,
+          "sha256": "537bd5aa6d3bb1f781616cc7ee7ca1bdfceb6fddd409d411a8169651cb35055a"
         },
         {
           "path": "domain-functions-integration.test.ts",

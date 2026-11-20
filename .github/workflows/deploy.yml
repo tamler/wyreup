@@ -21,6 +21,7 @@ jobs:
     permissions:
       contents: read
       deployments: write
+      actions: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -56,27 +57,22 @@ jobs:
             echo "::error::Deploy refused: main changed while this tested source was building."
             exit 1
           fi
-      - name: Require reviewed email-bound authentication rehearsal
+      - name: Require same-source free-only retirement proof
         env:
-          EMAIL_BOUND_AUTH_REHEARSAL_COMMIT: ${{ vars.EMAIL_BOUND_AUTH_REHEARSAL_COMMIT }}
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
           TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          APPROVED_SHA="$EMAIL_BOUND_AUTH_REHEARSAL_COMMIT"
-          if [[ ! "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "::error::Deploy refused: an explicit reviewed authentication rehearsal commit is required."
+          RUN_SHA="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID" --jq '.head_sha')"
+          if [ "$RUN_SHA" != "$TESTED_SHA" ] || [ "$(git rev-parse HEAD)" != "$TESTED_SHA" ]; then
+            echo "::error::Deploy refused: retirement proof must be for this exact tested source."
             exit 1
           fi
-          if [ "$(git rev-parse HEAD)" != "$TESTED_SHA" ] \
-            || ! git cat-file -e "$APPROVED_SHA^{commit}" \
-            || [ "$(git rev-parse "$APPROVED_SHA^{commit}")" != "$APPROVED_SHA" ] \
-            || ! git merge-base --is-ancestor "$APPROVED_SHA" "$TESTED_SHA"; then
-            echo "::error::Deploy refused: rehearsal approval must identify an ancestor of this exact tested commit."
-            exit 1
-          fi
-          if ! git diff --quiet "$APPROVED_SHA" "$TESTED_SHA" -- \
-            functions/ migrations/ wrangler.toml .github/workflows/deploy.yml; then
-            echo "::error::Deploy refused: protected authentication, migration, configuration or workflow source changed after rehearsal approval."
+          PROOF="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID/jobs?filter=latest&per_page=100" \
+            --jq '.jobs[] | select(.name == "Free-only retirement") | [.status, .conclusion] | @tsv')"
+          if [ "$PROOF" != $'completed\tsuccess' ]; then
+            echo "::error::Deploy refused: exactly one successful Free-only retirement job is required."
             exit 1
           fi
       - name: Ensure Pages project exists

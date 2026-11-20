@@ -229,7 +229,7 @@ it('the actual domain Cost and Privacy blocks describe free network processing',
   });
 }, 30000);
 
-it('retains separate actual local and hosted facts without running the hosted tool', async () => {
+it('keeps actual local file facts and returns 404 for a retired hosted tool', async () => {
   await withPage(async (page) => {
     await openRealPage(page, '/tools/compress/');
     expect(await costText(page)).toMatch(/free/i);
@@ -237,28 +237,23 @@ it('retains separate actual local and hosted facts without running the hosted to
     expect(local).toMatch(/local|in (?:this|your) browser/i);
     expect(local).toMatch(/setup|download/i);
     expect(local).not.toMatch(/domain.*sent.*Wyreup/i);
-    await openRealPage(page, '/tools/analyze-chart/');
-    expect(await costText(page)).toMatch(/credit/i);
-    const hosted = await page.locator('.privacy-callout').innerText();
-    expect(hosted).toMatch(/hosted.*PRO/i);
-    expect(hosted).toMatch(/input.*sent.*Wyreup/i);
-    expect(hosted).toMatch(/model provider/i);
     expect(await page.locator('.privacy-callout').getByRole('link', { name: /privacy policy/i }).getAttribute('href')).toBe('/legal/privacy');
+    expect((await page.goto(`${server!.url}/tools/analyze-chart/`))?.status()).toBe(404);
   });
 }, 45000);
 
-it('qualifies the real tools OG description and local/hosted category notices', async () => {
+it('qualifies the real tools social description and local or network category notices', async () => {
   await withPage(async (page) => {
     await openRealPage(page, '/tools/');
     const description = await page.locator('meta[property="og:description"]').getAttribute('content');
     expect(description).toMatch(/local/i);
     expect(description).toMatch(/network/i);
-    expect(description).toMatch(/hosted/i);
+    expect(description).not.toMatch(/hosted/i);
     expect(description).not.toMatch(/free tools (?:run|execute).*on your device/i);
     for (const category of ['finance', 'dev']) {
       await openRealPage(page, `/category/${category}/`);
       const note = await page.locator('.cat-intro__para').last().innerText();
-      expect(note).toMatch(/check|requirement|needed|explain/i);
+      expect(note).toMatch(/download/i);
       expect(note).not.toMatch(/(?:all|every|free) tools (?:run|execute).*?(?:locally|in your browser|on your device)/i);
       if (category === 'dev') {
         expect(note).toMatch(/includes network lookups/i);
@@ -286,7 +281,7 @@ it('shows a qualified offline banner on a hydrated real page and clears it onlin
     expect(text).toMatch(/asset/i);
     expect(text).toMatch(/if|when|available/i);
     expect(text).toMatch(/network/i);
-    expect(text).toMatch(/hosted|PRO/i);
+    expect(text).not.toMatch(/hosted|\bPRO\b/i);
     expect(text).toMatch(/connection|internet|online/i);
     expect(text).not.toMatch(/cached tools still work/i);
     expect(api).toEqual([]);

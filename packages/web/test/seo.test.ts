@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDefaultRegistry } from '@wyreup/core';
+import { createDefaultRegistry } from '../src/lib/core-execution';
 import { GET } from '../src/pages/sitemap.xml';
 import { JOBS } from '../src/data/jobs';
 import { canonicalPageUrl, isIndexablePath, TOOL_PAGE_METADATA } from '../src/lib/seo';
@@ -57,17 +57,9 @@ describe('search discovery', () => {
 
   it('keeps curated metadata bound to each tool’s real execution', () => {
     const registry = createDefaultRegistry();
-    const hosted = new Set(['ocr-hq', 'transcribe-pro', 'text-translate-pro', 'pdf-q-and-a']);
     for (const [id, page] of Object.entries(TOOL_PAGE_METADATA)) {
-      const tool = registry.toolsById.get(id);
-      expect(tool, id).toBeDefined();
-      expect(tool?.cost, `${id} metadata must be reviewed when execution changes`).toBe(
-        hosted.has(id) ? 'credit' : 'free',
-      );
-      if (hosted.has(id)) {
-        expect(page.description, id).toMatch(/sent to (Wyreup|a hosted model)/);
-        expect(page.description, id).toContain(`${tool!.creditCost} credit`);
-      }
+      expect(registry.toolsById.get(id)?.cost, id).toBe('free');
+      expect(page.description, id).not.toMatch(/hosted PRO|credit-metered/i);
     }
   });
 
@@ -98,10 +90,8 @@ describe('search discovery', () => {
       '/cli/',
       '/skill/',
       '/triggers/',
-      '/pro/',
       '/legal/privacy/',
       '/legal/terms/',
-      '/legal/refund/',
       ...tools.map((tool) => `/tools/${tool.id}/`),
       ...JOBS.map((job) => `/${job.slug}/`),
       ...[...categories].map((category) => `/category/${category}/`),
@@ -110,6 +100,8 @@ describe('search discovery', () => {
     for (const path of [
       '/account/',
       '/admin/',
+      '/pro/',
+      '/legal/refund/',
       '/settings/',
       '/share/',
       '/share-receive/',
@@ -165,7 +157,7 @@ const REDACTION_FAQS = {
     },
     {
       q: 'Will pattern-based redaction catch everything?',
-      a: 'It catches well-structured PII like emails and card numbers reliably, but free-form mentions (a name in a sentence) need a language-aware tool; for that, see Redact PII.',
+      a: 'It catches structured patterns such as email addresses and card numbers. Review free-form mentions such as names in a sentence yourself.',
     },
   ],
 };

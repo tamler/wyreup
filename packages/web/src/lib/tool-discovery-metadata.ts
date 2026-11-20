@@ -74,9 +74,7 @@ export function projectToolDiscoveryMetadata(tool: ToolModule): ToolDiscoveryMet
   const networkAccess = tool.id === 'domain-age-checker' ? 'domain-registration' : undefined;
   const execution = networkAccess
     ? 'This free lookup sends the entered domain to Wyreup and its public registration registry.'
-    : tool.cost === 'credit'
-      ? 'This hosted PRO tool sends its input to Wyreup for remote processing and uses credits.'
-      : 'Processing runs locally. Check the task controls and supported formats before using the result.';
+    : 'Processing runs locally. Check the task controls and supported formats before using the result.';
   const backfill: ToolSeoContent = {
     intro: `${description}\n\n${inputLabel} ${outputLabel} ${execution}`,
     useCases: [description],

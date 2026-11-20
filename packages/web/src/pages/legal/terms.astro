@@ -1,11 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-const lastUpdated = '2026-10-11';
+const lastUpdated = '2026-11-20';
 ---
 
 <BaseLayout
   title="Terms of Service — Wyreup"
-  description="The terms that govern your use of Wyreup, including free tools, the PRO tier, and credits."
+  description="The terms that govern your use of Wyreup's free tools."
 >
   <article class="legal">
     <header>
@@ -36,34 +36,17 @@ const lastUpdated = '2026-10-11';
       text utilities. Most of the underlying capabilities (image
       compression, PDF extraction, regex generation, etc.) are
       commonly available on their own; we organize them behind a
-      consistent interface, an optional chain runner, and an optional
-      hosted-AI tier. The convenience of access does not make us the
-      author of the work you do with the tools, the compositions you
-      assemble, or the outputs you generate.
+      consistent interface and an optional chain runner. You choose the
+      inputs and how to use the tools and outputs.
     </p>
-    <p>There are two tiers:</p>
-    <ul>
-      <li>
-        <strong>Free tools</strong> include local file processing and
-        public network lookups. Local tools process on your device.
-        Domain Registration Age sends the entered domain to Wyreup,
-        which reads the public IANA bootstrap without sending IANA the
-        queried domain, then sends the domain to its registration registry.
-        No API key is required. Registration age may differ from first-ever
-        use; missing records do not guarantee a domain is available.
-      </li>
-      <li>
-        <strong>PRO tools</strong> are tools where, when <strong>you</strong>
-        invoke them, <strong>your</strong> input is forwarded through
-        Wyreup's edge to a third-party hosted-AI model (Cloudflare
-        Workers AI, or an external image-model provider) that
-        <strong>you</strong> have selected by choosing the PRO tool.
-        The model — not Wyreup — runs against your input. Wyreup is
-        the conduit between you and the model; we route the request,
-        bill the credit, and return the model's response to you. PRO
-        usage requires an account and consumes credits.
-      </li>
-    </ul>
+    <p>
+      Wyreup's free tools include local file processing and public network lookups.
+      Domain Registration Age sends the entered domain to Wyreup, which reads the
+      public IANA bootstrap without sending IANA the queried domain, then sends the
+      domain to its registration registry. No API key is required. Registration age
+      may differ from first-ever use, and missing records do not guarantee a domain
+      is available.
+    </p>
     <p>
       <strong>Wyreup is not</strong>:
     </p>
@@ -89,36 +72,13 @@ const lastUpdated = '2026-10-11';
       </li>
     </ul>
 
-    <h2>3. Accounts and API keys</h2>
-    <p>
-      An account is identified by an email and one or more API keys. We
-      store the SHA-256 hash of each key — never the raw value. Treat
-      your keys like passwords. You can revoke or rotate them at any
-      time from your account page.
-    </p>
-    <p>
-      You are responsible for activity originating from your keys. If
-      you believe a key has been compromised, revoke it immediately at
-      <a href="/account">wyreup.com/account</a>.
-    </p>
-
-    <h2>4. Credits</h2>
-    <p>
-      Credits are a prepaid unit that fund PRO tool runs. Pricing and
-      the credit cost per tool are listed on
-      <a href="/pro">our pricing page</a>. Credits do not expire, do not
-      transfer between accounts, and have no cash value outside Wyreup.
-      See <a href="/legal/refund">our refund policy</a> for refunds.
-    </p>
-
-    <h2>5. Your inputs, your chains, your outputs</h2>
+    <h2>3. Your inputs, your chains, your outputs</h2>
     <p>
       You — not Wyreup — use the tools. You select which tools to run,
       you provide the inputs, you configure any chains or trigger rules,
       and you decide what to do with the outputs. Wyreup provides access
-      to the tools and (for PRO) routes your input to the third-party
-      model you've selected; we don't review, vouch for, or take
-      responsibility for what you do with that access. You are solely
+      to the tools. We do not review or take responsibility for how you use
+      them. You are solely
       responsible for:
     </p>
     <ul>
@@ -165,7 +125,7 @@ const lastUpdated = '2026-10-11';
       </li>
     </ul>
 
-    <h2>6. Acceptable use</h2>
+    <h2>4. Acceptable use</h2>
     <p>You agree not to use Wyreup to:</p>
     <ul>
       <li>
@@ -194,13 +154,8 @@ const lastUpdated = '2026-10-11';
         to you, don't submit it;
       </li>
       <li>
-        attempt to extract model weights, reverse-engineer hosted
-        endpoints, or otherwise abuse the PRO infrastructure;
-      </li>
-      <li>
-        circumvent the rate limits, credit checks, API authentication,
-        webhook signatures, or any other technical control of our
-        service;
+        circumvent rate limits or other technical controls on our service;
+
       </li>
       <li>
         produce material that is illegal under the laws of the United
@@ -213,34 +168,15 @@ const lastUpdated = '2026-10-11';
         impersonate any person or entity, including Wyreup or its
         employees, in outputs or in communications about Wyreup;
       </li>
-      <li>
-        use Wyreup to build a competing service that resells our PRO
-        infrastructure under a different brand.
-      </li>
     </ul>
 
     <h3>Cross-border processing — your responsibility</h3>
     <p>
-      PRO requests are routed through Cloudflare's global edge
-      network. Cloudflare may handle any individual request from any
-      of its data centers worldwide, and the third-party model
-      provider that runs against your input may operate in any region
-      where it has infrastructure. <strong>Wyreup does not select the
-      region, and we do not guarantee which country a given request
-      will pass through.</strong>
-    </p>
-    <p>
-      Your data does not see Wyreup's own servers in any meaningful
-      sense — Wyreup itself is an edge-compute application running on
-      Cloudflare's network. If your data is subject to data-residency,
-      cross-border-transfer, or sovereignty requirements (such as GDPR
-      transfer rules, UK data localization, healthcare or government
-      sectoral regimes, or financial-services egress restrictions),
-      <strong>it is your responsibility to independently verify
-      whether routing the data through Cloudflare's network and the
-      relevant model provider is permitted under the rules that apply
-      to you.</strong> If you cannot make that determination, do not
-      use PRO tools with that data.
+      Cloudflare may route public lookups through its global network to the
+      relevant registration registry. Wyreup does not select or guarantee the
+      country a request passes through. If your data is subject to residency,
+      cross-border transfer or sovereignty requirements, verify that the routing
+      is permitted before using the lookup.
     </p>
     <p>
       Local tools process on your device. Free public lookups can route
@@ -252,14 +188,13 @@ const lastUpdated = '2026-10-11';
       local operator exports have their own retention. See our privacy policy.
     </p>
     <p>
-      We may suspend or revoke access for violation of these rules
-      without refund of unused credits associated with the violating
-      activity. We may also report unlawful activity to the appropriate
+      We may suspend or revoke access for violation of these rules. We may also
+      report unlawful activity to the appropriate
       authorities, and you waive any objection to that disclosure for
       activity that violates this section.
     </p>
 
-    <h2>7. Disclaimer of warranties</h2>
+    <h2>5. Disclaimer of warranties</h2>
     <p>
       Wyreup is provided <strong>"as is" and "as available."</strong> To
       the maximum extent permitted by law, we disclaim all warranties,
@@ -271,7 +206,7 @@ const lastUpdated = '2026-10-11';
     <p>
       We do not warrant that Wyreup will be uninterrupted, error-free,
       secure, or free of harmful components, or that defects will be
-      corrected. We do not warrant that any tool — free or PRO — will
+      corrected. We do not warrant that any tool will
       produce output that is accurate, complete, current, lawful, or
       suitable for your purpose. AI-generated output in particular may
       be wrong, misleading, biased, or fabricated; verify everything
@@ -281,7 +216,7 @@ const lastUpdated = '2026-10-11';
       You are responsible for keeping your own backups of any data you
       process through Wyreup. Local file tools do not send us your files or outputs.
       Network lookup inputs are processed as disclosed by each tool. Temporary
-      admission counters, account metadata, platform logs and backups have the
+      admission counters, platform logs and backups have the
       retention limits described in our <a href="/legal/privacy">Privacy Policy</a>.
     </p>
     <p>
@@ -291,7 +226,7 @@ const lastUpdated = '2026-10-11';
       rights as a consumer.
     </p>
 
-    <h2>8. Limitation of liability</h2>
+    <h2>6. Limitation of liability</h2>
     <p>
       To the maximum extent permitted by law, our aggregate liability
       for any and all claims arising out of or related to your use of
@@ -311,10 +246,8 @@ const lastUpdated = '2026-10-11';
       fails of its essential purpose.
     </p>
     <p>
-      You acknowledge that the pricing of Wyreup, including the free
-      tier and the small per-credit cost of the PRO tier, reflects this
-      allocation of risk between us, and that the limits above are an
-      essential basis of our agreement. They survive any termination of
+      The limits above reflect the allocation of risk between us and are
+      an essential basis of our agreement. They survive any termination of
       these terms or your use of Wyreup.
     </p>
     <p>
@@ -329,7 +262,7 @@ const lastUpdated = '2026-10-11';
       part will be limited to the maximum extent permitted by law.
     </p>
 
-    <h2>9. Indemnification</h2>
+    <h2>7. Indemnification</h2>
     <p>
       You agree to defend, indemnify, and hold harmless Wyreup, its
       operators, employees, agents, and contractors from any claim,
@@ -360,7 +293,7 @@ const lastUpdated = '2026-10-11';
       without our prior written consent.
     </p>
 
-    <h2>10. Force majeure</h2>
+    <h2>8. Force majeure</h2>
     <p>
       We are not liable for any failure or delay in performance caused
       by events beyond our reasonable control — including infrastructure
@@ -373,49 +306,31 @@ const lastUpdated = '2026-10-11';
       further liability.
     </p>
 
-    <h2>11. Subprocessors</h2>
-    <p>
-      When you invoke a PRO tool, your input is forwarded through the
-      following providers. The actual processing of your input is
-      performed by the third-party model provider, not by Wyreup.
-    </p>
-    <ul>
-      <li><strong>Cloudflare</strong> — hosting, edge compute (Pages Functions), database (D1), and AI inference (Workers AI).</li>
-      <li><strong>An external image-model provider</strong> — hosts image PRO tools (background removal, upscaling). Current vendor disclosed on request.</li>
-      <li><strong>Lemon Squeezy</strong> — merchant of record for credit purchases; receives your billing info, not your tool inputs.</li>
-      <li><strong>Zoho (ZeptoMail)</strong> — transactional email delivery (welcome key, account notices).</li>
-    </ul>
+    <h2>9. Service providers</h2>
+    <p>Cloudflare provides hosting, edge compute and the database for
+      public-lookup admission.</p>
     <p>
       See <a href="/legal/privacy">our privacy policy</a> for what each
       subprocessor receives.
     </p>
 
-    <h2>12. Changes</h2>
+    <h2>10. Changes</h2>
     <p>
-      We may update these terms. Material changes will be noted by
-      updating the "Last updated" date and, where appropriate, by
-      sending an email to your account address. Continued use of
-      Wyreup after a change constitutes acceptance. If you do not
-      accept a change, your remedy is to stop using Wyreup and request a
-      refund per the refund policy.
+      We show the date of the latest revision at the top of these terms.
+      Continued use of Wyreup after a change constitutes acceptance.
     </p>
 
-    <h2>13. Termination</h2>
+    <h2>11. Termination</h2>
     <p>
-      You may close your account at any time by emailing
-      <strong>hello@wyreup.com</strong>. Unused credits at the time of
-      closure are refundable per the
-      <a href="/legal/refund">refund policy</a>. We may suspend or
-      terminate your access immediately if you violate section 6, with
-      no refund for credits associated with the violating activity.
+      We may suspend or terminate your access immediately if you violate
+      section 4.
     </p>
     <p>
-      Sections 5 (your inputs), 7 (warranty disclaimer), 8 (limitation
-      of liability), 9 (indemnification), 14 (governing law), and any
-      payment obligations you owe us survive termination.
+      Sections 3 (your inputs), 5 (warranty disclaimer), 6 (limitation of
+      liability), 7 (indemnification) and 12 (governing law) survive termination.
     </p>
 
-    <h2>14. Governing law and disputes</h2>
+    <h2>12. Governing law and disputes</h2>
     <p>
       These terms are governed by the laws of the State of Indiana and
       the United States, without regard to conflict-of-law provisions.
@@ -436,11 +351,10 @@ const lastUpdated = '2026-10-11';
       home courts, this section does not override that right.
     </p>
 
-    <h2>15. Entire agreement; assignment; no waiver</h2>
+    <h2>13. Entire agreement, assignment and no waiver</h2>
     <p>
       These terms, together with the
-      <a href="/legal/privacy">privacy policy</a> and the
-      <a href="/legal/refund">refund policy</a>, are the entire
+      <a href="/legal/privacy">privacy policy</a>, are the entire
       agreement between you and Wyreup regarding your use of the
       service. We may assign these terms to a successor in connection
       with a merger, acquisition, or sale of substantially all assets;
@@ -449,7 +363,7 @@ const lastUpdated = '2026-10-11';
       provision.
     </p>
 
-    <h2>16. Contact</h2>
+    <h2>14. Contact</h2>
     <p>
       Questions about these terms: <strong>hello@wyreup.com</strong>.<br />
       Security disclosures: <strong>security@wyreup.com</strong>.

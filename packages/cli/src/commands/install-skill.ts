@@ -38,19 +38,19 @@ export const SKILL_DEFS: Record<SkillVariant, SkillDef> = {
     name: 'wyreup-cli',
     url: 'https://wyreup.com/skills/wyreup-cli.md',
     description: 'CLI-only (smallest, for Claude Code shell agents)',
-    sha256: '5dd6211ba296ddd4f3254df21c402b816f4f9e876c0cdd849be6b2f5fa98141f',
+    sha256: '7e30c76b24b02d278888599d955931fda6c2fcd2f2b05ea46ed0816df83c653b',
   },
   mcp: {
     name: 'wyreup-mcp',
     url: 'https://wyreup.com/skills/wyreup-mcp.md',
     description: 'MCP-only (for agents that call tools via MCP)',
-    sha256: '42138af4a4391d0ba0c53bf7ad660dd24bdcb8016e00f85ea1a825bff5723c52',
+    sha256: '799c7b5cb35a76e2f652d4c10ffe2de2c78cc48b2bc7b9c656da19612ef6d459',
   },
   combined: {
     name: 'wyreup',
     url: 'https://wyreup.com/skills/wyreup.md',
     description: 'Both CLI and MCP (default; for most setups)',
-    sha256: '78693ffde0320a4d5866e0c33de3e54269d419bb7227631c8d024f04cb4368d0',
+    sha256: 'ab5ff7d104a0df5007a9670cd8a2e740f65759b31ef0aad06076a43a486566e3',
   },
 };
 

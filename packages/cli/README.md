@@ -1,6 +1,6 @@
 # @wyreup/cli
 
-Wyreup CLI — privacy-first tools from the shell. Same engine as [wyreup.com](https://wyreup.com), with local processing, public network lookups, and optional hosted PRO tools.
+Wyreup CLI — privacy-first tools from the shell. Same engine as [wyreup.com](https://wyreup.com), with local processing and disclosed public network lookups. Hosted inference and account services are retired; legacy hosted commands receive HTTP 410. Local tools need no account or API key.
 
 ## Install
 
@@ -237,6 +237,12 @@ wyreup install-skill --variant combined --location project -y
 wyreup install-skill --list
 ```
 
+The installer verifies the downloaded skill against the SHA-256 pinned in that
+CLI version. Once the site serves the updated free-tool guidance, older CLI
+versions reject the new files. Upgrade to a CLI release with matching pins, or
+install a reviewed local skill file with `--source ./skill.md`. Pass `--update`
+to replace a skill you already installed.
+
 ## Help
 
 ```bash
@@ -279,7 +285,7 @@ Tools span image, PDF, audio, video, text, dev, geo, and other categories. Run `
 
 ## Privacy
 
-Local file-processing tools keep their inputs on your machine. Setup may download packages or models; offline use depends on the tool and cached assets. Hosted PRO tools send their declared inputs for remote processing.
+Local file-processing tools keep their inputs on your machine. Setup may download packages or models; offline use depends on the tool and cached assets. Hosted execution is unavailable.
 
 Domain Registration Age is a free network lookup. The entered domain is sent to Wyreup, which reads the public IANA bootstrap without sending IANA the queried domain, then sends the domain to its registration registry. No API key or login is required; registration age may differ from first-ever use. `wyreup run domain-age-checker --param domain=example.com` uses the trusted `WYREUP_ORIGIN` (default `https://wyreup.com`), as do applicable chains. The normal egress lock still blocks direct registry requests.
 
@@ -295,8 +301,8 @@ With the fetch lock enabled, redirects are followed only for HTTP 301, 302, 303,
 
 | Var | Default | Purpose |
 | --- | --- | --- |
-| `WYREUP_API_KEY` | — | Bearer token for Pro tools and account commands. Read via `wyreup login` and stored in `~/.wyreup/config.json`. |
-| `WYREUP_ORIGIN` | `https://wyreup.com` | Trusted public lookup, Pro endpoint, and auth origin, allowed alongside configured model origins by the fetch lock. |
+| `WYREUP_API_KEY` | — | Legacy setting; the hosted/account service is retired. Not needed for local tools or public lookups. |
+| `WYREUP_ORIGIN` | `https://wyreup.com` | Trusted public lookup origin, allowed alongside configured model origins by the fetch lock. |
 | `WYREUP_MODEL_CDN` | `https://models.wyreup.com` | Model weight mirror URL, or `disabled` to use configured upstream model origins with the same fetch-lock setting. |
 | `WYREUP_ALLOW_DISABLE_TIMEOUT` | — | `1` permits `--timeout 0` (disable). |
 | `WYREUP_DISABLE_EGRESS_LOCK` | — | `1` skips installing the `fetch` egress lock. |

@@ -8,7 +8,7 @@ afterAll(async () => {
   await harness?.close();
 });
 
-it('retains the functional PRO destination while reporting no click beacon', async () => {
+it('continues to a local tool without a click beacon or a hosted upgrade link', async () => {
   const page = await harness.browser.newPage();
   page.setDefaultTimeout(3000);
   try {
@@ -25,15 +25,25 @@ it('retains the functional PRO destination while reporting no click beacon', asy
       document.addEventListener('click', (event) => event.preventDefault(), { capture: true });
     });
     await page.goto(harness.url);
-    const anchor = page.getByRole('link', { name: 'Try the stronger version →', exact: true });
-    expect(await anchor.getAttribute('href')).toBe('/tools/bg-remove-pro');
-    await anchor.click();
+    const continuation = page.getByRole('button', { name: 'convert-video media', exact: true });
+    await continuation.waitFor();
+    expect(await page.getByRole('link', { name: 'Try the stronger version →', exact: true }).count()).toBe(0);
+    expect(await page.locator('a[href="/tools/bg-remove-pro"]').count()).toBe(0);
+
+    // Let the actual handoff request finish while retaining the source document
+    // so the same page's beacon recorder can observe the whole click.
+    const destination = new URL('/tools/convert-video', harness.url).href;
+    await page.route(destination, route => route.fulfill({ status: 204 }));
+    const [response] = await Promise.all([
+      page.waitForResponse(response => response.url() === destination && response.request().isNavigationRequest()),
+      continuation.click(),
+    ]);
+    expect(response.status()).toBe(204);
     expect(
       await page.evaluate(
         () => (window as unknown as { observedSeamBeacons: unknown[] }).observedSeamBeacons,
       ),
     ).toEqual([]);
-    expect(await anchor.getAttribute('href')).toBe('/tools/bg-remove-pro');
   } finally {
     await page.close();
   }

@@ -70,7 +70,10 @@ export function forbidden(): Response {
 // Resolve the caller and verify they're in the ADMIN_EMAILS allowlist.
 // Returns the user when admin, or a Response (401/403) the handler should
 // return as-is.
-export async function requireAdmin(request: Request, env: Env): Promise<AuthedUser | Response> {
+export async function requireAdmin(
+  request: Request,
+  env: Env & { ADMIN_EMAILS?: string },
+): Promise<AuthedUser | Response> {
   const user = await resolveUser(request, env);
   if (!user) return unauthorized();
   if (!isAdminEmail(user.email, env)) return forbidden();

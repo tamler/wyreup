@@ -1,4 +1,4 @@
-import type { Env } from '../env';
+import type { HistoricalProviderEnv as Env } from '../historical-env';
 import { INFERENCE_TIMEOUTS, withTimeout } from '../timeout';
 import { boundedText, TTS_MAX_BYTES, ttsLanguage } from '../../../packages/core/src/lib/pro-migration-limits';
 

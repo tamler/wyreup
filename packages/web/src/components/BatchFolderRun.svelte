@@ -1,9 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { get } from 'svelte/store';
-  import { user, authReady } from '../stores/user';
   import { tryReserveMediaJob } from '../lib/mediaJobReservation';
-  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
   import ProgressBar from './runners/ProgressBar.svelte';
   import { knownExtensionForType } from './runners/naming';
   import type { ToolProgress } from '@wyreup/core';
@@ -44,8 +41,6 @@
   let outputCount = 0;
   let generation = 0;
   let disposed = false;
-  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
-  $: if (pendingPaid) { resolvedSteps; matchingFiles; if (!pendingPaid.current()) pendingPaid = null; }
   onDestroy(() => { disposed = true; generation++; if (zipUrl) URL.revokeObjectURL(zipUrl); });
 
   $: canRun = resolvedSteps.length > 0 && resolvedSteps.every((s) => s.valid);
@@ -109,7 +104,6 @@
     const current = () => !disposed && attempt === generation && files.length === matchingFiles.length && files.every((file, index) => file === matchingFiles[index]) && fingerprint === JSON.stringify(resolvedSteps.map((s) => ({ toolId: s.toolId, params: s.params })));
     const settleStale = () => {
       if (disposed || attempt !== generation || current()) return;
-      if (pendingPaid?.current === current) pendingPaid = null;
       if (state === 'running') state = pickedFiles.length > 0 ? 'review' : 'idle';
     };
     state = 'running';
@@ -120,34 +114,15 @@
     if (zipUrl) { URL.revokeObjectURL(zipUrl); zipUrl = null; }
 
     try {
-      const { createDefaultRegistry } = await import('../lib/core-execution');
+      const { createDefaultRegistry, runChain } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
       if (!current()) return;
-      const paid = summarizePaidChain(chain, registry, files.length);
-      const account = get(user);
-      assertPaidAccount(paid, get(authReady), account);
-      if (paid.steps.length) {
-        state = 'review';
-        pendingPaid = { text: `${files.length} matched files; ${pickedFiles.length - files.length} excluded.\n${paidChainDisclosure(paid, files, account!.email)}`, current, confirm: async () => {
-          if (!current()) { settleStale(); return; }
-          const latest = summarizePaidChain(chain, registry, files.length), latestAccount = get(user);
-          assertPaidAccount(latest, get(authReady), latestAccount);
-          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
-          pendingPaid = null;
-          await execute();
-        } };
-        return;
-      }
-      await execute();
-
-      async function execute() {
-      if (!current()) { settleStale(); return; }
+      const unavailable = chain.find((step) => !registry.toolsById.has(step.toolId));
+      if (unavailable) throw new Error(`Tool is unavailable on Wyreup: ${unavailable.toolId}`);
       const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
       if (!lease) { state = 'review'; errorMsg = 'Another media job is still running. Your files are retained. Retry after it settles; if it never settles, reload manually.'; return; }
       state = 'running';
       try {
-      const { runChain } = await import('../lib/core-execution');
-      if (!current()) return;
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
@@ -207,22 +182,12 @@
       zipUrl = URL.createObjectURL(zipBlob);
       outputCount = committedOutputs;
       state = 'done';
-      } catch (error) {
-        if (current()) { state = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
-      } finally { lease.release(); settleStale(); }
-      }
+      } finally { lease.release(); }
     } catch (err) {
       if (!current()) return;
       state = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     } finally { settleStale(); }
-  }
-
-  async function confirmPaid() {
-    const pending = pendingPaid;
-    if (!pending) return;
-    try { await pending.confirm(); }
-    catch (error) { if (pending.current()) { pendingPaid = null; state = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function downloadZip() {
@@ -235,7 +200,6 @@
 
   function reset() {
     generation++;
-    pendingPaid = null;
     state = 'idle';
     pickedFiles = [];
     matchingFiles = [];
@@ -259,13 +223,6 @@
   </summary>
 
   <div class="batch-body">
-    {#if pendingPaid}
-      <section role="dialog" aria-label="Confirm paid batch">
-        <p style="white-space: pre-wrap">{pendingPaid.text}</p>
-        <button type="button" on:click={confirmPaid}>Confirm paid batch</button>
-        <button type="button" on:click={() => { generation++; pendingPaid = null; state = 'review'; }}>Cancel paid batch</button>
-      </section>
-    {/if}
     {#if state === 'idle' || state === 'picking'}
       <p class="batch-help">
         Pick a folder; the chain runs on each compatible file. Outputs

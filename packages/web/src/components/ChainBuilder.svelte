@@ -1,9 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
-  import { get } from 'svelte/store';
-  import { user, authReady } from '../stores/user';
   import { tryReserveMediaJob } from '../lib/mediaJobReservation';
-  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
   import DropZone from './runners/DropZone.svelte';
   import ParamsForm from './runners/ParamsForm.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
@@ -98,8 +95,6 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
   let endOfRunSaved = false;
   let generation = 0;
   let disposed = false;
-  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
-  $: if (pendingPaid) { inputFile; chainSpec; if (!pendingPaid.current()) pendingPaid = null; }
   onDestroy(() => { disposed = true; generation++; clearResults(); if (saveTimer) clearTimeout(saveTimer); if (shareTimer) clearTimeout(shareTimer); });
 
   // Trigger-register state (G2: any rule registered here lands with
@@ -258,9 +253,7 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
       return {
         compatibleGroups,
         otherGroups,
-        // Only compatible tools are selectable: a chain edge the engine will
-        // reject must not be buildable from the picker (a failing step after
-        // credit-metered steps have already run is the worst outcome).
+        // Only compatible tools are selectable, matching chain execution.
         ordered: compatibleGroups.flatMap((group) => group.tools),
         hasCompatibilityContext: true,
       };
@@ -429,7 +422,8 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
   }
 
   $: validSteps = steps.filter((s) => s.toolId);
-  $: canRun = validSteps.length > 0 && inputFile !== null && runState !== 'running';
+  $: invalidToolIds = validSteps.filter((step) => !tools.some((tool) => tool.id === step.toolId)).map((step) => step.toolId);
+  $: canRun = validSteps.length > 0 && invalidToolIds.length === 0 && inputFile !== null && runState !== 'running';
   $: chainSpec = validSteps.map((s) => ({ toolId: s.toolId, params: s.params }));
 
   function updateUrl() {
@@ -488,34 +482,13 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
     stepStatuses = validSteps.map(() => 'pending' as const);
 
     try {
-      const { createDefaultRegistry } = await import('../lib/core-execution');
+      const { createDefaultRegistry, runChain } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
-      if (!current()) return;
-      const paid = summarizePaidChain(chain, registry);
-      const account = get(user);
-      assertPaidAccount(paid, get(authReady), account);
-      if (paid.steps.length) {
-        runState = 'idle';
-        pendingPaid = { text: paidChainDisclosure(paid, [capturedFile], account!.email), current, confirm: async () => {
-          if (!current()) { pendingPaid = null; return; }
-          const latest = summarizePaidChain(chain, registry), latestAccount = get(user);
-          assertPaidAccount(latest, get(authReady), latestAccount);
-          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
-          pendingPaid = null;
-          await execute();
-        } };
-        return;
-      }
-      await execute();
-
-      async function execute() {
       if (!current()) return;
       const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
       if (!lease) { runState = 'error'; errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.'; return; }
       runState = 'running';
       try {
-      const { runChain } = await import('../lib/core-execution');
-      if (!current()) return;
       const ac = new AbortController();
       const cache = new Map<string, unknown>();
 
@@ -555,22 +528,12 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
       // Auto-show save prompt after successful run
       saveName = validSteps.map((s) => s.toolId).join('-');
       showEndOfRunPrompt = true;
-      } catch (error) {
-        if (current()) { runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
       } finally { lease.release(); }
-      }
     } catch (err) {
       if (!current()) return;
       runState = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
-  }
-
-  async function confirmPaid() {
-    const pending = pendingPaid;
-    if (!pending) return;
-    try { await pending.confirm(); }
-    catch (error) { if (pending.current()) { pendingPaid = null; runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function confirmEndOfRunSave() {
@@ -595,7 +558,6 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
 
   function reset() {
     generation++;
-    pendingPaid = null;
     runState = 'idle';
     errorMsg = '';
     clearResults();
@@ -661,13 +623,6 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
 </script>
 
 <div class="chain-builder">
-  {#if pendingPaid}
-    <section role="dialog" aria-label="Confirm paid chain">
-      <p style="white-space: pre-wrap">{pendingPaid.text}</p>
-      <button type="button" on:click={confirmPaid}>Confirm paid chain</button>
-      <button type="button" on:click={reset}>Cancel paid chain</button>
-    </section>
-  {/if}
   <!-- Drop zone at top -->
   <DropZone
     accept={['*/*']}
@@ -833,6 +788,9 @@ import { couldFlowTo, DEFAULT_RATE_LIMIT } from '@wyreup/core/execution';
 
   <!-- Run button -->
   {#if steps.length > 0}
+    {#if invalidToolIds.length > 0}
+      <p role="alert">Unavailable tools: {invalidToolIds.join(', ')}. Remove or replace them to run this chain.</p>
+    {/if}
     <div class="run-row">
       <button
         class="btn-primary"

@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { get } from 'svelte/store';
   import DropZone from './runners/DropZone.svelte';
   import ProgressBar from './runners/ProgressBar.svelte';
   import BatchFolderRun from './BatchFolderRun.svelte';
@@ -10,8 +9,6 @@
   import { peekChainHandover, clearChainHandover, type ChainHandover } from './runners/chainStorage';
   import { clearTrail } from './runners/hopTrail';
   import { tryReserveMediaJob } from '../lib/mediaJobReservation';
-  import { summarizePaidChain, assertPaidAccount, paidChainDisclosure } from '../lib/chainPaidConsent';
-  import { user, authReady } from '../stores/user';
   import type { ToolProgress } from '@wyreup/core';
 
   interface ToolSummary {
@@ -47,8 +44,6 @@
   let recoveryMessage = '';
   let chainAdmission: { file: File; token: string | null; fingerprint: string } | null = null;
   let urlSteps = '';
-  let pendingPaid: { text: string; current(): boolean; confirm(): Promise<void> } | null = null;
-  $: if (pendingPaid) { inputFile; stepsFingerprint; if (!pendingPaid.current()) pendingPaid = null; }
   const downloadUrls = new Set<string>();
   const downloadTimers = new Set<ReturnType<typeof setTimeout>>();
 
@@ -86,7 +81,6 @@
 
   function resolveSteps(src: string) {
     generation++;
-    pendingPaid = null;
     runState = 'idle';
     errorMsg = '';
     clearResults();
@@ -229,34 +223,13 @@
     if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
 
     try {
-      const { createDefaultRegistry } = await import('../lib/core-execution');
+      const { createDefaultRegistry, runChain } = await import('../lib/core-execution');
       const registry = createDefaultRegistry();
-      if (!current()) return;
-      const paid = summarizePaidChain(chain, registry);
-      const account = get(user);
-      assertPaidAccount(paid, get(authReady), account);
-      if (paid.steps.length) {
-        runState = 'idle';
-        pendingPaid = { text: paidChainDisclosure(paid, [capturedFile], account!.email), current, confirm: async () => {
-          if (!current()) { pendingPaid = null; return; }
-          const latest = summarizePaidChain(chain, registry), latestAccount = get(user);
-          assertPaidAccount(latest, get(authReady), latestAccount);
-          if (JSON.stringify(latest) !== JSON.stringify(paid) || latestAccount?.email !== account?.email) throw new Error('Prices or account changed. Run again for a fresh disclosure.');
-          pendingPaid = null;
-          await execute();
-        } };
-        return;
-      }
-      await execute();
-
-      async function execute() {
       if (!current()) return;
       const lease = tryReserveMediaJob(chain.map((step) => step.toolId));
       if (!lease) { runState = 'error'; errorMsg = 'Another media job is still running. Your input is retained. Retry after it settles; if it never settles, reload manually.'; return; }
       runState = 'running';
       try {
-      const { runChain } = await import('../lib/core-execution');
-      if (!current()) return;
       const ac = new AbortController();
       const cache = new Map<string, unknown>();
 
@@ -292,22 +265,12 @@
           else recoveryMessage = 'Output is ready. Storage changed or could not be cleared; original retained.';
         }
       }
-      } catch (error) {
-        if (current()) { runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); }
       } finally { lease.release(); }
-      }
     } catch (err) {
       if (!current()) return;
       runState = 'error';
       errorMsg = err instanceof Error ? err.message : String(err);
     }
-  }
-
-  async function confirmPaid() {
-    const pending = pendingPaid;
-    if (!pending) return;
-    try { await pending.confirm(); }
-    catch (error) { if (pending.current()) { pendingPaid = null; runState = 'error'; errorMsg = error instanceof Error ? error.message : String(error); } }
   }
 
   function confirmEndOfRunSave() {
@@ -330,7 +293,6 @@
 
   function reset() {
     generation++;
-    pendingPaid = null;
     runState = 'idle';
     errorMsg = '';
     clearResults();
@@ -444,14 +406,6 @@
           <button type="button" on:click={dismissOriginal}>Dismiss original</button>
         {/if}
       </div>
-    {/if}
-
-    {#if pendingPaid}
-      <section role="dialog" aria-label="Confirm paid chain">
-        <p style="white-space: pre-wrap">{pendingPaid.text}</p>
-        <button type="button" on:click={confirmPaid}>Confirm paid chain</button>
-        <button type="button" on:click={reset}>Cancel paid chain</button>
-      </section>
     {/if}
 
     <!-- Drop zone -->

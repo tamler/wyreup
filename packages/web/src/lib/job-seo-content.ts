@@ -83,7 +83,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       },
       {
         q: 'Can it read handwriting or a difficult scan?',
-        a: 'The free reader is best with clear printed text. High-Accuracy OCR is the stronger PRO option for hard-to-read scans and handwriting when quality matters more.',
+        a: 'The reader works best with clear printed text. Check difficult scans and handwriting against the original.',
       },
       {
         q: 'How can I get a better result?',
@@ -251,7 +251,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       },
       {
         q: 'What if the recording has noise or strong accents?',
-        a: 'Transcribe PRO is the stronger hosted option for accents, noisy audio, and long recordings when higher transcription quality is the priority.',
+        a: 'Reduce background noise if possible and check the transcript against the original, especially for names and technical terms.',
       },
       {
         q: 'Is the transcript ready to publish?',
@@ -307,7 +307,7 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       },
       {
         q: 'Can this summarize the PDF for me?',
-        a: 'This job extracts the document text without interpreting it. PDF Summarize is the stronger PRO option when a concise summary matters more than receiving the full raw text.',
+        a: 'This job extracts the document text without interpreting it.',
       },
       {
         q: 'Does extraction change the PDF?',
@@ -340,62 +340,6 @@ export const JOB_SEO_CONTENT: Record<string, JobSeoContent> = {
       {
         q: 'Will the original files be deleted?',
         a: 'No. The merged PDF is a new download, and the separate source documents remain available on your device.',
-      },
-    ],
-  },
-  'translate-a-document': {
-    intro:
-      "Translate the full readable text of a PDF or plain-text document into another language without copying one section at a time. For a PDF, Wyreup extracts the text in your browser, then sends that extracted text to Wyreup's servers for translation by a hosted language model; the original PDF bytes are not sent. Plain-text files are sent as text to the same service. The result is a plain-text translation, so page design, images, tables, and exact formatting are not reproduced. Documents with scanned image pages need OCR first. Review names, specialist terms, figures, and legally important wording against the source before sharing or relying on the translated document.",
-    useCases: [
-      'Translate a readable PDF report for a colleague who uses another language.',
-      'Convert a plain-text guide into another language for a wider audience.',
-      'Prepare translated document text for summarizing.',
-      'Read the contents of a multilingual handout without translating each page separately.',
-    ],
-    faq: [
-      {
-        q: 'What is sent to the server for translation?',
-        a: "For a PDF, text is extracted in your browser and that extracted text is sent to Wyreup's servers. The original PDF bytes are not sent. For a plain-text file, its text is sent directly.",
-      },
-      {
-        q: 'Will the translated document keep its original layout?',
-        a: 'No. The output is plain text, so page layout, fonts, images, columns, and table formatting are not preserved.',
-      },
-      {
-        q: 'Can it translate a scanned PDF?',
-        a: 'A scan may contain images without readable embedded text. Run OCR first, then translate the extracted text.',
-      },
-      {
-        q: 'Should I rely on the translation without reviewing it?',
-        a: 'No automated translation is guaranteed to preserve every nuance. Check proper names, technical language, numbers, instructions, and legal or medical wording carefully.',
-      },
-    ],
-  },
-  'make-subtitles-for-a-video': {
-    intro:
-      "Turn the speech in a video into an SRT subtitle file you can upload to YouTube, a course platform, or a video editor. The audio track is pulled out in your browser first; the video itself stays on your device. Only that audio is sent to Wyreup, where a hosted Whisper model writes the words with start and end times. The run uses 3 credits, and a run that fails is refunded. The audio can be up to 25 MB, but the hosted step has a fixed processing time limit, so a long talk can run out of time; trim it into shorter parts if that happens. Read through the subtitles before publishing, especially names, numbers, and moments where people talk over each other.",
-    useCases: [
-      'Add captions to a recorded talk or lesson before posting it.',
-      'Make a short social video watchable with the sound off.',
-      'Give a video editor a timed SRT file to place on the timeline.',
-      'Create a searchable written record of an interview recording.',
-    ],
-    faq: [
-      {
-        q: 'What leaves my device?',
-        a: "Only the audio track, extracted in your browser, is sent to Wyreup for transcription. The video file itself is not uploaded. The confirmation before the paid step names your video because the chain starts from it.",
-      },
-      {
-        q: 'Can I burn the subtitles into the video?',
-        a: 'Yes. Open Burn Subtitles with your original video and the downloaded SRT file. That step runs in your browser.',
-      },
-      {
-        q: 'Does it work for languages other than English?',
-        a: 'Yes. Open the transcription tool, pick the spoken language, and choose SRT or WebVTT output. A correct language choice gives better results than auto-detect.',
-      },
-      {
-        q: 'Will the timings be exact?',
-        a: 'They follow the model\'s detected speech segments, which are usually close but not frame-accurate. Check the start of each line in a player before publishing.',
       },
     ],
   },

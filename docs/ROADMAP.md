@@ -1,5 +1,7 @@
 # Wyreup Roadmap
 
+Current decision (2026-11-20): Wyreup is free-only. Hosted inference, accounts and payments are retired; no email signup or cross-product promotion is planned. The earlier roadmap below is historical and its hosted-service, pricing, purchase-test and recovery items are superseded. Current implementation and release gates are in [free-only-service.md](free-only-service.md).
+
 _Updated: 2026-05-14 (post Wave T)_
 
 Three sections: **Now** (in flight), **Next** (scoped, not started), **Later**
