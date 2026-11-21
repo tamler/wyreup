@@ -49,6 +49,8 @@ export interface PdfRedactParams {
    * Redaction fill color as RGB 0-1. Default black [0, 0, 0].
    */
   color?: [number, number, number];
+  /** Remove every text layer, including hidden or misaligned OCR, on every page. */
+  removeAllText?: boolean;
 }
 
 export const pdfRedact: ToolModule<PdfRedactParams> = {
@@ -57,7 +59,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
   name: 'Redact PDF',
   description:
     'Remove covered text and image content from a new PDF. ' +
-    'Rebuilds pages at 144 DPI with extractable text outside the boxes; strips annotations, attachments and source metadata. Runs locally.',
+    'Rebuilds pages at 144 DPI. By default, visible and hidden text outside boxes stays extractable by position. Use removeAllText for image-only output, including scans with uncertain OCR. Strips annotations, attachments and source metadata. Runs locally.',
   category: 'edit',
   keywords: ['pdf', 'redact', 'cover', 'hide', 'privacy', 'black'],
 
@@ -81,12 +83,21 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
   defaults: {
     rectangles: [],
     color: [0, 0, 0],
+    removeAllText: false,
+  },
+  paramSchema: {
+    removeAllText: {
+      type: 'boolean',
+      label: 'Remove all text layers (image only)',
+      help: 'For scans or uncertain OCR. Removes all extractable text on every page, including invisible text outside boxes.',
+    },
   },
 
   async run(inputs: File[], params: PdfRedactParams, ctx: ToolRunContext): Promise<Blob> {
     if (ctx.signal.aborted) throw new Error('Aborted');
 
-    const { rectangles, color = [0, 0, 0] } = params;
+    const { rectangles, color = [0, 0, 0], removeAllText = false } = params;
+    if (typeof removeAllText !== 'boolean') throw new Error('removeAllText must be a boolean.');
 
     if (!rectangles || rectangles.length === 0) {
       throw new Error('rectangles must not be empty.');
@@ -129,6 +140,16 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     const { getDocument, PDFWorker, AnnotationMode, Util } =
       await import('pdfjs-dist/legacy/build/pdf.mjs');
     const isNode = typeof process !== 'undefined' && !!process.versions?.node;
+    let standardFontDataUrl: string | undefined;
+    if (isNode) {
+      const { createRequire } = await import('node:module');
+      const path = await import('node:path');
+      // PDF.js's Node data factory reads native paths, not file URL strings.
+      standardFontDataUrl =
+        path
+          .dirname(createRequire(import.meta.url).resolve('pdfjs-dist/package.json'))
+          .replaceAll('\\', '/') + '/standard_fonts/';
+    }
     const buffer = await inputs[0]!.arrayBuffer();
     // Use an owned channel with the bundled patched parser in every runtime.
     // This avoids shared/global worker configuration, stale fake-worker caches,
@@ -145,7 +166,13 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
     >[0]);
 
     ctx.onProgress({ stage: 'processing', percent: 10, message: 'Loading PDF' });
-    const task = getDocument({ data: new Uint8Array(buffer), stopAtErrors: true, worker });
+    const task = getDocument({
+      data: new Uint8Array(buffer),
+      stopAtErrors: true,
+      worker,
+      standardFontDataUrl,
+      useSystemFonts: !isNode,
+    });
     const abort = () => {
       void task.destroy();
     };
@@ -167,7 +194,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
 
       // Never copy source objects: even copying untouched pages can retain shared
       // images, font programs, form values or historical/unused confidential data.
-      const pdfDoc = await PDFDocument.create();
+      const pdfDoc = await PDFDocument.create({ updateMetadata: false });
       for (let number = 1; number <= pageCount; number++) {
         if (ctx.signal.aborted) throw new Error('Aborted');
         const sourcePage = await source.getPage(number);
@@ -233,6 +260,17 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
           height: page.getHeight(),
         });
         page.setRotation(degrees(sourcePage.rotate));
+        canvas.width = 0;
+        canvas.height = 0;
+        ctx.onProgress({
+          stage: 'processing',
+          percent: 10 + Math.floor((number / pageCount) * 75),
+          message: `Redacting page ${number}/${pageCount}`,
+        });
+        if (removeAllText) {
+          sourcePage.cleanup();
+          continue;
+        }
 
         // Wyreup's opt-in PDF.js patch emits one item per source glyph. Without
         // it, dropping a partly covered item would remove an entire text run.
@@ -342,14 +380,7 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
           );
         }
         page.pushOperators(endText(), popGraphicsState());
-        canvas.width = 0;
-        canvas.height = 0;
         sourcePage.cleanup();
-        ctx.onProgress({
-          stage: 'processing',
-          percent: 10 + Math.floor((number / pageCount) * 75),
-          message: `Redacting page ${number}/${pageCount}`,
-        });
       }
 
       ctx.onProgress({ stage: 'encoding', percent: 90, message: 'Saving PDF' });

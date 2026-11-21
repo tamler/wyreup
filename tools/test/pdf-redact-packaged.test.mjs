@@ -10,7 +10,7 @@ for (const format of ['esm', 'cjs']) {
     import assert from 'node:assert/strict';
     import { createRequire } from 'node:module';
     const require = createRequire(new URL('./packages/core/package.json', 'file://' + process.cwd() + '/'));
-    const { PDFDocument, StandardFonts } = require('pdf-lib');
+    const { PDFDocument, StandardFonts, PDFRawStream, PDFName, decodePDFRawStream } = require('pdf-lib');
     const format = process.argv[1];
     const core = format === 'esm'
       ? await import('./packages/core/dist/node/index.js')
@@ -31,6 +31,18 @@ for (const format of ['esm', 'cjs']) {
     const text = await extract.run([new File([blob], 'redacted.pdf')], {}, context);
     assert.ok((await text.text()).includes('OUTSIDE456'));
     assert.ok(!(await text.text()).includes('SECRET123'));
+    const output = await PDFDocument.load(await blob.arrayBuffer());
+    let ink = 0;
+    for (const [, object] of output.context.enumerateIndirectObjects()) {
+      if (!(object instanceof PDFRawStream) || object.dict.get(PDFName.of('Subtype'))?.toString() !== '/Image') continue;
+      const pixels = decodePDFRawStream(object).decode();
+      // 144 DPI: the retained Helvetica text occupies x=185..330, y=140..168.
+      for (let y = 140; y < 168; y++) for (let x = 185; x < 330; x++) {
+        const offset = (y * 600 + x) * 3;
+        if (pixels[offset] < 100 && pixels[offset + 1] < 100 && pixels[offset + 2] < 100) ink++;
+      }
+    }
+    assert.ok(ink > 30, 'Retained standard-font text must have visible raster ink');
     assert.ok(globalThis.pdfjsWorker?.WorkerMessageHandler);
     `;
     const result = spawnSync(process.execPath, ['--input-type=module', '-e', script, format], {

@@ -80,6 +80,7 @@
   let overlayEl: HTMLDivElement;
   let rectangles: DrawRect[] = [];
   let colorChoice = 'black';
+  let removeAllText = false;
 
   // Drawing state
   let drawing = false;
@@ -310,6 +311,7 @@
       const result = await toolModule.run(input, {
         rectangles: rectangles.map(r => ({ ...r.pdf })),
         color: preset.rgb,
+        removeAllText,
       }, {
         onProgress: (p) => { if (!disposed && generation === own) progress = p; },
         signal: abort.signal,
@@ -386,7 +388,7 @@
 
 <div class="runner">
   {#if previousCloseWarning}<p role="status">{previousCloseWarning}</p>{/if}
-  <p>Export removes covered text and image pixels. Pages are rebuilt at 144 DPI with extractable text outside the boxes; glyphs touching a box are removed in full. Annotations, forms, attachments and source metadata are discarded. Vector quality and interactivity are lost, and files may grow. Processing stays on your device. Review the exported copy before sharing; compression is optional.</p>
+  <p>Export removes covered text and image pixels. Pages are rebuilt at 144 DPI. By default, visible and hidden text outside boxes stays extractable by its PDF position, which may not match scanned ink. For scans, uncertain OCR or unusual fonts, select image-only export to remove every text layer on every page. Visual review cannot reveal hidden text. Annotations and forms (including visible values, stamps and ink signatures shown in the preview), attachments and source metadata are discarded. Vector quality and interactivity are lost, and files may grow. Processing stays on your device. Review the exported copy before sharing; compression is optional.</p>
   {#if originalFile}<p>Original PDF: {originalFile.name}.</p><div class="actions"><button type="button" class="btn-secondary" on:click={downloadOriginal}>Download original</button><button type="button" class="btn-secondary" on:click={retryOriginal}>Retry original</button><button type="button" class="btn-secondary" on:click={dismissOriginal}>Dismiss original</button></div>{/if}
   {#if state === 'idle' || files.length === 0}
     <DropZone
@@ -427,6 +429,8 @@
         <button class="btn-ghost-sm" on:click={clearAll} disabled={rectangles.length === 0} type="button">Clear all</button>
       </div>
     </div>
+    <label><input type="checkbox" bind:checked={removeAllText} disabled={state !== 'editing'} /> Remove all text layers (image only)</label>
+    <p>Image-only export keeps the redacted page pictures and removes all searchable or copyable text, including hidden OCR outside boxes.</p>
   {/if}
 
   {#if pdfDoc}

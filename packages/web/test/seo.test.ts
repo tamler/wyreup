@@ -119,7 +119,7 @@ const REDACTION_FAQS = {
   'pdf-redact': [
     {
       q: 'Is the redacted text truly gone?',
-      a: 'Yes. Export removes covered glyphs and image pixels from a freshly rebuilt PDF. Glyphs touching a box are removed in full; text outside stays extractable. Review the exported copy before sharing.',
+      a: 'Export removes covered image pixels and text located inside boxes from a freshly rebuilt PDF. By default, hidden text outside boxes stays extractable by PDF position. For scans, uncertain OCR or unusual fonts, select Remove all text layers (image only). Visual review cannot reveal hidden text. Review the exported copy before sharing.',
     },
     {
       q: 'Does my document get uploaded?',

@@ -299,16 +299,16 @@ const CONTENT_CORRECTIONS: Record<
   },
   'pdf-redact': {
     intro:
-      'Redact PDF removes covered text and image pixels in your browser. Every page is rebuilt at 144 DPI with a new extractable text layer outside the boxes; glyphs touching a box are removed in full. Source metadata, annotations, forms and attachments are discarded. Vector quality and interactivity are lost and files may grow. Review the exported copy before sharing. Your files stay on your device.',
+      'Redact PDF removes covered text and image pixels in your browser. Every page is rebuilt at 144 DPI. By default, visible and hidden text outside boxes stays extractable by PDF position, which may not match scanned ink or unusual font outlines. Select Remove all text layers (image only) for scans, uncertain OCR or unusual fonts: this removes all searchable text on every page. Visual review cannot reveal hidden text. Source metadata, annotations, forms (including visible values, stamps and ink signatures), and attachments are discarded. Vector quality and interactivity are lost and files may grow. Review the exported copy before sharing. Your files stay on your device.',
     useCases: [
       'Remove account numbers before sharing a statement',
-      'Remove addresses and signatures from scanned forms',
+      'Use image-only export for scanned forms with hidden or misaligned OCR',
       'Remove confidential passages while keeping other text extractable',
     ],
     faq: [
       {
         q: 'Is the redacted text truly gone?',
-        a: 'Yes. Export removes covered glyphs and image pixels from a freshly rebuilt PDF. Glyphs touching a box are removed in full; text outside stays extractable. Review the exported copy before sharing.',
+        a: 'Export removes covered image pixels and text located inside boxes from a freshly rebuilt PDF. By default, hidden text outside boxes stays extractable by PDF position. For scans, uncertain OCR or unusual fonts, select Remove all text layers (image only). Visual review cannot reveal hidden text. Review the exported copy before sharing.',
       },
       {
         q: 'Does my document get uploaded?',

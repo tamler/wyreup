@@ -224,6 +224,69 @@ describe('pdf-redact — metadata', () => {
 });
 
 describe('pdf-redact — run()', () => {
+  it('removes misaligned invisible OCR and all other text in image-only mode, including after compression', async () => {
+    const { beginText, endText, setTextRenderingMode, TextRenderingMode } = await import('pdf-lib');
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([300, 300]);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    // A scan-like image and an OCR layer offset from its visible mark.
+    const { createCanvas, canvasToBlob } = await import('../../../src/lib/canvas.js');
+    const canvas = await createCanvas(100, 20);
+    const context = canvas.getContext('2d') as unknown as CanvasRenderingContext2D;
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, 100, 20);
+    const image = await doc.embedPng(await (await canvasToBlob(canvas, 'image/png')).arrayBuffer());
+    page.drawImage(image, { x: 20, y: 220, width: 100, height: 20 });
+    page.drawRectangle({ x: 200, y: 100, width: 40, height: 40, color: rgb(0, 0, 1) });
+    page.pushOperators(beginText(), setTextRenderingMode(TextRenderingMode.Invisible), endText());
+    page.drawText('OCRSHIFTED', { x: 20, y: 190, size: 12, font });
+    const input = new File([(await doc.save()) as BlobPart], 'ocr.pdf');
+    const rectangles = [{ page: 1, x: 19, y: 219, width: 102, height: 22 }];
+    const positional = (await pdfRedact.run([input], { rectangles }, makeCtx())) as Blob;
+    const positionalText = (await pdfToText.run(
+      [new File([positional], 'position.pdf')],
+      {},
+      makeCtx(),
+    )) as Blob;
+    expect(await positionalText.text()).toContain('OCRSHIFTED');
+    const output = (await pdfRedact.run(
+      [input],
+      { rectangles, removeAllText: true },
+      makeCtx(),
+    )) as Blob;
+    const compressed = (await pdfCompress.run(
+      [new File([output], 'image-only.pdf')],
+      {},
+      makeCtx(),
+    )) as Blob;
+    for (const blob of [output, compressed]) {
+      const extracted = (await pdfToText.run(
+        [new File([blob], 'result.pdf')],
+        {},
+        makeCtx(),
+      )) as Blob;
+      expect((await extracted.text()).trim()).toBe('');
+    }
+    const rebuilt = await PDFDocument.load(await output.arrayBuffer(), { updateMetadata: false });
+    expect(rebuilt.getCreationDate()).toBeUndefined();
+    expect(rebuilt.getModificationDate()).toBeUndefined();
+    const { PDFRawStream, PDFName, decodePDFRawStream } = await import('pdf-lib');
+    const images = rebuilt.context
+      .enumerateIndirectObjects()
+      .map(([, object]) => object)
+      .filter(
+        (object): object is RawStream =>
+          object instanceof PDFRawStream &&
+          object.dict.get(PDFName.of('Subtype'))?.toString() === '/Image',
+      );
+    expect(images).toHaveLength(1);
+    const pixels = decodePDFRawStream(images[0]!).decode();
+    const pixel = (x: number, y: number) =>
+      Array.from(pixels.slice((y * 600 + x) * 3, (y * 600 + x) * 3 + 3));
+    expect(pixel(80, 140)).toEqual([0, 0, 0]); // Covered scan pixels.
+    expect(pixel(440, 360)).toEqual([0, 0, 255]); // Outside artwork remains.
+  });
+
   it('clips enormous finite boxes before converting to bitmap coordinates', async () => {
     const result = (await pdfRedact.run(
       [await secretFixture()],
