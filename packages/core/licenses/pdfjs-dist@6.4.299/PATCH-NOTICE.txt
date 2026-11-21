@@ -2,5 +2,7 @@ PDF.js 6.4.299 local modification
 
 Wyreup Contributors modified legacy/build/pdf.mjs to reject the operator-list read capability on worker errors even when a display-ready capability also exists. This prevents a failed operator-list request from remaining pending. The upstream API, Apache-2.0 license and Mozilla copyright notice are retained.
 
+Wyreup Contributors also modified legacy/build/pdf.mjs and legacy/build/pdf.worker.mjs to support opt-in perGlyph text extraction. This mode emits individual glyph items, preserves whitespace, propagates through Form XObjects, and reports a wyreupPerGlyph marker so redaction can fail closed if the worker lacks the patch. Default extraction behavior is unchanged.
+
 Source patch: patches/pdfjs-dist@6.4.299.patch
-Patch SHA-256: e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3
+Patch SHA-256: 691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15

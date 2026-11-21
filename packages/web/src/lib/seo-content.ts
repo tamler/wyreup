@@ -6294,18 +6294,16 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'pdf-redact': {
     intro:
-      "Redact PDF covers content with solid rectangles so account numbers, names, or signatures don't appear when the document is viewed. It's for sanitizing a file before you share it publicly or with a third party. The redaction runs in your browser, so the original sensitive document never gets uploaded — but read the caveat below before treating it as bulletproof.",
+      'Redact PDF removes covered text and image pixels in your browser. Every page is rebuilt at 144 DPI with a new extractable text layer outside the boxes; glyphs touching a box are removed in full. Source metadata, annotations, forms and attachments are discarded. Vector quality and interactivity are lost and files may grow. Review the exported copy before sharing. Your files stay on your device.',
     useCases: [
-      "Black out a customer's account number on a statement before attaching it to a support ticket",
-      'Cover personal addresses on a scanned form shared with a wider team',
-      'Hide pricing on a proposal before circulating an example externally',
-      'Mask signatures on a contract used as a template for others to fill in',
-      'Conceal a confidential clause in a document being shown in a public filing',
+      'Remove account numbers before sharing a statement',
+      'Remove addresses and signatures from scanned forms',
+      'Remove confidential passages while keeping other text extractable',
     ],
     faq: [
       {
         q: 'Is the redacted text truly gone?',
-        a: 'The rectangles cover the content visually, but the underlying text objects may still be extractable by specialized tools. For forensic-grade redaction, flatten the result with Compress PDF afterward.',
+        a: 'Yes. Export removes covered glyphs and image pixels from a freshly rebuilt PDF. Glyphs touching a box are removed in full; text outside stays extractable. Review the exported copy before sharing.',
       },
       {
         q: 'Does my document get uploaded?',
@@ -6313,7 +6311,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How do I make the redaction permanent?',
-        a: 'Run the redacted PDF through Compress PDF, which re-encodes the page imagery and removes the recoverable text beneath the rectangles.',
+        a: 'Export the redacted copy. Covered content is removed during export; Compress PDF is optional for file size and is not required for redaction.',
       },
       {
         q: 'Can I redact multiple areas on different pages?',
@@ -6327,15 +6325,15 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
     alsoTry: [
       {
         id: 'pdf-compress',
-        why: "Flatten a redacted PDF so the covered text can't be recovered underneath the rectangles.",
+        why: 'Optionally reduce the rebuilt PDF size. Covered content has already been removed.',
       },
       {
         id: 'pdf-metadata',
-        why: 'Strip author and title metadata that could leak identity alongside the redaction.',
+        why: 'Inspect the exported metadata. Redact PDF discards source metadata during rebuilding.',
       },
       {
         id: 'pdf-encrypt',
-        why: 'Lock the sanitized file with a password before sharing it.',
+        why: 'Add password protection to the redacted copy.',
       },
     ],
   },
@@ -8416,7 +8414,7 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
   },
   'text-redact': {
     intro:
-      "Text Redact finds and replaces personally identifiable information in plain text: emails, phone numbers, SSNs, Luhn-validated credit card numbers, IP addresses, URLs, UUIDs, and AWS access keys, with room to add your own regex patterns. It's the text-only sibling of pdf-redact, ideal for cleaning logs, transcripts, and support tickets before you share them. Everything happens in your browser, so the sensitive data you're scrubbing never gets uploaded.",
+      "Text Redact finds and replaces personally identifiable information in plain text: emails, phone numbers, SSNs, Luhn-validated credit card numbers, IP addresses, URLs, UUIDs, and AWS access keys, with room to add your own regex patterns. It edits plain text; Redact PDF removes manually selected page areas. Everything happens in your browser, so the sensitive data you're scrubbing never gets uploaded.",
     useCases: [
       'Strip emails and phone numbers out of a support transcript before pasting it into a bug report',
       'Mask credit card numbers in a log dump, with Luhn validation cutting down false positives',
@@ -8440,17 +8438,17 @@ export const SEO_CONTENT: Record<string, ToolSeoContent> = {
       },
       {
         q: 'How is this different from Redact PDF?',
-        a: 'This is the text-only sibling: it works on plain text rather than PDF page content. For documents, use pdf-redact instead.',
+        a: 'Text Redact replaces matching patterns in plain text. Redact PDF removes manually selected text and image areas from a rebuilt PDF, locally on your device.',
       },
       {
         q: 'Will pattern-based redaction catch everything?',
-        a: 'It catches well-structured PII like emails and card numbers reliably, but free-form mentions (a name in a sentence) need a language-aware tool; for that, see Redact PII.',
+        a: 'It catches structured patterns such as email addresses and card numbers. Review free-form mentions such as names in a sentence yourself.',
       },
     ],
     alsoTry: [
       {
         id: 'pdf-redact',
-        why: 'Cover sensitive content in a PDF document rather than plain text.',
+        why: 'Remove manually selected text and image areas from a PDF.',
       },
       {
         id: 'file-fingerprint',

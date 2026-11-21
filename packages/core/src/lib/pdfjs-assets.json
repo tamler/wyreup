@@ -2,8 +2,8 @@
   "version": "6.4.299",
   "patch": {
     "path": "patches/pdfjs-dist@6.4.299.patch",
-    "bytes": 879,
-    "sha256": "e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3"
+    "bytes": 4977,
+    "sha256": "691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15"
   },
   "notices": [
     {
@@ -18,8 +18,8 @@
     },
     {
       "file": "PATCH-NOTICE.txt",
-      "bytes": 473,
-      "sha256": "b4ee141dfb2aa4d04b7ef45c2eeb5b3e5a9db43423c5129504e58350ed4df35b"
+      "bytes": 839,
+      "sha256": "aeef5dd67c108d124a82d7be73d63d9cd3375c6d5bef6dc702d5f6ca028fd3e4"
     }
   ]
 }

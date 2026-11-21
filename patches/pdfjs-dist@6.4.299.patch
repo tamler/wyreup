@@ -1,7 +1,41 @@
 diff --git a/legacy/build/pdf.mjs b/legacy/build/pdf.mjs
+index 188020a36b70e5d86434f2e1c95804398d849d74..316fe14d2a2ca708e5bfe8fa5ce47f4a5773b56a 100644
 --- a/legacy/build/pdf.mjs
 +++ b/legacy/build/pdf.mjs
-@@ -22476,6 +22476,9 @@
+@@ -22336,14 +22336,16 @@ class PDFPageProxy {
+   }
+   streamTextContent({
+     includeMarkedContent = false,
+-    disableNormalization = false
++    disableNormalization = false,
++    perGlyph = false
+   } = {}) {
+     const TEXT_CONTENT_CHUNK_SIZE = 100;
+     return this._transport.messageHandler.sendWithStream("GetTextContent", {
+       pageId: this.#pagesMapper.getPageId(this._pageIndex + 1) - 1,
+       pageIndex: this._pageIndex,
+       includeMarkedContent: includeMarkedContent === true,
+-      disableNormalization: disableNormalization === true
++      disableNormalization: disableNormalization === true,
++      perGlyph: perGlyph === true
+     }, {
+       highWaterMark: TEXT_CONTENT_CHUNK_SIZE,
+       size: textContent => textContent.items.length
+@@ -22355,11 +22357,13 @@ class PDFPageProxy {
+     }
+     const readableStream = this.streamTextContent(params);
+     const textContent = {
++      wyreupPerGlyph: params.perGlyph === true,
+       items: [],
+       styles: Object.create(null),
+       lang: null
+     };
+     for await (const value of readableStream) {
++      textContent.wyreupPerGlyph &&= value.wyreupPerGlyph === true;
+       textContent.lang ??= value.lang;
+       Object.assign(textContent.styles, value.styles);
+       textContent.items.push(...value.items);
+@@ -22478,6 +22482,9 @@ class PDFPageProxy {
          if (this._transport.destroyed) {
            return;
          }
@@ -11,7 +45,7 @@ diff --git a/legacy/build/pdf.mjs b/legacy/build/pdf.mjs
          if (intentState.operatorList) {
            intentState.operatorList.lastChunk = true;
            for (const internalRenderTask of intentState.renderTasks) {
-@@ -22487,9 +22490,7 @@
+@@ -22487,9 +22494,7 @@ class PDFPageProxy {
          }
          if (intentState.displayReadyCapability) {
            intentState.displayReadyCapability.reject(reason);
@@ -22,3 +56,90 @@ diff --git a/legacy/build/pdf.mjs b/legacy/build/pdf.mjs
            throw reason;
          }
        });
+diff --git a/legacy/build/pdf.worker.mjs b/legacy/build/pdf.worker.mjs
+index c9788fa9ec2bf915ca88d75eac11652e50ff6369..bcdbf31a6a5e678f19fb081ed41d023e699a514f 100644
+--- a/legacy/build/pdf.worker.mjs
++++ b/legacy/build/pdf.worker.mjs
+@@ -41429,7 +41429,8 @@ class PartialEvaluator {
+     disableNormalization = false,
+     keepWhiteSpace = false,
+     prevRefs = null,
+-    intersector = null
++    intersector = null,
++    perGlyph = false
+   }) {
+     if (stream.isAsync) {
+       const bytes = await stream.asyncGetBytes();
+@@ -41451,6 +41452,7 @@ class PartialEvaluator {
+     let markedContentLevel = 0;
+     let textMarkedContentLevel = null;
+     const textContent = {
++      wyreupPerGlyph: perGlyph,
+       items: [],
+       styles: Object.create(null),
+       lang
+@@ -41787,6 +41789,9 @@ class PartialEvaluator {
+       const glyphs = font.charsToGlyphs(chars);
+       const scale = textState.fontMatrix[0] * textState.fontSize;
+       for (let i = 0, ii = glyphs.length; i < ii; i++) {
++        if (perGlyph) {
++          flushTextContentItem();
++        }
+         const glyph = glyphs[i];
+         const {
+           category,
+@@ -41854,6 +41859,9 @@ class PartialEvaluator {
+             textState.translateTextMatrix(0, -charSpacing);
+           }
+         }
++        if (perGlyph) {
++          flushTextContentItem();
++        }
+       }
+     }
+     function appendEOL() {
+@@ -42139,6 +42147,7 @@ class PartialEvaluator {
+                 viewBox,
+                 lang,
+                 disableNormalization,
++                perGlyph,
+                 keepWhiteSpace,
+                 prevRefs: seenRefs
+               }).then(function () {
+@@ -65368,6 +65377,7 @@ class Page {
+     task,
+     includeMarkedContent,
+     disableNormalization,
++    perGlyph = false,
+     sink,
+     intersector = null
+   }) {
+@@ -65383,6 +65393,8 @@ class Page {
+       resources,
+       includeMarkedContent,
+       disableNormalization,
++      perGlyph,
++      keepWhiteSpace: perGlyph,
+       sink,
+       viewBox: this.view,
+       lang,
+@@ -71042,7 +71054,8 @@ class WorkerMessageHandler {
+       pageId,
+       pageIndex,
+       includeMarkedContent,
+-      disableNormalization
++      disableNormalization,
++      perGlyph = false
+     }, sink) {
+       pdfManager.getPage(pageId).then(function (page) {
+         const task = new WorkerTask("GetTextContent: page " + pageIndex);
+@@ -71052,7 +71065,8 @@ class WorkerMessageHandler {
+           task,
+           sink,
+           includeMarkedContent,
+-          disableNormalization
++          disableNormalization,
++          perGlyph
+         }).then(() => {
+           sink.close();
+         }, reason => {

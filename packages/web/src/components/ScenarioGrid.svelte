@@ -52,7 +52,7 @@ import { createDefaultRegistry } from '../lib/core-execution';
     { label: 'Convert HEIC to JPG', slug: 'convert', category: 'convert', icon: categoryIcons.convert },
     { label: 'Generate a QR code', slug: 'qr', category: 'create', icon: categoryIcons.create },
     { label: 'Resize an image for web', slug: 'resize', category: 'edit', icon: categoryIcons.edit },
-    { label: 'Add visual covers to a PDF', slug: 'pdf-redact', category: 'pdf', icon: categoryIcons.pdf },
+    { label: 'Remove sensitive PDF content', slug: 'pdf-redact', category: 'pdf', icon: categoryIcons.pdf },
   ];
 
   interface OutcomeGroup {

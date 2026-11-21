@@ -35,7 +35,7 @@ patchedDependencies:
     hash: 0fe7c4344be49ce06b51aaf130f68a01bef68c4f6ca03e2b110c644a221c3cbf
     path: patches/glob@14.0.2.patch
   pdfjs-dist@6.4.299:
-    hash: e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3
+    hash: 691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15
     path: patches/pdfjs-dist@6.4.299.patch
 
 importers:
@@ -316,7 +316,7 @@ importers:
         version: 1.17.1
       pdfjs-dist:
         specifier: 6.4.299
-        version: 6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3)
+        version: 6.4.299(patch_hash=691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15)
       pixelmatch:
         specifier: ^7.2.0
         version: 7.2.0
@@ -512,7 +512,7 @@ importers:
         version: 3.10.2
       pdfjs-dist:
         specifier: ^6.4.299
-        version: 6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3)
+        version: 6.4.299(patch_hash=691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15)
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10
@@ -11556,7 +11556,7 @@ snapshots:
       pako: 1.0.11
       tslib: 1.14.1
 
-  pdfjs-dist@6.4.299(patch_hash=e6a8bdecf081bca18d373ba5737219cdbffefb08c7fda51f7daf34683ae1fad3):
+  pdfjs-dist@6.4.299(patch_hash=691ba18b6db2125acbeba861e54e11233ce8b888efbc364e15863c090c945b15):
     optionalDependencies:
       '@napi-rs/canvas': 1.0.10
 

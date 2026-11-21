@@ -386,7 +386,7 @@
 
 <div class="runner">
   {#if previousCloseWarning}<p role="status">{previousCloseWarning}</p>{/if}
-  <p>Visual cover only. Underlying text and images can remain recoverable. Compress PDF does not make this secure redaction. Do not use this output to securely remove confidential content.</p>
+  <p>Export removes covered text and image pixels. Pages are rebuilt at 144 DPI with extractable text outside the boxes; glyphs touching a box are removed in full. Annotations, forms, attachments and source metadata are discarded. Vector quality and interactivity are lost, and files may grow. Processing stays on your device. Review the exported copy before sharing; compression is optional.</p>
   {#if originalFile}<p>Original PDF: {originalFile.name}.</p><div class="actions"><button type="button" class="btn-secondary" on:click={downloadOriginal}>Download original</button><button type="button" class="btn-secondary" on:click={retryOriginal}>Retry original</button><button type="button" class="btn-secondary" on:click={dismissOriginal}>Dismiss original</button></div>{/if}
   {#if state === 'idle' || files.length === 0}
     <DropZone

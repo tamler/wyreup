@@ -49,7 +49,7 @@ export default defineConfig([
       execution: 'src/execution.ts',
       'file-worker': 'src/utilities/file-worker-node.ts',
     },
-    noExternal: [/^pdfjs-dist\/legacy\/build\/pdf\.mjs$/],
+    noExternal: [/^pdfjs-dist\/legacy\/build\/pdf(?:\.worker)?\.mjs$/],
     format: ['esm', 'cjs'],
     dts: true,
     outDir: 'dist/node',

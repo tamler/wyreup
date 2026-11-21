@@ -119,7 +119,7 @@ const REDACTION_FAQS = {
   'pdf-redact': [
     {
       q: 'Is the redacted text truly gone?',
-      a: 'No. The rectangles cover content visually, but underlying text can remain extractable. The PDF output is not secure redaction.',
+      a: 'Yes. Export removes covered glyphs and image pixels from a freshly rebuilt PDF. Glyphs touching a box are removed in full; text outside stays extractable. Review the exported copy before sharing.',
     },
     {
       q: 'Does my document get uploaded?',
@@ -127,7 +127,7 @@ const REDACTION_FAQS = {
     },
     {
       q: 'How do I make the redaction permanent?',
-      a: 'This tool does not offer permanent content removal. Compress PDF re-encodes embedded images to reduce file size; it does not remove the text or image content beneath these rectangles.',
+      a: 'Export the redacted copy. Covered content is removed during export; Compress PDF is optional for file size and is not required for redaction.',
     },
     {
       q: 'Can I redact multiple areas on different pages?',
@@ -153,7 +153,7 @@ const REDACTION_FAQS = {
     },
     {
       q: 'How is this different from Redact PDF?',
-      a: 'Text Redact replaces matching patterns in the output plain text. Redact PDF only adds visual cover rectangles: underlying PDF content may remain recoverable, including after compression. It is not a secure document-redaction equivalent.',
+      a: 'Text Redact replaces matching patterns in plain text. Redact PDF removes manually selected text and image areas from a rebuilt PDF, locally on your device.',
     },
     {
       q: 'Will pattern-based redaction catch everything?',
