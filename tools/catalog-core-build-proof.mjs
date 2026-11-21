@@ -8,7 +8,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const EXCLUDED = new Set(['node_modules', 'dist', '.turbo', '.tsup', '.cache', '.vite', '.vite-temp', '.astro']);
-const CONFIG_SHA = '3171d8a8befe386767657f919a88311d75098aa1a7e51660fe2ab50ec9213b6c';
+// Coordinator adjudicated the Node PDF.js worker bundling change in PR 124.
+const CONFIG_SHA = '3419bc761d565b77791e7843d8141700d22f1443274917c9349b1c0d550d5219';
 const inside = (root, file) => file === root || file.startsWith(root + path.sep);
 const order = (a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
