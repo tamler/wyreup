@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/core",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Tools for local file and text processing, calculations, and public network lookups.",
   "keywords": [
     "wyreup",
