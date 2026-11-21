@@ -37,7 +37,7 @@ async function packageRoot(name, from) {
 }
 
 // UNIT-ONLY authored package/source/output layouts. No tsup, Rollup/native, PDF.js or tool engine executes.
-async function fixture({ localRollup = false, misleadingCoreRollup = false, adapter = false, opaque = false, opaqueCollision = false, encodedInput = false, literal = false, runtime = false, deadlineAt = Date.now() + 180000 } = {}) {
+async function fixture({ localRollup = false, misleadingCoreRollup = false, adapter = false, opaque = false, bankSource, nodeWorker = false, workerMap = nodeWorker, opaqueCollision = false, encodedInput = false, literal = false, runtime = false, deadlineAt = Date.now() + 180000 } = {}) {
   const temporary = await owned();
   const root = path.join(temporary, 'source');
   await mkdir(root);
@@ -74,7 +74,7 @@ async function fixture({ localRollup = false, misleadingCoreRollup = false, adap
     for (const file of ['vendor/index.d.ts', 'UPSTREAM.json', 'NOTICE', 'README.md']) await write(path.join(root, `packages/${name}/${file}`), 'UNIT_ONLY_FIXED_INPUT');
   }
   const source = adapter ? "export { worker } from './utilities/file-job.js';\n" : opaque ? "import 'pdfjs-dist/legacy/build/pdf.mjs';\nexport const value = 1;\n" : literal ? "export const future = () => import('./literal.js');\n" : runtime ? 'export const future = (name) => import(name);\n' : 'export const value = 1;\n';
-  await write(path.join(root, 'packages/core/src/index.ts'), source);
+  await write(path.join(root, 'packages/core/src/index.ts'), source + (nodeWorker ? "import 'pdfjs-dist/legacy/build/pdf.worker.mjs';\n" : ''));
   // CURRENT45 adds six source inputs and seven entry/format output sets.
   await write(path.join(root, 'packages/core/src/execution.ts'), 'export const unitOnly = true;\n');
   for (const name of ['planning', 'building', 'hardware', 'finance', 'text-developer']) {
@@ -83,7 +83,7 @@ async function fixture({ localRollup = false, misleadingCoreRollup = false, adap
   if (literal) await write(path.join(root, 'packages/core/src/literal.ts'), 'export const literal = 123;\n');
   await write(path.join(root, 'packages/core/src/utilities/file-worker-browser.ts'), 'export const worker = 1;\n');
   await write(path.join(root, 'packages/core/src/utilities/file-worker-node.ts'), 'export const worker = 2;\n');
-  await write(path.join(root, 'packages/core/src/utilities/bank-pdf-worker.ts'), opaque ? "import 'pdfjs-dist/legacy/build/pdf.worker.mjs';\n" : 'export const worker = 3;\n');
+  await write(path.join(root, 'packages/core/src/utilities/bank-pdf-worker.ts'), bankSource ?? (opaque ? "import 'pdfjs-dist/legacy/build/pdf.worker.mjs';\n" : 'export const worker = 3;\n'));
   if (adapter) {
     await write(path.join(root, 'packages/core/src/utilities/file-job.ts'), "export { worker } from './file-job-platform.js';\n");
     await write(path.join(root, 'packages/core/src/utilities/file-job-platform.ts'), 'export const worker = 4;\n');
@@ -98,6 +98,7 @@ async function fixture({ localRollup = false, misleadingCoreRollup = false, adap
       await write(path.join(fakePdf, 'legacy/build', base), patchContext + `//# sourceMappingURL=${base}.map\n`);
       await metadata(path.join(fakePdf, 'legacy/build', base + '.map'), { version: 3, sourceRoot: '', sources: [encodedInput ? 'webpack://pdf.js/src/unit%20input.js' : ['same-content', 'different-content'].includes(opaqueCollision) && base === 'pdf.worker.mjs' ? 'webpack://pdf.js/src/unit input.js' : 'webpack://pdf.js/./src/unit input.js'], sourcesContent: [['different-content', 'same-raw-different-content'].includes(opaqueCollision) && base === 'pdf.worker.mjs' ? 'UNIT_ONLY_DISTINCT_COLLIDING_CONTENT' : content], names: [], mappings: '' });
     }
+    if (workerMap) await writeFile(path.join(fakePdf, 'legacy/build/pdf.worker.mjs.map'), JSON.stringify({ version: 3, sourceRoot: '', sources: ['webpack://pdf.js/src/core/primitives.js'], sourcesContent: ['UNIT_ONLY_WORKER_PRIMITIVES'], names: [], mappings: '' }));
     await link(path.join(root, 'packages/core/node_modules/pdfjs-dist'), fakePdf);
   }
   const session = await createCoreBuildProof({ root, runId: 'UNIT-only', deadlineAt });
@@ -515,6 +516,35 @@ test('UNIT-ONLY actual opaque map candidate set retains both raw origins without
   } finally { await value.cleanup(); }
 });
 
+for (const variant of ['identical', 'changed-content', 'unmapped-source', 'browser-only']) test('UNIT-ONLY Node bundled worker uses its own eligible byte-pinned input map: ' + variant, async () => {
+  const value = await fixture({ opaque: true, nodeWorker: variant !== 'browser-only', workerMap: true });
+  try {
+    await outputFiles(value);
+    const entry = path.join(value.session.cwd, 'dist/node/index.js');
+    await writeFile(entry, "export const unitOnly = true;\nimport './UNIT-worker.js';\n//# sourceMappingURL=index.js.map\n");
+    await execute(await realpath(process.execPath), ['--check', entry]);
+    const file = path.join(value.session.cwd, 'dist/node/UNIT-worker.js');
+    await write(file, 'export const unitOnlyWorker = 1;\n//# sourceMappingURL=UNIT-worker.js.map\n');
+    await metadata(file + '.map', { version: 3, sources: [variant === 'unmapped-source' ? 'webpack:/pdf.js/src/core/not-in-input.js' : 'webpack:/pdf.js/src/core/primitives.js'], sourcesContent: [variant === 'changed-content' ? 'UNIT_ONLY_CHANGED_WORKER_CONTENT' : 'UNIT_ONLY_WORKER_PRIMITIVES'], names: [], mappings: '' });
+    const lifecycle = await completed(value.session);
+    if (variant !== 'identical') {
+      await assert.rejects(value.session.commit(lifecycle), variant === 'changed-content' ? /Unmapped opaque source content:/ : /Unmapped opaque source:/);
+      await noProof(value.session);
+      return;
+    }
+    await value.session.commit(lifecycle);
+    const ledger = JSON.parse(await readFile(path.join(value.session.runDirectory, 'build-evidence/compiled-map-input-ledger.json')));
+    const relation = ledger.sourceRelationships.find(record => record.output === 'node/UNIT-worker.js');
+    assert.deepEqual(relation.eligibleEntries, ['node:index']);
+    assert.equal(relation.candidates.length, 1);
+    const candidate = relation.candidates[0];
+    assert.equal(candidate.module.path, path.join(value.fakePdf, 'legacy/build/pdf.worker.mjs'));
+    assert.equal(candidate.module.sha256, hash(await readFile(candidate.module.path)));
+    assert.equal(candidate.inputMap.sha256, hash(await readFile(path.join(value.fakePdf, 'legacy/build/pdf.worker.mjs.map'))));
+    assert.equal(candidate.content.sha256, hash('UNIT_ONLY_WORKER_PRIMITIVES'));
+  } finally { await value.cleanup(); }
+});
+
 for (const collision of ['same-content', 'different-content']) test('UNIT-ONLY distinct opaque raw origins refuse normalized collision before content filtering: ' + collision, async () => {
   const value = await fixture({ opaque: true, opaqueCollision: collision });
   try {
@@ -706,9 +736,9 @@ async function plan4FreshWrongNativeScaffold(base) {
   }
   return { ...base, root, freshTsup: fakeTsup, directEsbuild: fakeEsbuild, directNative: fakeNative, alternateNative: actualNative };
 }
-async function plan4Fixture({ sdk = 'valid', opaque = false } = {}) {
+async function plan4Fixture({ sdk = 'valid', opaque = false, bankSource, nodeWorker = false } = {}) {
   // The existing fixture/session is an untouched scaffold. It is never executed or committed.
-  let base = await fixture({ opaque });
+  let base = await fixture({ opaque, bankSource, nodeWorker });
   try {
     if (sdk === 'wrong-esbuild-native') base = await plan4FreshWrongNativeScaffold(base);
     const actualTsup = await packageRoot('tsup', path.join(currentRoot, 'packages/core/package.json'));
@@ -725,7 +755,7 @@ async function plan4Fixture({ sdk = 'valid', opaque = false } = {}) {
       assert.equal(hash(bytes), module.sha256);
       await write(path.join(base.root, module.logical), bytes);
     }
-    await writeFile(path.join(base.root, 'packages/core/src/index.ts'), (opaque ? "import 'pdfjs-dist/legacy/build/pdf.mjs';\n" : '') + "export * from './lib/excel.js';\nexport * from './lib/pdf-ranges.js';\n");
+    await writeFile(path.join(base.root, 'packages/core/src/index.ts'), (opaque ? "import 'pdfjs-dist/legacy/build/pdf.mjs';\n" : '') + (nodeWorker ? "import 'pdfjs-dist/legacy/build/pdf.worker.mjs';\n" : '') + "export * from './lib/excel.js';\nexport * from './lib/pdf-ranges.js';\n");
     const session = await createCoreBuildProof({ root: base.root, runId: 'UNIT-generated-plan4', deadlineAt: Date.now() + 180000 });
     const context = JSON.parse(await readFile(path.join(session.runDirectory, 'build-evidence/dependency-input-ledger.json')));
     const before = JSON.parse(await readFile(path.join(session.runDirectory, 'build-evidence/input-before.json')));
@@ -761,11 +791,99 @@ async function plan4Outputs(value) {
     }
   }
 }
+
+for (const variant of ['approved', 'export', 'named-import', 'executable', 'non-chunk', 'duplicate', 'one-import', 'unproven', 'wrong-source']) test('UNIT-ONLY bank worker side-effect entry: ' + variant, async () => {
+  const value = await plan4Fixture({ opaque: true, bankSource: variant === 'wrong-source' ? "import 'pdfjs-dist/legacy/build/pdf.worker.mjs';\nexport const unexpected = 1;\n" : undefined });
+  try {
+    await plan4Outputs(value);
+    const dir = path.join(value.session.cwd, 'dist/browser');
+    await plan4WriteJs(path.join(dir, 'chunk-WORKER.js'), "import './chunk-RUNTIME.js';\nexport const worker = 1;\n//# sourceMappingURL=chunk-WORKER.js.map\n");
+    await metadata(path.join(dir, 'chunk-WORKER.js.map'), { version: 3, sources: ['webpack:/pdf.js/src/unit%20input.js'], sourcesContent: [value.opaqueContent], names: [], mappings: '' });
+    await plan4WriteJs(path.join(dir, 'chunk-RUNTIME.js'), plan4HelperLiteral + plan4Footer('chunk-RUNTIME.js'));
+    await write(path.join(dir, 'chunk-RUNTIME.js.map'), plan4Map('chunk-RUNTIME.js'));
+    let body = "import './chunk-WORKER.js';\nimport './chunk-RUNTIME.js';";
+    if (variant === 'export') body += '\nexport {};';
+    if (variant === 'named-import') body = "import { worker } from './chunk-WORKER.js';\nimport './chunk-RUNTIME.js';";
+    if (variant === 'executable') body += '\nglobalThis.unexpected?.();';
+    if (variant === 'non-chunk') body = body.replace('./chunk-RUNTIME.js', './Z-runtime.js');
+    if (variant === 'duplicate') body = body.replace('./chunk-RUNTIME.js', './chunk-WORKER.js');
+    if (variant === 'one-import') body = "import './chunk-WORKER.js';";
+    if (variant === 'unproven') {
+      await plan4WriteJs(path.join(dir, 'chunk-UNPROVEN.js'), "import './chunk-WORKER.js';" + plan4Footer('chunk-UNPROVEN.js'));
+      await write(path.join(dir, 'chunk-UNPROVEN.js.map'), plan4Map('chunk-UNPROVEN.js'));
+      body = body.replace('./chunk-WORKER.js', './chunk-UNPROVEN.js');
+    }
+    await plan4ReplaceJs(path.join(dir, 'bank-pdf-worker.js'), body + plan4Footer('bank-pdf-worker.js'));
+    await writeFile(path.join(dir, 'bank-pdf-worker.js.map'), plan4Map('bank-pdf-worker.js'));
+    const lifecycle = await completed(value.session);
+    if (variant !== 'approved') {
+      await plan4Refuses(value, lifecycle, /Generated bank worker side-effect entry refused:/);
+      return;
+    }
+    await value.session.commit(lifecycle);
+    const ledger = JSON.parse(await readFile(path.join(value.session.runDirectory, 'build-evidence/compiled-map-input-ledger.json')));
+    const entry = ledger.generatedOutputs.find(record => record.output === 'browser/bank-pdf-worker.js');
+    assert.equal(entry.descriptor, 'esbuild0282-bank-worker-side-effect-entry-v1');
+    assert.deepEqual(entry.eligibleEntries, ['browser:bank-pdf-worker']);
+    assert.deepEqual(entry.targets.map(target => target.output), ['browser/chunk-WORKER.js', 'browser/chunk-RUNTIME.js']);
+    assert.equal(entry.input.path, 'packages/core/src/utilities/bank-pdf-worker.ts');
+    assert.equal(entry.runtimeConsumptionValidated, false);
+  } finally { await value.cleanup(); }
+});
 function plan4FalseFlags(record) {
   assert.equal(record.codeSourceRelationValidated, false);
   assert.equal(record.mappingCoverageValidated, false);
   assert.equal(record.runtimeConsumptionValidated, false);
 }
+
+for (const variant of ['browser', 'node', 'wrong-export', 'alias', 'extra-export', 'executable', 'duplicate', 'non-chunk', 'unproven', 'no-worker', 'foreign-file']) test('UNIT-ONLY PDF worker facade: ' + variant, async () => {
+  const value = await plan4Fixture({ opaque: true, nodeWorker: true });
+  try {
+    await plan4Outputs(value);
+    const platform = variant === 'node' ? 'node' : 'browser';
+    const dir = path.join(value.session.cwd, 'dist', platform);
+    const name = variant === 'foreign-file' ? 'other-worker-UNIT.js' : 'pdf.worker-UNIT.js';
+    const index = path.join(dir, 'index.js');
+    await plan4ReplaceJs(index, `import './${name}';\n` + await readFile(index, 'utf8'));
+    await plan4WriteJs(path.join(dir, 'chunk-WORKER.js'), "import './chunk-SIDE.js';\nconst WorkerMessageHandler = {};\nexport { WorkerMessageHandler };\n//# sourceMappingURL=chunk-WORKER.js.map\n");
+    const physical = path.join(value.session.cwd, 'src/index.ts');
+    await metadata(path.join(dir, 'chunk-WORKER.js.map'), { version: 3, sources: [variant === 'no-worker' ? path.relative(dir, physical).split(path.sep).join('/') : 'webpack:/pdf.js/src/core/primitives.js'], sourcesContent: [variant === 'no-worker' ? await readFile(physical, 'utf8') : 'UNIT_ONLY_WORKER_PRIMITIVES'], names: [], mappings: '' });
+    await plan4WriteJs(path.join(dir, 'chunk-SIDE.js'), plan4HelperLiteral + plan4Footer('chunk-SIDE.js'));
+    await write(path.join(dir, 'chunk-SIDE.js.map'), plan4Map('chunk-SIDE.js'));
+    let body = "export { WorkerMessageHandler } from './chunk-WORKER.js';\nimport './chunk-SIDE.js';";
+    if (variant === 'wrong-export') body = body.replace('WorkerMessageHandler', '__require');
+    if (variant === 'alias') body = body.replace('WorkerMessageHandler', 'WorkerMessageHandler as Other');
+    if (variant === 'extra-export') body = body.replace('WorkerMessageHandler', 'WorkerMessageHandler, Other');
+    if (variant === 'executable') body += '\nglobalThis.unexpected?.();';
+    if (variant === 'duplicate') body = body.replace('./chunk-SIDE.js', './chunk-WORKER.js');
+    if (variant === 'non-chunk') body = body.replace('./chunk-SIDE.js', './Z-runtime.js');
+    if (variant === 'unproven') {
+      await plan4WriteJs(path.join(dir, 'chunk-UNPROVEN.js'), "import './chunk-WORKER.js';" + plan4Footer('chunk-UNPROVEN.js'));
+      await write(path.join(dir, 'chunk-UNPROVEN.js.map'), plan4Map('chunk-UNPROVEN.js'));
+      body = body.replace('./chunk-WORKER.js', './chunk-UNPROVEN.js');
+    }
+    await plan4WriteJs(path.join(dir, name), body + plan4Footer(name));
+    await write(path.join(dir, name + '.map'), plan4Map(name));
+    const lifecycle = await completed(value.session);
+    if (!['browser', 'node'].includes(variant)) {
+      // Unproven chunks sort before this facade and must fail the older guard.
+      const expected = variant === 'foreign-file' ? /Generated wrapper eligible source refused:/
+        : variant === 'unproven' ? /Generated wrapper serialization refused: browser\/chunk-UNPROVEN\.js/
+          : /Generated PDF worker facade refused:/;
+      await plan4Refuses(value, lifecycle, expected);
+      return;
+    }
+    await value.session.commit(lifecycle);
+    const ledger = JSON.parse(await readFile(path.join(value.session.runDirectory, 'build-evidence/compiled-map-input-ledger.json')));
+    const record = ledger.generatedOutputs.find(entry => entry.output === platform + '/' + name);
+    assert.equal(record.descriptor, 'esbuild0282-pdf-worker-facade-v1');
+    assert.deepEqual(record.eligibleEntries, [platform + ':index']);
+    assert.deepEqual(record.bindings, ['WorkerMessageHandler']);
+    assert(record.workerInput.module.path.endsWith('/pdfjs-dist/legacy/build/pdf.worker.mjs'));
+    assert.deepEqual(record.targets.map(target => target.output), [platform + '/chunk-WORKER.js', platform + '/chunk-SIDE.js']);
+    plan4FalseFlags(record);
+  } finally { await value.cleanup(); }
+});
 function plan4Owner(before, resolution) {
   const result = before.dependencyIdentities.find((owner) => owner.packageRoot === resolution.packageRoot);
   assert(result);

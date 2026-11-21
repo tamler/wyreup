@@ -8,7 +8,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const EXCLUDED = new Set(['node_modules', 'dist', '.turbo', '.tsup', '.cache', '.vite', '.vite-temp', '.astro']);
-const CONFIG_SHA = '3171d8a8befe386767657f919a88311d75098aa1a7e51660fe2ab50ec9213b6c';
+// Coordinator adjudicated the Node PDF.js worker bundling change in PR 124.
+const CONFIG_SHA = '3419bc761d565b77791e7843d8141700d22f1443274917c9349b1c0d550d5219';
 const inside = (root, file) => file === root || file.startsWith(root + path.sep);
 const order = (a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -564,7 +565,9 @@ async function deriveGraphs(root, ownedRoot, specification, dependencies, source
           const specifier = edge.specifier;
           if (builtin.has(specifier)) { resolutionEdges.push({ input: filename, ...edge, platform: config.platform, disposition: 'runtime-builtin' }); continue; }
           const packageName = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
-          const noExternal = config.platform === 'browser' ? /^pdfjs-dist\/legacy\/build\/pdf(?:\.worker)?\.mjs$/ : /^pdfjs-dist\/legacy\/build\/pdf\.mjs$/;
+          // Both approved recipes inline the main module and worker. Visit each
+          // reached module so its actual byte-pinned input map stays root-local.
+          const noExternal = /^pdfjs-dist\/legacy\/build\/pdf(?:\.worker)?\.mjs$/;
           if (!specifier.startsWith('.') && external.has(packageName) && !noExternal.test(specifier)) {
             resolutionEdges.push({ input: filename, ...edge, platform: config.platform, disposition: 'declared-external-not-inlined' });
             continue;
@@ -1035,6 +1038,89 @@ async function mapRelationships(ownedRoot, outputs, specification, dependencies,
     const bindingError = 'Generated wrapper target bindings refused: ' + item.path;
     const sourceError = 'Generated wrapper eligible source refused: ' + item.path;
     const source = parsed(item.path, body, serializationError);
+    if (item.path === 'browser/bank-pdf-worker.js') {
+      const message = 'Generated bank worker side-effect entry refused: ' + item.path;
+      const logicalSource = 'packages/core/src/utilities/bank-pdf-worker.ts';
+      const inputs = sourceInputs.filter(input => input.path === logicalSource);
+      assert.equal(inputs.length, 1, message);
+      const input = inputs[0];
+      assert.deepEqual(await pin(path.join(originalRoot, logicalSource), logicalSource, dependencies.deadlineAt), input, message);
+      const copiedInput = await pin(path.join(ownedRoot, logicalSource), undefined, dependencies.deadlineAt);
+      assert(copiedInput.bytes === input.bytes && copiedInput.sha256 === input.sha256, message);
+      const original = parsed(logicalSource, await readFile(copiedInput.path, 'utf8'), message);
+      const declaration = original.statements[0];
+      assert(original.statements.length === 1 && ts.isImportDeclaration(declaration) && !declaration.importClause
+        && !declaration.attributes && ts.isStringLiteral(declaration.moduleSpecifier)
+        && declaration.moduleSpecifier.text === 'pdfjs-dist/legacy/build/pdf.worker.mjs', message);
+      assert.deepEqual([...roots], ['browser:bank-pdf-worker'], message);
+      const graph = rootGraph('browser:bank-pdf-worker', message);
+      assert(graph.files.includes(copiedInput.path), message);
+      const workers = [...derived.inputMaps.values()].filter(record => graph.files.includes(record.module.path)
+        && /[/\\]pdfjs-dist[/\\]legacy[/\\]build[/\\]pdf\.worker\.mjs$/.test(record.module.path));
+      assert.equal(workers.length, 1, message);
+      assert.equal(source.statements.length, 2, message);
+      const parts = [], targets = [], seen = new Set();
+      let workerProven = false;
+      for (const statement of source.statements) {
+        assert(ts.isImportDeclaration(statement) && !statement.importClause && !statement.attributes
+          && ts.isStringLiteral(statement.moduleSpecifier), message);
+        const specifier = statement.moduleSpecifier.text;
+        assert(/^\.\/chunk-[A-Za-z0-9_-]+\.js$/.test(specifier), message);
+        const output = path.posix.join('browser', specifier);
+        assert(!seen.has(output), message); seen.add(output);
+        const target = validated.get(output), helper = helpers.get(output);
+        assert(target || helper, message);
+        if (target) {
+          targetEligibleForRoots(target, roots, message);
+          workerProven ||= target.sourceRelationships.some(relation => relation.candidates?.some(candidate => candidate.module.path === workers[0].module.path));
+        } else assert(helper.eligibleEntries.includes('browser:bank-pdf-worker'), message);
+        targets.push({ output, outputPin: target ? await pin(path.join(outputRoot, output), undefined, dependencies.deadlineAt) : helper.outputPin, map: target ? target.map : helper.map });
+        parts.push("import '" + specifier + "';");
+      }
+      assert(workerProven, message);
+      assert.equal(body, parts.join('\n'), message);
+      const context = await generatedSdk(item.path);
+      generatedOutputs.push({ output: item.path, outputPin: await pin(path.join(outputRoot, item.path), undefined, dependencies.deadlineAt), map: candidate.map,
+        descriptor: 'esbuild0282-bank-worker-side-effect-entry-v1', eligibleEntries: [...roots], input, copiedInput,
+        workerInput: { module: workers[0].module, map: workers[0].map, sourceMappingURL: workers[0].sourceMappingURL }, targets,
+        classification: 'source-bound side-effect-only bank worker linkage to previously proven chunks; code/source relation and mapping coverage UNVALIDATED; runtime consumption UNPROVEN', ...GENERATED_RELATION_LIMITS, sdkContext: context });
+      continue;
+    }
+    if (/^(?:browser|node)\/pdf\.worker-[A-Za-z0-9_-]+\.js$/.test(item.path)) {
+      const message = 'Generated PDF worker facade refused: ' + item.path;
+      assert.equal(source.statements.length, 2, message);
+      const [exported, imported] = source.statements;
+      assert(ts.isExportDeclaration(exported) && !exported.isTypeOnly && !exported.attributes
+        && exported.exportClause && ts.isNamedExports(exported.exportClause)
+        && exported.exportClause.elements.length === 1 && exported.moduleSpecifier && ts.isStringLiteral(exported.moduleSpecifier), message);
+      const binding = exported.exportClause.elements[0];
+      assert(!binding.isTypeOnly && !binding.propertyName && ts.isIdentifier(binding.name) && binding.name.text === 'WorkerMessageHandler', message);
+      assert(ts.isImportDeclaration(imported) && !imported.importClause && !imported.attributes && ts.isStringLiteral(imported.moduleSpecifier), message);
+      const specifiers = [exported.moduleSpecifier.text, imported.moduleSpecifier.text];
+      assert(specifiers.every(specifier => /^\.\/chunk-[A-Za-z0-9_-]+\.js$/.test(specifier)) && specifiers[0] !== specifiers[1], message);
+      assert.equal(body, "export { WorkerMessageHandler } from '" + specifiers[0] + "';\nimport '" + specifiers[1] + "';", message);
+      const platform = item.path.split('/')[0];
+      assert([...roots].every(root => root.startsWith(platform + ':')), message);
+      const workers = [...derived.inputMaps.values()].filter(record => /[/\\]pdfjs-dist[/\\]legacy[/\\]build[/\\]pdf\.worker\.mjs$/.test(record.module.path)
+        && [...roots].every(root => rootGraph(root, message).files.includes(record.module.path)));
+      assert.equal(workers.length, 1, message);
+      const targets = [];
+      for (const [index, specifier] of specifiers.entries()) {
+        const output = path.posix.join(platform, specifier);
+        const target = validated.get(output), helper = helpers.get(output);
+        assert(target || helper, message);
+        if (target) targetEligibleForRoots(target, roots, message);
+        else assert([...roots].every(root => helper.eligibleEntries.includes(root)), message);
+        if (index === 0) assert(target && target.sourceRelationships.some(relation => relation.candidates?.some(candidate => candidate.module.path === workers[0].module.path)), message);
+        targets.push({ output, outputPin: target ? await pin(path.join(outputRoot, output), undefined, dependencies.deadlineAt) : helper.outputPin, map: target ? target.map : helper.map });
+      }
+      const context = await generatedSdk(item.path);
+      generatedOutputs.push({ output: item.path, outputPin: await pin(path.join(outputRoot, item.path), undefined, dependencies.deadlineAt), map: candidate.map,
+        descriptor: 'esbuild0282-pdf-worker-facade-v1', eligibleEntries: [...roots].sort(), bindings: ['WorkerMessageHandler'], targets,
+        workerInput: { module: workers[0].module, map: workers[0].map, sourceMappingURL: workers[0].sourceMappingURL },
+        classification: 'worker-input-bound named facade linkage to previously proven chunks; code/source relation and mapping coverage UNVALIDATED; runtime consumption UNPROVEN', ...GENERATED_RELATION_LIMITS, sdkContext: context });
+      continue;
+    }
     const selectedNames = source.statements.filter(statement => ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause))
       .flatMap(statement => statement.exportClause.elements.map(element => element.name.text));
     const currentSource = GENERATED_ENTRY_SOURCES.get(item.path) ?? (selectedNames.length === 1 ? GENERATED_LAZY_SOURCES.get(selectedNames[0]) : undefined);

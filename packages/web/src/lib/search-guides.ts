@@ -232,7 +232,7 @@ const CONTENT_CORRECTIONS: Record<
       },
       {
         id: 'pdf-redact',
-        why: 'Add visual covers to a PDF. Underlying content can remain recoverable; this is not secure redaction.',
+        why: 'Remove selected text and image content from a new PDF copy locally.',
       },
     ],
   },
@@ -299,16 +299,16 @@ const CONTENT_CORRECTIONS: Record<
   },
   'pdf-redact': {
     intro:
-      'Redact PDF adds solid rectangles to a new PDF copy as visual covers. It does not securely remove the underlying content: text and images can remain recoverable, including after Compress PDF. Use it only when the underlying content is already safe for recipients to access. Processing runs locally in your browser.',
+      'Redact PDF removes covered text and image pixels in your browser. Every page is rebuilt at 144 DPI. By default, visible and hidden text outside boxes stays extractable by PDF position, which may not match scanned ink or unusual font outlines. Select Remove all text layers (image only) for scans, uncertain OCR or unusual fonts: this removes all searchable text on every page. Visual review cannot reveal hidden text. Source metadata, annotations, forms (including visible values, stamps and ink signatures), and attachments are discarded. Vector quality and interactivity are lost and files may grow. Review the exported copy before sharing. Your files stay on your device.',
     useCases: [
-      'Mark areas intended for removal in an internal review copy whose original content is safe for every recipient to access',
-      'Add visual cover rectangles to a demonstration PDF containing non-confidential sample data',
-      'Prepare a visual mockup of a masked document without claiming that its content has been deleted',
+      'Remove account numbers before sharing a statement',
+      'Use image-only export for scanned forms with hidden or misaligned OCR',
+      'Remove confidential passages while keeping other text extractable',
     ],
     faq: [
       {
         q: 'Is the redacted text truly gone?',
-        a: 'No. The rectangles cover content visually, but underlying text can remain extractable. The PDF output is not secure redaction.',
+        a: 'Export removes covered image pixels and text located inside boxes from a freshly rebuilt PDF. By default, hidden text outside boxes stays extractable by PDF position. For scans, uncertain OCR or unusual fonts, select Remove all text layers (image only). Visual review cannot reveal hidden text. Review the exported copy before sharing.',
       },
       {
         q: 'Does my document get uploaded?',
@@ -316,7 +316,7 @@ const CONTENT_CORRECTIONS: Record<
       },
       {
         q: 'How do I make the redaction permanent?',
-        a: 'This tool does not offer permanent content removal. Compress PDF re-encodes embedded images to reduce file size; it does not remove the text or image content beneath these rectangles.',
+        a: 'Export the redacted copy. Covered content is removed during export; Compress PDF is optional for file size and is not required for redaction.',
       },
       {
         q: 'Can I redact multiple areas on different pages?',
@@ -330,15 +330,15 @@ const CONTENT_CORRECTIONS: Record<
     alsoTry: [
       {
         id: 'pdf-compress',
-        why: 'Reduce file size by re-encoding embedded images. Compression does not remove content beneath visual covers.',
+        why: 'Optionally reduce the rebuilt PDF size. Covered content has already been removed.',
       },
       {
         id: 'pdf-metadata',
-        why: 'Inspect or clear title, author, subject, keywords, creator and producer fields separately; this does not remove covered page content.',
+        why: 'Inspect the exported metadata. Redact PDF discards source metadata during rebuilding.',
       },
       {
         id: 'pdf-encrypt',
-        why: 'Add password protection separately; encryption does not remove the underlying covered content.',
+        why: 'Add password protection to the redacted copy.',
       },
     ],
   },
@@ -350,7 +350,7 @@ const CONTENT_CORRECTIONS: Record<
       },
       {
         id: 'pdf-redact',
-        why: 'Add visual covers before password protection. The covered content remains in the PDF and may be recoverable.',
+        why: 'Remove selected text and image content before password protection.',
       },
       {
         id: 'pdf-metadata',
@@ -367,7 +367,7 @@ const CONTENT_CORRECTIONS: Record<
       { id: 'strip-exif', why: 'Do the equivalent metadata scrub on standalone images.' },
       {
         id: 'pdf-redact',
-        why: 'Add visual covers separately from metadata edits. The covers do not securely remove page content.',
+        why: 'Remove selected page content and discard source metadata in a rebuilt copy.',
       },
     ],
   },
@@ -383,13 +383,13 @@ const CONTENT_CORRECTIONS: Record<
       },
       {
         id: 'pdf-redact',
-        why: 'Add visual covers for a review copy; extraction can still recover the covered text, so this does not neutralize suspicious PDF content.',
+        why: 'Remove selected suspicious text from a rebuilt copy. Review remaining text; redaction does not detect every suspicious passage.',
       },
     ],
   },
   'text-redact': {
     intro:
-      "Text Redact finds and replaces personally identifiable information in plain text: emails, phone numbers, SSNs, Luhn-validated credit card numbers, IP addresses, URLs, UUIDs, and AWS access keys, with room to add your own regex patterns. It edits the output text rather than placing visual covers on PDF pages. Everything happens in your browser, so the sensitive data you're scrubbing never gets uploaded.",
+      "Text Redact finds and replaces personally identifiable information in plain text: emails, phone numbers, SSNs, Luhn-validated credit card numbers, IP addresses, URLs, UUIDs, and AWS access keys, with room to add your own regex patterns. It edits plain text; Redact PDF removes manually selected page areas. Everything happens in your browser, so the sensitive data you're scrubbing never gets uploaded.",
     faq: [
       {
         q: 'What PII patterns does it detect out of the box?',
@@ -405,7 +405,7 @@ const CONTENT_CORRECTIONS: Record<
       },
       {
         q: 'How is this different from Redact PDF?',
-        a: 'Text Redact replaces matching patterns in the output plain text. Redact PDF only adds visual cover rectangles: underlying PDF content may remain recoverable, including after compression. It is not a secure document-redaction equivalent.',
+        a: 'Text Redact replaces matching patterns in plain text. Redact PDF removes manually selected text and image areas from a rebuilt PDF, locally on your device.',
       },
       {
         q: 'Will pattern-based redaction catch everything?',
@@ -415,7 +415,7 @@ const CONTENT_CORRECTIONS: Record<
     alsoTry: [
       {
         id: 'pdf-redact',
-        why: 'Add visual covers to a PDF rather than replacing text. Underlying content may remain recoverable.',
+        why: 'Remove manually selected text and image areas from a PDF.',
       },
       {
         id: 'file-fingerprint',

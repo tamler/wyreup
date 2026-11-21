@@ -48,9 +48,9 @@ Run it now: [wyreup.com/chain/run?steps=image-to-pdf|pdf-compress](https://wyreu
 
 ---
 
-### Add visual covers and password-protect a PDF
+### Redact and password-protect a PDF
 
-Drop a PDF whose underlying content is safe for recipients to access. Add visual cover rectangles, a password and page numbers. The covers and password do not remove the underlying content.
+Drop a PDF, select areas to remove, then add a password and page numbers. Redact PDF rebuilds every page at 144 DPI and overwrites covered image pixels. By default, visible and hidden text outside boxes stays extractable by its PDF position, which may not match scanned ink or unusual font outlines. For scans, uncertain OCR or unusual fonts, select **Remove all text layers (image only)** (`removeAllText: true` in the API/CLI/MCP). This removes every text layer on every page; visual review alone cannot reveal hidden text. Source metadata, annotations, forms (including visible values, stamps and ink signatures shown in the preview), attachments and original PDF objects are discarded. Node consumers resolve the installed PDF.js standard-font assets to retain visible non-embedded standard-font text. Fresh exports omit creation/modification timestamps. Pages become images with an optional new invisible text layer, so vector quality and document interactivity are lost and files may grow. Everything runs locally; review the exported copy before sharing. Compress PDF is optional and is not needed to make redaction permanent.
 
 ```
 pdf-redact → pdf-encrypt → page-numbers-pdf
@@ -200,6 +200,10 @@ Run just the core library tests:
 ```bash
 pnpm --filter @wyreup/core test
 ```
+
+After building core, run the emitted ESM/CommonJS redaction smoke test with `pnpm exec vitest run tools/test/pdf-redact-packaged.test.mjs`. Redaction regression tests generate synthetic PDFs and use PDF.js extraction and image samples; they also run `pdftotext` when Poppler is installed.
+
+Maintain corrected tool copy in `packages/web/src/lib/search-guides.ts`. To refresh one generated SEO entry without the original backfill batches, run `node scripts/seo-assemble.mjs --refresh-tool pdf-redact`, then format `packages/web/src/lib/seo-content.ts` with Prettier.
 
 Run the package-consumer evidence identity regression tests, including their real-filesystem check:
 

@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { chromium, type Browser } from 'playwright';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import type * as PDFLib from '../../core/node_modules/pdf-lib/es/index.js';
 import { mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -52,6 +54,34 @@ function visibleRectangle(spec: PageSpec): [number, number, number, number] {
   if (spec.rotation === 180) return [(originX + width - x - w) / width, (y - originY) / height, w / width, h / height];
   return [(originY + height - y - h) / height, (originX + width - x - w) / width, h / height, w / width];
 }
+
+it('pdf-redact image-only checkbox removes text outside boxes from the downloaded PDF', async () => {
+  const require = createRequire(new URL('../../core/package.json', import.meta.url));
+  const { PDFDocument, StandardFonts } = require('pdf-lib') as typeof PDFLib;
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  doc.addPage([400, 300]).drawText('OUTSIDE OCR', { x: 200, y: 220, size: 12, font });
+  const input = Buffer.from(await doc.save());
+  for (const imageOnly of [false, true]) {
+    const page = await browser.newPage({ viewport: { width: 1200, height: 1800 } });
+    try {
+      await page.goto(`${server.url}/tools/pdf-redact/`);
+      await selectOriginal(page, 'image-only.pdf', input);
+      const toggle = page.getByRole('checkbox', { name: 'Remove all text layers (image only)', exact: true });
+      expect(await toggle.isChecked()).toBe(false);
+      if (imageOnly) await toggle.check();
+      await dragTarget(page, input, 1, [40, 50, 80, 60]);
+      const output = await downloadedPdf(page, 'pdf-redact', `image-only-${imageOnly}`);
+      const task = getDocument({ data: output.slice() });
+      try {
+        const result = await task.promise;
+        const text = await (await result.getPage(1)).getTextContent();
+        const extracted = text.items.map(item => 'str' in item ? item.str : '').join('');
+        expect(extracted).toBe(imageOnly ? '' : 'OUTSIDE OCR');
+      } finally { await task.destroy(); }
+    } finally { await page.close(); }
+  }
+}, 30000);
 
 for (const id of ['pdf-crop', 'pdf-redact'] as const) {
   for (const scenario of ['wide', 'narrow', 'resize', 'origins-rotations-mixed'] as const) {

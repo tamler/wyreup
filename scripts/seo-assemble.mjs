@@ -3,6 +3,26 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createDefaultRegistry } from '../packages/core/dist/node/index.js';
+import { correctedToolSeoContent } from '../packages/web/src/lib/search-guides.ts';
+
+// Refresh one checked-in entry from the maintained corrections when the
+// original one-off backfill batches are no longer present in .cache/seo.
+if (process.argv[2] === '--refresh-tool') {
+  const id = process.argv[3];
+  const { SEO_CONTENT } = await import('../packages/web/src/lib/seo-content.ts');
+  const corrected = correctedToolSeoContent(id, SEO_CONTENT[id]);
+  if (!corrected || corrected === SEO_CONTENT[id])
+    throw new Error('Expected a tool with maintained corrections');
+  const path = 'packages/web/src/lib/seo-content.ts';
+  const source = readFileSync(path, 'utf8');
+  const start = source.indexOf(`  '${id}': {`);
+  const end = source.indexOf('\n  },', start);
+  if (start < 0 || end < 0) throw new Error('Cannot locate generated tool entry');
+  const entry = `  '${id}': ${JSON.stringify(corrected, null, 2).split('\n').join('\n  ')},`;
+  writeFileSync(path, source.slice(0, start) + entry + source.slice(end + 5));
+  console.log(`Refreshed ${id} from search-guides.ts`);
+  process.exit(0);
+}
 
 // Repo-local scratch dir, written by seo-manifest.mjs (not shared /tmp).
 const dir = fileURLToPath(new URL('../.cache/seo', import.meta.url));
@@ -51,7 +71,7 @@ for (const f of readdirSync(dir)
       problems.push(`${id}: duplicate (kept first)`);
       continue;
     }
-    merged[id] = sc;
+    merged[id] = correctedToolSeoContent(id, sc);
   }
 }
 

@@ -87,12 +87,12 @@ const exampleChains: ExampleChain[] = [
   },
   {
     id: 'redact-share',
-    name: 'Cover and password-protect a PDF',
-    description: 'Add visual rectangles, encrypt with a password and add page numbers. Underlying content can remain recoverable.',
-    situation: 'When a PDF needs visual covers and password protection without secure content removal.',
+    name: 'Redact and password-protect a PDF',
+    description: 'Remove selected text and image content, encrypt with a password and add page numbers.',
+    situation: 'When a PDF needs confidential areas removed and password protection.',
     steps: ['pdf-redact', 'pdf-encrypt', 'page-numbers-pdf'],
-    inputHint: 'Drop a PDF whose content is safe for recipients to access',
-    outputHint: 'Password-protected, numbered PDF with visual covers',
+    inputHint: 'Drop a PDF and select the content to remove',
+    outputHint: 'Password-protected, numbered PDF with selected content removed',
   },
   {
     id: 'dev-data',
