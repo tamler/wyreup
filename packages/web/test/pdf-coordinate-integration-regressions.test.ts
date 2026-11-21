@@ -2,6 +2,7 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import { chromium, type Browser } from 'playwright';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
+import type * as PDFLib from '../../core/node_modules/pdf-lib/es/index.js';
 import { mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -56,7 +57,7 @@ function visibleRectangle(spec: PageSpec): [number, number, number, number] {
 
 it('pdf-redact image-only checkbox removes text outside boxes from the downloaded PDF', async () => {
   const require = createRequire(new URL('../../core/package.json', import.meta.url));
-  const { PDFDocument, StandardFonts } = require('pdf-lib') as typeof import('../../core/node_modules/pdf-lib/es/index.js');
+  const { PDFDocument, StandardFonts } = require('pdf-lib') as typeof PDFLib;
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
   doc.addPage([400, 300]).drawText('OUTSIDE OCR', { x: 200, y: 220, size: 12, font });
