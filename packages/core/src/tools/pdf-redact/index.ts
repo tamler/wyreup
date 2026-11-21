@@ -3,6 +3,7 @@ import { assertPdfPageBudget } from '../../lib/budget.js';
 import { createCanvas, canvasToBlob } from '../../lib/canvas.js';
 import type { CanvasLike } from '../../lib/canvas.js';
 import type { TextItem, TextStyle } from 'pdfjs-dist/types/src/display/api.js';
+import type { PDFName } from 'pdf-lib';
 
 // Test glyph quadrilaterals in source PDF coordinates, before page rotation or
 // crop-box translation. A small margin also removes glyphs touching a box edge.
@@ -121,6 +122,8 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
       setTextRenderingMode,
       showText,
       TextRenderingMode,
+      pushGraphicsState,
+      popGraphicsState,
       degrees,
     } = lib;
     const { getDocument, PDFWorker, AnnotationMode, Util } =
@@ -260,69 +263,61 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
           });
         const glyphs = [...new Set(items.map((item) => item.str))];
         if (glyphs.length > 65_534) throw new Error('Too many unique text glyphs on one page.');
-        const codes = new Map(
-          glyphs.map((str, index) => [str, (index + 1).toString(16).padStart(4, '0')]),
-        );
+        const codes = new Map<string, { code: string; name: PDFName }>();
         // A fresh Unicode map preserves scripts and ligatures without embedding
         // source font programs (which can contain removed glyph outlines/data).
-        const mappings = glyphs.map(
-          (str) => `<${codes.get(str)}> <${PDFHexString.fromText(str).asString().slice(4)}>`,
-        );
-        const chunks: string[] = [];
-        for (let i = 0; i < mappings.length; i += 100) {
-          const chunk = mappings.slice(i, i + 100);
-          chunks.push(`${chunk.length} beginbfchar\n${chunk.join('\n')}\nendbfchar`);
+        // Embedded blank Type3 glyph programs are valid without source fonts
+        // or renderer-dependent substitution of an unembedded identity font.
+        const blank = pdfDoc.context.register(pdfDoc.context.flateStream('1000 0 d0\n'));
+        for (let start = 0; start < glyphs.length; start += 255) {
+          const batch = glyphs.slice(start, start + 255);
+          const mappings = batch.map(
+            (str, index) =>
+              `<${(index + 1).toString(16).padStart(2, '0')}> <${PDFHexString.fromText(str).asString().slice(4)}>`,
+          );
+          const chunks: string[] = [];
+          for (let i = 0; i < mappings.length; i += 100) {
+            const chunk = mappings.slice(i, i + 100);
+            chunks.push(`${chunk.length} beginbfchar\n${chunk.join('\n')}\nendbfchar`);
+          }
+          const cmap = pdfDoc.context.register(
+            pdfDoc.context.flateStream(
+              `/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /WyreupUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<00> <FF>\nendcodespacerange\n${chunks.join('\n')}\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend`,
+            ),
+          );
+          const names = batch.map((_, index) => `g${index + 1}`);
+          const font = pdfDoc.context.register(
+            pdfDoc.context.obj({
+              Type: 'Font',
+              Subtype: 'Type3',
+              FontBBox: [0, -300, 1000, 1000],
+              FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+              CharProcs: Object.fromEntries(names.map((name) => [name, blank])),
+              Encoding: { Type: 'Encoding', Differences: [1, ...names] },
+              FirstChar: 1,
+              LastChar: batch.length,
+              Widths: batch.map(() => 1000),
+              Resources: {},
+              ToUnicode: cmap,
+            }),
+          );
+          const name = page.node.newFontDictionary('WyreupText', font);
+          batch.forEach((str, index) =>
+            codes.set(str, { name, code: (index + 1).toString(16).padStart(2, '0') }),
+          );
         }
-        const cmap = pdfDoc.context.register(
-          pdfDoc.context.flateStream(
-            `/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /WyreupUnicode def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n${chunks.join('\n')}\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend`,
-          ),
-        );
-        const descriptor = pdfDoc.context.register(
-          pdfDoc.context.obj({
-            Type: 'FontDescriptor',
-            FontName: 'WyreupText',
-            Flags: 4,
-            FontBBox: [0, -300, 1000, 1000],
-            ItalicAngle: 0,
-            Ascent: 1000,
-            Descent: -300,
-            CapHeight: 1000,
-            StemV: 80,
-          }),
-        );
-        const descendant = pdfDoc.context.register(
-          pdfDoc.context.obj({
-            Type: 'Font',
-            Subtype: 'CIDFontType2',
-            BaseFont: 'WyreupText',
-            CIDSystemInfo: {
-              Registry: lib.PDFString.of('Adobe'),
-              Ordering: lib.PDFString.of('Identity'),
-              Supplement: 0,
-            },
-            FontDescriptor: descriptor,
-            DW: 1000,
-            CIDToGIDMap: 'Identity',
-          }),
-        );
-        const font = pdfDoc.context.register(
-          pdfDoc.context.obj({
-            Type: 'Font',
-            Subtype: 'Type0',
-            BaseFont: 'WyreupText',
-            Encoding: 'Identity-H',
-            DescendantFonts: [descendant],
-            ToUnicode: cmap,
-          }),
-        );
-        const name = page.node.newFontDictionary('WyreupText', font);
         page.pushOperators(
+          pushGraphicsState(),
           beginText(),
-          setFontAndSize(name, 1),
           setTextRenderingMode(TextRenderingMode.Invisible),
         );
+        let activeFont: PDFName | undefined;
         for (const item of items) {
+          const glyph = codes.get(item.str)!;
+          if (activeFont !== glyph.name) {
+            page.pushOperators(setFontAndSize(glyph.name, 1));
+            activeFont = glyph.name;
+          }
           const transform = Util.transform(
             [0.5, 0, 0, -0.5, originX!, page.getHeight() + originY!],
             Util.transform(viewport.transform, item.transform),
@@ -343,10 +338,10 @@ export const pdfRedact: ToolModule<PdfRedactParams> = {
               transform[4]!,
               transform[5]!,
             ),
-            showText(PDFHexString.of(codes.get(item.str)!)),
+            showText(PDFHexString.of(glyph.code)),
           );
         }
-        page.pushOperators(endText());
+        page.pushOperators(endText(), popGraphicsState());
         canvas.width = 0;
         canvas.height = 0;
         sourcePage.cleanup();

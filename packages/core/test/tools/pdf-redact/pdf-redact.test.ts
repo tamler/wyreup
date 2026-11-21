@@ -6,7 +6,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFRawStream as RawStream } from 
 import { pdfToText } from '../../../src/tools/pdf-to-text/index.js';
 import { pdfCompress } from '../../../src/tools/pdf-compress/index.js';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -75,6 +75,7 @@ async function assertSecretRemoved(blob: Blob) {
   const { PDFName, PDFArray, PDFRawStream, decodePDFRawStream } = await import('pdf-lib');
   expect(doc.getPage(0).node.lookupMaybe(PDFName.of('Annots'), PDFArray)?.size() ?? 0).toBe(0);
   let images = 0;
+  let lossless = true;
   for (const [, object] of doc.context.enumerateIndirectObjects()) {
     if (
       object instanceof PDFRawStream &&
@@ -82,6 +83,7 @@ async function assertSecretRemoved(blob: Blob) {
     ) {
       images++;
       const filter = object.dict.get(PDFName.of('Filter'))?.toString();
+      if (filter === '/DCTDecode') lossless = false;
       const pixels =
         filter === '/DCTDecode'
           ? (await (await import('../../../src/lib/codecs.js')).getCodec('jpeg')).decode(
@@ -94,6 +96,20 @@ async function assertSecretRemoved(blob: Blob) {
       expect(width).toBe(600);
       expect(height).toBe(600);
       const channels = pixels ? 4 : 3;
+      if (!pixels) {
+        for (const region of [
+          [40, 55, 160, 82],
+          [185, 140, 330, 168],
+        ]) {
+          let dark = 0;
+          for (let y = region[1]!; y < region[3]!; y++) {
+            for (let x = region[0]!; x < region[2]!; x++) {
+              if (decoded[(y * width + x) * channels]! < 64) dark++;
+            }
+          }
+          expect(dark, 'uncovered text must remain visibly rendered').toBeGreaterThan(30);
+        }
+      }
       // Covered half of the red image: every interior pixel is black.
       for (let y = 250; y < 390; y++) {
         for (let x = 45; x < 115; x++) {
@@ -130,6 +146,53 @@ async function assertSecretRemoved(blob: Blob) {
       expect(extracted).not.toContain('SECRET123');
       expect(extracted).toContain('OUTSIDE456');
       expect(extracted).toContain('KEEP789');
+      if (lossless && spawnSync('pdftoppm', ['-v']).status === 0) {
+        const prefix = join(directory, 'page');
+        if (spawnSync('pdftocairo', ['-v']).status === 0) {
+          const cairo = spawnSync(
+            'pdftocairo',
+            ['-scale-to', '600', '-singlefile', '-png', path, `${prefix}-cairo`],
+            { encoding: 'utf8' },
+          );
+          expect(cairo.status, cairo.stderr).toBe(0);
+          expect(cairo.stderr).not.toMatch(/Syntax Error|Syntax Warning/);
+        }
+        execFileSync('pdftoppm', ['-scale-to', '600', '-singlefile', '-png', path, prefix]);
+        const codec = await (await import('../../../src/lib/codecs.js')).getCodec('png');
+        const rendered = await codec.decode(readFileSync(`${prefix}.png`));
+        for (const region of [
+          [40, 55, 160, 82],
+          [185, 140, 330, 168],
+        ]) {
+          let dark = 0;
+          for (let y = region[1]!; y < region[3]!; y++) {
+            for (let x = region[0]!; x < region[2]!; x++) {
+              if (rendered.data[(y * rendered.width + x) * 4]! < 64) dark++;
+            }
+          }
+          expect(dark, 'exported PDF must visibly retain uncovered text').toBeGreaterThan(30);
+        }
+        const appended = await PDFDocument.load(bytes);
+        appended.getPage(0).drawText('AFTER', { x: 20, y: 20, size: 12 });
+        const appendedPath = join(directory, 'appended.pdf');
+        writeFileSync(appendedPath, await appended.save());
+        execFileSync('pdftoppm', [
+          '-scale-to',
+          '600',
+          '-singlefile',
+          '-png',
+          appendedPath,
+          `${prefix}-appended`,
+        ]);
+        const appendedImage = await codec.decode(readFileSync(`${prefix}-appended.png`));
+        let appendedInk = 0;
+        for (let y = 540; y < 565; y++) {
+          for (let x = 40; x < 130; x++) {
+            if (appendedImage.data[(y * appendedImage.width + x) * 4]! < 64) appendedInk++;
+          }
+        }
+        expect(appendedInk, 'later tools must be able to add visible text').toBeGreaterThan(30);
+      }
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -244,6 +307,51 @@ describe('pdf-redact — run()', () => {
     )) as Blob;
     expect(await extracted.text()).toContain('中文EEP');
     expect(await extracted.text()).not.toContain('SECRET123');
+  });
+
+  it('retains more than 255 distinct Unicode glyphs across output fonts', async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([300, 300]);
+    const { PDFDict, PDFName } = await import('pdf-lib');
+    const lines: string[] = [];
+    for (let row = 0; row < 3; row++) {
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const characters = Array.from({ length: 95 }, (_, i) => 0x4e00 + row * 95 + i);
+      lines.push(String.fromCharCode(...characters));
+      page.drawText(Array.from({ length: 95 }, (_, i) => String.fromCharCode(i + 32)).join(''), {
+        font,
+        x: 5,
+        y: 280 - row * 10,
+        size: 2,
+      });
+      await doc.flush();
+      const mappings = characters
+        .map((code, i) => `<${(i + 32).toString(16)}> <${code.toString(16)}>`)
+        .join('\n');
+      const cmap = doc.context.register(
+        doc.context.flateStream(
+          '/CIDInit /ProcSet findresource begin 12 dict begin begincmap ' +
+            '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def ' +
+            '/CMapName /ManyGlyphs def /CMapType 2 def ' +
+            `1 begincodespacerange <00> <FF> endcodespacerange 95 beginbfchar\n${mappings}\nendbfchar ` +
+            'endcmap CMapName currentdict /CMap defineresource pop end end',
+        ),
+      );
+      doc.context.lookup(font.ref, PDFDict).set(PDFName.of('ToUnicode'), cmap);
+    }
+    const result = (await pdfRedact.run(
+      [new File([(await doc.save()) as BlobPart], 'many-glyphs.pdf')],
+      {
+        rectangles: [{ page: 1, x: 0, y: 0, width: 1, height: 1 }],
+      },
+      makeCtx(),
+    )) as Blob;
+    const extracted = (await pdfToText.run(
+      [new File([result], 'output.pdf')],
+      {},
+      makeCtx(),
+    )) as Blob;
+    for (const line of lines) expect(await extracted.text()).toContain(line);
   });
 
   it.each([
