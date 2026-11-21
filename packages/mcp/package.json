@@ -1,6 +1,6 @@
 {
   "name": "@wyreup/mcp",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "MCP server for Wyreup's local file tools, calculations, and public network lookups.",
   "keywords": [
     "wyreup",
